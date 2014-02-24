@@ -25,46 +25,56 @@ from twisted.trial import unittest
 
 
 class TestEC2LatentBuildSlave(unittest.TestCase):
+    ec2_connection = None
 
     def botoSetup(self):
         c = boto.connect_ec2()
         c.create_key_pair('latent_buildbot_slave')
         c.create_security_group('latent_buildbot_slave', 'the security group')
         instance = c.run_instances('foo').instances[0]
-        ami = c.create_image(instance.id, "foo", "bar")
-        return {'ami': ami}
+        c.create_image(instance.id, "foo", "bar")
+        return c
 
     @moto.mock_ec2
     def test_constructor_minimal(self):
-        kwargs = self.botoSetup()
+        c = self.botoSetup()
+        amis = c.get_all_images()
         bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
-                                     **kwargs
+                                     ami=amis[0].id
                                      )
         self.assertEqual(bs.slavename, 'bot1')
         self.assertEqual(bs.password, 'sekrit')
         self.assertEqual(bs.instance_type, 'm1.large')
-        self.assertEqual(bs.ami, kwargs['ami'])
+        self.assertEqual(bs.ami, amis[0].id)
 
     @moto.mock_ec2
     def test_constructor_tags(self):
-        kwargs = self.botoSetup()
+        c = self.botoSetup()
+        amis = c.get_all_images()
         tags = {'foo': 'bar'}
         bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
                                      tags=tags,
-                                     **kwargs
+                                     ami=amis[0].id
                                      )
         self.assertEqual(bs.tags, tags)
 
     @moto.mock_ec2
     def test_start_instance(self):
-        kwargs = self.botoSetup()
+        c = self.botoSetup()
+        amis = c.get_all_images()
         bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
-                                     **kwargs
+                                     ami=amis[0].id
                                      )
-        bs._start_instance()
+        r = bs._start_instance()
+        instance_id = r[0]
+        image_id = r[1]
+        start_time = r[2]
+        self.assertTrue(instance_id.startswith('i-'))
+        self.assertTrue(image_id.startswith('r-'))
+        self.assertTrue(start_time > 0)
