@@ -34,11 +34,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
 				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
-			}
-
-			if ($('#builddetail_page').length > 0) {
-				helpers.summaryArtifactTests();
-			}
+			}			
 
        		// submenu overflow on small screens
 
