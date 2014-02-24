@@ -60,7 +60,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
                  placement=None, price_multiplier=1.2, retry=1,
-                 retry_price_adjustment=1):
+                 retry_price_adjustment=1, product_description='Linux/UNIX'):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -101,6 +101,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.retry_price_adjustment = retry_price_adjustment
         self.retry = retry
         self.attempt = 1
+        self.product_description = product_description
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -333,7 +334,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
         spot_prices = self.conn.get_spot_price_history(start_time=spot_history_starttime,
-                                                       product_description='Linux/UNIX',
+                                                       product_description=self.product_description,
                                                        availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
@@ -387,7 +388,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                             (self.__class__.__name__, self.slavename, self.retry))
                     raise interfaces.LatentBuildSlaveFailedToSubstantiate()
         else:
-            instance_id, image_id, start_time, success = self._submit_request() 
+            instance_id, image_id, start_time, success = self._submit_request()
             if not success:
                 raise interfaces.LatentBuildSlaveFailedToSubstantiate()
         return instance_id, image_id, start_time
