@@ -222,6 +222,7 @@ else:
     ]
     setup_args['tests_require'] = [
         'mock',
+        'moto'
     ]
     # Python-2.6 and up includes json
     if not py_26:
