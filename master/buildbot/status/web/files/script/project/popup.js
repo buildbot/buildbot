@@ -208,15 +208,8 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 
             //get all branches
             var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-            var sPageURL = window.location.search.substring(1);
-            var sURLVariables = sPageURL.split('&');
-            $.each(sURLVariables, function(index, val) {
-                var sParameterName = val.split('=');
-                if (sParameterName[0].indexOf("_branch") >= 0) {
-                    urlParams[sParameterName[0]] = sParameterName[1];                    
-                }
-            });
-			
+            helpers.codebasesFromURL(urlParams);
+
 			// get currentpage with url parameters
             var url = location.protocol + "//" + location.host + "/forms/forceBuild";
 			$.get(url, urlParams).done(function(data) {

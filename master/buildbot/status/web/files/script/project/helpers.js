@@ -154,14 +154,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 
                 //get all branches
                 var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-                var sPageURL = window.location.search.substring(1);
-                var sURLVariables = sPageURL.split('&');
-                $.each(sURLVariables, function(index, val) {
-                    var sParameterName = val.split('=');
-                    if (sParameterName[0].indexOf("_branch") >= 0) {
-                        urlParams[sParameterName[0]] = sParameterName[1];                        
-                    }
-                });
+                urlParams = helpers.codebasesFromURL(urlParams);
 
 				$.get(url, urlParams).done(function(data) {
 					$('#bowlG').remove();
@@ -500,27 +493,32 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
 		    var projectsPath = parser.pathname.match(/\projects\/([^\/]+)/);
 		    var buildslavesPath = parser.pathname.match(/\projects\/([^\/]+)/);
-		    
+		    var fullURL = "";
+            var urlParams = {"filter" : "1"};
 			if (helpers.getCurrentPage() === 'builders') {				
-				var fullUrl = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?filter=1';
-				//var fullUrl = 'http://10.45.6.93:8001/builders.json';
+				fullURL = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?';
 			}
 
-		    if (helpers.getCurrentPage() === 'builddetail') {
-		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/';
+		    else if (helpers.getCurrentPage() === 'builddetail') {
+		    	fullURL = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/?';
+                urlParams = {}; //We don't want filter here yet
 		    }
 
-		    if (helpers.getCurrentPage() === 'buildslaves') {		    	
-		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/slaves/?filter=1';
-		    	//var fullUrl = 'http://10.45.6.93:8001/json-slaves.json';
+		    else if (helpers.getCurrentPage() === 'buildslaves') {
+		    	fullURL = parser.protocol + '//' + parser.host + '/json/slaves/?';
 		    }
 
-		    if (helpers.getCurrentPage() === 'buildqueue') {		    			    	
-		    	var fullUrl = parser.protocol + '//' + parser.host + '/json/buildqueue/';		    	
-		    	
+		    else if (helpers.getCurrentPage() === 'buildqueue') {
+		    	fullURL = parser.protocol + '//' + parser.host + '/json/buildqueue/?';
 		    }
-		    
-		    return fullUrl;
+
+            urlParams = helpers.codebasesFromURL(urlParams);
+            var ret = [];
+            for (var d in urlParams)
+                ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+            var paramsString = ret.join("&");
+
+		    return fullURL + paramsString;
         }, getCurrentPage: function (isRealTime) {
         	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
         	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];        	
@@ -570,7 +568,18 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 					$(this).unbind(e);
 				}
 			});	
-		}
+		}, codebasesFromURL: function (urlParams) {
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            $.each(sURLVariables, function(index, val) {
+                var sParameterName = val.split('=');
+                if (sParameterName[0].indexOf("_branch") >= 0) {
+                    urlParams[sParameterName[0]] = sParameterName[1];
+                }
+            });
+
+            return urlParams;
+        }
 	};
 
     return helpers;

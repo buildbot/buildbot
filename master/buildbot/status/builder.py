@@ -18,6 +18,7 @@ from __future__ import with_statement
 
 import os, re, itertools
 from cPickle import load, dump
+from twisted.internet import defer
 
 from zope.interface import implements
 from twisted.python import log, runtime
@@ -297,6 +298,16 @@ class BuilderStatus(styles.Versioned):
                     foundcodebases.append(ss)
             return len(foundcodebases) == len(build_sourcestamps)
 
+    @defer.inlineCallbacks
+    def foundCodebasesInBuildRequest(self, build, codebases):
+        if len(codebases) > 0:
+            build_sourcestamps = yield build.getSourceStamps()
+            foundcodebases = []
+            for ss in build_sourcestamps.values():
+                if ss.codebase in codebases.keys() and ss.branch == codebases[ss.codebase]:
+                    foundcodebases.append(ss)
+            defer.returnValue(len(foundcodebases) == len(build_sourcestamps))
+
     def getCurrentBuilds(self, codebases={}):
         if len(codebases) == 0:
             return self.currentBuilds
@@ -560,7 +571,7 @@ class BuilderStatus(styles.Versioned):
         self.prune() # conserve disk
 
 
-    def asDict(self):
+    def asDict(self, codebases={}):
         result = {}
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
@@ -578,10 +589,10 @@ class BuilderStatus(styles.Versioned):
         # Transient
         # Collect build numbers.
         # Important: Only grab the *cached* builds numbers to reduce I/O.
-        current_builds = [b.getNumber() for b in self.currentBuilds]
+        current_builds = [b.getNumber() for b in self.getCurrentBuilds(codebases)]
         cached_builds = list(set(self.buildCache.keys() + current_builds))
         cached_builds.sort()
-        current_builds_dict = [b.asDict() for b in self.currentBuilds]
+        current_builds_dict = [b.asDict() for b in self.getCurrentBuilds(codebases)]
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds_dict
         result['state'] = self.getState()[0]
@@ -590,15 +601,24 @@ class BuilderStatus(styles.Versioned):
         result['pendingBuilds'] = 0
         return result
 
-    def asDict_async(self):
+    @defer.inlineCallbacks
+    def asDict_async(self, codebases={}):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict()
-        d = self.getPendingBuildRequestStatuses()
-        def combine(statuses):
-            result['pendingBuilds'] = len(statuses)
-            return result
-        d.addCallback(combine)
-        return d
+        result = self.asDict(codebases)
+        builds =  yield self.getPendingBuildRequestStatuses()
+
+        #Remove builds not within this codebase
+        count = 0
+        if len(codebases) > 1:
+            for b in builds:
+                in_codebase = yield self.foundCodebasesInBuildRequest(b, codebases)
+                if in_codebase:
+                    count += 1
+        else:
+            count = len(builds)
+
+        result['pendingBuilds'] = count
+        defer.returnValue(result)
 
     def getMetrics(self):
         return self.botmaster.parent.metrics

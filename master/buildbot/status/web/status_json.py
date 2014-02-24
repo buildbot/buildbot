@@ -674,20 +674,19 @@ class SingleProjectJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        status = None
         result = self.project_status.asDict()
+
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+
+        #Get branches
+        encoding = getRequestCharset(request)
+        branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
         result['builders'] = []
         for b in self.getBuilders():
-            builder = yield b.asDict_async()
-
-            #Get branches
-            encoding = getRequestCharset(request)
-            branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
-
-            #Get codebases
-            codebases = {}
-            getCodebasesArg(request=request, codebases=codebases)
+            builder = yield b.asDict_async(codebases)
 
             #Get latest build
             builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
