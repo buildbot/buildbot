@@ -721,9 +721,21 @@ class QueueJsonResource(JsonResource):
         else:
             builders = [self.status.getBuilder(builder_name) for builder_name in builder_names]
 
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+
         pending = []
         for b in builders:
             builds = yield b.getPendingBuildRequestStatuses()
+            if len(codebases) > 1:
+                tempBuilds = []
+                for build in builds:
+                    in_codebase = yield b.foundCodebasesInBuildRequest(build, codebases)
+                    if in_codebase:
+                        tempBuilds.append(build)
+                builds = tempBuilds
+
             pending.extend(builds)
 
         #Sort the list

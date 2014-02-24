@@ -37,8 +37,14 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				var currentUrl = document.URL;			              	
 			    var parser = document.createElement('a');
 			    parser.href = currentUrl;
-				var url = parser.protocol + '//' + parser.host +'/json/buildqueue?builder='+$(this).attr('data-builderName');							
-				popup.pendingJobs(url);					
+				var url = parser.protocol + '//' + parser.host +'/json/buildqueue?';
+                var urlParams = helpers.codebasesFromURL({"builder" : $(this).attr('data-builderName')});
+                var ret = [];
+                for (var d in urlParams)
+                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+                var paramsString = ret.join("&");
+
+				popup.pendingJobs(url + paramsString);
 			});
 
 			// Display the codebases form in a popup
