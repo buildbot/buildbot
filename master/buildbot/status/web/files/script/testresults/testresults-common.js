@@ -141,18 +141,18 @@ define(['jquery'], function ($) {
 				var fdtf = $(this).parent().find($('.failure-detail-txt'));
 				var parentTd = $(this).parent().parent();
 
-				$(fdtf).css({'max-height':'none', 'height': ''});
+				fdtf.css({'max-height':'none', 'height': ''});
 				
 				if (!$(this).hasClass('expanded-js')) {
 					$(this).addClass('expanded-js');
 					$(this).text('Show less');
-					$(fdtf).css('height',$(fdtf).height());
-					$(parentTd).css('height',$(fdtf).height());
+					fdtf.css('height','');
+					parentTd.css('height',fdtf.height() + 40);
 				} else {
 					$(this).removeClass('expanded-js');
 					$(this).text('Show more');
-					$(fdtf).css('max-height',130);
-					$(parentTd).css('height',170);
+					fdtf.css('max-height',130);
+					parentTd.css('height',170);
 				}
 			});
 
