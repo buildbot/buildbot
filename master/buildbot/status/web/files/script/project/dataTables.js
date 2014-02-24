@@ -127,8 +127,13 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 						{					
 						"aTargets": [ 0 ],
 						"sClass": "txt-align-left",	
-						"mRender": function (data,full,type)  {												
-							var htmlnew = Mustache.render(builders, {name:type.name});
+						"mRender": function (data,full,type)  {				
+							var urlParams = helpers.codebasesFromURL({});
+			                var ret = [];
+			                for (var d in urlParams)
+			                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+			                var paramsString = ret.join("&");
+							var htmlnew = Mustache.render(builders, {name:type.name,builderParam:paramsString});
 							return htmlnew;
 						}
 						},
@@ -180,7 +185,7 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 					]			
 
 				}
-				else if ($(this).hasClass('buildslaves-tables')) {	
+				else if ($(this).hasClass('buildslaves-table')) {	
 
 					optionTable.aoColumns = [
 						{ "mData": null },	

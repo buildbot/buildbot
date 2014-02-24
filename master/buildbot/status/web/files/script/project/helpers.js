@@ -513,6 +513,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
             for (var d in urlParams)
                 ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
             var paramsString = ret.join("&");
+            console.log(fullURL)
 
 		    return fullURL + paramsString;
         }, getCurrentPage: function (isRealTime) {
