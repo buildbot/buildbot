@@ -1,13 +1,13 @@
-{{#buildersPopup}}
-
+{{#showFriendlyName}}
 {{#friendly_name}}
-	<a href="buildslaves/{{host_name}}">{{friendly_name}}</a>	
-	<a class="more-info fl-right popup-btn-json-js" href="#"> </a>
+	<a href="buildslaves/{{host_name}}">{{friendly_name}}</a>			
 {{/friendly_name}}
 {{^friendly_name}}
   Not Available 
 {{/friendly_name}}
-
+{{/showFriendlyName}}
+{{#buildersPopup}}
+	<a title="Builder information" class="more-info popup-btn-json-js" href="#"> </a>
 {{/buildersPopup}}
 
 {{#showTimeago}}

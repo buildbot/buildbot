@@ -72,16 +72,6 @@ h1.logo a {
 	}
 }
 
-@include breakpoint($bkpt-small) {
-	h1.logo a {
-		padding-top: 17px;
-		font-size: 19px;
-		span {
-			font-size: 17px;
-		}
-	}
-}
-
 .logo a:hover {
 	opacity: 0.5;
 }
@@ -154,6 +144,10 @@ div.welcome-txt {
 	font-weight:bold;
 }
 
+.buildslaves-tables .more-info {
+	//margin-right:125px;
+}
+
 .mod-1.more-info:after {
 	margin-left:3px;
 }
@@ -187,4 +181,14 @@ div.welcome-txt {
 
 .dropdown-info:after {
 	content: "▼";
+}
+
+@include breakpoint($bkpt-small) {
+	h1.logo a {
+		padding-top: 17px;
+		font-size: 19px;
+		span {
+			font-size: 17px;
+		}
+	}
 }

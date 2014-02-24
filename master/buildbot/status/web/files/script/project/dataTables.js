@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','popup','text!templates/popups.html','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','moment'], function (dataTable,helpers,popup,popups,buildqueue,buildslaves,builders,Mustache,moment) {
+define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','moment'], function (dataTable,helpers,popup,buildqueue,buildslaves,builders,Mustache,moment) {
    
     "use strict";
     var dataTables;
@@ -47,8 +47,8 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 			    });
 
 				// add specific for the buildqueue page
-				if ($(this).hasClass('buildqueue-table')) {	
-
+				if ($(this).hasClass('buildqueue-table')) {							
+				      
 					optionTable.aaSorting = [[ 2, "asc" ]]			
 					optionTable.aoColumns = [
 						{ "mData": "builderName" },	
@@ -71,6 +71,8 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							var sourcesLength = type.sources.length
 							var htmlnew = Mustache.render(buildqueue, {showsources:true,sources:type.sources,codebase:type.codebase,sourcesLength:sourcesLength})								
 							return htmlnew;												
+						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {	
+							$(nTd).find('a.popup-btn-json-js').data({showCodebases:oData});							
 						}
 						},
 						{
@@ -93,7 +95,9 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							var slavelength = type.slaves.length	
 							var htmlnew = Mustache.render(buildqueue, {showslaves:true,slaves:data,slavelength:slavelength})						
 							return htmlnew; 						    						
-					    }
+					    },"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {	
+							$(nTd).find('a.popup-btn-json-js').data({showcompatibleSlaves:oData});							
+						}
 						},
 						{
 						"aTargets": [ 4 ],
@@ -105,7 +109,7 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 							
 						}
 					]
-					
+					  
 				} // add specific for the builders page
 				else if ($(this).hasClass('builders-table')) {	
         			
@@ -182,28 +186,39 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 						{ "mData": null },	
 			            { "mData": null },
 			            { "mData": null },
+			            { "mData": null },
 			            { "mData": null }
 					]
 					
 					optionTable.aoColumnDefs = [
 						{					
 						"aTargets": [ 0 ],
+						"sClass": "txt-align-left",	
 						"mRender": function (data,full,type)  {												
-							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true,friendly_name:type.friendly_name,host_name:type.name,buildbotversion:type.version,admin:type.admin,builders:type.builders});
+							var htmlnew = Mustache.render(buildslaves, {showFriendlyName:true,friendly_name:type.friendly_name,host_name:type.name});
 							return htmlnew;
-						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
-							$(nTd).find('a.popup-btn-json-js').data(oData);
 						}
 						},
 						{
 						"aTargets": [ 1 ],
+						"sClass": "txt-align-left",	
+						"mRender": function (data,full,type)  {												
+							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true});
+							return htmlnew;
+						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
+							$(nTd).find('a.popup-btn-json-js').data({showBuilders:oData});
+						}
+						},
+						{
+						"aTargets": [ 2 ],
+						"sClass": "txt-align-left",	
 						"mRender": function (data,full,type)  {
 							var name = type.name != undefined? type.name : 'Not Available';							
 							return name;
 						}
 						},
 						{
-						"aTargets": [ 2 ],
+						"aTargets": [ 3 ],
 						"mRender": function (data,full,type)  {
 							var statusTxt;
 							
@@ -231,7 +246,7 @@ define(['datatables-plugin','helpers','popup','text!templates/popups.html','text
 					    
 						},									
 						{
-						"aTargets": [ 3 ],
+						"aTargets": [ 4 ],
 						"mRender": function (data,full,type)  {																					
 							var showTimeago = type.lastMessage != undefined? true : null;																					
 							var lastMessageDate = showTimeago? ' ('+ moment.unix(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')' : '';							

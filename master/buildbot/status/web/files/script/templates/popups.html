@@ -10,7 +10,6 @@
 {{/preloader}}
 
 {{#popupOuter}}
-
 	<div class="more-info-box remove-js">
 		<span tabindex="0" class="close-btn"></span>
 			<h3 class="codebases-head">{{headline}}</h3>
@@ -55,7 +54,7 @@
 </div>
 {{/showPendingJobs}}
 
-{{#jData}}
+{{#showBuilders}}
 <div class="more-info-box more-info-box-js">
 	<span class="close-btn"></span>
 	<h3>Additional information</h3>
@@ -91,4 +90,65 @@
 		{{/builders}}		
 	</ul>
 </div>
-{{/jData}}
+{{/showBuilders}}
+
+{{#showCodebases}}
+<div class="more-info-box more-info-box-js">
+	<span class="close-btn">
+	</span>
+	<h3>Codebases</h3>
+	<table class="table-1 first-child">
+	<thead>
+	    <th class="txt-align-left">
+	        Codebase
+	    </th>
+	    <th class="txt-align-left">
+	        Repository
+	    </th>
+	    <th class="txt-align-left">
+	        Branch
+	    </th>
+	    <th class="txt-align-left">
+	        Revision
+	    </th>
+	</thead>
+	    <tbody>
+	        {{#sources}}
+	    	<tr>
+	    		<td class="txt-align-left">
+	    			{{codebase}}
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{repository}}                    			
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{branch}}                              
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{revision}}                   			
+	    		</td>
+	    	</tr>
+	        {{/sources}}
+	    </tbody>
+	</table>
+</div>
+
+{{/showCodebases}}
+{{#showcompatibleSlaves}}
+	<div class="more-info-box more-info-box-js">
+		<span class="close-btn">
+		</span>
+		<h3>Compatible slaves</h3>
+		<ul class="codebases-list">
+		{{#slaves}}	
+			{{#.}}
+			    <li> 
+                    <a href="/buildslaves/{{.}}">
+			    	    {{.}}
+                    </a>
+			    </li>
+			{{/.}}
+		{{/slaves}}	
+		</ul>
+	</div>
+{{/showcompatibleSlaves}}

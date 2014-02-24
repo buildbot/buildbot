@@ -8,16 +8,29 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 
 			//For non ajax boxes
 						
-			$('#tablesorterRt').delegate('.popup-btn-js-2', 'click', function(e){			
+	
+			
+
+			$('#tablesorterRt').delegate('a.popup-btn-json-js', 'click', function(e){
+				e.preventDefault();								
+				popup.showjsonPopup($(this).data());												
+			});
+
+			$('.popup-btn-js-2').click(function(e){			
 				e.preventDefault();
 				popup.nonAjaxPopup($(this));
 			});
-			
 
-			$('#tablesorterRt').delegate('.popup-btn-json-js', 'click', function(e){
-				e.preventDefault();				
-				popup.showBuildersInfo($(this).data());										
+			/*
+					$('#tablesorterRt').delegate('.popup-btn-js-2', 'click', function(e){			
+				e.preventDefault();
+				popup.nonAjaxPopup($(this));
 			});
+			$('#tablesorterRt').delegate('a.popup-btn-codebases-js', 'click', function(e){
+				e.preventDefault();				
+				//popup.showBuildersInfo($(this).data());										
+			});
+			*/
 
 			$('#tablesorterRt').delegate('.popup-btn-js', 'click', function(e){
 				e.preventDefault();				
@@ -41,8 +54,14 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				popup.externalContentPopup($(this));
 			});
 
-		}, showBuildersInfo: function(jsonObj) {
-			var mustacheTmpl = $(Mustache.render(popups, {jData:jsonObj}));					
+			$('.ajaxbtn').click(function(e){
+				e.preventDefault();
+				popup.externalContentPopup($(this));
+			});
+
+		}, showjsonPopup: function(jsonObj) {
+			
+			var mustacheTmpl = $(Mustache.render(popups, jsonObj));					
 			
 			$('body').append(mustacheTmpl);			
 			helpers.jCenter(mustacheTmpl).fadeIn('fast', function() {
@@ -112,7 +131,8 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				
 				success: function(data) {
 					
-					preloader.remove();													
+					preloader.remove();							
+					console.log(data)						
 					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL}));					
 					var waitingtime = mustacheTmpl.find('.waiting-time-js');
 					waitingtime.each(function(i){						
