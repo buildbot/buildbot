@@ -33,6 +33,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c.create_security_group('latent_buildbot_slave', 'the security group')
         instance = c.run_instances('foo').instances[0]
         c.create_image(instance.id, "foo", "bar")
+        c.terminate_instances([instance.id])
         return c
 
     @moto.mock_ec2
@@ -71,10 +72,30 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                                      secret_identifier='privatekey',
                                      ami=amis[0].id
                                      )
-        r = bs._start_instance()
-        instance_id = r[0]
-        image_id = r[1]
-        start_time = r[2]
+        instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('r-'))
         self.assertTrue(start_time > 0)
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].tags, {})
+
+    @moto.mock_ec2
+    def test_start_instance_tags(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        tags = {'foo': 'bar'}
+        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     tags=tags,
+                                     ami=amis[0].id
+                                     )
+        id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, id)
+        self.assertEqual(instances[0].tags, tags)
