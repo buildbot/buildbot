@@ -82,15 +82,15 @@ class GitHubBuildBot(resource.Resource):
         if payload['deleted'] is True:
             logging.info("Branch `%s' deleted, ignoring" % branch)
         else:
-            changes = [ { 'revision': c['id'],
-                          'revlink': c['url'],
-                          'who': c['author']['username'] + " <" + c['author']['email'] + "> ",
-                          'comments': c['message'],
-                          'repository': payload['repository']['url'],
-                          'files': c['added'] + c['removed'] + c['modified'],
-                          'project': project,
-                          'branch': branch }
-                        for c in payload['commits'] ]
+            changes = [{'revision': c['id'],
+                        'revlink': c['url'],
+                        'who': c['author']['username'] + " <" + c['author']['email'] + "> ",
+                        'comments': c['message'],
+                        'repository': payload['repository']['url'],
+                        'files': c['added'] + c['removed'] + c['modified'],
+                        'project': project,
+                        'branch': branch}
+                       for c in payload['commits']]
 
         if not changes:
             logging.warning("No changes found")
@@ -140,6 +140,7 @@ class GitHubBuildBot(resource.Resource):
         """
         return self.addChange(None, remote, changes.__iter__())
 
+
 def setup_options():
     """
     The main event loop that starts the server and configures it.
@@ -148,34 +149,35 @@ def setup_options():
     parser = OptionParser(usage)
 
     parser.add_option("-p", "--port",
-        help="Port the HTTP server listens to for the GitHub Service Hook"
-            + " [default: %default]", default=9001, type=int, dest="port")
+                      help="Port the HTTP server listens to for the GitHub Service Hook"
+                      + " [default: %default]", default=9001, type=int, dest="port")
 
     parser.add_option("-m", "--buildmaster",
-        help="Buildbot Master host and port. ie: localhost:9989 [default:"
-            + " %default]", default="10.108.0.6:9989", dest="buildmaster")
+                      help="Buildbot Master host and port. ie: localhost:9989 [default:"
+                      + " %default]", default="10.108.0.6:9989", dest="buildmaster")
 
     parser.add_option("-l", "--log",
-        help="The absolute path, including filename, to save the log to"
-            + " [default: %default]",
-            default = tempfile.gettempdir() + "/github_buildbot.log",
-            dest="log")
+                      help="The absolute path, including filename, to save the log to"
+                      + " [default: %default]",
+                      default=tempfile.gettempdir() + "/github_buildbot.log",
+                      dest="log")
 
     parser.add_option("-L", "--level",
-        help="The logging level: debug, info, warn, error, fatal [default:"
-            + " %default]", default='warn', dest="level")
+                      help="The logging level: debug, info, warn, error, fatal [default:"
+                      + " %default]", default='warn', dest="level")
 
     parser.add_option("-g", "--github",
-        help="The github server.  Changing this is useful if you've specified"
-            + "  a specific HOST handle in ~/.ssh/config for github "
-            + "[default: %default]", default='github.com',
-        dest="github")
+                      help="The github server.  Changing this is useful if you've specified"
+                      + "  a specific HOST handle in ~/.ssh/config for github "
+                      + "[default: %default]", default='github.com',
+                      dest="github")
 
     parser.add_option("--pidfile",
-        help="Write the process identifier (PID) to this file on start."
-            + " The file is removed on clean exit. [default: %default]",
-        default=None,
-        dest="pidfile")
+                      help="Write the process identifier (PID) to this file on start."
+                      +
+                      " The file is removed on clean exit. [default: %default]",
+                      default=None,
+                      dest="pidfile")
 
     (options, _) = parser.parse_args()
 
@@ -184,11 +186,11 @@ def setup_options():
             f.write(str(os.getpid()))
 
     levels = {
-        'debug':logging.DEBUG,
-        'info':logging.INFO,
-        'warn':logging.WARNING,
-        'error':logging.ERROR,
-        'fatal':logging.FATAL,
+        'debug': logging.DEBUG,
+        'info': logging.INFO,
+        'warn': logging.WARNING,
+        'error': logging.ERROR,
+        'fatal': logging.FATAL,
     }
 
     filename = options.log
@@ -197,6 +199,7 @@ def setup_options():
                         level=levels[options.level])
 
     return options
+
 
 def run_hook(options):
     github_bot = GitHubBuildBot()
@@ -207,6 +210,7 @@ def run_hook(options):
     reactor.listenTCP(options.port, site)
 
     reactor.run()
+
 
 def main():
     options = setup_options()
