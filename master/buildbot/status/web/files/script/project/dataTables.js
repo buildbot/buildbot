@@ -253,7 +253,8 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 						{
 						"aTargets": [ 4 ],
 						"mRender": function (data,full,type)  {																					
-							var showTimeago = type.lastMessage != undefined? true : null;																					
+							var showTimeago = type.lastMessage != undefined? true : null;		
+							console.log(type.lastMessage)																			
 							var lastMessageDate = showTimeago? ' ('+ moment.unix(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')' : '';							
 							var htmlnew = Mustache.render(buildslaves, {showTimeago:showTimeago,showLastMessageDate:lastMessageDate});
 							return htmlnew;
