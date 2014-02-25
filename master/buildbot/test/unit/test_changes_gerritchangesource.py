@@ -139,3 +139,19 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             self.failUnlessEqual(c['project'], "world")
         d.addCallback(check)
         return d
+
+
+class TestGerritChangeFilter(unittest.TestCase):
+    def test_basic(self):
+        class Change(object):
+            def __init__(self, chdict):
+                self.__dict__ = chdict
+
+        ch = Change(TestGerritChangeSource.expected_change)
+        f = gerritchangesource.GerritChangeFilter(branch=["br"], eventtype=["patchset-created"])
+        self.assertTrue(f.filter_change(ch))
+        f = gerritchangesource.GerritChangeFilter(branch="br2", eventtype=["patchset-created"])
+        self.assertFalse(f.filter_change(ch))
+        f = gerritchangesource.GerritChangeFilter(branch="br", eventtype="ref-updated")
+        self.assertFalse(f.filter_change(ch))
+        self.assertEqual(repr(f), '<GerritChangeFilter on prop:event.change.branch == br and prop:event.type == ref-updated>')

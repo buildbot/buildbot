@@ -16,11 +16,37 @@
 from buildbot import util
 from buildbot.changes import base
 from buildbot.util import json
+from buildbot.changes.filter import ChangeFilter
+from buildbot.util import NotABranch
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
+
+class GerritChangeFilter(ChangeFilter):
+
+    """This gerrit specific change filter helps creating pre-commit and post-commit builders"""
+
+    def __init__(self,
+                 # gets a Change object, returns boolean
+                 filter_fn=None,
+                 project=None, project_re=None, project_fn=None,
+                 repository=None, repository_re=None, repository_fn=None,
+                 branch=NotABranch, branch_re=None, branch_fn=None,
+                 category=None, category_re=None, category_fn=None,
+                 codebase=None, codebase_re=None, codebase_fn=None,
+                 eventtype=None, eventtype_re=None, eventtype_fn=None):
+
+        self.filter_fn = filter_fn
+        self.checks = self.createChecks(
+            (project, project_re, project_fn, "project"),
+            (repository, repository_re, repository_fn, "repository"),
+            (branch, branch_re, branch_fn, "prop:event.change.branch"),
+            (eventtype, eventtype_re, eventtype_fn, "prop:event.type"),
+            (category, category_re, category_fn, "category"),
+            (codebase, codebase_re, codebase_fn, "codebase"),
+        )
 
 class GerritChangeSource(base.ChangeSource):
 
@@ -130,7 +156,7 @@ class GerritChangeSource(base.ChangeSource):
         func_name = "eventReceived_%s" % event["type"].replace("-", "_")
         func = getattr(self, func_name, None)
         if func is None and event_with_change:
-            return self. addChangeFromEvent(properties, event)
+            return self.addChangeFromEvent(properties, event)
         elif func is None:
             log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
