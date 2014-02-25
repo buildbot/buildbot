@@ -4,9 +4,10 @@
 
 	{{#currentBuilds}}
 	
-		<h2 class="small-head">
-			Current job
-	    </h2>    
+		<h2 class="started-time">
+			Elapsed time
+			<span data-startTime="{{times.0}}" class="started-time-js"></span>
+		</h2>    
 	    <ul class="list current-job-js">
 	    	{{#.}}    		
 				<li>
@@ -19,8 +20,7 @@
 					{{/currentStep}}
 				</li>			
 			{{/.}}
-		</ul>
-	
+		</ul>	
 	{{/currentBuilds}}
 
 	{{#pendingBuilds}}	

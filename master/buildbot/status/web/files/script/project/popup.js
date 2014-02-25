@@ -138,7 +138,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				success: function(data) {
 					
 					preloader.remove();							
-					console.log(data)						
+									
 					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL}));					
 					var waitingtime = mustacheTmpl.find('.waiting-time-js');
 					waitingtime.each(function(i){						

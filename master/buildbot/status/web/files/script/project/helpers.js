@@ -405,10 +405,8 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		    var end = Math.round(+new Date()/1000);	
 		    var time = end - startTimestamp;	
 			var getTime = Math.round(time)				
-
-		    setInterval(function() {
-		    	getTime++;
-				var 
+			function timeVars() {
+			var 
 				days = Math.floor(getTime / 86400),
 				hours = Math.floor(getTime / 3600) % 24,
 		        minutes = Math.floor(getTime / 60 % 60),
@@ -427,16 +425,25 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
 				 }
 				 el.html(arr.join(' '));
-			 }, 1000);		
+			}
+			timeVars();
+			(function repeatTimeout(){
+				getTime++;
+				timeVars();
+				setTimeout(repeatTimeout, 1000);			 
+			})();		    	
 
 		}, startCounterTimeago: function(el, myStartTimestamp) {
-			var startTimestamp = parseInt(myStartTimestamp);			    		    
-			var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
-				el.html(lastMessageTimeAgo);
-		    setInterval(function() {		    	
+			function timeVars() {
+				var startTimestamp = parseInt(myStartTimestamp);			    		    
 				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
-				el.html(lastMessageTimeAgo);
-			 }, 10000);	
+				el.html(lastMessageTimeAgo);	
+			}
+			timeVars();		    
+		    (function repeatTimeout(){
+		    	timeVars();
+		    	setTimeout(repeatTimeout, 1000);			 
+		    })()
 		}, getTime: function  (start, end) {
 	
 			if (end === null) {
