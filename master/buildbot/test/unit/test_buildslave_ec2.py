@@ -15,17 +15,23 @@
 # Portions Copyright 2014 Longaccess private company
 
 try:
-    import moto
-    import boto
+    from moto import mock_ec2
 except ImportError:
-    raise ImportError("EC2LatentSlave tests require the 'moto' module; "
-                      "try 'pip install moto'")
+    mock_ec2 = lambda x: x
+    boto = None
+else:
+    import boto
 from buildbot.buildslave import ec2
 from twisted.trial import unittest
 
 
 class TestEC2LatentBuildSlave(unittest.TestCase):
     ec2_connection = None
+
+    def setUp(self):
+        super(TestEC2LatentBuildSlave, self).setUp()
+        if boto is None:
+            raise unittest.SkipTest("moto not found")
 
     def botoSetup(self):
         c = boto.connect_ec2()
@@ -36,7 +42,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c.terminate_instances([instance.id])
         return c
 
-    @moto.mock_ec2
+    @mock_ec2
     def test_constructor_minimal(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -50,7 +56,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.instance_type, 'm1.large')
         self.assertEqual(bs.ami, amis[0].id)
 
-    @moto.mock_ec2
+    @mock_ec2
     def test_constructor_tags(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -63,7 +69,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                                      )
         self.assertEqual(bs.tags, tags)
 
-    @moto.mock_ec2
+    @mock_ec2
     def test_start_instance(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -82,7 +88,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].tags, {})
 
-    @moto.mock_ec2
+    @mock_ec2
     def test_start_instance_tags(self):
         c = self.botoSetup()
         amis = c.get_all_images()
