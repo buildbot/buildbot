@@ -35,7 +35,11 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
 
     def botoSetup(self):
         c = boto.connect_ec2()
-        c.create_key_pair('latent_buildbot_slave')
+        try:
+            c.create_key_pair('latent_buildbot_slave')
+        except NotImplementedError:
+            raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
+                                    " in this version of moto, please update.")
         c.create_security_group('latent_buildbot_slave', 'the security group')
         instance = c.run_instances('foo').instances[0]
         c.create_image(instance.id, "foo", "bar")
