@@ -221,8 +221,7 @@ else:
         'python-dateutil==1.5',
     ]
     setup_args['tests_require'] = [
-        'mock',
-        'moto'
+        'mock'
     ]
     # Python-2.6 and up includes json
     if not py_26:
