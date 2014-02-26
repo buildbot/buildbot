@@ -645,7 +645,6 @@ class LogFile:
 
 
 class HTMLLogFile(LogFile):
-    implements(interfaces.IStatusLog)
 
     # logs that are smaller than this will be pickled
     maxEmbedSize = 10 * 1000
@@ -658,6 +657,7 @@ class HTMLLogFile(LogFile):
         else:
            self._fakeOpenfile(html)
            self.finished = True
+           self.html = html
 
     def hasContents(self):
         return True
