@@ -652,19 +652,19 @@ class HTMLLogFile(LogFile):
     def __init__(self, parent, name, logfilename, html):
         LogFile.__init__(self, parent, name, logfilename)
         if len(html) > self.maxEmbedSize:
-           self.addStderr(html)
-           self.finish()
+            self.addStderr(html)
+            self.finish()
         else:
-           self._fakeOpenfile(html)
-           self.finished = True
-           self.html = html
+            self._fakeOpenfile(html)
+            self.finished = True
+            self.html = html
 
     def hasContents(self):
         return True
 
     def _fakeOpenfile(self, html):
         # simulate s serialized stream of log chunks
-        buf = "%d:%d%s," % (len(html)+1, STDERR, html)
+        buf = "%d:%d%s," % ((len(html)+1), STDERR, html)
         self.openfile = StringIO(buf)
 
     def __setstate__(self, d):
