@@ -644,56 +644,39 @@ class LogFile:
         self.finished = True
 
 
-class HTMLLogFile:
+class HTMLLogFile(LogFile):
     implements(interfaces.IStatusLog)
 
-    filename = None
+    # logs that are smaller than this will be pickled
+    maxEmbedSize = 10 * 1000
 
     def __init__(self, parent, name, logfilename, html):
-        self.step = parent
-        self.name = name
-        self.filename = logfilename
-        self.html = html
-
-    def getName(self):
-        return self.name  # set in BuildStepStatus.addLog
-
-    def getStep(self):
-        return self.step
-
-    def isFinished(self):
-        return True
-
-    def waitUntilFinished(self):
-        return defer.succeed(self)
+        LogFile.__init__(self, parent, name, logfilename)
+        if len(html) > self.maxEmbedSize:
+           self.addStderr(html)
+           self.finish()
+        else:
+           self._fakeOpenfile(html)
+           self.finished = True
 
     def hasContents(self):
         return True
 
-    def getText(self):
-        return self.html  # looks kinda like text
+    def _fakeOpenfile(self, html):
+        # simulate s serialized stream of log chunks
+        buf = "%d:%d%s," % (len(html)+1, STDERR, html)
+        self.openfile = StringIO(buf)
 
-    def getTextWithHeaders(self):
-        return self.html
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.watchers = []
+        self.finishedWatchers = []
+        self.finished = True
 
-    def getChunks(self):
-        return [(STDERR, self.html)]
-
-    def subscribe(self, receiver, catchup):
-        pass
-
-    def unsubscribe(self, receiver):
-        pass
-
-    def finish(self):
-        pass
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['step']
-        if "master" in d:
-            del d['master']
-        return d
+        # buildbot <= 0.8.8 stored all html logs in the html property
+        if 'html' in self.__dict__:
+            self._fakeOpenfile(self.html)
+            del self.__dict__['html']
 
 
 def _tryremove(filename, timeout, retries):
