@@ -21,6 +21,9 @@ Features
    * String parameter ``placement`` is appended to the ``region`` parameter, e.g. ``region='us-west-2', placement='b'``
      will result in the spot request being placed in us-west-2b.
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
+   * Integer parameter ``retry`` allows a buildslave to retry spot requests if they are rejected.
+   * Float parameter ``retry_price_adjustment`` specifies the amount by which a spot price bid will be multiplied per retry.
+   * String parameter ``product_description`` to filter the spot price history by a specific product description.
   
   With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
   price, placement, and so on.

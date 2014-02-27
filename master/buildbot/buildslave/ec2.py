@@ -343,24 +343,25 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 price_sum += price.price
                 price_count += 1
         if price_count == 0:
-            target_price = 0.02
+            self.current_spot_price = 0.02
         else:
-            target_price = (price_sum / price_count) * self.price_multiplier
-        if target_price > self.max_spot_price:
+            self.current_spot_price = (price_sum / price_count) * self.price_multiplier
+        if self.current_spot_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.slavename,
-                     target_price, self.max_spot_price))
+                     self.current_spot_price, self.max_spot_price))
             raise interfaces.LatentBuildSlaveFailedToSubstantiate()
         else:
             if self.retry > 1:
                 log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
-                        (self.__class__.__name__, self.slavename, target_price, self.attempt,
+                        (self.__class__.__name__, self.slavename, self.current_spot_price, self.attempt,
                          self.retry))
             else:
                 log.msg('%s %s requesting spot instance with price %0.4f' %
-                        (self.__class__.__name__, self.slavename, target_price))
-        reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name,
+                        (self.__class__.__name__, self.slavename, self.current_spot_price))
+        reservations = self.conn.request_spot_instances(self.current_spot_price, self.ami,
+                                                        key_name=self.keypair_name,
                                                         security_groups=[self.security_name],
                                                         instance_type=self.instance_type,
                                                         user_data=self.user_data,
@@ -456,7 +457,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             request.cancel()
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.slavename))
-            self.price_multiplier *= self.retry_price_adjustment
+            self.current_spot_price *= self.retry_price_adjustment
             return request, False
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
