@@ -20,7 +20,11 @@ from buildbot.schedulers import timed
 from buildbot.test.util import compat
 from buildbot.test.util import config
 from buildbot.test.util import scheduler
-from multiprocessing import Process
+try:
+    from multiprocessing import Process
+    assert Process
+except ImportError:
+    Process = None
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -210,6 +214,8 @@ class NightlyCroniterImport(config.ConfigErrorsMixin, unittest.TestCase):
             from buildbot.schedulers.timed import NightlyBase
             self.assertRaisesConfigError("python-dateutil",
                                          lambda: NightlyBase(name='name', builderNames=[]))
+        if not Process:
+            raise unittest.SkipTest("multiprocessing not available on Python-2.5")
         p = Process(target=runInNewInterpreter)
         p.start()
         p.join()

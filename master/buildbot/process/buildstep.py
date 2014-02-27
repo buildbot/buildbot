@@ -567,7 +567,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def isNewStyle(self):
         # **temporary** method until new-style steps are the only supported style
-        return self.run.__func__ is not BuildStep.run.__func__
+        return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         raise NotImplementedError("your subclass must implement run()")
