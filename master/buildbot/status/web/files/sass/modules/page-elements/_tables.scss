@@ -31,6 +31,11 @@
 		@include text-shadow(0 1px 0 #fff);
 		border-top:1px solid #FFF;
 	}
+	tbody tr {
+		&:hover {
+			background-color:#F7F7F7;
+		}
+	}
 	tr th:first-child {
 		@include border-radius(4px 4px 0 0);
 	}
@@ -42,7 +47,7 @@
 		border-bottom:1px solid #C8C8C8;
 		&.buttontd {
 			width: 80px;
-		}
+		}		
 	}
 	
 	tr:last-child td {
