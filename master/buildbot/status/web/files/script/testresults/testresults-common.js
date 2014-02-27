@@ -5,9 +5,11 @@ define(['jquery'], function ($) {
 	$(document).ready(function(){
 
     		$("#filterinput").val("");
-
-			$('.check-boxes-list input').attr('checked', false);
 			
+			var checkboxesList = $('#CheckBoxesList input');
+			checkboxesList.prop('checked', true);
+
+			//console.log($('.check-boxes-list input'))
 			var th = $('.table-holder');
 
 			//  sort failues and ignored first
@@ -56,11 +58,12 @@ define(['jquery'], function ($) {
 			/* Add event listeners to the two range filtering inputs */
 			
 			function checkFilterInput() {
-				var iFields = $('.check-boxes-list input:checked');
-				$(th).show();
+				var iFields = $('#CheckBoxesList input:checked');
+				
+				th.show();
 				var checkString = []
 				
-				$(iFields).each(function(i){
+				iFields.each(function(i){
 					checkString.push('(' + $(this).val() + ')');
 				});
 				var changesstr = checkString.join("|");
@@ -70,12 +73,12 @@ define(['jquery'], function ($) {
 			}
 			checkFilterInput();	
 
-			$('.dataTables_filter input').click(function(){
+			checkboxesList.click(function(){
 				checkFilterInput();
 			});
 			
 			function inputVal(inputVal, num, bool) {
-				$(th).show(inputVal);
+				th.show(inputVal);
 				oTable.fnFilterAll(inputVal, num, bool);	
 			}
 
@@ -104,12 +107,12 @@ define(['jquery'], function ($) {
 			$('.failure-detail-cont', th).each(function(){	
 
 				var fdTxt = $('.failure-detail-txt', this);
-				$(this).height($(fdTxt).height() + 40);
+				$(this).height(fdTxt.height() + 40);
 				
-				if (!$(fdTxt).is(':empty')) {
-					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($(fdTxt));
-					if ($(fdTxt).height() >= 130) {
-						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($(fdTxt));	
+				if (!fdTxt.is(':empty')) {
+					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore(fdTxt);
+					if (fdTxt.height() >= 130) {
+						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore(fdTxt);	
 					}
 				}
 				

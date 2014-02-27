@@ -119,7 +119,7 @@
 <div class="container-inner">
 	
 		
-	<div class="dataTables_filter">
+	<div id="dataTablesFilter" class="dataTables_filter">
 		
 		<label class="input-label">
 			<input type="text" placeholder="Free text filter" id="filterinput" />
@@ -127,13 +127,13 @@
 			<button class="grey-btn" id="submitFilter">Filter</button>
 			<button class="grey-btn" id="clearFilter">Clear</button>
 
-		<div class="check-boxes-list">
+		<div id="CheckBoxesList" class="check-boxes-list">
 			<label for="passinput">Passed</label>
-			<input type="checkbox" value="Pass" id="passinput"/>
+			<input checked="checked" type="checkbox" value="Pass" id="passinput"/>
 			<label for="ignoreinput">ignored</label>
-			<input type="checkbox" value="Ignored" id="ignoreinput"/>
+			<input checked="checked" type="checkbox" value="Ignored" id="ignoreinput"/>
 			<label for="failedinput">Failed</label>
-			<input type="checkbox" value="Failure" id="failedinput"/>
+			<input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
 		</div>
 
 	</div>
