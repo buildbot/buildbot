@@ -4,6 +4,18 @@
   <html>
   <head><title>{{ pageTitle }}</title>
   <link rel="stylesheet" href="{{ path_to_root }}default.css" type="text/css" />
+  <script type="text/javascript">                                                                                                                                                                                                                                                                                                                                         
+    var active = true;
+    window.onscroll = function() {                                                                                                                                                                                                                                                                                                                                        
+      var html = document.documentElement;
+      active = (document.body.scrollTop + html.clientHeight >= document.body.scrollHeight - 30);                                                                                                                                                                                                                                                                          
+    }
+    window.setInterval(function() {                                                                                                                                                                                                                                                                                                                                       
+      if (active) {
+        document.body.scrollTop = document.body.scrollHeight;                                                                                                                                                                                                                                                                                                             
+      }
+    }, 300);                                                                                                                                                                                                                                                                                                                                                              
+  </script>
   </head>
   <body class='log'>
     <a href="{{ texturl }}">(view as text)</a><br/>
