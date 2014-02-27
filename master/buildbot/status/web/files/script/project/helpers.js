@@ -5,7 +5,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
     
     helpers = {
         init: function () {
-
+    
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -283,7 +283,7 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).insertAfter($('.dataTables_filter'));
+  			$(cbTable).appendTo($('.dataTables_wrapper .top'));
 
 			$(parsedUrl).each(function(i){
 
@@ -433,6 +433,65 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 				setTimeout(repeatTimeout, 1000);			 
 			})();		    	
 
+		}, progressBar: function(etaTime, el, startTime, overTime) {
+			var start = moment.unix(startTime),
+			percentInner = el.children('.percent-inner-js'),
+			timeTxt = el.children('.time-txt-js');
+
+			if (overTime) {
+				el.addClass('overtime');
+			}
+
+			function timeVars() {
+				var now = moment(),
+	        	addSubtract = overTime === undefined? etaTime-- : etaTime++,
+	        	then = moment().add('s',addSubtract),
+	        	ms = then.diff(now, 'milliseconds', true),
+	        	arr = [],
+	        	percent = 100 - (then - now) / (then - start) * 100 + "%";		        			        	
+	        	
+				percentInner.css('width',percent);
+
+	        	var days = Math.floor(moment.duration(ms).asDays());
+	        	if (days > 0) {
+					arr.push(days > 1 ? days + ' days' : days + ' day');
+					then = then.subtract('days', days);
+				}
+				
+				ms = then.diff(now, 'milliseconds', true);
+
+	        	var hours = Math.floor(moment.duration(ms).asHours());
+	        	if (hours > 0) {
+					arr.push(hours > 1 ? hours + ' hours' : hours + ' hour'); 
+					then = then.subtract('hours', hours);
+				}		        						
+
+				// update the duration in ms
+				ms = then.diff(now, 'milliseconds', true);
+				var minutes = Math.floor(moment.duration(ms).asMinutes());
+
+				if (minutes > 0 || hours > 0) {
+					arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min'); 
+					then = then.subtract('minutes', minutes);
+				}
+				
+				// update the duration in ms
+				ms = then.diff(now, 'milliseconds', true);
+				var seconds = Math.floor(moment.duration(ms).asSeconds());
+
+				if (seconds > 0 || minutes > 0) {
+					arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
+				}					
+	        	
+	        	timeTxt.html(arr.join(' '));
+			}
+			timeVars();
+
+			(function repeatTimeout() {	 
+	        	timeVars();
+        		setTimeout(repeatTimeout, 1000);	
+
+			})();
 		}, startCounterTimeago: function(el, myStartTimestamp) {
 			function timeVars() {
 				var startTimestamp = parseInt(myStartTimestamp);			    		    

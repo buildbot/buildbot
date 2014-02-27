@@ -2,36 +2,40 @@
 	<a href="builders/{{name}}?{{builderParam}}">{{name}}</a> 
 {{/name}}
 
-	{{#currentBuilds}}
-	
-		<h2 class="started-time">
-			Elapsed time
-			<span data-startTime="{{times.0}}" class="started-time-js"></span>
-		</h2>    
-	    <ul class="list current-job-js">
-	    	{{#.}}    		
-				<li>
-					<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}">{{number}}</a>  
-					{{#etaTime}}
-						ETA: {{etaTime}}
-					{{/etaTime}}                        			
-					{{#currentStep}}
-						{{name}} <span class="spin-icon animate-spin"></span>
-					{{/currentStep}}
-				</li>			
-			{{/.}}
-		</ul>	
-	{{/currentBuilds}}
+{{#currentBuilds}}
 
-	{{#pendingBuilds}}	
-		<a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
-	{{/pendingBuilds}}
+	<h2 class="started-time">
+		Elapsed time			
+		<span data-starttime="{{times.0}}" class="started-time-js"></span>
+	</h2>    
+    <ul class="list current-job-js">	    	    		
+			<li>
+				<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}">{{number}}</a>  
+				{{#currentStep}}
+					{{name}} <span class="spin-icon animate-spin"></span>
+				{{/currentStep}}
+				{{#eta}}
+					<div data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+						<span class="time-txt-js time-txt"></span>
+						<div class="percent-inner-js percent-inner">								
+						</div>
+					</div>					
+				{{/eta}}                        			
+				
+			</li>						
+	</ul>	
+{{/currentBuilds}}
 
 {{#showNoJobs}}
 	<span class="small-txt">
 		No jobs
     </span>
 {{/showNoJobs}}
+
+{{#pendingBuilds}}	
+	<a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
+{{/pendingBuilds}}
+
 {{#showLatestBuild}}
 	{{#latestBuild}}
 		<span class="hide hidden-date-js"></span>

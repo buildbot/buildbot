@@ -130,8 +130,9 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 						"mRender": function (data,full,type)  {				
 							var urlParams = helpers.codebasesFromURL({});
 			                var ret = [];
-			                for (var d in urlParams)
+			                for (var d in urlParams){
 			                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+			                }
 			                var paramsString = ret.join("&");
 							var htmlnew = Mustache.render(builders, {name:type.name,builderParam:paramsString});
 							return htmlnew;
@@ -140,15 +141,19 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 						{
 						"aTargets": [ 1 ],
 						"sClass": "txt-align-left",
-						"mRender": function (data,full,type)  {		
-							var noJobs = type.pendingBuilds === undefined && type.currentBuilds === undefined;														
-							var eta = type.eta != undefined? moment().utc(type.eta).format('MMM Do YYYY, H:mm:ss') : '';							
-							var htmlnew = Mustache.render(builders, {etaTime:eta,showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
+						"mRender": function (data,full,type) {		
+							var noJobs = type.pendingBuilds === undefined && type.currentBuilds === undefined;																					
+													
+							var htmlnew = Mustache.render(builders, {showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
 							return htmlnew;
 						}, 
-						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {														
-							var startTimeJs = $(nTd).find('.started-time-js');														
-							helpers.startCounter(startTimeJs,startTimeJs.attr('data-startTime'));																				
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {																																																					
+							if (oData.currentBuilds != undefined) {															
+								var startTimeJs = $(nTd).find('.started-time-js');	
+								var percentOuter = $(nTd).find('.percent-outer-js');
+								helpers.progressBar(percentOuter.attr('data-etatime'),percentOuter,startTimeJs.attr('data-starttime'));																									
+								helpers.startCounter(startTimeJs,startTimeJs.attr('data-starttime'));																												
+							}
 						}
 						},
 						{
@@ -293,20 +298,10 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 				            '</select>'
 					};
 					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
-				}
+				}			
 
 			   	//initialize datatable with options
-			  	var oTable = $(this).dataTable(optionTable);			  	
-
-			  	// special for the codebasespage
-			  	if ($('#codebases_page').length != 0) {
-					$('.dataTables_wrapper .top').append('<div class="filter-table-input">'+
-	    			'<input value="Show builders" class="blue-btn var-2" type="submit" />'+
-	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
-	  				'</div>');
-				}
-
-			  	var filterTableInput = $('.dataTables_filter input');
+			  	var oTable = $(this).dataTable(optionTable);			  				  	
 
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
@@ -314,8 +309,18 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','
 	        		helpers.codeBaseBranchOverview();	
 				}
 
+			  	// for the codebases
+			  	if ($(this).hasClass('branches-selectors-js')) {		
+					$('.dataTables_wrapper .top').append('<div class="filter-table-input">'+
+	    			'<input value="Show builders" class="blue-btn var-2" type="submit" />'+
+	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
+	  				'</div>');
+				}			  	
+
+			  
+				
 				// Set the marquee in the input field on load and listen for key event	
-				filterTableInput.attr('placeholder','Filter results').focus();				
+				$(this).parents('.dataTables_wrapper').find('.dataTables_filter input').attr('placeholder','Filter results').focus();				
 
 			});
 		}

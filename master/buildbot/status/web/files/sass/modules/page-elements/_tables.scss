@@ -1,3 +1,45 @@
+// progress bar
+
+.percent-outer {
+	position:relative;
+	height:17px;
+	width:100%;	
+	overflow: hidden;
+	background-color: #ADADAD;
+	border-radius: 4px;
+	@include box-shadow(inset 0 1px 2px rgba(0, 0, 0, 0.1));
+	margin-top:2px;
+}
+
+.percent-inner {
+	@include bgimage (linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent));
+	background-size: 40px 40px;	
+	background-color: #39719F;
+	@include box-shadow(0 -1px 0 rgba(0, 0, 0, 0.15) inset);
+	color: #FFFFFF;
+	float: left;
+	height: 100%;
+	line-height: 20px;
+	text-align: center;
+	transition: width 0.6s ease 0s;
+	width: 0;
+	-webkit-animation: progress-bar-stripes 2s linear infinite;
+    animation: progress-bar-stripes 2s linear infinite;
+    .overtime & {
+    	background-color:#857373;
+	
+	}
+}
+.time-txt {
+	position:absolute;
+	padding:2px 0 0 5px;
+	color:#fff;
+	display:block;
+	font-size:11px;
+} 
+
+
+
 // tables
 
 .table-wrapper {
@@ -197,10 +239,10 @@
 	border-left: 2px solid #2B6194;
     padding: 0 0 0 4px;
     @include box-shadow (1px 0 0px #FFFFFF inset);
-    float: left;
+    float: right;
     margin-top: 8px;
     padding: 0 0 0 4px; 
-    width: 88%;
+    width: 52%;
 }
 
 .inner-table-holder {
@@ -520,7 +562,7 @@ table.codebase-branch-table {
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {
-		width: 69%;
+		width: 50%;
 	}
 }
 
@@ -536,18 +578,18 @@ table.codebase-branch-table {
 		overflow: visible;	 	
 	}
 	.border-table-holder  {
-		width: 82%;
+		width: 28%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
 	.border-table-holder  {
-		width: 87%;
+		width: 50%;
 	}
 }
 
 @include breakpoint($bkpt-xxlarge) {
 	.border-table-holder  {
-		width: 88%;
+		width: 53%;
 	}
 }
