@@ -218,6 +218,8 @@ class DebugClientOptions(base.SubcommandOptions):
     buildbotOptions = [
         ['master', 'master'],
         ['debugMaster', 'master'],
+        ['username', 'username'],
+        ['password', 'passwd'],
     ]
     requiredOptions = ['master', 'passwd']
 
