@@ -38,7 +38,8 @@ class GitHubStatus(StatusReceiverMultiService):
     """
 
     def __init__(self, token, repoOwner, repoName, sha=None,
-                 startDescription=None, endDescription=None):
+                 startDescription=None, endDescription=None,
+                 categories=None):
         """
         Token for GitHub API.
         """
@@ -60,6 +61,7 @@ class GitHubStatus(StatusReceiverMultiService):
         self._repoOwner = repoOwner
         self._repoName = repoName
         self._github = GitHubAPI(oauth2_token=self._token)
+        self._categories = categories
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
@@ -68,8 +70,11 @@ class GitHubStatus(StatusReceiverMultiService):
 
     def builderAdded(self, name, builder):
         """
-        Subscribe to all builders.
+        Only subscribe to builders we are interested in.
         """
+        if self._categories is not None and builder.category not in self._categories:
+            return None
+
         return self
 
     def buildStarted(self, builderName, build):
