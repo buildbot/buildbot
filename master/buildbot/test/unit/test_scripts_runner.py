@@ -267,56 +267,6 @@ class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
     optionsClass = runner.ReconfigOptions
 
 
-class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.BaseStatusClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_defaults(self):
-        opts = self.parse('--master', 'm:20')
-        exp = dict(master='m:20', username='statusClient', passwd='clientpw')
-        self.assertOptions(opts, exp)
-
-    def test_short(self):
-        opts = self.parse('-m', 'm:20', '-u', 'u', '-p', 'p')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_long(self):
-        opts = self.parse('--master', 'm:20',
-                          '--username', 'u', '--passwd', 'p')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('--username', 'u', '--passwd', 'p', 'm:20')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_extra(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--username', 'u', '--passwd', 'p', 'm', '2'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--username', 'u', '--passwd', 'p'))
-
-    def test_invalid_master(self):
-        self.assertRaises(usage.UsageError, self.parse, "-m foo")
-
-    def test_options_masterstatus(self):
-        self.options_file['master'] = 'not_seen:2'
-        self.options_file['masterstatus'] = 'opt:3'
-        opts = self.parse('-p', 'pass', '-u', 'user')
-        exp = dict(master='opt:3', username='user', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
 class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
