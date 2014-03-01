@@ -477,7 +477,7 @@ CommandMixin
 The :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand` method can run a :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance, but it's no help in building that object or interpreting the results afterward.
 This mixin class adds some useful methods for running commands.
 
-.. py:class:: CommandMixin
+.. py:class:: buildbot.process.buildstep.CommandMixin
 
     Some remote commands are simple enough that they can boil down to a method call.
     Most of these take an ``abandonOnFailure`` argument which, if true, will abandon the entire buildstep on command failure.
@@ -528,7 +528,7 @@ ShellMixin
 Most Buildbot steps run shell commands on the slave, and Buildbot has an impressive array of configuration parameters to control that execution.
 The ``ShellMixin`` mixin provides the tools to make running shell commands easy and flexible.
 
-.. py:class:: ShellMixin
+.. py:class:: buildbot.process.buildstep.ShellMixin
 
     This mixin manages the following step configuration parameters, the contents of which are documented in the manual.
     Naturally, all of these are renderable.
