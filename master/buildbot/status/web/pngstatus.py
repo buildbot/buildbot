@@ -85,12 +85,13 @@ class PngStatusResource(resource.Resource):
             build = self.status.getBuilder(builder).getBuild(b)
             if build is not None:
                 result = build.getResults()
-                data['filename'] = (
-                    results.Results[result] + '_' + size + '.png')
+                if result is not None:
+                    data['filename'] = (
+                        results.Results[result] + '_' + size + '.png')
 
-                # read the png file from the disc
-                png_file = (os.path.dirname(os.path.abspath(__file__)) +
-                            '/files/' + data['filename'])
+                    # read the png file from the disc
+                    png_file = (os.path.dirname(os.path.abspath(__file__)) +
+                                '/files/' + data['filename'])
 
         # load the png file from the file system
         png = open(png_file, 'rb')
