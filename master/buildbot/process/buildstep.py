@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
 from twisted.python import log
+from twisted.python import failure
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -27,6 +28,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.util import flatten
 from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -139,6 +141,7 @@ class BuildStep(object, properties.PropertiesMixin):
     buildslave = None
     step_status = None
     progress = None
+    cmd = None
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -494,11 +497,15 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.addURL(name, url)
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
         command.buildslave = self.buildslave
-        d = command.run(self, self.remote)
-        return d
+        try:
+            res = yield command.run(self, self.remote)
+        finally:
+            self.cmd = None
+        defer.returnValue(res)
 
     @staticmethod
     def _maybeEvaluate(value, *args, **kwargs):
@@ -668,6 +675,208 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
+
+class CommandMixin(object):
+
+    @defer.inlineCallbacks
+    def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
+        cmd = remotecommand.RemoteCommand(cmd, args)
+        try:
+            log = self.getLog('stdio')
+        except Exception:
+            log = yield self.addLog('stdio')
+        cmd.useLog(log, False)
+        yield self.runCommand(cmd)
+        if abandonOnFailure and cmd.didFail():
+            raise BuildStepFailed()
+        if makeResult:
+            defer.returnValue(makeResult(cmd))
+        else:
+            defer.returnValue(not cmd.didFail())
+
+    def runRmdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('rmdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+    def pathExists(self, path, log=None):
+        return self._runRemoteCommand('stat', False,
+                                      {'file': path, 'logEnviron': False})
+
+    def runMkdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('mkdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+    def glob(self, glob):
+        return self._runRemoteCommand(
+            'glob', True, {'glob': glob, 'logEnviron': False},
+            makeResult=lambda cmd: cmd.updates['files'][0])
+
+
+class ShellMixin(object):
+
+    command = None
+    workdir = None
+    env = {}
+    want_stdout = True
+    want_stderr = True
+    usePTY = 'slave-config'
+    logfiles = {}
+    lazylogfiles = {}
+    timeout = 1200
+    maxTime = None
+    logEnviron = True
+    interruptSignal = 'KILL'
+    sigtermTime = None
+    initialStdin = None
+    decodeRC = {0: SUCCESS}
+
+    _shellMixinArgs = [
+        'command',
+        'workdir',
+        'env',
+        'want_stdout',
+        'want_stderr',
+        'usePTY',
+        'logfiles',
+        'lazylogfiles',
+        'timeout',
+        'maxTime',
+        'logEnviron',
+        'interruptSignal',
+        'sigtermTime',
+        'initialStdin',
+        'decodeRC',
+    ]
+    renderables = _shellMixinArgs
+
+    def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+        constructorArgs = constructorArgs.copy()
+
+        def bad(arg):
+            config.error("invalid %s argument %s" %
+                         (self.__class__.__name__, arg))
+        for arg in self._shellMixinArgs:
+            if arg not in constructorArgs:
+                continue
+            if arg in prohibitArgs:
+                bad(arg)
+            else:
+                setattr(self, arg, constructorArgs[arg])
+            del constructorArgs[arg]
+        for arg in constructorArgs:
+            if arg not in BuildStep.parms:
+                bad(arg)
+                del constructorArgs[arg]
+        return constructorArgs
+
+    @defer.inlineCallbacks
+    def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
+                               stdioLogName='stdio',
+                               **overrides):
+        kwargs = dict([(arg, getattr(self, arg))
+                       for arg in self._shellMixinArgs])
+        kwargs.update(overrides)
+        stdio = None
+        if stdioLogName is not None:
+            stdio = yield self.addLog(stdioLogName)
+        kwargs['command'] = flatten(kwargs['command'], (list, tuple))
+
+        # check for the usePTY flag
+        if kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("shell", "2.7"):
+                if stdio is not None:
+                    yield stdio.addHeader(
+                        "NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        # check for the interruptSignal flag
+        if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
+            if stdio is not None:
+                yield stdio.addHeader(
+                    "NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        # lazylogfiles are handled below
+        del kwargs['lazylogfiles']
+
+        # merge the builder's environment with that supplied here
+        builderEnv = self.build.builder.config.env
+        kwargs['env'] = yield self.build.render(builderEnv)
+        kwargs['env'].update(self.env)
+        kwargs['stdioLogName'] = stdioLogName
+        # default the workdir appropriately
+        if not self.workdir:
+            if callable(self.build.workdir):
+                kwargs['workdir'] = self.build.workdir(self.build.sources)
+            else:
+                kwargs['workdir'] = self.build.workdir
+
+        # the rest of the args go to RemoteShellCommand
+        cmd = remotecommand.RemoteShellCommand(**kwargs)
+
+        # set up logging
+        if stdio is not None:
+            cmd.useLog(stdio, False)
+        for logname, remotefilename in self.logfiles.items():
+            if self.lazylogfiles:
+                # it's OK if this does, or does not, return a Deferred
+                callback = lambda cmd_arg, logname=logname: self.addLog(
+                    logname)
+                cmd.useLogDelayed(logname, callback, True)
+            else:
+                # tell the BuildStepStatus to add a LogFile
+                newlog = yield self.addLog(logname)
+                # and tell the RemoteCommand to feed it
+                cmd.useLog(newlog, False)
+
+        defer.returnValue(cmd)
+
+    def _describe(self, done=False):
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # if self.cmd is set, then use the RemoteCommand's info
+            if self.cmd:
+                command = self.command.command
+            # otherwise, if we were configured with a command, use that
+            elif self.command:
+                command = self.command
+            else:
+                return super(ShellMixin, self)._describe(done)
+
+            words = command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return super(ShellMixin, self)._describe(done)
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return super(ShellMixin, self)._describe(done)
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except Exception:
+            log.err(failure.Failure(), "Error describing step")
+            return super(ShellMixin, self)._describe(done)
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
