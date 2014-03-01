@@ -84,19 +84,19 @@ function checkMouseLeave(element, event) {
     <tr>
       <td width="33%" align="left" class="left_align">
 {% if categories|length > 1 %}
-        <br><b>Categories:</b> {% for c in categories %}{{ c.name|e }} {% endfor %}
+        <br/><b>Categories:</b> {% for c in categories %}{{ c.name|e }} {% endfor %}
 {% endif %}
 {% if codebase %}
-        <br><b>Codebase:</b> {{ codebase|e }}
+        <br/><b>Codebase:</b> {{ codebase|e }}
 {% endif %}
 {% if repository %}
-        <br><b>Repository:</b> {{ repository|e }}
+        <br/><b>Repository:</b> {{ repository|e }}
 {% endif %}
 {% if project %}
-        <br><b>Project:</b> {{ project|e }}
+        <br/><b>Project:</b> {{ project|e }}
 {% endif %}
 {% if branch != ANYBRANCH %}
-        <br><b>Branch:</b> {{ branch|e }}
+        <br/><b>Branch:</b> {{ branch|e }}
 {% endif %}
       </td>
       <td width="33%" align="center" class="center_align">
@@ -128,7 +128,7 @@ function checkMouseLeave(element, event) {
           }
 // ]]> 
         </script>
-        <form onsubmit='reload_page()'>
+        <form onsubmit='reload_page()' action="">
           <input id='namebox' name='name' type='text' style='color:#999;'
               onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
               onfocus='this.value=""; this.style.color = "#000";'
@@ -160,6 +160,8 @@ function checkMouseLeave(element, event) {
   {% endfor %}
   </tr>
   <tr class='DevStatusSpacing'>
+    <td>
+    </td>
   </tr>
 {% endif %}
 
