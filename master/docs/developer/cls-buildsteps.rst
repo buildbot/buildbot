@@ -397,6 +397,16 @@ BuildStep
         Add a link to the given ``url``, with the given ``name`` to displays of this step.
         This allows a step to provide links to data that is not available in the log files.
 
+    Build steps have a set of short strings associated with them, describing the current status and results.
+    
+    .. py:method:: setStateStrings(strings)
+
+        :param strings: a list of short strings
+        :returns: Deferred
+
+        Update the state strings associated with this step.
+        This completely replaces any previously-set state strings.
+
 LoggingBuildStep
 ----------------
 
