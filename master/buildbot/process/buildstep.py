@@ -210,6 +210,11 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    def setStateStrings(self, strings):
+        self.step_status.old_setText(strings)
+        self.step_status.old_setText2(strings)
+        return defer.succeed(None)
+
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
