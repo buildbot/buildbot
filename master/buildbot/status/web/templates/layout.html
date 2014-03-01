@@ -14,8 +14,8 @@
     {% endif %}
     <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
-    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss" />
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico" />
     {% endblock %}
   </head>
   <body class="interface">
@@ -45,8 +45,8 @@
     <a href="{{ authz.httpLoginUrl }}">Login</a>
     {% elif authz.auth %}
     <form method="post" name="login" action="{{ path_to_root }}login">
-    <input type="text" name="username" size=10 />
-    <input type="password" name="passwd" size=10 />
+    <input type="text" name="username" size="10" />
+    <input type="password" name="passwd" size="10" />
     <input type="submit" value="login" />
     </form>
     {% endif %}

@@ -453,8 +453,8 @@ class ConsoleStatusResource(HtmlResource):
                 current_details = {}
                 if introducedIn:
                     current_details = introducedIn.details or ""
-                    url = "./buildstatus?builder=%s&number=%s" % (urllib.quote(builder),
-                                                                  introducedIn.number)
+                    url = "./buildstatus?builder=%s&amp;number=%s" % (urllib.quote(builder),
+                                                                      introducedIn.number)
                     pageTitle += " "
                     pageTitle += urllib.quote(' '.join(introducedIn.text), ' \n\\/:')
 
