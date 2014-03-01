@@ -326,7 +326,7 @@ def ToHtml(text):
         else:
             output.append(html.escape(line).replace('  ', '&nbsp;&nbsp;'))
         if not in_item:
-            output.append('<br>')
+            output.append('<br/>')
 
     if in_item:
         output.append('</li>')
