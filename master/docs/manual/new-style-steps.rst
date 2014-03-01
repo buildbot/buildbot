@@ -24,6 +24,8 @@ Summary of Changes
    However, it does not support log-reading methods such as ``getText``.
    It was never advisable to handle logs as enormous strings.
    New-style steps should, instead, use a LogObserver or (in Buildbot-0.9.0) fetch log lines bit by bit using the data API.
+ * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be uesd in new-style steps.
+   Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
 
 Rewriting ``start``
 +++++++++++++++++++
@@ -66,7 +68,6 @@ The following methods now return a Deferred:
  * :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog`
  * :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`
  * :py:meth:`buildbot.process.buildstep.BuildStep.addURL`
- * :py:meth:`buildbot.process.buildstep.LoggingBuildStep.setStatus`
 
 Any custom code in a new-style step that calls these methods must handle the resulting Deferred.
 In some cases, that means that the calling method's signature will change.
@@ -135,17 +136,8 @@ Any other uses of the subscribe method should be refactored to use a :py:class:`
 Removed Methods
 +++++++++++++++
 
-Similarly, the :py:class:`~buildbot.process.buildstep.LoggingBuildStep` ``createSummary`` method has been removed, as its ``log`` argument was an instance of a class that is no longer present.
-Instead, process logs in the ``evaluateCommand`` method using the Data API, or implement a log observer.
-
-:py:class:`~buildbot.process.buildstep.LoggingBuildStep`'s undocumented ``setStatus`` method has also been removed.
-Again, set the status in ``evaluateCommand`` if the default implementation is inadequate.
-
 The ``self.step_status.setText`` and ``setText2`` methods have been removed.
 Replace them with asynchronous calls to ``self.setStatusStrings``.
 
 Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects.
 Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.
-
-The ``log_eval_func`` method of :bb:step:`ShellCommand` has been removed.
-Instead, users should override the :py:meth:`~buildbot.process.buildstep.LoggingBuildStep.evaluateCommand` method.
