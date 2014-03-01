@@ -65,5 +65,5 @@ class BuildStatusStatusResource(HtmlResource):
         # We want all links to display in a new tab/window instead of in the
         # current one.
         # TODO: Move to template
-        data = data.replace('<a ', '<a target="_blank"')
+        data = data.replace('<a ', '<a target="_blank" ')
         return data
