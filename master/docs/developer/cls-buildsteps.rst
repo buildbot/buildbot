@@ -338,6 +338,15 @@ BuildStep
 
         See :ref:`Adding-LogObservers` for more information on log observers.
 
+    .. py:method:: setStateStrings(strings)
+
+        :param strings: a list of short strings
+        :returns: Deferred
+
+        Update the state strings associated with this step.
+        This completely replaces any previously-set state strings.
+        This method replaces ``self.step_status.setText`` and ``self.step_status.setText2`` in new-style steps.
+
 LoggingBuildStep
 ----------------
 
