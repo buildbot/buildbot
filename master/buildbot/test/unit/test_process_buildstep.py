@@ -358,11 +358,6 @@ class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
             status, FAILURE, "evaluateCommand returned %d, should've returned %d" %
             (status, FAILURE))
 
-    def test_evaluateCommand_log_eval_func(self):
-        deprecatedMsg = "the 'log_eval_func' paramater is no longer available"
-        self.assertRaisesConfigError(deprecatedMsg, lambda:
-                                     buildstep.LoggingBuildStep(log_eval_func=mock.Mock()))
-
 
 class InterfaceTests(interfaces.InterfaceTests):
 

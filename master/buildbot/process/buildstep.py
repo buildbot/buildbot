@@ -18,6 +18,7 @@ try:
     assert StringIO
 except ImportError:
     import StringIO
+import re
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -49,6 +50,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util import flatten
 
 
@@ -715,7 +717,7 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
     cmd = None
 
     renderables = ['logfiles', 'lazylogfiles']
@@ -733,9 +735,10 @@ class LoggingBuildStep(BuildStep):
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
-        if log_eval_func is not None:
+        if log_eval_func and not callable(log_eval_func):
             config.error(
-                "the 'log_eval_func' paramater is no longer available")
+                "the 'log_eval_func' paramater must be a callable")
+        self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def isNewStyle(self):
@@ -834,6 +837,9 @@ class LoggingBuildStep(BuildStep):
         pass
 
     def evaluateCommand(self, cmd):
+        # NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+        if self.log_eval_func:
+            return self.log_eval_func(cmd, self.step_status)
         return cmd.results()
 
     def getText(self, cmd, results):
@@ -1077,6 +1083,30 @@ class ShellMixin(object):
         except Exception:
             log.err(failure.Failure(), "Error describing step")
             return super(ShellMixin, self)._describe(done)
+
+# Parses the logs for a list of regexs. Meant to be invoked like:
+# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
+# self.addStep(ShellCommand,
+#   command=...,
+#   ...,
+#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
+# )
+# NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+
+
+def regex_log_evaluator(cmd, step_status, regexes):
+    worst = cmd.results()
+    for err, possible_status in regexes:
+        # worst_status returns the worse of the two status' passed to it.
+        # we won't be changing "worst" unless possible_status is worse than it,
+        # so we don't even need to check the log if that's the case
+        if worst_status(worst, possible_status) == possible_status:
+            if isinstance(err, (basestring)):
+                err = re.compile(".*%s.*" % err, re.DOTALL)
+            for l in cmd.logs.values():
+                if err.search(l.getText()):
+                    worst = possible_status
+    return worst
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
