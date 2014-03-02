@@ -518,6 +518,19 @@ class BuildStep(object, properties.PropertiesMixin):
             value = value(*args, **kwargs)
         return value
 
+    def hasStatistic(self, name):
+        return self.step_status.hasStatistic(name)
+
+    def getStatistic(self, name, default=None):
+        return self.step_status.getStatistic(name, default)
+
+    def getStatistics(self):
+        return self.step_status.getStatistics()
+
+    def setStatistic(self, name, value):
+        return self.step_status.setStatistics(name, value)
+
+
 components.registerAdapter(
     BuildStep._getStepFactory,
     BuildStep, interfaces.IBuildStepFactory)
