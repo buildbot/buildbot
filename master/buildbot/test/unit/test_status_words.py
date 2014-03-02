@@ -16,20 +16,38 @@
 import mock
 
 from buildbot.status import words
+from buildbot.status.results import SUCCESS
+from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakedb
 from buildbot.test.util import compat
 from buildbot.test.util import config
+from buildbot.util import datetime2epoch
 from twisted.application import internet
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
 
-
 class TestIrcContactChannel(unittest.TestCase):
 
+    BUILDER_NAMES = [u'builder1', u'builder2']
+    BUILDER_IDS   = [23, 45]
+
     def setUp(self):
+        self.master = fakemaster.make_master(testcase=self, wantMq=True,
+                                             wantData=True, wantDb=True)
+
+        for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
+            self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
+
+        # I think the 'bot' part of this is actually going away ...
+        ## TO REMOVE:
+
         self.bot = mock.Mock(name='IRCStatusBot-instance')
         self.bot.nickname = 'nick'
         self.bot.notify_events = {'success': 1, 'failure': 1}
+        self.bot.useRevisions = False
+        self.bot.useColors = False
 
         # fake out subscription/unsubscription
         self.subscribed = False
@@ -43,7 +61,7 @@ class TestIrcContactChannel(unittest.TestCase):
         self.bot.status.unsubscribe = unsubscribe
 
         # fake out clean shutdown
-        self.bot.master = mock.Mock(name='IRCStatusBot-instance.master')
+        self.bot.master = self.master
         self.bot.master.botmaster = mock.Mock(name='IRCStatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
 
@@ -71,6 +89,7 @@ class TestIrcContactChannel(unittest.TestCase):
             self.actions.append(msg)
         self.contact.act = act
 
+    @defer.inlineCallbacks
     def do_test_command(self, command, args='', who='me', clock_ticks=None,
                         exp_usage=True, exp_UsageError=False, allowShutdown=False,
                         shuttingDown=False):
@@ -88,7 +107,7 @@ class TestIrcContactChannel(unittest.TestCase):
 
         if exp_UsageError:
             try:
-                cmd(args, who)
+                yield cmd(args, who)
             except words.UsageError:
                 return
             else:
@@ -251,6 +270,203 @@ class TestIrcContactChannel(unittest.TestCase):
     def test_command_dance(self):
         self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
         self.assertTrue(self.sent)  # doesn't matter what it sent
+
+    @defer.inlineCallbacks
+    def test_command_list(self):
+        yield self.do_test_command('list', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_list_builders(self):
+        yield self.do_test_command('list', args='builders')
+        self.assertEqual(len(self.sent), 1)
+        for builder in self.BUILDER_NAMES:
+            self.assertIn('%s [offline]'%builder, self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_list_builders_connected(self):
+        # Make first builder configured, but not connected
+        # Make second builder configured and connected
+        self.master.db.insertTestData([
+            fakedb.Buildslave(id=1, name=u'linux', info={}),  # connected one
+            fakedb.Buildslave(id=2, name=u'linux', info={}),  # disconnected one
+            fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
+            fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
+            fakedb.ConfiguredBuildslave(id=14013,
+                                buildslaveid=2, buildermasterid=4012),
+            fakedb.ConfiguredBuildslave(id=14013,
+                                buildslaveid=1, buildermasterid=4013),
+            fakedb.ConnectedBuildslave(id=113, masterid=13, buildslaveid=1),
+        ])
+
+        yield self.do_test_command('list', args='builders')
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('%s [offline]'%self.BUILDER_NAMES[0], self.sent[0])
+        self.assertNotIn('%s [offline]'%self.BUILDER_NAMES[1], self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_status(self):
+        yield self.do_test_command('status')
+
+    @defer.inlineCallbacks
+    def test_command_status_all(self):
+        yield self.do_test_command('status', args='all')
+
+    @defer.inlineCallbacks
+    def test_command_status_builder0_offline(self):
+        yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
+        self.assertEqual(self.sent, ['%s: offline' % self.BUILDER_NAMES[0]])
+
+    @defer.inlineCallbacks
+    def test_command_status_builder0_running(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('status', args=self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('builder1: running', self.sent[0])
+        self.assertIn(' 3 (no current step)', self.sent[0])
+        self.assertIn(' 6 (no current step)', self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_status_bogus(self):
+        yield self.do_test_command('status', args='bogus_builder', exp_UsageError=True)
+
+
+    @defer.inlineCallbacks
+    def test_command_last(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('last')
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn('last build [builder1]: last build 0 seconds ago: test', self.sent)
+        self.assertIn('last build [builder2]: (no builds run since last restart)', self.sent)
+
+    @defer.inlineCallbacks
+    def test_command_last_builder_bogus(self):
+        yield self.do_test_command('last', args="BOGUS", exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_last_builder0(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('last', args=self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('last build [builder1]: last build 0 seconds ago: test', self.sent)
+
+    @defer.inlineCallbacks
+    def test_command_last_builder1(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('last', args=self.BUILDER_NAMES[1])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('last build [builder2]: (no builds run since last restart)', self.sent)
+
+    @defer.inlineCallbacks
+    def test_command_watch(self):
+        yield self.do_test_command('watch', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_watch_builder0_no_builds(self):
+        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('there are no builds', self.sent[0])
+
+    def setupSomeBuilds(self):
+        self.master.db.insertTestData([
+            # Three builds on builder#0, One build on builder#1
+            fakedb.Build(id=13, masterid=88, buildslaveid=13,
+                         builderid=self.BUILDER_IDS[0], 
+                         buildrequestid=82, number=3),
+            fakedb.Build(id=14, masterid=88, buildslaveid=13,
+                         builderid=self.BUILDER_IDS[0], 
+                         buildrequestid=83, number=4),
+            fakedb.Build(id=15, masterid=88, buildslaveid=13,
+                         builderid=self.BUILDER_IDS[1], 
+                         buildrequestid=84, number=5),
+            fakedb.Build(id=16, masterid=88, buildslaveid=13,
+                         builderid=self.BUILDER_IDS[0], 
+                         buildrequestid=85, number=6),
+        ])
+        self.master.db.builds.finishBuild(buildid=14, results='results')        
+
+    @defer.inlineCallbacks
+    def test_command_watch_builder0(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn('watching build builder1 #3 until it finishes..', self.sent)
+        self.assertIn('watching build builder1 #6 until it finishes..', self.sent)
+
+    @defer.inlineCallbacks
+    def test_command_watch_builder0_get_notifications(self):
+        # (continue from the prior test)
+        yield self.test_command_watch_builder0()
+        del self.sent[:]
+
+        yield self.sendBuildFinishedMessage(16)
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('Hey! build builder1 #6 is complete: Success []', self.sent)
+
+    @defer.inlineCallbacks
+    def sendBuildFinishedMessage(self, buildid, results=0):
+        self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
+        build = yield self.master.db.builds.getBuild(buildid)    
+        self.master.mq.callConsumer(('builds', str(buildid), 'complete'),
+                                    dict(
+                                        buildid=buildid,
+                                        number=build['number'],
+                                        builderid=build['builderid'],
+                                        buildrequestid=build['buildrequestid'],
+                                        buildslaveid=build['buildslaveid'],
+                                        masterid=build['masterid'],
+                                        started_at=datetime2epoch(build['started_at']),
+                                        complete=True,
+                                        complete_at=datetime2epoch(build['complete_at']),
+                                        state_strings=[],
+                                        results=results,
+                                    ))
+
+    @defer.inlineCallbacks
+    def test_command_stop(self):
+        yield self.do_test_command('stop', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_stop_bogus_builder(self):
+        yield self.do_test_command('stop', args="build BOGUS 'i have a reason'", exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_stop_builder0_no_builds(self):
+        yield self.do_test_command('stop', args="build %s 'i have a reason'"%self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('no build is', self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_stop_builder0_1_builds(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('stop', args="build %s 'i have a reason'"%self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn('build 3 interrupted', self.sent)
+        self.assertIn('build 6 interrupted', self.sent)
+
+
+    @defer.inlineCallbacks
+    def test_command_force_no_args(self):
+        yield self.do_test_command('force', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_wrong_first_arg(self):
+        yield self.do_test_command('force', args='notbuild', exp_UsageError=True)
+
+    @defer.inlineCallbacks
+    def test_command_force_build_no_args(self):
+        yield self.do_test_command('force', args='build', exp_UsageError=True)
+
+    # TODO: missing tests for:
+    #   - bad args
+    #   - arg validation failure (self.master.config.validation)
+
+    # TODO: the below fails due to the assertion (see "rewrite to not use the status hierarchy")
+    # @defer.inlineCallbacks
+    # def test_command_force(self):
+    #     yield self.do_test_command('force', 
+    #             args='build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 %s REASON' 
+    #               % self.BUILDER_NAMES[0])
+
 
     def test_send(self):
         events = []

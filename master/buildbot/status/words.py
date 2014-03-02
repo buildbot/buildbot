@@ -35,7 +35,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot import version
-from buildbot.interfaces import IStatusReceiver
+from buildbot.data import resultspec
 from buildbot.process.properties import Properties
 from buildbot.status import base
 from buildbot.status.results import CANCELLED
@@ -144,7 +144,6 @@ class IrcBuildRequest:
 
 
 class IRCContact(base.StatusReceiver):
-    implements(IStatusReceiver)
     """I hold the state for a single user's interaction with the buildbot.
 
     There will be one instance of me for each user who interacts personally
@@ -156,7 +155,8 @@ class IRCContact(base.StatusReceiver):
         self.bot = bot
         self.master = bot.master
         self.notify_events = {}
-        self.subscribed = 0
+        self.subscribed = []
+        self.build_subscriptions = []
         self.muted = False
         self.useRevisions = bot.useRevisions
         self.useColors = bot.useColors
@@ -187,29 +187,57 @@ class IRCContact(base.StatusReceiver):
             reactor.callLater(when, self.send, r)
             when += 2.5
 
-    def getBuilder(self, which):
-        try:
-            b = self.bot.status.getBuilder(which)
-        except KeyError:
+    @defer.inlineCallbacks
+    def getBuilder(self, buildername=None, builderid=None):
+        if buildername:
+            bdicts = yield self.master.data.get(('builders',),
+                             filters=[resultspec.Filter('name', 'eq', [buildername])])
+            if bdicts:
+                bdict = bdicts[0]  # Could there be more than one? One is enough.
+            else:
+                bdict = None
+        elif builderid:
+            bdict = yield self.master.data.get(('builders',builderid))
+        else:
+            raise UsageError("no builder specified")
+
+        if bdict is None:
+            if buildername:
+                which = '%s' % buildername
+            else:
+                which = 'number %s' % builderid
             raise UsageError("no such builder '%s'" % which)
-        return b
+        defer.returnValue(bdict)
 
     def getControl(self, which):
+        # TODO in nine: there's going to be a better way to do all this.
+        #   For now, this continues to work.
         if not self.bot.control:
             raise UsageError("builder control is not enabled")
         try:
-            bc = self.bot.control.getBuilder(which)
+            bc = self.bot.control.getBuilder(buildername=which)
         except KeyError:
             raise UsageError("no such builder '%s'" % which)
         return bc
 
     def getAllBuilders(self):
-        """
-        @rtype: list of L{buildbot.process.builder.Builder}
-        """
-        names = sorted(self.bot.status.getBuilderNames(tags=self.bot.tags))
-        builders = [self.bot.status.getBuilder(n) for n in names]
-        return builders
+        d = self.master.data.get(('builders',))
+        return d
+
+    @defer.inlineCallbacks
+    def getOnlineBuilders(self):
+        all_buildslaves = yield self.master.data.get(('buildslaves',))
+        online_builderids = set()
+        for buildslave in all_buildslaves:
+            builders = buildslave['configured_on']
+            builderids = [ builder['builderid'] for builder in builders ]
+            online_builderids.update(builderids)
+        defer.returnValue(list(online_builderids))
+
+    @defer.inlineCallbacks
+    def getRevisionsForBuild(bdict):
+        # FIXME: Need to get revision info! (build -> buildreq -> buildset -> sourcestamps)
+        defer.returnValue(["TODO"])
 
     def convertTime(self, seconds):
         if seconds < 60:
@@ -222,7 +250,7 @@ class IRCContact(base.StatusReceiver):
         minutes = minutes - 60 * hours
         return "%dh%02dm%02ds" % (hours, minutes, seconds)
 
-    def reportBuild(self, builder, buildnum):
+    def shouldReportBuild(self, builder, buildnum):
         """Returns True if this build should be reported for this contact
         (eliminating duplicates), and also records the report for later"""
         for w, b, n in self.reported_builds:
@@ -252,24 +280,26 @@ class IRCContact(base.StatusReceiver):
     def command_VERSION(self, args, who):
         self.send("buildbot-%s at your service" % version)
 
+    @defer.inlineCallbacks
     def command_LIST(self, args, who):
         args = self.splitArgs(args)
-        if len(args) == 0:
+        if not args:
             raise UsageError("try 'list builders'")
+
         if args[0] == 'builders':
-            builders = self.getAllBuilders()
-            str = "Configured builders: "
-            for b in builders:
-                str += b.name
-                state = b.getState()[0]
-                if state == 'offline':
-                    str += "[offline]"
-                str += " "
-            str.rstrip()
-            self.send(str)
+            bdicts = yield self.getAllBuilders()
+            online_builderids = yield self.getOnlineBuilders()
+
+            response = ["Configured builders:"]
+            for bdict in bdicts:
+                response.append(bdict['name'])
+                if bdict['builderid'] not in online_builderids:
+                    response.append("[offline]")
+            self.send(' '.join(response))
             return
     command_LIST.usage = "list builders - List configured builders"
 
+    @defer.inlineCallbacks
     def command_STATUS(self, args, who):
         args = self.splitArgs(args)
         if len(args) == 0:
@@ -279,11 +309,11 @@ class IRCContact(base.StatusReceiver):
         else:
             raise UsageError("try 'status <builder>'")
         if which == "all":
-            builders = self.getAllBuilders()
-            for b in builders:
-                self.emit_status(b.name)
+            bdicts = yield self.getAllBuilders()
+            for bdict in bdicts:
+                yield self.emit_status(bdict['name'])
             return
-        self.emit_status(which)
+        yield self.emit_status(which)
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
@@ -296,21 +326,32 @@ class IRCContact(base.StatusReceiver):
     def notify_for(self, *events):
         for event in events:
             if event in self.notify_events:
-                return 1
-        return 0
+                return True
+        return False
 
     def subscribe_to_build_events(self):
-        self.bot.status.subscribe(self)
-        self.subscribed = 1
+
+        # FIXME:
+        #  -- builderAdded
+        #  -- builderRemoved
+        #  -- builderStarted
+        #  -- buildFinished
+
+
+        handle = True #self.master.data.startConsuming(watchForCompleteEvent, {}, 
+                      #                               (build['link'].path))
+        self.subscribed.append(handle)
 
     def unsubscribe_from_build_events(self):
-        self.bot.status.unsubscribe(self)
-        self.subscribed = 0
+        # Cancel all the subscriptions we have
+        old_list, self.subscribed = self.subscribed, []
+        for handle in old_list:
+            handle.stopConsuming()
 
     def add_notification_events(self, events):
         for event in events:
             self.validate_notification_event(event)
-            self.notify_events[event] = 1
+            self.notify_events[event] = True
 
             if not self.subscribed:
                 self.subscribe_to_build_events()
@@ -320,7 +361,7 @@ class IRCContact(base.StatusReceiver):
             self.validate_notification_event(event)
             del self.notify_events[event]
 
-            if len(self.notify_events) == 0 and self.subscribed:
+            if not self.notify_events:
                 self.unsubscribe_from_build_events()
 
     def remove_all_notification_events(self):
@@ -330,10 +371,11 @@ class IRCContact(base.StatusReceiver):
             self.unsubscribe_from_build_events()
 
     def command_NOTIFY(self, args, who):
+        # FIXME: NEED TO THINK ABOUT!
         args = self.splitArgs(args)
 
         if not args:
-            raise UsageError("try 'notify on|off|list <EVENT>'")
+            raise UsageError("try 'notify on|off|list [<EVENT>]'")
         action = args.pop(0)
         events = args
 
@@ -354,41 +396,71 @@ class IRCContact(base.StatusReceiver):
 
         elif action == "list":
             self.list_notified_events()
-            return
 
         else:
-            raise UsageError("try 'notify on|off <EVENT>'")
+            raise UsageError("try 'notify on|off|list [<EVENT>]'")
 
     command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
+    def getRunningBuilds(self, builderid):
+        d = self.master.data.get(('builds',),
+                        filters=[resultspec.Filter('builderid', 'eq', [builderid]),
+                                 resultspec.Filter('complete', 'eq', [False])])
+        return d
+
+    def getLastCompletedBuild(self, builderid):
+        d = self.master.data.get(('builds',),
+                        filters=[resultspec.Filter('builderid', 'eq', [builderid]),
+                                 resultspec.Filter('complete', 'eq', [True])],
+                        order=['number'],
+                        limit=1)
+        @d.addCallback
+        def listAsOneOrNone(res):
+            if res:
+                return res[0]
+            return None
+
+        return d
+
+    @defer.inlineCallbacks
     def command_WATCH(self, args, who):
         args = self.splitArgs(args)
         if len(args) != 1:
             raise UsageError("try 'watch <builder>'")
+        
         which = args[0]
-        b = self.getBuilder(which)
-        builds = b.getCurrentBuilds()
+        builder = yield self.getBuilder(buildername=which)
+
+        # Get current builds on this builder.
+        builds = yield self.getRunningBuilds(builder['builderid'])
         if not builds:
             self.send("there are no builds currently running")
             return
+
+        def watchForCompleteEvent(key, msg):
+            if key[-1] == 'complete':
+                return self.watchedBuildFinished(msg)
+
         for build in builds:
-            assert not build.isFinished()
-            d = build.waitUntilFinished()
-            d.addCallback(self.watchedBuildFinished)
+            handle = self.master.data.startConsuming(watchForCompleteEvent, {}, 
+                                                     (build['link'].path))
+            self.build_subscriptions.append((build['buildid'], handle))
+
             if self.useRevisions:
+                revisions = yield self.getRevisionsForBuild(build)
                 r = "watching build %s containing revision(s) [%s] until it finishes" \
-                    % (which, build.getRevisions())
+                    % (which, ','.join(revisions))
             else:
                 r = "watching build %s #%d until it finishes" \
-                    % (which, build.getNumber())
-            eta = build.getETA()
-            if eta is not None:
-                r += " [%s]" % self.convertTime(eta)
+                    % (which, build['number'])
+
             r += ".."
             self.send(r)
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
+    ## OLD_STYLE
     def builderAdded(self, builderName, builder):
+        # FIXME: NEED TO THINK ABOUT!
         if (self.bot.tags is not None and
                 not builder.matchesAnyTag(tags=self.bot.tags)):
             return
@@ -396,10 +468,14 @@ class IRCContact(base.StatusReceiver):
         log.msg('[Contact] Builder %s added' % (builderName))
         builder.subscribe(self)
 
+    ## OLD_STYLE
     def builderRemoved(self, builderName):
+        # FIXME: NEED TO THINK ABOUT!
         log.msg('[Contact] Builder %s removed' % (builderName))
 
+    ## OLD_STYLE
     def buildStarted(self, builderName, build):
+        # FIXME: NEED TO THINK ABOUT!
         builder = build.getBuilder()
         log.msg('[Contact] Builder %r started' % (builder,))
 
@@ -414,8 +490,9 @@ class IRCContact(base.StatusReceiver):
             return
 
         if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(build)
             r = "build containing revision(s) [%s] on %s started" % \
-                (build.getRevisions(), builder.getName())
+                (','.join(revisions), builder.getName())
         else:
             # Abbreviate long lists of changes to simply two
             # revisions, and the number of additional changes.
@@ -450,7 +527,9 @@ class IRCContact(base.StatusReceiver):
     def getResultsDescriptionAndColor(self, results):
         return self.results_descriptions.get(results, ("??", 'RED'))
 
+    ## OLD_STYLE
     def buildFinished(self, builderName, build, results):
+        # FIXME: NEED TO THINK ABOUT!
         builder = build.getBuilder()
 
         if (self.bot.tags is not None and
@@ -462,28 +541,31 @@ class IRCContact(base.StatusReceiver):
 
         builder_name = builder.getName()
         buildnum = build.getNumber()
-        buildrevs = build.getRevisions()
 
         results = self.getResultsDescriptionAndColor(build.getResults())
-        if self.reportBuild(builder_name, buildnum):
-            if self.useRevisions:
-                r = "build containing revision(s) [%s] on %s is complete: %s" % \
-                    (buildrevs, builder_name, results[0])
-            else:
-                r = "build #%d of %s is complete: %s" % \
-                    (buildnum, builder_name, results[0])
+        if not self.shouldReportBuild(builder_name, buildnum):
+            return
 
-            r += ' [%s]' % maybeColorize(" ".join(build.getText()), results[1], self.useColors)
-            buildurl = self.bot.status.getURLForThing(build)
-            if buildurl:
-                r += "  Build details are at %s" % buildurl
+        if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(bdict)
+            r = "build containing revision(s) [%s] on %s is complete: %s" % \
+                (','.join(revisions), builder_name, results[0])
+        else:
+            r = "build #%d of %s is complete: %s" % \
+                (buildnum, builder_name, results[0])
 
-            if self.bot.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-                r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+        r += ' [%s]' % maybeColorize(" ".join(build.getText()), results[1], self.useColors)
+        buildurl = self.bot.status.getURLForThing(build)
+        if buildurl:
+            r += "  Build details are at %s" % buildurl
 
-            self.send(r)
+        if self.bot.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
+            r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+
+        self.send(r)
 
     def notify_for_finished(self, build):
+        # FIXME: NEED TO THINK ABOUT!
         results = build.getResults()
 
         if self.notify_for('finished'):
@@ -506,34 +588,41 @@ class IRCContact(base.StatusReceiver):
 
         return False
 
-    def watchedBuildFinished(self, b):
+    @defer.inlineCallbacks
+    def watchedBuildFinished(self, build):
+        builder = yield self.getBuilder(builderid=build['builderid'])
 
+        # FIXME: NEED TO THINK ABOUT!
         # only notify about builders we are interested in
-        builder = b.getBuilder()
-        if (self.bot.tags is not None and
-                not builder.matchesAnyTag(tags=self.bot.tags)):
+        # if (self.bot.tags is not None and
+        #         not builder.matchesAnyTag(tags=self.bot.tags)):
+        #     return
+
+        builder_name = builder['name']
+        buildnum = build['number']
+
+        if not self.shouldReportBuild(builder_name, buildnum):
             return
 
-        builder_name = builder.getName()
-        buildnum = b.getNumber()
-        buildrevs = b.getRevisions()
+        results = self.getResultsDescriptionAndColor(build['results'])
+        if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(build)
+            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+                (builder_name, ','.join(revisions), results[0])
+        else:
+            r = "Hey! build %s #%d is complete: %s" % \
+                (builder_name, buildnum, results[0])
 
-        results = self.getResultsDescriptionAndColor(b.getResults())
-        if self.reportBuild(builder_name, buildnum):
-            if self.useRevisions:
-                r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
-                    (builder_name, buildrevs, results[0])
-            else:
-                r = "Hey! build %s #%d is complete: %s" % \
-                    (builder_name, buildnum, results[0])
+        r += ' [%s]' % maybeColorize(" ".join(build['state_strings']), results[1], self.useColors)
+        self.send(r)
 
-            r += ' [%s]' % maybeColorize(" ".join(b.getText()), results[1], self.useColors)
-            self.send(r)
-            buildurl = self.bot.status.getURLForThing(b)
-            if buildurl:
-                self.send("Build details are at %s" % buildurl)
+        # FIXME: where do we get the base_url? Then do we use the build Link to make the URL?
+        buildurl = None # self.bot.status.getBuildbotURL() + build
+        if buildurl:
+            self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
+        # FIXME: NEED TO THINK ABOUT!
         errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
         args = self.splitArgs(args)
         if not args:
@@ -588,21 +677,26 @@ class IRCContact(base.StatusReceiver):
                     return
                 properties.setProperty(pname, pvalue, "Force Build IRC")
 
-        reason = "forced: by %s: %s" % (self.describeUser(who), reason)
-        d = self.master.data.addBuildset(builderNames=[builderName],
+        reason = u"forced: by %s: %s" % (self.describeUser(who), reason)
+        d = self.master.data.updates.addBuildset(builderNames=[builderName],
+                                         scheduler=u"IRC", # For now, we just use this as the id.
                                          sourcestamps=[{'branch': branch, 'revision': revision}],
-                                         reason=reason, properties=properties.asDict)
+                                         reason=reason, 
+                                         properties=properties.asDict(),
+                                         waited_for=False)
 
         def subscribe(xxx_todo_changeme):
             (bsid, brids) = xxx_todo_changeme
             assert 0, "rewrite to not use the status hierarchy"  # TODO
             # ireq = IrcBuildRequest(self, self.useRevisions)
             # buildreq.subscribe(ireq.started)
+
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 
     command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
 
+    @defer.inlineCallbacks
     def command_STOP(self, args, who):
         args = self.splitArgs(args)
         if len(args) < 3 or args[0] != 'build':
@@ -615,14 +709,15 @@ class IRCContact(base.StatusReceiver):
         r = "stopped: by %s: %s" % (self.describeUser(who), reason)
 
         # find an in-progress build
-        builderstatus = self.getBuilder(which)
-        builds = builderstatus.getCurrentBuilds()
+        builder = yield self.getBuilder(buildername=which)
+        builds = yield self.getRunningBuilds(builder['builderid'])
+
         if not builds:
             self.send("sorry, no build is currently running")
             return
-        for build in builds:
-            num = build.getNumber()
-            revs = build.getRevisions()
+
+        for bdict in builds:
+            num = bdict['number']
 
             # obtain the BuildControl object
             buildcontrol = buildercontrol.getBuild(num)
@@ -631,65 +726,89 @@ class IRCContact(base.StatusReceiver):
             buildcontrol.stopBuild(r)
 
             if self.useRevisions:
-                response = "build containing revision(s) [%s] interrupted" % revs
+                revisions = yield self.getRevisionsForBuild(bdict)
+                response = "build containing revision(s) [%s] interrupted" % ','.join(revisions)
             else:
                 response = "build %d interrupted" % num
             self.send(response)
 
     command_STOP.usage = "stop build <which> <reason> - Stop a running build"
 
+    def getCurrentBuildstep(self, build):
+        d = self.master.data.get(('builds', build['buildid'], 'steps'),
+                filters=[resultspec.Filter('complete', 'eq', [False])],
+                order=['number'],
+                limit=1)
+        return d
+
+    @defer.inlineCallbacks
     def emit_status(self, which):
-        b = self.getBuilder(which)
-        str = "%s: " % which
-        state, builds = b.getState()
-        str += state
-        if state == "idle":
-            last = b.getLastFinishedBuild()
-            if last:
-                start, finished = last.getTimes()
-                str += ", last build %s ago: %s" % \
-                    (self.convertTime(int(util.now() - finished)), " ".join(last.getText()))
-        if state == "building":
-            t = []
-            for build in builds:
-                step = build.getCurrentStep()
+        response = '%s: ' % which
+
+        builder = yield self.getBuilder(buildername=which)
+        runningBuilds = yield self.getRunningBuilds(builder['builderid'])
+
+        if not runningBuilds:
+            onlineBuilders = yield self.getOnlineBuilders()
+            if builder['builderid'] in onlineBuilders:
+                response += "idle"
+                lastBuild = yield self.getLastCompletedBuild(builder['builderid'])
+                if lastBuild:
+                    complete_at = lastBuild['complete_at']
+                    if complete_at:
+                        complete_at = util.datetime2epoch(complete_at)
+                        ago = self.convertTime(int(util.now() - complete_at))
+                    else:
+                        ago = "??"
+                    status = " ".join(lastBuild['state_strings'])
+                    response += ' last build %s ago: %s' % (ago, status)
+            else:
+                response += "offline"
+        else:
+            response += "running:"
+            buildInfo = []
+            for build in runningBuilds:
+                step = yield self.getCurrentBuildstep(build)
                 if step:
-                    s = "(%s)" % " ".join(step.getText())
+                    s = "(%s)" % " ".join(step['state_strings'])
                 else:
                     s = "(no current step)"
-                ETA = build.getETA()
-                if ETA is not None:
-                    s += " [ETA %s]" % self.convertTime(ETA)
-                t.append(s)
-            str += ", ".join(t)
-        self.send(str)
+                buildInfo.append("%d %s" % (build['number'], s))
 
+            response += ' ' + ', '.join(buildInfo)
+
+        self.send(response)
+
+    @defer.inlineCallbacks
     def command_LAST(self, args, who):
+        # FIXME: NEED TO THINK ABOUT!
         args = self.splitArgs(args)
 
         if len(args) == 0:
-            which = "all"
+            builders = yield self.getAllBuilders()
         elif len(args) == 1:
-            which = args[0]
+            builder = yield self.getBuilder(buildername=args[0])
+            if not builder:
+                raise UsageError("no such builder")
+            builders = [builder]
         else:
             raise UsageError("try 'last <builder>'")
 
-        def emit_last(which):
-            last = self.getBuilder(which).getLastFinishedBuild()
-            if not last:
-                str = "(no builds run since last restart)"
+        for builder in builders:
+            lastBuild = yield self.getLastCompletedBuild(builder['builderid'])
+            if not lastBuild:
+                status = "(no builds run since last restart)"
             else:
-                start, finish = last.getTimes()
-                str = "%s ago: " % (self.convertTime(int(util.now() - finish)))
-                str += " ".join(last.getText())
-            self.send("last build [%s]: %s" % (which, str))
+                complete_at = lastBuild['complete_at']
+                if complete_at:
+                    complete_at = util.datetime2epoch(complete_at)
+                    ago = self.convertTime(int(util.now() - complete_at))
+                else:
+                    ago = "??"
+                status = " ".join(lastBuild['state_strings'])
+                status = 'last build %s ago: %s' % (ago, status)
+            self.send("last build [%s]: %s" % (builder['name'], status))
 
-        if which == "all":
-            builders = self.getAllBuilders()
-            for b in builders:
-                emit_last(b.name)
-            return
-        emit_last(which)
     command_LAST.usage = "last <which> - list last build status for builder <which>"
 
     def build_commands(self):
@@ -723,8 +842,9 @@ class IRCContact(base.StatusReceiver):
     command_UNMUTE.usage = "unmute - disable a previous 'mute'"
 
     def command_HELP(self, args, who):
+        # FIXME: NEED TO THINK ABOUT!
         args = self.splitArgs(args)
-        if len(args) == 0:
+        if not args:
             self.send("Get help on what? (try 'help <foo>', 'help <foo> <bar>, "
                       "or 'commands' for a command list)")
             return
@@ -759,6 +879,7 @@ class IRCContact(base.StatusReceiver):
     command_COMMANDS.usage = "commands - List available commands"
 
     def command_DESTROY(self, args, who):
+        # FIXME: self.bot
         if self.bot.nickname not in args:
             self.act("readies phasers")
 
@@ -770,6 +891,7 @@ class IRCContact(base.StatusReceiver):
         reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_SHUTDOWN(self, args, who):
+        # FIXME: NEED TO THINK ABOUT!
         if args not in ('check', 'start', 'stop', 'now'):
             raise UsageError("try 'shutdown check|start|stop|now'")
 
@@ -821,6 +943,8 @@ class IRCContact(base.StatusReceiver):
     def getCommandMethod(self, command):
         return getattr(self, 'command_' + command.upper(), None)
 
+
+    ## FIXME: this returns a deferred, but nothing uses it!
     def handleMessage(self, message, who):
         # a message has arrived from 'who'. For broadcast contacts (i.e. when
         # people do an irc 'buildbot: command'), this will be a string
@@ -872,6 +996,8 @@ class IRCContact(base.StatusReceiver):
         verb = words[-2]
         if verb == "kicks":
             response = "%s back" % verb
+        elif verb == "threatens":
+            response = "hosts a red wedding for %s" % user
         else:
             response = "%s %s too" % (verb, user)
         self.act(response)
@@ -937,14 +1063,15 @@ class IrcStatusBot(irc.IRCClient):
         if channel == self.nickname:
             # private message
             contact = self.getContact(user)
-            contact.handleMessage(message, user)
-            return
+            d = contact.handleMessage(message, user)
+            return d
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
         contact = self.getContact(channel)
         if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
             message = message[len("%s:" % self.nickname):]
-            contact.handleMessage(message, user)
+            d = contact.handleMessage(message, user)
+            return d
 
     def action(self, user, channel, data):
         user = user.split('!', 1)[0]  # rest is ~user@hostname
@@ -1067,8 +1194,6 @@ class IrcStatusFactory(ThrottledClientFactory):
 
 
 class IRC(base.StatusReceiverMultiService):
-    implements(IStatusReceiver)
-
     in_test_harness = False
 
     compare_attrs = ["host", "port", "nick", "password",

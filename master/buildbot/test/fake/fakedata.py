@@ -115,7 +115,7 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
                     properties={}, builderNames=[], external_idstring=None,
                     parent_buildid=None, parent_relationship=None):
         # assert types
