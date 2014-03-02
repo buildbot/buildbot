@@ -163,7 +163,22 @@ class GerritChangeSource(base.ChangeSource):
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
 
+    def getGroupingPolicyFromEvent(self, event):
+        # At the moment, buildbot's change grouping strategy is hardcoded at various place
+        # to be the 'branch' of an event.
+        # With gerrit, you usually want to group by branch on post commit, and by changeid
+        # on pre-commit.
+        # we keep this customization point here, waiting to have a better grouping strategy support
+        # in the core
+        event_change = event["change"]
+        if event['type'] in ('patchset-created',):
+            return "%s/%s" % (event_change["branch"],
+                              event_change['number'])
+        else:
+            return event_change["branch"]
+
     def addChangeFromEvent(self, properties, event):
+
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
             return self.addChange({
@@ -174,8 +189,7 @@ class GerritChangeSource(base.ChangeSource):
                 'repository': "ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
-                'branch': "%s/%s" % (event_change["branch"],
-                                     event_change['number']),
+                'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],
