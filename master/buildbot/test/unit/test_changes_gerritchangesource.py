@@ -82,7 +82,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         )))
 
         def check(_):
-            self.failUnlessEqual(len(self.changes_added), 1)
+            self.assertEqual(len(self.changes_added), 1)
             c = self.changes_added[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
@@ -107,9 +107,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
         def check(_):
-            self.failUnlessEqual(len(self.changes_added), 1)
+            self.assertEqual(len(self.changes_added), 1)
             c = self.changes_added[0]
-            self.failUnlessEqual(c["category"], "change-merged")
+            self.assertEqual(c["category"], "change-merged")
+            self.assertEqual(c["branch"], "br")
         d.addCallback(check)
         return d
 
@@ -117,7 +118,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = self.newChangeSource(
             'somehost', 'some_choosy_user')
         d = s.lineReceived(json.dumps(self.change_merged_event))
-        check = lambda _: self.failUnlessEqual(len(self.changes_added), 0)
+        check = lambda _: self.assertEqual(len(self.changes_added), 0)
         d.addCallback(check)
         return d
 
@@ -134,9 +135,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
         def check(_):
-            self.failUnlessEqual(len(self.changes_added), 1)
+            self.assertEqual(len(self.changes_added), 1)
             c = self.changes_added[0]
-            self.failUnlessEqual(c['project'], "world")
+            self.assertEqual(c['project'], "world")
         d.addCallback(check)
         return d
 
