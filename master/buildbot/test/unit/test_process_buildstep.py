@@ -320,6 +320,15 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertFalse(OldStyleStep().isNewStyle())
         self.assertTrue(NewStyleStep().isNewStyle())
 
+    @defer.inlineCallbacks
+    def test_newStyleNoStepStatus(self):
+        self.patch(NewStyleStep, 'run', lambda self: self.step_status.attr)
+        self.setupStep(NewStyleStep())
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=["generic", "exception"])
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
