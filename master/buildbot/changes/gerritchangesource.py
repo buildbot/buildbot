@@ -29,24 +29,18 @@ class GerritChangeFilter(ChangeFilter):
     """This gerrit specific change filter helps creating pre-commit and post-commit builders"""
 
     def __init__(self,
-                 # gets a Change object, returns boolean
-                 filter_fn=None,
-                 project=None, project_re=None, project_fn=None,
-                 repository=None, repository_re=None, repository_fn=None,
-                 branch=NotABranch, branch_re=None, branch_fn=None,
-                 category=None, category_re=None, category_fn=None,
-                 codebase=None, codebase_re=None, codebase_fn=None,
-                 eventtype=None, eventtype_re=None, eventtype_fn=None):
+                 eventtype=None, eventtype_re=None, eventtype_fn=None, **kw):
+        ChangeFilter.__init__(self, **kw)
 
-        self.filter_fn = filter_fn
-        self.checks = self.createChecks(
-            (project, project_re, project_fn, "project"),
-            (repository, repository_re, repository_fn, "repository"),
-            (branch, branch_re, branch_fn, "prop:event.change.branch"),
-            (eventtype, eventtype_re, eventtype_fn, "prop:event.type"),
-            (category, category_re, category_fn, "category"),
-            (codebase, codebase_re, codebase_fn, "codebase"),
-        )
+        self.checks.update(
+            self.createChecks(
+                (eventtype, eventtype_re, eventtype_fn, "prop:event.type"),
+            ))
+        # for branch change filter, we take the real gerrit branch
+        # instead of the change's branch, which is also used as a grouping key
+        if "branch" in self.checks:
+            self.checks["prop:event.change.branch"] = self.checks["branch"]
+            del self.checks["branch"]
 
 class GerritChangeSource(base.ChangeSource):
 
