@@ -92,6 +92,12 @@ class BaseParameter(object):
            the optional regex field and calls 'parse_from_args' for the final conversion.
         """
         args = kwargs.get(self.fullName, [])
+
+        # delete white space for args
+        for arg in args:
+            if not arg.strip():
+                args.remove(arg)
+                
         if len(args) == 0:
             if self.required:
                 raise ValidationError("'%s' needs to be specified" % (self.label))
