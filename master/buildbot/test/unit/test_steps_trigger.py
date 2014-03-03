@@ -20,11 +20,11 @@ from buildbot import interfaces
 from buildbot.process import properties
 from buildbot.status import master
 from buildbot.status.results import EXCEPTION
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
 from buildbot.test.util import compat
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
@@ -32,6 +32,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
+from mock import Mock
 
 
 class FakeTriggerable(object):
@@ -46,7 +47,8 @@ class FakeTriggerable(object):
     def __init__(self, name):
         self.name = name
 
-    def trigger(self, waited_for, sourcestamps=None, set_props=None):
+    def trigger(self, waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         self.triggered_with = (waited_for, sourcestamps, set_props.properties)
         idsDeferred = defer.Deferred()
         idsDeferred.callback((self.bsid, self.brids))
@@ -96,7 +98,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         # should be fixed!
 
         # set up a buildmaster that knows about two fake schedulers, a and b
-        m = fakemaster.make_master(testcase=self, wantDb=True)
+        m = self.master
         self.build.builder.botmaster = m.botmaster
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
@@ -141,7 +143,6 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def runStep(self):
         d = steps.BuildStepMixin.runStep(self)
-
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
         if self.step.waitForFinish:
@@ -154,6 +155,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                              self.exp_a_trigger)
             self.assertEqual(self.scheduler_b.triggered_with,
                              self.exp_b_trigger)
+            for i in xrange(len(self.exp_added_urls)):
+                self.assertEqual(self.step_status.addURL.call_args_list[i],
+                                 self.exp_added_urls[i])
             self.assertEqual(self.step_status.addURL.call_args_list,
                              self.exp_added_urls)
 
@@ -173,26 +177,29 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def expectTriggeredWith(self, a=None, b=None):
         self.exp_a_trigger = a
+        if a is not None:
+            self.expectTriggeredLinks('a_br')
         self.exp_b_trigger = b
+        if b is not None:
+            self.expectTriggeredLinks('b_br')
 
     def expectAddedSourceStamp(self, **kwargs):
         self.exp_add_sourcestamp = kwargs
 
     def expectTriggeredLinks(self, *args):
-        def get_args(sch, name):
-            label = lambda name, num: "%s #%d" % (name, num)
-            url = lambda name, num: "baseurl/builders/%s/builds/%d" % (name, num)
-
-            num = BRID_TO_BUILD_NUMBER(sch.brids[name])
-
-            # returns the *args and **kwargs that will be called on addURL...
-            #   which is just addURL('label', 'url')
-            return ((label(name, num), url(name, num)), {})
-
+        if 'a_br' in args:
+            self.exp_added_urls.append((('a #11', 'baseurl/#buildrequest/11'), {}))
+        if 'b_br' in args:
+            self.exp_added_urls.append((('b #22', 'baseurl/#buildrequest/22'), {}))
         if 'a' in args:
-            self.exp_added_urls.append(get_args(self.scheduler_a, 'A'))
+            self.exp_added_urls.append((('success: A #4011',
+                                         'baseurl/#builders/A/builds/4011'), {}))
         if 'b' in args:
-            self.exp_added_urls.append(get_args(self.scheduler_b, 'B'))
+            self.exp_added_urls.append((('success: B #4022',
+                                         'baseurl/#builders/B/builds/4022'), {}))
+        if 'afailed' in args:
+            self.exp_added_urls.append((('failure: A #4011',
+                                         'baseurl/#builders/A/builds/4011'), {}))
 
     # tests
     def test_no_schedulerNames(self):
@@ -256,7 +263,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def test_bogus_scheduler(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'x']))
-        self.expectOutcome(result=FAILURE, status_text=['not valid scheduler:', 'x'])
+        # bogus scheduler is an exception, not a failure (dont blame the patch)
+        self.expectOutcome(result=EXCEPTION, status_text=['not valid scheduler:', 'x'])
         self.expectTriggeredWith(a=None)  # a is not triggered!
         return self.runStep()
 
@@ -452,13 +460,14 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.scheduler_a.result = FAILURE
         self.expectOutcome(result=FAILURE, status_text=['triggered', 'a'])
         self.expectTriggeredWith(a=(True, [], {}))
-        self.expectTriggeredLinks('a')
+        self.expectTriggeredLinks('afailed')
         return self.runStep()
 
-    @compat.usesFlushLoggedErrors
+    @defer.inlineCallbacks
     def test_waitForFinish_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
                                        waitForFinish=True))
+        self.step.addCompleteLog = Mock()
         self.scheduler_b.exception = True
         self.expectOutcome(result=EXCEPTION,
                            status_text=['triggered', 'a', 'b'])
@@ -466,12 +475,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             a=(True, [], {}),
             b=(True, [], {}))
         self.expectTriggeredLinks('a')  # b doesn't return a brid
-        d = self.runStep()
-
-        def flush(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(flush)
-        return d
+        yield self.runStep()
+        self.assertEqual(len(self.step.addCompleteLog.call_args_list), 1)
 
     def test_set_properties(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
@@ -505,7 +510,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_waitForFinish_interrupt(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
                                        waitForFinish=True))
-        self.expectOutcome(result=EXCEPTION, status_text=['interrupted'])
+        self.expectOutcome(result=CANCELLED, status_text=['interrupted'])
         self.expectTriggeredWith(a=(True, [], {}))
         d = self.runStep()
 

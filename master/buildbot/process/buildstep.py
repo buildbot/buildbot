@@ -440,12 +440,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         except Exception:
             why = Failure()
             log.err(why, "BuildStep.failed; traceback follows")
-            # log the exception to the user, too
-            try:
-                self.addCompleteLog("err.text", why.getTraceback())
-                self.addHTMLLog("err.html", formatFailure(why))
-            except Exception:
-                log.err(Failure(), "error while formatting exceptions")
+            yield self.addLogWithFailure(why)
 
             yield self.setStateStrings([self.name, "exception"])
             results = EXCEPTION
@@ -654,6 +649,19 @@ class BuildStep(results.ResultComputingConfigMixin,
         l = self._newLog(name, u'h', logid)
         yield l.addContent(html)
         yield l.finish()
+
+    @defer.inlineCallbacks
+    def addLogWithFailure(self, why, logprefix=""):
+        # helper for showing exceptions to the users
+        try:
+            yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
+            yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))
+        except Exception:
+            print "oups"
+            log.err(Failure(), "error while formatting exceptions")
+
+    def addLogWithException(self, why, logprefix=""):
+        return self.addLogWithFailure(Failure(why), logprefix)
 
     def addLogObserver(self, logname, observer):
         assert interfaces.ILogObserver.providedBy(observer)

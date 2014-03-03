@@ -1122,7 +1122,8 @@ class ITriggerableScheduler(Interface):
     A scheduler that can be triggered by buildsteps.
     """
 
-    def trigger(waited_for, sourcestamps=None, set_props=None):
+    def trigger(waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         """Trigger a build with the given source stamp and properties.
         """
 

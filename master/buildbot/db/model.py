@@ -100,6 +100,9 @@ class Model(base.DBConnectorComponent):
                       sa.Column('id', sa.Integer, primary_key=True),
                       sa.Column('number', sa.Integer, nullable=False),
                       sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+                      # note that there is 1:N relationship here.
+                      # In case of slave loss, build has results RETRY
+                      # and buildrequest is unclaimed
                       sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
                                 nullable=False),
                       # slave which performed this build
@@ -189,6 +192,14 @@ class Model(base.DBConnectorComponent):
                          # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
                          # etc - see master/buildbot/status/builder.py
                          sa.Column('results', sa.SmallInteger),
+
+                         # optional parent build, we use use_alter to prevent circular reference
+                         # http://docs.sqlalchemy.org/en/latest/orm/relationships.html#rows-that-point-to-themselves-mutually-dependent-rows
+                         sa.Column('parent_buildid', sa.Integer,
+                                   sa.ForeignKey('builds.id', use_alter=True, name='parent_buildid')),
+                         # text describing what is the relationship with the build
+                         # could be 'triggered from', 'rebuilt from', 'inherited from'
+                         sa.Column('parent_relationship', sa.Text),
                          )
 
     # changesources

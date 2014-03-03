@@ -19,7 +19,7 @@ BuildRequests
     :attr timestamp submitted_at: time at which this buildrequest were submitted
     :attr timestamp complete_at: time at which this buildrequest was completed,
           or None if it's still running
-    :attr boolean waited_for: true if the entity that triggered this buildrequest is waiting for it to complete
+    :attr boolean waited_for: true if the entity that triggered this buildrequest is waiting for it to complete (should be used by clean shutdown to only start br that are waited_for)
     :attr Link link: link for this buildrequest
 
     This resource type describes completed and in-progress buildrequests.
@@ -28,7 +28,7 @@ BuildRequests
 Events
 ------
 
-.. todo:: 
+.. todo::
     The initial version of buildrequest events is described in :ref:`Messaging_and_Queues`
     This list is under discussion
 
@@ -107,7 +107,7 @@ All update methods are available as attributes of ``master.data.updates``.
     .. py:method:: unclaimBuildRequests(brids)
 
         :param list(integer) brids: list of buildrequest id to unclaim
-        
+
         Unclaim a list of buildrequests
 
     .. py:method:: completeBuildRequests(brids, results, complete_at=None, _reactor=twisted.internet.reactor)

@@ -178,7 +178,8 @@ class BaseScheduler(ClusteredService, StateMixin):
     # starting builds
 
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
-                                               waited_for=False, properties=None, builderNames=None):
+                                               waited_for=False, properties=None, builderNames=None,
+                                               **kw):
 
         if sourcestamps is None:
             sourcestamps = []
@@ -203,7 +204,8 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
                                                reason=reason, waited_for=waited_for, properties=properties,
-                                               builderNames=builderNames)
+                                               builderNames=builderNames,
+                                               **kw)
 
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does
@@ -213,7 +215,8 @@ class BaseScheduler(ClusteredService, StateMixin):
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, waited_for=False, reason='',
                               external_idstring=None, changeids=[], builderNames=None,
-                              properties=None):
+                              properties=None,
+                              **kw):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
@@ -246,13 +249,13 @@ class BaseScheduler(ClusteredService, StateMixin):
         bsid, brids = yield self.addBuildsetForSourceStamps(
             waited_for, sourcestamps=sourcestamps, reason=reason,
             external_idstring=external_idstring, builderNames=builderNames,
-            properties=properties)
+            properties=properties, **kw)
 
         defer.returnValue((bsid, brids))
 
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
                                    reason='', external_idstring=None, properties=None,
-                                   builderNames=None):
+                                   builderNames=None, **kw):
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)
@@ -270,4 +273,4 @@ class BaseScheduler(ClusteredService, StateMixin):
         return self.master.data.updates.addBuildset(
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
             waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
-            external_idstring=external_idstring)
+            external_idstring=external_idstring, **kw)

@@ -120,19 +120,23 @@ class Buildset(base.ResourceType):
         sourcestamps = types.List(
             of=sourcestampsapi.SourceStamp.entityType)
         link = types.Link()
+        parent_buildid = types.NoneOk(types.Integer())
+        parent_relationship = types.NoneOk(types.String())
     entityType = EntityType(name)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
                     properties={}, builderNames=[], external_idstring=None,
+                    parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
         submitted_at = int(_reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,
             properties=properties, builderNames=builderNames,
             waited_for=waited_for, external_idstring=external_idstring,
-            submitted_at=epoch2datetime(submitted_at))
+            submitted_at=epoch2datetime(submitted_at),
+            parent_buildid=parent_buildid, parent_relationship=parent_relationship)
 
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)

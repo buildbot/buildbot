@@ -79,6 +79,12 @@ class FakeStatus(object):
     def build_started(self, brid, buildername, build_status):
         pass
 
+    def getURLForBuild(self, builder_name, build_number):
+        return "URLForBuild/%s/%d" % (builder_name, build_number)
+
+    def getURLForBuildrequest(self, buildrequestid):
+        return "URLForBuildrequest/%d" % (buildrequestid,)
+
 
 class FakeBuilderStatus(object):
 

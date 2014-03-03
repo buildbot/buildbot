@@ -143,9 +143,13 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getURLForBuild(self, builder_name, build_number):
         prefix = self.getBuildbotURL()
-        return prefix + "builders/%s/builds/%d" % (
+        return prefix + "#builders/%s/builds/%d" % (
             urllib.quote(builder_name, safe=''),
             build_number)
+
+    def getURLForBuildrequest(self, buildrequestid):
+        prefix = self.getBuildbotURL()
+        return prefix + "#buildrequest/%d" % (buildrequestid,)
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -157,7 +161,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             pass
         if interfaces.IBuilderStatus.providedBy(thing):
             bldr = thing
-            return prefix + "builders/%s" % (
+            return prefix + "#builders/%s" % (
                 urllib.quote(bldr.getName(), safe=''),
             )
         if interfaces.IBuildStatus.providedBy(thing):
@@ -169,7 +173,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             step = thing
             build = step.getBuild()
             bldr = build.getBuilder()
-            return prefix + "builders/%s/builds/%d/steps/%s" % (
+            return prefix + "#builders/%s/builds/%d/steps/%s" % (
                 urllib.quote(bldr.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''))
@@ -178,7 +182,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # ISlaveStatus
         if interfaces.ISlaveStatus.providedBy(thing):
             slave = thing
-            return prefix + "buildslaves/%s" % (
+            return prefix + "#buildslaves/%s" % (
                 urllib.quote(slave.getName(), safe=''),
             )
 
@@ -187,7 +191,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             # TODO: this is goofy, create IChange or something
             if isinstance(thing, changes.Change):
                 change = thing
-                return "%schanges/%d" % (prefix, change.number)
+                return "%s#changes/%d" % (prefix, change.number)
 
     def getChangeSources(self):
         return list(self.master.change_svc)

@@ -164,7 +164,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self.master.data.updates.addBuildset,  # fake
             self.rtype.addBuildset)  # real
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
-                        properties={}, builderNames=[], external_idstring=None):
+                        properties={}, builderNames=[], external_idstring=None,
+                        parent_buildid=None, parent_relationship=None):
             pass
 
     def do_test_addBuildset(self, kwargs, expectedReturn,

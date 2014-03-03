@@ -91,7 +91,6 @@ class Build(properties.PropertiesMixin):
         self.terminate = False
 
         self._acquiringLock = None
-        self._dbid = None
 
     def setBuilder(self, builder):
         """
