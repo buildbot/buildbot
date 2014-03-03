@@ -55,6 +55,11 @@ FLAGS = """\
       http://en.wikipedia.org/wiki/JSONP. Note that
       Access-Control-Allow-Origin:* is set in the HTTP response header so you
       can use this in compatible browsers.
+  - codebases
+    - Filter builds by the codebases they use an example of this is:
+      unity_branch=trunk&cellsdk_branch=default
+      Note: You will probably need to specify all of the codebases
+
 """
 
 EXAMPLES = """\
@@ -68,9 +73,7 @@ EXAMPLES = """\
   - /json/builders/<A_BUILDER>/builds
     - All *cached* builds.
   - /json/builders/<A_BUILDER>/builds/_all
-    - All builds. Warning, reads all previous build data.
-  - /json/builders/<A_BUILDER>/builds/?branch=trunk
-    - All builds that contain the branch trunk
+    - All builds. Warning, reads all previous build data. (Can be filtered by codebases)
   - /json/builders/<A_BUILDER>/builds/<A_BUILD>
     - Where <A_BUILD> is either positive, a build number, or negative, a past
       build.
@@ -479,6 +482,10 @@ class AllBuildsJsonResource(JsonResource):
 
     def asDict(self, request):
         results = {}
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+
         # If max > buildCacheSize, it'll trash the cache...
         cache_size = self.builder_status.master.config.caches['Builds']
         max = int(RequestArg(request, 'max', cache_size))
@@ -487,14 +494,9 @@ class AllBuildsJsonResource(JsonResource):
             if not isinstance(child, BuildJsonResource):
                 continue
 
-            branch_filter = request.args.get("branch")
-            should_filter = False
-            if branch_filter is not None and len(child.build_status.sources) > 0:
-                #For now we assume that the first branch will be the one we want to check against
-                if child.build_status.sources[0].branch != branch_filter[0]:
-                    should_filter = True
-            if should_filter is False:
+            if len(codebases) == 0 or child.build_status.builder.foundCodebasesInBuild(child.build_status, codebases):
                 results[child.build_status.getNumber()] = child.asDict(request)
+
         return results
 
 
