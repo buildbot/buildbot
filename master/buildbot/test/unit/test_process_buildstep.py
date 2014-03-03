@@ -551,6 +551,7 @@ class TestRealItfc(unittest.TestCase,
     def setUp(self):
         self.step = buildstep.BuildStep()
 
+
 class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
 
     @defer.inlineCallbacks

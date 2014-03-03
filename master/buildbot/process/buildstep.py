@@ -199,7 +199,7 @@ class BuildStep(object, properties.PropertiesMixin):
     @property
     def step_status(self):
         assert not self.isNewStyle(
-                ), "self.step_status is not available in new-style steps"
+        ), "self.step_status is not available in new-style steps"
         return self._step_status
 
     def setStepStatus(self, step_status):
@@ -232,7 +232,7 @@ class BuildStep(object, properties.PropertiesMixin):
         if isNew:
             def nope(*args, **kwargs):
                 raise AssertionError("new-style steps must not call "
-                                        "this method")
+                                     "this method")
             self.finished = nope
             self.failed = nope
 
@@ -381,7 +381,7 @@ class BuildStep(object, properties.PropertiesMixin):
             if results != RETRY:
                 results = EXCEPTION
             self._step_status.setText(self.describe(True) +
-                                     ["interrupted"])
+                                      ["interrupted"])
             self._step_status.setText2(["interrupted"])
         self._finishFinished(results)
 
@@ -417,7 +417,7 @@ class BuildStep(object, properties.PropertiesMixin):
         # finish with a RETRY.
         if why.check(error.ConnectionLost):
             self._step_status.setText(self.describe(True) +
-                                     ["exception", "slave", "lost"])
+                                      ["exception", "slave", "lost"])
             self._step_status.setText2(["exception", "slave", "lost"])
             self.finished(RETRY)
             return
@@ -924,6 +924,8 @@ class ShellMixin(object):
 #   ...,
 #   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
 # )
+
+
 def regex_log_evaluator(cmd, step_status, regexes):
     worst = cmd.results()
     for err, possible_status in regexes:
