@@ -227,6 +227,15 @@ class BuildStep(object, properties.PropertiesMixin):
         self.remote = remote
         isNew = self.isNewStyle()
 
+        old_finished = self.finished
+        old_failed = self.failed
+        if isNew:
+            def nope(*args, **kwargs):
+                raise AssertionError("new-style steps must not call "
+                                        "this method")
+            self.finished = nope
+            self.failed = nope
+
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
                       for access in self.locks]
@@ -253,7 +262,7 @@ class BuildStep(object, properties.PropertiesMixin):
             yield self.acquireLocks()
 
             if self.stopped:
-                self.finished(EXCEPTION)
+                old_finished(EXCEPTION)
                 defer.returnValue((yield self.deferred))
 
             # ste up progress
@@ -284,14 +293,17 @@ class BuildStep(object, properties.PropertiesMixin):
                 if doStep:
                     if isNew:
                         result = yield self.run()
-                        self.finished(result)
+                        assert isinstance(result, int), \
+                            "run must return an integer (via Deferred)"
+                        old_finished(result)
                     else:
                         result = yield self.start()
                     if result == SKIPPED:
                         doStep = False
             except Exception:
                 log.msg("BuildStep.startStep exception in .start")
-                self.failed(Failure())
+                self.finished = old_finished
+                old_failed(Failure())
 
             if not doStep:
                 self._step_status.setText(self.describe(True) + ['skipped'])
@@ -302,7 +314,8 @@ class BuildStep(object, properties.PropertiesMixin):
                 # after start() (bug #837)
                 eventually(self._finishFinished, SKIPPED)
         except Exception:
-            self.failed(Failure())
+            self.finished = old_finished
+            old_failed(Failure())
 
         # and finally, wait for self.deferred to get triggered and return its
         # value

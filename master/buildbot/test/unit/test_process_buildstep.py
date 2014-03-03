@@ -329,6 +329,33 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
+    @defer.inlineCallbacks
+    def test_newStyleCallsFinished(self):
+        self.patch(NewStyleStep, 'run', lambda self: self.finished(0))
+        self.setupStep(NewStyleStep())
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=["generic", "exception"])
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
+    @defer.inlineCallbacks
+    def test_newStyleCallsFailed(self):
+        self.patch(NewStyleStep, 'run', lambda self: self.failed(None))
+        self.setupStep(NewStyleStep())
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=["generic", "exception"])
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
+    @defer.inlineCallbacks
+    def test_newStyleReturnsNone(self):
+        self.patch(NewStyleStep, 'run', lambda self: None)
+        self.setupStep(NewStyleStep())
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=["generic", "exception"])
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
