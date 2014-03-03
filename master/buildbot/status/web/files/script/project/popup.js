@@ -7,11 +7,9 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 		init: function () {
 
 			//For non ajax boxes
-						
-	
-			
+			var tableSorterRt = $('#tablesorterRt');
 
-			$('#tablesorterRt').delegate('a.popup-btn-json-js', 'click', function(e){
+			tableSorterRt.delegate('a.popup-btn-json-js', 'click', function(e){
 				e.preventDefault();								
 				popup.showjsonPopup($(this).data());												
 			});
@@ -21,24 +19,14 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 				popup.nonAjaxPopup($(this));
 			});
 
-			/*
-					$('#tablesorterRt').delegate('.popup-btn-js-2', 'click', function(e){			
-				e.preventDefault();
-				popup.nonAjaxPopup($(this));
-			});
-			$('#tablesorterRt').delegate('a.popup-btn-codebases-js', 'click', function(e){
-				e.preventDefault();				
-				//popup.showBuildersInfo($(this).data());										
-			});
-			*/
-
-			$('#tablesorterRt').delegate('.popup-btn-js', 'click', function(e){
+			tableSorterRt.delegate('.popup-btn-js', 'click', function(e){
 				e.preventDefault();				
 				var currentUrl = document.URL;			              	
 			    var parser = document.createElement('a');
 			    parser.href = currentUrl;
-				var url = parser.protocol + '//' + parser.host +'/json/buildqueue?';
-                var urlParams = helpers.codebasesFromURL({"builder" : $(this).attr('data-builderName')});
+                var builder_name = $(this).attr('data-builderName');
+                var url = "{0}//{1}/json/pending/{2}/?".format(parser.protocol, parser.host, builder_name);
+                var urlParams = helpers.codebasesFromURL({});
                 var ret = [];
                 for (var d in urlParams)
                     ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
@@ -54,8 +42,7 @@ define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,p
 			});
 			
 			// popbox for ajaxcontent
-			
-			$('#tablesorterRt').delegate('.ajaxbtn', 'click', function(e){
+			tableSorterRt.delegate('.ajaxbtn', 'click', function(e){
 				e.preventDefault();
 				popup.externalContentPopup($(this));
 			});
