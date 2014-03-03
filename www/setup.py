@@ -105,22 +105,21 @@ package_json = {
 }
 package_json.update(base_json)
 
-ANGULAR_TAG = "v1.2.5"
+ANGULAR_TAG = "1.2.14"
 bower_json = {
     "dependencies": {
         "bootstrap": "~3.0.0",
         "font-awesome": "4.0.3",
         "angular": ANGULAR_TAG,
         "angular-animate": ANGULAR_TAG,
-        "angular-bootstrap": "~0.6.0",
-        "angular-ui-router": "0.2.7",
-        "restangular": "latest",
-        "lodash": "latest",
+        "angular-bootstrap": "~0.10.0",
+        "angular-ui-router": "0.2.9",
+        "restangular": "~1.3.1",
+        "lodash": "~2.4.1",
         "html5shiv": "~3.6.2",
-        "jquery": "~2.0.0",
+        "jquery": "~2.1.0",
         "requirejs": "~2.1.5",
         "moment": "~2.1.0",
-        "json2": "latest",
         # test deps
         "angular-mocks": ANGULAR_TAG
     }
