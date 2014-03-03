@@ -4,76 +4,81 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
     var tbsorter = $('#tablesorterRt').dataTable();
     var stepList = $('#stepList > li');
     var currentstepJS = $('.current-step-js');
+    var sock = null;
+    var realTimeFunc = null;
 
     realtimePages = {
-        initRealtime: function (realTimeFunc) {
-        	       		
+        createWebSocket: function(wsURI) {
+            if (sock == null) {
+
+                if ("WebSocket" in window) {
+                    sock = new WebSocket(wsURI);
+                } else if ("MozWebSocket" in window) {
+                    sock = new MozWebSocket(wsURI);
+                } else {
+                    log("Browser does not support WebSocket!");
+                    window.location = "http://autobahn.ws/unsupportedbrowser";
+                }
+
+                // if the socket connection is success
+                if (sock) {
+                     sock.onopen = function () {
+                         $('#bowlG').remove();
+                         // get the json url to parse
+                         realtimePages.broadcastMessage(helpers.getJsonUrl());
+                     };
+
+                     // when the connection closes
+                     sock.onclose = function(e) {
+                         sock = null;
+                         console.log("We lost our connection, retrying in 5 seconds...");
+                         setTimeout(function() {realtimePages.createWebSocket(wsURI)}, 5000);
+                     };
+
+                     // when the client recieves a message
+                     sock.onmessage = function(e) {
+                         realtimePages.updateRealTimeData(e.data);
+                     }
+                }
+            }
+
+            return sock;
+        },
+        initRealtime: function (rtFunc) {
+            realTimeFunc = rtFunc;
 
             //Attempt to load our table immediately
-            var json = getInstantJSON();
+            var json = realtimePages.getInstantJSON();
             if (json !== undefined)
             {
                 console.log("Loaded from instant JSON");
-                loadTable(json);
+                realtimePages.updateRealTimeData(json);
             }
 
         	// Creating a new websocket
-	        window.sock = null; // Global
          	var wsURI = $('body').attr('data-realTimeServer');
-            var sock;
+            realtimePages.createWebSocket(wsURI);
          	console.log(wsURI);
-
-	         if ("WebSocket" in window) {
-	         	sock = new WebSocket(wsURI);
-	         } else if ("MozWebSocket" in window) {
-	         	sock = new MozWebSocket(wsURI);
-	         } else {
-	             log("Browser does not support WebSocket!");
-	             window.location = "http://autobahn.ws/unsupportedbrowser";
-	         }
-
-	         // if the socket connection is success
-	         if (sock) {
-	             sock.onopen = function () {
-                     $('#bowlG').remove();
-                     // get the json url to parse
-                     broadcast(helpers.getJsonUrl());
-                 };
-
-	             // when the connection closes
-	             sock.onclose = function(e) {
-	                 sock = null;
-	             };
-
-	             // when the client recieves a message
-	             sock.onmessage = function(e) {
-                     loadTable(e.data);
-	             }
-	         }
-
-	        // send a message to the server
-	         function broadcast(msg) {
-	             if (sock) {
-	             	sock.send(msg);
-	             }
-	         }
-
-            function getInstantJSON () {
-                var script = $('#instant-json');
-                if (script.length) {
-                    script.remove();
-                    return instantJSON;
-                }
-                return undefined;
+        },
+        broadcastMessage: function(msg) {
+            if (sock) {
+                sock.send(msg);
             }
-
-            function loadTable(data) {
-                if (typeof data === "string") {
-                    data = JSON.parse(data);
-                }
-                realTimeFunc(data);
-                console.log("Reloading data...")
+        },
+        updateRealTimeData: function(data) {
+            if (typeof data === "string") {
+                data = JSON.parse(data);
             }
+            realTimeFunc(data);
+            console.log("Reloading data...")
+        },
+        getInstantJSON: function() {
+            var script = $('#instant-json');
+            if (script.length) {
+                script.remove();
+                return instantJSON;
+            }
+            return undefined;
         },
         rtBuildDetail: function (data,el) {
             
