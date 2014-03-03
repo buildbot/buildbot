@@ -318,6 +318,15 @@ class BuilderStatus(styles.Versioned):
                     currentBuildsCodebases.append(build)
         return currentBuildsCodebases
 
+    def getCachedBuilds(self, codebases={}):
+        builds = []
+        for id in self.buildCache.keys():
+            build = self.getBuild(id)
+            if len(codebases) == 0 or self.foundCodebasesInBuild(build, codebases):
+                builds.append(build)
+
+        return builds
+
     def getLastFinishedBuild(self):
         b = self.getBuild(-1)
         if not (b and b.isFinished()):
