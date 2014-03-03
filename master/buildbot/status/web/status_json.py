@@ -514,16 +514,12 @@ class BuildsJsonResource(AllBuildsJsonResource):
         return self.children['_all'].getChildWithDefault(path, request)
 
     def asDict(self, request):
-        # This would load all the pickles and is way too heavy, especially that
-        # it would trash the cache:
-        # self.children['builds'].asDict(request)
-        # TODO(maruel) This list should also need to be cached but how?
-        builds = dict([
-            (int(file), None)
-            for file in os.listdir(self.builder_status.basedir)
-            if _IS_INT.match(file)
-        ])
-        return builds
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+
+        builds = self.builder_status.getCachedBuilds(codebases=codebases)
+        return [b.asDict() for b in builds]
 
 
 class BuildStepJsonResource(JsonResource):
