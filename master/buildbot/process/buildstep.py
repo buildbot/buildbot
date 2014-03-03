@@ -762,7 +762,7 @@ class LoggingBuildStep(BuildStep):
 
         # stdio is the first log
         self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, True)
+        cmd.useLog(stdio_log, closeWhenFinished=True)
         for em in errorMessages:
             stdio_log.addHeader(em)
             # TODO: consider setting up self.stdio_log earlier, and have the
@@ -786,8 +786,6 @@ class LoggingBuildStep(BuildStep):
 
         def _gotResults(results):
             self.setStatus(cmd, results)
-            # finish off the stdio logfile
-            stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
         d.addCallback(self.finished)
