@@ -16,7 +16,9 @@
 import mock
 import posixpath
 
+from buildbot import config
 from buildbot import interfaces
+from buildbot.process import factory
 from buildbot.process import properties
 from twisted.python import components
 
@@ -40,7 +42,12 @@ class FakeBuild(properties.PropertiesMixin):
     def __init__(self, props=None):
         self.build_status = FakeBuildStatus()
         self.builder = mock.Mock(name='build.builder')
+        self.builder.config = config.BuilderConfig(
+            name='bldr',
+            slavenames=['a'],
+            factory=factory.BuildFactory())
         self.path_module = posixpath
+        self.workdir = 'build'
 
         self.sources = {}
         if props is None:

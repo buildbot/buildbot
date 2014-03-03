@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot import util
+from buildbot import interfaces
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -36,7 +36,8 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-                 collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS}):
+                 collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS},
+                 stdioLogName='stdio'):
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
@@ -45,7 +46,7 @@ class RemoteCommand(pb.Referenceable):
         self.stdout = ''
         self.stderr = ''
         self.updates = {}
-
+        self.stdioLogName = stdioLogName
         self._startTime = None
         self._remoteElapsed = None
         self.remote_command = remote_command
@@ -193,20 +194,23 @@ class RemoteCommand(pb.Referenceable):
         return None
 
     def addStdout(self, data):
-        if 'stdio' in self.logs:
-            self.logs['stdio'].addStdout(data)
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].addStdout(data)
         if self.collectStdout:
             self.stdout += data
+        return defer.succeed(None)
 
     def addStderr(self, data):
-        if 'stdio' in self.logs:
-            self.logs['stdio'].addStderr(data)
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].addStderr(data)
         if self.collectStderr:
             self.stderr += data
+        return defer.succeed(None)
 
     def addHeader(self, data):
-        if 'stdio' in self.logs:
-            self.logs['stdio'].addHeader(data)
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            self.logs[self.stdioLogName].addHeader(data)
+        return defer.succeed(None)
 
     def addToLog(self, logname, data):
         # Activate delayed logs on first data.
@@ -221,6 +225,7 @@ class RemoteCommand(pb.Referenceable):
             self.logs[logname].addStdout(data)
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
+        return defer.succeed(None)
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     def remoteUpdate(self, update):
@@ -286,7 +291,8 @@ class RemoteShellCommand(RemoteCommand):
                  logfiles={}, usePTY="slave-config", logEnviron=True,
                  collectStdout=False, collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0: SUCCESS}):
+                 initialStdin=None, decodeRC={0: SUCCESS},
+                 stdioLogName='stdio'):
 
         self.command = command  # stash .command, set it later
         if isinstance(self.command, basestring):
@@ -322,7 +328,8 @@ class RemoteShellCommand(RemoteCommand):
             args['interruptSignal'] = interruptSignal
         RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
                                collectStderr=collectStderr,
-                               decodeRC=decodeRC)
+                               decodeRC=decodeRC,
+                               stdioLogName=stdioLogName)
 
     def _start(self):
         self.args['command'] = self.command

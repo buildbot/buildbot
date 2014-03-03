@@ -18,12 +18,14 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
+from buildbot import util
 from buildbot.buildslave.base import BuildSlave
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
 from buildbot.process import slavebuilder
+from buildbot.process import remotecommand
 from buildbot.status import results
 from buildbot.steps import shell
 from buildbot.test.fake import fakemaster
@@ -85,6 +87,43 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
             import traceback
             traceback.print_exc()
             self.failed(failure.Failure(e))
+
+
+class NewStyleCustomBuildStep(buildstep.BuildStep):
+
+    @defer.inlineCallbacks
+    def run(self):
+        def dCheck(d):
+            if not isinstance(d, defer.Deferred):
+                raise AssertionError("expected Deferred")
+            return d
+
+        # don't complete immediately, or synchronously
+        yield util.asyncSleep(0)
+
+        lo = TestLogObserver()
+        self.addLogObserver('testlog', lo)
+
+        log = yield dCheck(self.addLog('testlog'))
+        yield dCheck(log.addStdout(u'stdout\n'))
+
+        yield dCheck(self.addCompleteLog('obs',
+                'Observer saw %r' % (map(unicode, lo.observed),)))
+        yield dCheck(self.addHTMLLog('foo.html', '<head>\n'))
+        yield dCheck(self.addURL('linkie', 'http://foo'))
+
+        cmd = remotecommand.RemoteCommand('fake', {})
+        cmd.useLog(log)
+        stdio = yield dCheck(self.addLog('stdio'))
+        cmd.useLog(stdio)
+        yield dCheck(cmd.addStdout(u'stdio\n'))
+        yield dCheck(cmd.addStderr(u'stderr\n'))
+        yield dCheck(cmd.addHeader(u'hdr\n'))
+        yield dCheck(cmd.addToLog('testlog', 'fromcmd\n'))
+
+        yield dCheck(log.finish())
+
+        defer.returnValue(results.SUCCESS)
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
@@ -248,6 +287,9 @@ class RunSteps(unittest.TestCase):
 
     def assertLogs(self, exp_logs):
         bs = self.master.status.lastBuilderStatus.lastBuildStatus
+        # tell the steps they're not new-style anymore, so they don't assert
+        for l in bs.getLogs():
+            l._isNewStyle = False
         got_logs = dict((l.name, l.getText()) for l in bs.getLogs())
         self.assertEqual(got_logs, exp_logs)
 
@@ -274,6 +316,17 @@ class RunSteps(unittest.TestCase):
         bs = yield self.do_test_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertEqual(bs.getResults(), results.EXCEPTION)
+
+    @defer.inlineCallbacks
+    def test_NewStyleCustomBuildStep(self):
+        self.factory.addStep(NewStyleCustomBuildStep())
+        yield self.do_test_step()
+        self.assertLogs({
+            'foo.html': '<head>\n',
+            'testlog': 'stdout\nfromcmd\n',
+            'obs': "Observer saw [u'stdout\\n']",
+            'stdio': "stdio\nstderr\n",
+        })
 
     @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):

@@ -490,7 +490,7 @@ class TestBuild(unittest.TestCase):
             return retval
         step.acquireLocks = acquireLocks
         step.setStepStatus = Mock()
-        step.step_status = Mock()
+        step._step_status = Mock()
         step.step_status.addLog().chunkSize = 10
         step.step_status.getLogs.return_value = []
 

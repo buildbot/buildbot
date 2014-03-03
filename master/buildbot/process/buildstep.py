@@ -19,6 +19,7 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
 from twisted.python import log
+from twisted.python import failure
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -27,6 +28,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.util import flatten
 from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -139,6 +141,8 @@ class BuildStep(object, properties.PropertiesMixin):
     buildslave = None
     step_status = None
     progress = None
+    cmd = None
+    _step_status = None
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -192,14 +196,20 @@ class BuildStep(object, properties.PropertiesMixin):
     def _getStepFactory(self):
         return self._factory
 
+    @property
+    def step_status(self):
+        assert not self.isNewStyle(
+        ), "self.step_status is not available in new-style steps"
+        return self._step_status
+
     def setStepStatus(self, step_status):
-        self.step_status = step_status
+        self._step_status = step_status
 
     def setupProgress(self):
         if self.useProgress:
             sp = progress.StepProgress(self.name, self.progressMetrics)
             self.progress = sp
-            self.step_status.setProgress(sp)
+            self._step_status.setProgress(sp)
             return sp
         return None
 
@@ -207,10 +217,24 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    def setStateStrings(self, strings):
+        self._step_status.old_setText(strings)
+        self._step_status.old_setText2(strings)
+        return defer.succeed(None)
+
     @defer.inlineCallbacks
     def startStep(self, remote):
         self.remote = remote
         isNew = self.isNewStyle()
+
+        old_finished = self.finished
+        old_failed = self.failed
+        if isNew:
+            def nope(*args, **kwargs):
+                raise AssertionError("new-style steps must not call "
+                                     "this method")
+            self.finished = nope
+            self.failed = nope
 
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
@@ -230,15 +254,15 @@ class BuildStep(object, properties.PropertiesMixin):
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
-        self.step_status.setText(self.describe(False))
-        self.step_status.stepStarted()
+        self._step_status.setText(self.describe(False))
+        self._step_status.stepStarted()
 
         try:
             # set up locks
             yield self.acquireLocks()
 
             if self.stopped:
-                self.finished(EXCEPTION)
+                old_finished(EXCEPTION)
                 defer.returnValue((yield self.deferred))
 
             # ste up progress
@@ -269,25 +293,29 @@ class BuildStep(object, properties.PropertiesMixin):
                 if doStep:
                     if isNew:
                         result = yield self.run()
-                        self.finished(result)
+                        assert isinstance(result, int), \
+                            "run must return an integer (via Deferred)"
+                        old_finished(result)
                     else:
                         result = yield self.start()
                     if result == SKIPPED:
                         doStep = False
             except Exception:
                 log.msg("BuildStep.startStep exception in .start")
-                self.failed(Failure())
+                self.finished = old_finished
+                old_failed(Failure())
 
             if not doStep:
-                self.step_status.setText(self.describe(True) + ['skipped'])
-                self.step_status.setSkipped(True)
+                self._step_status.setText(self.describe(True) + ['skipped'])
+                self._step_status.setSkipped(True)
                 # this return value from self.start is a shortcut to finishing
                 # the step immediately; we skip calling finished() as
                 # subclasses may have overridden that an expect it to be called
                 # after start() (bug #837)
                 eventually(self._finishFinished, SKIPPED)
         except Exception:
-            self.failed(Failure())
+            self.finished = old_finished
+            old_failed(Failure())
 
         # and finally, wait for self.deferred to get triggered and return its
         # value
@@ -302,7 +330,7 @@ class BuildStep(object, properties.PropertiesMixin):
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
             if not lock.isAvailable(self, access):
-                self.step_status.setWaitingForLocks(True)
+                self._step_status.setWaitingForLocks(True)
                 log.msg("step %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
@@ -311,7 +339,7 @@ class BuildStep(object, properties.PropertiesMixin):
         # all locks are available, claim them all
         for lock, access in self.locks:
             lock.claim(self, access)
-        self.step_status.setWaitingForLocks(False)
+        self._step_status.setWaitingForLocks(False)
         return defer.succeed(None)
 
     def isNewStyle(self):
@@ -352,9 +380,9 @@ class BuildStep(object, properties.PropertiesMixin):
             # due to slave lost
             if results != RETRY:
                 results = EXCEPTION
-            self.step_status.setText(self.describe(True) +
-                                     ["interrupted"])
-            self.step_status.setText2(["interrupted"])
+            self._step_status.setText(self.describe(True) +
+                                      ["interrupted"])
+            self._step_status.setText2(["interrupted"])
         self._finishFinished(results)
 
     def _finishFinished(self, results):
@@ -372,8 +400,8 @@ class BuildStep(object, properties.PropertiesMixin):
             results = EXCEPTION
             hidden = False
 
-        self.step_status.stepFinished(results)
-        self.step_status.setHidden(hidden)
+        self._step_status.stepFinished(results)
+        self._step_status.setHidden(hidden)
 
         self.releaseLocks()
         self.deferred.callback(results)
@@ -388,9 +416,9 @@ class BuildStep(object, properties.PropertiesMixin):
         # However, in the case of losing the connection to a slave, we want to
         # finish with a RETRY.
         if why.check(error.ConnectionLost):
-            self.step_status.setText(self.describe(True) +
-                                     ["exception", "slave", "lost"])
-            self.step_status.setText2(["exception", "slave", "lost"])
+            self._step_status.setText(self.describe(True) +
+                                      ["exception", "slave", "lost"])
+            self._step_status.setText2(["exception", "slave", "lost"])
             self.finished(RETRY)
             return
 
@@ -405,12 +433,12 @@ class BuildStep(object, properties.PropertiesMixin):
                 log.err(Failure(), "error while formatting exceptions")
 
             # could use why.getDetailedTraceback() for more information
-            self.step_status.setText([self.name, "exception"])
-            self.step_status.setText2([self.name])
-            self.step_status.stepFinished(EXCEPTION)
+            self._step_status.setText([self.name, "exception"])
+            self._step_status.setText2([self.name])
+            self._step_status.stepFinished(EXCEPTION)
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
-            self.step_status.setHidden(hidden)
+            self._step_status.setHidden(hidden)
         except Exception:
             log.err(Failure(), "exception during failure processing")
             # the progress stuff may still be whacked (the StepStatus may
@@ -442,29 +470,35 @@ class BuildStep(object, properties.PropertiesMixin):
         return self.build.getSlaveName()
 
     def addLog(self, name):
-        loog = self.step_status.addLog(name)
+        loog = self._step_status.addLog(name)
         self._connectPendingLogObservers()
-        return loog
+        if self.isNewStyle():
+            loog._isNewStyle = True
+            return defer.succeed(loog)
+        else:
+            return loog
 
     def getLog(self, name):
-        for l in self.step_status.getLogs():
+        for l in self._step_status.getLogs():
             if l.getName() == name:
                 return l
         raise KeyError("no log named '%s'" % (name,))
 
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)
-        loog = self.step_status.addLog(name)
+        loog = self._step_status.addLog(name)
         size = loog.chunkSize
         for start in range(0, len(text), size):
             loog.addStdout(text[start:start + size])
         loog.finish()
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
-        self.step_status.addHTMLLog(name, html)
+        self._step_status.addHTMLLog(name, html)
         self._connectPendingLogObservers()
+        return defer.succeed(None)
 
     def addLogObserver(self, logname, observer):
         assert interfaces.ILogObserver.providedBy(observer)
@@ -475,10 +509,10 @@ class BuildStep(object, properties.PropertiesMixin):
     def _connectPendingLogObservers(self):
         if not self._pendingLogObservers:
             return
-        if not self.step_status:
+        if not self._step_status:
             return
         current_logs = {}
-        for loog in self.step_status.getLogs():
+        for loog in self._step_status.getLogs():
             current_logs[loog.getName()] = loog
         for logname, observer in self._pendingLogObservers[:]:
             if logname in current_logs:
@@ -486,19 +520,37 @@ class BuildStep(object, properties.PropertiesMixin):
                 self._pendingLogObservers.remove((logname, observer))
 
     def addURL(self, name, url):
-        self.step_status.addURL(name, url)
+        self._step_status.addURL(name, url)
+        return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
         command.buildslave = self.buildslave
-        d = command.run(self, self.remote)
-        return d
+        try:
+            res = yield command.run(self, self.remote)
+        finally:
+            self.cmd = None
+        defer.returnValue(res)
 
     @staticmethod
     def _maybeEvaluate(value, *args, **kwargs):
         if callable(value):
             value = value(*args, **kwargs)
         return value
+
+    def hasStatistic(self, name):
+        return self._step_status.hasStatistic(name)
+
+    def getStatistic(self, name, default=None):
+        return self._step_status.getStatistic(name, default)
+
+    def getStatistics(self):
+        return self._step_status.getStatistics()
+
+    def setStatistic(self, name, value):
+        return self._step_status.setStatistics(name, value)
+
 
 components.registerAdapter(
     BuildStep._getStepFactory,
@@ -553,7 +605,7 @@ class LoggingBuildStep(BuildStep):
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
-        self.step_status.setText(self.describe(False))
+        self._step_status.setText(self.describe(False))
 
         # stdio is the first log
         self.stdio_log = stdio_log = self.addLog("stdio")
@@ -602,7 +654,7 @@ class LoggingBuildStep(BuildStep):
         # instead of FAILURE, might make the text a bit more clear.
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
-        if self.step_status.isWaitingForLocks():
+        if self._step_status.isWaitingForLocks():
             self.addCompleteLog(
                 'interrupt while waiting for locks', str(reason))
         else:
@@ -625,7 +677,7 @@ class LoggingBuildStep(BuildStep):
 
     def evaluateCommand(self, cmd):
         if self.log_eval_func:
-            return self.log_eval_func(cmd, self.step_status)
+            return self.log_eval_func(cmd, self._step_status)
         return cmd.results()
 
     def getText(self, cmd, results):
@@ -659,9 +711,211 @@ class LoggingBuildStep(BuildStep):
     def setStatus(self, cmd, results):
         # this is good enough for most steps, but it can be overridden to
         # get more control over the displayed text
-        self.step_status.setText(self.getText(cmd, results))
-        self.step_status.setText2(self.maybeGetText2(cmd, results))
+        self._step_status.setText(self.getText(cmd, results))
+        self._step_status.setText2(self.maybeGetText2(cmd, results))
 
+
+class CommandMixin(object):
+
+    @defer.inlineCallbacks
+    def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
+        cmd = remotecommand.RemoteCommand(cmd, args)
+        try:
+            log = self.getLog('stdio')
+        except Exception:
+            log = yield self.addLog('stdio')
+        cmd.useLog(log, False)
+        yield self.runCommand(cmd)
+        if abandonOnFailure and cmd.didFail():
+            raise BuildStepFailed()
+        if makeResult:
+            defer.returnValue(makeResult(cmd))
+        else:
+            defer.returnValue(not cmd.didFail())
+
+    def runRmdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('rmdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+    def pathExists(self, path, log=None):
+        return self._runRemoteCommand('stat', False,
+                                      {'file': path, 'logEnviron': False})
+
+    def runMkdir(self, dir, log=None, abandonOnFailure=True):
+        return self._runRemoteCommand('mkdir', abandonOnFailure,
+                                      {'dir': dir, 'logEnviron': False})
+
+    def glob(self, glob):
+        return self._runRemoteCommand(
+            'glob', True, {'glob': glob, 'logEnviron': False},
+            makeResult=lambda cmd: cmd.updates['files'][0])
+
+
+class ShellMixin(object):
+
+    command = None
+    workdir = None
+    env = {}
+    want_stdout = True
+    want_stderr = True
+    usePTY = 'slave-config'
+    logfiles = {}
+    lazylogfiles = {}
+    timeout = 1200
+    maxTime = None
+    logEnviron = True
+    interruptSignal = 'KILL'
+    sigtermTime = None
+    initialStdin = None
+    decodeRC = {0: SUCCESS}
+
+    _shellMixinArgs = [
+        'command',
+        'workdir',
+        'env',
+        'want_stdout',
+        'want_stderr',
+        'usePTY',
+        'logfiles',
+        'lazylogfiles',
+        'timeout',
+        'maxTime',
+        'logEnviron',
+        'interruptSignal',
+        'sigtermTime',
+        'initialStdin',
+        'decodeRC',
+    ]
+    renderables = _shellMixinArgs
+
+    def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+        constructorArgs = constructorArgs.copy()
+
+        def bad(arg):
+            config.error("invalid %s argument %s" %
+                         (self.__class__.__name__, arg))
+        for arg in self._shellMixinArgs:
+            if arg not in constructorArgs:
+                continue
+            if arg in prohibitArgs:
+                bad(arg)
+            else:
+                setattr(self, arg, constructorArgs[arg])
+            del constructorArgs[arg]
+        for arg in constructorArgs:
+            if arg not in BuildStep.parms:
+                bad(arg)
+                del constructorArgs[arg]
+        return constructorArgs
+
+    @defer.inlineCallbacks
+    def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
+                               stdioLogName='stdio',
+                               **overrides):
+        kwargs = dict([(arg, getattr(self, arg))
+                       for arg in self._shellMixinArgs])
+        kwargs.update(overrides)
+        stdio = None
+        if stdioLogName is not None:
+            stdio = yield self.addLog(stdioLogName)
+        kwargs['command'] = flatten(kwargs['command'], (list, tuple))
+
+        # check for the usePTY flag
+        if kwargs['usePTY'] != 'slave-config':
+            if self.slaveVersionIsOlderThan("shell", "2.7"):
+                if stdio is not None:
+                    yield stdio.addHeader(
+                        "NOTE: slave does not allow master to override usePTY\n")
+                del kwargs['usePTY']
+
+        # check for the interruptSignal flag
+        if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
+            if stdio is not None:
+                yield stdio.addHeader(
+                    "NOTE: slave does not allow master to specify interruptSignal\n")
+            del kwargs['interruptSignal']
+
+        # lazylogfiles are handled below
+        del kwargs['lazylogfiles']
+
+        # merge the builder's environment with that supplied here
+        builderEnv = self.build.builder.config.env
+        kwargs['env'] = yield self.build.render(builderEnv)
+        kwargs['env'].update(self.env)
+        kwargs['stdioLogName'] = stdioLogName
+        # default the workdir appropriately
+        if not self.workdir:
+            if callable(self.build.workdir):
+                kwargs['workdir'] = self.build.workdir(self.build.sources)
+            else:
+                kwargs['workdir'] = self.build.workdir
+
+        # the rest of the args go to RemoteShellCommand
+        cmd = remotecommand.RemoteShellCommand(**kwargs)
+
+        # set up logging
+        if stdio is not None:
+            cmd.useLog(stdio, False)
+        for logname, remotefilename in self.logfiles.items():
+            if self.lazylogfiles:
+                # it's OK if this does, or does not, return a Deferred
+                callback = lambda cmd_arg, logname=logname: self.addLog(
+                    logname)
+                cmd.useLogDelayed(logname, callback, True)
+            else:
+                # tell the BuildStepStatus to add a LogFile
+                newlog = yield self.addLog(logname)
+                # and tell the RemoteCommand to feed it
+                cmd.useLog(newlog, False)
+
+        defer.returnValue(cmd)
+
+    def _describe(self, done=False):
+        try:
+            if done and self.descriptionDone is not None:
+                return self.descriptionDone
+            if self.description is not None:
+                return self.description
+
+            # if self.cmd is set, then use the RemoteCommand's info
+            if self.cmd:
+                command = self.command.command
+            # otherwise, if we were configured with a command, use that
+            elif self.command:
+                command = self.command
+            else:
+                return super(ShellMixin, self)._describe(done)
+
+            words = command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+
+            try:
+                len(words)
+            except (AttributeError, TypeError):
+                # WithProperties and Property don't have __len__
+                # For old-style classes instances AttributeError raised,
+                # for new-style classes instances - TypeError.
+                return super(ShellMixin, self)._describe(done)
+
+            # flatten any nested lists
+            words = flatten(words, (list, tuple))
+
+            # strip instances and other detritus (which can happen if a
+            # description is requested before rendering)
+            words = [w for w in words if isinstance(w, (str, unicode))]
+
+            if len(words) < 1:
+                return super(ShellMixin, self)._describe(done)
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+        except Exception:
+            log.err(failure.Failure(), "Error describing step")
+            return super(ShellMixin, self)._describe(done)
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
@@ -670,6 +924,8 @@ class LoggingBuildStep(BuildStep):
 #   ...,
 #   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
 # )
+
+
 def regex_log_evaluator(cmd, step_status, regexes):
     worst = cmd.results()
     for err, possible_status in regexes:
