@@ -115,6 +115,10 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     logging.info("JSON at {1} Changed, informing {0} client(s)".format(len(clients), url))
                     for client in clients:
                         client.sendMessage(jsonString)
+
+                #Reset error count to reduce cutting of many users
+                #in busy times
+                self.urlCacheDict[url].errorCount = 0
             except Exception as e:
                 logging.error(e)
                 self.urlCacheDict[url].errorCount += 1
