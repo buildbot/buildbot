@@ -1,3 +1,4 @@
+
 angular.module('app').service 'singulars', ['plurals', (plurals) ->
     ret = {}
     for k, v of plurals
@@ -23,9 +24,10 @@ angular.module('app').factory 'buildbotService',
                 new_elem = elem.unmemoized_all(route)
                 new_elem.queryParams = queryParams
                 return new_elem
-            elem.one = memoize(elem.one)
-            elem.all = memoize(elem.all)
-
+            if elem.one?
+                elem.one = memoize(elem.one)
+                elem.all = memoize(elem.all)
+            return null
         responseExtractor =  (response, operation) ->
             if operation == "post"
                 return response
