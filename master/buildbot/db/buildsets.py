@@ -29,13 +29,14 @@ class BsDict(dict):
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
-                   external_idstring=None, _reactor=reactor):
+    def addBuildset(self, sourcestampsetid, reason, properties, triggeredbybrid=None,
+                    builderNames=None, external_idstring=None,  _reactor=reactor):
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
 
-            self.check_length(buildsets_tbl.c.reason, reason)
+            reason_val = self.truncateColumn(buildsets_tbl.c.reason, reason)
+            self.check_length(buildsets_tbl.c.reason, reason_val)
             self.check_length(buildsets_tbl.c.external_idstring,
                     external_idstring)
 
@@ -44,7 +45,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # insert the buildset itself
             r = conn.execute(buildsets_tbl.insert(), dict(
                 sourcestampsetid=sourcestampsetid, submitted_at=submitted_at,
-                reason=reason, complete=0, complete_at=None, results=-1,
+                reason=reason_val, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 
@@ -70,16 +71,27 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # a time.
             brids = {}
             br_tbl = self.db.model.buildrequests
+            startbrid = triggeredbybrid
+            if triggeredbybrid is not None:
+                q = sa.select([br_tbl.c.triggeredbybrid, br_tbl.c.startbrid]) \
+                    .where(br_tbl.c.id == triggeredbybrid)
+
+                res = conn.execute(q)
+                row = res.fetchone()
+                if row and (row.startbrid is not None):
+                    startbrid = row.startbrid
+
             ins = br_tbl.insert()
             for buildername in builderNames:
                 self.check_length(br_tbl.c.buildername, buildername)
-                r = conn.execute(ins,
+                res = conn.execute(ins,
                     dict(buildsetid=bsid, buildername=buildername, priority=0,
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
-                        submitted_at=submitted_at, complete_at=None))
+                        submitted_at=submitted_at, complete_at=None,
+                        triggeredbybrid=triggeredbybrid, startbrid=startbrid))
 
-                brids[buildername] = r.inserted_primary_key[0]
+                brids[buildername] = res.inserted_primary_key[0]
 
             transaction.commit()
 

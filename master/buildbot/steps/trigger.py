@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
+from buildbot.process.buildstep import LoggingBuildStep, BuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
@@ -65,14 +65,15 @@ class Trigger(LoggingBuildStep):
         LoggingBuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
-        if self.running and not self.ended:
-            self.step_status.setText(["interrupted"])
-            return self.end(EXCEPTION)
+        if self.running:
+            BuildStep.interrupt(self, reason)
+            if self.step_status.isWaitingForLocks():
+                self.addCompleteLog('interrupt while waiting for locks', str(reason))
+            else:
+                self.addCompleteLog('interrupt', str(reason))
 
-    def end(self, result):
-        if not self.ended:
-            self.ended = True
-            return self.finished(result)
+            self.running = False
+            self.finished(EXCEPTION)
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self):
@@ -130,13 +131,17 @@ class Trigger(LoggingBuildStep):
 
         return ss_for_trigger
 
+    def finishIfRunning(self, result):
+        if self.running:
+            self.finished(result)
+
     @defer.inlineCallbacks
     def start(self):
         # Get all triggerable schedulers and check if there are invalid schedules
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
         if invalid_schedulers:
             self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
-            self.end(FAILURE)
+            self.finished(FAILURE)
             return
 
         self.running = True
@@ -166,7 +171,7 @@ class Trigger(LoggingBuildStep):
                 d.addErrback(log.err,
                     '(ignored) while invoking Triggerable schedulers:')
             rclist = None
-            self.end(SUCCESS)
+            self.finishIfRunning(SUCCESS)
             return
 
         was_exception = was_failure = False
@@ -220,7 +225,7 @@ class Trigger(LoggingBuildStep):
                             bn = brid_to_bn[build['brid']]
                             num = build['number']
                             url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn, num), url, *getBuildResults(build))
+                            self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
             res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
@@ -229,5 +234,5 @@ class Trigger(LoggingBuildStep):
             else:
                 add_links(res_builds)
 
-        self.end(result)
+        self.finishIfRunning(result)
         return

@@ -101,6 +101,10 @@ a.grey-btn,
     position: absolute;
     right: 10px;
     top: -6px;
+    &:focus {
+        outline: none;   
+        @include box-shadow($focusShadow);
+    }
 }
 
 .more-info-box .codebases .blue-btn {
@@ -180,7 +184,10 @@ a.grey-btn,
 	position: absolute;
     right: 10px;
     top: 4px;
-    cursor: pointer;
+    cursor: pointer;    
+    &:hover:after {
+        color:#1f5184;
+    }    
 }
 
 .close-btn:after {

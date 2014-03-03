@@ -7,32 +7,44 @@ define(['select2'], function () {
 
 		//Set the highest with on both selectors
 		init: function () {
-				
-			$("select.select-tools-js").select2({
-				width: selectors.getMaxChildWidth(".select-tools-js")
-			});
+			var selectBranches = $(".select-tools-js");
+			var commonbranchSelect = $("#commonBranch_select");
+
+			selectBranches.select2({
+				width: selectors.getMaxChildWidth(selectBranches),
+				minimumResultsForSearch : 10
+			});									
+
+			// invoke the sortingfunctionality when the selector
+			selectBranches.add(commonbranchSelect).on("select2-open", function() { 	
+				selectors.clickSort();
+			})
 			
-			$('.show-common').click(function(){
-				//$('#branchTxt').fadeOut('fast');
-				var commonContainer = $(this).next('.select2-container');
-				
-				$(commonContainer).show(0,function(){
-					$(this).select2('open');	
-				});
-			});
-			$('#commonBranch_select').on("select2-close", function() {
-				$('.common-branch-select').hide();
-			});	
-			$("#commonBranch_select").select2({
-				placeholder: "Common branches"
+			// fill the options in the combobox with common options
+			selectors.comboBox(selectBranches, commonbranchSelect);
+
+			//Invoke select2 for the common selector
+			commonbranchSelect.select2({
+				width: selectors.getMaxChildWidth(commonbranchSelect),
+				placeholder: "Select a common branch"
 			});
 
-			selectors.clickSort($('#select2-drop .select2-results'));
+			// unbind the click event on close for the sorting functionality	
+			commonbranchSelect.add(selectBranches).on("select2-close", function() {
+				
+				$('.sort-name').unbind('click');
+				$('.select2-container').removeClass('select2-container-active');			
+			});	
+
+			selectBranches.on("select2-selecting", function(e) {    			
+    			 commonbranchSelect.select2("val", "");
+			});
 
 		}, getMaxChildWidth: function(sel) {
 			    var max = 80;
-			    $(sel).each(function(){
+			    sel.each(function(){
 			        var c_width = $(this).width();
+			        
 			        if (c_width > max) {
 			            max = c_width + 30;
 			        }
@@ -41,62 +53,65 @@ define(['select2'], function () {
 			    return max;
 		},
 		// combobox on codebases
-		comboBox: function (selector) {
+		comboBox: function (selector, commonbranchSelect) {			
 
-			// invoke selec2 plugin
-			var selectLength = $('select.select-tools-js').length;
-
+			// Find common options
+			var commonOptions = {};
 			$('option', selector).each(function() {			
-				 if ($('option[value="' + $(this).val() + '"]', selector).length == selectLength) {
-	        		$(this).clone().prop('selected', false).appendTo("#commonBranch_select");			
-	    		}
-			});
-
-			// Remove duplicates from the list
-			var map = {};
-			$("#commonBranch_select option").each(function(){
 			    var value = $(this).text();
-			    if (map[value] == null){
-			        map[value] = true;
-			    } else {
-			        $(this).remove();
+			    if (commonOptions[value] == null){
+			        commonOptions[value] = true;
+			    } else {			        
+			        $(this).clone().prop('selected', false).appendTo(commonbranchSelect)
 			    }
 			});
 
-			$('#commonBranch_select').change(function(){
+			// remove the duplicates
+			var removedDuplicatesOptions = {};
+			$('option',commonbranchSelect).each(function() {			
+			    var value = $(this).text();
+			    if (removedDuplicatesOptions[value] == null){
+			        removedDuplicatesOptions[value] = true;
+			    } else {
+			    	$(this).remove();			        
+			    }
+			});
+
+			commonbranchSelect.on("change", function() {
+				
 				var commonVal = $(this);
 				
 				$('option',selector).each(function() {
 					
 					if ($(this).val() === $(commonVal).val() ) {					
-							$(this).parent().children('option').prop('selected', false);
-							$(this).prop('selected', true);
-						}
-				});
-				
-				$(selector).trigger("change");
-			});
-
+						$(this).parent().children('option').prop('selected', false);
+						$(this).prop('selected', true);
+					}
+				});				
+				selector.trigger("change");			
+			});	
+			
 		},
 		// sort selector list by name
-		clickSort: function (selector) {
+		clickSort: function () {
+			var selector = $('#select2-drop');
+			var selectResults = selector.children(".select2-results");
+			var sortLink = selector.children('.sort-name');
 
-			$('.sort-name').click(function(e){
-				var sn = $(this)
-				sn.toggleClass('direction-up');
-				e.preventDefault();
-
-			    selector.children("li").sort(function(a, b) {
+			sortLink.bind('click', function(e){
+				e.preventDefault();							
+				sortLink.toggleClass('direction-up');
+			    selectResults.children('li').sort(function(a, b) {
 			        var upA = $(a).text().toUpperCase();
 			        var upB = $(b).text().toUpperCase();
-			        if ($(sn).hasClass('direction-up')) {
+			        if (!sortLink.hasClass('direction-up')) {
 			        	return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
 			        } else {
 			        	return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
 			        }
-			    }).appendTo(selector);
+			    }).appendTo(selectResults);
+			    selectResults.prop({ scrollTop: 0 });
 			});
-			
 		}
 	}	
 	return selectors;

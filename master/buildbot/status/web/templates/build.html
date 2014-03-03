@@ -30,7 +30,6 @@
   </span>
   
   <div class="divider"></div>
-
   {% if authz.advertiseAction('stopBuild', request) %}
     <h2 class="head-2">
       Stop Build
@@ -38,6 +37,7 @@
     {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
       <div class="divider"></div>
   {% endif %}
+
 
 {% else %}
 

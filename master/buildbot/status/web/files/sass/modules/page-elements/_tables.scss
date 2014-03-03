@@ -31,6 +31,12 @@
 		@include text-shadow(0 1px 0 #fff);
 		border-top:1px solid #FFF;
 	}
+	tbody tr {		
+		&:hover {		
+			background-color:#fafafa;
+			@include box-shadow(0 0px 12px #FFFFFF inset);
+		}
+	}
 	tr th:first-child {
 		@include border-radius(4px 4px 0 0);
 	}
@@ -42,7 +48,7 @@
 		border-bottom:1px solid #C8C8C8;
 		&.buttontd {
 			width: 80px;
-		}
+		}		
 	}
 	
 	tr:last-child td {
@@ -207,12 +213,16 @@ table.codebase-branch-table {
     margin: 15px 0 20px 0;
     float: left;
     .top & {
-	    margin: 13px 0 0 10px;
+	    margin: 13px 0 0 10px;	
 	}
     a {
-	    display: inline-block;
-	    padding: 3px 11px;
+    	&:focus {
+    		outline: none;	    		
+    		@include box-shadow($focusShadow);	  
+    	}    	
 	    margin-right: 5px;
+	    display: inline-block;
+	    padding: 3px 11px;	    
 	    @include border-radius(4px);
 	    border: solid 1px #c0c0c0;
 	    background: #fff;
@@ -224,13 +234,14 @@ table.codebase-branch-table {
 			background: #E0E0E0;
 			color:#444;
 	    }
+	    
 		&.paginate_active {
 				cursor: default;
 				border: none;
 				background: #8297AE;
 			    @include box-shadow(0 0 8px rgba(108, 108, 108, 0.5) inset, 0 1px 0 rgba(255, 255, 255, 0.8));		    
 			    color: #f0f0f0;
-			    @include text-shadow(0 0 3px rgba(0,0,0, .5));
+			    @include text-shadow(0 0 3px rgba(0,0,0, .5));			    
 		}
 		&.paginate_button_disabled,
 		&.paginate_disabled_previous,
@@ -287,6 +298,10 @@ table.codebase-branch-table {
         border:1px solid #aaa;
         @include appearance(none);
         min-width: 60px;
+        &:focus {
+        	outline: none;	 
+        	@include box-shadow ($focusShadow,0 0 3px white inset, 0 1px 1px rgba(0, 0, 0, 0.1));
+        }
         
     }
     label {
@@ -363,7 +378,12 @@ table.codebase-branch-table {
             line-height: 13px;
             padding: 9px 11px 8px 30px;
             @include text-shadow (0 1px 0 white);
-            width: 100px;
+            width: 100px;        
+            &:focus {
+            	outline: none;	 
+            	@include box-shadow ($focusShadow, 1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+            	
+            }    
         }
         &:after {
             color: #ADADAD;
@@ -392,15 +412,13 @@ table.codebase-branch-table {
 		margin:24px 0 0;
 	}
 
-
-
 	.dataTables_length,
     .dataTables_info,
     .border-table-holder {
         display:none;
     }
     .dataTables_filter > label input {
-        width: 67px;
+        width: 67px;        
     }
 
 	.more-info-box {

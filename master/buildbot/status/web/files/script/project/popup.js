@@ -79,7 +79,7 @@ define(['helpers'], function (helpers) {
 		}, pendingJobs: function(thisEl) {
 
 			var thisi = thisEl.attr('data-in');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 			var rtUpdate = thisEl.attr('data-rt_update');
 
 			$('body').append(preloader).show();
@@ -92,7 +92,7 @@ define(['helpers'], function (helpers) {
 					rt_update:'pending'
 				},
 				success: function(data) {
-					$('#bowlG').remove();
+					preloader.remove();
 					var doc = document.createElement('html');
  					doc.innerHTML = data;
 					
@@ -117,7 +117,7 @@ define(['helpers'], function (helpers) {
 		}, codebasesBranches: function() {
 			
 			var path = $('#pathToCodeBases').attr('href');
-			var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
 			$('body').append(preloader).show();
 			var mib = popup.htmlModule ('Select branches');
 			
@@ -127,26 +127,25 @@ define(['helpers'], function (helpers) {
 			$.get(path)
 			.done(function(data) {
 				var formContainer = $('#content1');	
-				$('#bowlG').remove();
+				preloader.remove();
 				
 				var fw = $(data).find('#formWrapper')
 				
-				$(fw).appendTo(formContainer);
+				fw.children('#getForm').prepend('<div class="filter-table-input">'+
+	    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
+	  				'</div>');
 				
-				$('#content .blue-btn').val('update');
+				fw.appendTo(formContainer);												
 
-				// remove unwanted html for the popup box
-				$('#content1 .filter-table-input label, #content1 .filter-table-input .help-txt').remove();
-
-				helpers.jCenter(mib).fadeIn('fast');
+				helpers.jCenter(mib).fadeIn('fast',function(){					
+					$('#getForm .blue-btn').focus();
+				});
 				
 				$(window).resize(function() {					
 					helpers.jCenter(mib);
 				});
 
-
-				require(['selectors'],function(selectors) {
-		        	selectors.comboBox('#formWrapper .select-tools-js');
+				require(['selectors'],function(selectors) {		        	
 		        	selectors.init();
 					$(window).resize(function() {
 						helpers.jCenter($('.more-info-box-js'));
@@ -180,15 +179,31 @@ define(['helpers'], function (helpers) {
 			var popupTitle = thisEl.attr('data-popuptitle');
 			var datab = thisEl.attr('data-b');
 			var dataindexb = thisEl.attr('data-indexb');
+            var dataReturnPage = thisEl.attr('data-returnpage');
 			var rtUpdate = thisEl.attr('data-rt_update');
-			var contentType = thisEl.attr('data-contenttype'); 
+			var contentType = thisEl.attr('data-contenttype');
+            var builder_name = thisEl.attr('data-b_name');
 			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
-			$('body').append(preloader);
+            var body = $('body');
+			body.append(preloader);
 			var mib = popup.htmlModule (popupTitle);
-			mib.appendTo($('body'));
+			mib.appendTo(body);
+
+            //get all branches
+            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            $.each(sURLVariables, function(index, val) {
+                var sParameterName = val.split('=');
+                if (sParameterName[0].indexOf("_branch") >= 0) {
+                    urlParams[sParameterName[0]] = sParameterName[1];
+                    console.log(val)
+                }
+            });
 			
 			// get currentpage with url parameters
-			$.get('', {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb}).done(function(data) {
+            var url = location.protocol + "//" + location.host + "/forms/forceBuild";
+			$.get(url, urlParams).done(function(data) {
 				var exContent = $('#content1');
 				preloader.remove();
 				$(data).appendTo(exContent);

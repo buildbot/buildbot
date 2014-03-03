@@ -41,6 +41,8 @@ define(['screensize'], function (screenSize) {
 				//helpers.updateBuilders();
 			}
 
+
+
        		// submenu overflow on small screens
 
 	        helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -141,15 +143,31 @@ define(['screensize'], function (screenSize) {
 			
 		}, runIndividualBuild: function() { // trigger individual builds
 			$('.run-build-js').click(function(e){
-
 				$('.remove-js').remove();
 				e.preventDefault();
-				var datab = $(this).prev().attr('data-b');
-				var dataindexb = $(this).prev().attr('data-indexb');
+                var prevElem = $(this).prev();
+				var datab = prevElem.attr('data-b');
+				var dataindexb = prevElem.attr('data-indexb');
+                var dataReturnPage = prevElem.attr('data-returnpage');
 				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
+                var builder_name = $(this).prev().attr('data-b_name');
 				$('body').append(preloader).show();
 				// get the current url with parameters append the form to the DOM and submit it
-				$.get('', {rt_update: 'extforms', datab: datab, dataindexb: dataindexb}).done(function(data) {
+                var url = location.protocol + "//" + location.host + "/forms/forceBuild";
+
+                //get all branches
+                var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
+                var sPageURL = window.location.search.substring(1);
+                var sURLVariables = sPageURL.split('&');
+                $.each(sURLVariables, function(index, val) {
+                    var sParameterName = val.split('=');
+                    if (sParameterName[0].indexOf("_branch") >= 0) {
+                        urlParams[sParameterName[0]] = sParameterName[1];
+                        console.log(val)
+                    }
+                });
+
+				$.get(url, urlParams).done(function(data) {
 					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
 					
@@ -366,9 +384,9 @@ define(['screensize'], function (screenSize) {
 
 		}, closePopup: function(boxElement, clearEl) {
 			$(document, '.close-btn').bind('click touchstart', function(e){
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length ) {
+				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
 					
-					if (clearEl === undefined) {
+					if (clearEl === undefined ) {
 						boxElement.remove();
 					} else {
 						boxElement.slideUp('fast', function(){

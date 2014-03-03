@@ -148,7 +148,7 @@ class ForceBuildActionResource(ActionResource):
         # decode all of the args
         encoding = getRequestCharset(req)
         for name, argl in args.iteritems():
-            args[name] = [ arg.decode(encoding) for arg in argl ]
+            args[name] = [ urllib.unquote(arg).decode(encoding) for arg in argl ]
 
         # damn html's ungeneric checkbox implementation...
         for cb in args.get("checkbox", []):
@@ -224,10 +224,10 @@ def builder_info(build, req, codebases_arg={}):
     step = build.getCurrentStep()
     # TODO: is this necessarily the case?
     if not step:
-        b['current_step'] = "[waiting for Lock]"
+        b['current_step'] = "[waiting for build slave]"
     else:
         if step.isWaitingForLocks():
-            b['current_step'] = "%s [waiting for Lock]" % step.getName()
+            b['current_step'] = "%s [waiting for build slave]" % step.getName()
         else:
             b['current_step'] = step.getName()
 
@@ -321,6 +321,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['codebases_arg'] = codebases_arg
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt['builder_name'] = b.getName()
 
         cxt['rt_update'] = req.args
 

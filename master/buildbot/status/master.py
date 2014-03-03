@@ -132,23 +132,35 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if bldr.config.project:
                 builder_path += "projects/%s/" % bldr.config.project
 
-        builder_path += "builders/%s/builds/%d" % (
-            urllib.quote(builder_name, safe=''),
-            build_number)
+        builder_path += "builders/%s" % urllib.quote(builder_name, safe='')
+
+        if build_number is not None:
+            builder_path += "/builds/%d" % build_number
 
         return builder_path
 
     def getURLForBuild(self, builder_name, build_number):
+        url = {}
         prefix = self.getBuildbotURL()
-        return prefix + self.getBuildersPath(builder_name, build_number)
+        url['path'] = prefix + self.getBuildersPath(builder_name, build_number)
+        url['text'] = self.getURLText(builder_name, build_number)
+        return url
+
+    def getURLText(self, builder_name, build_number):
+        text = builder_name
+        if build_number is not None:
+            text += " #" + str(build_number)
+        else:
+            text += " (Canceled)"
+        return text
 
     def getURLForBuildRequest(self, brid, builder_name, build_number):
         d = self.master.db.mastersconfig.getMasterURL(brid)
-        
+
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
             url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
-            url['text'] = "%s #%d" % (builder_name, build_number)
+            url['text'] = self.getURLText(builder_name, build_number)
             return url
         d.addCallback(getMasterURL, builder_name, build_number)
         return d

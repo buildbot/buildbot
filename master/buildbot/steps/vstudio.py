@@ -348,12 +348,12 @@ class VCExpress9(VC8):
 
 # Add first support for VC9 (Same as VC8, with a different installdir)
 class VC9(VC8):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
+    default_installdir = 'C:\\Program Files (x86)\\Microsoft Visual Studio 9.0'
 
 VS2008 = VC9
 
 # VC10 doesn't looks like it needs extra stuff.
 class VC10(VC9):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
+    default_installdir = 'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10

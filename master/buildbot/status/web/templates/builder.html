@@ -122,7 +122,7 @@
       -->
       <li>
         {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-          <a href="#" title="Run custom build" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" class="ajaxbtn more-info">Run build
+          <a href="#" title="Run custom build" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" class="ajaxbtn more-info">Run build
           </a>
         {% endif %}          
       </li>
@@ -153,8 +153,7 @@
       {% if slaves %}
         <tr>
           <th class="txt-align-left">Name</th>
-          <th>Status</th>
-          <th>Admin</th>
+          <th>Status</th>          
         </tr>
       {% endif %}
       </thead>
@@ -170,10 +169,8 @@
         </td>
         {% if s.connected %}
           <td class="idle">connected</td>
-          <td>{{ s.admin|email if s.admin else ""}}</td>
         {% else %}
-          <td class="offline">offline</td>
-          <td>&nbsp;</td>
+          <td class="offline">offline</td>        
         {% endif %}
         
       {% else %}
@@ -187,11 +184,6 @@
 </div>
 
 {% endblock %}
- {% elif rt_update.rt_update[0] == 'extforms' %}
-
-    {% import 'forms.html' as forms %}
-
-    {{ forms.force_build(builder_url+"/force"+codebases_arg, authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}
     <table class="table-1 tablesorter-js tablesorter first-child">
               <thead>

@@ -475,8 +475,14 @@ class Builder(config.ReconfigurableServiceMixin,
         brobj = yield self._brdictToBuildRequest(brdicts[0])
         for b in self.building:
             if self._defaultMergeRequestFn(b.requests[0], brobj):
-                yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
+                building = b.requests
                 b.requests = b.requests + breqs
+                try:
+                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
+                except:
+                    b.requests = building
+                    raise
+
                 log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
                 defer.returnValue(True)
                 return
@@ -502,6 +508,24 @@ class Builder(config.ReconfigurableServiceMixin,
     def getAvailableSlaveBuilders(self):
         return [sb for sb in self.slaves
                 if sb.isAvailable()]
+
+    def getSelectedSlaveFromBuildRequest(self, brdict):
+        """
+        Grab the selected slave and return the slave object
+        if selected_slave property is not found then returns
+        None
+        """
+        if self.buildRequestHasSelectedSlave(brdict):
+            for sb in self.slaves:
+                if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
+                    return sb
+        return None
+
+    def buildRequestHasSelectedSlave(self, brdict):
+        """
+        Does the build request have a specified slave?
+        """
+        return brdict['brobj'].properties.hasProperty("selected_slave")
 
     @defer.inlineCallbacks
     def maybeStartBuild(self):
@@ -538,7 +562,10 @@ class Builder(config.ReconfigurableServiceMixin,
         # match them up until we're out of options
         while (available_slavebuilders or self.building) and unclaimed_requests:
             # then choose a request (using nextBuild)
-            brdict = yield self._chooseBuild(unclaimed_requests)
+            if self.config.nextBuild:
+                brdict =  yield self._chooseNextBuild(unclaimed_requests)
+            else:
+                brdict = yield self._chooseBuild(unclaimed_requests)
 
             if not brdict:
                 break
@@ -566,7 +593,6 @@ class Builder(config.ReconfigurableServiceMixin,
                 if (yield self.mergeBuildingRequests(brdicts, brids, breqs)):
                     self.removeFromUnclaimRequestsList(brdicts, unclaimed_requests)
                     continue
-
             except:
                 unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
                 continue
@@ -601,7 +627,13 @@ class Builder(config.ReconfigurableServiceMixin,
                 self.updateBigStatus()
                 break
 
-            slavebuilder = yield self._chooseSlave(available_slavebuilders)
+            #If we selected a specific slave check for availability
+            if self.buildRequestHasSelectedSlave(brdict):
+                slavebuilder = self.getSelectedSlaveFromBuildRequest(brdict)
+                if slavebuilder.isAvailable() is False:
+                    slavebuilder = None
+            else:
+                slavebuilder = yield self._chooseSlave(available_slavebuilders)
 
             if not slavebuilder:
                 break
@@ -666,6 +698,7 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             return defer.succeed(random.choice(available_slavebuilders))
 
+    @defer.inlineCallbacks
     def _chooseBuild(self, buildrequests):
         """
         Choose the next build from the given set of build requests (represented
@@ -675,20 +708,30 @@ class Builder(config.ReconfigurableServiceMixin,
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        if self.config.nextBuild:
-            # nextBuild expects BuildRequest objects, so instantiate them here
-            # and cache them in the dictionaries
-            d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                      for brdict in buildrequests ])
-            d.addCallback(lambda requestobjects :
-                    self.config.nextBuild(self, requestobjects))
-            def to_brdict(brobj):
-                # get the brdict for this object back
-                return brobj.brdict
-            d.addCallback(to_brdict)
-            return d
-        else:
-            return defer.succeed(buildrequests[0])
+        for b in buildrequests:
+            d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
+            brdict = d[0].brdict
+            if self.buildRequestHasSelectedSlave(brdict):
+                selected_slave = self.getSelectedSlaveFromBuildRequest(brdict)
+                if selected_slave is not None and selected_slave.isAvailable():
+                    defer.returnValue(brdict)
+            else:
+                defer.returnValue(brdict)
+
+        defer.returnValue(None)
+
+    def _chooseNextBuild(self, buildrequests):
+        # nextBuild expects BuildRequest objects, so instantiate them here
+        # and cache them in the dictionaries
+        d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
+                                  for brdict in buildrequests ])
+        d.addCallback(lambda requestobjects :
+        self.config.nextBuild(self, requestobjects))
+        def to_brdict(brobj):
+            # get the brdict for this object back
+            return brobj.brdict
+        d.addCallback(to_brdict)
+        return d
 
     def _getMergeRequestsFn(self):
         """Helper function to determine which mergeRequests function to use
@@ -715,6 +758,11 @@ class Builder(config.ReconfigurableServiceMixin,
         return property
 
     def propertiesMatch(self, req1, req2):
+        #If the instances are the same then they match!
+        if req1.bsid == req2.bsid:
+            return True
+        if req1.properties.has_key('selected_slave') or req2.properties.has_key('selected_slave'):
+            return False
         if self.getBoolProperty(req1, "force_rebuild") != self.getBoolProperty(req2, "force_rebuild"):
             return False
         return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
@@ -741,6 +789,8 @@ class Builder(config.ReconfigurableServiceMixin,
         breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
 
         # gather the mergeable requests
+        # NOTE: This is assuming that it checks against itself
+        # otherwise we get a return of an empty array
         merged_request_objects = []
         for other_breq_object in unclaimed_request_objects:
             if (yield defer.maybeDeferred(
