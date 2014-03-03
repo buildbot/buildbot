@@ -242,8 +242,6 @@ class MakeDirectory(SlaveBuildStep):
 
 class CompositeStepMixin():
 
-    """I define utils for composite steps, factorizing basic remote commands"""
-
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write

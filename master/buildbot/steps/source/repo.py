@@ -195,10 +195,11 @@ class Repo(Source):
     def _Cmd(self, command, abandonOnFailure=True, workdir=None, **kwargs):
         if workdir is None:
             workdir = self.workdir
-        self.cmd = cmd = buildstep.RemoteShellCommand(workdir, command,
-                                                      env=self.env,
-                                                      logEnviron=self.logEnviron,
-                                                      timeout=self.timeout, **kwargs)
+        cmd = buildstep.RemoteShellCommand(workdir, command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout, **kwargs)
+        self.lastCommand = cmd
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
@@ -252,7 +253,7 @@ class Repo(Source):
 
         # starting from here, clobbering will not help
         yield self.doRepoDownloads()
-        self.setStatus(self.cmd, 0)
+        self.setStatus(self.lastCommand, 0)
         yield self.finished(0)
 
     @defer.inlineCallbacks
@@ -305,9 +306,9 @@ class Repo(Source):
     # compiled regexps in self.re_error_messages
     def _findErrorMessages(self, error_re):
         for logname in ['stderr', 'stdout']:
-            if not hasattr(self.cmd, logname):
+            if not hasattr(self.lastCommand, logname):
                 continue
-            msg = getattr(self.cmd, logname)
+            msg = getattr(self.lastCommand, logname)
             if not (re.search(error_re, msg) is None):
                 return True
         return False
@@ -341,7 +342,7 @@ class Repo(Source):
                 self.step_status.setText2(["repo: change %s does not exist" % download])
                 raise buildstep.BuildStepFailed()
 
-            if self.cmd.didFail() or self._findErrorMessages(self.cherry_pick_error_re):
+            if self.lastCommand.didFail() or self._findErrorMessages(self.cherry_pick_error_re):
                 # cherry pick error! We create a diff with status current workdir
                 # in stdout, which reveals the merge errors and exit
                 command = ['forall', '-c', 'git', 'diff', 'HEAD']
@@ -349,8 +350,8 @@ class Repo(Source):
                 self.step_status.setText(["download failed: %s" % download])
                 raise buildstep.BuildStepFailed()
 
-            if hasattr(self.cmd, 'stderr'):
-                lines = self.cmd.stderr.split("\n")
+            if hasattr(self.lastCommand, 'stderr'):
+                lines = self.lastCommand.stderr.split("\n")
                 match1 = match2 = False
                 for line in lines:
                     if not match1:
@@ -395,9 +396,9 @@ class Repo(Source):
         # stat -c%Y gives mtime in second since epoch
         res = yield self._Cmd(["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False)
         if not res:
-            tarball_mtime = int(self.cmd.stdout)
+            tarball_mtime = int(self.lastCommand.stdout)
             yield self._Cmd(["stat", "-c%Y", "."], collectStdout=True)
-            now_mtime = int(self.cmd.stdout)
+            now_mtime = int(self.lastCommand.stdout)
             age = now_mtime - tarball_mtime
         if res or age > self.updateTarballAge:
             tar = self.computeTarballOptions() + ['-cvf', self.tarball, ".repo"]
