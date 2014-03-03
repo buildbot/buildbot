@@ -93,8 +93,8 @@ EXAMPLES = """\
     - A specific project.
   - /json/buildqueue/
     - The current build queue
-  - /json/buildqueue/?builder=<A_BUILDER>
-    - The current build queue
+  - /json/pending/<A_BUILDER>/
+    - The current pending builds for a builder (Can be filtered by codebases)
 """
 
 
@@ -711,36 +711,60 @@ class QueueJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        # buildbot.status.builder.BuilderStatus
-        builder_names = self.status.getBuilderNames()
+        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
 
-        if request.args.has_key("builder"):
-            builder_filter = request.args.get("builder")
-            builders = [self.status.getBuilder(builder_name)
-                        for builder_name in builder_names if builder_name in builder_filter]
-        else:
-            builders = [self.status.getBuilder(builder_name) for builder_name in builder_names]
+        #Convert to dictionary
+        output = []
+        for br_dict in unclaimed_brq:
+            br = BuildRequestStatus(br_dict['buildername'], br_dict['brid'], self.status)
+            d = yield br.asDict_async()
+            output.append(d)
+
+        defer.returnValue(output)
+
+
+class PendingBuildsJsonResource(JsonResource):
+    help = """List the builds in the queue for a particular builder."""
+    pageTitle = 'Queue'
+
+    def __init__(self, status):
+        JsonResource.__init__(self, status)
+        self.status = status
+        for builder_name in self.status.getBuilderNames():
+            self.putChild(builder_name,
+                          SinglePendingBuildsJsonResource(status,
+                                              status.getBuilder(builder_name)))
+
+
+class SinglePendingBuildsJsonResource(JsonResource):
+    help = """List the pending builds for a specific ."""
+    pageTitle = 'Queue'
+
+    def __init__(self, status, builder):
+        JsonResource.__init__(self, status)
+        self.status = status
+        self.builder = builder
+
+    @defer.inlineCallbacks
+    def asDict(self, request):
+        builds = yield self.builder.getPendingBuildRequestStatuses()
 
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
 
+        #Filter + add sort info
         pending = []
-        for b in builders:
-            builds = yield b.getPendingBuildRequestStatuses()
-            if len(codebases) > 1:
-                tempBuilds = []
-                for build in builds:
-                    in_codebase = yield b.foundCodebasesInBuildRequest(build, codebases)
-                    if in_codebase:
-                        tempBuilds.append(build)
-                builds = tempBuilds
+        for br in builds:
+            result = True
+            if len(codebases) > 0:
+                from buildbot.status.web.builder import foundCodebasesInPendingBuild
+                result = yield foundCodebasesInPendingBuild(br, codebases)
 
-            pending.extend(builds)
 
-        #Sort the list
-        for br in pending:
-            br.sort_value = yield br.getSubmitTime()
+            if result:
+                br.sort_value = yield br.getSubmitTime()
+                pending.append(br)
 
         def sort_queue(br, otherBR):
             return br.sort_value - otherBR.sort_value
@@ -750,10 +774,11 @@ class QueueJsonResource(JsonResource):
         #Convert to dictionary
         output = []
         for b in pending:
-            dict = yield b.asDict_async()
-            output.append(dict)
+            d = yield b.asDict_async()
+            output.append(d)
 
         defer.returnValue(output)
+
 
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
@@ -863,6 +888,7 @@ For help on any sub directory, use url /child/help
         self.putChild('slaves', SlavesJsonResource(status))
         self.putChild('metrics', MetricsJsonResource(status))
         self.putChild('buildqueue', QueueJsonResource(status))
+        self.putChild('pending', PendingBuildsJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 
