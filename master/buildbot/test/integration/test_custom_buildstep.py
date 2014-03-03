@@ -287,6 +287,9 @@ class RunSteps(unittest.TestCase):
 
     def assertLogs(self, exp_logs):
         bs = self.master.status.lastBuilderStatus.lastBuildStatus
+        # tell the steps they're not new-style anymore, so they don't assert
+        for l in bs.getLogs():
+            l._isNewStyle = False
         got_logs = dict((l.name, l.getText()) for l in bs.getLogs())
         self.assertEqual(got_logs, exp_logs)
 

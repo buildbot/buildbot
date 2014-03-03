@@ -212,6 +212,7 @@ class LogFile:
     BUFFERSIZE = 2048
     filename = None  # relative to the Builder's basedir
     openfile = None
+    _isNewStyle = False  # set to True by new-style buildsteps
 
     def __init__(self, parent, name, logfilename):
         """
@@ -259,6 +260,7 @@ class LogFile:
 
         @returns: boolean
         """
+        assert not self._isNewStyle, "not available in new-style steps"
         return os.path.exists(self.getFilename() + '.bz2') or \
             os.path.exists(self.getFilename() + '.gz') or \
             os.path.exists(self.getFilename())
@@ -328,9 +330,11 @@ class LogFile:
 
     def getText(self):
         # this produces one ginormous string
+        assert not self._isNewStyle, "not available in new-style steps"
         return "".join(self.getChunks([STDOUT, STDERR], onlyText=True))
 
     def getTextWithHeaders(self):
+        assert not self._isNewStyle, "not available in new-style steps"
         return "".join(self.getChunks(onlyText=True))
 
     def getChunks(self, channels=[], onlyText=False):
@@ -345,6 +349,8 @@ class LogFile:
         # point. To use this in subscribe(catchup=True) without missing any
         # data, you must insure that nothing will be added to the log during
         # yield() calls.
+
+        assert not self._isNewStyle, "not available in new-style steps"
 
         f = self.getFile()
         if not self.finished:
@@ -404,11 +410,13 @@ class LogFile:
     def readlines(self):
         """Return an iterator that produces newline-terminated lines,
         excluding header chunks."""
+        assert not self._isNewStyle, "not available in new-style steps"
         alltext = "".join(self.getChunks([STDOUT], onlyText=True))
         io = StringIO(alltext)
         return io.readlines()
 
     def subscribe(self, receiver, catchup):
+        assert not self._isNewStyle, "not available in new-style steps"
         if self.finished:
             return
         self.watchers.append(receiver)
@@ -423,6 +431,7 @@ class LogFile:
             self.watchers.remove(receiver)
 
     def subscribeConsumer(self, consumer):
+        assert not self._isNewStyle, "not available in new-style steps"
         p = LogFileProducer(self, consumer)
         p.resumeProducing()
 

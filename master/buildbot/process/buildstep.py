@@ -460,6 +460,7 @@ class BuildStep(object, properties.PropertiesMixin):
         loog = self._step_status.addLog(name)
         self._connectPendingLogObservers()
         if self.isNewStyle():
+            loog._isNewStyle = True
             return defer.succeed(loog)
         else:
             return loog
