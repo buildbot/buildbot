@@ -25,7 +25,6 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
 from buildbot.test.util import compat
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
@@ -34,6 +33,7 @@ from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
 from mock import Mock
+
 
 class FakeTriggerable(object):
     implements(interfaces.ITriggerableScheduler)
@@ -188,15 +188,18 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def expectTriggeredLinks(self, *args):
         if 'a_br' in args:
-            self.exp_added_urls.append((('a #11', 'baseurl/#buildrequest/11'),{}))
+            self.exp_added_urls.append((('a #11', 'baseurl/#buildrequest/11'), {}))
         if 'b_br' in args:
-            self.exp_added_urls.append((('b #22', 'baseurl/#buildrequest/22'),{}))
+            self.exp_added_urls.append((('b #22', 'baseurl/#buildrequest/22'), {}))
         if 'a' in args:
-            self.exp_added_urls.append((('success: A #4011', 'baseurl/#builders/A/builds/4011'),{}))
+            self.exp_added_urls.append((('success: A #4011',
+                                         'baseurl/#builders/A/builds/4011'), {}))
         if 'b' in args:
-            self.exp_added_urls.append((('success: B #4022', 'baseurl/#builders/B/builds/4022'),{}))
+            self.exp_added_urls.append((('success: B #4022',
+                                         'baseurl/#builders/B/builds/4022'), {}))
         if 'afailed' in args:
-            self.exp_added_urls.append((('failure: A #4011', 'baseurl/#builders/A/builds/4011'),{}))
+            self.exp_added_urls.append((('failure: A #4011',
+                                         'baseurl/#builders/A/builds/4011'), {}))
 
     # tests
     def test_no_schedulerNames(self):
@@ -473,7 +476,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             b=(True, [], {}))
         self.expectTriggeredLinks('a')  # b doesn't return a brid
         yield self.runStep()
-        self.assertEqual(len(self.step.addCompleteLog.call_args_list),1)
+        self.assertEqual(len(self.step.addCompleteLog.call_args_list), 1)
 
     def test_set_properties(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
