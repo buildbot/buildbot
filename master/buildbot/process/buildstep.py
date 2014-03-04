@@ -18,6 +18,7 @@ try:
     assert StringIO
 except ImportError:
     import StringIO
+import re
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -49,6 +50,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util import flatten
 
 
@@ -351,6 +353,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # call to the status API for now
         self.step_status.old_setText(strings)
         self.step_status.old_setText2(strings)
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def startStep(self, remote):
@@ -562,7 +565,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def isNewStyle(self):
         # **temporary** method until new-style steps are the only supported style
-        return self.run.__func__ is not BuildStep.run.__func__
+        return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         raise NotImplementedError("your subclass must implement run()")
@@ -723,7 +726,7 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
     cmd = None
 
     renderables = ['logfiles', 'lazylogfiles']
@@ -741,9 +744,10 @@ class LoggingBuildStep(BuildStep):
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
-        if log_eval_func is not None:
+        if log_eval_func and not callable(log_eval_func):
             config.error(
-                "the 'log_eval_func' paramater is no longer available")
+                "the 'log_eval_func' paramater must be a callable")
+        self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def isNewStyle(self):
@@ -766,7 +770,7 @@ class LoggingBuildStep(BuildStep):
 
         # stdio is the first log
         self.stdio_log = stdio_log = self.addLog("stdio")
-        cmd.useLog(stdio_log, True)
+        cmd.useLog(stdio_log, closeWhenFinished=True)
         for em in errorMessages:
             stdio_log.addHeader(em)
             # TODO: consider setting up self.stdio_log earlier, and have the
@@ -790,8 +794,6 @@ class LoggingBuildStep(BuildStep):
 
         def _gotResults(results):
             self.setStatus(cmd, results)
-            # finish off the stdio logfile
-            stdio_log.finish()
             return results
         d.addCallback(_gotResults)  # returns results
         d.addCallback(self.finished)
@@ -842,6 +844,9 @@ class LoggingBuildStep(BuildStep):
         pass
 
     def evaluateCommand(self, cmd):
+        # NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+        if self.log_eval_func:
+            return self.log_eval_func(cmd, self.step_status)
         return cmd.results()
 
     def getText(self, cmd, results):
@@ -885,7 +890,7 @@ class LoggingBuildStep(BuildStep):
 class CommandMixin(object):
 
     @defer.inlineCallbacks
-    def _runRemoteCommand(self, cmd, abandonOnFailure, args):
+    def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
         cmd = remotecommand.RemoteCommand(cmd, args)
         try:
             log = self.getLog('stdio')
@@ -895,7 +900,10 @@ class CommandMixin(object):
         yield self.runCommand(cmd)
         if abandonOnFailure and cmd.didFail():
             raise BuildStepFailed()
-        defer.returnValue(not cmd.didFail())
+        if makeResult:
+            defer.returnValue(makeResult(cmd))
+        else:
+            defer.returnValue(not cmd.didFail())
 
     def runRmdir(self, dir, log=None, abandonOnFailure=True):
         return self._runRemoteCommand('rmdir', abandonOnFailure,
@@ -908,6 +916,11 @@ class CommandMixin(object):
     def runMkdir(self, dir, log=None, abandonOnFailure=True):
         return self._runRemoteCommand('mkdir', abandonOnFailure,
                                       {'dir': dir, 'logEnviron': False})
+
+    def glob(self, glob):
+        return self._runRemoteCommand(
+            'glob', True, {'glob': glob, 'logEnviron': False},
+            makeResult=lambda cmd: cmd.updates['files'][0])
 
 
 class ShellMixin(object):
@@ -1077,6 +1090,30 @@ class ShellMixin(object):
         except Exception:
             log.err(failure.Failure(), "Error describing step")
             return super(ShellMixin, self)._describe(done)
+
+# Parses the logs for a list of regexs. Meant to be invoked like:
+# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
+# self.addStep(ShellCommand,
+#   command=...,
+#   ...,
+#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
+# )
+# NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+
+
+def regex_log_evaluator(cmd, step_status, regexes):
+    worst = cmd.results()
+    for err, possible_status in regexes:
+        # worst_status returns the worse of the two status' passed to it.
+        # we won't be changing "worst" unless possible_status is worse than it,
+        # so we don't even need to check the log if that's the case
+        if worst_status(worst, possible_status) == possible_status:
+            if isinstance(err, (basestring)):
+                err = re.compile(".*%s.*" % err, re.DOTALL)
+            for l in cmd.logs.values():
+                if err.search(l.getText()):
+                    worst = possible_status
+    return worst
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties

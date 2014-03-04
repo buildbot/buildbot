@@ -66,6 +66,10 @@ class GitHubStatus(StatusReceiverMultiService):
         self._status = self.parent.getStatus()
         self._status.subscribe(self)
 
+    def stopService(self):
+        StatusReceiverMultiService.stopService(self)
+        self._status.unsubscribe(self)
+
     def builderAdded(self, name, builder):
         """
         Subscribe to all builders.

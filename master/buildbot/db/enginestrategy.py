@@ -24,6 +24,7 @@ special cases that Buildbot needs.  Those include:
 """
 
 import os
+import re
 import sqlalchemy as sa
 
 from buildbot.util import sautils
@@ -163,9 +164,24 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         else:
             sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
+    def check_sqlalchemy_version(self):
+        version = getattr(sa, '__version__', '0')
+        try:
+            version_digits = re.sub('[^0-9.]', '', version)
+            version_tup = tuple(map(int, version_digits.split('.')))
+        except TypeError:
+            pass
+
+        if version_tup < (0, 6):
+            raise RuntimeError("SQLAlchemy version %s is too old" % (version,))
+        if version_tup > (0, 7, 10):
+            raise RuntimeError("SQLAlchemy version %s is not supported by "
+                               "SQLAlchemy-Migrate" % (version,))
+
     def create(self, name_or_url, **kwargs):
         if 'basedir' not in kwargs:
             raise TypeError('no basedir supplied to create_engine')
+        self.check_sqlalchemy_version()
 
         max_conns = None
 

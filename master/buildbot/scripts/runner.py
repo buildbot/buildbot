@@ -212,34 +212,6 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
         return "Usage:    buildbot reconfig [<basedir>]"
 
 
-class BaseStatusClientOptions(base.SubcommandOptions):
-    optFlags = [
-        ['help', 'h', "Display this message"],
-    ]
-    optParameters = [
-        ["master", "m", None,
-         "Location of the buildmaster's status port (host:port)"],
-        ["username", "u", "statusClient",
-         "Username performing the trial build"],
-        ["passwd", 'p', "clientpw", "password for PB authentication"],
-    ]
-    buildbotOptions = [
-        ['master', 'master'],
-        ['masterstatus', 'master'],
-    ]
-    requiredOptions = ['master']
-
-    def parseArgs(self, *args):
-        if len(args) > 0:
-            self['master'] = args[0]
-        if len(args) > 1:
-            raise usage.UsageError("I wasn't expecting so many arguments")
-
-    def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
-        validateMasterOption(self.get('master'))
-
-
 class SendChangeOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.sendchange.sendchange"
 

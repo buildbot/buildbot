@@ -397,6 +397,16 @@ BuildStep
         Add a link to the given ``url``, with the given ``name`` to displays of this step.
         This allows a step to provide links to data that is not available in the log files.
 
+    Build steps have a set of short strings associated with them, describing the current status and results.
+    
+    .. py:method:: setStateStrings(strings)
+
+        :param strings: a list of short strings
+        :returns: Deferred
+
+        Update the state strings associated with this step.
+        This completely replaces any previously-set state strings.
+
 LoggingBuildStep
 ----------------
 
@@ -477,7 +487,7 @@ CommandMixin
 The :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand` method can run a :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance, but it's no help in building that object or interpreting the results afterward.
 This mixin class adds some useful methods for running commands.
 
-.. py:class:: CommandMixin
+.. py:class:: buildbot.process.buildstep.CommandMixin
 
     Some remote commands are simple enough that they can boil down to a method call.
     Most of these take an ``abandonOnFailure`` argument which, if true, will abandon the entire buildstep on command failure.
@@ -512,13 +522,23 @@ This mixin class adds some useful methods for running commands.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
+    .. py:method:: glob(path)
+
+        :param path path to test
+        :returns: list of filenames
+
+        Get the list of files matching the given path pattern on the slave.
+        This uses Python's ``glob`` module.
+        If the ``glob`` method fails, it aborts the step.
+
+
 ShellMixin
 ----------
 
 Most Buildbot steps run shell commands on the slave, and Buildbot has an impressive array of configuration parameters to control that execution.
 The ``ShellMixin`` mixin provides the tools to make running shell commands easy and flexible.
 
-.. py:class:: ShellMixin
+.. py:class:: buildbot.process.buildstep.ShellMixin
 
     This mixin manages the following step configuration parameters, the contents of which are documented in the manual.
     Naturally, all of these are renderable.
