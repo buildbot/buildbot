@@ -673,6 +673,7 @@ class HTMLLogFile(LogFile):
             self.html = html
 
     def hasContents(self):
+        assert not self._isNewStyle, "not available in new-style steps"
         return True
 
     def _fakeOpenfile(self, html):
