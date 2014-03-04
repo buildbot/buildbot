@@ -382,14 +382,6 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.master = self.master
         step.build.builder.basedir = self.basedir
 
-    def delete_logfile(self):
-        if self.logfile.openfile:
-            try:
-                self.logfile.openfile.close()
-            except:
-                pass  # oh well, we tried
-        os.unlink(os.path.join('basedir', '123-error_html'))
-
     def test_unpickle(self):
         self.pickle_and_restore()
 
@@ -432,9 +424,6 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_waitUntilFinished(self):
         d = self.logfile.waitUntilFinished()
         return d
-
-    def test_getText(self):
-        self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
 
     def test_getText(self):
         self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
