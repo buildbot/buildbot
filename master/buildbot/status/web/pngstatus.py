@@ -72,6 +72,9 @@ class PngStatusResource(resource.Resource):
         # build number
         b = int(request.args.get('number', [-1])[0])
 
+        # revision hash
+        rev = request.args.get("revision", [None])[0]
+
         # default data
         png_file = (
             os.path.dirname(os.path.abspath(__file__)) +
@@ -82,7 +85,7 @@ class PngStatusResource(resource.Resource):
 
         if builder is not None and builder in self.status.getBuilderNames():
             # get the last build result from this builder
-            build = self.status.getBuilder(builder).getBuild(b)
+            build = self.status.getBuilder(builder).getBuild(b, rev)
             if build is not None:
                 result = build.getResults()
                 if result is not None:
