@@ -340,3 +340,74 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_compressLog_none(self):
         self.config.logCompressionMethod = None
         return self.do_test_compressLog('', expect_comp=False)
+
+
+class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
+
+    def setUp(self):
+        step = self.build_step_status = mock.Mock(name='build_step_status')
+        self.basedir = step.build.builder.basedir = os.path.abspath('basedir')
+        self.setUpDirs(self.basedir)
+        self.logfile = logfile.HTMLLogFile(step, 'error.html', '123-error_html', '<span>You lost the game</span>')
+        self.master = self.logfile.master = mock.Mock()
+        self.config = self.logfile.master.config = config.MasterConfig()
+
+    def tearDown(self):
+        if self.logfile.openfile:
+            try:
+                self.logfile.openfile.close()
+            except:
+                pass  # oh well, we tried
+        self.tearDownDirs()
+
+    def pickle_and_restore(self):
+        pkl = cPickle.dumps(self.logfile)
+        self.logfile = cPickle.loads(pkl)
+        step = self.build_step_status
+        self.logfile.step = step
+        self.logfile.master = self.master
+        step.build.builder.basedir = self.basedir
+
+    def delete_logfile(self):
+        if self.logfile.openfile:
+            try:
+                self.logfile.openfile.close()
+            except:
+                pass  # oh well, we tried
+        os.unlink(os.path.join('basedir', '123-error_html'))
+
+    def test_unpickle_embedded(self):
+        pass
+
+    def test_unpickle_fromFile(self):
+        pass
+
+    def test_unpickle_pre089(self):
+        pass
+
+    def test_getName(self):
+        pass
+
+    def test_getStep(self):
+        pass
+
+    def test_isFinished(self):
+        pass
+
+    def test_waitUntilFinished(self):
+        pass
+
+    def test_getText_embedded(self):
+        pass
+
+    def test_getText_fromFile(self):
+        pass
+
+    def test_getTextWithHeaders_embedded(self):
+        pass
+
+    def test_getTextWithHeaders_fromFile(self):
+        pass
+
+    def test_finish(self):
+        pass

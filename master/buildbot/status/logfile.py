@@ -677,7 +677,7 @@ class HTMLLogFile(LogFile):
 
     def _fakeOpenfile(self, html):
         # simulate s serialized stream of log chunks
-        buf = "%d:%d%s," % ((len(html)+1), STDERR, html)
+        buf = "%d:%d%s," % (len(html) + 1, STDERR, html)
         self.openfile = StringIO(buf)
 
     def __setstate__(self, d):
