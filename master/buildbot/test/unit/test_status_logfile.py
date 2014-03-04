@@ -382,13 +382,6 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         self.logfile.master = self.master
         step.build.builder.basedir = self.basedir
 
-    def create_large_logfile(self):
-        # fake a logfile that exceeds HTMLLogFile.maxEmbedSize
-        maxEmbedSize = logfile.HTMLLogFile.maxEmbedSize
-        logfile.HTMLLogFile.maxEmbedSize = 5
-        self.logfile = logfile.HTMLLogFile(self.build_step_status, 'error.html', '123-error_html', '<span>You lost the game</span>')
-        self.logfile.master = self.master
-
     def delete_logfile(self):
         if self.logfile.openfile:
             try:
@@ -397,27 +390,17 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
                 pass  # oh well, we tried
         os.unlink(os.path.join('basedir', '123-error_html'))
 
-    def test_unpickle_embedded(self):
+    def test_unpickle(self):
         self.pickle_and_restore()
 
         d = self.logfile.finish()
 
         def check(_):
-            # LogFile.__init__ already creates the file ...
-            # self.assertFalse(os.path.exists(os.path.join('basedir', '123-error_html')))
-            pass
-
-        d.addCallback(check)
-        return d
-
-    def test_unpickle_fromFile(self):
-        self.create_large_logfile()
-        self.pickle_and_restore()
-
-        d = self.logfile.finish()
-
-        def check(_):
-            self.assertTrue(os.path.exists(os.path.join('basedir', '123-error_html')))
+            fn = os.path.join('basedir', '123-error_html')
+            self.assertTrue(os.path.exists(fn))
+            fp = open(fn, 'r')
+            self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')
+            fp.close()
 
         d.addCallback(check)
         return d
@@ -450,36 +433,16 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         d = self.logfile.waitUntilFinished()
         return d
 
-    def test_getText_embedded(self):
+    def test_getText(self):
         self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
 
-    def test_getText_fromFile(self):
-        self.create_large_logfile()
-        self.pickle_and_restore()
+    def test_getText(self):
         self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
 
-    def test_getTextWithHeaders_embedded(self):
+    def test_getTextWithHeaders(self):
         self.assertEqual(self.logfile.getTextWithHeaders(), '<span>You lost the game</span>')
 
-    def test_getTextWithHeaders_fromFile(self):
-        self.create_large_logfile()
-        self.pickle_and_restore()
-        self.assertEqual(self.logfile.getTextWithHeaders(), '<span>You lost the game</span>')
-
-    def test_getFile_embedded(self):
-        fp = self.logfile.getFile()
-        fp.seek(0, 0)
-        self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')
-
-        self.pickle_and_restore()
-
-        fp = self.logfile.getFile()
-        fp.seek(0, 0)
-        self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')
-
-    def test_getFile_fromFile(self):
-        self.create_large_logfile()
-
+    def test_getFile(self):
         fp = self.logfile.getFile()
         fp.seek(0, 0)
         self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')

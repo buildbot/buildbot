@@ -659,27 +659,14 @@ class LogFile:
 
 class HTMLLogFile(LogFile):
 
-    # logs that are smaller than this will be pickled
-    maxEmbedSize = 10 * 1000
-
     def __init__(self, parent, name, logfilename, html):
         LogFile.__init__(self, parent, name, logfilename)
-        if len(html) > self.maxEmbedSize:
-            self.addStderr(html)
-            self.finish()
-        else:
-            self._fakeOpenfile(html)
-            self.finished = True
-            self.html = html
+        self.addStderr(html)
+        self.finish()
 
     def hasContents(self):
         assert not self._isNewStyle, "not available in new-style steps"
         return True
-
-    def _fakeOpenfile(self, html):
-        # simulate s serialized stream of log chunks
-        buf = "%d:%d%s," % (len(html) + 1, STDERR, html)
-        self.openfile = StringIO(buf)
 
     def __setstate__(self, d):
         self.__dict__ = d
@@ -689,7 +676,8 @@ class HTMLLogFile(LogFile):
 
         # buildbot <= 0.8.8 stored all html logs in the html property
         if 'html' in self.__dict__:
-            self._fakeOpenfile(self.html)
+            buf = "%d:%d%s," % (len(self.html) + 1, STDERR, self.html)
+            self.openfile = StringIO(buf)
             del self.__dict__['html']
 
 
