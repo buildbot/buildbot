@@ -102,6 +102,7 @@ class Build(properties.PropertiesMixin):
                       for access in lockList]
 
     def setSlaveEnvironment(self, env):
+        # TODO: remove once we don't have anything depending on this method or attribute
         self.slaveEnvironment = env
 
     def getSourceStamp(self, codebase=''):
@@ -171,7 +172,7 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        master = self.builder.botmaster.master
+        master = self.builder.master
         props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change
@@ -320,6 +321,7 @@ class Build(properties.PropertiesMixin):
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
+            # TODO: remove once we don't have anything depending on setDefaultWorkdir
             if callable(self.workdir):
                 step.setDefaultWorkdir(self.workdir(self.sources))
             else:

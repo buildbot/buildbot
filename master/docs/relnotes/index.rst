@@ -125,7 +125,7 @@ Features
 
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
-  
+
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
 * The IRC bot of :bb:status:`IRC` will, unless useRevisions is set, shorten
@@ -146,6 +146,15 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+Forward Compatibility
+~~~~~~~~~~~~~~~~~~~~~
+
+In preparation for a more asynchronous implementation of build steps in Buildbot 0.9.0, this version introduces support for new-style steps.
+Existing old-style steps will continue to function correctly in Buildbot 0.8.x releases and in Buildbot 0.9.0, but support will be dropped soon afterward.
+See :ref:`New-Style-Build-Steps`, below, for guidance on rewriting existing steps in this new style.
+To eliminate ambiguity, the documentation for this version only reflects support for new-style steps.
+Refer to the documentation for previous versions for infrormation on old-style steps.
+
 Fixes
 ~~~~~
 
@@ -160,6 +169,10 @@ Fixes
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Both old-style and new-style steps are supported in this version of Buildbot.
+  Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
+  See :ref:`New-Style-Build-Steps` for details.
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
@@ -182,6 +195,8 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the slave that match a given shell-style pattern.
+
 Slave
 -----
 
@@ -192,6 +207,7 @@ Features
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug: `751`)
 * Added spot instance support to EC2LatentBuildSlave.
+* Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the slave.
 
 Fixes
 ~~~~~

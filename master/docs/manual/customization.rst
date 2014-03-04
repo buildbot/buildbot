@@ -513,6 +513,11 @@ repos and workdir, this will work.
 Writing New BuildSteps
 ----------------------
 
+.. warning::
+
+    Buildbot is transitioning to a new, simpler style for writing custom steps.
+    See :doc:`new-style-steps` for details.
+
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`BuildStep`.
 Once written, this Step can be used in the :file:`master.cfg` file.
@@ -907,6 +912,91 @@ something like this::
 Of course if the build is run under a PTY, then stdout and stderr will
 be merged before the buildbot ever sees them, so such interleaving
 will be unavoidable.
+
+Discovering files
+~~~~~~~~~~~~~~~~~
+
+When implementing a :class:`BuildStep` it may be necessary to know about files
+that are created during the build.  There are a few slave commands that can be
+used to find files on the slave and test for the existence (and type) of files
+and directories.
+
+The slave provides the following file-discovery related commands:
+
+* `stat` calls :func:`os.stat` for a file in the slave's build directory. This
+  can be used to check if a known file exists and whether it is a regular file,
+  directory or symbolic link.
+
+* `listdir` calls :func:`os.listdir` for a directory on the slave. It can be
+  used to obtain a list of files that are present in a directory on the slave.
+
+* `glob` calls :func:`glob.glob` on the slave, with a given shell-style pattern
+  containing wildcards.
+
+For example, we could use stat to check if a given path exists and contains
+``*.pyc`` files. If the path does not exist (or anything fails) we mark the step
+as failed; if the path exists but is not a directory, we mark the step as having
+"warnings".
+
+.. code-block:: python
+
+    from buildbot.process import buildstep
+    from buildbot.interfaces import BuildSlaveToOldError
+    from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+    import stat
+
+    class MyBuildStep(buildstep.BuildStep):
+
+        def __init__(self, dirname, **kwargs):
+            buildstep.BuildStep.__init__(self, **kwargs)
+            self.dirname = dirname
+
+        def start(self):
+            # make sure the slave knows about stat
+            slavever = (self.slaveVersion('stat'),
+                        self.slaveVersion('glob'))
+            if not all(slavever):
+                raise BuildSlaveToOldError('need stat and glob')
+
+            cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
+
+            d = self.runCommand(cmd)
+            d.addCallback(lambda res: self.evaluateStat(cmd))
+            d.addErrback(self.failed)
+            return d
+
+        def evaluateStat(self, cmd):
+            if cmd.didFail():
+                self.step_status.setText(["File not found."])
+                self.finished(FAILURE)
+                return
+            s = cmd.updates["stat"][-1]
+            if not stat.S_ISDIR(s[stat.ST_MODE]):
+                self.step_status.setText(["'tis not a directory"])
+                self.finished(WARNINGS)
+                return
+
+            cmd = buildstep.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'})
+
+            d = self.runCommand(cmd)
+            d.addCallback(lambda res: self.evaluateGlob(cmd))
+            d.addErrback(self.failed)
+            return d
+
+        def evaluateGlob(self, cmd):
+            if cmd.didFail():
+                self.step_status.setText(["Glob failed."])
+                self.finished(FAILURE)
+                return
+            files = cmd.updates["files"][-1]
+            if len(files):
+                self.step_status.setText(["Found pycs"]+files)
+            else:
+                self.step_status.setText(["No pycs found"])
+            self.finished(SUCCESS)
+
+
+For more information on the available commands, see :doc:`../developer/master-slave`.
 
 .. todo::
 

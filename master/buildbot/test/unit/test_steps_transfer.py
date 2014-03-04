@@ -561,7 +561,7 @@ class TestStringDownload(unittest.TestCase):
         s.build.getProperties.return_value = Properties()
         s.build.getSlaveCommandVersion.return_value = 1
 
-        s.step_status = Mock()
+        s._step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 
@@ -590,7 +590,7 @@ class TestJSONStringDownload(unittest.TestCase):
         s.build.getProperties.return_value = Properties()
         s.build.getSlaveCommandVersion.return_value = 1
 
-        s.step_status = Mock()
+        s._step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 
@@ -623,7 +623,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         ss.asDict.return_value = dict(revision="12345")
         s.build.getSourceStamp.return_value = ss
 
-        s.step_status = Mock()
+        s._step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 

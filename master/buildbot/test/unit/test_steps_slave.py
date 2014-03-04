@@ -42,6 +42,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
             variables=["one", "two", "three", "five", "six"],
             source="me"))
         self.buildslave.slave_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}
+        self.buildslave.slave_system = 'linux'
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
@@ -362,6 +363,32 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))
         self.expectCommands(
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_glob(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.runGlob("*.pyc")
+            self.assertEqual(res, ["one.pyc", "two.pyc"])
+
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            + Expect.update('files', ["one.pyc", "two.pyc"])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_glob_fail(self):
+        self.setupStep(CompositeUser(lambda x: x.runGlob("*.pyc")))
+        self.expectCommands(
+            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
             + 1
         )
         self.expectOutcome(result=FAILURE,

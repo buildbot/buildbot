@@ -24,6 +24,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.test.fake import slave
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -130,6 +131,7 @@ class TestBuild(unittest.TestCase):
 
         self.master.botmaster = FakeBotMaster(master=self.master)
 
+        self.slave = slave.FakeSlave(self.master)
         self.builder = self.createBuilder()
         self.build = Build([r])
         self.build.master = self.master
@@ -488,7 +490,7 @@ class TestBuild(unittest.TestCase):
             return retval
         step.acquireLocks = acquireLocks
         step.setStepStatus = Mock()
-        step.step_status = Mock()
+        step._step_status = Mock()
         step.step_status.addLog().chunkSize = 10
         step.step_status.getLogs.return_value = []
 

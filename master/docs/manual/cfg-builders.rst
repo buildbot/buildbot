@@ -118,6 +118,8 @@ Other optional keys may be set on each ``BuilderConfig``:
                 env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
+    Unlike most builder configuration arguments, this argument can contain renderables.
+
 .. index:: Builds; merging
 
 ``mergeRequests``

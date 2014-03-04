@@ -17,6 +17,7 @@ import mock
 
 from buildbot import interfaces
 from buildbot.process import buildstep
+from buildbot.process import remotecommand as real_remotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand
@@ -47,10 +48,11 @@ class BuildStepMixin(object):
         # make an (admittedly global) reference to this test case so that
         # the fakes can call back to us
         remotecommand.FakeRemoteCommand.testcase = self
-        self.patch(buildstep, 'RemoteCommand',
-                   remotecommand.FakeRemoteCommand)
-        self.patch(buildstep, 'RemoteShellCommand',
-                   remotecommand.FakeRemoteShellCommand)
+        for module in buildstep, real_remotecommand:
+            self.patch(module, 'RemoteCommand',
+                       remotecommand.FakeRemoteCommand)
+            self.patch(module, 'RemoteShellCommand',
+                       remotecommand.FakeRemoteShellCommand)
         self.expected_remote_commands = []
 
     def tearDownBuildStep(self):
@@ -104,7 +106,8 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = slave.FakeSlave()
+        self.master = fakemaster.make_master(testcase=self)
+        self.buildslave = step.buildslave = slave.FakeSlave(self.master)
 
         # step.step_status
 

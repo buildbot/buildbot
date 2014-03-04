@@ -1059,6 +1059,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         for brid in brids:
             if brid in self.claims and self.claims[brid].objectid == self.MASTER_ID:
                 self.claims.pop(brid)
+        return defer.succeed(None)
 
     def completeBuildRequests(self, brids, results, complete_at=None,
                               _reactor=reactor):
@@ -1075,6 +1076,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             self.reqs[brid].complete = 1
             self.reqs[brid].results = results
             self.reqs[brid].complete_at = complete_at
+        return defer.succeed(None)
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         old_epoch = _reactor.seconds() - old
@@ -1181,6 +1183,7 @@ class FakeBuildsComponent(FakeDBComponent):
             b = self.builds.get(bid)
             if b:
                 b.finish_time = now
+        return defer.succeed(None)
 
 
 class FakeUsersComponent(FakeDBComponent):

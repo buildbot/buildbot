@@ -13,11 +13,45 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process import buildstep
+import mock
+
+from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
-from buildbot.test.fake import remotecommand
+from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from twisted.trial import unittest
+
+
+class TestRemoteShellCommand(unittest.TestCase):
+
+    def test_obfuscated_arguments(self):
+        command = ["echo",
+                   ("obfuscated", "real", "fake"),
+                   "test",
+                   ("obfuscated", "real2", "fake2"),
+                   ("not obfuscated", "a", "b"),
+                   ("obfuscated"),  # not obfuscated
+                   ("obfuscated", "test"),  # not obfuscated
+                   ("obfuscated", "1", "2", "3"),  # not obfuscated)
+                   ]
+        cmd = remotecommand.RemoteShellCommand("build", command)
+        self.assertEqual(cmd.command, command)
+        self.assertEqual(cmd.fake_command, ["echo",
+                                            "fake",
+                                            "test",
+                                            "fake2",
+                                            ("not obfuscated", "a", "b"),
+                                            ("obfuscated"),  # not obfuscated
+                                            # not obfuscated
+                                            ("obfuscated", "test"),
+                                            # not obfuscated)
+                                            ("obfuscated", "1", "2", "3"),
+                                            ])
+
+        command = "echo test"
+        cmd = remotecommand.RemoteShellCommand("build", command)
+        self.assertEqual(cmd.command, command)
+        self.assertEqual(cmd.fake_command, command)
 
 # NOTE:
 #
@@ -29,14 +63,16 @@ class Tests(interfaces.InterfaceTests):
 
     remoteCommandClass = None
 
-    def makeRemoteCommand(self):
-        return self.remoteCommandClass('ping', {'arg': 'val'})
+    def makeRemoteCommand(self, stdioLogName='stdio'):
+        return self.remoteCommandClass('ping', {'arg': 'val'},
+                                       stdioLogName=stdioLogName)
 
     def test_signature_RemoteCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
                      collectStdout=False, collectStderr=False,
-                     decodeRC={0: SUCCESS}):
+                     decodeRC={0: SUCCESS},
+                     stdioLogName='stdio'):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
@@ -45,7 +81,8 @@ class Tests(interfaces.InterfaceTests):
                      want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
                      usePTY="slave-config", logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
-                     decodeRC={0: SUCCESS}):
+                     decodeRC={0: SUCCESS},
+                     stdioLogName='stdio'):
             pass
 
     def test_signature_run(self):
@@ -98,11 +135,25 @@ class Tests(interfaces.InterfaceTests):
 
 class TestRunCommand(unittest.TestCase, Tests):
 
-    remoteCommandClass = buildstep.RemoteCommand
-    remoteShellCommandClass = buildstep.RemoteShellCommand
+    remoteCommandClass = remotecommand.RemoteCommand
+    remoteShellCommandClass = remotecommand.RemoteShellCommand
+
+    def test_notStdioLog(self):
+        logname = 'notstdio'
+        cmd = self.makeRemoteCommand(stdioLogName=logname)
+        step = mock.Mock(name='step')
+        step.logobservers = []
+        log = fakeremotecommand.FakeLogFile(logname, step)
+        cmd.useLog(log)
+        cmd.addStdout('some stdout')
+        self.failUnlessEqual(log.stdout, 'some stdout')
+        cmd.addStderr('some stderr')
+        self.failUnlessEqual(log.stderr, 'some stderr')
+        cmd.addHeader('some header')
+        self.failUnlessEqual(log.header, 'some header')
 
 
 class TestFakeRunCommand(unittest.TestCase, Tests):
 
-    remoteCommandClass = remotecommand.FakeRemoteCommand
-    remoteShellCommandClass = remotecommand.FakeRemoteShellCommand
+    remoteCommandClass = fakeremotecommand.FakeRemoteCommand
+    remoteShellCommandClass = fakeremotecommand.FakeRemoteShellCommand

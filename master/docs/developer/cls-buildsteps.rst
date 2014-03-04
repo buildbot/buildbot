@@ -248,11 +248,11 @@ BuildStep
     The following methods are provided as utilities to subclasses.
     These methods should only be invoked after the step is started.
 
-    .. py:method:: slaveVersion(command, oldVersion=None)
+    .. py:method:: slaveVersion(command, oldversion=None)
 
         :param command: command to examine
         :type command: string
-        :param oldVersion: return value if the slave does not specify a version
+        :param oldversion: return value if the slave does not specify a version
         :returns: string
 
         Fetch the version of the named command, as specified on the slave.
@@ -337,6 +337,15 @@ BuildStep
         The named log need not have been added already: the observer will be connected when the log is added.
 
         See :ref:`Adding-LogObservers` for more information on log observers.
+
+    .. py:method:: setStateStrings(strings)
+
+        :param strings: a list of short strings
+        :returns: Deferred
+
+        Update the state strings associated with this step.
+        This completely replaces any previously-set state strings.
+        This method replaces ``self.step_status.setText`` and ``self.step_status.setText2`` in new-style steps.
 
 LoggingBuildStep
 ----------------
@@ -434,6 +443,117 @@ LoggingBuildStep
         :returns: a list of short strings
 
         Like :meth:`getText`, this method summarizes the step's result, but it is only called when that result affects the build, either by making it halt, flunk, or end with warnings.
+
+CommandMixin
+------------
+
+The :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand` method can run a :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance, but it's no help in building that object or interpreting the results afterward.
+This mixin class adds some useful methods for running commands.
+
+This class can only be used in new-style steps.
+
+.. py:class:: buildbot.process.buildstep.CommandMixin
+
+    Some remote commands are simple enough that they can boil down to a method call.
+    Most of these take an ``abandonOnFailure`` argument which, if true, will abandon the entire buildstep on command failure.
+    This is accomplished by raising :py:exc:`~buildbot.process.buildstep.BuildStepFailed`.
+
+    These methods all write to the ``stdio`` log (generally just for errors).
+    They do not close the log when finished.
+
+    .. py:method:: runRmdir(dir, abandonOnFailure=True)
+
+        :param dir: directory to remove
+        :param abndonOnFailure: if true, abandon step on failure
+        :returns: Boolean via Deferred
+
+        Remove the given directory, using the ``rmdir`` command.
+        Returns False on failure.
+
+    .. py:method:: runMkdir(dir, abandonOnFailure=True)
+
+        :param dir: directory to create
+        :param abndonOnFailure: if true, abandon step on failure
+        :returns: Boolean via Deferred
+
+        Create the given directory and any parent directories, using the ``mkdir`` command.
+        Returns False on failure.
+
+    .. py:method:: pathExists(path)
+
+        :param path path to test
+        :returns: Boolean via Deferred
+
+        Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
+        This uses the ``stat`` command.
+
+    .. py:method:: glob(path)
+
+        :param path path to test
+        :returns: list of filenames
+
+        Get the list of files matching the given path pattern on the slave.
+        This uses Python's ``glob`` module.
+        If the ``glob`` method fails, it aborts the step.
+
+
+ShellMixin
+----------
+
+Most Buildbot steps run shell commands on the slave, and Buildbot has an impressive array of configuration parameters to control that execution.
+The ``ShellMixin`` mixin provides the tools to make running shell commands easy and flexible.
+
+This class can only be used in new-style steps.
+
+.. py:class:: buildbot.process.buildstep.ShellMixin
+
+    This mixin manages the following step configuration parameters, the contents of which are documented in the manual.
+    Naturally, all of these are renderable.
+
+    ..py:attribute:: command
+    ..py:attribute:: workdir
+    ..py:attribute:: env
+    ..py:attribute:: want_stdout
+    ..py:attribute:: want_stderr
+    ..py:attribute:: usePTY
+    ..py:attribute:: logfiles
+    ..py:attribute:: lazylogfiles
+    ..py:attribute:: timeout
+    ..py:attribute:: maxTime
+    ..py:attribute:: logEnviron
+    ..py:attribute:: interruptSignal
+    ..py:attribute:: sigtermTime
+    ..py:attribute:: initialStdin
+    ..py:attribute:: decodeRC
+
+    ..py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
+
+        :param dict constructorArgs constructor keyword arguments
+        :param list prohibitArgs list of recognized arguments to reject
+        :returns: keyword arguments destined for :py:class:`BuildStep`
+
+        This method is intended to be called from the shell constructor, passed any keyword arguments not otherwise used by the step.
+        Any attributes set on the instance already (e.g., class-level attributes) are used as defaults.
+        Attributes named in ``prohibitArgs`` are rejected with a configuration error.
+
+        The return value should be passed to the :py:class:`BuildStep` constructor.
+
+    ..py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
+
+        :param collectStdout: if true, the command's stdout wil be available in ``cmd.stdout`` on completion
+        :param collectStderr: if true, the command's stderr wil be available in ``cmd.stderr`` on completion
+        :param overrides: overrides arguments that might have been passed to :py:meth:`setupShellMixin`
+        :returns: :py:class:`~buildbot.process.remotecommand.RemoteShellCommand` instance via Deferred
+
+        This method constructs a :py:class:`~buildbot.process.remotecommand.RemoteShellCommand` instance based on the instance attributes and any supplied overrides.
+        It must be called while the step is running, as it examines the slave capabilities before creating the command.
+        It takes care of just about everything:
+
+         * Creating log files and associating them with the command
+         * Merging environment configuration
+         * Selecting the appropriate workdir configuration
+
+        All that remains is to run the command with :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand`.
 
 Exceptions
 ----------

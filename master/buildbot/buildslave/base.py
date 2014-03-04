@@ -383,7 +383,6 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         if buildFinished:
             self.slave_status.buildFinished(buildFinished)
 
-    @metrics.countMethod('AbstractBuildSlave.attached()')
     def attached(self, bot):
         """This is called when the slave connects.
 
@@ -494,7 +493,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             log.msg("bot attached")
             self.messageReceivedFromSlave()
             self.stopMissingTimer()
-            self.botmaster.master.status.slaveConnected(self.slavename)
+            self.master.status.slaveConnected(self.slavename)
 
         d.addCallback(lambda _: self._saveSlaveInfoDict())
 
@@ -521,7 +520,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.slave_status.removePauseWatcher(self._pauseChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        self.botmaster.master.status.slaveDisconnected(self.slavename)
+        self.master.status.slaveDisconnected(self.slavename)
         self.stopKeepaliveTimer()
         self.releaseLocks()
 
