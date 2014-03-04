@@ -99,11 +99,12 @@ Within the buildmaster process, the root of the data API is available at `self.m
         Get the endpoint responsible for the given path, along with any arguments extracted from the path.
         This can be used by callers that need access to information from the endpoint beyond that returned from ``get``.
 
-    .. py:method:: startConsuming(callback, options, kwargs)
+    .. py:method:: startConsuming(callback, options, path)
 
         :param callback: a function to call for each message
         :param options: dictionary containing model-specific options
-        :param kwargs: a dictionary describing the resource to control, extracted from the path
+        :param tuple path: A tuple of path elements representing the API path.
+            Numbers can be passed as strings or integers.
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
 
         This method implements the subscriptions section.
@@ -122,11 +123,12 @@ Within the buildmaster process, the root of the data API is available at `self.m
         data, please use this API, rather than directly call mq.
         It ensures the event is sent to all the routingkeys specified by eventPathPatterns
 
-    .. py:method:: control(action, args, kwargs)
+    .. py:method:: control(action, args, path)
 
         :param action: a short string naming the action to perform
         :param args: dictionary containing arguments for the action
-        :param kwargs: a dictionary describing the resource to control, extracted from the path
+        :param tuple path: A tuple of path elements representing the API path.
+            Numbers can be passed as strings or integers.
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
         :returns: a resource or list via Deferred, or None
 
