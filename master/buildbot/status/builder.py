@@ -329,7 +329,21 @@ class BuilderStatus(styles.Versioned):
     def getCategory(self):
         return self.category
 
-    def getBuild(self, number):
+    def getBuildByRevision(self, rev):
+        number = self.nextBuildNumber - 1
+        while number > 0:
+            build = self.getBuildByNumber(number)
+            got_revision = build.getAllGotRevisions().get("")
+
+            if rev == got_revision:
+                return build
+            number -= 1
+        return None
+
+    def getBuild(self, number, revision=None):
+        if revision is not None:
+            return self.getBuildByRevision(revision)
+
         if number < 0:
             number = self.nextBuildNumber + number
         if number < 0 or number >= self.nextBuildNumber:
