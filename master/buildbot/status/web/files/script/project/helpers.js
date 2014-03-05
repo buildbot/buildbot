@@ -608,9 +608,8 @@ define(['screensize','text!templates/popups.html', 'mustache'], function (screen
 		}, isRealTimePage: function () {
 			var isRealTimePage = false;
 			var isFinishedAttr = $('#isFinished').attr('data-isfinished');
-			var rtServer = $('body').attr('data-realTimeServer') != '';
 			
-			if (isFinishedAttr === undefined && rtServer === true) {        								
+			if (isFinishedAttr === undefined) {
 				isRealTimePage = true;
         	}
         	return isRealTimePage

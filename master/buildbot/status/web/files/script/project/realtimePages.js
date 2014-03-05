@@ -57,8 +57,13 @@ define(['jquery','helpers','popup','text!templates/builders.html','mustache'], f
 
         	// Creating a new websocket
          	var wsURI = $('body').attr('data-realTimeServer');
-            realtimePages.createWebSocket(wsURI);
-         	console.log(wsURI);
+            if (wsURI !== undefined && wsURI != "") {
+                console.log(wsURI);
+                realtimePages.createWebSocket(wsURI);
+            }
+            else {
+                console.log("Realtime server not found, disabling realtime.")
+            }
         },
         broadcastMessage: function(msg) {
             if (sock) {
