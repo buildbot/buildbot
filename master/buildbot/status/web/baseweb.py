@@ -103,7 +103,7 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
      /builders/_all/{force,stop}: force a build/stop building on all builders.
      /buildstatus?builder=...&number=...: an embedded iframe for the console
-     /png?buildername=...&number=...&size=... a png resource with build info
+     /png?builder=...&number=...&size=... a png resource with build info
      /redirect?builder=...&revision=... a redirect to the build that built the
                                         given revision
      /changes : summarize all ChangeSources
