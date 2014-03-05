@@ -25,7 +25,7 @@ class Hg(Mercurial):
 
         # calculate rev ranges
         lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name,
-                                                                     self.build.build_status.number,
+                                                                     self.build.requests[0].id,
                                                                      self.codebase,
                                                                      self.repourl,
                                                                      self.update_branch)

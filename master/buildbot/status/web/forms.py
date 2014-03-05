@@ -36,6 +36,9 @@ class FormsKatanaResource(HtmlResource):
 class ForceBuildDialogPage(HtmlResource):
     pageTitle = "Force Build"
 
+    def decodeFromURL(self, value, encoding):
+        return urllib.unquote(value).decode(encoding)
+
     def content(self, request, cxt):
         status = self.getStatus(request)
 
@@ -44,12 +47,13 @@ class ForceBuildDialogPage(HtmlResource):
         # decode all of the args
         encoding = getRequestCharset(request)
         for name, argl in args.iteritems():
-            args[name] = [ urllib.unquote(arg).decode(encoding) for arg in argl ]
+            if '_branch' in name:
+                args[name] = [ self.decodeFromURL(arg, encoding) for arg in argl ]
 
         #Get builder info
         builder_status = None
         if args.has_key("builder_name") and len(args["builder_name"]) == 1:
-            builder_status = status.getBuilder(args["builder_name"][0])
+            builder_status = status.getBuilder(self.decodeFromURL(args["builder_name"][0], encoding))
             bm = self.getBuildmaster(request)
 
             cxt['slaves'] = [s for s in builder_status.getSlaves() if s.isConnected()]
@@ -61,8 +65,7 @@ class ForceBuildDialogPage(HtmlResource):
 
             # Add codebase info
             codebases = {}
-            codebases_arg = getCodebasesArg(request=request, codebases=codebases)
-            cxt['codebases_arg'] = codebases_arg.encode(encoding)
+            cxt['codebases_arg'] = codebases_arg = getCodebasesArg(request=request, codebases=codebases)
 
             return_page = ""
             if args.has_key("returnpage"):

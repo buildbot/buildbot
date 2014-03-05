@@ -159,20 +159,20 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return ssdict
         return self.db.pool.do(thd)
 
-    def findLastBuildRev(self, buildername, buildnumber, codebase, repository, branch):
+    def findLastBuildRev(self, buildername, brid, codebase, repository, branch):
         def thd(conn):
             sourcestamps_tbl = self.db.model.sourcestamps
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
             buildsets_prop_tbl = self.db.model.buildset_properties
-            builds_tbl = self.db.model.builds
 
             # we need to filter buildrequests_tbl.c.lastest
-            q = sa.select([sa.func.max(buildrequests_tbl.c.id)], from_obj= buildrequests_tbl.join(buildsets_tbl,
+            q = sa.select([sa.func.max(buildrequests_tbl.c.id).label("id")], from_obj= buildrequests_tbl.join(buildsets_tbl,
                                                             (buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id)
                                                             & (buildrequests_tbl.c.buildername == buildername)
                                                             & (buildrequests_tbl.c.complete == 1)
-                                                            & (buildrequests_tbl.c.results.in_([SUCCESS, FAILURE])))
+                                                            & (buildrequests_tbl.c.results.in_([SUCCESS, FAILURE]))
+                                                            & (buildrequests_tbl.c.id < brid))
                                                             .join(buildsets_prop_tbl, (buildsets_tbl.c.id == buildsets_prop_tbl.c.buildsetid)
                                                                 & (buildsets_prop_tbl.c.property_name == 'buildLatestRev')
                                                                 & (buildsets_prop_tbl.c.property_value.ilike('%True%')))
@@ -180,16 +180,23 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                                                                   (buildsets_tbl.c.sourcestampsetid  == sourcestamps_tbl.c.sourcestampsetid)
                                                                 & (sourcestamps_tbl.c.codebase == codebase)
                                                                 & (sourcestamps_tbl.c.repository == repository)
-                                                                & (sourcestamps_tbl.c.branch == branch))
-            .join(builds_tbl, (buildrequests_tbl.c.id == builds_tbl.c.brid) & (builds_tbl.c.number < buildnumber)))
+                                                                & (sourcestamps_tbl.c.branch == branch)))
 
-            stmt = sa.select([sourcestamps_tbl.c.revision, buildrequests_tbl.c.id])\
+            # get previous build request matching the criteria to calculate incoming changes
+            res = conn.execute(q)
+            row = res.fetchone()
+            if not row:
+                return None
+
+            last_brid_codebases = row.id
+
+            stmt = sa.select([sourcestamps_tbl.c.revision])\
                 .where(sourcestamps_tbl.c.sourcestampsetid == buildsets_tbl.c.sourcestampsetid)\
                 .where(sourcestamps_tbl.c.codebase == codebase)\
                 .where(sourcestamps_tbl.c.repository == repository)\
                 .where(sourcestamps_tbl.c.branch == branch)\
                 .where(buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id)\
-                .where(buildrequests_tbl.c.id.in_(q))
+                .where(buildrequests_tbl.c.id == last_brid_codebases)
 
             res = conn.execute(stmt)
             row = res.fetchone()
