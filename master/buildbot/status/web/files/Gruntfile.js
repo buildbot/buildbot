@@ -15,7 +15,7 @@ module.exports = function(grunt) {
         options: {
           sassDir: '<%= meta.srcPath %>',
           cssDir: '<%= meta.deployPath %>',
-          debugInfo: true,
+          debugInfo: false,
           environment: "development"
         }
       },
@@ -71,7 +71,8 @@ module.exports = function(grunt) {
           jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
           //jquery: 'empty:' //Use this to continue using CDN loading
           
-          datatables: '../plugins/jquery-datatables'
+          datatables: '../plugins/jquery-datatables',
+          debug: false
         },
           name: 'testresults-main',
           out: 'prod/script/testresults/testresults-main.js',
