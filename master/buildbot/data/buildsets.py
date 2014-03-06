@@ -64,10 +64,11 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         /buildsets/n:bsid
     """
 
+    @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        d = self.master.db.buildsets.getBuildset(kwargs['bsid'])
-        d.addCallback(self.db2data)
-        return d
+        res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
+        res = yield self.db2data(res)
+        defer.returnValue(res)
 
     def startConsuming(self, callback, options, kwargs):
         return self.master.mq.startConsuming(callback,
