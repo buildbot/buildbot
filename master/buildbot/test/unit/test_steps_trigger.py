@@ -188,9 +188,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def expectTriggeredLinks(self, *args):
         if 'a_br' in args:
-            self.exp_added_urls.append((('a #11', 'baseurl/#buildrequest/11'), {}))
+            self.exp_added_urls.append((('a #11', 'baseurl/#buildrequests/11'), {}))
         if 'b_br' in args:
-            self.exp_added_urls.append((('b #22', 'baseurl/#buildrequest/22'), {}))
+            self.exp_added_urls.append((('b #22', 'baseurl/#buildrequests/22'), {}))
         if 'a' in args:
             self.exp_added_urls.append((('success: A #4011',
                                          'baseurl/#builders/A/builds/4011'), {}))

@@ -149,7 +149,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getURLForBuildrequest(self, buildrequestid):
         prefix = self.getBuildbotURL()
-        return prefix + "#buildrequest/%d" % (buildrequestid,)
+        return prefix + "#buildrequests/%d" % (buildrequestid,)
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
