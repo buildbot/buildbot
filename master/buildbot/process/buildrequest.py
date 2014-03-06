@@ -34,6 +34,8 @@ class TempSourceStamp(object):
         del result['ssid']
         del result['changes']
 
+        if 'patch' in result and result['patch'] is None:
+            result['patch'] = (None, None, None)
         result['patch_level'], result['patch_body'], result['patch_subdir'] = result.pop('patch')
         result['patch_author'], result['patch_comment'] = result.pop('patch_info')
 
