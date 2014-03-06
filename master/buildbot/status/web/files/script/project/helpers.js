@@ -44,7 +44,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
         	}
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
-				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
+				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave').find('li'));
 			}			
 
        		// submenu overflow on small screens
@@ -80,7 +80,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			// Set the full name from a cookie. Used on buildersform and username in the header
 			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
 		
-			$('#authUserBtn').click(function(e){
+			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
 
@@ -108,9 +108,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			
 				var path = window.location.pathname.split("\/");
 				
-				 $('.top-menu a').each(function(index) {
-				 	var thishref = this.href.split("\/");
-				 	
+				 $('.top-menu a').each(function() {
 				    if(this.id == path[1].trim().toLowerCase() || (this.id == 'home' && path[1].trim().toLowerCase().length === 0))
 				        $(this).parent().addClass("selected");
 				});
@@ -289,7 +287,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 		}, codeBaseBranchOverview: function() {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
-			var parsedUrl = decodedUri.split('&')
+			var parsedUrl = decodedUri.split('&');
 			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
@@ -400,13 +398,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
 		}, setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
 
-			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
-			
-			if (eraseCookie === undefined) {
-				var expiredate = expiry.toGMTString();
-			} else {
-				var expiredate = 'Thu, 01 Jan 1970 00:00:00 GMT;';
-			}
+			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
 			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
@@ -415,7 +407,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			var startTimestamp = parseInt(myStartTimestamp);			    
 		    var end = Math.round(+new Date()/1000);	
 		    var time = end - startTimestamp;	
-			var getTime = Math.round(time)				
+			var getTime = Math.round(time);
 			function timeVars() {
 			var 
 				days = Math.floor(getTime / 86400),
@@ -458,8 +450,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				var now = moment(),
 	        	addSubtract = overTime === undefined? etaTime-- : etaTime++,
 	        	then = moment().add('s',addSubtract),
-	        	ms = then.diff(now, 'milliseconds', true),
-	        	arr = [],
 	        	percent = 100 - (then - now) / (then - start) * 100;
 	        	percent = percent.clamp(0,100);
 				percentInner.css('width',percent + "%");
@@ -507,7 +497,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
 			var time = end - start;	
 
-			var getTime = Math.round(time)
+			var getTime = Math.round(time);
 			var days = Math.floor(time / 86400) == 0? '' : Math.floor(time / 86400) + ' days ' ;
 			var hours = Math.floor(time / 3600) == 0? '' : Math.floor(time / 3600) % 24 + ' hours ';
 			
@@ -521,16 +511,14 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
     		return results[resultIndex]
         
         }, getSlavesResult: function (connected, runningBuilds) {
-        	
-        	var slavesResult = connected === false? 'Not connected' : runningBuilds.length > 0? 'Running' : 'idle' ;        	
-        	return slavesResult;
+
+            return connected === false ? 'Not connected' : runningBuilds.length > 0 ? 'Running' : 'idle';
 
         }, getClassName: function(connected, runningBuilds) {
         	
-			var slavesResult = helpers.getSlavesResult(connected, runningBuilds);			
-			var classNameSlaveresult = slavesResult === 'Not connected'? 'status-td offline' : slavesResult === 'Running'? 'status-td building' : 'status-td idle';        	
-			
-			return classNameSlaveresult;
+			var slavesResult = helpers.getSlavesResult(connected, runningBuilds);
+
+            return slavesResult === 'Not connected' ? 'status-td offline' : slavesResult === 'Running' ? 'status-td building' : 'status-td idle';
 
         }, getJsonUrl: function () {
 
@@ -538,27 +526,18 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			               	
 		    var parser = document.createElement('a');
 		    parser.href = currentUrl;
-		     
-		    parser.protocol; // => "http:"
-		    parser.hostname; // => "example.com"
-		    parser.port;     // => "3000"
-		    parser.pathname; // => "/pathname/"
-		    parser.search;   // => "?search=test"
-		    parser.hash;     // => "#hash"
-		    parser.host;     // => "example.com:3000"
 
-		    var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
-		    var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
-		    var projectsPath = parser.pathname.match(/\projects\/([^\/]+)/);
-		    var buildslavesPath = parser.pathname.match(/\projects\/([^\/]+)/);
 		    var fullURL = "";
             var urlParams = {"filter" : "1"};
-			if (helpers.getCurrentPage() === 'builders') {				
+			if (helpers.getCurrentPage() === 'builders') {
+                var projectsPath = parser.pathname.match(/\/projects\/([^\/]+)/);
 				fullURL = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?';
 			}
 
 		    else if (helpers.getCurrentPage() === 'builddetail') {
-		    	fullURL = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'/?';
+                var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
+                var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
+		    	fullURL = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'&';
                 urlParams = {}; //We don't want filter here yet
 		    }
 
@@ -572,17 +551,19 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
             urlParams = helpers.codebasesFromURL(urlParams);
             var ret = [];
-            for (var d in urlParams)
-                ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+            for (var d in urlParams) {
+                if (urlParams.hasOwnProperty(d)) {
+                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
+                }
+            }
             var paramsString = ret.join("&");
-            console.log(fullURL)
+            fullURL = fullURL + paramsString;
+            console.log(fullURL);
 
-		    return fullURL + paramsString;
-        }, getCurrentPage: function (isRealTime) {
-        	//var currentPage = [$('#builders_page'),$('#builddetail_page'),$('#buildqueue_page'),$('#buildslaves_page'),$('#frontpage_page')];
-        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];        	
-        	
-        	var currentPageNoHash;
+		    return fullURL;
+        }, getCurrentPage: function () {
+        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];
+        	var currentPageNoHash = "";
 
         	$.each(currentPage, function(key, value) {
         		if (value.length === 1) {        			
