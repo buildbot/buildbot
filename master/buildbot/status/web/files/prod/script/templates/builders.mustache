@@ -12,7 +12,7 @@
 			<li>
 				<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}">{{number}}</a>  
 				{{#currentStep}}
-					{{name}} <span class="spin-icon animate-spin"></span>
+					{{name}}{{^name}}0{{/name}}<span class="spin-icon animate-spin"></span>
 				{{/currentStep}}
 				{{#eta}}
 					<div data-etatime="{{eta}}" class="percent-outer-js percent-outer">
@@ -20,7 +20,16 @@
 						<div class="percent-inner-js percent-inner">								
 						</div>
 					</div>					
-				{{/eta}}                        			
+				{{/eta}}
+                {{^eta}}
+					<div data-etatime="0" class="percent-outer-js percent-outer">
+						<span class="time-txt-js time-txt">{{times.0}}Test</span>
+						<div class="percent-inner-js percent-inner">
+
+						</div>
+                        Test2
+					</div>
+                {{/eta}}
 				
 			</li>						
 	</ul>	
