@@ -441,6 +441,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			var start = moment.unix(startTime),
 			percentInner = el.children('.percent-inner-js'),
 			timeTxt = el.children('.time-txt-js');
+            var hasETA = etaTime > 0;
 
 			if (overTime) {
 				el.addClass('overtime');
@@ -453,15 +454,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 	        	percent = 100 - (then - now) / (then - start) * 100;
 	        	percent = percent.clamp(0,100);
 				percentInner.css('width',percent + "%");
-                var etaEpoch = Date.now() + (etaTime * 1000.0);
-
-                if (Date.now() > etaEpoch) {
-                    el.addClass('overtime');
-                }
 
                 var old_lang = moment.lang();
-                moment.lang('progress-bar-en');
-                timeTxt.html(moment(etaEpoch).fromNow());
+                if (hasETA) {
+                    var etaEpoch = now + (etaTime * 1000.0);
+                    moment.lang('progress-bar-en');
+                    timeTxt.html(moment(etaEpoch).fromNow());
+
+                    if (now > etaEpoch)
+                        el.addClass('overtime');
+                }
+                else {
+                    moment.lang('progress-bar-no-eta-en');
+                    timeTxt.html(moment(parseInt(startTime * 1000)).fromNow());
+                }
                 moment.lang(old_lang);
 			}
 			timeVars();

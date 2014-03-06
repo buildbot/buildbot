@@ -148,11 +148,9 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 							return htmlnew;
 						}, 
 						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {																																																					
-							if (oData.currentBuilds != undefined) {															
-								var startTimeJs = $(nTd).find('.started-time-js');	
+							if (oData.currentBuilds != undefined) {
 								var percentOuter = $(nTd).find('.percent-outer-js');
-								helpers.progressBar(percentOuter.attr('data-etatime'),percentOuter,startTimeJs.attr('data-starttime'));																									
-								helpers.startCounter(startTimeJs,startTimeJs.attr('data-starttime'));																												
+								helpers.progressBar(percentOuter.attr('data-etatime'),percentOuter,percentOuter.attr('data-starttime'));
 							}
 						}
 						},

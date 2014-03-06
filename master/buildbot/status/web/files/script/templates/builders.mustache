@@ -3,11 +3,6 @@
 {{/name}}
 
 {{#currentBuilds}}
-
-	<h2 class="started-time">
-		Elapsed time			
-		<span data-starttime="{{times.0}}" class="started-time-js"></span>
-	</h2>    
     <ul class="list current-job-js">	    	    		
 			<li>
 				<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}{{^number}}0{{/number}}">{{number}}{{^number}}0{{/number}}</a>
@@ -15,19 +10,18 @@
 					{{name}}{{^name}}0{{/name}}<span class="spin-icon animate-spin"></span>
 				{{/currentStep}}
 				{{#eta}}
-					<div data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+					<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
 						<span class="time-txt-js time-txt"></span>
 						<div class="percent-inner-js percent-inner">								
 						</div>
 					</div>					
 				{{/eta}}
                 {{^eta}}
-					<div data-etatime="0" class="percent-outer-js percent-outer">
-						<span class="time-txt-js time-txt">{{times.0}}Test</span>
+					<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
+						<span class="time-txt-js time-txt">{{times.0}}</span>
 						<div class="percent-inner-js percent-inner">
 
 						</div>
-                        Test2
 					</div>
                 {{/eta}}
 				
@@ -62,7 +56,7 @@
 {{#showStatus}}
 	{{#latestBuild}}	
 	<span class="hide">{{text.0}}</span>
-	<a href="{{#url}}{{path}}{{/url}}">#{{number}}</a>
+	<a href="{{#url}}{{path}}{{/url}}">#{{number}}{{^number}}0{{/number}}</a>
 	<span class="status-text">
 	 {{#text}}
 	 	{{.}}
