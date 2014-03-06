@@ -342,3 +342,45 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_strings': [u'pending'],
             'urls': [],
         })
+
+    def test_signature_addStepURL(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.addStepURL,  # fake
+            self.rtype.addStepURL)  # real
+        def addStepURL(self, stepid, name, url):
+            pass
+
+    @defer.inlineCallbacks
+    def test_addStepURL(self):
+        yield self.master.db.steps.addStep(buildid=10, name=u'ten',
+                                           state_strings=[u'pending'])
+        yield self.rtype.addStepURL(stepid=100, name=u"foo", url=u"bar")
+
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'stepid': 100,
+            'urls': [{u'name': u'foo', u'url': u'bar'}],
+        }
+        self.master.mq.assertProductions([
+            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
+            (('steps', str(100), 'updated'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': 100,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'urls': [{u'name': u'foo', u'url': u'bar'}],
+        })

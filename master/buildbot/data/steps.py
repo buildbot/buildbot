@@ -153,6 +153,13 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
+    def addStepURL(self, stepid, name, url):
+        yield self.master.db.steps.addURL(
+            stepid=stepid, name=name, url=url)
+        yield self.generateEvent(stepid, 'updated')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
     def finishStep(self, stepid, results):
         yield self.master.db.steps.finishStep(
             stepid=stepid, results=results)

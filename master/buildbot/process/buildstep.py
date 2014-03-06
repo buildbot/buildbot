@@ -686,9 +686,11 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self._pendingLogObservers.remove((logname, observer))
 
     @_maybeUnhandled
+    @defer.inlineCallbacks
     def addURL(self, name, url):
+        yield self.master.data.updates.addStepURL(self.stepid, unicode(name), unicode(url))
         self.step_status.addURL(name, url)
-        return defer.succeed(None)
+        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def runCommand(self, command):

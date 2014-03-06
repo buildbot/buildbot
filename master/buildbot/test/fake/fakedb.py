@@ -1786,6 +1786,20 @@ class FakeStepsComponent(FakeDBComponent):
             b['state_strings_json'] = json.dumps(state_strings)
         return defer.succeed(None)
 
+    def addURL(self, stepid, name, url, _racehook=None):
+        validation.verifyType(self.t, 'stepid', stepid,
+                              validation.IntValidator())
+        validation.verifyType(self.t, 'name', name,
+                              validation.IdentifierValidator(50))
+        validation.verifyType(self.t, 'url', url,
+                              validation.StringValidator())
+        b = self.steps.get(stepid)
+        if b:
+            urls = json.loads(b['urls_json'])
+            urls.append(dict(name=name, url=url))
+            b['urls_json'] = json.dumps(urls)
+        return defer.succeed(None)
+
     def finishStep(self, stepid, results, _reactor=reactor):
         now = _reactor.seconds()
         b = self.steps.get(stepid)
