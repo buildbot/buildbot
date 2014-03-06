@@ -33,7 +33,31 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def setup_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-
+            # This table contains basic information about each build.
+            builds = sa.Table('builds', metadata,
+                              sa.Column('id', sa.Integer, primary_key=True),
+                              sa.Column('number', sa.Integer, nullable=False),
+                              sa.Column('builderid', sa.Integer),
+                              # note that there is 1:N relationship here.
+                              # In case of slave loss, build has results RETRY
+                              # and buildrequest is unclaimed
+                              sa.Column('buildrequestid', sa.Integer,
+                                        nullable=False),
+                              # slave which performed this build
+                              # TODO: ForeignKey to buildslaves table, named buildslaveid
+                              # TODO: keep nullable to support slave-free builds
+                              sa.Column('buildslaveid', sa.Integer),
+                              # master which controlled this build
+                              sa.Column('masterid', sa.Integer,
+                                        nullable=False),
+                              # start/complete times
+                              sa.Column('started_at', sa.Integer, nullable=False),
+                              sa.Column('complete_at', sa.Integer),
+                              # a list of strings describing the build's state
+                              sa.Column('state_strings_json', sa.Text, nullable=False),
+                              sa.Column('results', sa.Integer),
+                              )
+            builds.create()
             buildsets = sa.Table('buildsets', metadata,
                                  sa.Column('id', sa.Integer, primary_key=True),
                                  sa.Column('external_idstring', sa.String(256)),

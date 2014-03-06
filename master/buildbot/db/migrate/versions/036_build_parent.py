@@ -20,6 +20,7 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
+    sa.Table('builds', metadata, autoload=True)
     buildsets_table = sa.Table('buildsets', metadata, autoload=True)
 
     # optional parent build
