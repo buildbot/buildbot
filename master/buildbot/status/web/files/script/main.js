@@ -21,14 +21,15 @@ require.config({
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'jqache': 'plugins/jqache-0-1-1-min',
 		'overscroll': 'plugins/jquery-overscroll',		
-		'moment': 'plugins/moment-with-langs',		
+		'moment': 'plugins/moment-with-langs',
+        'extend-moment': 'project/extendMoment',
 		'mustache': "libs/mustache-wrap",
 		'livestamp': "plugins/livestamp"
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown'], 
-	function(helpers, dataTables,popup, screenSize, projectDropDown) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment) {
 		
 	'use strict';
 
@@ -82,5 +83,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 		helpers.init();	
 		dataTables.init($('.tablesorter-js'));	
 		dataTables.init($('#tablesorterRt'));
+        extendMoment.init();
 	});	
 });

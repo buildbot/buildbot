@@ -9,6 +9,10 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
             return typeof args[number] != 'undefined' ? args[number] : match;
         });
     };
+
+    Number.prototype.clamp = function(min, max) {
+      return Math.min(Math.max(this, min), max);
+    };
     
     helpers = {
         init: function () {
@@ -439,7 +443,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				timeVars();
 				setTimeout(repeatTimeout, 1000);			 
 			})();		    	
-
+        }, inDOM: function(element) {
+            return element.closest(document.documentElement).size() > 0;
 		}, progressBar: function(etaTime, el, startTime, overTime) {
 			var start = moment.unix(startTime),
 			percentInner = el.children('.percent-inner-js'),
@@ -455,49 +460,29 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 	        	then = moment().add('s',addSubtract),
 	        	ms = then.diff(now, 'milliseconds', true),
 	        	arr = [],
-	        	percent = 100 - (then - now) / (then - start) * 100 + "%";		        			        	
-	        	
-				percentInner.css('width',percent);
+	        	percent = 100 - (then - now) / (then - start) * 100;
+	        	percent = percent.clamp(0,100);
+				percentInner.css('width',percent + "%");
+                var etaEpoch = Date.now() + (etaTime * 1000.0);
 
-	        	var days = Math.floor(moment.duration(ms).asDays());
-	        	if (days > 0) {
-					arr.push(days > 1 ? days + ' days' : days + ' day');
-					then = then.subtract('days', days);
-				}
-				
-				ms = then.diff(now, 'milliseconds', true);
+                if (Date.now() > etaEpoch) {
+                    el.addClass('overtime');
+                }
 
-	        	var hours = Math.floor(moment.duration(ms).asHours());
-	        	if (hours > 0) {
-					arr.push(hours > 1 ? hours + ' hours' : hours + ' hour'); 
-					then = then.subtract('hours', hours);
-				}		        						
-
-				// update the duration in ms
-				ms = then.diff(now, 'milliseconds', true);
-				var minutes = Math.floor(moment.duration(ms).asMinutes());
-
-				if (minutes > 0 || hours > 0) {
-					arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min'); 
-					then = then.subtract('minutes', minutes);
-				}
-				
-				// update the duration in ms
-				ms = then.diff(now, 'milliseconds', true);
-				var seconds = Math.floor(moment.duration(ms).asSeconds());
-
-				if (seconds > 0 || minutes > 0) {
-					arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
-				}					
-	        	
-	        	timeTxt.html(arr.join(' '));
+                var old_lang = moment.lang();
+                moment.lang('progress-bar-en');
+                timeTxt.html(moment(etaEpoch).fromNow());
+                moment.lang(old_lang);
 			}
 			timeVars();
 
 			(function repeatTimeout() {	 
 	        	timeVars();
-        		setTimeout(repeatTimeout, 1000);	
-
+                setTimeout(function(){
+                    if (helpers.inDOM(percentInner)) {
+                        repeatTimeout()
+                    }
+                }, 1000);
 			})();
 		}, startCounterTimeago: function(el, myStartTimestamp) {
 			function timeVars() {
@@ -508,7 +493,11 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			timeVars();		    
 		    (function repeatTimeout(){
 		    	timeVars();
-		    	setTimeout(repeatTimeout, 1000);			 
+		    	setTimeout(function() {
+                    if (helpers.inDOM(el)) {
+                        repeatTimeout();
+                    }
+                }, 1000);
 		    })()
 		}, getTime: function  (start, end) {
 	
