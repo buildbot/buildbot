@@ -299,7 +299,7 @@ class FakeUpdates(object):
     def setStepStateStrings(self, stepid, state_strings):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
-        validation.verifyType(self.t, 'state_strings', state_strings,
+        validation.verifyType(self.testcase, 'state_strings', state_strings,
                               validation.ListValidator(validation.StringValidator()))
         return defer.succeed(None)
 

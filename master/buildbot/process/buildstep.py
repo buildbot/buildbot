@@ -349,11 +349,13 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    @defer.inlineCallbacks
     def setStateStrings(self, strings):
+        yield self.master.data.updates.setStepStateStrings(self.stepid, map(unicode,strings))
         # call to the status API for now
         self.step_status.old_setText(strings)
         self.step_status.old_setText2(strings)
-        return defer.succeed(None)
+        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def startStep(self, remote):
