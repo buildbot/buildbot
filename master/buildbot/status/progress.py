@@ -119,8 +119,8 @@ class StepProgress:
                 avg = 1.0
             if avg < 0.0:
                 avg = 0.0
-        if percentages and self.expectedTime != None:
-            return self.expectedTime - (avg * self.expectedTime)
+        if percentages and self.expectedTime is not None:
+            return (avg * self.expectedTime) - (util.now() - self.startTime)
         if self.expectedTime is not None:
             # fall back to pure time
             return self.expectedTime - (util.now() - self.startTime)
