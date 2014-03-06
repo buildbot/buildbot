@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','popup','text!templates/buildqueue.html','text!templates/buildslaves.html','text!templates/builders.html','mustache','moment'], function (dataTable,helpers,popup,buildqueue,buildslaves,builders,Mustache,moment) {
+define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustache','text!templates/buildslaves.mustache','text!templates/builders.mustache','mustache','moment'], function (dataTable,helpers,popup,buildqueue,buildslaves,builders,Mustache,moment) {
    
     "use strict";
     var dataTables;

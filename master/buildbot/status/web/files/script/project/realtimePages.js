@@ -1,4 +1,4 @@
-define(['jquery','helpers','popup','text!templates/builders.html','mustache'], function ($,helpers,popup,builders,Mustache) {
+define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'], function ($,helpers,popup,builders,Mustache) {
 	 "use strict";
     var realtimePages;    
     var tbsorter = $('#tablesorterRt').dataTable();

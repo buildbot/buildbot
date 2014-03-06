@@ -1,4 +1,4 @@
-define(['helpers','text!templates/popups.html', 'mustache'], function (helpers,popups,Mustache) {
+define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpers,popups,Mustache) {
 
     "use strict";
     var popup;

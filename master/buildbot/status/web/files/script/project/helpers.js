@@ -1,4 +1,4 @@
-define(['screensize','text!templates/popups.html', 'mustache'], function (screenSize,popups,Mustache) {
+define(['screensize','text!templates/popups.mustache', 'mustache'], function (screenSize,popups,Mustache) {
 
     "use strict";
     var helpers;
