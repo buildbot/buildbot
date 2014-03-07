@@ -139,20 +139,23 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 						}
 						},
 						{
-						"aTargets": [ 1 ],
-						"sClass": "txt-align-left",
-						"mRender": function (data,full,type) {		
-							var noJobs = type.pendingBuilds === undefined && type.currentBuilds === undefined;																					
-													
-							var htmlnew = Mustache.render(builders, {showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
-							return htmlnew;
-						}, 
-						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {																																																					
-							if (oData.currentBuilds != undefined) {
-								var percentOuter = $(nTd).find('.percent-outer-js');
-								helpers.progressBar(percentOuter.attr('data-etatime'),percentOuter,percentOuter.attr('data-starttime'));
-							}
-						}
+                            "aTargets": [ 1 ],
+                            "sClass": "txt-align-left",
+                            "mRender": function (data,full,type) {
+                                var noJobs = type.pendingBuilds === undefined && type.currentBuilds === undefined;
+
+                                var htmlnew = Mustache.render(builders, {showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
+                                return htmlnew;
+                            },
+                            "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+                                if (oData.currentBuilds != undefined) {
+                                    var bars = $(nTd).find('.percent-outer-js');
+                                    $.each(bars, function(key, elem) {
+                                        var obj = $(elem);
+                                        helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
+                                    });
+                                }
+                            }
 						},
 						{
 						"aTargets": [ 2 ],
