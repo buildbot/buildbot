@@ -76,7 +76,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 dict(external_idstring='extid', reason='rsn1', sourcestamps=[91],
                      submitted_at=datetime2epoch(datetime.datetime(1978, 6, 15, 12, 31, 15)),
                      complete_at=datetime2epoch(datetime.datetime(1979, 6, 15, 12, 31, 15)),
-                     complete=False, results=-1, bsid=91)
+                     complete=0, results=-1, bsid=91)
             ])
 
         def verify_thd(conn):
