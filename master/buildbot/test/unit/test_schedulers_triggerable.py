@@ -104,8 +104,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             self.assertEqual(expected_ss, actual_ss)
 
         for brid in brids.values():
-            #from datetime import datetime
-            #from buildbot.util import UTC
+            # from datetime import datetime
+            # from buildbot.util import UTC
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,

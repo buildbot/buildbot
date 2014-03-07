@@ -19,8 +19,8 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import properties
 from buildbot.status import master
-from buildbot.status.results import EXCEPTION
 from buildbot.status.results import CANCELLED
+from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import trigger
@@ -28,11 +28,11 @@ from buildbot.test.fake import fakedb
 from buildbot.test.util import compat
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
+from mock import Mock
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
-from mock import Mock
 
 
 class FakeTriggerable(object):
