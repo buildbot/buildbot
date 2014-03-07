@@ -633,6 +633,9 @@ class Model(base.DBConnectorComponent):
         ('buildset_sourcestamps',
             dict(unique=False, column_names=['sourcestampid'],
                  name='sourcestampid')),
+        ('buildsets',
+            dict(unique=False, column_names=['parent_buildid'],
+                 name='parent_buildid')),
     ]
 
     #
