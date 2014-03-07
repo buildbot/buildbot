@@ -448,16 +448,18 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			}
 
 			function timeVars() {
-				var now = moment(),
-	        	addSubtract = overTime === undefined? etaTime-- : etaTime++,
-	        	then = moment().add('s',addSubtract),
-	        	percent = 100 - (then - now) / (then - start) * 100;
-	        	percent = percent.clamp(0,100);
-				percentInner.css('width',percent + "%");
-
+                var percent = 100;
                 var old_lang = moment.lang();
+
                 if (hasETA) {
-                    var etaEpoch = now + (etaTime * 1000.0);
+                    var now = moment(),
+                    addSubtract = overTime === undefined? etaTime-- : etaTime++,
+                    then = moment().add('s',addSubtract),
+                    etaEpoch = now + (etaTime * 1000.0);
+
+                    percent = 100 - (then - now) / (then - start) * 100;
+                    percent = percent.clamp(0,100);
+
                     moment.lang('progress-bar-en');
                     timeTxt.html(moment(etaEpoch).fromNow());
 
@@ -468,7 +470,10 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
                     moment.lang('progress-bar-no-eta-en');
                     timeTxt.html(moment(parseInt(startTime * 1000)).fromNow());
                 }
+
+                //Reset language to original
                 moment.lang(old_lang);
+                percentInner.css('width',percent + "%");
 			}
 			timeVars();
 
