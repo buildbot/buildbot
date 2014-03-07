@@ -170,7 +170,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def _processBranches(self, output):
-        args = ['branches', "--closed"]
+        args = ['branches',]
 
         results = yield utils.getProcessOutput(self.hgbin, args,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
