@@ -481,6 +481,7 @@ class ForceScheduler(base.BaseScheduler):
                  username=UserNameParameter(),
                  reason=StringParameter(name="reason", default="force build", size=20),
                  reasonString="A build was forced by '%(owner)s': %(reason)s",
+                 buttonName="Force Build",
                  codebases=None,
 
                  properties=[
@@ -605,6 +606,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
+        self.buttonName = buttonName
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
