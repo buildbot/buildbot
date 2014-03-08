@@ -16,7 +16,7 @@ Steps
     :attr list state_strings: a list of strings giving progressively more detail on the state of the build.
         The first is usually one word or phrase; the remainder are sized for one-line display.
     :attr urls: a list of URLs associated with this step.
-    :type urls: list of strings
+    :type urls: list of dictionaries with keys `name` and `url`
     :attr Link link: link for this step
 
     This resource type describes a step in a build.
@@ -101,6 +101,16 @@ All update methods are available as attributes of ``master.data.updates``.
         :param list state_strings: new state strings for this step
 
         Replace the existing state strings for a step with a new list.
+
+    .. py:method:: addStepURL(stepid, name, url):
+
+        :param integer stepid: the step to modify
+        :param string name: the url name
+        :param string url: the actual url
+        :returns: None via deferred
+
+        Add a new url to a step.
+        The new url is added to the list of urls.
 
     .. py:method:: finishStep(stepid, results)
 

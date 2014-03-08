@@ -335,7 +335,7 @@ steps
     * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
     * ``state_strings`` (list of short strings describing the step's state)
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
-    * ``urls`` (list of URLs produced by this step)
+    * ``urls`` (list of URLs produced by this step. Each urls is stored as a dictionary with keys `name` and `url`)
 
     .. py:method:: getStep(stepid=None, buildid=None, number=None, name=None)
 
@@ -390,6 +390,16 @@ steps
         .. note::
 
             This update is done unconditionally, even if the steps are already finished.
+
+    .. py:method:: addURL(self, stepid, name, url)
+
+        :param integer stepid: the stepid to add the url.
+        :param string name: the url name
+        :param string url: the actual url
+        :returns: None via deferred
+
+        Add a new url to a step.
+        The new url is added to the list of urls.
 
 logs
 ~~~~

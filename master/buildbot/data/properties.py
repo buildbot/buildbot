@@ -36,6 +36,8 @@ class BuildPropertiesEndpoint(base.Endpoint):
     """
 
     def get(self, resultSpec, kwargs):
+        # its not really implemented db.getBuildProperties is TBD
+        # this code is kept here as a placeholder (so its not yet documented)
         return self.master.db.builds.getBuildProperties(kwargs['buildid'])
 
 

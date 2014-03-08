@@ -131,8 +131,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
         # at the end of a step)
         # this race condition is only inside the same master, as only one master
         # is supposed to add urls to a buildstep.
-        # so threading.lock is used, as we are in the thread poll
+        # so threading.lock is used, as we are in the thread pool
         if self.url_lock is None:
+            # this runs in reactor thread, so no race here..
             self.url_lock = defer.DeferredLock()
 
         def thd(conn):
