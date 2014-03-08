@@ -50,7 +50,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                         started_at=TIME1, complete_at=TIME2, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
                         started_at=TIME2, complete_at=TIME3, results=2,
-                        urls_json='["http://url"]'),
+                        urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
                         started_at=TIME3),
         ])
@@ -127,7 +127,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                         started_at=TIME1, complete_at=TIME2, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
                         started_at=TIME2, complete_at=TIME3, results=2,
-                        urls_json='["http://url"]'),
+                        urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
                         started_at=TIME3),
             fakedb.Step(id=73, number=0, name='otherbuild', buildid=31,
