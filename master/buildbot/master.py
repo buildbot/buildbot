@@ -52,6 +52,7 @@ from buildbot.status.master import Status
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.status.results import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
@@ -249,6 +250,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.masterid = yield self.db.masters.findMasterId(
                 name=self.name)
 
+            yield self.doMasterHouseKeeping(self.masterid)
+
             # call the parent method
             yield service.AsyncMultiService.startService(self)
 
@@ -278,6 +281,19 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         log.msg("BuildMaster is stopped")
         self._master_initialized = False
+
+    @defer.inlineCallbacks
+    def doMasterHouseKeeping(self, masterid):
+        # House keeping method, when a master is stopped, disappear or
+        # starts (if it has crashed before)
+        # unclaim the unfinished buildrequest, and finish the unfinished builds
+        buildrequests = yield self.db.buildrequests.getBuildRequests(
+            complete=False, claimed=masterid)
+
+        yield self.db.buildrequests.unclaimBuildRequests(
+            brids=[br['buildrequestid'] for br in buildrequests])
+
+        yield self.db.builds.finishBuildsFromMaster(masterid, RETRY)
 
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at
@@ -434,43 +450,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         bsid, brids = yield self.data.updates.addBuildset(
             scheduler=scheduler, **kwargs)
         defer.returnValue((bsid, brids))
-
-    @defer.inlineCallbacks
-    def maybeBuildsetComplete(self, bsid, _reactor=reactor):
-        """
-        Instructs the master to check whether the buildset is complete,
-        and notify appropriately if it is.
-
-        Note that buildset completions are only reported on the master
-        on which the last build request completes.
-        """
-        brdicts = yield self.db.buildrequests.getBuildRequests(
-            bsid=bsid, complete=False)
-
-        # if there are incomplete buildrequests, bail out
-        if brdicts:
-            return
-
-        brdicts = yield self.db.buildrequests.getBuildRequests(bsid=bsid)
-
-        # figure out the overall results of the buildset
-        cumulative_results = SUCCESS
-        for brdict in brdicts:
-            if brdict['results'] not in (SUCCESS, WARNINGS):
-                cumulative_results = FAILURE
-
-        # mark it as completed in the database
-        complete_at_epoch = _reactor.seconds()
-        complete_at = epoch2datetime(complete_at_epoch)
-        yield self.db.buildsets.completeBuildset(bsid, cumulative_results,
-                                                 complete_at=complete_at)
-
-        # new-style notification
-        msg = dict(
-            bsid=bsid,
-            complete_at=complete_at_epoch,
-            results=cumulative_results)
-        self.master.data.produceEvent('buildset', 'complete', msg)
 
     # state maintenance (private)
     def getObjectId(self):

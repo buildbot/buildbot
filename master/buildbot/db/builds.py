@@ -105,6 +105,18 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                          results=results)
         return self.db.pool.do(thd)
 
+    def finishBuildsFromMaster(self, masterid, results, _reactor=reactor):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = tbl.update()
+            q = q.where(tbl.c.masterid == masterid)
+            q = q.where(tbl.c.results == None)
+
+            conn.execute(q,
+                         complete_at=_reactor.seconds(),
+                         results=results)
+        return self.db.pool.do(thd)
+
     def _builddictFromRow(self, row):
         def mkdt(epoch):
             if epoch:

@@ -168,6 +168,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
             lambda masterid: defer.succeed(None)
 
         self.rtype = masters.Master(self.master)
+        self.master.doMasterHouseKeeping = mock.Mock()
 
     def test_signature_masterActive(self):
         @self.assertArgSpecMatches(
@@ -238,6 +239,8 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
             (('masters', '13', 'stopped'),
              dict(masterid=13, name='aname', active=False)),
         ])
+        self.master.doMasterHouseKeeping. \
+            assert_called_with(masterid=13)
 
     @defer.inlineCallbacks
     def test_masterStopped_already(self):
@@ -251,6 +254,8 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
         self.assertEqual(self.master.mq.productions, [])
+        self.master.doMasterHouseKeeping. \
+            assert_not_called()
 
     def test_signature_expireMasters(self):
         @self.assertArgSpecMatches(
@@ -288,4 +293,6 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.master.data.rtypes.scheduler._masterDeactivated. \
             assert_called_with(masterid=14)
         self.master.data.rtypes.changesource._masterDeactivated. \
+            assert_called_with(masterid=14)
+        self.master.doMasterHouseKeeping. \
             assert_called_with(masterid=14)
