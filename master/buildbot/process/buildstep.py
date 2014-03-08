@@ -387,6 +387,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
+        # self.description is not yet rendered, but setStateStrings accepts renderable
         yield self.setStateStrings(self.describe(False))
         self.step_status.stepStarted()
 

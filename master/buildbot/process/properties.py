@@ -652,6 +652,11 @@ class FlattenList(util.ComparableMixin):
         d.addCallback(flat)
         return d
 
+    def __add__(self, b):
+        if isinstance(b, FlattenList):
+            b = b.nestedlist
+        return FlattenList(self.nestedlist + b, self.types)
+
 
 class _Renderer(util.ComparableMixin, object):
     implements(IRenderable)

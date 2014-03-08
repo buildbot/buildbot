@@ -214,7 +214,8 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(workdir='build',
                                command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
-                               description=properties.FlattenList(['test', ['done']])))
+                               description=properties.FlattenList(['test', ['done']]),
+                               descriptionSuffix=properties.FlattenList(['test', ['done']])))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'],
@@ -222,7 +223,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=['test', 'done'])
+                           status_text=['test', 'done', 'test', 'done'])
         return self.runStep()
 
     def test_run_nested_command(self):
