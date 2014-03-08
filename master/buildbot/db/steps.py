@@ -21,6 +21,7 @@ from buildbot.util import json
 from twisted.internet import defer
 from twisted.internet import reactor
 
+
 class StepsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
     url_lock = None

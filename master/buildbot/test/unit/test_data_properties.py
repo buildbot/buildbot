@@ -46,5 +46,5 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         @d.addCallback
         def check(props):
-            self.assertEqual(props,  {u'prop': (22, u'fakedb')})
+            self.assertEqual(props, {u'prop': (22, u'fakedb')})
         return d
