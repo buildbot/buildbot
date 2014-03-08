@@ -64,6 +64,11 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             defer.returnValue((yield self.db2data(buildrequest)))
         defer.returnValue(None)
 
+    def startConsuming(self, callback, options, kwargs):
+        buildrequestid = kwargs.get('buildrequestid')
+        return self.master.mq.startConsuming(callback,
+                                             ('buildrequests', buildrequestid, None))
+
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -133,6 +138,9 @@ class BuildRequest(base.ResourceType):
     plural = "buildrequests"
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
     keyFields = ['buildsetid', 'builderid', 'buildrequestid']
+    eventPathPatterns = """
+        /buildrequests/:buildrequestid
+    """
 
     class EntityType(types.Entity):
         buildrequestid = types.Integer()
@@ -153,6 +161,13 @@ class BuildRequest(base.ResourceType):
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
+    def generateEvent(self, brids, event):
+        for _id in brids:
+            # get the build and munge the result for the notification
+            br = yield self.master.data.get(('buildrequests', str(_id)))
+            self.produceEvent(br, event)
+
+    @defer.inlineCallbacks
     def callDbBuildRequests(self, brids, db_callable, **kw):
         if not brids:
             # empty buildrequest list. No need to call db API
@@ -163,6 +178,7 @@ class BuildRequest(base.ResourceType):
             # the db layer returned an AlreadyClaimedError exception, usually
             # because one of the buildrequests has already been claimed by another master
             defer.returnValue(False)
+        yield self.generateEvent(brids, "update")
         defer.returnValue(True)
 
     @base.updateMethod
@@ -183,6 +199,7 @@ class BuildRequest(base.ResourceType):
     def unclaimBuildRequests(self, brids):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+            yield self.generateEvent(brids, "update")
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -201,6 +218,7 @@ class BuildRequest(base.ResourceType):
             # the db layer returned a NotClaimedError exception, usually
             # because one of the buildrequests has been claimed by another master
             defer.returnValue(False)
+        yield self.generateEvent(brids, "update")
         defer.returnValue(True)
 
     @base.updateMethod
