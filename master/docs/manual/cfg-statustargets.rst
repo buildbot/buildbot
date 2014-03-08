@@ -378,6 +378,12 @@ be used to access them.
     Buildbot stores old build details in pickle files so it's a good idea to enable
     cache if you are planning to actively search build statuses by revision.
 
+``/redirect``
+    This provides a redirection to the latest build by a given revision. It's best used with the ``/png`` view to provide a link to the build.
+
+:samp:`/redirect?revision=${REVHASH}&builder=${BUILDERNAME}`
+    This will return a redirection to the build specified by the $REVHASH on the given builder $BUILDERNAME. $BUILDERNAME is optional, if it's not specified all builders are searched. Please note that this will return a redirection to the latest build with the revision (for example it can be a force built one).
+
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.
     It'll redirect to ``/authfail`` on ``False``, ``/users/table`` on ``True``,
