@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db import base
+from buildbot.db import null
 from buildbot.util import epoch2datetime
 from buildbot.util import json
 from twisted.internet import reactor

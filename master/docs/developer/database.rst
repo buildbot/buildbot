@@ -8,11 +8,6 @@ backend.  This section describes the database connector classes, which allow
 other parts of Buildbot to access the database.  It also describes how to
 modify the database schema and the connector classes themselves.
 
-.. note::
-
-    Buildbot is only half-migrated to a database backend.  Build and builder
-    status information is still stored on disk in pickle files.  This is
-    difficult to fix, although work is underway.
 
 Database Overview
 -----------------
@@ -1509,6 +1504,18 @@ returned.
 Queries can be constructed using any of the SQLAlchemy core methods, using
 tables from :class:`~buildbot.db.model.Model`, and executed with the connection
 object, ``conn``.
+
+.. note::
+
+    SQLAlchemy requires the use of a syntax that is forbidden by pep8.
+    If in where clauses you need to select rows where a value is null,
+    you need to write (`tbl.c.value == None`). This form is forbidden by pep8
+    which requires the use of `is None` instead of `== None`. As sqlalchemy is using operator
+    overloading to implement pythonic SQL statements, and `is` operator is not overloadable,
+    we need to keep the `==` operators. In order to solve this issue, buildbot
+    uses `buildbot.db.null` constant, which is `None`.
+    So instead of writting `tbl.c.value == None`, please write `tbl.c.value == null`)
+
 
 .. py:class:: DBThreadPool
 

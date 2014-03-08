@@ -12,3 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+# a null constant to use in sqlalchemy whereclauses e.g. (tbl.c.results == null)
+null = None

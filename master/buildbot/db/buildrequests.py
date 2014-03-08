@@ -17,6 +17,7 @@ import itertools
 import sqlalchemy as sa
 
 from buildbot.db import base
+from buildbot.db import null
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import reactor
@@ -82,11 +83,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if isinstance(claimed, bool):
                     if not claimed:
                         q = q.where(
-                            (claims_tbl.c.claimed_at == None) &
+                            (claims_tbl.c.claimed_at == null) &
                             (reqs_tbl.c.complete == 0))
                     else:
                         q = q.where(
-                            (claims_tbl.c.claimed_at != None))
+                            (claims_tbl.c.claimed_at != null))
                 else:
                     q = q.where(
                         (claims_tbl.c.masterid == claimed))

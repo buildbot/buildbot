@@ -20,6 +20,7 @@ Support for buildsets in the database
 import sqlalchemy as sa
 
 from buildbot.db import base
+from buildbot.db import null
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
@@ -127,7 +128,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
             q = tbl.update(whereclause=(
                 (tbl.c.id == bsid) &
-                ((tbl.c.complete == None) | (tbl.c.complete != 1))))
+                ((tbl.c.complete == null) | (tbl.c.complete != 1))))
             res = conn.execute(q,
                                complete=1,
                                results=results,
@@ -157,7 +158,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(bs_tbl.c.complete != 0)
                 else:
                     q = q.where((bs_tbl.c.complete == 0) |
-                                (bs_tbl.c.complete == None))
+                                (bs_tbl.c.complete == null))
             res = conn.execute(q)
             return [self._thd_row2dict(conn, row) for row in res.fetchall()]
         return self.db.pool.do(thd)
@@ -180,7 +181,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(bs_tbl.c.complete != 0)
                 else:
                     q = q.where((bs_tbl.c.complete == 0) |
-                                (bs_tbl.c.complete == None))
+                                (bs_tbl.c.complete == null))
             if branch:
                 q = q.where(ss_tbl.c.branch == branch)
             if repository:
