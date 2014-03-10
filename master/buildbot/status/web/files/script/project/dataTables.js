@@ -95,7 +95,7 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
 	        		// Parse the url and insert current codebases and branches
-	        		helpers.codeBaseBranchOverview();	
+	        		helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'));	
 				}
 
 				// Set the marquee in the input field on load and listen for key event	

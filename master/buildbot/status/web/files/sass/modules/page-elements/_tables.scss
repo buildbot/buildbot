@@ -1,3 +1,4 @@
+@charset "UTF-8";
 // tables
 
 .table-wrapper {
@@ -33,7 +34,7 @@
 	}
 	tbody tr {		
 		&:hover {		
-			background-color:#fafafa;
+			background-color:#EFEFEF;
 			@include box-shadow(0 0px 12px #FFFFFF inset);
 		}
 	}
@@ -163,17 +164,16 @@
 		}
 	}
 }
- 
+   
  .border-table-holder  {
-	border-left: 2px solid #2B6194;
-    padding: 0 0 0 4px;
+	border-left: 2px solid #2B6194;    
     @include box-shadow (1px 0 0px #FFFFFF inset);
     float: left;
     margin-top: 8px;
-    padding: 0 0 0 4px; 
+    padding: 0 0 0 10px; 
     width: 88%;
 }
-
+  
 .inner-table-holder {
 	height: 30px;
 	overflow: hidden;
@@ -200,6 +200,9 @@ table.codebase-branch-table {
     	vertical-align: top;
     	font-weight:bold;
     	padding:0 9px 0;
+    }
+    tr th:first-child{
+		padding-left:0;
     }
     tr:first-child th{
     	padding-bottom: 2px;
@@ -358,6 +361,12 @@ table.codebase-branch-table {
 .top {
 	@include pie-clearfix;
 	margin-bottom:20px;
+	&.branch-overview {
+		.border-table-holder {
+			border-left:0;		
+			padding-left:0;	
+		}
+	}
 }
 .dataTables_filter  {    
     width: 145px;

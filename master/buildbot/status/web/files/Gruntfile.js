@@ -15,7 +15,7 @@ module.exports = function(grunt) {
         options: {
           sassDir: '<%= meta.srcPath %>',
           cssDir: '<%= meta.deployPath %>',
-          debugInfo: true,
+          debugInfo: false,
           environment: "development"
         }
       },
@@ -67,6 +67,7 @@ module.exports = function(grunt) {
       compileLog: {
         options: {
           baseUrl: 'script/testresults',
+          debugInfo: false,
           paths: {
           jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
           //jquery: 'empty:' //Use this to continue using CDN loading
