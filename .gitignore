@@ -51,3 +51,5 @@ master/buildbot/status/web/files/node_modules/grunt-usemin/node_modules/.bin/lod
 master/buildbot/status/web/files/test3.xml
 
 master/buildbot/status/web/files/test.xml
+
+master/buildbot/status/web/files/builders.json
