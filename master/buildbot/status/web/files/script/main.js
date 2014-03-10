@@ -28,7 +28,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 	  $(document).ready(function() {
         $('body').show();
 	  	// swipe or scroll in the codebases overview
-	  	if ($('#builders_page').length) {
+	  	if ($('#builders_page').length || $('#builder_page').length) {
 	  	require(['overscroll'],
 	        function(overscroll) {	        	
 	        	$("#overScrollJS").overscroll({
