@@ -1945,7 +1945,7 @@ a.grey-btn:hover,
 /* line 36, ../sass/modules/page-elements/_tables.scss */
 .table-1 tbody tr:hover,
 .table-2 tbody tr:hover {
-  background-color: #fafafa;
+  background-color: #EFEFEF;
   -webkit-box-shadow: 0 0px 12px white inset;
   -moz-box-shadow: 0 0px 12px white inset;
   box-shadow: 0 0px 12px white inset;
