@@ -86,7 +86,7 @@ class Builder(config.ReconfigurableServiceMixin,
             self.builder_status = self.master.status.builderAdded(
                     builder_config.name,
                     builder_config.builddir,
-                    builder_config.category)
+                    builder_config.category, builder_config.friendly_name)
 
         self.config = builder_config
 

@@ -460,16 +460,23 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result = {}
         # Constant
         result['builderName'] = self.builder.name
+        result['builderFriendlyName'] = self.builder.getFriendlyName()
         result['number'] = self.getNumber()
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
+        result['url'] = self.builder.status.getURLForThing(self)
 
         # Transient
         result['properties'] = self.getProperties().asList()
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
+
+        #Lazy importing here to avoid python import errors
+        from buildbot.status.web.base import css_classes
+        result['results_text'] = css_classes.get(result['results'], "")
+
         result['slave'] = self.getSlavename()
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()

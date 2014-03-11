@@ -121,12 +121,25 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.submittedAt)
 
+    @defer.inlineCallbacks
+    def getReason(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.reason)
+
+    def getSlaves(self):
+        builder = self.status.getBuilder(self.getBuilderName())
+        return builder.slavenames
+
     def asDict(self):
         result = {}
         # Constant
+        result['brid'] = self.brid
         result['source'] = None # not available sync, sorry
         result['builderName'] = self.buildername
         result['submittedAt'] = None # not availably sync, sorry
+        result['slaves'] =  self.getSlaves()
+        result['reason'] = None # not availably sync, sorry
+        result['builderURL'] = self.status.getURLForThing(self.status.getBuilder(self.getBuilderName()))
 
         # Transient
         result['builds'] = [] # not available async, sorry
@@ -136,10 +149,18 @@ class BuildRequestStatus:
     def asDict_async(self):
         result = {}
 
+        builder = self.status.getBuilder(self.getBuilderName())
         ss = yield self.getSourceStamp()
+        sources = yield self.getSourceStamps()
+        result['brid'] = self.brid
         result['source'] = ss.asDict()
+        result['sources'] = [s.asDict() for s in sources.values()]
         result['builderName'] = self.getBuilderName()
+        result['builderFriendlyName'] = builder.getFriendlyName()
+        result['reason'] = yield self.getReason()
+        result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
+        result['builderURL'] = self.status.getURLForThing(builder)
 
         builds = yield self.getBuilds()
         result['builds'] = [ build.asDict() for build in builds ]
