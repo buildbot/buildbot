@@ -98,7 +98,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         connect_count = slave.getConnectCount()
 
         ctx.update(dict(slave=slave,
-                        slavename = self.slavename,  
+                        slavename = slave.getFriendlyName(),
                         current = current_builds, 
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),
@@ -150,7 +150,7 @@ class BuildSlavesResource(HtmlResource):
             if show_builder_column:
                 info['builders'] = []
                 for b in used_by_builder.get(name, []):
-                    info['builders'].append(dict(link=path_to_builder(request, b), name=b.getName()))
+                    info['builders'].append(dict(link=path_to_builder(request, b), name=b.getFriendlyName()))
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()

@@ -244,13 +244,14 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         self.builder_status = builder_status
 
     def getPageTitle(self, request):
-        return "Katana - %s" % self.builder_status.getName()
+        return "Katana - %s" % self.builder_status.getFriendlyName()
 
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
         project = cxt['selectedproject'] =  b.getProject()
         cxt['name'] = b.getName()
+        cxt['friendly_name'] = b.getFriendlyName()
 
         req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
@@ -594,7 +595,8 @@ class BuildersResource(HtmlResource):
             builder = status.getBuilder(bn)
 
             bld = { 'link': path_to_builder(req, builder),
-                    'name': bn, 'builder_url': path_to_builder(req, builder, False) }
+                    'name': bn, 'builder_url': path_to_builder(req, builder, False),
+                    'friendly_name': builder.friendly_name}
 
             bs.append(bld)
 

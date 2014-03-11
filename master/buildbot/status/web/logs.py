@@ -109,10 +109,15 @@ class TextLog(Resource):
 
         if not self.asText:
             self.template = req.site.buildbot_service.templates.get_template("logs.html")                
-            
+            builder = self.original.step.build.builder
+            build_id = self.original.step.build.number
+            url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
+
             data = self.template.module.page_header(
                     pageTitle = "Log File contents",
                     texturl = req.childLink("text"),
+                    builder_name = builder.getFriendlyName(),
+                    builder_url = url_dict['path'],
                     path_to_root = path_to_root(req))
             data = data.encode('utf-8')                   
             req.write(data)
