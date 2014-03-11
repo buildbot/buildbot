@@ -466,6 +466,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
         result['url'] = self.builder.status.getURLForThing(self)
+        result['builder_url'] = self.builder.status.getURLForThing(self.builder)
 
         # Transient
         result['times'] = self.getTimes()
