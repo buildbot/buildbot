@@ -10,7 +10,7 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 			var tableSorterRt = $('#tablesorterRt');
 
 			tableSorterRt.delegate('a.popup-btn-json-js', 'click', function(e){
-				e.preventDefault();								
+				e.preventDefault();												
 				popup.showjsonPopup($(this).data());												
 			});
 
@@ -52,11 +52,14 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 				popup.externalContentPopup($(this));
 			});
 
-		}, showjsonPopup: function(jsonObj) {
-			
-			var mustacheTmpl = $(Mustache.render(popups, jsonObj));					
-			
-			$('body').append(mustacheTmpl);			
+		}, showjsonPopup: function(jsonObj) {			
+			var mustacheTmpl = $(Mustache.render(popups, jsonObj));								
+			$('body').append(mustacheTmpl);	
+
+			if (jsonObj.showRunningBuilds != undefined) {
+				helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));                
+	        }
+            		
 			helpers.jCenter(mustacheTmpl).fadeIn('fast', function() {
 				helpers.closePopup(mustacheTmpl);
 			});			

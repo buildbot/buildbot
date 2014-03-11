@@ -437,6 +437,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			})();		    	
         }, inDOM: function(element) {
             return element.closest(document.documentElement).size() > 0;
+		}, delegateToProgressBar: function (bars) {
+            $.each(bars, function(key, elem) {
+                var obj = $(elem);
+                helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
+            });
+
 		}, progressBar: function(etaTime, el, startTime, overTime) {
 			var start = moment.unix(startTime),
 			percentInner = el.children('.percent-inner-js'),

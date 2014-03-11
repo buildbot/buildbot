@@ -152,3 +152,36 @@
 		</ul>
 	</div>
 {{/showcompatibleSlaves}}
+
+{{#showRunningBuilds}}
+	<div class="more-info-box more-info-box-js">
+		<span class="close-btn">
+		</span>
+		<h3>Running builds</h3>
+		<br>
+		{{#runningBuilds}}
+    		<ul class="list current-job-js">	    	    		    			
+				<li>
+					<a href="{{#url}}{{path}}{{/url}}">#{{number}}{{^number}}0{{/number}}</a>
+					
+						<a href="#">{{builderName}}</a> <span class="spin-icon animate-spin"></span>
+					
+					{{#eta}}
+						<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt"></span>
+							<div class="percent-inner-js percent-inner">								
+							</div>
+						</div>					
+					{{/eta}}
+	                {{^eta}}
+						<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt">{{times.0}}</span>
+							<div class="percent-inner-js percent-inner">
+							</div>
+						</div>
+	                {{/eta}}					
+				</li>									
+			</ul>	
+		{{/runningBuilds}}
+	</div>
+{{/showRunningBuilds}}

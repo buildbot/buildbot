@@ -143,6 +143,16 @@ div.welcome-txt {
 	margin-left:10px;
 }
 
+.bubble {
+	background-color: #80000D;
+	@include border-radius(9px);
+	@include box-shadow (1px 1px 1px #FFFFFF);
+	color: #FFFFFF;
+	padding: 2px 6px;
+	margin-left:5px;
+	font-size: 11px;
+}
+
 .more-info {
 	font-weight:bold;
 }
