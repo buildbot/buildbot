@@ -140,6 +140,8 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+
 * The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
