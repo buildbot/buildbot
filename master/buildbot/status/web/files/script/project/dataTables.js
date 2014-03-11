@@ -51,7 +51,7 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 				      
 					optionTable.aaSorting = [[ 2, "asc" ]]			
 					optionTable.aoColumns = [
-						{ "mData": "builderName" },	
+						{ "mData": "builderFriendlyName" },
 			            { "mData": "sources" },
 			            { "mData": "reason"},
 			            { "mData": "slaves" },
@@ -134,7 +134,7 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 			                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
 			                }
 			                var paramsString = ret.join("&");
-							var htmlnew = Mustache.render(builders, {name:type.name,builderParam:paramsString});
+							var htmlnew = Mustache.render(builders, {name:type.name, friendly_name:type.friendly_name, builderParam:paramsString});
 							return htmlnew;
 						}
 						},
