@@ -165,6 +165,7 @@
         <span class="label">Specify slave</span>
         <select id="selected_slave" name="selected_slave">
             <option value="default">Any Compatible</option>
+            <option value="allCompatible">All Compatible</option>
             {% for slave in slaves %}
             <option value="{{ slave.name }}">{{ slave.name }}</option>
             {% endfor %}
