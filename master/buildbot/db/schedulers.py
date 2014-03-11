@@ -17,7 +17,7 @@ import sqlalchemy as sa
 import sqlalchemy.exc
 
 from buildbot.db import base
-from buildbot.db import null
+from buildbot.db import NULL
 from twisted.internet import defer
 
 
@@ -161,9 +161,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 if masterid is not None:
                     wc = (sch_mst_tbl.c.masterid == masterid)
                 elif active:
-                    wc = (sch_mst_tbl.c.masterid != null)
+                    wc = (sch_mst_tbl.c.masterid != NULL)
                 elif active is not None:
-                    wc = (sch_mst_tbl.c.masterid == null)
+                    wc = (sch_mst_tbl.c.masterid == NULL)
 
             q = sa.select([sch_tbl.c.id, sch_tbl.c.name,
                            sch_mst_tbl.c.masterid],

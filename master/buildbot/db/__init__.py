@@ -13,5 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-# a null constant to use in sqlalchemy whereclauses e.g. (tbl.c.results == null)
-null = None
+# a NULL constant to use in sqlalchemy whereclauses e.g. (tbl.c.results == NULL)
+# so that pep8 is happy
+NULL = None

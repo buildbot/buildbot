@@ -16,7 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db import base
-from buildbot.db import null
+from buildbot.db import NULL
 from buildbot.util import epoch2datetime
 from buildbot.util import json
 from twisted.internet import reactor
@@ -111,7 +111,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.builds
             q = tbl.update()
             q = q.where(tbl.c.masterid == masterid)
-            q = q.where(tbl.c.results == None)
+            q = q.where(tbl.c.results == NULL)
 
             conn.execute(q,
                          complete_at=_reactor.seconds(),

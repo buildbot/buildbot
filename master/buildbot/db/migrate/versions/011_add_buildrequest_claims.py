@@ -16,7 +16,7 @@
 import migrate
 import sqlalchemy as sa
 
-from buildbot.db import null
+from buildbot.db import NULL
 from buildbot.util import sautils
 
 
@@ -33,7 +33,7 @@ def migrate_claims(migrate_engine, metadata, buildrequests, objects,
         buildrequests.c.claimed_by_name.label("name"),
         sa.literal_column("'BuildMaster'").label("class_name"),
     ],
-        whereclause=buildrequests.c.claimed_by_name != null,
+        whereclause=buildrequests.c.claimed_by_name != NULL,
         distinct=True)
 
     # this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
@@ -51,7 +51,7 @@ def migrate_claims(migrate_engine, metadata, buildrequests, objects,
         objects.c.id.label('objectid'),
         buildrequests.c.claimed_at,
     ], from_obj=[join],
-        whereclause=buildrequests.c.claimed_by_name != null)
+        whereclause=buildrequests.c.claimed_by_name != NULL)
     migrate_engine.execute(
         str(sautils.InsertFromSelect(buildrequest_claims, claims)))
 

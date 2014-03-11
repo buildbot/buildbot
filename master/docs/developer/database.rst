@@ -1508,13 +1508,13 @@ object, ``conn``.
 .. note::
 
     SQLAlchemy requires the use of a syntax that is forbidden by pep8.
-    If in where clauses you need to select rows where a value is null,
+    If in where clauses you need to select rows where a value is NULL,
     you need to write (`tbl.c.value == None`). This form is forbidden by pep8
     which requires the use of `is None` instead of `== None`. As sqlalchemy is using operator
     overloading to implement pythonic SQL statements, and `is` operator is not overloadable,
     we need to keep the `==` operators. In order to solve this issue, buildbot
-    uses `buildbot.db.null` constant, which is `None`.
-    So instead of writting `tbl.c.value == None`, please write `tbl.c.value == null`)
+    uses `buildbot.db.NULL` constant, which is `None`.
+    So instead of writting `tbl.c.value == None`, please write `tbl.c.value == NULL`)
 
 
 .. py:class:: DBThreadPool

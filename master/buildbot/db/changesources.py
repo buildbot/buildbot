@@ -16,7 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db import base
-from buildbot.db import null
+from buildbot.db import NULL
 from twisted.internet import defer
 
 
@@ -87,9 +87,9 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 if masterid is not None:
                     wc = (cs_mst_tbl.c.masterid == masterid)
                 elif active:
-                    wc = (cs_mst_tbl.c.masterid != null)
+                    wc = (cs_mst_tbl.c.masterid != NULL)
                 elif active is not None:
-                    wc = (cs_mst_tbl.c.masterid == null)
+                    wc = (cs_mst_tbl.c.masterid == NULL)
 
             q = sa.select([cs_tbl.c.id, cs_tbl.c.name,
                            cs_mst_tbl.c.masterid],
