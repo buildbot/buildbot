@@ -49,13 +49,9 @@ from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.status.master import Status
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
 from buildbot.status.results import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import datetime2epoch
-from buildbot.util import epoch2datetime
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.www import service as wwwservice

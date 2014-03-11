@@ -30,8 +30,8 @@ from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
-from buildbot.test.fake.fakemaster import FakeBotMaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
+from buildbot.test.fake.fakemaster import FakeBotMaster
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements

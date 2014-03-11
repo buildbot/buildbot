@@ -16,8 +16,8 @@
 import itertools
 import sqlalchemy as sa
 
-from buildbot.db import base
 from buildbot.db import NULL
+from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import reactor
