@@ -148,12 +148,8 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
                                 return htmlnew;
                             },
                             "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
-                                if (oData.currentBuilds != undefined) {
-                                    var bars = $(nTd).find('.percent-outer-js');
-                                    $.each(bars, function(key, elem) {
-                                        var obj = $(elem);
-                                        helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
-                                    });
+                                if (oData.currentBuilds != undefined) {                                    
+                                    helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));                                    
                                 }
                             }
 						},
@@ -220,7 +216,8 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 						"mRender": function (data,full,type)  {												
 							var htmlnew = Mustache.render(buildslaves, {buildersPopup:true});
 							return htmlnew;
-						},"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
+						},
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {							
 							$(nTd).find('a.popup-btn-json-js').data({showBuilders:oData});
 						}
 						},
@@ -236,27 +233,37 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 						"aTargets": [ 3 ],
 						"mRender": function (data,full,type)  {
 							var statusTxt;
-							
+							var overtime = 0;
 							if (type.connected === undefined) {
 								statusTxt = 'Offline';							
 							} 
 							else if (type.connected === true && type.runningBuilds === undefined) {
 								statusTxt = 'Idle';								
 							} else if (type.connected === true && type.runningBuilds.length > 0){															
-								statusTxt = 'Running ' + type.runningBuilds.length + ' build(s)';								
+								statusTxt = type.runningBuilds.length + ' build(s) ';								
 								var spinIcon = true;
 							}
-							var htmlnew = Mustache.render(buildslaves, {showStatusTxt:statusTxt,showSpinIcon:spinIcon});
+							if (type.runningBuilds != undefined) {			
+								
+								$.each(type.runningBuilds, function(key, value){
+									if (value.eta != undefined && value.eta < 0) {
+										overtime++
+									}																		
+								});
+								overtime = overtime > 0? overtime : false;								
+							}
+							var htmlnew = Mustache.render(buildslaves, {showStatusTxt:statusTxt,showSpinIcon:spinIcon,showOvertime:overtime});
 							return htmlnew;							
-						}, "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {														
+						}, 
+						"fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
 							if (oData.connected === undefined) {
 								$(nTd).addClass('offline');
 							} 
 							else if (oData.connected === true && oData.runningBuilds === undefined) {
 								$(nTd).addClass('idle');
-							} else if (oData.connected === true && oData.runningBuilds.length > 0){															
-								$(nTd).addClass('building');
-							}											
+							} else if (oData.connected === true && oData.runningBuilds.length > 0) {															
+								$(nTd).addClass('building').find('a.popup-btn-json-js').data({showRunningBuilds:oData});
+							}						
 					    }
 					    
 						},									
