@@ -41,6 +41,11 @@ define(['screensize'], function (screenSize) {
 				//helpers.updateBuilders();
 			}
 
+			if ($('#builder_page').length != 0) {
+				
+				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
+			}
+
 
 
        		// submenu overflow on small screens
@@ -249,7 +254,7 @@ define(['screensize'], function (screenSize) {
                     $('#slavesNr').text(arraySlaves.length);
 				}
 			});
-		}, codeBaseBranchOverview: function() {
+		}, codeBaseBranchOverview: function(El) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&')
@@ -257,7 +262,7 @@ define(['screensize'], function (screenSize) {
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).insertAfter($('.dataTables_filter'));
+  			cbTable.appendTo(El);
 
 			$(parsedUrl).each(function(i){
 
