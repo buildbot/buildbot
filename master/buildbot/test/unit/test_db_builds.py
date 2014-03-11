@@ -237,7 +237,7 @@ class Tests(interfaces.InterfaceTests):
                 id=54, buildrequestid=40, number=50, masterid=89,
                 builderid=77, buildslaveid=13, state_strings_json='["test"]',
                 started_at=TIME1)
-            ])
+        ])
         yield self.db.builds.finishBuildsFromMaster(masterid=88, results=7, _reactor=clock)
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'builddict', bdict)
