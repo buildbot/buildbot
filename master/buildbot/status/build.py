@@ -460,6 +460,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result = {}
         # Constant
         result['builderName'] = self.builder.name
+        result['builderFriendlyName'] = self.builder.getFriendlyName()
         result['number'] = self.getNumber()
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()

@@ -814,7 +814,8 @@ class SlaveJsonResource(JsonResource):
                     break
                 if build_status.getSlavename() == self.name:
                     builds.append(build_status.getNumber())
-            builderDict = {'builds': builds, 'name': builderName, 'url': self.status.getURLForThing(builder_status)}
+            builderDict = {'builds': builds, 'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
+                           'url': self.status.getURLForThing(builder_status)}
             results['builders'].append(builderDict)
         return results
 
