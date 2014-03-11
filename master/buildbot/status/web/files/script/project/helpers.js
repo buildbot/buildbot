@@ -388,7 +388,19 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart', function(e){
+			var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
+	
+			var closeBtn = $('.close-btn').add(document);
+
+			if (isWindows) {
+				var hasSelect2 = boxElement.find('.select-tools-js').length;
+				if (hasSelect2) {
+					closeBtn = closeBtn.not(document);
+				}
+			} 
+
+			closeBtn.bind('click touchstart', function(e){
+
 				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
 					
 					if (clearEl === undefined ) {
@@ -400,7 +412,9 @@ define(['screensize'], function (screenSize) {
 					}
 					
 					$(this).unbind(e);
+				
 				}
+
 			});	
 		}
 	};
