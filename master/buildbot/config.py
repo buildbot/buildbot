@@ -671,7 +671,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=False, project=None):
+            properties=None, mergeRequests=False, project=None, friendly_name=None):
 
         errors = ConfigErrors([])
 
@@ -683,6 +683,11 @@ class BuilderConfig:
             errors.addError(
                 "builder names must not start with an underscore: '%s'" % name)
         self.name = name
+
+        if friendly_name is None:
+            self.friendly_name = name
+        else:
+            self.friendly_name = friendly_name
 
         # factory is required
         if factory is None:

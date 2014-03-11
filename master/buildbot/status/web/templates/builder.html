@@ -5,11 +5,10 @@
 {% extends "layout.html" %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu(active_page=name, pathNum=4, builderName=name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='')}}
+  {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='')}}
 {% endblock %}
 
 {% block content %}
-
 
 <div class="column-1">
   <div class="span-4 column">

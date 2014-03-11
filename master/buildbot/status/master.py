@@ -154,13 +154,18 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             text += " (Canceled)"
         return text
 
-    def getURLForBuildRequest(self, brid, builder_name, build_number):
+    def getURLForBuildRequest(self, brid, builder_name, build_number, builder_friendly_name=None):
         d = self.master.db.mastersconfig.getMasterURL(brid)
+
+        if builder_friendly_name is None:
+            name = builder_name
+        else:
+            name = builder_friendly_name
 
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
             url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
-            url['text'] = self.getURLText(builder_name, build_number)
+            url['text'] = self.getURLText(name, build_number)
             return url
         d.addCallback(getMasterURL, builder_name, build_number)
         return d
@@ -351,17 +356,21 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     # methods called by upstream objects
 
     def announceNewBuilder(self, target, name, builder_status):
-        t = target.builderAdded(name, builder_status)
+        t = target.builderAdded(name, builder_status, friendly_name=builder_status.friendly_name)
         if t:
             builder_status.subscribe(t)
 
-    def builderAdded(self, name, basedir, category=None):
+    def builderAdded(self, name, basedir, category=None, friendly_name=None):
         """
         @rtype: L{BuilderStatus}
         """
         filename = os.path.join(self.basedir, basedir, "builder")
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
+
+        if friendly_name is None:
+            friendly_name = name
+
         try:
             with open(filename, "rb") as f:
                 builder_status = load(f)
@@ -385,7 +394,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = builder.BuilderStatus(name, category, self.master)
+            builder_status = builder.BuilderStatus(name, category, self.master, friendly_name)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
@@ -395,6 +404,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated
         builder_status.status = self
+        builder_status.friendly_name = friendly_name
 
         if not os.path.isdir(builder_status.basedir):
             os.makedirs(builder_status.basedir)

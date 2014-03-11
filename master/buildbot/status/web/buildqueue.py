@@ -54,7 +54,7 @@ class BuildQueueResource(HtmlResource):
             brdict = pb['brdict']
             brs = pb['brstatus']
             builder_status = status.getBuilder(brs.buildername)
-            bq['name'] = brs.buildername
+            bq['name'] = builder_status.getFriendlyName()
             bq['sourcestamps'] = yield brs.getSourceStamps()
             bq['reason'] = brdict['reason']
             submitTime = yield brs.getSubmitTime()
