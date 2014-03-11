@@ -209,7 +209,7 @@ class SetSlaveInfo(BuildStep):
         update = self.getSlaveInfoUpdate()
 
         if update and isinstance(update, dict):
-            self.build.slavebuilder.slave.updateSlaveInfo(update)
+            self.build.slavebuilder.slave.updateSlaveInfo(**update)
 
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
