@@ -50,7 +50,7 @@ class FakeBotMaster(object):
 
 class FakeStatus(object):
 
-    def builderAdded(self, name, basedir, category=None):
+    def builderAdded(self, name, basedir, category=None, friendly_name=None):
         return FakeBuilderStatus()
 
 
