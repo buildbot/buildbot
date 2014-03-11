@@ -99,11 +99,6 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             raise NotImplementedError("cannot consume from this path")
 
 
-class UrlType(types.Entity):
-    name = types.String()
-    url = types.String()
-
-
 class Step(base.ResourceType):
 
     name = "step"

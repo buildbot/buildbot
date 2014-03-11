@@ -254,10 +254,12 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         descriptionDone = ['oogaBooga done!']
         step = buildstep.BuildStep(description=description,
                                    descriptionDone=descriptionDone)
+        step.rendered = True
         self.assertEqual(step.describe(), description)
         self.assertEqual(step.describe(done=True), descriptionDone)
 
         step2 = buildstep.BuildStep()
+        step2.rendered = True
         self.assertEqual(step2.describe(), [step2.name])
         self.assertEqual(step2.describe(done=True), [step2.name])
 
@@ -269,11 +271,13 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step = buildstep.BuildStep(description=description,
                                    descriptionDone=descriptionDone,
                                    descriptionSuffix=descriptionSuffix)
+        step.rendered = True
         self.assertEqual(step.describe(), description + descriptionSuffix)
         self.assertEqual(step.describe(done=True),
                          descriptionDone + descriptionSuffix)
 
         step2 = buildstep.BuildStep(descriptionSuffix=descriptionSuffix)
+        step2.rendered = True
         self.assertEqual(step2.describe(), [step2.name] + descriptionSuffix)
         self.assertEqual(step2.describe(done=True),
                          [step2.name] + descriptionSuffix)
@@ -814,6 +818,5 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='build', command=['foo', 'BAR'])
             + 0,
         )
-        # TODO: status is only set at the step start, so BAR isn't rendered
-        self.expectOutcome(result=SUCCESS, status_text=["'foo'"])
+        self.expectOutcome(result=SUCCESS, status_text=["'foo", "BAR'"])
         yield self.runStep()

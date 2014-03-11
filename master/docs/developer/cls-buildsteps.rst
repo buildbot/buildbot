@@ -94,6 +94,12 @@ BuildStep
         The log encoding to use for logs produced in this step, or None to ues the global default.
         See :ref:`Log-Encodings`.
 
+    .. py:attribute:: rendered
+
+        At the begining of the step, the renderable attributes are rendered against the properties.
+        There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs. To address this problem, a ``rendered`` attribute is
+        available for methods that could be called early in the buildstep creation.
+
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
 
@@ -398,7 +404,7 @@ BuildStep
         This allows a step to provide links to data that is not available in the log files.
 
     Build steps have a set of short strings associated with them, describing the current status and results.
-    
+
     .. py:method:: setStateStrings(strings)
 
         :param strings: a list of short strings

@@ -275,6 +275,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     progress = None
     logEncoding = None
     cmd = None
+    rendered = False  # true if attributes are rendered
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -310,6 +311,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         return [self.name]
 
     def describe(self, done=False):
+        assert(self.rendered)
         desc = self._describe(done)
         if self.descriptionSuffix:
             desc = desc + self.descriptionSuffix
@@ -351,8 +353,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     @defer.inlineCallbacks
     def setStateStrings(self, strings):
-        # we render the strings with properties first
-        strings = yield self.build.render(strings)
         yield self.master.data.updates.setStepStateStrings(self.stepid, map(unicode, strings))
         # call to the status API for now
         self.step_status.old_setText(strings)
@@ -385,10 +385,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                         " parent Build (%s)" % (l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
 
-        # Set the step's text here so that the stepStarted notification sees
-        # the correct description
-        # self.description is not yet rendered, but setStateStrings accepts renderable
-        yield self.setStateStrings(self.describe(False))
         self.step_status.stepStarted()
 
         try:
@@ -421,6 +417,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                 d.addCallback(setRenderable, renderable)
                 dl.append(d)
             yield defer.gatherResults(dl)
+            self.rendered = True
+            # we describe ourselves only when renderables are interpolated
+            yield self.setStateStrings(self.describe(False))
 
             # run -- or skip -- the step
             if doStep:
@@ -457,7 +456,10 @@ class BuildStep(results.ResultComputingConfigMixin,
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            descr = self.describe(True)
+            if self.rendered:
+                descr = self.describe(True)
+            else:  # we haven't rendered yet. Don't bother
+                descr = []
             if results == CANCELLED:
                 yield self.setStateStrings(descr + ["cancelled"])
             else:
