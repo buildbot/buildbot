@@ -63,11 +63,12 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category, master):
+    def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
         self.category = category
         self.master = master
         self.project = None
+        self.friendly_name = friendly_name
 
         self.slavenames = []
         self.events = []
@@ -271,6 +272,12 @@ class BuilderStatus(styles.Versioned):
         # if builderstatus page does show not up without any reason then 
         # str(self.name) may be a workaround
         return self.name
+
+    def getFriendlyName(self):
+        if self.friendly_name is None:
+            return self.name
+
+        return self.friendly_name
 
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
@@ -585,6 +592,7 @@ class BuilderStatus(styles.Versioned):
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['name'] = self.name
+        result['friendly_name'] = self.getFriendlyName()
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
         result['project'] = self.project

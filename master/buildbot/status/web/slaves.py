@@ -100,7 +100,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         connect_count = slave.getConnectCount()
 
         ctx.update(dict(slave=slave,
-                        slavename = self.slavename,  
+                        slavename = slave.getFriendlyName(),
                         current = current_builds, 
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),

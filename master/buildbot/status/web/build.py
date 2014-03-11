@@ -131,7 +131,7 @@ class StatusResourceBuild(HtmlResource):
 
     def getPageTitle(self, request):
         return ("Katana - %s Build #%d" %
-                (self.build_status.getBuilder().getName(),
+                (self.build_status.getBuilder().getFriendlyName(),
                  self.build_status.getNumber()))
 
     def content(self, req, cxt):
@@ -140,7 +140,7 @@ class StatusResourceBuild(HtmlResource):
         req.setHeader('Cache-Control', 'no-cache')
 
         builder = self.build_status.getBuilder()
-        cxt['builder_name'] = builder.getName()
+        cxt['builder_name'] = builder.getFriendlyName()
         cxt['build_number'] = b.getNumber()
         cxt['builder_name_link'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')
         cxt['b'] = b

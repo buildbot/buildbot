@@ -461,6 +461,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         # Constant
         result['builderName'] = self.builder.name
+        result['builderFriendlyName'] = self.builder.getFriendlyName()
         result['number'] = self.getNumber()
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()

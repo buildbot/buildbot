@@ -491,7 +491,7 @@ class BuildLineMixin:
         '''
         Collect the data needed for each line display
         '''
-        builder_name = build.getBuilder().getName()
+        builder_name = build.getBuilder().getFriendlyName()
         results = build.getResults()
         text = build.getText()
         all_got_revision = build.getAllGotRevisions()
