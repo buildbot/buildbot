@@ -60,7 +60,11 @@ class Bzr(Source):
         self.stdio_log = self.addLog("stdio")
 
         if self.repourl is None:
-            self.repourl = os.path.join(self.baseURL, self.branch)
+            #We only want os path characters if its not a web url
+            if "http" in self.baseURL:
+                self.repourl = "/".join([self.baseURL, self.branch])
+            else:
+                self.repourl = os.path.join(self.baseURL, self.branch)
 
         d = self.checkBzr()
         def checkInstall(bzrInstalled):

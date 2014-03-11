@@ -18,7 +18,7 @@ desbuildmaster:yifux5rkzvI5w
 desbuildslave:W8SPURMnCs7Tc
 desbuildbot:IzclhyfHAq6Oc
 """
-
+import imp
 
 from twisted.trial import unittest
 
@@ -29,6 +29,10 @@ class TestHTPasswdAuth(unittest.TestCase):
     htpasswd = HTPasswdAuth(__file__)
 
     def test_authenticate_des(self):
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            raise unittest.SkipTest("crypt not found")
         for key in ('buildmaster','buildslave','buildbot'):                
             if self.htpasswd.authenticate('des'+key, key) == False:
                 self.fail("authenticate failed for '%s'" % ('des'+key))
@@ -38,13 +42,25 @@ class TestHTPasswdAuth(unittest.TestCase):
             self.fail("authenticate succeed for 'foo:bar'")
 
     def test_authenticate_wopassword(self):
-        for algo in ('des','md5','sha'):
+        algorithms = ['des','md5','sha']
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            algorithms.remove('des')
+
+        for algo in algorithms:
             if self.htpasswd.authenticate(algo+'buildmaster', '') == True:
                 self.fail("authenticate succeed for %s w/o password"
                                         % (algo+'buildmaster'))
 
     def test_authenticate_wrongpassword(self):
-        for algo in ('des','md5','sha'):
+        algorithms = ['des','md5','sha']
+        try:
+            imp.find_module('crypt')
+        except ImportError:
+            algorithms.remove('des')
+
+        for algo in algorithms:
             if self.htpasswd.authenticate(algo+'buildmaster', algo) == True:
                 self.fail("authenticate succeed for %s w/ wrong password"
                                         % (algo+'buildmaster'))
