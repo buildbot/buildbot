@@ -16,9 +16,17 @@
 	<small>{{showLastMessageDate}}</small>
 {{/showTimeago}}
 
-{{#showStatusTxt}}
-	{{showStatusTxt}}
+{{#showStatusTxt}}	
 	{{#showSpinIcon}}
-		<span class="spin-icon animate-spin"></span>
+		<a class="more-info popup-btn-json-js" href="#">
+			{{showStatusTxt}}
+		</a>
+		<span title="Running" class="spin-icon animate-spin"></span>		
 	{{/showSpinIcon}}
+	{{^showSpinIcon}}
+		{{showStatusTxt}}
+	{{/showSpinIcon}}
+	{{#showOvertime}}
+		<span title="Builds running overtime" class="bubble" title="Builds running overtime">showOvertime</span>
+	{{/showOvertime}}
 {{/showStatusTxt}}
