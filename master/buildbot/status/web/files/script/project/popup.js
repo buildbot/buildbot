@@ -53,15 +53,17 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 			});
 
 		}, showjsonPopup: function(jsonObj) {			
-			var mustacheTmpl = $(Mustache.render(popups, jsonObj));								
-			$('body').append(mustacheTmpl);	
+			var mustacheTmpl = Mustache.render(popups, jsonObj);		
+			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));								
+			
+			$('body').append(mustacheTmplShell);	
 
 			if (jsonObj.showRunningBuilds != undefined) {
 				helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));                
 	        }
             		
-			helpers.jCenter(mustacheTmpl).fadeIn('fast', function() {
-				helpers.closePopup(mustacheTmpl);
+			helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+				helpers.closePopup(mustacheTmplShell);
 			});			
 
 		}, validateForm: function(formContainer) { // validate the forcebuildform
@@ -125,18 +127,17 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 				cache: false,
 				dataType: "json",
 				
-				success: function(data) {
-					
-					preloader.remove();							
-									
-					var mustacheTmpl = $(Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL}));					
-					var waitingtime = mustacheTmpl.find('.waiting-time-js');
+				success: function(data) {					
+					preloader.remove();																
+					var mustacheTmpl = Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL});					
+					var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));						
+					var waitingtime = mustacheTmplShell.find('.waiting-time-js');
 					waitingtime.each(function(i){						
 						helpers.startCounter($(this),data[i].submittedAt);
 					});					
-					mustacheTmpl.appendTo('body');					
-					helpers.jCenter(mustacheTmpl).fadeIn('fast', function(){
-						helpers.closePopup(mustacheTmpl);	
+					mustacheTmplShell.appendTo('body');					
+					helpers.jCenter(mustacheTmplShell).fadeIn('fast', function(){
+						helpers.closePopup(mustacheTmplShell);	
 					});
 					
 				}

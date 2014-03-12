@@ -14,9 +14,17 @@
 		<span tabindex="0" class="close-btn"></span>
 			<h3 class="codebases-head">{{headline}}</h3>
 			<div id="content1">
+				
 			</div>
 	</div>
 {{/popupOuter}}
+
+{{#MoreInfoBoxOuter}}
+	<div class="more-info-box more-info-box-js">
+		<span class="close-btn"></span>		
+		{{>partial}}
+	</div>
+{{/MoreInfoBoxOuter}}
 
 {{#errorinput}}
 	<div class="error-input">
@@ -25,9 +33,6 @@
 {{/errorinput}}
 
 {{#showPendingJobs}}
-<div class="more-info-box more-info-box-js">
-	<span class="close-btn">
-	</span>
 	<h3>Pending Build Requests</h3>
 	<ul class="pending-job-list">
 			<li>
@@ -51,12 +56,9 @@
 			</li>		
 		{{/pendingJobs}}
 	</ul>
-</div>
 {{/showPendingJobs}}
 
 {{#showBuilders}}
-<div class="more-info-box more-info-box-js">
-	<span class="close-btn"></span>
 	<h3>Additional information</h3>
 	
 	{{#version}}
@@ -89,13 +91,10 @@
 			{{/.}}			
 		{{/builders}}		
 	</ul>
-</div>
+
 {{/showBuilders}}
 
 {{#showCodebases}}
-<div class="more-info-box more-info-box-js">
-	<span class="close-btn">
-	</span>
 	<h3>Codebases</h3>
 	<table class="table-1 first-child">
 	<thead>
@@ -131,13 +130,9 @@
 	        {{/sources}}
 	    </tbody>
 	</table>
-</div>
 
 {{/showCodebases}}
 {{#showcompatibleSlaves}}
-	<div class="more-info-box more-info-box-js">
-		<span class="close-btn">
-		</span>
 		<h3>Compatible slaves</h3>
 		<ul class="codebases-list">
 		{{#slaves}}	
@@ -150,13 +145,9 @@
 			{{/.}}
 		{{/slaves}}	
 		</ul>
-	</div>
 {{/showcompatibleSlaves}}
 
 {{#showRunningBuilds}}
-	<div class="more-info-box more-info-box-js">
-		<span class="close-btn">
-		</span>
 		<h3>Running builds</h3>
 		<br>
 		{{#runningBuilds}}
@@ -183,5 +174,5 @@
 				</li>									
 			</ul>	
 		{{/runningBuilds}}
-	</div>
+
 {{/showRunningBuilds}}
