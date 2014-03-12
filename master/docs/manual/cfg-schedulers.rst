@@ -1226,7 +1226,7 @@ the new build.  The new parameter is:
 Example::
 
     def get_compatible_builds(status, builder):
-        if builder == None: # this is the case for force_build_all
+        if builder is None: # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
         builds = []

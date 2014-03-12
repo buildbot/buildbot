@@ -140,6 +140,8 @@ class Master(base.ResourceType):
             masterid=masterid)
         yield self.master.data.rtypes.changesource._masterDeactivated(
             masterid=masterid)
+
+        yield self.master.doMasterHouseKeeping(masterid=masterid)
         self.produceEvent(
             dict(masterid=masterid, name=name, active=False),
             'stopped')

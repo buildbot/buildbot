@@ -121,7 +121,11 @@ class Step(base.ResourceType):
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
         state_strings = types.List(of=types.String())
-        urls = types.List(of=types.String())
+        urls = types.List(
+            of=types.Dict(
+                name=types.String(),
+                url=types.String()
+            ))
         link = types.Link()
     entityType = EntityType(name)
 
@@ -149,6 +153,13 @@ class Step(base.ResourceType):
     def setStepStateStrings(self, stepid, state_strings):
         yield self.master.db.steps.setStepStateStrings(
             stepid=stepid, state_strings=state_strings)
+        yield self.generateEvent(stepid, 'updated')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def addStepURL(self, stepid, name, url):
+        yield self.master.db.steps.addURL(
+            stepid=stepid, name=name, url=url)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod

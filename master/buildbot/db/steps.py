@@ -24,14 +24,15 @@ from twisted.internet import reactor
 
 class StepsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
+    url_lock = None
 
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
+        tbl = self.db.model.steps
         if stepid is not None:
-            wc = self.db.model.steps.c.id == stepid
+            wc = (tbl.c.id == stepid)
         else:
             if buildid is None:
                 return defer.fail(RuntimeError('must supply either stepid or buildid'))
-            tbl = self.db.model.steps
             if number is not None:
                 wc = (tbl.c.number == number)
             elif name is not None:
@@ -123,6 +124,36 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, state_strings_json=json.dumps(state_strings))
         return self.db.pool.do(thd)
+
+    def addURL(self, stepid, name, url, _racehook=None):
+        # This methods adds an URL to the db
+        # This is a read modify write and thus there is a possibility
+        # that several urls are added at the same time (e.g with a deferredlist
+        # at the end of a step)
+        # this race condition is only inside the same master, as only one master
+        # is supposed to add urls to a buildstep.
+        # so threading.lock is used, as we are in the thread pool
+        if self.url_lock is None:
+            # this runs in reactor thread, so no race here..
+            self.url_lock = defer.DeferredLock()
+
+        def thd(conn):
+
+            tbl = self.db.model.steps
+            wc = (tbl.c.id == stepid)
+            q = sa.select([tbl.c.urls_json],
+                          whereclause=wc)
+            res = conn.execute(q)
+            row = res.fetchone()
+            if _racehook is not None:
+                _racehook()
+            urls = json.loads(row.urls_json)
+            urls.append(dict(name=name, url=url))
+
+            q = tbl.update(whereclause=wc)
+            conn.execute(q, urls_json=json.dumps(urls))
+
+        return self.url_lock.run(lambda: self.db.pool.do(thd))
 
     def finishStep(self, stepid, results, _reactor=reactor):
         def thd(conn):

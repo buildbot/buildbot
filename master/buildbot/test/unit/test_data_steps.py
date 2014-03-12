@@ -50,7 +50,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                         started_at=TIME1, complete_at=TIME2, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
                         started_at=TIME2, complete_at=TIME3, results=2,
-                        urls_json='["http://url"]'),
+                        urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
                         started_at=TIME3),
         ])
@@ -127,7 +127,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                         started_at=TIME1, complete_at=TIME2, results=0),
             fakedb.Step(id=71, number=1, name='two', buildid=30,
                         started_at=TIME2, complete_at=TIME3, results=2,
-                        urls_json='["http://url"]'),
+                        urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
                         started_at=TIME3),
             fakedb.Step(id=73, number=0, name='otherbuild', buildid=31,
@@ -341,4 +341,46 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': epoch2datetime(TIME1),
             'state_strings': [u'pending'],
             'urls': [],
+        })
+
+    def test_signature_addStepURL(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.addStepURL,  # fake
+            self.rtype.addStepURL)  # real
+        def addStepURL(self, stepid, name, url):
+            pass
+
+    @defer.inlineCallbacks
+    def test_addStepURL(self):
+        yield self.master.db.steps.addStep(buildid=10, name=u'ten',
+                                           state_strings=[u'pending'])
+        yield self.rtype.addStepURL(stepid=100, name=u"foo", url=u"bar")
+
+        msgBody = {
+            'buildid': 10,
+            'complete': False,
+            'complete_at': None,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'stepid': 100,
+            'urls': [{u'name': u'foo', u'url': u'bar'}],
+        }
+        self.master.mq.assertProductions([
+            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
+            (('steps', str(100), 'updated'), msgBody),
+        ])
+        step = yield self.master.db.steps.getStep(100)
+        self.assertEqual(step, {
+            'buildid': 10,
+            'complete_at': None,
+            'id': 100,
+            'name': u'ten',
+            'number': 0,
+            'results': None,
+            'started_at': None,
+            'state_strings': [u'pending'],
+            'urls': [{u'name': u'foo', u'url': u'bar'}],
         })

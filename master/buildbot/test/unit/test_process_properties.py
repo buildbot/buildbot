@@ -17,6 +17,7 @@ import mock
 
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
+from buildbot.process.properties import FlattenList
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.properties import PropertiesMixin
@@ -1203,6 +1204,35 @@ class TestProperty(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                       "default-value")
         default.callback("default-value")
+        return d
+
+    def testFlattenList(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla"])
+        return d
+
+    def testFlattenListAdd(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+        value = value + FlattenList([Property("do-tests"), ["bla"]])
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla", "string", "bla"])
+        return d
+
+    def testFlattenListAdd2(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+        value = value + [Property("do-tests"), ["bla"]]
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla", "string", "bla"])
         return d
 
 

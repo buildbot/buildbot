@@ -282,6 +282,15 @@ class FakeUpdates(object):
                               validation.IdentifierValidator(50))
         return defer.succeed((10, 1, name))
 
+    def addStepURL(self, stepid, name, url):
+        validation.verifyType(self.testcase, 'stepid', stepid,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name,
+                              validation.StringValidator())
+        validation.verifyType(self.testcase, 'url', url,
+                              validation.StringValidator())
+        return defer.succeed(None)
+
     def startStep(self, stepid):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
@@ -290,7 +299,7 @@ class FakeUpdates(object):
     def setStepStateStrings(self, stepid, state_strings):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
-        validation.verifyType(self.t, 'state_strings', state_strings,
+        validation.verifyType(self.testcase, 'state_strings', state_strings,
                               validation.ListValidator(validation.StringValidator()))
         return defer.succeed(None)
 

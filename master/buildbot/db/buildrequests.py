@@ -16,6 +16,7 @@
 import itertools
 import sqlalchemy as sa
 
+from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
@@ -82,11 +83,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if isinstance(claimed, bool):
                     if not claimed:
                         q = q.where(
-                            (claims_tbl.c.claimed_at == None) &
+                            (claims_tbl.c.claimed_at == NULL) &
                             (reqs_tbl.c.complete == 0))
                     else:
                         q = q.where(
-                            (claims_tbl.c.claimed_at != None))
+                            (claims_tbl.c.claimed_at != NULL))
                 else:
                     q = q.where(
                         (claims_tbl.c.masterid == claimed))

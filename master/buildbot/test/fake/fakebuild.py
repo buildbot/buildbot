@@ -24,6 +24,7 @@ from twisted.python import components
 
 
 class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
+    properties = properties.Properties()
 
     # work around http://code.google.com/p/mock/issues/detail?id=105
     def _get_child_mock(self, **kw):

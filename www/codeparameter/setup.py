@@ -241,8 +241,9 @@ class develop(setuptools.command.develop.develop):
     ]
 
     def run(self):
-        for command in self.get_sub_commands():
-            self.run_command(command)
+        if MODE == 'SRC':
+            for command in self.get_sub_commands():
+                self.run_command(command)
         setuptools.command.develop.develop.run(self)
 
 cmdclass['develop'] = develop

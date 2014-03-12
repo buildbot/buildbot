@@ -80,73 +80,87 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_describe_no_command(self):
         step = shell.ShellCommand(workdir='build')
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
     def test_describe_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
         step = shell.ShellCommand(workdir='build', command=' ')
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
     def test_describe_from_short_command(self):
         step = shell.ShellCommand(workdir='build', command="true")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'true'"],) * 2)
 
     def test_describe_from_short_command_list(self):
         step = shell.ShellCommand(workdir='build', command=["true"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'true'"],) * 2)
 
     def test_describe_from_med_command(self):
         step = shell.ShellCommand(command="echo hello")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'echo", "hello'"],) * 2)
 
     def test_describe_from_med_command_list(self):
         step = shell.ShellCommand(command=["echo", "hello"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'echo", "hello'"],) * 2)
 
     def test_describe_from_long_command(self):
         step = shell.ShellCommand(command="this is a long command")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_long_command_list(self):
         step = shell.ShellCommand(command="this is a long command".split())
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list(self):
         step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_tuples(self):
         step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list_empty(self):
         step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_from_nested_command_list_deep(self):
         step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'this", "is", "...'"],) * 2)
 
     def test_describe_custom(self):
         step = shell.ShellCommand(command="echo hello",
                                   description=["echoing"], descriptionDone=["echoed"])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing'], ['echoed']))
 
     def test_describe_with_suffix(self):
         step = shell.ShellCommand(command="echo hello", descriptionSuffix="suffix")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'echo", "hello'", 'suffix'],) * 2)
 
@@ -154,21 +168,25 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         step = shell.ShellCommand(command="echo hello",
                                   description=["echoing"], descriptionDone=["echoed"],
                                   descriptionSuffix="suffix")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['echoing', 'suffix'], ['echoed', 'suffix']))
 
     def test_describe_no_command_with_suffix(self):
         step = shell.ShellCommand(workdir='build', descriptionSuffix="suffix")
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???', 'suffix'],) * 2)
 
     def test_describe_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
     def test_describe_unrendered_custom_new_style_class_rendarable(self):
         step = shell.ShellCommand(command=object())
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
@@ -176,12 +194,14 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         class C:
             pass
         step = shell.ShellCommand(command=C())
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (['???'],) * 2)
 
     def test_describe_unrendered_WithProperties_list(self):
         step = shell.ShellCommand(
             command=['x', properties.WithProperties(''), 'y'])
+        step.rendered = True
         self.assertEqual((step.describe(), step.describe(done=True)),
                          (["'x", "y'"],) * 2)
 
@@ -214,7 +234,8 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(workdir='build',
                                command=properties.FlattenList(['trial', ['-b', '-B'], 'buildbot.test']),
-                               description=properties.FlattenList(['test', ['done']])))
+                               description=properties.FlattenList(['test', ['done']]),
+                               descriptionSuffix=properties.FlattenList(['test', ['done']])))
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '-b', '-B', 'buildbot.test'],
@@ -222,7 +243,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=['test', 'done'])
+                           status_text=['test', 'done', 'test', 'done'])
         return self.runStep()
 
     def test_run_nested_command(self):
@@ -953,10 +974,12 @@ class Test(steps.BuildStepMixin, unittest.TestCase):
 
     def test_describe_not_done(self):
         step = self.setupStep(shell.Test())
+        step.rendered = True
         self.assertEqual(step.describe(), ['testing'])
 
     def test_describe_done(self):
         step = self.setupStep(shell.Test())
+        step.rendered = True
         self.step_statistics['tests-total'] = 93
         self.step_statistics['tests-failed'] = 10
         self.step_statistics['tests-passed'] = 20
@@ -966,6 +989,7 @@ class Test(steps.BuildStepMixin, unittest.TestCase):
 
     def test_describe_done_no_total(self):
         step = self.setupStep(shell.Test())
+        step.rendered = True
         self.step_statistics['tests-total'] = 0
         self.step_statistics['tests-failed'] = 10
         self.step_statistics['tests-passed'] = 20

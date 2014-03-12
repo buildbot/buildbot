@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import time
+
 from buildbot.db import steps
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -231,6 +233,27 @@ class Tests(interfaces.InterfaceTests):
                                                 state_strings=[u'aaa', u'bbb'])
         stepdict = yield self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict['state_strings'], [u'aaa', u'bbb'])
+
+    @defer.inlineCallbacks
+    def test_addURL(self):
+        yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
+        yield self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar')
+
+        stepdict = yield self.db.steps.getStep(stepid=72)
+        self.assertEqual(stepdict['urls'], [{'name': u'foo', 'url': u'bar'}])
+
+    @defer.inlineCallbacks
+    def test_addURL_race(self):
+        yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
+        yield defer.gatherResults([
+            # only a tiny sleep is required to see the problem.
+            self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar', _racehook=lambda: time.sleep(.01)),
+            self.db.steps.addURL(stepid=72, name=u'foo2', url=u'bar2')])
+
+        stepdict = yield self.db.steps.getStep(stepid=72)
+        # order is not garanteed though
+        self.assertEqual(sorted(stepdict['urls']), [{'name': u'foo', 'url': u'bar'},
+                                                    {'name': u'foo2', 'url': u'bar2'}])
 
     @defer.inlineCallbacks
     def test_finishStep(self):

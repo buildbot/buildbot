@@ -30,6 +30,7 @@ from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
+from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.fake.fakemaster import FakeBotMaster
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -89,10 +90,6 @@ class FakeBuildStep:
         self.warnOnFailure = False
         self.alwaysRun = False
         self.name = 'fake'
-
-
-class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)
 
 
 class FakeBuilder:
@@ -754,11 +751,12 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         r.sources[1].revision = "34567"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = Mock()
+        self.builder = FakeBuilder(
+            fakemaster.make_master(wantData=True, testcase=self))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
-        self.build.build_status.setProperty = self.setProperty
+        self.build.build_status.properties.setProperty = self.setProperty
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
@@ -795,11 +793,12 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         r.sources[0].revision = "12345"
         self.build = Build([r])
         self.build.setStepFactories([])
-        self.builder = Mock()
+        self.builder = FakeBuilder(
+            fakemaster.make_master(wantData=True, testcase=self))
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
-        self.build.build_status.setProperty = self.setProperty
+        self.build.build_status.properties.setProperty = self.setProperty
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
@@ -843,6 +842,8 @@ class TestBuildProperties(unittest.TestCase):
     """
 
     def setUp(self):
+        class FakeBuildStatus(Mock):
+            implements(interfaces.IProperties)
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
