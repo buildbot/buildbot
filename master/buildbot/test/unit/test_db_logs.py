@@ -43,11 +43,11 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
                    complete=0, num_lines=7, type=u's'),
         fakedb.LogChunk(logid=201, first_line=0, last_line=1, compressed=0,
-            content=textwrap.dedent("""\
+                        content=textwrap.dedent("""\
                     line zero
                     line 1""")),
         fakedb.LogChunk(logid=201, first_line=2, last_line=4, compressed=0,
-            content=textwrap.dedent("""\
+                        content=textwrap.dedent("""\
                     line TWO
                     line 3
                     line 2**2""")),
@@ -315,6 +315,7 @@ class TestFakeDB(unittest.TestCase, Tests):
     def setUp(self):
         self.master = fakemaster.make_master()
         self.db = fakedb.FakeDBConnector(self.master, self)
+        self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 
 

@@ -99,6 +99,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         # set up a buildmaster that knows about two fake schedulers, a and b
         m = self.master
+        m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
@@ -122,6 +123,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         m.db.insertTestData([
             fakedb.Master(id=9),
+            fakedb.Buildset(id=2022),
+            fakedb.Buildset(id=2011),
+            fakedb.Buildslave(id=13, name="some:slave"),
             make_fake_br(11, "A"),
             make_fake_br(22, "B"),
             make_fake_build(11),

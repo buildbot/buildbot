@@ -289,22 +289,22 @@ class Tests(interfaces.InterfaceTests):
     def do_test_getBuildRequests_branch_arg(self, **kwargs):
         expected = kwargs.pop('expected')
         d = self.insertTestData([
-            fakedb.BuildRequest(id=70, buildsetid=self.BSID + 1),
             fakedb.Buildset(id=self.BSID + 1),
+            fakedb.BuildRequest(id=70, buildsetid=self.BSID + 1),
             fakedb.SourceStamp(id=self.BSID + 1,
                                branch='branch_A'),
             fakedb.BuildsetSourceStamp(buildsetid=self.BSID + 1,
                                        sourcestampid=self.BSID + 1),
 
-            fakedb.BuildRequest(id=80, buildsetid=self.BSID + 2),
             fakedb.Buildset(id=self.BSID + 2),
+            fakedb.BuildRequest(id=80, buildsetid=self.BSID + 2),
             fakedb.SourceStamp(id=self.BSID + 2,
                                repository='repository_A'),
             fakedb.BuildsetSourceStamp(buildsetid=self.BSID + 2,
                                        sourcestampid=self.BSID + 2),
 
-            fakedb.BuildRequest(id=90, buildsetid=self.BSID + 3),
             fakedb.Buildset(id=self.BSID + 3),
+            fakedb.BuildRequest(id=90, buildsetid=self.BSID + 3),
             fakedb.SourceStamp(id=self.BSID + 3,
                                branch='branch_A', repository='repository_A'),
             fakedb.BuildsetSourceStamp(buildsetid=self.BSID + 3,
@@ -724,6 +724,7 @@ class TestFakeDB(unittest.TestCase, Tests):
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, testcase=self)
         self.db = self.master.db
+        self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
         return self.setUpTests()
 

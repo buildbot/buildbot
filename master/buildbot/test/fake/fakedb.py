@@ -65,6 +65,7 @@ class Row(object):
     lists = ()
     dicts = ()
     hashedColumns = []
+    foreignKeys = []
 
     _next_id = None
 
@@ -75,7 +76,7 @@ class Row(object):
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
-            assert col in kwargs, "%s not specified" % col
+            assert col in kwargs, "%s not specified: %s" % col
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:
@@ -116,6 +117,30 @@ class Row(object):
                 return str(x)
         return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
 
+    @defer.inlineCallbacks
+    def checkForeignKeys(self, db, t):
+        accessors = dict(
+            buildsetid=db.buildsets.getBuildset,
+            buildslaveid=db.buildslaves.getBuildslave,
+            builderid=db.builders.getBuilder,
+            buildid=db.builds.getBuild,
+            changesourceid=db.changesources.getChangeSource,
+            changeid=db.changes.getChange,
+            buildrequestid=db.buildrequests.getBuildRequest,
+            sourcestampid=db.sourcestamps.getSourceStamp,
+            schedulerid=db.schedulers.getScheduler,
+            brid=db.buildrequests.getBuildRequest,
+            masterid=db.masters.getMaster)
+        for foreign_key in self.foreignKeys:
+            if foreign_key in accessors:
+                key = getattr(self, foreign_key)
+                if key is not None:
+                    val = yield accessors[foreign_key](key)
+                    t.assertTrue(val is not None,
+                                 "foreign key %s:%r does not exit" % (foreign_key, key))
+            else:
+                raise ValueError("warning, unsupported foreign key", foreign_key, self.table)
+
 
 class BuildRequest(Row):
     table = "buildrequests"
@@ -131,6 +156,7 @@ class BuildRequest(Row):
         complete_at=None,
         waited_for=0,
     )
+    foreignKeys = ('buildsetid',)
 
     id_column = 'id'
     required_columns = ('buildsetid',)
@@ -144,6 +170,7 @@ class BuildRequestClaim(Row):
         masterid=None,
         claimed_at=None
     )
+    foreignKeys = ('brid', 'masterid')
 
     required_columns = ('brid', 'masterid', 'claimed_at')
 
@@ -169,6 +196,7 @@ class ChangeSourceMaster(Row):
         masterid=None,
     )
 
+    foreignKeys = ('changesourceid', 'masterid')
     required_columns = ('changesourceid', 'masterid')
 
 
@@ -203,6 +231,7 @@ class ChangeFile(Row):
         filename=None,
     )
 
+    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
 
@@ -215,6 +244,7 @@ class ChangeProperty(Row):
         property_value=None,
     )
 
+    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
 
@@ -226,6 +256,7 @@ class ChangeUser(Row):
         uid=None,
     )
 
+    foreignKeys = ('changeid',)
     required_columns = ('changeid',)
 
 
@@ -285,6 +316,7 @@ class SchedulerMaster(Row):
         masterid=None,
     )
 
+    foreignKeys = ('schedulerid', 'masterid')
     required_columns = ('schedulerid', 'masterid')
 
 
@@ -297,6 +329,7 @@ class SchedulerChange(Row):
         important=1,
     )
 
+    foreignKeys = ('schedulerid', 'changeid')
     required_columns = ('schedulerid', 'changeid')
 
 
@@ -327,6 +360,7 @@ class BuildsetProperty(Row):
         property_value='[22, "fakedb"]',
     )
 
+    foreignKeys = ('buildsetid',)
     required_columns = ('buildsetid', )
 
 
@@ -352,6 +386,7 @@ class BuildsetSourceStamp(Row):
         sourcestampid=None,
     )
 
+    foreignKeys = ('buildsetid', 'sourcestampid')
     required_columns = ('buildsetid', 'sourcestampid', )
     id_column = 'id'
 
@@ -402,6 +437,7 @@ class UserInfo(Row):
         attr_data='Tyler Durden <tyler@mayhem.net>',
     )
 
+    foreignKeys = ('uid',)
     required_columns = ('uid', )
 
 
@@ -421,6 +457,7 @@ class Build(Row):
         results=None)
 
     id_column = 'id'
+    foreignKeys = ('buildrequestid', 'masterid', 'buildslaveid', 'builderid')
     required_columns = ('buildrequestid', 'masterid', 'buildslaveid')
 
 
@@ -439,6 +476,7 @@ class Step(Row):
         urls_json='[]')
 
     id_column = 'id'
+    foreignKeys = ('buildid',)
     required_columns = ('buildid', )
 
 
@@ -2158,7 +2196,8 @@ class FakeDBConnector(object):
         # reset the id generator, for stable id's
         Row._next_id = 1000
         self.master = master
-
+        self.t = testcase
+        self.checkForeignKeys = False
         self._components = []
         self.changes = comp = FakeChangesComponent(self, testcase)
         self._components.append(comp)
@@ -2196,8 +2235,11 @@ class FakeDBConnector(object):
     def insertTestData(self, rows):
         """Insert a list of Row instances into the database; this method can be
         called synchronously or asynchronously (it completes immediately) """
-        for comp in self._components:
-            comp.insertTestData(rows)
+        for row in rows:
+            if self.checkForeignKeys:
+                row.checkForeignKeys(self, self.t)
+            for comp in self._components:
+                comp.insertTestData([row])
         return defer.succeed(None)
 
 

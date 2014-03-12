@@ -1641,7 +1641,7 @@ It goes without saying that any new connector methods must be fully tested!
 You will also want to add an in-memory implementation of the methods to the
 fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
 is tested using these fake implementations in order to isolate that code from
-the database code.
+the database code, and to speed-up tests.
 
 The keys and types used in the return value from a connector's ``get`` methods are described in :bb:src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
 This is a dictionary of ``DictValidator`` objects, one for each return value.
@@ -1698,6 +1698,19 @@ upgrades, and will confirm that the resulting database matches the model.  If
 you encounter implicit indexes on MySQL, that do not appear on SQLite or
 Postgres, add them to ``implied_indexes`` in
 :file:`master/buidlbot/db/model.py`.
+
+Foreign key checking
+--------------------
+Non sqlite db backends are checking the foreign keys consistancy. As sqlite is much
+easier to install, most of the developer would only test against sqlite, and then get
+errors on metabuildbot. In order to avoid that the fakedb can check the foreign key
+consistancy of your test data. for this, just enable it with::
+
+    self.db = fakedb.FakeDBConnector(self.master, self)
+    self.db.checkForeignKeys = True
+
+Note that tests that only use fakedb do not really need foreign key consistency, even
+if this is a good practice to enable it in new code.
 
 Database Compatibility Notes
 ----------------------------

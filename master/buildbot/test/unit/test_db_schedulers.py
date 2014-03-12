@@ -330,6 +330,7 @@ class TestFakeDB(unittest.TestCase, Tests):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self, wantDb=True)
         self.db = self.master.db
+        self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 
     def addClassifications(self, schedulerid, *classifications):
