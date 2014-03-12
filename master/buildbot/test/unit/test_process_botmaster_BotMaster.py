@@ -18,6 +18,7 @@ import mock
 from buildbot import config
 from buildbot import interfaces
 from buildbot.process import factory
+from buildbot.process.builder import Builder
 from buildbot.process.botmaster import BotMaster
 from buildbot.test.fake import fakemaster
 from twisted.application import service
@@ -214,6 +215,15 @@ class TestBotMaster(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
+
+        # patch Builder.stopAllBuild() so that we can keep
+        # track if it is called
+        stopAllBuilds = mock.Mock()
+        self.patch(Builder, "stopAllBuilds", stopAllBuilds)
+
+        # make it possible to adapt FakeMuster to IControl interface
+        self.patch(interfaces, "IControl", mock.Mock())
+
         bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
                                   slavename='f')
         self.new_config.builders = [bc]
@@ -224,15 +234,16 @@ class TestBotMaster(unittest.TestCase):
         self.assertIdentical(bldr.parent, self.botmaster)
         self.assertIdentical(bldr.master, self.master)
         self.assertEqual(self.botmaster.builderNames, ['bldr'])
+        self.assertFalse(stopAllBuilds.called)
 
         self.new_config.builders = []
 
         yield self.botmaster.reconfigServiceBuilders(self.new_config)
 
         self.assertIdentical(bldr.parent, None)
-        self.assertIdentical(bldr.master, None)
         self.assertEqual(self.botmaster.builders, {})
         self.assertEqual(self.botmaster.builderNames, [])
+        stopAllBuilds.assert_called_once_with("builder removed")
 
     def test_maybeStartBuildsForBuilder(self):
         brd = self.botmaster.brd = mock.Mock()
