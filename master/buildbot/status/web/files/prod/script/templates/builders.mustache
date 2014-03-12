@@ -2,6 +2,14 @@
 	<a href="builders/{{name}}?{{builderParam}}">{{friendly_name}}{{^friendly_name}}{{name}}{{/friendly_name}}</a>
 {{/name}}
 
+{{#progressBar}}
+	<div data-starttime="{{etaStart}}" data-etatime="{{etaCurrent}}" class="percent-outer-js percent-outer">
+		<span class="time-txt-js time-txt"></span>
+		<div class="percent-inner-js percent-inner">								
+		</div>
+	</div>
+{{/progressBar}}
+
 {{#currentBuilds}}
     <ul class="list current-job-js">	    	    		
 			<li>
