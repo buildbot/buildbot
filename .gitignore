@@ -61,3 +61,7 @@ master/buildbot/status/web/files/prod/script/project/aadata.json
 master/buildbot/status/web/files/aadata.json
 
 master/buildbot/status/web/files/builders.json
+
+master/buildbot/status/web/files/css/default.css
+
+master/buildbot/status/web/files/css/log.css
