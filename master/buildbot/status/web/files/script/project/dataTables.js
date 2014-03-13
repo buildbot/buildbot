@@ -142,8 +142,11 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
                             "aTargets": [ 1 ],
                             "sClass": "txt-align-left",
                             "mRender": function (data,full,type) {
-                                var noJobs = type.pendingBuilds === undefined && type.currentBuilds === undefined;
-
+                                var noJobs = false;
+                                if ((type.pendingBuilds === undefined || type.pendingBuilds == 0) &&
+                                    (type.currentBuilds === undefined || type.currentBuilds == 0)) {
+                                    noJobs = true;
+                                }
                                 var htmlnew = Mustache.render(builders, {showNoJobs:noJobs,pendingBuilds:type.pendingBuilds,currentBuilds:type.currentBuilds,builderName:type.name,projects:type.project});
                                 return htmlnew;
                             },

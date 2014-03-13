@@ -245,7 +245,15 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 					helpers.jCenter(mib);
 				});
 				// popup.customTabs();
-				helpers.closePopup(mib);				
+                helpers.closePopup(mib);
+
+                exContent.find('form').ajaxForm(function(data) {
+                    requirejs(['project/realtimePages'], function (realtimePages) {
+                        exContent.closest('.more-info-box').find('.close-btn').click();
+                        realtimePages.updateRealTimeData(data);
+                    });
+                });
+
 			});
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 

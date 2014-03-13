@@ -1,4 +1,4 @@
-define(['jquery', 'project/realtimePages', 'helpers'], function ($, realtimePages, helpers) {
+define(['jquery', 'project/realtimePages', 'helpers', 'libs/jquery.form'], function ($, realtimePages, helpers, form) {
          "use strict";
     var rtBuilders;
     

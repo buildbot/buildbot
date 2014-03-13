@@ -164,6 +164,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				$.get(url, urlParams).done(function(data) {
 					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
+
+                    formContainer.find('form').ajaxForm(function(data) {
+                        requirejs(['project/realtimePages'], function (realtimePages) {
+                            realtimePages.updateRealTimeData(data);
+                        });
+                    });
 					
 					// Add the value from the cookie to the disabled and hidden field
 

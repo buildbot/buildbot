@@ -1,1 +1,1 @@
-define(["jquery","project/realtimePages","helpers"],function(e,t,n){var r;return r={init:function(){t.initRealtime(t.buildersPage)}},r});
+define(["jquery","project/realtimePages","helpers","libs/jquery.form"],function(e,t,n,r){var i;return i={init:function(){t.initRealtime(t.buildersPage)}},i});
