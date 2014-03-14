@@ -74,7 +74,6 @@ angular.module("app").directive "d3demo", ["sample_plugin_config", (config) ->
 
     d3.timer ->
       angle = (Date.now() - start) * speed
-      console.log speed
       transform = (d) ->
         "rotate(" + angle / d.radius + ")"
 

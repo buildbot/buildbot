@@ -158,6 +158,7 @@ module.exports = (grunt) ->
                         'test/dataspec'    # test mocks in dev mode
                         'test/mocks/*'     # test mocks in dev mode
                         'app'              # app needs libs
+                        'constants'        # constants is needed by other components
                         'routes'           # default routes first
                         '{views,config,*/**}'    # remaining angularjs components
                         'run'     # run has to be in the end, because it is triggering
@@ -366,6 +367,9 @@ module.exports = (grunt) ->
                 autoWatch: false
                 background: false
                 singleRun: true
+                client:
+                    captureConsole: true
+                    useIframe: true
                 reporters: ['progress']
                 frameworks: ['jasmine', 'requirejs'],
                 browsers: ['PhantomJS']

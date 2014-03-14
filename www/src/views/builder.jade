@@ -42,7 +42,7 @@
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
           td(width='20px')
             a(href='#/builders/{{ builder.id }}/build/{{build.number}}',title='{{build}}')
-              span.badge-status(ng-class="'status_'+build.results + (build.complete==0 ? ' status_pending pulse':'')")
+              span.badge-status(ng-class="results2class(build, 'pulse')")
                 | {{ build.number }}
           td(width='150px')
             span(title="{{build.started_at | dateformat:'LLL'}}")

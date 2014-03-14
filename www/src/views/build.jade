@@ -8,7 +8,7 @@
         a(href="#/builders/{{builder.builderid}}")
           | {{builder.name}}
       li
-        a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}")
+        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
           | {{build.number}}
       li.pull-right
         button.btn.btn-default(ng-hide="build.complete")
@@ -19,28 +19,10 @@
       li.pull-right
         button.btn.btn-default(ng-show="build.complete") Promote
   .row
-    .col-sm-4
-      h4 Steps
-      ul.list-group.no-select
-        li.list-group-item(ng-repeat="step in steps",
-                           ng-click="step.fulldisplay=!step.fulldisplay")
-          span.pull-right(ng-if="step.started_at")
-            | &nbsp;{{step.state_strings.join(' ')}}
-          span.badge-status(ng-class="'status_'+step.results + ((step.complete==0  && step.started_at) ? ' status_pending pulse':'')")
-            | {{step.number}}
-          | &nbsp;
-          i.fa.fa-chevron-circle-right.rotate(ng-class="{'rotate-90':fulldisplay}", ng-if="step.logs.length")
-          | &nbsp; {{step.name}}
-          div.anim-stepdetails(ng-show="step.fulldisplay")
-            ul.unstyled
-              li(ng-repeat="log in step.logs")
-                a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}") {{log.name}}
-                | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
-          ul.unstyled
-            li(ng-repeat="url in step.urls")
-              a(href="{{url}}") {{url}}
-    .col-sm-8
-      tabset(justified="true")
+    .col-sm-5
+      buildsummary(ng-if="build", buildid="build.buildid")
+    .col-sm-7
+      tabset
           tab(heading="properties")
               rawdata(data="properties")
           tab(heading="{{buildslave.name}}")
@@ -49,3 +31,7 @@
               rawdata(data="builder")
           tab(heading="build")
               rawdata(data="build")
+          tab(heading="buildrequest")
+              rawdata(data="buildrequest")
+          tab(heading="buildset")
+              rawdata(data="buildset")

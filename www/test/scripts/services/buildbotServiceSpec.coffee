@@ -13,9 +13,9 @@ if window.__karma__?
             $timeout = $injector.get('$timeout')
             $q = $injector.get('$q')
             # stub out the actual backend of mqservice
-            spyOn(mqService,"setBaseUrl").andReturn(null)
-            spyOn(mqService,"startConsuming").andReturn($q.when( -> ))
-            spyOn(mqService,"stopConsuming").andReturn(null)
+            spyOn(mqService,"setBaseUrl").and.returnValue(null)
+            spyOn(mqService,"startConsuming").and.returnValue($q.when( -> ))
+            spyOn(mqService,"stopConsuming").and.returnValue(null)
             buildbotService = $injector.get('buildbotService')
 
         beforeEach(inject(injected))
@@ -26,6 +26,7 @@ if window.__karma__?
             buildbotService.all("changes").bind($scope)
             $httpBackend.flush()
             expect($scope.changes.length).toBe(1)
+
         it 'should query for builds/1/steps/2 and receive a SUCCESS result', ->
             $httpBackend.expectDataGET 'builds/1/steps/2',
                 override: (res) ->
@@ -191,7 +192,6 @@ if window.__karma__?
             .toThrow()
 
         it 'should reload the data in case of loss of synchronisation', ->
-            console.log "here"
             $httpBackend.expectDataGET 'builds',
                 nItems:1
             r = buildbotService.all("builds")

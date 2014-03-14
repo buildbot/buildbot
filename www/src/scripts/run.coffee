@@ -43,7 +43,6 @@ require(plugins_modules, ->
     else
         if config.devmode?
             app = 'devapp'
-            console.log "devmode!"
         else
             app = 'app'
         angular.bootstrap document, [ app ]

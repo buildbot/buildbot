@@ -16,9 +16,17 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                             modal: -> modal
 
                     # We exit the state if the dialog is closed or dismissed
+                    goBuild = (result) ->
+                        [ buildsetid, brids ] = result
+                        buildernames = _.keys(brids)
+                        if buildernames.length == 1
+                            $state.go "buildrequest",
+                                buildrequest: brids[buildernames[0]]
+                                redirect_to_build: true
                     goUp = (result) ->
-                        $state.go "^"
-                    modal.modal.result.then(goUp, goUp)
+                        $state.go "^",
+
+                    modal.modal.result.then(goBuild, goUp)
             ]
     forceDialogController = [ "$scope", "$state", "modal", "scheduler",
         "scheduler_data","$rootScope", "builderid"
@@ -54,7 +62,7 @@ angular.module('app').config [ "$stateProvider", ($stateProvider) ->
                     gatherFields(scheduler_data.all_fields)
                     scheduler.control("force", params)
                     .then (res) ->
-                        modal.modal.close(res)
+                        modal.modal.close(res.result)
                     ,   (err) ->
                         if err.data.error.code == -32602
                             for k, v of err.data.error.message

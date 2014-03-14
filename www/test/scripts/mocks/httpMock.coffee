@@ -80,10 +80,10 @@ window.decorateHttpBackend = ($httpBackend) ->
             if dataEp.re.test(ep)
                 if nItems?
                     data = []
-                    for i in [1..nItems]
-                        data.push(valueFromSpec(dataEp.type_spec, hint))
+                    for i in [0..nItems - 1] by 1
+                        data.push(valueFromBaseType(dataEp.type_spec, hint))
                 else
-                    data = [valueFromSpec(dataEp.type_spec, hint)]
+                    data = [valueFromBaseType(dataEp.type_spec, hint)]
                 ret = {meta:{links: [] }}
                 ret[dataEp.plural] = data
                 return ret
@@ -97,9 +97,9 @@ window.decorateHttpBackend = ($httpBackend) ->
         opts ?=
             nItems: undefined  # if nItems is defined, we will produce a collection
             override: undefined  # callback for overriding automaticly generated data
-            when: undefined  # use whenGetET instead of expectGET
-
-        value = this.buildDataValue(this.epExample(ep), opts.nItems)
+            when: undefined  # use whenGET instead of expectGET
+        ep_query = ep.split("?")
+        value = this.buildDataValue(this.epExample(ep_query[0]), opts.nItems)
 
         if opts.override?
             opts.override(value)

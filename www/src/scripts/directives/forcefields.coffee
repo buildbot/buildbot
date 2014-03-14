@@ -1,33 +1,16 @@
 
-# This directive allows recursive call of the same directive
-# this is used here for forcefield template which is recursively
-# called in case of a nested parameter
-
-angular.module("app").directive "recursive", ["$compile", ($compile) ->
-    restrict: "A"
-    priority: 100000
-    compile: (tElement, tAttr) ->
-        contents = tElement.contents().remove()
-        compiledContents = undefined
-        return (scope, iElement, iAttr) ->
-            compiledContents = $compile(contents)  unless compiledContents
-            iElement.append compiledContents(scope, (clone) ->
-                clone
-            )
-  ]
-
 # This is the generic plugin-able field implementation
 # It will create and compile arbitrary field widget, without
 # parent template to have to know each field type in a big ng-switch
 # This is done by merging compile and link phasis, so that the template
 # includes directives whose types depend on the model.
 angular.module('app').directive 'forcefield',
-['$log', '$compile', ($log, $compile) ->
+['$log', '$compile', 'RecursionHelper', ($log, $compile, RecursionHelper) ->
     replace: true
     restrict: 'E'
     scope: {field:"="}
     compile: (element, attrs) ->
-        return (scope, element, attrs) ->
+        return RecursionHelper.compile element, (scope, element, attrs) ->
             if scope.field.type == 'nested'
                 t = scope.field.layout + "layout"
             else

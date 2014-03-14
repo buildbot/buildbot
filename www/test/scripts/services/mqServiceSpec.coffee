@@ -18,9 +18,9 @@ if window.__karma__?
             $scope = $injector.get('$rootScope').$new()
             mqService = $injector.get('mqService')
             # stub out the actual backend of mqservice
-            spyOn(mqService,"getEventSource").andReturn(es)
-            spyOn(event_receiver,"receiver1").andReturn(null)
-            spyOn(event_receiver,"receiver2").andReturn(null)
+            spyOn(mqService,"getEventSource").and.returnValue(es)
+            spyOn(event_receiver,"receiver1").and.returnValue(null)
+            spyOn(event_receiver,"receiver2").and.returnValue(null)
 
         beforeEach(inject(injected))
 

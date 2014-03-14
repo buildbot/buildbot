@@ -66,6 +66,11 @@ angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuS
                 url: "/builders/:builder/build/:build/step/:step/log/:log"
                 tabid: "builders"
 
+            'buildrequest':
+                url: "/buildrequests/:buildrequest?redirect_to_build"
+                tabid: "builders"
+
+
             buildslave:
                 url: "/buildslaves/:buildslave"
                 tabid: "buildslaves"
@@ -84,8 +89,8 @@ angular.module('app').config [ "$stateProvider", "$urlRouterProvider", "topMenuS
             cfg.tabid ?= id
             cfg.tabhash = "##{id}"
             state =
-                controller: "#{id}Controller"
-                templateUrl: "views/#{id}.html"
+                controller: cfg.controller ? "#{id}Controller"
+                templateUrl: cfg.templateUrl ? "views/#{id}.html"
                 name: id
                 url: cfg.url
                 data: cfg
