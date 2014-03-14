@@ -381,7 +381,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"hide": false, "fullName": "p1", "type": "text", "size": 10}')
 
     def test_StringParameter_Required(self):
-        self.do_ParameterTest(value=" ", expect=ValidationError,
+        self.do_ParameterTest(value=" ", expect=CollectedValidationError,
                               expectKind=Exception,
                               klass=StringParameter, required=True)
 
