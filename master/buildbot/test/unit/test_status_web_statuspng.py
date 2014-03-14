@@ -107,7 +107,7 @@ class FakeBuilder(object):
     def __init__(self, status_code):
         self._status_code = status_code
 
-    def getBuild(self, number=0):
+    def getBuild(self, number=0, revision=None):
         return FakeBuild(self._status_code)
 
 

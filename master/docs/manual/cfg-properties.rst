@@ -269,6 +269,7 @@ While Interpolate can handle many simple cases, and even some common conditional
 The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when the step it's passed to begins.
 The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.  For example::
 
+    from buildbot.process import properties
     @properties.renderer
     def makeCommand(props):
         command = [ 'make' ]

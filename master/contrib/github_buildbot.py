@@ -13,24 +13,25 @@ trigger this webhook.
 
 """
 
-import tempfile
 import logging
 import os
-import re
 import sys
+import tempfile
 import traceback
-from twisted.web import server, resource
+
+from optparse import OptionParser
+from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
-from twisted.cred import credentials
-from optparse import OptionParser
+from twisted.web import resource
+from twisted.web import server
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-########################################################################
+#
 
 
 class GitHubBuildBot(resource.Resource):
@@ -80,7 +81,7 @@ class GitHubBuildBot(resource.Resource):
         branch = payload['ref'].split('/')[-1]
 
         if payload['deleted'] is True:
-            logging.info("Branch `%s' deleted, ignoring" % branch)
+            logging.info("Branch `%s' deleted, ignoring", branch)
         else:
             changes = [{'revision': c['id'],
                         'revlink': c['url'],
@@ -110,24 +111,24 @@ class GitHubBuildBot(resource.Resource):
         """
         If connection is failed.  Logs the error.
         """
-        logging.error("Could not connect to master: %s"
-                      % error.getErrorMessage())
+        logging.error("Could not connect to master: %s",
+                      error.getErrorMessage())
         return error
 
     def addChange(self, dummy, remote, changei, src='git'):
         """
         Sends changes from the commit to the buildmaster.
         """
-        logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
+        logging.debug("addChange %s, %s", repr(remote), repr(changei))
         try:
             change = changei.next()
         except StopIteration:
             remote.broker.transport.loseConnection()
             return None
 
-        logging.info("New revision: %s" % change['revision'][:8])
+        logging.info("New revision: %s", change['revision'][:8])
         for key, value in change.iteritems():
-            logging.debug("  %s: %s" % (key, value))
+            logging.debug("  %s: %s", key, value)
 
         change['src'] = src
         deferred = remote.callRemote('addChange', change)

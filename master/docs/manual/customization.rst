@@ -944,27 +944,27 @@ as failed; if the path exists but is not a directory, we mark the step as having
     from buildbot.interfaces import BuildSlaveToOldError
     from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
     import stat
-    
+
     class MyBuildStep(buildstep.BuildStep):
-    
+
         def __init__(self, dirname, **kwargs):
             buildstep.BuildStep.__init__(self, **kwargs)
             self.dirname = dirname
-    
+
         def start(self):
             # make sure the slave knows about stat
             slavever = (self.slaveVersion('stat'),
                         self.slaveVersion('glob'))
             if not all(slavever):
                 raise BuildSlaveToOldError('need stat and glob')
-    
+
             cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
-    
+
             d = self.runCommand(cmd)
-            d.addCallback(lambda res: evaluateStat(cmd))
+            d.addCallback(lambda res: self.evaluateStat(cmd))
             d.addErrback(self.failed)
             return d
-    
+
         def evaluateStat(self, cmd):
             if cmd.didFail():
                 self.step_status.setText(["File not found."])
@@ -975,14 +975,14 @@ as failed; if the path exists but is not a directory, we mark the step as having
                 self.step_status.setText(["'tis not a directory"])
                 self.finished(WARNINGS)
                 return
-    
-            cmd = buildstep.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'}))
-    
-            d = self.runCommand(cwd)
-            d.addCallback(lambda res: evaluateGlob(cmd))
+
+            cmd = buildstep.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'})
+
+            d = self.runCommand(cmd)
+            d.addCallback(lambda res: self.evaluateGlob(cmd))
             d.addErrback(self.failed)
             return d
-    
+
         def evaluateGlob(self, cmd):
             if cmd.didFail():
                 self.step_status.setText(["Glob failed."])
@@ -994,6 +994,7 @@ as failed; if the path exists but is not a directory, we mark the step as having
             else:
                 self.step_status.setText(["No pycs found"])
             self.finished(SUCCESS)
+
 
 For more information on the available commands, see :doc:`../developer/master-slave`.
 
