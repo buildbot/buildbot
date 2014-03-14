@@ -366,6 +366,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
                               klass=StringParameter)
 
+    def test_StringParameter_Required(self):
+        self.do_ParameterTest(value=" ", expect=ValidationError,
+                              expectKind=Exception,
+                              klass=StringParameter, required=True)
+
     def test_IntParameter(self):
         self.do_ParameterTest(value="123", expect=123, klass=IntParameter)
 
