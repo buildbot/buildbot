@@ -16,6 +16,7 @@
 import os
 
 from bz2 import BZ2File
+from cStringIO import StringIO
 from gzip import GzipFile
 
 from buildbot import interfaces
@@ -558,6 +559,7 @@ class LogFile:
         for w in watchers:
             w.callback(self)
         self.watchers = []
+        return defer.succeed(None)
 
     def compressLog(self):
         logCompressionMethod = self.master.config.logCompressionMethod
@@ -630,51 +632,27 @@ class LogFile:
         self.finished = True
 
 
-class HTMLLogFile:
-    filename = None
+class HTMLLogFile(LogFile):
 
     def __init__(self, parent, name, logfilename, html):
-        self.step = parent
-        self.name = name
-        self.filename = logfilename
-        self.html = html
-
-    def getName(self):
-        return self.name  # set in BuildStepStatus.addLog
-
-    def old_getStep(self):
-        return self.step
-
-    def isFinished(self):
-        return True
-
-    def waitUntilFinished(self):
-        return defer.succeed(self)
+        LogFile.__init__(self, parent, name, logfilename)
+        self.addStderr(html)
+        self.finish()
 
     def old_hasContents(self):
         return True
 
-    def old_getText(self):
-        return self.html  # looks kinda like text
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.watchers = []
+        self.finishedWatchers = []
+        self.finished = True
 
-    def old_getChunks(self):
-        return [(STDERR, self.html)]
-
-    def subscribe(self, receiver, catchup):
-        pass
-
-    def unsubscribe(self, receiver):
-        pass
-
-    def finish(self):
-        pass
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['step']
-        if "master" in d:
-            del d['master']
-        return d
+        # buildbot <= 0.8.8 stored all html logs in the html property
+        if 'html' in self.__dict__:
+            buf = "%d:%d%s," % (len(self.html) + 1, STDERR, self.html)
+            self.openfile = StringIO(buf)
+            del self.__dict__['html']
 
 
 def _tryremove(filename, timeout, retries):
