@@ -112,8 +112,6 @@ class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
             def check_current(res):
                 if not res:
-                    if db_url.startswith("sqlite"):
-                        return self.model.upgrade()
                     for l in upgrade_message.split('\n'):
                         log.msg(l)
                     raise exceptions.DatabaseNotReadyError()
