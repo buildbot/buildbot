@@ -601,6 +601,6 @@ This special target only runs once, so is not connected to the watch mechanics:
 Debug with karma
 ~~~~~~~~~~~~~~~~
 ``console.log`` is available via karma. In order to debug the unit tests, you can
-also use the global variable ``dump``, which dump any object for inspection in the console.
+also use the global variable ``dump``, which dumps any object for inspection in the console.
 this can be handy to be sure that you dont let debug logs in your code to always use ``dump``
 
