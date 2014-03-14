@@ -380,6 +380,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"default": "", "required": false, "label": "p1", "tablabel": "p1", '
                               '"hide": false, "fullName": "p1", "type": "text", "size": 10}')
 
+    def test_StringParameter_Required(self):
+        self.do_ParameterTest(value=" ", expect=ValidationError,
+                              expectKind=Exception,
+                              klass=StringParameter, required=True)
+
     def test_IntParameter(self):
         self.do_ParameterTest(value="123", expect=123, klass=IntParameter,
                               expectJson='{"regex": null, "multiple": false, "name": "p1", '
