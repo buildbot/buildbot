@@ -19,8 +19,8 @@ import mock
 
 from buildbot.test.fake.web import FakeRequest
 
-from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.trial import unittest
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modfied" and "removed", and change email
@@ -115,7 +115,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithProjectToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = "/change_hook/gitlab"
-        self.request.args = { 'project': ['MyProject'] }
+        self.request.args = {'project': ['MyProject']}
         self.request.method = "POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes(res, project="MyProject")
@@ -124,7 +124,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithCodebaseToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = "/change_hook/gitlab"
-        self.request.args = { 'codebase': ['MyCodebase'] }
+        self.request.args = {'codebase': ['MyCodebase']}
         self.request.method = "POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes(res, codebase="MyCodebase")
