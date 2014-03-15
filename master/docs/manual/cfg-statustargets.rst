@@ -890,8 +890,8 @@ When this is setup you should add a `POST` service pointing to ``/change_hook/gi
 relative to the root of the web status. For example, it the grid URL is
 ``http://builds.mycompany.com/bbot/grid``, then point GitLab to
 ``http://builds.mycompany.com/change_hook/gitlab``. The project and/or codebase can
-also be passed along, which is forwarded to the shedulers. These are passed
-by appending ``?project=name`` or ``?codebase=foo`` to the URL.
+also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
+These parameters will be passed along to the scheduler.
 
 .. warning::
 
