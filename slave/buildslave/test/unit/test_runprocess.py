@@ -244,16 +244,24 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    @compat.skipUnlessPlatformIs("win32")
-    def testPipeEmbedded(self):
+    def testPunctuation(self):
+        # make sure special characters make it through unscathed
         b = FakeSlaveBuilder(False, self.basedir)
-        s = runprocess.RunProcess(b, ['echo', 'escaped|pipe'],
+        punct = '''!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~'''
+        s = runprocess.RunProcess(b, ['echo', punct, '%PATH%'],
                                   self.basedir)
 
         d = s.start()
 
+        if runtime.platformType == "win32":
+            # Windows echo doesn't parse arguments, so they remain
+            # quoted/escaped
+            out_punct = '"' + punct.replace('"', r'\"') + '"'
+        else:
+            out_punct = punct
+
         def check(ign):
-            self.failUnless({'stdout': nl('escaped|pipe\n')} in b.updates, b.show())
+            self.failUnless({'stdout': nl(out_punct + ' %PATH%\n')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d

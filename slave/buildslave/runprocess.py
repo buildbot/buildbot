@@ -44,6 +44,22 @@ from buildslave.exceptions import AbandonChain
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
 
+def win32_batch_quote(cmd_list):
+    # Quote cmd_list to a string that is suitable for inclusion in a
+    # Windows batch file. This is not quite the same as quoting it for the
+    # shell, as cmd.exe doesn't support the %% escape in interactive mode.
+    # As an exception, a lone pipe as an argument is not escaped, and
+    # becomes a shell pipe.
+    def escape_arg(arg):
+        if arg == '|': return arg
+
+        arg = quoteArguments([arg])
+        # escape shell special characters
+        arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
+        # prevent variable expansion
+        return arg.replace('%', '%%')
+
+    return ' '.join(map(escape_arg, cmd_list))
 
 def shell_quote(cmd_list):
     # attempt to quote cmd_list such that a shell will properly re-interpret
@@ -570,13 +586,7 @@ class RunProcess:
         if type(self.command) in types.StringTypes:
             tf.write(self.command)
         else:
-            def maybe_escape_pipes(arg):
-                if arg != '|':
-                    return arg.replace('|', '^|')
-                else:
-                    return '|'
-            cmd = [maybe_escape_pipes(arg) for arg in self.command]
-            tf.write(quoteArguments(cmd))
+            tf.write(win32_batch_quote(self.command))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
