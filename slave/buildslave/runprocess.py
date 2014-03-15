@@ -63,18 +63,16 @@ def win32_batch_quote(cmd_list):
 
 def shell_quote(cmd_list):
     # attempt to quote cmd_list such that a shell will properly re-interpret
-    # it.  The pipes module is only available on UNIX, and Windows "shell"
-    # quoting is indescribably convoluted - so much so that it's not clear it's
-    # reversible.  Also, the quote function is undocumented (although it looks
-    # like it will be documented soon: http://bugs.python.org/issue9723).
-    # Finally, it has a nasty bug in some versions where an empty string is not
-    # quoted.
+    # it.  The pipes module is only available on UNIX; also, the quote
+    # function is undocumented (although it looks like it will be documented
+    # soon: http://bugs.python.org/issue9723). Finally, it has a nasty bug
+    # in some versions where an empty string is not quoted.
     #
     # So:
     #  - use pipes.quote on UNIX, handling '' as a special case
-    #  - use Python's repr() on Windows, as a best effort
+    #  - use our own custom function on Windows
     if runtime.platformType == 'win32':
-        return " ".join([repr(e) for e in cmd_list])
+        return win32_batch_quote(cmd_list)
     else:
         import pipes
 
