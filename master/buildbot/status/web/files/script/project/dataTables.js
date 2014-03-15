@@ -2,15 +2,18 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 
     "use strict";
     var dataTables;
-    
+
     dataTables = {
         init: function () {
-			// Colums with sorting 
+            //Setup sort neutral function
+            dataTables.initSortNeutral();
+
+			// Colums with sorting
 							
 			var tablesorterEl = $('.tablesorter-js');				
 
 			// Select which columns not to sort
-			tablesorterEl.each(function(i){			    	
+			tablesorterEl.each(function(i){
 				var colList = [];
 
 				var optionTable = {
@@ -101,10 +104,34 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 				// Set the marquee in the input field on load and listen for key event	
 				filterTableInput.attr('placeholder','Filter results').focus().keydown(function(event) {
 					oTable.fnFilter($(this).val());
-				});  
+				});
+
+
+                $(".reset-sort").click(function(){
+                    oTable.fnSortNeutral();
+                    return false;
+                });
 
 			});
-		}
+		}, initSortNeutral: function() {
+            //Add the ability to unsort
+            $.fn.dataTableExt.oApi.fnSortNeutral = function ( oSettings )
+            {
+                /* Remove any current sorting */
+                oSettings.aaSorting = [];
+
+                /* Sort display arrays so we get them in numerical order */
+                oSettings.aiDisplay.sort( function (x,y) {
+                    return x-y;
+                } );
+                oSettings.aiDisplayMaster.sort( function (x,y) {
+                    return x-y;
+                } );
+
+                /* Redraw */
+                oSettings.oApi._fnReDraw( oSettings );
+            };
+        }
 	};
 
     return dataTables;

@@ -206,3 +206,18 @@ a.grey-btn,
         margin-right: 0;
     }
 }
+
+.reset-sort {
+    cursor: pointer;
+    &:hover:after {
+        color:#1f5184;
+    }
+    display: inline-block;
+    float:right;
+}
+
+.reset-sort:after {
+  font-size: 20px;
+  content: "";
+  font-family: katana_icons;
+}
