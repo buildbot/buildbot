@@ -153,6 +153,7 @@ class Trigger(BuildStep):
 
     @defer.inlineCallbacks
     def addBuildUrls(self, rclist):
+        brids = {}
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, brids = results
@@ -163,7 +164,7 @@ class Trigger(BuildStep):
                     for build in builds:
                         num = build['number']
                         url = self.master.status.getURLForBuild(buildername, num)
-                        yield self.step_status.addURL("%s: %s #%d" % (statusToString(results),
+                        yield self.addURL("%s: %s #%d" % (statusToString(results),
                                                                       buildername, num), url)
 
     @defer.inlineCallbacks

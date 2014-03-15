@@ -29,6 +29,7 @@ if window.__karma__?
                 results:undefined
                 complete:false
                 started_at:10
+                , "pulse"
             ).toBe("results_PENDING pulse")
 
         it 'should provide correct results2Text', ->

@@ -8,8 +8,6 @@ angular.module('app').factory 'resultsService',
             if build_or_step?
                 if build_or_step.results? and _.has(resultsTexts, build_or_step.results)
                     ret = 'results_' + resultsTexts[build_or_step.results]
-                if ret == "results_UNKNOWN"
-                    console.log build_or_step
                 if (build_or_step.complete == false  && build_or_step.started_at > 0)
                     ret = 'results_PENDING'
                     if pulse?
