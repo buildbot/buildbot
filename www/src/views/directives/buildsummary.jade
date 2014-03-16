@@ -26,5 +26,5 @@
         li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
           buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')
       ul
-        li(ng-if='!isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
+        li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
           a(href="{{url.url}}") {{url.name}}

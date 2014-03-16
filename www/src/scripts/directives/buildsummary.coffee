@@ -10,8 +10,13 @@ angular.module('app').directive 'buildsummary',
 ]
 
 angular.module('app').controller 'buildsummaryController',
-['$scope', 'buildbotService', 'resultsTexts', 'config', 'resultsService'
-    ($scope, buildbotService, resultsTexts, config, resultsService) ->
+['$scope', 'buildbotService', 'resultsTexts', 'config', 'resultsService', '$urlMatcherFactory'
+    ($scope, buildbotService, resultsTexts, config, resultsService, $urlMatcherFactory) ->
+
+        buildrequestURLMatcher = $urlMatcherFactory.compile(
+            "#{config.url}#buildrequests/{buildrequestid:[0-9]+}")
+        buildURLMatcher = $urlMatcherFactory.compile(
+            "#{config.url}#builders/{builderid}/builds/{buildid:[0-9]+}")
 
         NONE = 0
         ONLY_NOT_SUCCESS = 1
@@ -35,15 +40,13 @@ angular.module('app').controller 'buildsummaryController',
                 return false
 
         $scope.getBuildRequestIDFromURL = (url) ->
-            url = url.split("/")
-            return parseInt(url[url.length - 1], 10)
+            return parseInt(buildrequestURLMatcher.exec(url).buildrequestid, 10)
 
         $scope.isBuildRequestURL = (url) ->
-            baseurl =  "#{config.url}#buildrequests/"
-            if not _.startsWith(url, baseurl)
-                return false
-            remain = url.substr(baseurl.length)
-            return not isNaN(parseInt(remain, 10))
+            return buildrequestURLMatcher.exec(url) != null
+
+        $scope.isBuildURL = (url) ->
+            return buildURLMatcher.exec(url) != null
 
 
         buildbotService.one('builds', $scope.buildid)

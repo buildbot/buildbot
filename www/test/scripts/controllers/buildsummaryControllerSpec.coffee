@@ -79,6 +79,7 @@ if window.__karma__?
             $scope.toggleDetails()
 
         it 'should provide correct getBuildRequestIDFromURL', ->
+            config.url = 'http://localhost:5000/'
             controller = createController()
             $httpBackend.flush()
             expect($scope.getBuildRequestIDFromURL("http://localhost:5000/#buildrequests/123"))
@@ -95,4 +96,13 @@ if window.__karma__?
             expect($scope.isBuildRequestURL("http://localhost:5000/#build/123"))
             .toBe(false)
             expect($scope.isBuildRequestURL("http://localhost:5000/#buildrequests/bla"))
+            .toBe(false)
+
+        it 'should provide correct isBuildURL', ->
+            config.url = 'http://localhost:5000/'
+            controller = createController()
+            $httpBackend.flush()
+            expect($scope.isBuildRequestURL("http://localhost:5000/#builders/123/builds/123"))
+            .toBe(true)
+            expect($scope.isBuildRequestURL("http://localhost:5000/#builders/sdf/builds/123"))
             .toBe(false)
