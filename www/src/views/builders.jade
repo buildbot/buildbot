@@ -15,5 +15,5 @@
           td
             span(data-ng-repeat="build in builder.builds")
                 a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.number}}")
-                    span.badge-status(ng-class="'status_'+build.results + (build.complete==0 ? ' status_pending pulse':'')")
+                    span.badge-status(ng-class="results2class(build, 'pulse')")
                       | {{ build.number }}

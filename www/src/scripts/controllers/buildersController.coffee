@@ -1,6 +1,8 @@
 angular.module('app').controller 'buildersController',
-['$log', '$scope', '$location', 'buildbotService'
-    ($log, $scope, $location, buildbotService) ->
+['$log', '$scope', '$location', 'buildbotService','resultsService',
+    ($log, $scope, $location, buildbotService, resultsService) ->
+        # make resultsService utilities available in the template
+        _.mixin($scope, resultsService)
 
         buildbotService.all('builders').bind $scope,
             onchild: (builder) ->

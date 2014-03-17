@@ -141,7 +141,15 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getMetrics(self):
         return self.master.metrics
 
-    def getURLForBuild(self, builder_name, build_number):
+    def getURLForBuild(self, builderid, build_number):
+        prefix = self.getBuildbotURL()
+        return prefix + "#builders/%d/builds/%d" % (
+            builderid,
+            build_number)
+
+    def _getURLForBuildWithBuildername(self, builder_name, build_number):
+        # dont use this API. this URL is not supported
+        # its here waiting for getURLForThing removal or switch to deferred
         prefix = self.getBuildbotURL()
         return prefix + "#builders/%s/builds/%d" % (
             urllib.quote(builder_name, safe=''),
@@ -167,7 +175,10 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             bldr = build.getBuilder()
-            return self.getURLForBuild(bldr.getName(), build.getNumber())
+            # should be:
+            # builderid = yield bldr.getBuilderId()
+            # return self.getURLForBuild(self, builderid, build.getNumber())
+            return self._getURLForBuildWithBuildername(bldr.getName(), build.getNumber())
 
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing

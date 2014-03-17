@@ -1,0 +1,8 @@
+div
+  div(ng-if="buildrequest.claimed")
+    div(ng-repeat="build in builds")
+      buildsummary(buildid="build.buildid", condensed="true")
+  div(ng-if="!buildrequest.claimed")
+    span.badge-status.status_pending.pulse
+        | &nbsp;
+    | waiting for available slave

@@ -1,10 +1,4 @@
 
-angular.module('app').service 'singulars', ['plurals', (plurals) ->
-    ret = {}
-    for k, v of plurals
-        ret[v] = k
-    return ret
-]
 angular.module('app').factory 'buildbotService',
 ['$log', 'Restangular', 'mqService', '$rootScope', 'BASEURLAPI',
     'BASEURLSSE', 'plurals', 'singulars', '$q', '$timeout', 'config',
@@ -16,13 +10,21 @@ angular.module('app').factory 'buildbotService',
         # some is added to base service, and restangularized elements
         addSomeAndMemoize = (elem) ->
             memoize = (f) ->
-                return _.memoize f, (a,b,c) ->
-                    return [a,b,c].toString()
+                return _.memoize f, (args...) ->
+                    # todo: need a saner and tested method for finding hash of args
+                    key = ""
+                    for a in args
+                        if _.isObject(a)
+                            a = JSON.stringify(a)
+                        key = key + a
+                    return key
             # all will be memoized later, so we need to save the unmemoized version
             elem.unmemoized_all = elem.all
             elem.some = memoize (route, queryParams) ->
                 new_elem = elem.unmemoized_all(route)
                 new_elem.queryParams = queryParams
+                new_elem.getSome = ->
+                    return new_elem.getList(queryParams)
                 return new_elem
             if elem.one?
                 elem.one = memoize(elem.one)

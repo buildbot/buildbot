@@ -23,6 +23,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.status.results import statusToString
 from buildbot.status.results import worst_status
+from buildbot.util import ascii2unicode
 from twisted.internet import defer
 from twisted.python import log
 
@@ -153,6 +154,7 @@ class Trigger(BuildStep):
 
     @defer.inlineCallbacks
     def addBuildUrls(self, rclist):
+        brids = {}
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, brids = results
@@ -162,9 +164,10 @@ class Trigger(BuildStep):
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
                     for build in builds:
                         num = build['number']
-                        url = self.master.status.getURLForBuild(buildername, num)
-                        yield self.step_status.addURL("%s: %s #%d" % (statusToString(results),
-                                                                      buildername, num), url)
+                        builderid = yield self.master.data.updates.findBuilderId(ascii2unicode(buildername))
+                        url = self.master.status.getURLForBuild(builderid, num)
+                        yield self.addURL("%s: %s #%d" % (statusToString(results),
+                                                          buildername, num), url)
 
     @defer.inlineCallbacks
     def run(self):

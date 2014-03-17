@@ -5,5 +5,4 @@
         div.form-horizontal
             div(ng-repeat='field in field.fields | filter:{hide:false}',
                 class="{{column_class}}")
-                forcefield(recursive,
-                           field="field")
+                forcefield(field="field")

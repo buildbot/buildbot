@@ -197,13 +197,13 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             self.exp_added_urls.append((('b #22', 'baseurl/#buildrequests/22'), {}))
         if 'a' in args:
             self.exp_added_urls.append((('success: A #4011',
-                                         'baseurl/#builders/A/builds/4011'), {}))
+                                         'baseurl/#builders/1/builds/4011'), {}))
         if 'b' in args:
             self.exp_added_urls.append((('success: B #4022',
-                                         'baseurl/#builders/B/builds/4022'), {}))
+                                         'baseurl/#builders/2/builds/4022'), {}))
         if 'afailed' in args:
             self.exp_added_urls.append((('failure: A #4011',
-                                         'baseurl/#builders/A/builds/4011'), {}))
+                                         'baseurl/#builders/1/builds/4011'), {}))
 
     # tests
     def test_no_schedulerNames(self):

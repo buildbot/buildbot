@@ -42,7 +42,6 @@ angular.module("app").directive "d3demo", ["sample_plugin_config", (config) ->
     if config.rotate_speed?
       speed = config.rotate_speed
     start = Date.now()
-    console.log element
     svg = d3.select(element[0]).append("svg")
             .attr("width", width)
             .attr("height", height)
@@ -74,7 +73,6 @@ angular.module("app").directive "d3demo", ["sample_plugin_config", (config) ->
 
     d3.timer ->
       angle = (Date.now() - start) * speed
-      console.log speed
       transform = (d) ->
         "rotate(" + angle / d.radius + ")"
 
