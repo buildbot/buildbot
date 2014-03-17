@@ -882,11 +882,12 @@ class RunProcess:
         log.msg("we tried to kill the process, and it wouldn't die.."
                 " finish anyway")
         self.killTimer = None
-        self.sendStatus({'header': "SIGKILL failed to kill process\n"})
+        signalName = "SIG" + self.interruptSignal
+        self.sendStatus({'header': signalName + " failed to kill process\n"})
         if self.sendRC:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
-        self.failed(RuntimeError("SIGKILL failed to kill process"))
+        self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):
         for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer', 'sigtermTimer'):
