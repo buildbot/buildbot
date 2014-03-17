@@ -53,3 +53,5 @@ master/buildbot/status/web/files/test3.xml
 master/buildbot/status/web/files/test.xml
 
 master/buildbot/status/web/files/builders.json
+
+master/buildbot/status/web/files/css/default.css

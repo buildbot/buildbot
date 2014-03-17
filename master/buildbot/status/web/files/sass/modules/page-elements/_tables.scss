@@ -168,10 +168,10 @@
  .border-table-holder  {
 	border-left: 2px solid #2B6194;    
     @include box-shadow (1px 0 0px #FFFFFF inset);
-    float: left;
+    float: right;
     margin-top: 8px;
     padding: 0 0 0 10px; 
-    width: 88%;
+    width: 86%;
 }
   
 .inner-table-holder {
@@ -216,7 +216,7 @@ table.codebase-branch-table {
     margin: 15px 0 20px 0;
     float: left;
     .top & {
-	    margin: 13px 0 0 10px;	
+	    margin: 13px 15px 0 10px;	
 	}
     a {
     	&:focus {
@@ -500,7 +500,7 @@ table.codebase-branch-table {
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {
-		width: 69%;
+		width: 67%;
 	}
 }
 
@@ -516,18 +516,18 @@ table.codebase-branch-table {
 		overflow: visible;	 	
 	}
 	.border-table-holder  {
-		width: 82%;
+		width: 80%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
 	.border-table-holder  {
-		width: 87%;
+		width: 85%;
 	}
 }
 
 @include breakpoint($bkpt-xxlarge) {
 	.border-table-holder  {
-		width: 88%;
+		width: 86%;
 	}
 }

@@ -83,10 +83,10 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			    
 			   	//initialize datatable with options
 			  	var oTable = $(this).dataTable(optionTable);			  	
-
+			  	var dtWTop = $('.dataTables_wrapper .top');
 			  	// special for the codebasespage
 			  	if ($('#codebases_page').length != 0) {
-					$('.dataTables_wrapper .top').append('<div class="filter-table-input">'+
+					dtWTop.append('<div class="filter-table-input">'+
 	    			'<input value="Show builders" class="blue-btn var-2" type="submit" />'+
 	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
 	  				'</div>');
@@ -98,19 +98,20 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
 	        		// Parse the url and insert current codebases and branches
-	        		helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'));	
+	        		helpers.codeBaseBranchOverview(dtWTop);	
 				}
 
 				// Set the marquee in the input field on load and listen for key event	
 				filterTableInput.attr('placeholder','Filter results').focus().keydown(function(event) {
 					oTable.fnFilter($(this).val());
 				});
-
-
-                $(".reset-sort").click(function(){
-                    oTable.fnSortNeutral();
-                    return false;
-                });
+				
+				$('<div class="reset-sort" title="Reset table sorting"/>')
+					.appendTo(dtWTop)
+					.click(function(){
+                    	oTable.fnSortNeutral();
+                    	return false;
+                	});
 
 			});
 		}, initSortNeutral: function() {

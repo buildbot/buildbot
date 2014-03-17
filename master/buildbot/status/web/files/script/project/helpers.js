@@ -85,6 +85,30 @@ define(['screensize'], function (screenSize) {
 			$('#authUserBtn').click(function(e){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
+			helpers.tooltip($('.tooltip'));
+
+		}, tooltip: function (el) {
+			
+			el.hover(function(e) {
+				var toolTipCont = $('<div class="tooltip-cont" />');
+				this.t = this.title;
+				this.title = "";
+				var cursorPosTop = e.pageY;
+				var cursorPosLeft = e.pageX;
+				toolTipCont.html(this.t);
+				toolTipCont.appendTo('body')
+				.css({'top':cursorPosTop,'left':cursorPosLeft})
+				.delay(250)
+				.fadeIn('250')
+				.delay(3000)
+				.fadeOut('250');					        				    
+
+			}, function() {
+				this.title = this.t;
+				var toolTipCont = $('.tooltip-cont');	
+				toolTipCont.remove();
+			})
+
 
 		}, authorizeUser: function() {
 
