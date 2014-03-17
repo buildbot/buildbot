@@ -102,7 +102,7 @@ if window.__karma__?
             config.url = 'http://localhost:5000/'
             controller = createController()
             $httpBackend.flush()
-            expect($scope.isBuildRequestURL("http://localhost:5000/#builders/123/builds/123"))
+            expect($scope.isBuildURL("http://localhost:5000/#builders/123/builds/123"))
             .toBe(true)
-            expect($scope.isBuildRequestURL("http://localhost:5000/#builders/sdf/builds/123"))
+            expect($scope.isBuildURL("http://localhost:5000/#builders/sdf/builds/123"))
             .toBe(false)

@@ -16,7 +16,7 @@ angular.module('app').controller 'buildsummaryController',
         buildrequestURLMatcher = $urlMatcherFactory.compile(
             "#{config.url}#buildrequests/{buildrequestid:[0-9]+}")
         buildURLMatcher = $urlMatcherFactory.compile(
-            "#{config.url}#builders/{builderid}/builds/{buildid:[0-9]+}")
+            "#{config.url}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
 
         NONE = 0
         ONLY_NOT_SUCCESS = 1
