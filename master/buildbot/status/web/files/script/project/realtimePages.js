@@ -7,6 +7,11 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
     var sock = null;
     var realTimeFunc = null;
 
+    //Realtime commands
+    var KRT_JSON_DATA = "krtJSONData";
+    var KRT_URL_DROPPED = "krtURLDropped";
+    var KRT_REGISTER_URL = "krtRegisterURL";
+
     realtimePages = {
         createWebSocket: function(wsURI) {
             if (sock == null) {
@@ -25,7 +30,7 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
                      sock.onopen = function () {
                          $('#bowlG').remove();
                          // get the json url to parse
-                         realtimePages.broadcastMessage(helpers.getJsonUrl());
+                         realtimePages.sendCommand(KRT_REGISTER_URL, helpers.getJsonUrl());
                      };
 
                      // when the connection closes
@@ -37,7 +42,11 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
 
                      // when the client recieves a message
                      sock.onmessage = function(e) {
-                         realtimePages.updateRealTimeData(e.data);
+                         var data = e.data;
+                         if (typeof data === "string") {
+                            data = JSON.parse(data);
+                         }
+                         realtimePages.parseRealtimeCommand(data);
                      }
                 }
             }
@@ -65,17 +74,26 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
                 console.log("Realtime server not found, disabling realtime.")
             }
         },
-        broadcastMessage: function(msg) {
+        sendCommand: function(cmd, data) {
             if (sock) {
+                var msg = JSON.stringify({"cmd": cmd, "data": data});
                 sock.send(msg);
             }
         },
-        updateRealTimeData: function(data) {
-            if (typeof data === "string") {
-                data = JSON.parse(data);
+        parseRealtimeCommand: function(data) {
+            if (data["cmd"] === KRT_JSON_DATA) {
+                realtimePages.updateRealTimeData(data["data"]["data"]);
             }
+            if (data["cmd"] === KRT_URL_DROPPED) {
+                console.log("URL Dropped by server will retry in 5 seconds...");
+                setTimeout(function() {
+                    realtimePages.sendCommand(KRT_REGISTER_URL, helpers.getJsonUrl());
+                }, 5000);
+            }
+        },
+        updateRealTimeData: function(data) {
             realTimeFunc(data);
-            console.log("Reloading data...")
+            console.log("Reloading data...");
         },
         getInstantJSON: function() {
             var script = $('#instant-json');
@@ -86,7 +104,6 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
             return undefined;
         },
         rtBuildDetail: function (data,el) {
-            
             try {
                  $.each(data, function (key, value) {
                   	
@@ -97,8 +114,7 @@ define(['jquery','helpers','popup','text!templates/builders.mustache','mustache'
                   	var resultTxt = value.text;	
             		    	
                   			// timetable
-                  			helpers.startCounter($('#elapsedTimeJs'), startTime)
-		                    
+                  			helpers.startCounter($('#elapsedTimeJs'), startTime);
 
 							if (endTime) { 
 								// If the build is finished

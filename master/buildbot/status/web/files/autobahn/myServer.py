@@ -9,13 +9,20 @@ from twisted.internet import reactor
 from twisted.python import log
 from twisted.web.server import Site
 from twisted.web.static import File
-from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
+from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
 
 PORT = 8010
 POLL_INTERVAL = 5
 updateLock = Lock()
 
+#Server Messages
+KRT_JSON_DATA = "krtJSONData"
+KRT_URL_DROPPED = "krtURLDropped"
+KRT_REGISTER_URL = "krtRegisterURL"
+
+
 agent = Agent(reactor)
+
 
 def dict_compare(d1, d2):
     d1_keys = set(d1.keys())
@@ -29,6 +36,9 @@ def dict_compare(d1, d2):
 
 
 class CachedURL():
+    """
+    Caches the data found on a URL for future references
+    """
     def __init__(self, url):
         self.url = url
         self.cachedJSON = None
@@ -40,6 +50,9 @@ class CachedURL():
         return (time.time() - self.lastChecked) > POLL_INTERVAL
 
 class BroadcastServerProtocol(WebSocketServerProtocol):
+    def __init__(self):
+        self.peerstr = ""
+
     def onOpen(self):
         self.factory.register(self)
 
@@ -66,6 +79,18 @@ class BroadcastServerFactory(WebSocketServerFactory):
         self.clients_urls = {}
         self.tick()
 
+    def tick(self):
+        self.tickcount += 1
+        self.checkURLs()
+        reactor.callLater(1, self.tick)
+
+    def sendClientCommand(self, clients, command, data):
+        msg = {"cmd": command, "data": data}
+        msg = json.dumps(msg)
+
+        for client in clients:
+            client.sendMessage(msg)
+
     def jsonChanged(self, json, cachedJSON):
         if cachedJSON is None:
             return True
@@ -78,11 +103,6 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 return cachedJSON != json
 
         return False
-
-    def tick(self):
-        self.tickcount += 1
-        self.checkURLs()
-        reactor.callLater(1, self.tick)
 
     def checkURLs(self):
         threads = []
@@ -99,6 +119,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
         url = urlCache.url
         if self.urlCacheDict[url].errorCount > 5:
             logging.info("Removing cached URL as it has too many errors")
+            self.sendClientCommand(self.urlCacheDict[url].clients, KRT_URL_DROPPED, url)
             del self.urlCacheDict[url]
             return
         if urlCache.pollNeeded():
@@ -111,10 +132,9 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 if self.jsonChanged(jsonObj, self.urlCacheDict[url].cachedJSON):
                     self.urlCacheDict[url].cachedJSON = jsonObj
                     clients = self.urlCacheDict[url].clients
-                    jsonString = json.dumps(jsonObj)
                     logging.info("JSON at {1} Changed, informing {0} client(s)".format(len(clients), url))
-                    for client in clients:
-                        client.sendMessage(jsonString)
+                    data = {"url": url, "data": jsonObj}
+                    self.sendClientCommand(clients, KRT_JSON_DATA, data)
 
                 #Reset error count to reduce cutting of many users
                 #in busy times
@@ -147,12 +167,21 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 break
 
     def clientMessage(self, msg, client):
-        if msg.startswith("http://"):
-            if not msg in self.urlCacheDict:
-                self.urlCacheDict[msg] = CachedURL(msg)
-                self.urlCacheDict[msg].clients = [client, ]
-            else:
-                self.urlCacheDict[msg].clients.append(client)
+        try:
+            data = json.loads(msg)
+            if data["cmd"] == KRT_REGISTER_URL:
+                url = data["data"]
+                if not url in self.urlCacheDict:
+                    logging.info("Created new url {0} for {1}".format(url, client.peer))
+                    self.urlCacheDict[url] = CachedURL(url)
+                    self.urlCacheDict[url].clients = [client, ]
+                else:
+                    logging.info("Added {1} to url {0}".format(url, client.peer))
+                    self.urlCacheDict[url].clients.append(client)
+        except AttributeError as e:
+            pass
+        except ValueError as e:
+            pass
 
 
 def createDeamon():
@@ -165,7 +194,6 @@ def createDeamon():
         sys.exit(0)
 
 if __name__ == '__main__':
-
     if len(sys.argv) > 1 and sys.argv[1] == 'debug':
         log.startLogging(sys.stdout)
         debug = True
@@ -198,8 +226,7 @@ if __name__ == '__main__':
     listenWS(factory)
 
     webdir = File(".")
-    web = Site(webdir)
-    reactor.listenTCP(8080, web)
-
-    logging.info("Starting autobahn server on port {0}".format(PORT))
+    sweb = Site(webdir)
+    reactor.listenTCP(8080, factory)
     reactor.run()
+    logging.info("Starting autobahn server on port {0}".format(PORT))
