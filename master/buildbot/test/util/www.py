@@ -27,6 +27,10 @@ from twisted.web import server
 from uuid import uuid1
 
 
+class FakeSession(object):
+    pass
+
+
 class FakeRequest(object):
     written = ''
     finished = False
@@ -40,7 +44,6 @@ class FakeRequest(object):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-
         x = path.split('?', 1)
         if len(x) == 1:
             self.path = path
@@ -84,6 +87,9 @@ class FakeRequest(object):
             return res
         return d
 
+    def getSession(self):
+        return self.session
+
 
 class RequiresWwwMixin(object):
     # mix this into a TestCase to skip if buildbot-www is not installed
@@ -101,14 +107,18 @@ class WwwTestMixin(RequiresWwwMixin):
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
+        self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
         cfg = dict(url='//', port=None)
         cfg.update(kwargs)
         master.config.www = cfg
+        self.master.session = FakeSession()
+
         return master
 
     def make_request(self, path=None, method='GET'):
         self.request = FakeRequest(path)
+        self.request.session = self.master.session
         self.request.method = method
         return self.request
 

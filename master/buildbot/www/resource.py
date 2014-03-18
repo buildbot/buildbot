@@ -13,7 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.python import log
 from twisted.web import resource
+from twisted.web import server
+from twisted.web.error import Error
+
+
+class Redirect(Error):
+
+    def __init__(self, url):
+        Error.__init__(self, 302, "redirect")
+        self.url = url
 
 
 class Resource(resource.Resource):
@@ -39,6 +50,55 @@ class Resource(resource.Resource):
     def reconfigResource(self, new_config):
         raise NotImplementedError
 
+    def asyncRenderHelper(self, request, _callable, writeError=None):
+        def writeErrorDefault(msg, errcode=400):
+            request.setResponseCode(errcode)
+            request.setHeader('content-type', 'text/plain; charset=utf-8')
+            request.write(msg)
+            request.finish()
+        if writeError is None:
+            writeError = writeErrorDefault
+        try:
+            d = _callable(request)
+        except Exception, e:
+            d = defer.fail(e)
+
+        @d.addErrback
+        def failHttpRedirect(f):
+            f.trap(Redirect)
+            print "redirecting", f.value.url
+            request.redirect(f.value.url)
+            return None
+
+        @d.addErrback
+        def failHttpError(f):
+            f.trap(Error)
+            e = f.value
+            writeError(e.message, errcode=e.status)
+
+        @d.addErrback
+        def fail(f):
+            log.err(f, 'While rendering resource:')
+            try:
+                writeError('internal error - see logs', errcode=500)
+            except Exception:
+                try:
+                    request.finish()
+                except:
+                    pass
+
+        @d.addCallback
+        def finish(s):
+            try:
+                if s is not None:
+                    request.write(s)
+                request.finish()
+            except RuntimeError:  # pragma: no-cover
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
+        return server.NOT_DONE_YET
+
 
 class RedirectResource(Resource):
 
@@ -50,3 +110,8 @@ class RedirectResource(Resource):
         redir = self.base_url + self.basepath
         request.redirect(redir)
         return redir
+
+
+class ConfiguredBase(object):
+    def getConfig(self, request):
+        return {'name': self.name}

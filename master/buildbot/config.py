@@ -25,6 +25,8 @@ from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import safeTranslate
+from buildbot.www import auth
+from buildbot.www import avatar
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
@@ -110,7 +112,9 @@ class MasterConfig(object):
         self.www = dict(
             port=None,
             url='http://localhost:8080/',
-            plugins=dict()
+            plugins=dict(),
+            auth=auth.NoAuth(),
+            avatar_methods=avatar.AvatarGravatar()
         )
 
     _known_config_keys = set([
@@ -558,7 +562,7 @@ class MasterConfig(object):
         www_cfg = config_dict['www']
         allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins'])
+                       'plugins', 'auth', 'avatar_methods'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %

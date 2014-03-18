@@ -692,6 +692,14 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     Thus ``['*']`` will match all origins, and ``['https://*.buildbot.net']`` will match secure sites under ``buildbot.net``.
     The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
 
+``auth``
+   auth module
+
+   ldap ::
+
+       sudo apt-get builddep python-ldap
+       pip install python-ldap
+
 .. bb:cfg:: codebaseGenerator
 
 Codebase Generator
