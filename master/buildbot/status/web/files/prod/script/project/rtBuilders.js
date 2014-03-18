@@ -1,1 +1,1 @@
-define(["jquery","project/realtimePages","helpers","libs/jquery.form"],function(e,t,n,r){var i;return i={init:function(){t.initRealtime(t.buildersPage)}},i});
+define(["jquery","project/realtimePages","helpers","libs/jquery.form"],function(e,t,n,r){var i,s=e("#tablesorterRt").dataTable();return i={init:function(){t.initRealtime(i.processBuilders)},processBuilders:function(e){s.fnClearTable();try{s.fnAddData(e.builders)}catch(t){}}},i});
