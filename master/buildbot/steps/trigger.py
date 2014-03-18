@@ -35,7 +35,7 @@ class Trigger(LoggingBuildStep):
 
     def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={},set_parent_properties=[],
+                 waitForFinish=False, set_properties={},
                  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(
@@ -50,9 +50,6 @@ class Trigger(LoggingBuildStep):
             config.error(
                 "You can't specify both alwaysUseLatest and updateSourceStamp"
             )
-        if set_parent_properties and not waitForFinish:
-            config.error(
-                "You can't specify set_parent_properties and not enable waitForFinish")
         self.schedulerNames = schedulerNames
         self.sourceStamps = sourceStamps or []
         if sourceStamp:
@@ -63,9 +60,11 @@ class Trigger(LoggingBuildStep):
             self.updateSourceStamp = not (alwaysUseLatest or self.sourceStamps)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
-        self.set_properties = set_properties
-        self.copy_properties = copy_properties
-        self.set_parent_properties = set_parent_properties
+        properties = {}
+        properties.update(set_properties)
+        for i in copy_properties:
+            properties[i] = Property(i)
+        self.set_properties = properties
         self.running = False
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
@@ -84,12 +83,8 @@ class Trigger(LoggingBuildStep):
     def createTriggerProperties(self):
         # make a new properties object from a dict rendered by the old
         # properties object
-
         trigger_properties = Properties()
         trigger_properties.update(self.set_properties, "Trigger")
-
-        for i in self.copy_properties:
-            trigger_properties.setProperty(i, self.getProperty(i), 'Trigger')
         return trigger_properties
 
     # Get all scheduler instances that were configured
@@ -199,16 +194,6 @@ class Trigger(LoggingBuildStep):
 
         if brids:
             master = self.build.builder.botmaster.parent
-
-            if self.waitForFinish and self.set_parent_properties:
-                for bn, brid in brids.iteritems():
-                    bdicts = yield master.db.builds.getBuildsForRequest(brid)
-                    for build in bdicts:
-                        build = master.status.getBuilder(bn).getBuildByNumber(build['number'])
-                        for prop_name in self.set_parent_properties:
-                            if build.getProperty(prop_name):
-                                prop_value = build.getProperty(prop_name)
-                                self.setProperty(prop_name, prop_value, "Trigger")
 
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
