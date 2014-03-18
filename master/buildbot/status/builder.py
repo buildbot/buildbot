@@ -279,6 +279,9 @@ class BuilderStatus(styles.Versioned):
 
         return self.friendly_name
 
+    def setFriendlyName(self, name):
+        self.friendly_name = name
+
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 

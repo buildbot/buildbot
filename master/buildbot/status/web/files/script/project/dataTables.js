@@ -5,7 +5,9 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
       
     dataTables = {
         init: function (tablesorterEl) {
-			
+			//Setup sort neutral function
+            dataTables.initSortNeutral();
+
 			// Select which columns not to sort
 			tablesorterEl.each(function(i) {			    	
 				
@@ -313,11 +315,11 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 
 			   	//initialize datatable with options
 			  	var oTable = $(this).dataTable(optionTable);			  				  	
-
+			  	var dtWTop = $('.dataTables_wrapper .top');
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
-	        		// Parse the url and insert current codebases and branches
-	        		helpers.codeBaseBranchOverview();	
+	        		// Parse the url and insert current codebases and branches	        		
+	        		helpers.codeBaseBranchOverview(dtWTop);
 				}
 
 			  	// for the codebases
@@ -328,13 +330,38 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 	  				'</div>');
 				}			  	
 
-			  
-				
 				// Set the marquee in the input field on load and listen for key event	
-				$(this).parents('.dataTables_wrapper').find('.dataTables_filter input').attr('placeholder','Filter results').focus();				
+				$(this).parents('.dataTables_wrapper').find('.dataTables_filter input').attr('placeholder','Filter results').focus();	
+
+				/*
+				$('<div class="reset-sort" title="Reset table sorting"/>')
+					.appendTo(dtWTop)
+					.click(function(){
+                    	oTable.fnSortNeutral();
+                    	return false;
+                	});			
+                */
 
 			});
-		}
+		}, initSortNeutral: function() {
+            //Add the ability to unsort
+            $.fn.dataTableExt.oApi.fnSortNeutral = function ( oSettings )
+            {
+                /* Remove any current sorting */
+                oSettings.aaSorting = [];
+
+                /* Sort display arrays so we get them in numerical order */
+                oSettings.aiDisplay.sort( function (x,y) {
+                    return x-y;
+                } );
+                oSettings.aiDisplayMaster.sort( function (x,y) {
+                    return x-y;
+                } );
+
+                /* Redraw */
+                oSettings.oApi._fnReDraw( oSettings );
+            };
+        }
 	};
 
     return dataTables;

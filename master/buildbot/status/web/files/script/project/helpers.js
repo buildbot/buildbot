@@ -37,15 +37,23 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			// Authorize on every page
 			helpers.authorizeUser();
 
-        	// insert codebase and branch on the builders page
-        	if ($('#builders_page').length && window.location.search != '') {
-        		// Parse the url and insert current codebases and branches
-        		helpers.codeBaseBranchOverview();
-        	}
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
 				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave').find('li'));
 			}			
+
+			if ($('#builddetail_page').length > 0) {
+				helpers.summaryArtifactTests();
+			}
+
+			if ($('#tb-root').length != 0) {
+                //Disabled until we decided that we need an updating front page
+				//helpers.updateBuilders();
+			}
+
+			if ($('#builder_page').length != 0) {				
+				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
+			}
 
        		// submenu overflow on small screens
 
@@ -108,7 +116,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			
 				var path = window.location.pathname.split("\/");
 				
-				 $('.top-menu a').each(function() {
+				 $('.top-menu a').each(function(index) {
+				 	var thishref = this.href.split("\/");
+				 	
 				    if(this.id == path[1].trim().toLowerCase() || (this.id == 'home' && path[1].trim().toLowerCase().length === 0))
 				        $(this).parent().addClass("selected");
 				});
@@ -290,15 +300,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
                     $('#slavesNr').text(arraySlaves.length);
 				}
 			});
-		}, codeBaseBranchOverview: function() {
+		}, codeBaseBranchOverview: function(El) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
-			var parsedUrl = decodedUri.split('&');
+			var parsedUrl = decodedUri.split('&')
 			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
-  			$(cbTable).appendTo($('.dataTables_wrapper .top'));
+  			cbTable.appendTo(El);
 
 			$(parsedUrl).each(function(i){
 
@@ -610,7 +620,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 
-		  	return (value != null) ? unescape(value[1]) : ''; 			
+		  	return (value != null) ?  decodeURI(value[1]) : ''; 
 
 		}, eraseCookie: function (name, value, eraseCookie) {
     		helpers.setCookie(name, value, eraseCookie);

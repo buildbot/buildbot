@@ -80,7 +80,7 @@
 	}
 	tbody tr {		
 		&:hover {		
-			background-color:#fafafa;
+			background-color:#EFEFEF;
 			@include box-shadow(0 0px 12px #FFFFFF inset);
 		}
 	}
@@ -143,7 +143,7 @@
 		padding-left:15px;
 		font-weight: bold;
 		width: 23%;
-	}
+	} 
 	tr th:first-child {
 		padding-left:15px;
 		border-left:1px solid #fff;
@@ -244,17 +244,16 @@
 		}
 	}
 }
- 
+   
  .border-table-holder  {
-	border-left: 2px solid #2B6194;
-    padding: 0 0 0 4px;
+	border-left: 2px solid #2B6194;    
     @include box-shadow (1px 0 0px #FFFFFF inset);
     float: right;
     margin-top: 8px;
-    padding: 0 0 0 4px; 
-    width: 52%;
+    padding: 0 0 0 12px; 
+    width: 88%;
 }
-
+  
 .inner-table-holder {
 	height: 30px;
 	overflow: hidden;
@@ -282,6 +281,9 @@ table.codebase-branch-table {
     	font-weight:bold;
     	padding:0 9px 0;
     }
+    tr th:first-child{
+		padding-left:0;
+    }
     tr:first-child th{
     	padding-bottom: 2px;
     }
@@ -294,7 +296,7 @@ table.codebase-branch-table {
     margin: 15px 0 20px 0;
     float: left;
     .top & {
-	    margin: 13px 0 0 10px;	
+	    margin: 13px 7px 0 10px;	
 	}
     a {
     	&:focus {
@@ -439,6 +441,13 @@ table.codebase-branch-table {
 .top {
 	@include pie-clearfix;
 	margin-bottom:20px;
+	&.branch-overview {
+		.border-table-holder {
+			float: left;
+			border-left:0;		
+			padding-left:0;	
+		}
+	}
 }
 .dataTables_filter  {    
     width: 145px;
