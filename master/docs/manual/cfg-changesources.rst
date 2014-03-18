@@ -565,9 +565,6 @@ P4Source
 The :bb:chsrc:`P4Source` periodically polls a `Perforce <http://www.perforce.com/>`_
 depot for changes. It accepts the following arguments:
 
-``p4base``
-    The base depot path to watch, without the trailing '/...'.
-
 ``p4port``
     The Perforce server to connect to (as :samp:`{host}:{port}`).
 
@@ -576,6 +573,9 @@ depot for changes. It accepts the following arguments:
 
 ``p4passwd``
     The Perforce password.
+
+``p4base``
+    The base depot path to watch, without the trailing '/...'.
 
 ``p4bin``
     An optional string parameter. Specify the location of the perforce command
@@ -590,6 +590,9 @@ depot for changes. It accepts the following arguments:
 
 ``pollInterval``
     How often to poll, in seconds. Defaults to 600 (10 minutes).
+
+``project``
+    The perforce project.
 
 ``pollAtLaunch``
     Determines when the first poll occurs. True = immediately on launch,
