@@ -252,7 +252,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception", "cancelled")
+    possible_modes = ("change", "failing", "passing", "problem", "warnings",
+                      "exception", "cancelled", "force")
 
     def __init__(self, fromaddr, mode=("failing", "passing", "warnings"),
                  categories=None, builders=None, addLogs=False,
@@ -298,6 +299,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                      - "warnings": send mail if a build contain warnings
                      - "exception": send mail if a build fails due to an exception
                      - "cancelled": send mail if a build is cancelled
+                     - "force": send mail to the user who forces a build.
                      - "all": always send mail
                      Defaults to ("failing", "passing", "warnings").
 
@@ -406,6 +408,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                 mode = ("failing", "passing", "warnings", "exception", "cancelled")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
+            elif mode == "force":
+                mode = ("force",)
             else:
                 mode = (mode,)
         for m in mode:
@@ -512,6 +516,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             return False  # ignore this build
 
         prev = self.getPreviousBuild(build)
+        if "force" in self.mode:
+            return True
         if "change" in self.mode:
             if prev and prev.getResults() != results:
                 return True

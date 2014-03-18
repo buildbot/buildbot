@@ -46,7 +46,7 @@ def getChanges(request, options=None):
     return (changes, 'git')
 
 
-def process_change(payload, user, repo, repo_url, project):
+def process_change(payload, user, repo, repo_url, project, codebase=None):
     """
     Consumes the JSON as a python object and actually starts the build.
 
@@ -86,7 +86,8 @@ def process_change(payload, user, repo, repo_url, project):
                 when_timestamp = dateparse(commit['timestamp'])
 
                 log.msg("New revision: %s" % commit['id'][:8])
-                changes.append({
+
+                change = {
                     'author': '%s <%s>' % (
                         commit['author']['name'], commit['author']['email']
                     ),
@@ -98,6 +99,11 @@ def process_change(payload, user, repo, repo_url, project):
                     'revlink': commit['url'],
                     'repository': repo_url,
                     'project': project
-                })
+                }
+
+                if codebase is not None:
+                    change['codebase'] = codebase
+
+                changes.append(change)
 
     return changes

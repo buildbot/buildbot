@@ -237,8 +237,9 @@ The GitLab hook is as simple as GitHub one and it also takes no options. ::
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab``
 relative to the root of the web status. For example, it the grid URL is
 ``http://builds.mycompany.com/bbot/grid``, then point GitLab to
-``http://builds.mycompany.com/change_hook/gitlab``. To specify a project associated
-to the repository, append ``?project=name`` to the URL.
+``http://builds.mycompany.com/change_hook/gitlab``. The project and/or codebase can
+also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
+These parameters will be passed along to the scheduler.
 
 .. warning::
 
@@ -254,7 +255,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     ))
 
-Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -553,6 +554,9 @@ MailNotifier arguments
 
     ``exception``
         Send mail about builds which generate exceptions.
+
+    ``force``
+        Send mail about builds which are forced by the user.
 
     Defaults to (``failing``, ``passing``, ``warnings``).
 
