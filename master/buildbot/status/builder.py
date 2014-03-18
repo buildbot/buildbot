@@ -62,11 +62,12 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category, master):
+    def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
         self.category = category
         self.master = master
         self.project = None
+        self.friendly_name = friendly_name
 
         self.slavenames = []
         self.events = []
@@ -271,6 +272,15 @@ class BuilderStatus(styles.Versioned):
         # str(self.name) may be a workaround
         return self.name
 
+    def getFriendlyName(self):
+        if self.friendly_name is None:
+            return self.name
+
+        return self.friendly_name
+
+    def setFriendlyName(self, name):
+        self.friendly_name = name
+
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
@@ -306,6 +316,15 @@ class BuilderStatus(styles.Versioned):
                 if self.foundCodebasesInBuild(build, codebases):
                     currentBuildsCodebases.append(build)
         return currentBuildsCodebases
+
+    def getCachedBuilds(self, codebases={}):
+        builds = []
+        for id in self.buildCache.keys():
+            build = self.getBuild(id)
+            if len(codebases) == 0 or self.foundCodebasesInBuild(build, codebases):
+                builds.append(build)
+
+        return builds
 
     def getLastFinishedBuild(self):
         b = self.getBuild(-1)
@@ -564,6 +583,8 @@ class BuilderStatus(styles.Versioned):
         result = {}
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
+        result['name'] = self.name
+        result['friendly_name'] = self.getFriendlyName()
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
         result['project'] = self.project
@@ -580,8 +601,9 @@ class BuilderStatus(styles.Versioned):
         current_builds = [b.getNumber() for b in self.currentBuilds]
         cached_builds = list(set(self.buildCache.keys() + current_builds))
         cached_builds.sort()
+        current_builds_dict = [b.asDict() for b in self.currentBuilds]
         result['cachedBuilds'] = cached_builds
-        result['currentBuilds'] = current_builds
+        result['currentBuilds'] = current_builds_dict
         result['state'] = self.getState()[0]
         # lies, but we don't have synchronous access to this info; use
         # asDict_async instead

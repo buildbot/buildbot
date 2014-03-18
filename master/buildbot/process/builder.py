@@ -86,7 +86,7 @@ class Builder(config.ReconfigurableServiceMixin,
             self.builder_status = self.master.status.builderAdded(
                     builder_config.name,
                     builder_config.builddir,
-                    builder_config.category)
+                    builder_config.category, builder_config.friendly_name)
 
         self.config = builder_config
 
@@ -94,6 +94,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
         self.builder_status.setProject(builder_config.project)
+        self.builder_status.setFriendlyName(builder_config.friendly_name)
 
         return defer.succeed(None)
 

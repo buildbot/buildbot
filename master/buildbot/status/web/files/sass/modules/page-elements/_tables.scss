@@ -172,7 +172,12 @@
     margin-top: 8px;
     padding: 0 0 0 10px; 
     width: 86%;
+    .branch-overview & {
+    	float: left;
+    }
 }
+
+
   
 .inner-table-holder {
 	height: 30px;

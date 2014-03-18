@@ -81,13 +81,16 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                                 'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout("1"),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '1:1',
                                 '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout(os.linesep.join(['0:64a5dc2', '1:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '64a5dc2',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                os.linesep.join(['--template={date|hgdate}',
+                                '{author}',
+                                '{files}',
+                                '{desc|strip}']))
                 .path('/some/dir').stdout(os.linesep.join([
                     '1273258009.0 -7200',
                     'Joe Test <joetest@example.org>',
@@ -96,7 +99,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                     'Comment for rev 0',
                     ''])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                os.linesep.join(['--template={date|hgdate}',
+                                '{author}',
+                                '{files}',
+                                '{desc|strip}']))
                 .path('/some/dir').stdout(os.linesep.join([
                     '1273258100.0 -7200',
                     'Bob Test <bobtest@example.org>',
@@ -155,7 +161,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                             'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
         )
 
@@ -172,13 +178,16 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                             'ssh://example.com/foo/baz')
                 .path('/some/dir'),
-            gpo.Expect('hg', 'heads', 'default', '--template={rev}\n')
+            gpo.Expect('hg', 'heads', 'default', '--template={rev}' + os.linesep)
                 .path('/some/dir').stdout('5' + os.linesep),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
                             '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                '--template={date|hgdate}\n{author}\n{files}\n{desc|strip}')
+                os.linesep.join(['--template={date|hgdate}',
+                                '{author}',
+                                '{files}',
+                                '{desc|strip}']))
                 .path('/some/dir').stdout(os.linesep.join([
                         '1273258009.0 -7200',
                         'Joe Test <joetest@example.org>',

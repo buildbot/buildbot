@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import copy
 
 import logging
 from zope.interface import implements
@@ -23,7 +24,63 @@ from buildbot.util import ComparableMixin
 from buildbot import config, interfaces
 from buildbot.util.state import StateMixin
 
-class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
+
+class ScheduleOnMultipleSlavesMixin(object):
+    """
+    A mixin that allows you to schedule the build on all available
+    slaves
+    """
+    def shouldBuildOnAllSlaves(self, properties=None):
+        if properties is None and hasattr(self, 'properties'):
+            properties = self.properties
+
+        if properties is not None:
+            if properties.hasProperty("run_all_slaves"):
+                return properties.getProperty("run_all_slaves", False)
+            elif properties.hasProperty("selected_slave"):
+                return properties.getProperty("selected_slave") == "allCompatible"
+
+
+        return False
+
+    def addBuildForEachSlave(self, function, **kwargs):
+        #Check for properties existing
+        properties = None
+        if kwargs.has_key('properties'):
+            properties = kwargs['properties']
+
+        if properties is None and hasattr(self, 'properties'):
+            properties = self.properties
+
+        if properties is None:
+            log.msg("Unable to start build as no properties were found")
+            return False
+
+        #Get all the slaves
+        slaves = []
+        if kwargs.has_key("builderNames"):
+            builder_name = kwargs["builderNames"][0]
+        else:
+            builder_name = self.builderNames[0]
+        builder = None
+        for b in self.master.botmaster.getBuilders():
+            if b.name == builder_name:
+                builder = b
+
+        if builder is not None:
+            slaves = builder.slaves
+
+        output = []
+        for s in slaves:
+            if s.slave.slavename is not None and s.slave.isConnected():
+                copy_properties = copy.deepcopy(properties)
+                copy_properties.setProperty("selected_slave", s.slave.slavename, "Scheduler")
+                kwargs['properties'] = copy_properties
+                output.append(function(**kwargs))
+
+        return output
+
+class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleOnMultipleSlavesMixin):
     """
     Base class for all schedulers; this provides the equipment to manage
     reconfigurations and to handle basic scheduler state.  It also provides
