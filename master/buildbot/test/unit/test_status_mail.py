@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import re
+import sys
 
 from buildbot import config
 from buildbot.config import ConfigErrors
@@ -219,7 +219,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org',
                           buildSetSummary=True,
-                          mode=("failing", "passing", "warnings"),
+                          mode=("failing", "passing", "warnings", "force"),
                           builders=["Builder1", "Builder2"])
 
         mn.buildMessage = fakeBuildMessage
