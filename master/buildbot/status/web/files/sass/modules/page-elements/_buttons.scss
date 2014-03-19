@@ -198,25 +198,6 @@ a.grey-btn,
     text-shadow: 1px 1px 1px #FFFFFF;
 }
 
-.reset-sort {
-    cursor: pointer;
-    margin-top: 15px;    
-    float:left;  
-
-    &:hover:after {
-        color:#2B6194;    
-    }
-
-    &:after {
-        color:#717171;
-        @include text-shadow (1px 1px 0 #FFF);
-        font-size: 17px;
-        content: "";
-        font-family: katana_icons;
-    }
-    
-}
-
 @include breakpoint($bkpt-small) {
     .codebases .grey-btn {
         //float:left;   
