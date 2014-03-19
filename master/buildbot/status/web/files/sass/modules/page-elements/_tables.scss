@@ -6,7 +6,7 @@
 	overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
- 
+  
 .table-1,
 .table-2 {
 	width:100%;
@@ -169,7 +169,7 @@
     float: right;
     margin-top: 8px;
     padding: 0 0 0 10px; 
-    width: 86%;
+    width: 88%;
     .branch-overview & {
     	float: left;
     }
@@ -503,7 +503,7 @@ table.codebase-branch-table {
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {
-		width: 67%;
+		width: 69%;
 	}
 }
 
@@ -519,18 +519,18 @@ table.codebase-branch-table {
 		overflow: visible;	 	
 	}
 	.border-table-holder  {
-		width: 80%;
+		width: 82%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
 	.border-table-holder  {
-		width: 85%;
+		width: 87%;
 	}
 }
 
 @include breakpoint($bkpt-xxlarge) {
 	.border-table-holder  {
-		width: 86%;
+		width: 88%;
 	}
 }
