@@ -16,6 +16,7 @@
 	@include text-shadow(0 1px 0 #FFFFFF);
 	@include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
 	padding:8px 8px 8px 8px;
+	z-index:1000;
 }
 // used on status messages together with the color class
 .result {

@@ -93,23 +93,26 @@ define(['screensize'], function (screenSize) {
 				var toolTipCont = $('<div class="tooltip-cont" />');
 				this.t = this.title;
 				this.title = "";
-				var cursorPosTop = e.pageY;
-				var cursorPosLeft = e.pageX;
-				toolTipCont.html(this.t);
-				toolTipCont.appendTo('body')
+				var cursorPosTop = e.pageY + 5;
+				var cursorPosLeft = e.pageX + 5;
+				$(e.target).click(function(){
+					toolTipCont.remove();					
+				});	
+				toolTipCont.html(this.t)
+				.appendTo('body')
 				.css({'top':cursorPosTop,'left':cursorPosLeft})
-				.delay(250)
+				.delay(600)
 				.fadeIn('250')
-				.delay(3000)
-				.fadeOut('250');					        				    
-
+				.delay(10000)
+				.fadeOut('250', function(){					
+					$(this).remove();
+				});
 			}, function() {
 				this.title = this.t;
 				var toolTipCont = $('.tooltip-cont');	
 				toolTipCont.remove();
-			})
-
-
+			});
+			
 		}, authorizeUser: function() {
 
 			// the current url

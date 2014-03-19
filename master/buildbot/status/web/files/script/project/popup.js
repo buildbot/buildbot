@@ -30,7 +30,7 @@ define(['helpers'], function (helpers) {
 			// popbox for ajaxcontent
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
-				popup.externalContentPopup($(this));
+				popup.externalContentPopup($(this));				
 			});
 
 		}, validateForm: function(formContainer) { // validate the forcebuildform
@@ -208,7 +208,7 @@ define(['helpers'], function (helpers) {
 				preloader.remove();
 				$(data).appendTo(exContent);
 
-				
+				helpers.tooltip($('.tooltip'));
 				// Insert full name from cookie
 				if (contentType === 'form') {
 					helpers.setFullName($("#usernameDisabled, #usernameHidden", exContent));	
