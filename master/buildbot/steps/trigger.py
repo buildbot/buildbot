@@ -212,7 +212,7 @@ class Trigger(LoggingBuildStep):
                     if was_cb:
                         for build in builddicts:
                             bn = brid_to_bn[build['brid']]
-                            friendly_name = self.build.build_status.builder.getFriendlyName()
+                            friendly_name = master.getStatus().getBuilder(bn).friendly_name
                             num = build['number']
                             url = yield master.status.getURLForBuildRequest(build['brid'], bn, num, friendly_name)
                             self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
