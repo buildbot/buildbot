@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers'], function (dataTable,helpers) {
+define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,helpers, naturalSort) {
 
     "use strict";
     var dataTables;
@@ -6,14 +6,15 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
     dataTables = {
         init: function () {
             //Setup sort neutral function
-            dataTables.initSortNeutral();
+            dataTables.initSortNatural();
 
 			// Colums with sorting
 							
 			var tablesorterEl = $('.tablesorter-js');				
 
 			// Select which columns not to sort
-			tablesorterEl.each(function(i){
+			tablesorterEl.each(function(i, tableElem){
+                var $tableElem = $(tableElem);
 				var colList = [];
 
 				var optionTable = {
@@ -31,7 +32,7 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 					"bSearchable": true,
 					"aaSorting": [],
 					"iDisplayLength": 50,
-					"bStateSave": true,
+					"bStateSave": false
 
 					//"fnDrawCallback": function( oSettings ) {
 				     // alert( 'DataTables has redrawn the table' );
@@ -80,7 +81,26 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 			    });
 
 			    optionTable.aoColumns = colList;
-			    
+
+                if (tableElem.hasAttribute("data-default-sort-col")) {
+                    var defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
+                    var sort = $tableElem.attr("data-default-sort-dir") || "asc";
+                    var cols = $tableElem.find('tr')[0].cells.length;
+                    var aoColumns = [];
+
+                    optionTable.aaSorting = [[defaultSortCol, sort]];
+
+                    for (var i=0; i < cols; i++) {
+                        if (defaultSortCol === i) {
+                            aoColumns.push({ "sType": "natural" });
+                        }
+                        else {
+                            aoColumns.push(null);
+                        }
+                    }
+                    optionTable.aoColumns = aoColumns;
+                }
+
 			   	//initialize datatable with options
 			  	var oTable = $(this).dataTable(optionTable);			  	
 			  	var dtWTop = $('.dataTables_wrapper .top');
@@ -105,33 +125,22 @@ define(['datatables-plugin','helpers'], function (dataTable,helpers) {
 				filterTableInput.attr('placeholder','Filter results').focus().keydown(function(event) {
 					oTable.fnFilter($(this).val());
 				});
-				
-				$('<div class="reset-sort" title="Reset table sorting"/>')
-					.appendTo(dtWTop)
-					.click(function(){
-                    	oTable.fnSortNeutral();
-                    	return false;
-                	});
 
 			});
-		}, initSortNeutral: function() {
-            //Add the ability to unsort
-            $.fn.dataTableExt.oApi.fnSortNeutral = function ( oSettings )
-            {
-                /* Remove any current sorting */
-                oSettings.aaSorting = [];
+		}, initSortNatural: function() {
+            //Add the ability to sort naturally
+            jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+                "natural-pre": function(a) {
+                    return $(a).text().trim();
+                },
+                "natural-asc": function ( a, b ) {
+                    return naturalSort.sort(a,b);
+                },
 
-                /* Sort display arrays so we get them in numerical order */
-                oSettings.aiDisplay.sort( function (x,y) {
-                    return x-y;
-                } );
-                oSettings.aiDisplayMaster.sort( function (x,y) {
-                    return x-y;
-                } );
-
-                /* Redraw */
-                oSettings.oApi._fnReDraw( oSettings );
-            };
+                "natural-desc": function ( a, b ) {
+                    return naturalSort.sort(a,b) * -1;
+                }
+            } );
         }
 	};
 
