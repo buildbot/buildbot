@@ -581,7 +581,7 @@ table.codebase-branch-table {
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {
-		width: 50%;
+		width: 80%;
 	}
 }
 
@@ -597,18 +597,18 @@ table.codebase-branch-table {
 		overflow: visible;	 	
 	}
 	.border-table-holder  {
-		width: 28%;
+		width: 80%;
 	}
 }
 
 @include breakpoint($bkpt-xlarge) {
 	.border-table-holder  {
-		width: 50%;
+		width: 86%;
 	}
 }
 
 @include breakpoint($bkpt-xxlarge) {
 	.border-table-holder  {
-		width: 53%;
+		width: 88%;
 	}
 }

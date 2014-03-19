@@ -2836,7 +2836,7 @@ table.codebase-branch-table tr:first-child th {
 @media (min-width: 571px) and (max-width: 1024px) {
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003583}}
   .border-table-holder {
-    width: 50%;
+    width: 80%;
   }
 }
 @media (min-width: 0) and (max-width: 1025px) {
@@ -2854,19 +2854,19 @@ table.codebase-branch-table tr:first-child th {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003599}}
   .border-table-holder {
-    width: 28%;
+    width: 80%;
   }
 }
 @media (min-width: 1400px) {
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003605}}
   .border-table-holder {
-    width: 50%;
+    width: 86%;
   }
 }
 @media (min-width: 1600px) {
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_tables\.scss}line{font-family:\00003611}}
   .border-table-holder {
-    width: 53%;
+    width: 88%;
   }
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/modules\/page-elements\/_forms\.scss}line{font-family:\000033}}
