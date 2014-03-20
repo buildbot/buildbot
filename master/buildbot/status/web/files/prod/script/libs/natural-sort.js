@@ -1,0 +1,6 @@
+/*
+ * Natural Sort algorithm for Javascript - Version 0.7 - Released under MIT license
+ * Author: Jim Palmer (based on chunking idea from Dave Koelle)
+ */
+
+define([],function(){var e={sort:function(t,n){var r=/(^-?[0-9]+(\.?[0-9]*)[df]?e?[0-9]?$|^0x[0-9a-f]+$|[0-9]+)/gi,i=/(^[ ]*|[ ]*$)/g,s=/(^([\w ]+,?[\w ]+)?[\w ]+,?[\w ]+\d+:\d+(:\d+)?[\w ]?|^\d{1,4}[\/\-]\d{1,4}[\/\-]\d{1,4}|^\w+, \w+ \d+, \d{4})/,o=/^0x[0-9a-f]+$/i,u=/^0/,a=function(t){return e.insensitive&&(""+t).toLowerCase()||""+t},f=a(t).replace(i,"")||"",l=a(n).replace(i,"")||"",c=f.replace(r,"\0$1\0").replace(/\0$/,"").replace(/^\0/,"").split("\0"),h=l.replace(r,"\0$1\0").replace(/\0$/,"").replace(/^\0/,"").split("\0"),p=parseInt(f.match(o))||c.length!=1&&f.match(s)&&Date.parse(f),d=parseInt(l.match(o))||p&&l.match(s)&&Date.parse(l)||null,v,m;if(d){if(p<d)return-1;if(p>d)return 1}for(var g=0,y=Math.max(c.length,h.length);g<y;g++){v=!(c[g]||"").match(u)&&parseFloat(c[g])||c[g]||0,m=!(h[g]||"").match(u)&&parseFloat(h[g])||h[g]||0;if(isNaN(v)!==isNaN(m))return isNaN(v)?1:-1;typeof v!=typeof m&&(v+="",m+="");if(v<m)return-1;if(v>m)return 1}return 0}};return e});

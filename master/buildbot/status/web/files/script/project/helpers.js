@@ -85,7 +85,34 @@ define(['screensize'], function (screenSize) {
 			$('#authUserBtn').click(function(e){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
+			helpers.tooltip($('.tooltip'));
 
+		}, tooltip: function (el) {
+			
+			el.hover(function(e) {
+				var toolTipCont = $('<div class="tooltip-cont" />');
+				this.t = this.title;
+				this.title = "";
+				var cursorPosTop = e.pageY + 5;
+				var cursorPosLeft = e.pageX + 5;
+				$(e.target).click(function(){
+					toolTipCont.remove();					
+				});	
+				toolTipCont.html(this.t)
+				.appendTo('body')
+				.css({'top':cursorPosTop,'left':cursorPosLeft})
+				.delay(600)
+				.fadeIn('250')
+				.delay(10000)
+				.fadeOut('250', function(){					
+					$(this).remove();
+				});
+			}, function() {
+				this.title = this.t;
+				var toolTipCont = $('.tooltip-cont');	
+				toolTipCont.remove();
+			});
+			
 		}, authorizeUser: function() {
 
 			// the current url
@@ -388,7 +415,19 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart', function(e){
+			var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
+	
+			var closeBtn = $('.close-btn').add(document);
+
+			if (isWindows) {
+				var hasSelect2 = boxElement.find('.select-tools-js').length;
+				if (hasSelect2) {
+					closeBtn = closeBtn.not(document);
+				}
+			} 
+
+			closeBtn.bind('click touchstart', function(e){
+
 				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
 					
 					if (clearEl === undefined ) {
@@ -400,7 +439,9 @@ define(['screensize'], function (screenSize) {
 					}
 					
 					$(this).unbind(e);
+				
 				}
+
 			});	
 		}
 	};

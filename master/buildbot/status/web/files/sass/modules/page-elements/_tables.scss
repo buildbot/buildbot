@@ -6,9 +6,7 @@
 	overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
-
-
- 
+  
 .table-1,
 .table-2 {
 	width:100%;
@@ -168,11 +166,16 @@
  .border-table-holder  {
 	border-left: 2px solid #2B6194;    
     @include box-shadow (1px 0 0px #FFFFFF inset);
-    float: left;
+    float: right;
     margin-top: 8px;
     padding: 0 0 0 10px; 
     width: 88%;
+    .branch-overview & {
+    	float: left;
+    }
 }
+
+
   
 .inner-table-holder {
 	height: 30px;
@@ -216,7 +219,7 @@ table.codebase-branch-table {
     margin: 15px 0 20px 0;
     float: left;
     .top & {
-	    margin: 13px 0 0 10px;	
+	    margin: 13px 15px 0 10px;	
 	}
     a {
     	&:focus {
@@ -346,7 +349,7 @@ table.codebase-branch-table {
     }
 }
 
-
+ 
 
 .filter-table-input {
 	margin-bottom:25px;
