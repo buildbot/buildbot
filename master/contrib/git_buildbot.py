@@ -57,7 +57,7 @@ repository = None
 project = None
 
 # When sending the notification, send this codebase.  If this is None, no
-# codebase will be sent.  This can also be set via --project
+# codebase will be sent.  This can also be set via --codebase
 
 codebase = None
 
