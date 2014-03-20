@@ -16,6 +16,7 @@
 
 import time
 import os
+import sys
 from twisted.python import log
 from twisted.internet import defer, utils
 
@@ -109,8 +110,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
+            if sys.platform != 'win32':
+                linesep = os.linesep
+            else:
+                linesep = '\n'
             date, author, comments = output.decode(self.encoding, "replace").split(
-                os.linesep, 2)
+                linesep, 2)
 
             if not self.usetimestamps:
                 stamp = None
