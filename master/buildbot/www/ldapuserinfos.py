@@ -45,7 +45,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
             res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [
                 self.accountEmail, self.accountFullName, 'dn'] + self.accountExtraFields)
             if len(res) != 1:
-                raise ValueError("ldap search %s return %d results" % (pattern, len(res)))
+                raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
             dn, ldap_infos = res[0]
             infos['full_name'] = ldap_infos[self.accountFullName][0]
             infos['email'] = ldap_infos[self.accountEmail][0]
