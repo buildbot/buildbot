@@ -63,11 +63,23 @@ class Resource(resource.Resource):
         except Exception, e:
             d = defer.fail(e)
 
+        @d.addCallback
+        def finish(s):
+            try:
+                if s is not None:
+                    request.write(s)
+                request.finish()
+            except RuntimeError:  # pragma: no-cover
+                # this occurs when the client has already disconnected; ignore
+                # it (see #2027)
+                log.msg("http client disconnected before results were sent")
+
         @d.addErrback
         def failHttpRedirect(f):
             f.trap(Redirect)
             print "redirecting", f.value.url
             request.redirect(f.value.url)
+            request.finish()
             return None
 
         @d.addErrback
@@ -87,16 +99,6 @@ class Resource(resource.Resource):
                 except:
                     pass
 
-        @d.addCallback
-        def finish(s):
-            try:
-                if s is not None:
-                    request.write(s)
-                request.finish()
-            except RuntimeError:  # pragma: no-cover
-                # this occurs when the client has already disconnected; ignore
-                # it (see #2027)
-                log.msg("http client disconnected before results were sent")
         return server.NOT_DONE_YET
 
 

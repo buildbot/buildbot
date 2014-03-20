@@ -153,6 +153,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /sse
         root.putChild('sse', sse.EventResource(self.master))
 
+        self.root = root
         self.site = server.Site(root)
 
         # todo: need to store session infos in the db for multimaster

@@ -36,7 +36,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
         # test hook point
         return ldap
 
-    def getUserInfos(self, username):
+    def updateUserInfos(self, username):
         def thd():
             infos = {'username': username}
             l = self.getLdap().initialize(self.uri)
@@ -71,7 +71,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
         # ignore unknown image format
         return None
 
-    def getUserAvatar(self, user_email, size):
+    def getUserAvatar(self, user_email, size, defaultAvatarUrl):
         def thd():
             l = self.getLdap().initialize(self.uri)
             l.simple_bind_s(self.bind_user, self.bind_pw)

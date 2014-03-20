@@ -3,6 +3,7 @@ import sanction
 from buildbot.www import auth, resource
 from twisted.internet import defer
 from twisted.internet import threads
+from posixpath import join
 
 
 class OAuth2LoginResource(auth.LoginResource):
@@ -31,6 +32,9 @@ class OAuth2Auth(auth.AuthBase):
 
     def __init__(self, authUri, tokenUri, clientId,
                  authUriConfig, tokenConfig):
+
+        # userInfos are populated by the auth plugin directly
+        auth.AuthBase.__init__(self, userInfos=None)
         self.authUri = authUri
         self.tokenUri = tokenUri
         self.clientId = clientId
@@ -39,7 +43,7 @@ class OAuth2Auth(auth.AuthBase):
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = new_config.www['url'] + "login"
+        self.loginUri = join(new_config.www['url'], "login")
         self.homeUri = new_config.www['url']
 
     def getConfig(self, request):
@@ -124,8 +128,8 @@ class GithubAuth(OAuth2Auth):
 
     def getUserInfosFromOAuthClient(self, c):
         user = c.request('/user')
-        orgs = c.request('/users/' + user['login'] + "/orgs")
+        orgs = c.request(join('/users', user['login'], "orgs"))
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
-                    orgs=[org['login'] for org in orgs])
+                    groups=[org['login'] for org in orgs])

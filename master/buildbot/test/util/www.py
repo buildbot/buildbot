@@ -20,6 +20,7 @@ import pkg_resources
 import urllib
 
 from buildbot.test.fake import fakemaster
+from buildbot.www import auth
 from buildbot.util import json
 from cStringIO import StringIO
 from twisted.internet import defer
@@ -35,6 +36,7 @@ class FakeRequest(object):
     written = ''
     finished = False
     redirected_to = None
+    rendered_resource = None
     failure = None
     method = 'GET'
     path = '/req.path'
@@ -61,6 +63,10 @@ class FakeRequest(object):
 
     def redirect(self, url):
         self.redirected_to = url
+
+    def render(self, rsrc):
+        rendered_resource = rsrc
+        self.deferred.callback(rendered_resource)
 
     def finish(self):
         self.finished = True
@@ -109,7 +115,7 @@ class WwwTestMixin(RequiresWwwMixin):
         master = fakemaster.make_master(wantData=True, testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
-        cfg = dict(url='//', port=None)
+        cfg = dict(url='//', port=None, auth=auth.NoAuth())
         cfg.update(kwargs)
         master.config.www = cfg
         self.master.session = FakeSession()
@@ -123,7 +129,8 @@ class WwwTestMixin(RequiresWwwMixin):
         return self.request
 
     def render_resource(self, rsrc, path='/', accept=None, method='GET',
-                        origin=None, access_control_request_method=None):
+                        origin=None, access_control_request_method=None,
+                        extraHeaders=None):
         request = self.make_request(path, method=method)
         if accept:
             request.input_headers['accept'] = accept
@@ -132,6 +139,8 @@ class WwwTestMixin(RequiresWwwMixin):
         if access_control_request_method:
             request.input_headers['access-control-request-method'] = \
                 access_control_request_method
+        if extraHeaders is not None:
+            request.input_headers.update(extraHeaders)
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:

@@ -16,6 +16,7 @@
 import hashlib
 import urllib
 
+from urlparse import urljoin
 from buildbot.www import resource
 from twisted.internet import defer
 
@@ -23,27 +24,29 @@ from twisted.internet import defer
 class AvatarBase(resource.ConfiguredBase):
     name = "noavatar"
 
-    def getUserAvatar(self, email, size):
-        raise NotImplemented()
+    def getUserAvatar(self, email, size, defaultAvatarUrl):
+        raise NotImplementedError()
 
 
 class AvatarGravatar(AvatarBase):
     name = "gravatar"
 
-    def getUserAvatar(self, email, size):
+    def getUserAvatar(self, email, size, defaultAvatarUrl):
         # construct the url
         gravatar_url = "//www.gravatar.com/avatar/"
         gravatar_url += hashlib.md5(email.lower()).hexdigest() + "?"
-        gravatar_url += urllib.urlencode({'s': str(size)})
+        gravatar_url += urllib.urlencode({'s': str(size), 'd': defaultAvatarUrl})
         raise resource.Redirect(gravatar_url)
 
 
 class AvatarResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
+    defaultAvatarUrl = "img/nobody.png"
 
     def reconfigResource(self, new_config):
-        self.avatarMethods = new_config.www['avatar_methods']
+        self.avatarMethods = new_config.www.get('avatar_methods', [])
+        self.defaultAvatarFullUrl = urljoin(new_config.www['url'], self.defaultAvatarUrl)
         self.cache = {}
         # ensure the avatarMethods is a iterable
         if isinstance(self.avatarMethods, AvatarBase):
@@ -60,7 +63,7 @@ class AvatarResource(resource.Resource):
             r = self.cache[email]
         for method in self.avatarMethods:
             try:
-                res = yield method.getUserAvatar(email, size)
+                res = yield method.getUserAvatar(email, size, self.defaultAvatarFullUrl)
             except resource.Redirect, r:
                 self.cache[email] = r
                 raise
@@ -68,5 +71,5 @@ class AvatarResource(resource.Resource):
                 request.setHeader('content-type', res[0])
                 request.setHeader('content-length', len(res[1]))
                 request.write(res[1])
-                defer.returnValue(None)
-        defer.returnValue("")
+                return
+        raise resource.Redirect(self.defaultAvatarUrl)

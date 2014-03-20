@@ -40,6 +40,9 @@ class AuthBase(resource.ConfiguredBase):
             userInfos = UserInfosBase()
         self.userInfos = userInfos
 
+    def reconfigAuth(self, master, new_config):
+        self.master = master
+
     def maybeAutoLogin(self, request):
         return defer.succeed(False)
 
@@ -50,17 +53,17 @@ class AuthBase(resource.ConfiguredBase):
         return LoginResource(master)
 
     @defer.inlineCallbacks
-    def getUserInfos(self, request):
+    def updateUserInfos(self, request):
         session = request.getSession()
         if self.userInfos is not None:
-            infos = yield self.userInfos.getUserInfos(session.user_infos['username'])
+            infos = yield self.userInfos.updateUserInfos(session.user_infos['username'])
             session.user_infos.update(infos)
 
 
 class UserInfosBase(resource.ConfiguredBase):
     name = "noinfo"
 
-    def getUserInfos(self, username):
+    def updateUserInfos(self, username):
         return defer.succeed({'email': username})
 
 
@@ -83,21 +86,24 @@ class RemoteUserAuth(AuthBase):
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):
         header = request.getHeader(self.header)
+        if header is None:
+            raise Error(403, "missing http header %s. Check your reverse proxy config!" % (
+                             self.header))
         res = self.headerRegex.match(header)
         if res is None:
-            raise Error(403, "http header does not match regex %s %s" % (header,
-                                                                         self.headerRegex.pattern))
+            raise Error(403, 'http header does not match regex! "%s" not matching %s' %
+                        (header, self.headerRegex.pattern))
         session = request.getSession()
         if not hasattr(session, "user_infos"):
             session.user_infos = dict(res.groupdict())
-            yield self.getUserInfos(request)
+            yield self.updateUserInfos(request)
         defer.returnValue(True)
 
     def authenticateViaLogin(self, request):
         raise Error(403, "should authenticate via reverse proxy")
 
 
-class authRealm(object):
+class AuthRealm(object):
     implements(IRealm)
 
     def __init__(self, master, auth):
@@ -121,7 +127,7 @@ class TwistedICredAuthBase(AuthBase):
         self.checkers = checkers
 
     def getLoginResource(self, master):
-        return HTTPAuthSessionWrapper(Portal(authRealm(master, self), self.checkers),
+        return HTTPAuthSessionWrapper(Portal(AuthRealm(master, self), self.checkers),
                                       self.credentialFactories)
 
 
@@ -192,7 +198,6 @@ class LoginResource(resource.Resource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         yield self.auth.authenticateViaLogin(request)
-        defer.returnValue("")
 
 
 class PreAuthenticatedLoginResource(LoginResource):
@@ -209,7 +214,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     def renderLogin(self, request):
         session = request.getSession()
         session.user_infos = dict(username=self.username)
-        yield self.auth.getUserInfos(request)
+        yield self.auth.updateUserInfos(request)
 
 
 class LogoutResource(resource.Resource):
