@@ -23,6 +23,7 @@ import textwrap
 
 from buildbot import buildslave
 from buildbot import config
+from buildbot import util
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import revlinks
@@ -58,7 +59,9 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
-    www=dict(port=None, url='http://localhost:8080/', plugins={}),
+    www=dict(port=None, url='http://localhost:8080/', plugins={},
+             auth={'name': 'noauth'},
+             avatar_methods={'name': 'gravatar'}),
 )
 
 
@@ -190,6 +193,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(cfg, attr))
             for attr, exp in expected.iteritems()])
+        got = util.ConfiguredMixin.getConfigFromThing(got)
         self.assertEqual(got, expected)
 
     def test_defaults_validation(self):
@@ -348,6 +352,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(self.cfg, attr))
             for attr, exp in expected.iteritems()])
+        got = util.ConfiguredMixin.getConfigFromThing(got)
         self.assertEqual(got, expected)
 
     # tests
@@ -794,25 +799,30 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_www_default(self):
         self.cfg.load_www(self.filename, {})
         self.assertResults(www=dict(port=None, url='http://localhost:8080/',
-                                    plugins={}))
+                                    plugins={}, auth={'name': 'noauth'},
+                                    avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_port(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(port=9888)))
         self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
-                                    plugins={}))
+                                    plugins={}, auth={'name': 'noauth'},
+                                    avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_plugin(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(plugins={'waterfall': {'foo': 'bar'}})))
         self.assertResults(www=dict(port=None, url='http://localhost:8080/',
-                                    plugins={'waterfall': {'foo': 'bar'}}))
+                                    plugins={'waterfall': {'foo': 'bar'}},
+                                    auth={'name': 'noauth'},
+                                    avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_url_no_slash(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(url='http://foo', port=20)))
         self.assertResults(www=dict(port=20, url='http://foo/',
-                                    plugins={}))
+                                    plugins={}, auth={'name': 'noauth'},
+                                    avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_allowed_origins(self):
         self.cfg.load_www(self.filename,
@@ -820,7 +830,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                         allowed_origins=['a', 'b'])))
         self.assertResults(www=dict(port=None, url='http://foo/',
                                     allowed_origins=['a', 'b'],
-                                    plugins={}))
+                                    plugins={}, auth={'name': 'noauth'},
+                                    avatar_methods={'name': 'gravatar'}
+                                    ))
 
     def test_load_www_unknown(self):
         self.cfg.load_www(self.filename,

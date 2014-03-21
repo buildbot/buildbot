@@ -110,6 +110,25 @@ class ComparableMixin:
         return cmp(self_list, them_list)
 
 
+class ConfiguredMixin(object):
+    def getConfig(self):
+        return {'name': self.name}
+
+    @staticmethod
+    def getConfigFromThing(config):
+        if isinstance(config, dict):
+            return dict([(k, ConfiguredMixin.getConfigFromThing(v))
+                         for k, v in config.items()])
+        if isinstance(config, list):
+            return [(ConfiguredMixin.getConfigFromThing(v))
+                    for v in config]
+        # we return untouched mocks, but try to not import the module here
+        if hasattr(config, "getConfig") and not config.__class__.__name__ == "Mock":
+            return config.getConfig()
+        else:
+            return config
+
+
 def diffSets(old, new):
     if not isinstance(old, set):
         old = set(old)

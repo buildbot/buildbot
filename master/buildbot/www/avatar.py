@@ -19,9 +19,10 @@ import urllib
 from urlparse import urljoin
 from buildbot.www import resource
 from twisted.internet import defer
+from buildbot import util
 
 
-class AvatarBase(resource.ConfiguredBase):
+class AvatarBase(util.ConfiguredMixin):
     name = "noavatar"
 
     def getUserAvatar(self, email, size, defaultAvatarUrl):

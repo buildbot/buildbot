@@ -46,16 +46,12 @@ class OAuth2Auth(auth.AuthBase):
         self.loginUri = join(new_config.www['url'], "login")
         self.homeUri = new_config.www['url']
 
-    def getConfig(self, request):
+    def getConfig(self):
         return dict(name=self.name,
                     oauth2=True,
                     fa_icon=self.faIcon
                     )
         pass
-
-    def getSanction(self):
-        # test hook point
-        return sanction
 
     def getLoginResource(self, master):
         return OAuth2LoginResource(master, self)
@@ -69,7 +65,7 @@ class OAuth2Auth(auth.AuthBase):
         return threads.deferToThread(thd)
 
     def verifyCode(self, code):
-        def thd():
+        def thd():  # everything in deferToThread is not counted with trial  --coverage :-(
             c = sanction.Client(token_endpoint=self.tokenUri,
                                 client_id=self.clientId,
                                 **self.tokenConfig)
@@ -106,6 +102,7 @@ class GoogleAuth(OAuth2Auth):
     def getUserInfosFromOAuthClient(self, c):
         data = c.request('/userinfo')
         return dict(full_name=data["name"],
+                    username=data['sub'],
                     email=data["email"],
                     avatar_url=data["picture"])
 

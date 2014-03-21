@@ -77,7 +77,6 @@ class Resource(resource.Resource):
         @d.addErrback
         def failHttpRedirect(f):
             f.trap(Redirect)
-            print "redirecting", f.value.url
             request.redirect(f.value.url)
             request.finish()
             return None
@@ -112,8 +111,3 @@ class RedirectResource(Resource):
         redir = self.base_url + self.basepath
         request.redirect(redir)
         return redir
-
-
-class ConfiguredBase(object):
-    def getConfig(self, request):
-        return {'name': self.name}

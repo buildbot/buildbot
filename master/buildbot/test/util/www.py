@@ -70,7 +70,10 @@ class FakeRequest(object):
 
     def finish(self):
         self.finished = True
-        self.deferred.callback(self.written)
+        if self.redirected_to is not None:
+            self.deferred.callback(dict(redirected=self.redirected_to))
+        else:
+            self.deferred.callback(self.written)
 
     def setResponseCode(self, code):
         self.responseCode = code

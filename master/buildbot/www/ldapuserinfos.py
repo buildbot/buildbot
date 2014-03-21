@@ -32,14 +32,10 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
         self.avatarData = avatarData
         self.accountExtraFields = accountExtraFields
 
-    def getLdap(self):
-        # test hook point
-        return ldap
-
     def updateUserInfos(self, username):
         def thd():
             infos = {'username': username}
-            l = self.getLdap().initialize(self.uri)
+            l = ldap.initialize(self.uri)
             l.simple_bind_s(self.bind_user, self.bind_pw)
             pattern = self.accountPattern % dict(username=username)
             res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [
@@ -73,7 +69,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
 
     def getUserAvatar(self, user_email, size, defaultAvatarUrl):
         def thd():
-            l = self.getLdap().initialize(self.uri)
+            l = ldap.initialize(self.uri)
             l.simple_bind_s(self.bind_user, self.bind_pw)
             pattern = self.avatarPattern % dict(email=user_email)
             res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [self.avatarData])
