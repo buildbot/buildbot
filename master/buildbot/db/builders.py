@@ -20,7 +20,7 @@ from buildbot.db import base
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
 
-    def findBuilderId(self, name):
+    def findBuilderId(self, name, category=''):
         tbl = self.db.model.builders
         return self.findSomethingId(
             tbl=tbl,
@@ -28,6 +28,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             insert_values=dict(
                 name=name,
                 name_hash=self.hashColumns(name),
+                category=category,
             ))
 
     def getBuilder(self, builderid):
