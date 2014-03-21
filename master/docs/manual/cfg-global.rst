@@ -693,12 +693,149 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
 
 ``auth``
-   auth module
+   Authentication module to use for the web server. See :bb:cfg:`auth`
 
-   ldap ::
+.. bb:cfg:: auth
 
-       sudo apt-get builddep python-ldap
-       pip install python-ldap
+Authentication plugins
+~~~~~~~~~~~~~~~~~~~~~~
+
+By default, buildbot does not require people to authenticate in order to see the readonly data.
+In order to access control feature in the web UI, you will need to configure an authentication plugin.
+
+.. py:class:: buildbot.auth.NoAuth
+
+    This class is the default authentication plugin, which disables authentication
+
+.. py:class:: buildbot.auth.BasicAuth
+
+    This class implements a basic authentication mechanism using a list of user/password tuples provided from the configuration file.
+
+    * ``users``: list of ``("user","password")`` tuples, or dictionary ``dict(user="passwd")``
+
+    example::
+
+        from buildbot.auth import BasicAuth
+        auth=BasicAuth({"homer": "doh!"})
+
+.. py:class:: buildbot.auth.HTPasswdAuth
+
+    This class implements an authentication against a standard :file:`.htpasswd` file.
+
+    * ``passwdFile``: ``.htpasswd`` file to read
+
+    example::
+
+        from buildbot.auth import HTPasswdAuth
+        auth=HTPasswdAuth("my_htpasswd")
+
+.. py:class:: buildbot.auth.RemoteUserAuth
+
+    In case if buildbot web ui is served through reverse proxy that supports HTTP-based authentication (like apache, lighttpd), it's possible to to tell buildbot to trust web server and get username from request headers.
+
+    Administrator must make sure that it's impossible to get access to buildbot using other way than through frontend. Usually this means that buildbot should listen for incoming connections only on localhost (or on some firewall-protected port). Frontend must require HTTP authentication to access buildbot pages (using any source for credentials, such as htpasswd, PAM, LDAP, Kerberos).
+
+    * ``header``: header to use to get the username (defaults to ``REMOTE_USER``)
+    * ``headerRegex``: regular expression to get the username from header value. (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)"). Note that your at least need to specify a ``?P<username>`` regular expression named group.
+
+    example::
+
+        from buildbot.auth import RemoteUserAuth
+        auth=RemoteUserAuth()
+
+    A corresponding Apache configuration example
+
+     .. code-block:: none
+
+        <Location "/">
+                AuthType Kerberos
+                AuthName "Buildbot login via Kerberos"
+                KrbMethodNegotiate On
+                KrbMethodK5Passwd On
+                KrbAuthRealms <<YOUR CORP REALMS>>
+                KrbVerifyKDC off
+                KrbServiceName Any
+                Krb5KeyTab /etc/krb5/krb5.keytab
+                KrbSaveCredentials Off
+                require valid-user
+                Order allow,deny
+
+                Satisfy Any
+
+                #] SSO
+                RewriteEngine On
+                RewriteCond %{LA-U:REMOTE_USER} (.+)$
+                RewriteRule . - [E=RU:%1,NS]
+                RequestHeader set REMOTE_USER %{RU}e
+
+        </Location>
+
+    The advantage of http auth is that it is uses a proven and fast implementation for authentication. The problem is that the only information that is passed is the username, and there is no way to pass any other information like user email, user groups, etc.
+    Those information can be very useful to the mailstatus plugin, or the authorization criterias.
+
+    In order to get additional information, you can specify a :py:class:`buildbot.auth.UserInfosBase` object, which is responsible of getting more information about the user using any means. the :py:class:`buildbot.auth.UserInfosBase` has one method:
+
+    .. py:method:: getUserInfos(username)
+
+    Get additional info for one user. returns a :py:class:`dict` with following keys:
+
+        * ``email``: email address of the user
+        * ``full_name``: Full name of the user, like "Homer Simpson"
+        * ``groups``: groups the user belongs to, like ["duff fans", "dads"]
+
+    Following are the implemented sub classes of :py:class:`UserInfosBase`
+
+.. py:class:: buildbot.ldapuserinfos.LdapUserInfos
+
+        * ``uri``: uri of the ldap server
+        * ``bind_user``: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
+        * ``bind_pw``: password of the ``bind_user``
+        * ``accountBase``: the base dn (distinguished name)of the user database
+        * ``groupBase``: the base dn of the groups database
+        * ``accountPattern``: the pattern for searching in the account database. This must contain the ``%(username)s`` string, which is replaced by the searched username
+        * ``groupMemberPattern``: the pattern for searching in the group database. This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
+        * ``accountFullName``: the name of the field in account ldap database where the full user name is to be found.
+        * ``accountEmail``: the name of the field in account ldap database where the user email is to be found.
+        * ``groupName``: the name of the field in groups ldap database where the group name is to be found.
+        * ``avatarPattern``: the pattern for searching avatars from emails in the account database. This must contain the ``%(email)s`` string, which is replaced by the searched email
+        * ``avatarData``: the name of the field in groups ldap database where the avatar picture is to be found. This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
+        * ``accountExtraFields``: extra fields to extracts for use with the authorization policies.
+
+        Example::
+
+            from buildbot.www.auth import RemoteUserAuth
+            from buildbot.www.ldapuserinfos import LdapUserInfos
+            from buildbot.www.avatar import AvatarGravatar
+
+            # this configuration works for MS Active Directory ldap implementation
+            # we use it for user info, and avatars
+            userInfos = LdapUserInfos(
+                uri='ldap://ldap.mycompany.com:3268',
+                bind_user='ldap_user',
+                bind_pw='p4$$wd',
+                accountBase='dc=corp,dc=mycompany,dc=com',
+                groupBase='dc=corp,dc=mycompany,dc=com',
+                accountPattern='(&(objectClass=person)(sAMAccountName=%(username)s))',
+                accountFullName='displayName',
+                accountEmail='mail',
+                groupMemberPattern='(&(objectClass=group)(member=%(dn)s))',
+                groupName='cn',
+                avatarPattern='(&(objectClass=person)(mail=%(email)s))',
+                avatarData='thumbnailPhoto',
+            )
+            c['www'] = dict(port=PORT, allowed_origins=["*"],
+                            url=c['buildbotURL'],
+                            auth=RemoteUserAuth(userInfos=userInfos),
+                            avatar_methods=[userInfos, AvatarGravatar()]
+                            )
+
+        in order to use this module, you need to install the python `ldap` module
+
+        .. code-block:: bash
+
+               sudo apt-get builddep python-ldap
+               pip install python-ldap
+
 
 .. bb:cfg:: codebaseGenerator
 

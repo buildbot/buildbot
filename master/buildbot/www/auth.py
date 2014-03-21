@@ -57,14 +57,14 @@ class AuthBase(util.ConfiguredMixin):
     def updateUserInfos(self, request):
         session = request.getSession()
         if self.userInfos is not None:
-            infos = yield self.userInfos.updateUserInfos(session.user_infos['username'])
+            infos = yield self.userInfos.getUserInfos(session.user_infos['username'])
             session.user_infos.update(infos)
 
 
 class UserInfosBase(util.ConfiguredMixin):
     name = "noinfo"
 
-    def updateUserInfos(self, username):
+    def getUserInfos(self, username):
         return defer.succeed({'email': username})
 
 
@@ -82,7 +82,7 @@ class RemoteUserAuth(AuthBase):
         if header is not None:
             self.header = header
         if headerRegex is not None:
-            self.headerRegex = headerRegex
+            self.headerRegex = re.compile(headerRegex)
 
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):
@@ -148,7 +148,7 @@ class BasicAuth(TwistedICredAuthBase):
         TwistedICredAuthBase.__init__(
             self,
             [DigestCredentialFactory("md5", "buildbot"), BasicCredentialFactory("buildbot")],
-            [InMemoryUsernamePasswordDatabaseDontUse(**users)],
+            [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
 
 

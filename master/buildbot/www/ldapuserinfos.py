@@ -32,7 +32,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
         self.avatarData = avatarData
         self.accountExtraFields = accountExtraFields
 
-    def updateUserInfos(self, username):
+    def getUserInfos(self, username):
         def thd():
             infos = {'username': username}
             l = ldap.initialize(self.uri)
