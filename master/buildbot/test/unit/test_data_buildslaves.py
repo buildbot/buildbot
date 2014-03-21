@@ -68,15 +68,12 @@ def bs1(builderid=None, masterid=None):
         'name': 'linux',
         'slaveinfo': {},
         'connected_to': [
-            {'masterid': 13, 'link': base.Link(('masters', '13'))},
+            {'masterid': 13},
         ],
         'configured_on': sorted([
-            {'builderid': 40, 'masterid': 13,
-             'link': base.Link(('masters', '13', 'builders', '40'))},
-            {'builderid': 40, 'masterid': 14,
-             'link': base.Link(('masters', '14', 'builders', '40'))},
+            {'builderid': 40, 'masterid': 13},
+            {'builderid': 40, 'masterid': 14},
         ]),
-        'link': base.Link(('buildslaves', '1')),
     }, builderid, masterid)
 
 
@@ -86,17 +83,13 @@ def bs2(builderid=None, masterid=None):
         'name': 'windows',
         'slaveinfo': {'a': 'b'},
         'connected_to': [
-            {'masterid': 14, 'link': base.Link(('masters', '14'))},
+            {'masterid': 14},
         ],
         'configured_on': sorted([
-            {'builderid': 40, 'masterid': 13,
-             'link': base.Link(('masters', '13', 'builders', '40'))},
-            {'builderid': 41, 'masterid': 13,
-             'link': base.Link(('masters', '13', 'builders', '41'))},
-            {'builderid': 40, 'masterid': 14,
-             'link': base.Link(('masters', '14', 'builders', '40'))},
+            {'builderid': 40, 'masterid': 13},
+            {'builderid': 41, 'masterid': 13},
+            {'builderid': 40, 'masterid': 14},
         ]),
-        'link': base.Link(('buildslaves', '2')),
     }, builderid, masterid)
 
 

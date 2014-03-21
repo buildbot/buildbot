@@ -35,7 +35,6 @@ class FixerMixin(object):
         if change:
             change = change.copy()
             change['when_timestamp'] = datetime2epoch(change['when_timestamp'])
-            change['link'] = base.Link(('changes', str(change['changeid'])))
 
             sskey = ('sourcestamps', str(change['sourcestampid']))
             change['sourcestamp'] = yield self.master.data.get(sskey)
@@ -99,7 +98,6 @@ class Change(base.ResourceType):
         project = types.String()
         codebase = types.String()
         sourcestamp = sourcestamps.SourceStamp.entityType
-        link = types.Link()
     entityType = EntityType(name)
 
     @base.updateMethod
@@ -165,8 +163,6 @@ class Change(base.ResourceType):
         # get the change and munge the result for the notification
         change = yield self.master.data.get(('changes', str(changeid)))
         change = copy.deepcopy(change)
-        del change['link']
-        del change['sourcestamp']['link']
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters

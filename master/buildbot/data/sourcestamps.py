@@ -28,7 +28,6 @@ def _db2data(ss):
         'repository': ss['repository'],
         'codebase': ss['codebase'],
         'created_at': ss['created_at'],
-        'link': base.Link(('sourcestamps', str(ss['ssid']))),
         'patch': None,
     }
     if ss['patch_body']:
@@ -91,5 +90,4 @@ class SourceStamp(base.ResourceType):
         codebase = types.String()
         patch = types.NoneOk(patches.Patch.entityType)
         created_at = types.DateTime()
-        link = types.Link()
     entityType = EntityType(name)

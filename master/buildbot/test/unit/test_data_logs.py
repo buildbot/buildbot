@@ -58,12 +58,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'logid': 60,
             'name': u'stdio',
             'slug': u'stdio',
-            'step_link': base.Link(('steps', '50')),
             'stepid': 50,
             'complete': False,
             'num_lines': 0,
-            'type': u's',
-            'link': base.Link(('logs', '60'))})
+            'type': u's'})
 
     @defer.inlineCallbacks
     def test_get_missing(self):

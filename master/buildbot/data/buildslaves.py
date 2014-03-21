@@ -26,15 +26,12 @@ class Db2DataMixin(object):
             'name': dbdict['name'],
             'slaveinfo': dbdict['slaveinfo'],
             'connected_to': [
-                {'masterid': id, 'link': base.Link(('masters', str(id)))}
+                {'masterid': id}
                 for id in dbdict['connected_to']],
             'configured_on': [
                 {'masterid': c['masterid'],
-                 'builderid': c['builderid'],
-                 'link': base.Link(('masters', str(c['masterid']),
-                                    'builders', str(c['builderid'])))}
+                 'builderid': c['builderid']}
                 for c in dbdict['configured_on']],
-            'link': base.Link(('buildslaves', str(dbdict['id']))),
         }
 
 
@@ -93,14 +90,11 @@ class Buildslave(base.ResourceType):
         buildslaveid = types.Integer()
         name = types.String()
         connected_to = types.List(of=types.Dict(
-            masterid=types.Integer(),
-            link=types.Link()))
+            masterid=types.Integer()))
         configured_on = types.List(of=types.Dict(
             masterid=types.Integer(),
-            builderid=types.Integer(),
-            link=types.Link()))
+            builderid=types.Integer()))
         slaveinfo = types.JsonObject()
-        link = types.Link()
     entityType = EntityType(name)
 
     @base.updateMethod
