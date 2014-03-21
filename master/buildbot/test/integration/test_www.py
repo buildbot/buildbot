@@ -22,12 +22,14 @@ from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import service as wwwservice
+from buildbot.www import auth
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
-
+import twisted
+twisted.internet.base.DelayedCall.debug = True
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
 
@@ -74,7 +76,10 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
-            debug=True)
+            debug=True,
+            auth=auth.NoAuth(),
+            url="not yet known",
+            avatar_methods=[])
         master.www = wwwservice.WWWService(master)
         yield master.www.startService()
         yield master.www.reconfigService(master.config)
