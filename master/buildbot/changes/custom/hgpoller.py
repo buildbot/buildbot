@@ -41,7 +41,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='',
-                 encoding='utf-8'):
+                 encoding='utf-8', commits_checked=10000):
 
         self.repourl = repourl
         self.branches = branches
@@ -59,6 +59,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.project = project
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
+        self.commits_checked = commits_checked
 
         if self.workdir == None:
             config.error("workdir is mandatory for now in HgPoller")
@@ -175,7 +176,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def _processBranches(self, output):
-        args = ['log', '-r', '-10000:&head()&!closed()', '--template', '{branch} {bookmarks} {node}\n']
+
+        search = 'last(:tip,{0}):&head()&!closed()'.format(self.commits_checked)
+        args = ['log', '-r', search, '--template', '{branch} {bookmarks} {rev}:{node|short}\n']
 
         results = yield utils.getProcessOutput(self.hgbin, args,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
