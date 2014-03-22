@@ -1,6 +1,6 @@
 angular.module('app').controller 'buildController',
-['$log', '$scope', '$location', 'buildbotService', '$stateParams'
-    ($log, $scope, $location, buildbotService, $stateParams) ->
+['$log', '$scope', '$location', 'buildbotService', '$stateParams', 'recentStorage'
+    ($log, $scope, $location, buildbotService, $stateParams, recentStorage) ->
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
@@ -10,5 +10,8 @@ angular.module('app').controller 'buildController',
                 buildset = buildbotService.one("buildsets", buildrequest.buildsetid)
                 buildset.bind($scope)
                 buildset.one("properties").bind($scope, dest_key:'properties')
+                recentStorage.addBuild
+                    link: '#/builders/' + $scope.builder.builderid + '/build/' + $scope.build.buildid
+                    caption: $scope.builder.name + ' / ' + $scope.build.buildid
 
 ]
