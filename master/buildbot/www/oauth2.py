@@ -30,8 +30,8 @@ class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
 
     def __init__(self, authUri, tokenUri, clientId,
-                 authUriConfig, tokenConfig):
-
+                 authUriConfig, tokenConfig, **kwargs):
+        auth.AuthBase.__init__(self, **kwargs)
         # userInfos are populated by the auth plugin directly
         auth.AuthBase.__init__(self, userInfos=None)
         self.authUri = authUri
@@ -82,7 +82,7 @@ class GoogleAuth(OAuth2Auth):
     name = "Google"
     faIcon = "fa-google-plus"
 
-    def __init__(self, clientId, clientSecret):
+    def __init__(self, clientId, clientSecret, **kwargs):
         OAuth2Auth.__init__(self,
                             authUri='https://accounts.google.com/o/oauth2/auth',
                             tokenUri='https://accounts.google.com/o/oauth2/token',
@@ -95,7 +95,8 @@ class GoogleAuth(OAuth2Auth):
                             tokenConfig=dict(
                                 resource_endpoint='https://www.googleapis.com/oauth2/v1',
                                 client_secret=clientSecret,
-                                token_transport=sanction.transport_headers)
+                                token_transport=sanction.transport_headers),
+                            **kwargs
                             )
 
     def getUserInfosFromOAuthClient(self, c):
@@ -110,7 +111,7 @@ class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
 
-    def __init__(self, clientId, clientSecret):
+    def __init__(self, clientId, clientSecret, **kwargs):
         OAuth2Auth.__init__(self,
                             authUri='https://github.com/login/oauth/authorize',
                             tokenUri='https://github.com/login/oauth/access_token',
@@ -119,7 +120,8 @@ class GitHubAuth(OAuth2Auth):
                             tokenConfig=dict(
                                 resource_endpoint='https://api.github.com',
                                 client_secret=clientSecret,
-                                token_transport=sanction.transport_headers)
+                                token_transport=sanction.transport_headers),
+                            **kwargs
                             )
 
     def getUserInfosFromOAuthClient(self, c):
