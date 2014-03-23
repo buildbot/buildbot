@@ -592,7 +592,7 @@ depot for changes. It accepts the following arguments:
     How often to poll, in seconds. Defaults to 600 (10 minutes).
 
 ``project``
-    The perforce project.
+    The project name in the Perforce base depot path.
 
 ``pollAtLaunch``
     Determines when the first poll occurs. True = immediately on launch,
