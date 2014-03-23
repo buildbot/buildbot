@@ -387,6 +387,7 @@ dbdict['builderdict'] = DictValidator(
     id=IntValidator(),
     masterids=ListValidator(IntValidator()),
     name=StringValidator(),
+    category=NoneOk(StringValidator()),
 )
 
 # slave

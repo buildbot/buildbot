@@ -531,6 +531,7 @@ class Builder(Row):
         id=None,
         name='some:builder',
         name_hash=None,
+        category='',
     )
 
     id_column = 'id'
@@ -2129,19 +2130,21 @@ class FakeBuildersComponent(FakeDBComponent):
             if isinstance(row, Builder):
                 self.builders[row.id] = dict(
                     id=row.id,
-                    name=row.name)
+                    name=row.name,
+                    category=row.category)
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
                     (row.builderid, row.masterid)
 
-    def findBuilderId(self, name, _reactor=reactor):
+    def findBuilderId(self, name, category='', _reactor=reactor):
         for m in self.builders.itervalues():
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.builders) + 1
         self.builders[id] = dict(
             id=id,
-            name=name)
+            name=name,
+            category=category)
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
