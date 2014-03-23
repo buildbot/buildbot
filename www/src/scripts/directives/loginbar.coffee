@@ -2,9 +2,9 @@ angular.module('app').directive 'loginbar',
 ['$log', ($log) ->
     controller = [
         '$scope', 'config', '$http', ($scope, config, $http) ->
-            $scope.username=""
-            $scope.password=""
-            $scope.loginCollapsed=1
+            $scope.username = ""
+            $scope.password = ""
+            $scope.loginCollapsed = 1
             $scope.config = config
             _.assign($scope, config.user)
             $scope.login = ->
@@ -31,7 +31,7 @@ angular.module('app').directive 'loginbar',
                     method: "GET"
                     url: "#{config.url}login"
                 .success (data, status) ->
-                    document.location=data
+                    document.location = data
     ]
     controller: controller
     replace: true

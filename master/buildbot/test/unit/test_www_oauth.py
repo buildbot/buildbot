@@ -42,7 +42,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         from buildbot.www import oauth2
 
         self.googleAuth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
-        self.githubAuth = oauth2.GithubAuth("ghclientID", "clientSECRET")
+        self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
         master = self.make_master(url='h:/a/b/', auth=self.googleAuth)
         self.googleAuth.reconfigAuth(master, master.config)
         self.master = master = self.make_master(url='h:/a/b/', auth=self.githubAuth)
@@ -146,6 +146,6 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfig(), {'fa_icon': 'fa-github',
-                                                       'name': 'Github', 'oauth2': True})
+                                                       'name': 'GitHub', 'oauth2': True})
         self.assertEqual(self.googleAuth.getConfig(), {'fa_icon': 'fa-google-plus',
                                                        'name': 'Google', 'oauth2': True})

@@ -60,7 +60,7 @@ class LdapUserInfos(unittest.TestCase):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[], [], []])
         try:
-            yield self.userinfos.updateUserInfos("me")
+            yield self.userinfos.getUserInfos("me")
         except KeyError, e:
             self.assertEqual(repr(e), "KeyError('ldap search \"accpattern\" returned 0 results',)")
         else:
@@ -71,7 +71,7 @@ class LdapUserInfos(unittest.TestCase):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[("cn", {"accountFullName": ["me too"],
                                                  "accountEmail": ["mee@too"]})], [], []])
-        res = yield self.userinfos.updateUserInfos("me")
+        res = yield self.userinfos.getUserInfos("me")
         self.assertEqual(self.ldap.search_s.call_args_list, [
             (('accbase', 2, 'accpattern', ['accountEmail', 'accountFullName', 'dn', 'myfield']), {}),
             (('groupbase', 2, 'groupMemberPattern', ['groupName']), {}),
@@ -87,7 +87,7 @@ class LdapUserInfos(unittest.TestCase):
                                         [("cn", {"groupName": ["group"]}),
                                          ("cn", {"groupName": ["group2"]})
                                          ], []])
-        res = yield self.userinfos.updateUserInfos("me")
+        res = yield self.userinfos.getUserInfos("me")
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})
 

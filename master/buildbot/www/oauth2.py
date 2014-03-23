@@ -7,7 +7,6 @@ from posixpath import join
 
 
 class OAuth2LoginResource(auth.LoginResource):
-    # a LoginResource, which is already authenticated via a HTTPAuthSessionWrapper
     # disable reconfigResource calls
     needsReconfig = False
 
@@ -107,8 +106,8 @@ class GoogleAuth(OAuth2Auth):
                     avatar_url=data["picture"])
 
 
-class GithubAuth(OAuth2Auth):
-    name = "Github"
+class GitHubAuth(OAuth2Auth):
+    name = "GitHub"
     faIcon = "fa-github"
 
     def __init__(self, clientId, clientSecret):

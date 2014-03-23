@@ -357,6 +357,10 @@ This is a global default value for builders' :bb:cfg:`mergeRequests` parameter, 
 This parameter can be overridden on a per-builder basis.
 See :ref:`Merging-Build-Requests` for the allowed values for this parameter.
 
+.. note::
+
+    This feature is currently not working in buildbot nine. http://trac.buildbot.net/ticket/2645
+
 .. index:: Builders; priority
 
 .. bb:cfg:: prioritizeBuilders
@@ -695,6 +699,16 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 ``auth``
    Authentication module to use for the web server. See :bb:cfg:`auth`
 
+``avatar_methods``
+    List of methods that can be used to get avatar pictures to use for the web server.
+    By default, buildbot uses Gravatar to get images associated with each users, if you want to disable this you can just specify empty list::
+
+        c['www'] = {
+            'avatar_methods': []
+        }
+
+    For use of corporate pictures, you can use LdapUserInfos, which can also acts as an avatar provider.  See :bb:cfg:`auth`
+
 .. bb:cfg:: auth
 
 Authentication plugins
@@ -728,6 +742,42 @@ In order to access control feature in the web UI, you will need to configure an 
 
         from buildbot.auth import HTPasswdAuth
         auth=HTPasswdAuth("my_htpasswd")
+
+.. py:class:: buildbot.oauth2.GoogleAuth
+
+    This class implements an authentication with Google_ single sign-on.
+    You can look at the Google_ oauth2 documentation on how to register your buildbot to the Google systems. The developer console will give you the two parameters you have to give to ``GoogleAuth``
+
+    Please make sure you register your application with the ``BUILDBOT_URL/login`` url as the allowed redirect URIs.
+
+    * ``clientId``: The client ID of your buildbot application
+
+    * ``clientSecret``: The client secret of your buildbot application
+
+    example::
+
+        from buildbot.oauth2 import GoogleAuth
+        auth=GoogleAuth("clientid", "clientsecret")
+
+.. _Google: https://developers.google.com/accounts/docs/OAuth2
+
+.. py:class:: buildbot.oauth2.GitHubAuth
+
+    This class implements an authentication with GitHub_ single sign-on.
+    You can look at the GitHub_ oauth2 documentation on how to register your buildbot to the GitHub systems. The developer console will give you the two parameters you have to give to ``GitHubAuth``
+
+    Please make sure you register your application with the ``BUILDBOT_URL/login`` url as the allowed redirect URIs.
+
+    * ``clientId``: The client ID of your buildbot application
+
+    * ``clientSecret``: The client secret of your buildbot application
+
+    example::
+
+        from buildbot.oauth2 import GitHubAuth
+        auth=GitHubAuth("clientid", "clientsecret")
+
+.. _GitHub: http://developer.github.com/v3/oauth_authorizations/
 
 .. py:class:: buildbot.auth.RemoteUserAuth
 
