@@ -1369,10 +1369,12 @@ builders
     * ``id`` -- the ID of this builder
     * ``name`` -- the name of the builder
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
+    * ``category`` -- the category of the builder
 
-    .. py:method:: findBuilderId(name)
+    .. py:method:: findBuilderId(name, category='')
 
         :param unicode name: name of this builder
+        :param unicode category: name of the category
         :returns: builder id via Deferred
 
         Return the builder ID for the builder with this builder name.
