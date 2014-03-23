@@ -219,7 +219,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org',
                           buildSetSummary=True,
-                          mode=("failing", "passing", "warnings", "force"),
+                          mode=("failing", "passing", "warnings"),
                           builders=["Builder1", "Builder2"])
 
         mn.buildMessage = fakeBuildMessage

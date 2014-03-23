@@ -1207,9 +1207,6 @@ MailNotifier arguments
     ``exception``
         Send mail about builds which generate exceptions.
 
-    ``force``
-        Send mail about builds which are forced by the user.
-
     Defaults to (``failing``, ``passing``, ``warnings``).
 
 ``builders``
