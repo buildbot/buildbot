@@ -189,7 +189,10 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         for branch in branchlist:
             list = branch.strip().split()
             if self.trackingBranch(list[0]):
-                self.currentRev[list[0]] = list[1]
+                if len(list) == 2:
+                    self.currentRev[list[0]] = list[1]
+                elif len(list) == 3:
+                    self.currentRev[list[1]] = list[2]
 
     # filter branches by regex
     def trackingBranch(self, branch):
