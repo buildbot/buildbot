@@ -1085,9 +1085,10 @@ class TestPropertiesMixin(unittest.TestCase):
         self.assertTrue(self.mp.hasProperty('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
-    def test_has_propkey(self):
+    def test_has_key(self):
         self.mp.properties.hasProperty.return_value = True
-        self.assertTrue(self.mp.has_propkey('abc'))
+        # getattr because pep8 doesn't like calls to has_key
+        self.assertTrue(getattr(self.mp, 'has_key')('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
     def test_setProperty(self):
