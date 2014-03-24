@@ -30,8 +30,7 @@ define(['select2'], function () {
 			});
 
 			// unbind the click event on close for the sorting functionality	
-			commonbranchSelect.add(selectBranches).on("select2-close", function() {
-				
+			commonbranchSelect.add(selectBranches).on("select2-close", function(e) {				
 				$('.sort-name').unbind('click');
 				$('.select2-container').removeClass('select2-container-active');			
 			});	
@@ -40,16 +39,19 @@ define(['select2'], function () {
     			 commonbranchSelect.select2("val", "");
 			});
 
-		}, getMaxChildWidth: function(sel) {
+
+
+		}, getMaxChildWidth: function(sel) {			
 			    var max = 80;
+			    
 			    sel.each(function(){
 			        var c_width = $(this).width();
-			        
+			    	    
 			        if (c_width > max) {
 			            max = c_width + 30;
 			        }
 			    });
-
+			    
 			    return max;
 		},
 		// combobox on codebases

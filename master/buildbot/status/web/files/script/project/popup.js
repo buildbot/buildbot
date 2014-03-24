@@ -126,6 +126,8 @@ define(['helpers'], function (helpers) {
 
 			$.get(path)
 			.done(function(data) {
+				require(['selectors'],function(selectors) {		        	
+		        	
 				var formContainer = $('#content1');	
 				preloader.remove();
 				
@@ -136,9 +138,10 @@ define(['helpers'], function (helpers) {
 				
 				
 				fw.appendTo(formContainer);												
-				require(['selectors'],function(selectors) {		        	
-		        	selectors.init();					
+					
 					helpers.jCenter(mib).fadeIn('fast',function(){					
+						selectors.init();
+
 						getForm
 						.attr('action', window.location.href)
 						.find('.blue-btn[type="submit"]')

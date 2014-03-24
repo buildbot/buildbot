@@ -60,13 +60,16 @@ define(['screensize'], function (screenSize) {
 			
 			// chrome font problem fix
 			$(function chromeWin() {
-				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());
 				var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
-				if(is_chrome && isWindows){
-				  $('body').addClass('chrome win');
-
+				if (is_chrome) {
+					$('body').addClass('chrome');
 				}
-			});
+				if (isWindows) {
+					$('body').addClass('win');
+				}
+								
+			});		
 
 			// tooltip used on the builddetailpage
 			helpers.toolTip('.ellipsis-js');
@@ -415,29 +418,30 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
-	
-			var closeBtn = $('.close-btn').add(document);
-
-			if (isWindows) {
+			
+			var closeBtn = $('.close-btn').add('body');
+			
+			if ($('body').hasClass('win')) {
 				var hasSelect2 = boxElement.find('.select-tools-js').length;
 				if (hasSelect2) {
 					closeBtn = closeBtn.not(document);
 				}
-			} 
-
+			} 			
+			
 			closeBtn.bind('click touchstart', function(e){
+				console.log($(e.target).children($('#select2-drop-mask')).length)
+				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {
+					$('body').removeClass('close') 
+				
+						if (clearEl === undefined ) {
 
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
-					
-					if (clearEl === undefined ) {
-						boxElement.remove();
-					} else {
-						boxElement.slideUp('fast', function(){
-							$(this).remove();	
-						});
-					}
-					
+							boxElement.remove();
+						} else {
+							boxElement.slideUp('fast', function(){
+								$(this).remove();	
+							});
+						}
+
 					$(this).unbind(e);
 				
 				}
