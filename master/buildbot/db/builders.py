@@ -74,8 +74,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                            onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
                 [bldr_tbl.c.id, bldr_tbl.c.name, bldr_tbl.c.category,
-                 bm_tbl.c.masterid], from_obj=[j],
-                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
+                 bm_tbl.c.masterid],
+                from_obj=[j], order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:
                 # filter the masterid from the limiting table
                 q = q.where(limiting_bm_tbl.c.masterid == masterid)
