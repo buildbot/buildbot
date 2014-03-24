@@ -15,7 +15,6 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 			// Select which columns not to sort
 			tablesorterEl.each(function(i, tableElem){
                 var $tableElem = $(tableElem);
-				var colList = [];
 
 				var optionTable = {
 					"bPaginate": false,
@@ -42,7 +41,7 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 				    	//$('#formWrapper').show();	
 							 //alert( 'DataTables has finished its initialisation.' );
 					//}
-				}
+				};
 
 				// add searchfilterinput, length change and pagination
 				if ($(this).hasClass('tools-js')) {						
@@ -71,33 +70,24 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
 				}
 
-				// remove sorting from selected columns
-			    $('> thead th', this).each(function(i){			        
-			        if (!$(this).hasClass('no-tablesorter-js')) {
-			            colList.push(null);
-			        } else {
-			            colList.push({'bSortable': false });
-			        }
-			    });
-
-			    optionTable.aoColumns = colList;
-
                 if (tableElem.hasAttribute("data-default-sort-col")) {
                     var defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
                     var sort = $tableElem.attr("data-default-sort-dir") || "asc";
-                    var cols = $tableElem.find('tr')[0].cells.length;
                     var aoColumns = [];
 
                     optionTable.aaSorting = [[defaultSortCol, sort]];
 
-                    for (var i=0; i < cols; i++) {
-                        if (defaultSortCol === i) {
+                    $('> thead th', this).each(function(i, obj){
+                        if ($(obj).hasClass('no-tablesorter-js')) {
+                            aoColumns.push({'bSortable': false });
+                        }
+                        else if (defaultSortCol === i) {
                             aoColumns.push({ "sType": "natural" });
                         }
                         else {
                             aoColumns.push(null);
                         }
-                    }
+                    });
                     optionTable.aoColumns = aoColumns;
                 }
 
