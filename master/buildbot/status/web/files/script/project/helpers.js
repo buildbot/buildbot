@@ -147,16 +147,16 @@ define(['screensize'], function (screenSize) {
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
-			    var tw = el.outerWidth(); 
+			    var tw = el.outerWidth(); 			   			    
+
+			    // adjust height to browser height , "height":h - 75 , "height":'auto'
 			    
-			    el.css("position", "absolute");
+			    if (h < (tu + 5)) {
 
-			    // adjust height to browser height
-
-			    if (h < tu) {
-			    	el.css("top", (h - tu + (tu - h) + 10) / 2 + $(window).scrollTop() + "px");
+			    	el.css({"top": 5 + $(window).scrollTop() + "px","height":h -60});
 			    } else {
-			    	el.css("top", (h - tu) / 2 + $(window).scrollTop() + "px");
+			    
+			    	el.css({"top": (h - tu) / 2 + $(window).scrollTop() + 'px',"height":'auto'});
 			    }
 				
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
