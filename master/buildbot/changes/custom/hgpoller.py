@@ -192,6 +192,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                 if len(list) == 2:
                     self.currentRev[list[0]] = list[1]
                 elif len(list) == 3:
+                    self.currentRev[list[0]] = list[2]
                     self.currentRev[list[1]] = list[2]
 
     # filter branches by regex
