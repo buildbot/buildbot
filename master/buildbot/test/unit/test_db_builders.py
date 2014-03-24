@@ -82,7 +82,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Master(id=10, name='def'),
             fakedb.BuilderMaster(builderid=7, masterid=10),
         ])
-        x = yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
+        yield self.db.builders.addBuilderMaster(builderid=7, masterid=9)
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
