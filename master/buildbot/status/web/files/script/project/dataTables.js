@@ -70,26 +70,27 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
 				}
 
+                var defaultSortCol= undefined;
+                var aoColumns = [];
+                var sort = $tableElem.attr("data-default-sort-dir") || "asc";
+
                 if (tableElem.hasAttribute("data-default-sort-col")) {
-                    var defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
-                    var sort = $tableElem.attr("data-default-sort-dir") || "asc";
-                    var aoColumns = [];
-
+                    defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
                     optionTable.aaSorting = [[defaultSortCol, sort]];
-
-                    $('> thead th', this).each(function(i, obj){
-                        if ($(obj).hasClass('no-tablesorter-js')) {
-                            aoColumns.push({'bSortable': false });
-                        }
-                        else if (defaultSortCol === i) {
-                            aoColumns.push({ "sType": "natural" });
-                        }
-                        else {
-                            aoColumns.push(null);
-                        }
-                    });
-                    optionTable.aoColumns = aoColumns;
                 }
+
+                $('> thead th', this).each(function(i, obj){
+                    if ($(obj).hasClass('no-tablesorter-js')) {
+                        aoColumns.push({'bSortable': false });
+                    }
+                    else if (defaultSortCol !== undefined  && defaultSortCol === i) {
+                        aoColumns.push({ "sType": "natural" });
+                    }
+                    else {
+                        aoColumns.push(null);
+                    }
+                });
+                optionTable.aoColumns = aoColumns;
 
 			   	//initialize datatable with options
 			  	var oTable = $(this).dataTable(optionTable);			  	
