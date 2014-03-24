@@ -88,8 +88,8 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             token_endpoint='https://accounts.google.com/o/oauth2/token',
             client_id='ggclientID',
             token_transport="sanction.transport_headers",
-            resource_endpoint='https://www.googleapis.com/oauth2/v1'
-            )
+            resource_endpoint='https://www.googleapis.com/oauth2/v1')
+
         self.sanction.Client().request_token.assert_called_with(
             code='code!', redirect_uri='h:/a/b/login')
         self.assertEqual({'avatar_url': 'http://pic', 'email': 'bar@foo',
@@ -110,8 +110,8 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             client_secret='clientSECRET',
             token_endpoint='https://github.com/login/oauth/access_token',
             client_id='ghclientID', token_transport='sanction.transport_headers',
-            resource_endpoint='https://api.github.com'
-            )
+            resource_endpoint='https://api.github.com')
+
         self.sanction.Client().request_token.assert_called_with(
             code='code!', redirect_uri='h:/a/b/login')
 
@@ -142,7 +142,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.verifyCode.assert_called_once_with("code!")
         self.assertEqual(self.master.session.user_infos, {'username': 'bar'})
-        self.assertEqual(res,  {'redirected': '://me'})
+        self.assertEqual(res, {'redirected': '://me'})
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfig(), {'fa_icon': 'fa-github',

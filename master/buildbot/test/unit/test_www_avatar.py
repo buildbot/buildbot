@@ -13,16 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-import base64
-
 from buildbot.test.util import www
 from buildbot.www import avatar
 from buildbot.www import auth
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.web._auth.wrapper import UnauthorizedResource
-from twisted.web.resource import IResource
 
 
 class AvatarResource(www.WwwTestMixin, unittest.TestCase):
@@ -46,12 +41,11 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEquals(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
                                                'def654fccc4a4d8?s=32&d=http%3A%2F%2Fa%2Fb%2Fimg%2Fnobody.png'))
 
-
     @defer.inlineCallbacks
     def test_custom(self):
         class CustomAvatar(avatar.AvatarBase):
             def getUserAvatar(self, email, size, defaultAvatarUrl):
-                return defer.succeed(("image/png", email+str(size)+defaultAvatarUrl))
+                return defer.succeed(("image/png", email + str(size) + defaultAvatarUrl))
 
         master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[CustomAvatar()])
         rsrc = avatar.AvatarResource(master)
@@ -75,5 +69,3 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, '/?email=foo')
         self.assertEquals(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
                                                'def654fccc4a4d8?s=32&d=http%3A%2F%2Fa%2Fb%2Fimg%2Fnobody.png'))
-
-

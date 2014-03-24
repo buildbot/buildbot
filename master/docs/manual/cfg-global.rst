@@ -759,6 +759,12 @@ In order to access control feature in the web UI, you will need to configure an 
         from buildbot.oauth2 import GoogleAuth
         auth=GoogleAuth("clientid", "clientsecret")
 
+    in order to use this module, you need to install the python ``sanction`` module
+
+    .. code-block:: bash
+
+            pip install sanction
+
 .. _Google: https://developers.google.com/accounts/docs/OAuth2
 
 .. py:class:: buildbot.oauth2.GitHubAuth
@@ -776,6 +782,12 @@ In order to access control feature in the web UI, you will need to configure an 
 
         from buildbot.oauth2 import GitHubAuth
         auth=GitHubAuth("clientid", "clientsecret")
+
+    in order to use this module, you need to install the python ``sanction`` module
+
+    .. code-block:: bash
+
+            pip install sanction
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
 
@@ -879,12 +891,13 @@ In order to access control feature in the web UI, you will need to configure an 
                             avatar_methods=[userInfos, AvatarGravatar()]
                             )
 
-        in order to use this module, you need to install the python `ldap` module
+        in order to use this module, you need to install the python ``ldap`` module
 
         .. code-block:: bash
 
-               sudo apt-get builddep python-ldap
-               pip install python-ldap
+                # its not a pure python, so you need to install some c library dependancies
+                sudo apt-get builddep python-ldap
+                pip install python-ldap
 
 
 .. bb:cfg:: codebaseGenerator

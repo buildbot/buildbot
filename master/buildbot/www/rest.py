@@ -29,7 +29,6 @@ from buildbot.www import resource
 from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
-from twisted.web import server
 from twisted.web.error import Error
 
 
