@@ -80,18 +80,17 @@ changes = []
 
 
 def connectFailed(error):
-    logging.error("Could not connect to %s: %s"
-                  % (master, error.getErrorMessage()))
+    logging.error("Could not connect to %s: %s", master, error.getErrorMessage())
     return error
 
 
 def addChanges(remote, changei, src='git'):
-    logging.debug("addChanges %s, %s" % (repr(remote), repr(changei)))
+    logging.debug("addChanges %s, %s", repr(remote), repr(changei))
 
     def addChange(c):
-        logging.info("New revision: %s" % c['revision'][:8])
+        logging.info("New revision: %s", c['revision'][:8])
         for key, value in c.iteritems():
-            logging.debug("  %s: %s" % (key, value))
+            logging.debug("  %s: %s", key, value)
 
         c['src'] = src
         d = remote.callRemote('addChange', c)
@@ -140,13 +139,13 @@ def grab_commit_info(c, rev):
 
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
-            logging.debug("Got file: %s" % m.group(1))
+            logging.debug("Got file: %s", m.group(1))
             files.append(unicode(m.group(1), encoding=encoding))
             continue
 
         m = re.match(r"^Author:\s+(.+)$", line)
         if m:
-            logging.debug("Got author: %s" % m.group(1))
+            logging.debug("Got author: %s", m.group(1))
             c['who'] = unicode(m.group(1), encoding=encoding)
 
         if re.match(r"^Merge: .*$", line):
@@ -156,7 +155,7 @@ def grab_commit_info(c, rev):
     c['files'] = files
     status = f.close()
     if status:
-        logging.warning("git show exited with status %d" % status)
+        logging.warning("git show exited with status %d", status)
 
 
 def gen_changes(input, branch):
@@ -165,7 +164,7 @@ def gen_changes(input, branch):
         if not line:
             break
 
-        logging.debug("Change: %s" % line)
+        logging.debug("Change: %s", line)
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
@@ -196,7 +195,7 @@ def gen_create_branch_changes(newrev, refname, branch):
     # at the same time, pointing to the same commit, or if there are
     # commits that only exists in a common subset of the new branches.
 
-    logging.info("Branch `%s' created" % branch)
+    logging.info("Branch `%s' created", branch)
 
     f = os.popen("git rev-parse --not --branches"
                  + "| grep -v $(git rev-parse %s)" % refname
@@ -207,7 +206,7 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     status = f.close()
     if status:
-        logging.warning("git rev-list exited with status %d" % status)
+        logging.warning("git rev-list exited with status %d", status)
 
 
 def gen_update_branch_changes(oldrev, newrev, refname, branch):
@@ -219,18 +218,17 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     # newrev. Then, generate Change events for each commit between the
     # common ancestor and newrev.
 
-    logging.info("Branch `%s' updated %s .. %s"
-                 % (branch, oldrev[:8], newrev[:8]))
+    logging.info("Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
 
     baserev = commands.getoutput("git merge-base %s %s" % (oldrev, newrev))
-    logging.debug("oldrev=%s newrev=%s baserev=%s" % (oldrev, newrev, baserev))
+    logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
         c = {'revision': baserev,
              'comments': "Rewind branch",
              'branch': unicode(branch, encoding=encoding),
              'who': "dummy",
              }
-        logging.info("Branch %s was rewound to %s" % (branch, baserev[:8]))
+        logging.info("Branch %s was rewound to %s", branch, baserev[:8])
         files = []
         f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
         while True:
@@ -239,12 +237,12 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
                 break
 
             file = re.match(r"^:.*[MAD]\s+(.+)$", line).group(1)
-            logging.debug("  Rewound file: %s" % file)
+            logging.debug("  Rewound file: %s", file)
             files.append(unicode(file, encoding=encoding))
 
         status = f.close()
         if status:
-            logging.warning("git diff exited with status %d" % status)
+            logging.warning("git diff exited with status %d", status)
 
         if category:
             c['category'] = unicode(category, encoding=encoding)
@@ -270,7 +268,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
         status = f.close()
         if status:
-            logging.warning("git rev-list exited with status %d" % status)
+            logging.warning("git rev-list exited with status %d", status)
 
 
 def cleanup(res):
@@ -289,7 +287,7 @@ def process_changes():
         # We only care about regular heads, i.e. branches
         m = re.match(r"^refs\/heads\/(.+)$", refname)
         if not m:
-            logging.info("Ignoring refname `%s': Not a branch" % refname)
+            logging.info("Ignoring refname `%s': Not a branch", refname)
             continue
 
         branch = m.group(1)
@@ -297,7 +295,7 @@ def process_changes():
         # Find out if the branch was created, deleted or updated. Branches
         # being deleted aren't really interesting.
         if re.match(r"^0*$", newrev):
-            logging.info("Branch `%s' deleted, ignoring" % branch)
+            logging.info("Branch `%s' deleted, ignoring", branch)
             continue
         elif re.match(r"^0*$", oldrev):
             gen_create_branch_changes(newrev, refname, branch)
