@@ -311,6 +311,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             sl.append(s)
             s['link'] = path_to_slave(req, slave)
             s['name'] = slave.getName()
+            s['friendly_name'] = slave.getFriendlyName()
             c = s['connected'] = slave.isConnected()
             if c:
                 s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
