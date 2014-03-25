@@ -71,6 +71,9 @@ class FakeBuilderStatus(object):
     def setBigState(self, state):
         pass
 
+    def setFriendlyName(self, name):
+        pass
+
 
 class FakeMaster(object):
     """
