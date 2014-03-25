@@ -13,86 +13,92 @@ define(['select2'], function () {
 			selectBranches.select2({
 				width: selectors.getMaxChildWidth(selectBranches),
 				minimumResultsForSearch : 10
-			});									
+			});
 
 			// invoke the sortingfunctionality when the selector
-			selectBranches.add(commonbranchSelect).on("select2-open", function() { 	
+			selectBranches.add(commonbranchSelect).on("select2-open", function() {
 				selectors.clickSort();
-			})
-			
+			});
+
 			// fill the options in the combobox with common options
 			selectors.comboBox(selectBranches, commonbranchSelect);
 
 			//Invoke select2 for the common selector
 			commonbranchSelect.select2({
 				width: selectors.getMaxChildWidth(commonbranchSelect),
-				placeholder: "Select a common branch"
+				placeholder: "Select a branch"
 			});
 
-			// unbind the click event on close for the sorting functionality	
-			commonbranchSelect.add(selectBranches).on("select2-close", function(e) {				
+			// unbind the click event on close for the sorting functionality
+			commonbranchSelect.add(selectBranches).on("select2-close", function() {
 				$('.sort-name').unbind('click');
 				$('.select2-container').removeClass('select2-container-active');			
-			});	
+			});
 
-			selectBranches.on("select2-selecting", function(e) {    			
+			selectBranches.on("select2-selecting", function() {
     			 commonbranchSelect.select2("val", "");
 			});
 
 
 
-		}, getMaxChildWidth: function(sel) {			
+		}, getMaxChildWidth: function(sel) {
 			    var max = 80;
-			    
+
 			    sel.each(function(){
 			        var c_width = $(this).width();
-			    	    
+
 			        if (c_width > max) {
 			            max = c_width + 30;
 			        }
 			    });
-			    
+
 			    return max;
 		},
 		// combobox on codebases
-		comboBox: function (selector, commonbranchSelect) {			
+		comboBox: function (selector, commonbranchSelect) {
 
 			// Find common options
-			var commonOptions = {};
-			$('option', selector).each(function() {			
-			    var value = $(this).text();
-			    if (commonOptions[value] == null){
-			        commonOptions[value] = true;
-			    } else {			        
-			        $(this).clone().prop('selected', false).appendTo(commonbranchSelect)
-			    }
+			$('option', selector).each(function() {
+                $(this).clone().prop('selected', false).appendTo(commonbranchSelect)
 			});
 
 			// remove the duplicates
 			var removedDuplicatesOptions = {};
-			$('option',commonbranchSelect).each(function() {			
+			$('option',commonbranchSelect).each(function() {
 			    var value = $(this).text();
 			    if (removedDuplicatesOptions[value] == null){
 			        removedDuplicatesOptions[value] = true;
 			    } else {
-			    	$(this).remove();			        
+			    	$(this).remove();
 			    }
 			});
 
+            var defaults = [];
+            $(selector).each(function(i, obj) {
+                var opt = $('option[selected]', obj);
+                defaults.push(opt.html().trim())
+            });
+
 			commonbranchSelect.on("change", function() {
-				
 				var commonVal = $(this);
-				
-				$('option',selector).each(function() {
-					
-					if ($(this).val() === $(commonVal).val() ) {					
-						$(this).parent().children('option').prop('selected', false);
-						$(this).prop('selected', true);
-					}
-				});				
-				selector.trigger("change");			
-			});	
-			
+				$(selector).each(function(i, obj) {
+                    $('option', obj).each(function() {
+                        if ($(this).val() === $(commonVal).val() ) {
+                            $(this).parent().children('option').prop('selected', false);
+                            $(this).prop('selected', true);
+                            return false;
+                        }
+                        return true;
+                    });
+
+                    if ($(obj).val() !== commonVal.val()) {
+                        $(obj).val(defaults[i]);
+                    }
+				});
+
+                selector.trigger("change");
+			});
+
 		},
 		// sort selector list by name
 		clickSort: function () {
@@ -101,7 +107,7 @@ define(['select2'], function () {
 			var sortLink = selector.children('.sort-name');
 
 			sortLink.bind('click', function(e){
-				e.preventDefault();							
+				e.preventDefault();
 				sortLink.toggleClass('direction-up');
 			    selectResults.children('li').sort(function(a, b) {
 			        var upA = $(a).text().toUpperCase();
@@ -115,6 +121,7 @@ define(['select2'], function () {
 			    selectResults.prop({ scrollTop: 0 });
 			});
 		}
-	}	
+	};
+
 	return selectors;
 });
