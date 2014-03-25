@@ -172,6 +172,9 @@ class BuilderStatus(styles.Versioned):
     def loadBuildFromFile(self, number):
         filename = self.makeBuildFilename(number)
         try:
+            if not os.path.exists(filename):
+                return None
+
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
             with open(filename, "rb") as f:

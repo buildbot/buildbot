@@ -16,6 +16,7 @@
 
 import time
 import os
+import sys
 from twisted.python import log
 from twisted.internet import defer, utils
 
@@ -40,7 +41,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
                  category=None, project='',
-                 encoding='utf-8'):
+                 encoding='utf-8', commits_checked=10000):
 
         self.repourl = repourl
         self.branches = branches
@@ -58,6 +59,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         self.project = project
         self.commitInfo  = {}
         self.initLock = defer.DeferredLock()
+        self.commits_checked = commits_checked
 
         if self.workdir == None:
             config.error("workdir is mandatory for now in HgPoller")
@@ -109,8 +111,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
                                    env=os.environ, errortoo=False )
         def process(output):
             # fortunately, Mercurial issues all filenames one one line
+            if sys.platform != 'win32':
+                linesep = os.linesep
+            else:
+                linesep = '\n'
             date, author, comments = output.decode(self.encoding, "replace").split(
-                os.linesep, 2)
+                linesep, 2)
 
             if not self.usetimestamps:
                 stamp = None
@@ -170,7 +176,9 @@ class HgPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def _processBranches(self, output):
-        args = ['branches',]
+
+        search = 'last(:tip,{0}):&head()&!closed()+bookmark()'.format(self.commits_checked)
+        args = ['log', '-r', search, '--template', '{branch} {bookmarks} {rev}:{node|short}\n']
 
         results = yield utils.getProcessOutput(self.hgbin, args,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
@@ -181,7 +189,11 @@ class HgPoller(base.PollingChangeSource, StateMixin):
         for branch in branchlist:
             list = branch.strip().split()
             if self.trackingBranch(list[0]):
-                self.currentRev[list[0]] = list[1]
+                if len(list) == 2:
+                    self.currentRev[list[0]] = list[1]
+                elif len(list) == 3:
+                    self.currentRev[list[0]] = list[2]
+                    self.currentRev[list[1]] = list[2]
 
     # filter branches by regex
     def trackingBranch(self, branch):

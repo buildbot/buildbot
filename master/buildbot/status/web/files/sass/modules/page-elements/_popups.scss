@@ -1,6 +1,7 @@
 @charset "UTF-8";
 // more info box
 .more-info-box {
+    position: absolute;
 	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;

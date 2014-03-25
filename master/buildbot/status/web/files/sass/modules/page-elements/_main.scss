@@ -5,8 +5,19 @@
 * @section page-elements
 * @author Simon Holm
 */
-  
-
+     
+.tooltip-cont {
+	position:absolute;
+	display:block;	
+	display:none;
+	max-width:350px;
+	@include bgimage (linear-gradient(center top , rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+	@include border-radius(8px);
+	@include text-shadow(0 1px 0 #FFFFFF);
+	@include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
+	padding:8px 8px 8px 8px;
+	z-index:1000;
+}
 // used on status messages together with the color class
 .result {
 	padding: 4px 9px;

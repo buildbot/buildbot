@@ -60,13 +60,16 @@ define(['screensize'], function (screenSize) {
 			
 			// chrome font problem fix
 			$(function chromeWin() {
-				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());
 				var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
-				if(is_chrome && isWindows){
-				  $('body').addClass('chrome win');
-
+				if (is_chrome) {
+					$('body').addClass('chrome');
 				}
-			});
+				if (isWindows) {
+					$('body').addClass('win');
+				}
+								
+			});		
 
 			// tooltip used on the builddetailpage
 			helpers.toolTip('.ellipsis-js');
@@ -85,7 +88,34 @@ define(['screensize'], function (screenSize) {
 			$('#authUserBtn').click(function(e){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
+			helpers.tooltip($('.tooltip'));
 
+		}, tooltip: function (el) {
+			
+			el.hover(function(e) {
+				var toolTipCont = $('<div class="tooltip-cont" />');
+				this.t = this.title;
+				this.title = "";
+				var cursorPosTop = e.pageY + 5;
+				var cursorPosLeft = e.pageX + 5;
+				$(e.target).click(function(){
+					toolTipCont.remove();					
+				});	
+				toolTipCont.html(this.t)
+				.appendTo('body')
+				.css({'top':cursorPosTop,'left':cursorPosLeft})
+				.delay(600)
+				.fadeIn('250')
+				.delay(10000)
+				.fadeOut('250', function(){					
+					$(this).remove();
+				});
+			}, function() {
+				this.title = this.t;
+				var toolTipCont = $('.tooltip-cont');	
+				toolTipCont.remove();
+			});
+			
 		}, authorizeUser: function() {
 
 			// the current url
@@ -120,16 +150,16 @@ define(['screensize'], function (screenSize) {
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
-			    var tw = el.outerWidth(); 
+			    var tw = el.outerWidth(); 			   			    
+
+			    // adjust height to browser height , "height":h - 75 , "height":'auto'
 			    
-			    el.css("position", "absolute");
+			    if (h < (tu + 5)) {
 
-			    // adjust height to browser height
-
-			    if (h < tu) {
-			    	el.css("top", (h - tu + (tu - h) + 10) / 2 + $(window).scrollTop() + "px");
+			    	el.css({"top": 5 + $(window).scrollTop() + "px","height":h -60});
 			    } else {
-			    	el.css("top", (h - tu) / 2 + $(window).scrollTop() + "px");
+			    
+			    	el.css({"top": (h - tu) / 2 + $(window).scrollTop() + 'px',"height":'auto'});
 			    }
 				
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
@@ -388,19 +418,34 @@ define(['screensize'], function (screenSize) {
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart', function(e){
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
-					
-					if (clearEl === undefined ) {
-						boxElement.remove();
-					} else {
-						boxElement.slideUp('fast', function(){
-							$(this).remove();	
-						});
-					}
-					
-					$(this).unbind(e);
+			
+			var closeBtn = $('.close-btn').add('body');
+			
+			if ($('body').hasClass('win')) {
+				var hasSelect2 = boxElement.find('.select-tools-js').length;
+				if (hasSelect2) {
+					closeBtn = closeBtn.not(document);
 				}
+			} 			
+			
+			closeBtn.bind('click touchstart', function(e){
+				console.log($(e.target).children($('#select2-drop-mask')).length)
+				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {
+					$('body').removeClass('close') 
+				
+						if (clearEl === undefined ) {
+
+							boxElement.remove();
+						} else {
+							boxElement.slideUp('fast', function(){
+								$(this).remove();	
+							});
+						}
+
+					$(this).unbind(e);
+				
+				}
+
 			});	
 		}
 	};
