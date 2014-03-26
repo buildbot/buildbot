@@ -433,16 +433,16 @@ class StaticHTML(HtmlResource):
         return template.render(**cxt)
 
 
-class DirectoryLister(static.DirectoryLister, ContextMixin):
+class DirectoryLister(static.DirectoryLister, HtmlResource):
 
     """This variant of the static.DirectoryLister uses a template
     for rendering."""
 
-    pageTitle = 'BuildBot'
+    def __init__(self, pathname, dirs, contentTypes, contentEncodings, defaultType):
+        static.DirectoryLister.__init__(self, pathname, dirs, contentTypes, contentEncodings, defaultType)
+        HtmlResource.__init__(self)
 
-    def render(self, request):
-        cxt = self.getContext(request)
-
+    def content(self, request, cxt):
         if self.dirs is None:
             directory = sorted(os.listdir(self.path))
         else:
@@ -458,6 +458,9 @@ class DirectoryLister(static.DirectoryLister, ContextMixin):
         if isinstance(data, unicode):
             data = data.encode("utf-8")
         return data
+
+    def render(self, request):
+        return HtmlResource.render(self, request)
 
 
 class StaticFile(static.File):
