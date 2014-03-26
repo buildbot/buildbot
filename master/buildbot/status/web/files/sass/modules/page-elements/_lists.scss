@@ -219,13 +219,17 @@ a.no-artifacts {
 	.label {
 		display:block;
 		float:left;
-		font-weight:bold;
-		width: 84px;
+		font-weight:bold;		
 		color: #333;
+		margin:6px 10px 8px 0;	
 	}
 	.select {
 		display:block;
 		float:left;
+	}
+	input[type="checkbox"] {
+		display: block;
+		clear: both;
 	}
 }
 
@@ -238,17 +242,16 @@ div.force-text {
 	    @include border-radius(4px);
 	    color: #666;
 	    display: block;
-	    float: left;
+	    clear: both;	    
 	    padding: 7px;		
-	    width: 220px;
+	    width: 306px;
 	}
 	.label {
 		display:block;
 		float:left;
 		font-weight:bold;
-		width: 84px;
 		color: #333;
-		margin-top: 6px;
+		margin:6px 10px 8px 0;		  
 	}	
 }
 

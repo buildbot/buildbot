@@ -98,17 +98,22 @@
             <input type="hidden" name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
           {% endif %}
     {% elif 'text' in f.type or 'int' in f.type %}
-      {% set titleTxt = '' %}
-      {% set tooltipClass = ''%}
+      
       {% if 'Reason' in f.label %}
-        {% set titleTxt = 'This will be filled out automatically if a build is triggered as a dependency. Otherwise, you can write a reason here for while you are requesting the build (this information will show up on the build details page).' %}      
-        {% set tooltipClass = 'class="tooltip"'%}
+       
       {% endif %}
        <span class="label">{{f.label}}</span>
-       <input type='text' size='{{f.size}}' {{tooltipClass}} name='{{f.fullName}}' title="{{titleTxt}}" value='{{default_props[sch.name+"."+f.fullName]}}' />
-    {% elif 'bool' in f.type%}
-       <input type='checkbox' title="Checking this box will force the built to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt" class="tooltip" name='checkbox' value='{{f.fullName}}'  {{default_props[sch.name+"."+f.fullName]}} />
+      {% if 'Reason' in f.label %}
+          <span title="This will be filled out automatically if a build is triggered as a dependency. Otherwise, you can write a reason here for while you are requesting the build (this information will show up on the build details page)." class="question-icon tooltip">
+          </span>
+      {% endif %}
+       <input type='text' size='{{f.size}}'  name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
+     
+    {% elif 'bool' in f.type%}      
        <span class="label">{{f.label}}</span>
+        <span title="Checking this box will force the built to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt" class="tooltip question-icon">
+      </span>
+       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'textarea' in f.type %}
        <span class="label">{{f.label}}</span>
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
@@ -169,7 +174,9 @@
     <div class="row force-text" id="force-{{ sch.name }}-slave">
     {% if slaves %}
         <span class="label">Specify slave</span>
-        <select id="selected_slave" name="selected_slave" class="tooltip" title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases.">
+           <span title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases." class="tooltip question-icon">
+      </span>
+        <select id="selected_slave" name="selected_slave" class="select"> 
             <option value="default">Any Compatible</option>
             <option value="allCompatible">All Compatible</option>
             {% for slave in slaves %}
@@ -182,6 +189,7 @@
     {% for f in sch.all_fields %}
       {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
     {% endfor %}
+     <input class="grey-btn" type="submit" value="Run" />
   </div>
   {#
    <div class="dependencies">
@@ -272,9 +280,10 @@
     
   </div>
   #}
+
 </div>
   
-<input class="grey-btn" type="submit" value="Run" />
+
   
 
  </form>

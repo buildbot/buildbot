@@ -103,17 +103,15 @@ define(['screensize'], function (screenSize) {
 				});	
 				toolTipCont.html(this.t)
 				.appendTo('body')
-				.css({'top':cursorPosTop,'left':cursorPosLeft})
-				.delay(600)
-				.fadeIn('250')
-				.delay(10000)
-				.fadeOut('250', function(){					
-					$(this).remove();
-				});
+				.css({'top':cursorPosTop,'left':cursorPosLeft})				
+				.fadeIn('fast');
+				
 			}, function() {
 				this.title = this.t;
 				var toolTipCont = $('.tooltip-cont');	
-				toolTipCont.remove();
+				toolTipCont.fadeOut('fast', function(){					
+					$(this).remove();
+				});
 			});
 			
 		}, authorizeUser: function() {
