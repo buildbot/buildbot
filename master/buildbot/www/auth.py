@@ -102,7 +102,8 @@ class RemoteUserAuth(AuthBase):
         defer.returnValue(True)
 
     def authenticateViaLogin(self, request):
-        raise Error(403, "should authenticate via reverse proxy")
+        raise Error(403, "Please check with your administrator"
+                         ", there is an issue with the reverse proxy")
 
 
 class AuthRealm(object):

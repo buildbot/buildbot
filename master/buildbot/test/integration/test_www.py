@@ -28,8 +28,6 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
-import twisted
-twisted.internet.base.DelayedCall.debug = True
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
 
