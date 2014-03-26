@@ -67,13 +67,16 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			
 			// chrome font problem fix
 			$(function chromeWin() {
-				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase() );
+				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());
 				var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
-				if(is_chrome && isWindows){
-				  $('body').addClass('chrome win');
-
+				if (is_chrome) {
+					$('body').addClass('chrome');
 				}
-			});
+				if (isWindows) {
+					$('body').addClass('win');
+				}
+								
+			});		
 
 			// tooltip used on the builddetailpage
 			helpers.toolTip('.ellipsis-js');
@@ -91,7 +94,32 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
+			helpers.tooltip($('.tooltip'));
 
+		}, tooltip: function (el) {
+			
+			el.hover(function(e) {
+				var toolTipCont = $('<div class="tooltip-cont" />');
+				this.t = this.title;
+				this.title = "";
+				var cursorPosTop = e.pageY + 5;
+				var cursorPosLeft = e.pageX + 5;
+				$(e.target).click(function(){
+					toolTipCont.remove();					
+				});	
+				toolTipCont.html(this.t)
+				.appendTo('body')
+				.css({'top':cursorPosTop,'left':cursorPosLeft})				
+				.fadeIn('fast');
+				
+			}, function() {
+				this.title = this.t;
+				var toolTipCont = $('.tooltip-cont');	
+				toolTipCont.fadeOut('fast', function(){					
+					$(this).remove();
+				});
+			});
+			
 		}, authorizeUser: function() {
 
 			// the current url
@@ -127,16 +155,16 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
-			    var tw = el.outerWidth(); 
+			    var tw = el.outerWidth(); 			   			    
+
+			    // adjust height to browser height , "height":h - 75 , "height":'auto'
 			    
-			    el.css("position", "absolute");
+			    if (h < (tu + 5)) {
 
-			    // adjust height to browser height
-
-			    if (h < tu) {
-			    	el.css("top", (h - tu + (tu - h) + 10) / 2 + $(window).scrollTop() + "px");
+			    	el.css({"top": 5 + $(window).scrollTop() + "px","height":h -60});
 			    } else {
-			    	el.css("top", (h - tu) / 2 + $(window).scrollTop() + "px");
+			    
+			    	el.css({"top": (h - tu) / 2 + $(window).scrollTop() + 'px',"height":'auto'});
 			    }
 				
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
@@ -626,19 +654,26 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
     		helpers.setCookie(name, value, eraseCookie);
 
 		}, closePopup: function(boxElement, clearEl) {
-			$(document, '.close-btn').bind('click touchstart', function(e){
-				if (!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length) {
-					
-					if (clearEl === undefined ) {
-						boxElement.remove();
-					} else {
-						boxElement.slideUp('fast', function(){
-							$(this).remove();	
-						});
-					}
-					
+			
+			var closeBtn = $('.close-btn').add(document);
+			
+			closeBtn.bind('click touchstart', function(e){
+				
+				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
+				
+						if (clearEl === undefined ) {
+
+							boxElement.remove();
+						} else {
+							boxElement.slideUp('fast', function(){
+								$(this).remove();	
+							});
+						}
+
 					$(this).unbind(e);
+				
 				}
+
 			});	
 		}, codebasesFromURL: function (urlParams) {
             var sPageURL = window.location.search.substring(1);

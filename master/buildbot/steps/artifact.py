@@ -265,7 +265,7 @@ class UploadArtifact(ShellCommand):
 
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
-        command = ["rsync", "-vazr", self.artifact, remotelocation]
+        command = ["rsync", "-var", self.artifact, remotelocation]
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
         self.addURL(self.artifact, self.artifactURL)
@@ -305,7 +305,7 @@ class DownloadArtifact(ShellCommand):
             artifactPath += "/%s" % self.artifactDirectory
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
-        command = ["rsync", "-vazr", remotelocation, self.artifactDestination]
+        command = ["rsync", "-var", remotelocation, self.artifactDestination]
         self.setCommand(command)
         ShellCommand.start(self)
 

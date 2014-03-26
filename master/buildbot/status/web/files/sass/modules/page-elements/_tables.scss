@@ -51,9 +51,7 @@
 	overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
-
-
- 
+  
 .table-1,
 .table-2 {
 	width:100%;
@@ -252,7 +250,12 @@
     margin-top: 8px;
     padding: 0 0 0 12px; 
     width: 88%;
+    .branch-overview & {
+    	float: left;
+    }
 }
+
+
   
 .inner-table-holder {
 	height: 30px;
@@ -426,7 +429,7 @@ table.codebase-branch-table {
     }
 }
 
-
+ 
 
 .filter-table-input {
 	margin-bottom:25px;
@@ -577,7 +580,7 @@ table.codebase-branch-table {
 			
 		}
 	}
-
+ 
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {

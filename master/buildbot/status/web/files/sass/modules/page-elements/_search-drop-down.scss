@@ -125,6 +125,9 @@ div.common-branch-select {
 	@include text-shadow(0 1px 0 #fff);
     text-overflow: ellipsis;
 }
+.select2-hidden-accessible {
+    display: none;
+}
 
 .select2-container .select2-choice abbr {
     display: none;

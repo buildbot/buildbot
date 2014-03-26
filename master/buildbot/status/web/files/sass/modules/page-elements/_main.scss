@@ -5,7 +5,45 @@
 * @section page-elements
 * @author Simon Holm
 */
-    
+     
+.tooltip-cont {
+	position:absolute;
+	display:block;	
+	display:none;
+	max-width:350px;
+	@include bgimage(linear-gradient(top, rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+	@include border-radius(8px);
+	@include text-shadow(0 1px 0 #FFFFFF);
+	@include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
+	padding:8px 8px 8px 8px;
+	z-index:1000;
+	
+}
+
+div.force-text .label.question-icon {
+	margin-top: 9px;
+}
+
+.question-icon {
+
+	&:after {
+
+	 	color: #718396;
+	    content: "";
+	    display: inline-block;
+	    font-family: "katana_icons";
+	    font-size: 16px;
+	    font-weight: normal;
+	    margin-top: 5px;
+	    padding: 0 0 0 0;
+	    position: absolute;	 
+	    @include text-shadow(0 1px 0 #FFFFFF);   
+    }
+    &:hover:after {
+		color: #ccc;
+		cursor: pointer;
+	}
+}
 
 // used on status messages together with the color class
 .result {

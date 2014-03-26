@@ -73,9 +73,9 @@
 </h2>
   
 {% if slave_url %}  
-  <a class="small-head" href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+  <a class="small-head" href="{{ slave_url|e }}">{{ slave_friendly_name|e }}</a>
 {% else %}
-  {{ b.getSlavename()|e }} 
+  {{ slave_friendly_name|e }}
 {% endif %}
 <div class="divider"></div>
 

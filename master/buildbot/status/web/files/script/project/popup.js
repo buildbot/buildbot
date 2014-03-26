@@ -1,4 +1,4 @@
-define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpers,popups,Mustache) {
+define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache'], function (helpers,form,popups,Mustache) {
 
     "use strict";
     var popup;
@@ -49,7 +49,7 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
-				popup.externalContentPopup($(this));
+				popup.externalContentPopup($(this));				
 			});
 
 		}, showjsonPopup: function(jsonObj) {			
@@ -151,49 +151,43 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 			var preloader = $(mustacheTmpl);
 
 			$('body').append(preloader).show();
-			
-			var mustacheTmplOutBox = Mustache.render(popups, {'popupOuter':'true','headline':'Select branches'});
-			var mib = $(mustacheTmplOutBox);
-			
+			var mib = popup.htmlModule ('Select branches');
 			mib.appendTo('body');
+
 
 			$.get(path)
 			.done(function(data) {
-
+				require(['selectors'],function(selectors) {		        	
+		        	
 				var formContainer = $('#content1');	
 				preloader.remove();
 				
-				var fw = $(data).find('#formWrapper')
-				
-				fw.children('#getForm').prepend('<div class="filter-table-input">'+
+				var fw = $(data).find('#formWrapper');
+				var getForm = fw.children('#getForm').prepend('<div class="filter-table-input">'+
 	    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
 	  				'</div>');
 				
+				
 				fw.appendTo(formContainer);												
+					
+					helpers.jCenter(mib).fadeIn('fast',function(){					
+						selectors.init();
 
-				helpers.jCenter(mib).fadeIn('fast',function(){					
-					$('#getForm .blue-btn').focus();
-				});
-				
-				$(window).resize(function() {					
-					helpers.jCenter(mib);
-				});
-
-				require(['selectors'],function(selectors) {		        	
-		        	selectors.init();
-					$(window).resize(function() {
-						helpers.jCenter($('.more-info-box-js'));
-						
+						getForm
+						.attr('action', window.location.href)
+						.find('.blue-btn[type="submit"]')
+						.focus()
+						.click(function(){
+							mib.hide();				
+						});
+						helpers.closePopup(mib);
 					});
-				});
+					
+					$(window).resize(function() {					
+						helpers.jCenter(mib);
+					});
 				
-				$('#getForm').attr('action', window.location.href);	
-				$('#getForm .blue-btn[type="submit"]').click(function(){
-					$('.more-info-box-js').hide();				
-				});
-
-				helpers.closePopup(mib);
-
+				});			
 			});
 		}, customTabs: function (){ // tab list for custom build
 			$('.tabs-list li').click(function(i){
@@ -225,15 +219,24 @@ define(['helpers','text!templates/popups.mustache', 'mustache'], function (helpe
 
             //get all branches
             var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-            helpers.codebasesFromURL(urlParams);
-
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            $.each(sURLVariables, function(index, val) {
+                var sParameterName = val.split('=');
+                if (sParameterName[0].indexOf("_branch") >= 0) {
+                    urlParams[sParameterName[0]] = sParameterName[1];
+                    console.log(val)
+                }
+            });
+			
 			// get currentpage with url parameters
             var url = location.protocol + "//" + location.host + "/forms/forceBuild";
 			$.get(url, urlParams).done(function(data) {
 				var exContent = $('#content1');
 				preloader.remove();
 				$(data).appendTo(exContent);
-				
+
+				helpers.tooltip($('.tooltip'));
 				// Insert full name from cookie
 				if (contentType === 'form') {
 					helpers.setFullName($("#usernameDisabled, #usernameHidden", exContent));	

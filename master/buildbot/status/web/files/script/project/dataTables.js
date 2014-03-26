@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustache','text!templates/buildslaves.mustache','text!templates/builders.mustache','mustache','moment'], function (dataTable,helpers,popup,buildqueue,buildslaves,builders,Mustache,moment) {
+define(['datatables-plugin','helpers','libs/natural-sort','popup','text!templates/buildqueue.mustache','text!templates/buildslaves.mustache','text!templates/builders.mustache','mustache','moment'], function (dataTable,helpers,naturalSort,popup,buildqueue,buildslaves,builders,Mustache,moment) {
    
     "use strict";
     var dataTables;
@@ -6,10 +6,11 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
     dataTables = {
         init: function (tablesorterEl) {
 			//Setup sort neutral function
-            dataTables.initSortNeutral();
+            dataTables.initSortNatural();
 
 			// Select which columns not to sort
-			tablesorterEl.each(function(i) {			    	
+			tablesorterEl.each(function(i, tableElem){
+                var $tableElem = $(tableElem);			    	
 				
 				var colList = [];								
 				var optionTable = {				 			
@@ -38,15 +39,27 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
 				}
 
-				// remove sorting from selected columns
+				var defaultSortCol= undefined;
+                var aoColumns = [];
+                var sort = $tableElem.attr("data-default-sort-dir") || "asc";
 
-				$('> thead th', this).each(function(i){			        
-			        if (!$(this).hasClass('no-tablesorter-js')) {
-			            colList.push(null);			            
-			        } else {
-			            colList.push({'bSortable': false });
-			        }
-			    });
+                if (tableElem.hasAttribute("data-default-sort-col")) {
+                    defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
+                    optionTable.aaSorting = [[defaultSortCol, sort]];
+                }
+
+                $('> thead th', this).each(function(i, obj){
+                    if ($(obj).hasClass('no-tablesorter-js')) {
+                        aoColumns.push({'bSortable': false });
+                    }
+                    else if (defaultSortCol !== undefined  && defaultSortCol === i) {
+                        aoColumns.push({ "sType": "natural" });
+                    }
+                    else {
+                        aoColumns.push(null);
+                    }
+                });
+                optionTable.aoColumns = aoColumns;
 
 				// add specific for the buildqueue page
 				if ($(this).hasClass('buildqueue-table')) {							
@@ -288,10 +301,6 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 						
 					]
 
-				} else {
-
-					// add no sorting 
-					optionTable.aoColumns = colList;	
 				}
 				
 				// add searchfilterinput, length change and pagination
@@ -319,7 +328,7 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
 	        		// Parse the url and insert current codebases and branches	        		
-	        		helpers.codeBaseBranchOverview(dtWTop);
+	        		//helpers.codeBaseBranchOverview(dtWTop); not working yet
 				}
 
 			  	// for the codebases
@@ -343,24 +352,20 @@ define(['datatables-plugin','helpers','popup','text!templates/buildqueue.mustach
                 */
 
 			});
-		}, initSortNeutral: function() {
-            //Add the ability to unsort
-            $.fn.dataTableExt.oApi.fnSortNeutral = function ( oSettings )
-            {
-                /* Remove any current sorting */
-                oSettings.aaSorting = [];
+		}, initSortNatural: function() {
+            //Add the ability to sort naturally
+            jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+                "natural-pre": function(a) {
+                    return $(a).text().trim();
+                },
+                "natural-asc": function ( a, b ) {
+                    return naturalSort.sort(a,b);
+                },
 
-                /* Sort display arrays so we get them in numerical order */
-                oSettings.aiDisplay.sort( function (x,y) {
-                    return x-y;
-                } );
-                oSettings.aiDisplayMaster.sort( function (x,y) {
-                    return x-y;
-                } );
-
-                /* Redraw */
-                oSettings.oApi._fnReDraw( oSettings );
-            };
+                "natural-desc": function ( a, b ) {
+                    return naturalSort.sort(a,b) * -1;
+                }
+            } );
         }
 	};
 
