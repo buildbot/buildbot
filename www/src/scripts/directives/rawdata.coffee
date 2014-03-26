@@ -1,7 +1,12 @@
 angular.module('app').directive 'rawdata',
-['$log', ($log) ->
+['$log', 'RecursionHelper', ($log, RecursionHelper) ->
     replace: true
     restrict: 'E'
     scope: {data:'='}
     templateUrl: 'views/directives/rawdata.html'
+    compile: RecursionHelper.compile
+    controller: [ '$scope', ($scope) ->
+        $scope.isObject = (v) -> _.isObject(v) and not _.isArray(v)
+        $scope.isArrayOfObjects = (v) -> _.isArray(v) and v.length > 0 and _.isObject(v[0])
+    ]
 ]

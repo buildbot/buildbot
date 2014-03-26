@@ -18,6 +18,7 @@ import re
 from zope.interface import implements
 
 from buildbot.util import json
+from buildbot.interfaces import IConfigured
 from buildbot.www import resource
 from buildbot import util
 
@@ -158,6 +159,7 @@ class SessionConfigResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         self.config = new_config.www
+        self.master_config = new_config
 
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderConfig)
@@ -179,10 +181,13 @@ class SessionConfigResource(resource.Resource):
         else:
             config.update({"user": {"anonymous": True}})
         config.update(self.config)
+        config['master'] = self.master_config
 
         def toJson(obj):
-            if isinstance(obj, object) and hasattr(obj, "getConfig"):
-                return obj.getConfig()
+            obj = IConfigured(obj).getConfigDict()
+            if isinstance(obj, dict):
+                return obj
+            return repr(obj) + " not yet IConfigured"
         defer.returnValue("this.config = " + json.dumps(config, default=toJson))
 
 

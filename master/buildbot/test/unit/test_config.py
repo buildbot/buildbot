@@ -193,7 +193,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(cfg, attr))
             for attr, exp in expected.iteritems()])
-        got = util.ConfiguredMixin.getConfigFromThing(got)
+        got = interfaces.IConfigured(got).getConfigDict()
+        expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
 
     def test_defaults_validation(self):
@@ -352,7 +353,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(self.cfg, attr))
             for attr, exp in expected.iteritems()])
-        got = util.ConfiguredMixin.getConfigFromThing(got)
+        got = interfaces.IConfigured(got).getConfigDict()
+        expected = interfaces.IConfigured(expected).getConfigDict()
+
         self.assertEqual(got, expected)
 
     # tests

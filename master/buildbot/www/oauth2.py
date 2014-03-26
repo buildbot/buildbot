@@ -45,7 +45,7 @@ class OAuth2Auth(auth.AuthBase):
         self.loginUri = join(new_config.www['url'], "login")
         self.homeUri = new_config.www['url']
 
-    def getConfig(self):
+    def getConfigDict(self):
         return dict(name=self.name,
                     oauth2=True,
                     fa_icon=self.faIcon

@@ -57,7 +57,7 @@ def error(error):
         raise ConfigErrors([error])
 
 
-class MasterConfig(object):
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -128,6 +128,7 @@ class MasterConfig(object):
         "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
+    compare_attrs = list(_known_config_keys)
 
     @classmethod
     def loadConfig(cls, basedir, filename):
@@ -683,8 +684,7 @@ class MasterConfig(object):
             error("slaves are configured, but c['protocols'] not")
 
 
-class BuilderConfig:
-
+class BuilderConfig(util.ConfiguredMixin):
     def __init__(self, name=None, slavename=None, slavenames=None,
                  builddir=None, slavebuilddir=None, factory=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
@@ -791,7 +791,6 @@ class BuilderConfig:
         if self.description:
             rv['description'] = self.description
         return rv
-
 
 class ReconfigurableServiceMixin:
 

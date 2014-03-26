@@ -25,6 +25,10 @@ from twisted.python import reflect
 
 from buildbot.util.misc import SerializedInvocation
 from buildbot.util.misc import deferredLocked
+from buildbot.interfaces import IConfigured
+
+from twisted.python.components import registerAdapter
+from zope.interface import implements
 
 
 def naturalSort(l):
@@ -76,8 +80,8 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
-class ComparableMixin:
-
+class ComparableMixin(object):
+    implements(IConfigured)
     compare_attrs = []
 
     class _None:
@@ -109,24 +113,65 @@ class ComparableMixin:
                      for name in compare_attrs]
         return cmp(self_list, them_list)
 
+    def getConfigDict(self):
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
+        return dict([(k, getattr(self, k)) for k in compare_attrs if hasattr(self, k)])
+
+
+class _DefaultConfigured(object):
+    implements(IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return self.value
+
+registerAdapter(_DefaultConfigured, object, IConfigured)
+
+
+class _ListConfigured(object):
+    implements(IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return [IConfigured(e).getConfigDict() for e in self.value]
+
+registerAdapter(_ListConfigured, list, IConfigured)
+
+
+class _DictConfigured(object):
+    implements(IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict([(k, IConfigured(v).getConfigDict()) for k, v in self.value.iteritems()])
+
+registerAdapter(_DictConfigured, dict, IConfigured)
+
+
+class _SREPatternConfigured(object):
+    implements(IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict(name="re", pattern=self.value.pattern)
+
+registerAdapter(_SREPatternConfigured, re.compile("").__class__, IConfigured)
+
 
 class ConfiguredMixin(object):
-    def getConfig(self):
-        return {'name': self.name}
+    implements(IConfigured)
 
-    @staticmethod
-    def getConfigFromThing(config):
-        if isinstance(config, dict):
-            return dict([(k, ConfiguredMixin.getConfigFromThing(v))
-                         for k, v in config.items()])
-        if isinstance(config, list):
-            return [(ConfiguredMixin.getConfigFromThing(v))
-                    for v in config]
-        # we return untouched mocks, but try to not import the module here
-        if hasattr(config, "getConfig") and not config.__class__.__name__ == "Mock":
-            return config.getConfig()
-        else:
-            return config
+    def getConfigDict(self):
+        return {'name': self.name}
 
 
 def diffSets(old, new):
@@ -279,4 +324,4 @@ __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffSets', 'makeList', 'in_reactor', 'string2boolean']
+    'diffSets', 'makeList', 'in_reactor', 'string2boolean', 'ConfiguredMixin']
