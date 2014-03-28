@@ -13,6 +13,34 @@ Components which need to be notified of changes in the configuration should be
 implemented as services, subclassing :py:class:`ReconfigurableServiceMixin`, as
 described in :ref:`developer-Reconfiguration`.
 
+IConfigured
+~~~~~~~~~~~
+
+.. class:: buildbot.interfaces.IConfigured
+
+    Providers of this interface allow to get access to an object configuration
+
+    The goal is to be able to have a way to serialize all configured stuff for display by the UI, UI-plugins, or use in status plugins.
+
+   .. method:: getConfigDict()
+
+        this method should be overridden in order to describe the public configuration of the object
+
+.. py:module:: buildbot.util
+
+.. py:class:: ConfiguredMixin
+
+    This class is a basic implementation of IConfigure for classes which does not expose their internal configuration, and just expose their name.
+
+    .. py:attribute:: name
+
+        Each object configured shall have a ``name``, defined as a class attribute
+
+    .. py:method:: getConfigDict(self)
+
+        the default method returns a dict with only the name attribute
+
+
 .. py:class:: MasterConfig
 
     The master object makes much of the configuration available from an object
@@ -99,11 +127,11 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`prioritizeBuilders`.
 
     .. py:attribute:: codebaseGenerator
-    
-        A callable, or None, used to determine the codebase from an incoming 
+
+        A callable, or None, used to determine the codebase from an incoming
         :py:class:`~buildbot.changes.changes.Change`,
         from :bb:cfg:`codebaseGenerator`
-        
+
     .. py:attribute:: protocols
 
         The per-protocol port specification for slave connections.

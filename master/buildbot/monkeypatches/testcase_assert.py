@@ -44,5 +44,22 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
                   (expected_regexp.pattern, str(exception)))
 
 
+def _assertRegexpMatches(self, text, regexp, msg=None):
+    """
+    Asserts that the message matches a regexp.
+
+    This is a simple clone of unittest.TestCase.assertRegexpMatches() method
+    introduced in python 2.7. The goal for this function is to behave exactly
+    as assertRegexpMatches() in standard library.
+    """
+    if not re.search(text, regexp):
+        if msg is not None:
+            self.fail(msg)
+        else:
+            self.fail('"%s"\n does not match \n"%s"' %
+                      (text, regexp))
+
+
 def patch():
     unittest.TestCase.assertRaisesRegexp = _assertRaisesRegexp
+    unittest.TestCase.assertRegexpMatches = _assertRegexpMatches

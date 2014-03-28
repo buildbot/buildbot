@@ -1135,5 +1135,5 @@ class IBuildStepFactory(Interface):
 
 
 class IConfigured(Interface):
-    def getConfig():
+    def getConfigDict():
         pass

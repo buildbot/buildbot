@@ -6,7 +6,7 @@ from buildbot.www import avatar
 from twisted.internet import threads
 
 
-class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
+class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
     name = 'ldap'
 
     def __init__(self, uri, bind_user, bind_pw,
@@ -18,6 +18,8 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
                  avatarPattern=None,
                  avatarData=None,
                  accountExtraFields=[]):
+        avatar.AvatarBase.__init__(self)
+        auth.UserInfoProviderBase.__init__(self)
         self.uri = uri
         self.bind_user = bind_user
         self.bind_pw = bind_pw
@@ -32,7 +34,7 @@ class LdapUserInfos(avatar.AvatarBase, auth.UserInfosBase):
         self.avatarData = avatarData
         self.accountExtraFields = accountExtraFields
 
-    def getUserInfos(self, username):
+    def getUserInfo(self, username):
         def thd():
             infos = {'username': username}
             l = ldap.initialize(self.uri)

@@ -145,7 +145,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {'redirected': '://me'})
 
     def test_getConfig(self):
-        self.assertEqual(self.githubAuth.getConfig(), {'fa_icon': 'fa-github',
+        self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github',
                                                        'name': 'GitHub', 'oauth2': True})
-        self.assertEqual(self.googleAuth.getConfig(), {'fa_icon': 'fa-google-plus',
+        self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus',
                                                        'name': 'Google', 'oauth2': True})

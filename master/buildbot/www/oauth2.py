@@ -32,8 +32,6 @@ class OAuth2Auth(auth.AuthBase):
     def __init__(self, authUri, tokenUri, clientId,
                  authUriConfig, tokenConfig, **kwargs):
         auth.AuthBase.__init__(self, **kwargs)
-        # userInfos are populated by the auth plugin directly
-        auth.AuthBase.__init__(self, userInfos=None)
         self.authUri = authUri
         self.tokenUri = tokenUri
         self.clientId = clientId
@@ -71,10 +69,10 @@ class OAuth2Auth(auth.AuthBase):
             c.request_token(code=code,
                             redirect_uri=self.loginUri)
 
-            return self.getUserInfosFromOAuthClient(c)
+            return self.getUserInfoFromOAuthClient(c)
         return threads.deferToThread(thd)
 
-    def getUserInfosFromOAuthClient(self, c):
+    def getUserInfoFromOAuthClient(self, c):
         return {}
 
 
@@ -99,7 +97,7 @@ class GoogleAuth(OAuth2Auth):
                             **kwargs
                             )
 
-    def getUserInfosFromOAuthClient(self, c):
+    def getUserInfoFromOAuthClient(self, c):
         data = c.request('/userinfo')
         return dict(full_name=data["name"],
                     username=data['sub'],
@@ -124,7 +122,7 @@ class GitHubAuth(OAuth2Auth):
                             **kwargs
                             )
 
-    def getUserInfosFromOAuthClient(self, c):
+    def getUserInfoFromOAuthClient(self, c):
         user = c.request('/user')
         orgs = c.request(join('/users', user['login'], "orgs"))
         return dict(full_name=user['name'],

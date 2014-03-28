@@ -37,10 +37,10 @@ from twisted.web.resource import IResource
 class AuthBase(util.ConfiguredMixin):
     name = "auth"
 
-    def __init__(self, userInfos=None):
-        if userInfos is None:
-            userInfos = UserInfosBase()
-        self.userInfos = userInfos
+    def __init__(self, userInfoProvider=None):
+        if userInfoProvider is None:
+            userInfoProvider = UserInfoProviderBase()
+        self.userInfoProvider = userInfoProvider
 
     def reconfigAuth(self, master, new_config):
         self.master = master
@@ -55,17 +55,17 @@ class AuthBase(util.ConfiguredMixin):
         return LoginResource(master)
 
     @defer.inlineCallbacks
-    def updateUserInfos(self, request):
+    def updateUserInfo(self, request):
         session = request.getSession()
-        if self.userInfos is not None:
-            infos = yield self.userInfos.getUserInfos(session.user_infos['username'])
+        if self.userInfoProvider is not None:
+            infos = yield self.userInfoProvider.getUserInfo(session.user_infos['username'])
             session.user_infos.update(infos)
 
 
-class UserInfosBase(util.ConfiguredMixin):
+class UserInfoProviderBase(util.ConfiguredMixin):
     name = "noinfo"
 
-    def getUserInfos(self, username):
+    def getUserInfo(self, username):
         return defer.succeed({'email': username})
 
 
@@ -98,7 +98,7 @@ class RemoteUserAuth(AuthBase):
         session = request.getSession()
         if not hasattr(session, "user_infos"):
             session.user_infos = dict(res.groupdict())
-            yield self.updateUserInfos(request)
+            yield self.updateUserInfo(request)
         defer.returnValue(True)
 
     def authenticateViaLogin(self, request):
@@ -160,7 +160,6 @@ class SessionConfigResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         self.config = new_config.www
-        self.master_config = new_config
 
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderConfig)
@@ -182,7 +181,6 @@ class SessionConfigResource(resource.Resource):
         else:
             config.update({"user": {"anonymous": True}})
         config.update(self.config)
-        config['master'] = self.master_config
 
         def toJson(obj):
             obj = IConfigured(obj).getConfigDict()
@@ -221,7 +219,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     def renderLogin(self, request):
         session = request.getSession()
         session.user_infos = dict(username=self.username)
-        yield self.auth.updateUserInfos(request)
+        yield self.auth.updateUserInfo(request)
 
 
 class LogoutResource(resource.Resource):

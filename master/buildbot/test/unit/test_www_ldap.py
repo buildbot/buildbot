@@ -27,16 +27,16 @@ class FakeLdap(object):
     SCOPE_SUBTREE = 2
 
 
-class LdapUserInfos(unittest.TestCase):
+class LdapUserInfo(unittest.TestCase):
     # we completetly fake the python-ldap module, so no need to require
     # it to run the unit tests
     def setUp(self):
         self.oldldap = sys.modules.get("ldap", None)
         self.ldap = FakeLdap()
         sys.modules["ldap"] = self.ldap
-        from buildbot.www import ldapuserinfos
+        from buildbot.www import ldapuserinfo
 
-        self.userinfos = ldapuserinfos.LdapUserInfos(
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri", bind_user="user", bind_pw="pass",
             accountBase="accbase", groupBase="groupbase",
             accountPattern="accpattern", groupMemberPattern="groupMemberPattern",
@@ -47,7 +47,7 @@ class LdapUserInfos(unittest.TestCase):
             avatarData="picture",
             accountExtraFields=["myfield"])
         self.ldap.initialize = mock.Mock(side_effect=[self.ldap])
-        self.userinfos.getLdap = lambda: self.ldap
+        self.userInfoProvider.getLdap = lambda: self.ldap
 
     def tearDown(self):
         if self.oldldap is None:
@@ -56,22 +56,22 @@ class LdapUserInfos(unittest.TestCase):
             sys.modules["ldap"] = self.oldldap
 
     @defer.inlineCallbacks
-    def test_updateUserInfosNoResults(self):
+    def test_updateUserInfoNoResults(self):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[], [], []])
         try:
-            yield self.userinfos.getUserInfos("me")
+            yield self.userInfoProvider.getUserInfo("me")
         except KeyError, e:
             self.assertEqual(repr(e), "KeyError('ldap search \"accpattern\" returned 0 results',)")
         else:
             self.fail("should have raised a key error")
 
     @defer.inlineCallbacks
-    def test_updateUserInfosNoGroups(self):
+    def test_updateUserInfoNoGroups(self):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[("cn", {"accountFullName": ["me too"],
                                                  "accountEmail": ["mee@too"]})], [], []])
-        res = yield self.userinfos.getUserInfos("me")
+        res = yield self.userInfoProvider.getUserInfo("me")
         self.assertEqual(self.ldap.search_s.call_args_list, [
             (('accbase', 2, 'accpattern', ['accountEmail', 'accountFullName', 'dn', 'myfield']), {}),
             (('groupbase', 2, 'groupMemberPattern', ['groupName']), {}),
@@ -80,14 +80,14 @@ class LdapUserInfos(unittest.TestCase):
                                'groups': [], 'username': 'me'})
 
     @defer.inlineCallbacks
-    def test_updateUserInfosGroups(self):
+    def test_updateUserInfoGroups(self):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[("cn", {"accountFullName": ["me too"],
                                                  "accountEmail": ["mee@too"]})],
                                         [("cn", {"groupName": ["group"]}),
                                          ("cn", {"groupName": ["group2"]})
                                          ], []])
-        res = yield self.userinfos.getUserInfos("me")
+        res = yield self.userInfoProvider.getUserInfo("me")
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})
 
@@ -96,7 +96,7 @@ class LdapUserInfos(unittest.TestCase):
         self.ldap.search_s = mock.Mock(side_effect=
                                        [[("cn", {"picture": ["\x89PNG lljklj"]})],
                                         ])
-        res = yield self.userinfos.getUserAvatar("me", 21, None)
+        res = yield self.userInfoProvider.getUserAvatar("me", 21, None)
         self.assertEqual(self.ldap.search_s.call_args_list, [
             (('accbase', 2, 'avatar', ['picture']), {}),
         ])

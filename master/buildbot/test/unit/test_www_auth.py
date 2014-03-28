@@ -15,6 +15,7 @@
 
 import mock
 import base64
+import re
 
 from buildbot.test.util import www
 from buildbot.www import auth
@@ -79,10 +80,10 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin = mock.Mock()
         _auth.authenticateViaLogin = mock.Mock()
 
-        def updateUserInfos(request):
+        def updateUserInfo(request):
             session = request.getSession()
             session.user_infos['email'] = session.user_infos['username'] + "@org"
-        _auth.updateUserInfos = mock.Mock(side_effect=updateUserInfos)
+        _auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
         master = self.make_master(url='h:/a/b/', auth=_auth)
         rsrc = auth.PreAuthenticatedLoginResource(master, _auth, "him")
         rsrc.reconfigResource(master.config)
@@ -91,7 +92,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, "")
         _auth.maybeAutoLogin.assert_not_called()
         _auth.authenticateViaLogin.assert_not_called()
-        _auth.updateUserInfos.assert_called()
+        _auth.updateUserInfo.assert_called()
         self.assertEqual(master.session.user_infos, {'email': 'him@org', 'username': 'him'})
 
 
@@ -138,7 +139,8 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         rsrc = auth.LoginResource(master)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        self.assertEqual(res, "should authenticate via reverse proxy")
+        self.assertEqual(res, 'Please check with your administrator,'
+                              ' there is an issue with the reverse proxy')
 
 
 class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):

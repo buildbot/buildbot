@@ -53,23 +53,27 @@ Aside from the fancy authentication mechanisms, there is a need for the simple m
     * buildbot UI provides a form allowing user to specify user and password
     * The password is verified against the local database
 
-Potencial future auth systems
+Potential future auth systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* browserid: This method is very similar to oauth2, and should be implemented in a similar way (i.e. two stage redirect, token-verify)
-* use the user table in db: This is a very similar to the BasicAuth use cases (form + local db verify). This method would require some work on the UI in order to populate the db, add a "register" button, verification email, etc.
+* Browserid/Persona: This method is very similar to oauth2, and should be implemented in a similar way (i.e. two stage redirect + token-verify)
 
+* Use the User table in db: This is a very similar to the BasicAuth use cases (form + local db verification). Eventually, this method will require some work on the UI in order to populate the db, add a "register" button, verification email, etc. This has to be done in a ui plugin.
+
+
+API documentation
+~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.www.auth
 
 .. py:class:: AuthBase
 
     This class is the base class for all authentication methods.
-    All authentications are not done at the same level, so several optional methods are available. This class implements default implementation. The login session is stored via twisted's ``request.getSession()``, and detailled used information is stored in ``request.getSession().user_infos``. The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
+    All authentications are not done at the same level, so several optional methods are available. This class implements default implementation. The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_infos``. The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
 
-    .. py:attribute:: userInfos
+    .. py:attribute:: userInfoProvider
 
-        Optionally additional user information can be gathered by this object.
+        Authentication modules are responsible for providing user information as detailed as possible. When there is a need to get additional information from another source, a userInfoProvider can optionally be specified.
 
     .. py:method:: reconfigAuth(master, new_config)
 
@@ -82,7 +86,7 @@ Potencial future auth systems
 
         :param request: the request object
 
-        Automatically login the user on one of the first request (when browser fetches ``/config.js``). This is the entrypoint for reverse-proxy driven authentication.
+        Automatically login the user on one of the first request (when browser fetches ``/config.js``). This is the entry-point for reverse-proxy driven authentication.
 
         returns a deferred which fires with ignored results, when the authentication task is done.
         If it succeeded, ``request.getSession().user_infos`` is defined.
@@ -107,7 +111,7 @@ Potencial future auth systems
 
     .. py:method:: updateUserInfos(request)
 
-        Separate entrypoint for getting user information. This is a mean to call self.userInfos if provided.
+        Separate entrypoint for getting user information. This is a mean to call self.userInfoProvider if provided.
 
 .. py:class:: UserInfosBase
 
@@ -131,7 +135,7 @@ Potencial future auth systems
 
     .. py:method:: getUserAvatar(self, email, size, defaultAvatarUrl)
 
-    returns the user's avatar, from the user's email (via deferred). If the data is directly available, this function returns a tuple ``(mime_type, picture_raw_data)``. If the data is available in another url, this function can raise ``resource.Redirect(avatar_url)``, and the web server will redirect to the avatar_url.
+    returns the user's avatar, from the user's email (via deferred). If the data is directly available, this function returns a tuple ``(mime_type, picture_raw_data)``. If the data is available in another URL, this function can raise ``resource.Redirect(avatar_url)``, and the web server will redirect to the avatar_url.
 
 .. py:module:: buildbot.www.oauth2
 
@@ -151,15 +155,15 @@ Potencial future auth systems
 
     .. py:method:: __init__(self, authUri, tokenUri, clientId, authUriConfig, tokenConfig)
 
-        :param authUri: the uri for the authentication part (first phasis)
+        :param authUri: the Uri for the authentication part (first phase)
 
-        :param tokenUri: the uri for the verification of the token (second phasis)
+        :param tokenUri: the Uri for the verification of the token (second phase)
 
         :param clientId: the clientId
 
-        :param authUriConfig: the additionnal configuration to pass to sanction_ ``auth_uri`` api.
+        :param authUriConfig: the additional configuration to pass to sanction_ ``auth_uri`` api.
 
-        :param tokenConfig: the additionnal configuration to pass to sanction_ ``Client`` api for the verify token phase.
+        :param tokenConfig: the additional configuration to pass to sanction_ ``Client`` api for the verify token phase.
 
     .. py:method:: getUserInfoFromOAuthClient(self, c)
 

@@ -717,11 +717,11 @@ Authentication plugins
 By default, buildbot does not require people to authenticate in order to see the readonly data.
 In order to access control feature in the web UI, you will need to configure an authentication plugin.
 
-.. py:class:: buildbot.auth.NoAuth
+.. py:class:: buildbot.www.auth.NoAuth
 
     This class is the default authentication plugin, which disables authentication
 
-.. py:class:: buildbot.auth.BasicAuth
+.. py:class:: buildbot.www.auth.BasicAuth
 
     This class implements a basic authentication mechanism using a list of user/password tuples provided from the configuration file.
 
@@ -729,10 +729,10 @@ In order to access control feature in the web UI, you will need to configure an 
 
     example::
 
-        from buildbot.auth import BasicAuth
+        from buildbot.www.auth import BasicAuth
         auth=BasicAuth({"homer": "doh!"})
 
-.. py:class:: buildbot.auth.HTPasswdAuth
+.. py:class:: buildbot.www.auth.HTPasswdAuth
 
     This class implements an authentication against a standard :file:`.htpasswd` file.
 
@@ -740,10 +740,10 @@ In order to access control feature in the web UI, you will need to configure an 
 
     example::
 
-        from buildbot.auth import HTPasswdAuth
+        from buildbot.www.auth import HTPasswdAuth
         auth=HTPasswdAuth("my_htpasswd")
 
-.. py:class:: buildbot.oauth2.GoogleAuth
+.. py:class:: buildbot.www.oauth2.GoogleAuth
 
     This class implements an authentication with Google_ single sign-on.
     You can look at the Google_ oauth2 documentation on how to register your buildbot to the Google systems. The developer console will give you the two parameters you have to give to ``GoogleAuth``
@@ -756,7 +756,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
     example::
 
-        from buildbot.oauth2 import GoogleAuth
+        from buildbot.www.oauth2 import GoogleAuth
         auth=GoogleAuth("clientid", "clientsecret")
 
     in order to use this module, you need to install the python ``sanction`` module
@@ -767,7 +767,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
 .. _Google: https://developers.google.com/accounts/docs/OAuth2
 
-.. py:class:: buildbot.oauth2.GitHubAuth
+.. py:class:: buildbot.www.oauth2.GitHubAuth
 
     This class implements an authentication with GitHub_ single sign-on.
     You can look at the GitHub_ oauth2 documentation on how to register your buildbot to the GitHub systems. The developer console will give you the two parameters you have to give to ``GitHubAuth``
@@ -780,7 +780,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
     example::
 
-        from buildbot.oauth2 import GitHubAuth
+        from buildbot.www.oauth2 import GitHubAuth
         auth=GitHubAuth("clientid", "clientsecret")
 
     in order to use this module, you need to install the python ``sanction`` module
@@ -791,7 +791,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
 
-.. py:class:: buildbot.auth.RemoteUserAuth
+.. py:class:: buildbot.www.auth.RemoteUserAuth
 
     In case if buildbot web ui is served through reverse proxy that supports HTTP-based authentication (like apache, lighttpd), it's possible to to tell buildbot to trust web server and get username from request headers.
 
@@ -802,7 +802,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
     example::
 
-        from buildbot.auth import RemoteUserAuth
+        from buildbot.www.auth import RemoteUserAuth
         auth=RemoteUserAuth()
 
     A corresponding Apache configuration example
@@ -835,17 +835,7 @@ In order to access control feature in the web UI, you will need to configure an 
     The advantage of http auth is that it is uses a proven and fast implementation for authentication. The problem is that the only information that is passed is the username, and there is no way to pass any other information like user email, user groups, etc.
     Those information can be very useful to the mailstatus plugin, or the authorization criterias.
 
-    In order to get additional information, you can specify a :py:class:`buildbot.auth.UserInfosBase` object, which is responsible of getting more information about the user using any means. the :py:class:`buildbot.auth.UserInfosBase` has one method:
-
-    .. py:method:: getUserInfos(username)
-
-    Get additional info for one user. returns a :py:class:`dict` with following keys:
-
-        * ``email``: email address of the user
-        * ``full_name``: Full name of the user, like "Homer Simpson"
-        * ``groups``: groups the user belongs to, like ["duff fans", "dads"]
-
-    Following are the implemented sub classes of :py:class:`UserInfosBase`
+    You can configure RemoteUserAuth to use ldap directory to fill remaining user info data
 
 .. py:class:: buildbot.ldapuserinfos.LdapUserInfos
 
