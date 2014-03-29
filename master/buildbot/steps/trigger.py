@@ -35,7 +35,7 @@ class Trigger(LoggingBuildStep):
 
     def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={},
+                 waitForFinish=False, set_properties={}, set_parent_properties=[],
                  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(
@@ -65,6 +65,7 @@ class Trigger(LoggingBuildStep):
         for i in copy_properties:
             properties[i] = Property(i)
         self.set_properties = properties
+        self.set_parent_properties = set_parent_properties
         self.running = False
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
@@ -194,25 +195,32 @@ class Trigger(LoggingBuildStep):
 
         if brids:
             master = self.build.builder.botmaster.parent
-
-            def add_links(res):
-                # reverse the dictionary lookup for brid to builder name
-                brid_to_bn = dict((_brid, _bn) for _bn, _brid in brids.iteritems())
-
-                for was_cb, builddicts in res:
-                    if was_cb:
-                        for build in builddicts:
-                            bn = brid_to_bn[build['brid']]
-                            num = build['number']
-
-                            url = master.status.getURLForBuild(bn, num)
-                            self.step_status.addURL("%s #%d" % (bn, num), url)
-
-                return self.end(result)
-
             builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
             dl = defer.DeferredList(builddicts, consumeErrors=1)
-            dl.addCallback(add_links)
-
+            dl.addCallback(self.createLinksAndProperties, result, brids)
+        
         self.end(result)
         return
+
+    def createLinksAndProperties(self, res, result, brids):
+        master = self.build.builder.botmaster.parent
+        # reverse the dictionary lookup for brid to builder name
+        brid_to_bn = dict((_brid, _bn) for _bn, _brid in brids.iteritems())
+
+        for was_cb, builddicts in res:
+            if was_cb:
+                for build in builddicts:                        
+                    bn = brid_to_bn[build['brid']]
+                    num = build['number']
+                    url = master.status.getURLForBuild(bn, num)
+                    self.step_status.addURL("%s #%d" % (bn, num), url)
+
+                if self.waitForFinish and self.set_parent_properties:
+                    build_instance = master.status.getBuilder(bn).getBuildByNumber(build['number'])
+                    for prop_name in self.set_parent_properties:
+                        if build_instance.getProperty(prop_name):
+                            prop_value = build_instance.getProperty(prop_name)
+                            self.setProperty(prop_name, prop_value, "Trigger")
+
+        return self.end(result)
+        
