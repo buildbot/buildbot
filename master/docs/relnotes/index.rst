@@ -165,6 +165,8 @@ Fixes
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
 
+* The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:bb:pull:`1114`).
+
 * The source steps now correctly interpolate properties in ``env``.
 
 Deprecations, Removals, and Non-Compatible Changes
