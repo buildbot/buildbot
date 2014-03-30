@@ -4,7 +4,7 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'noauth'")
             | Anonymous
             b.caret
         ul.dropdown-menu(style="padding:17px;")
-            form(role='login', ng-hide="config.auth.oauth2"))
+            form(role='login', ng-hide="config.auth.oauth2")
                 | Login:
                 .form-group
                     input(type='text', placeholder='username', ng-model="username")
