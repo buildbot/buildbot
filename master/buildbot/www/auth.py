@@ -58,8 +58,8 @@ class AuthBase(config.ConfiguredMixin):
     def updateUserInfo(self, request):
         session = request.getSession()
         if self.userInfoProvider is not None:
-            infos = yield self.userInfoProvider.getUserInfo(session.user_infos['username'])
-            session.user_infos.update(infos)
+            infos = yield self.userInfoProvider.getUserInfo(session.user_info['username'])
+            session.user_info.update(infos)
 
 
 class UserInfoProviderBase(config.ConfiguredMixin):
@@ -96,8 +96,8 @@ class RemoteUserAuth(AuthBase):
             raise Error(403, 'http header does not match regex! "%s" not matching %s' %
                         (header, self.headerRegex.pattern))
         session = request.getSession()
-        if not hasattr(session, "user_infos"):
-            session.user_infos = dict(res.groupdict())
+        if not hasattr(session, "user_info"):
+            session.user_info = dict(res.groupdict())
             yield self.updateUserInfo(request)
         defer.returnValue(True)
 
@@ -176,8 +176,8 @@ class SessionConfigResource(resource.Resource):
         except Error, e:
             config["on_load_warning"] = e.message
 
-        if hasattr(session, "user_infos"):
-            config.update({"user": session.user_infos})
+        if hasattr(session, "user_info"):
+            config.update({"user": session.user_info})
         else:
             config.update({"user": {"anonymous": True}})
         config.update(self.config)
@@ -218,7 +218,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_infos = dict(username=self.username)
+        session.user_info = dict(username=self.username)
         yield self.auth.updateUserInfo(request)
 
 

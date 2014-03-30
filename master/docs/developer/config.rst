@@ -14,7 +14,7 @@ implemented as services, subclassing :py:class:`ReconfigurableServiceMixin`, as
 described in :ref:`developer-Reconfiguration`.
 
 IConfigured
-~~~~~~~~~~~
+-----------
 
 .. class:: buildbot.interfaces.IConfigured
 

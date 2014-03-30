@@ -1,9 +1,10 @@
 import sanction
 
-from buildbot.www import auth, resource
+from buildbot.www import auth
+from buildbot.www import resource
+from posixpath import join
 from twisted.internet import defer
 from twisted.internet import threads
-from posixpath import join
 
 
 class OAuth2LoginResource(auth.LoginResource):
@@ -22,7 +23,7 @@ class OAuth2LoginResource(auth.LoginResource):
             defer.returnValue(url)
         else:
             details = yield self.auth.verifyCode(code)
-            request.getSession().user_infos = details
+            request.getSession().user_info = details
             raise resource.Redirect(self.auth.homeUri)
 
 

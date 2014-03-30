@@ -16,9 +16,9 @@
 import mock
 import sys
 
+from buildbot.test.util import www
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.test.util import www
 
 
 class FakeClient(object):
@@ -34,6 +34,7 @@ class FakeSanction(object):
 class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
     # we completely fake the python sanction module, so no need to require
     # it to run the unit tests
+
     def setUp(self):
         self.oldsanction = sys.modules.get("sanction", None)
         self.sanction = FakeSanction()
@@ -141,11 +142,11 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, '/?code=code!')
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.verifyCode.assert_called_once_with("code!")
-        self.assertEqual(self.master.session.user_infos, {'username': 'bar'})
+        self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': '://me'})
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github',
-                                                       'name': 'GitHub', 'oauth2': True})
+                                                           'name': 'GitHub', 'oauth2': True})
         self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus',
-                                                       'name': 'Google', 'oauth2': True})
+                                                           'name': 'Google', 'oauth2': True})

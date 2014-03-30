@@ -69,7 +69,7 @@ API documentation
 .. py:class:: AuthBase
 
     This class is the base class for all authentication methods.
-    All authentications are not done at the same level, so several optional methods are available. This class implements default implementation. The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_infos``. The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
+    All authentications are not done at the same level, so several optional methods are available. This class implements default implementation. The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_info``. The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
 
     .. py:attribute:: userInfoProvider
 
@@ -89,19 +89,19 @@ API documentation
         Automatically login the user on one of the first request (when browser fetches ``/config.js``). This is the entry-point for reverse-proxy driven authentication.
 
         returns a deferred which fires with ignored results, when the authentication task is done.
-        If it succeeded, ``request.getSession().user_infos`` is defined.
+        If it succeeded, ``request.getSession().user_info`` is defined.
         If it failed, ``resource.Error`` must be raised.
-        If it is not implemented, the deferred will fire with user_infos unset.
+        If it is not implemented, the deferred will fire with user_info unset.
 
     .. py:method:: authenticateViaLogin(request)
 
         :param request: the request object
 
-        Entry point for login via /login request. The default UI is passing the login credential via BasicAuth method. One can verify the login credential via deferred using this simple API. Once the user is authenticated, this method is responsible for filling ``request.getSession().user_infos``, by calling ``updateUserInfos()``
+        Entry point for login via /login request. The default UI is passing the login credential via BasicAuth method. One can verify the login credential via deferred using this simple API. Once the user is authenticated, this method is responsible for filling ``request.getSession().user_info``, by calling ``updateUserInfo()``
         returns a deferred which fires with ignored results, when the authentication task is done.
-        If it succeeded, ``request.getSession().user_infos`` is defined.
+        If it succeeded, ``request.getSession().user_info`` is defined.
         If it failed, ``resource.Error`` must be raised.
-        If it is not implemented, the deferred will fire with user_infos unset.
+        If it is not implemented, the deferred will fire with user_info unset.
 
     .. py:method:: getLoginResource(master)
 
@@ -109,11 +109,11 @@ API documentation
 
         Entry point for getting a customized loginResource. This is a mean to reuse twisted code.
 
-    .. py:method:: updateUserInfos(request)
+    .. py:method:: updateUserInfo(request)
 
         Separate entrypoint for getting user information. This is a mean to call self.userInfoProvider if provided.
 
-.. py:class:: UserInfosBase
+.. py:class:: UserInfoBase
 
     Class that can be used, to get more info for the user like groups, in a separate database.
 

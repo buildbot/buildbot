@@ -707,7 +707,7 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
             'avatar_methods': []
         }
 
-    For use of corporate pictures, you can use LdapUserInfos, which can also acts as an avatar provider.  See :bb:cfg:`auth`
+    For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.  See :bb:cfg:`auth`
 
 .. bb:cfg:: auth
 
@@ -837,7 +837,7 @@ In order to access control feature in the web UI, you will need to configure an 
 
     You can configure RemoteUserAuth to use ldap directory to fill remaining user info data
 
-.. py:class:: buildbot.ldapuserinfos.LdapUserInfos
+.. py:class:: buildbot.ldapuserinfos.LdapUserInfo
 
         * ``uri``: uri of the ldap server
         * ``bind_user``: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
@@ -856,12 +856,12 @@ In order to access control feature in the web UI, you will need to configure an 
         Example::
 
             from buildbot.www.auth import RemoteUserAuth
-            from buildbot.www.ldapuserinfos import LdapUserInfos
+            from buildbot.www.ldapuserinfos import LdapUserInfo
             from buildbot.www.avatar import AvatarGravatar
 
             # this configuration works for MS Active Directory ldap implementation
             # we use it for user info, and avatars
-            userInfos = LdapUserInfos(
+            userInfos = LdapUserInfo(
                 uri='ldap://ldap.mycompany.com:3268',
                 bind_user='ldap_user',
                 bind_pw='p4$$wd',

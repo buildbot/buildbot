@@ -39,7 +39,7 @@ class SessionConfigResource(www.WwwTestMixin, unittest.TestCase):
         exp = 'this.config = {"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "noauth"}, "port": null}'
         self.assertEqual(res, exp)
 
-        master.session.user_infos = dict(name="me", email="me@me.org")
+        master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
         exp = 'this.config = {"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "noauth"}, "port": null}'
         self.assertEqual(res, exp)
@@ -59,7 +59,7 @@ class LoginResource(www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin = mock.Mock()
 
         def authenticateViaLogin(request):
-            request.getSession().user_infos = dict(name="me")
+            request.getSession().user_info = dict(name="me")
         _auth.authenticateViaLogin = mock.Mock(side_effect=authenticateViaLogin)
         master = self.make_master(url='h:/a/b/', auth=_auth)
         rsrc = _auth.getLoginResource(master)
@@ -81,7 +81,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
 
         def updateUserInfo(request):
             session = request.getSession()
-            session.user_infos['email'] = session.user_infos['username'] + "@org"
+            session.user_info['email'] = session.user_info['username'] + "@org"
         _auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
         master = self.make_master(url='h:/a/b/', auth=_auth)
         rsrc = auth.PreAuthenticatedLoginResource(master, _auth, "him")
@@ -92,7 +92,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin.assert_not_called()
         _auth.authenticateViaLogin.assert_not_called()
         _auth.updateUserInfo.assert_called()
-        self.assertEqual(master.session.user_infos, {'email': 'him@org', 'username': 'him'})
+        self.assertEqual(master.session.user_info, {'email': 'him@org', 'username': 'him'})
 
 
 class LogoutResource(www.WwwTestMixin, unittest.TestCase):
@@ -180,4 +180,4 @@ class AuthRealm(www.WwwTestMixin, unittest.TestCase):
         _, rsrc, _ = realm.requestAvatar("me", None, IResource)
         res = yield self.render_resource(rsrc, '/')
         self.assertEqual(res, "")
-        self.assertEqual(master.session.user_infos, {'email': 'me', 'username': 'me'})
+        self.assertEqual(master.session.user_info, {'email': 'me', 'username': 'me'})
