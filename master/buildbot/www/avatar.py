@@ -16,13 +16,13 @@
 import hashlib
 import urllib
 
-from urlparse import urljoin
+from buildbot.util import config
 from buildbot.www import resource
 from twisted.internet import defer
-from buildbot import util
+from urlparse import urljoin
 
 
-class AvatarBase(util.ConfiguredMixin):
+class AvatarBase(config.ConfiguredMixin):
     name = "noavatar"
 
     def getUserAvatar(self, email, size, defaultAvatarUrl):

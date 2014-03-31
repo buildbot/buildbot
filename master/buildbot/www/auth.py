@@ -17,10 +17,10 @@ import re
 
 from zope.interface import implements
 
-from buildbot.util import json
 from buildbot.interfaces import IConfigured
+from buildbot.util import config
+from buildbot.util import json
 from buildbot.www import resource
-from buildbot import util
 
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -34,7 +34,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
 
-class AuthBase(util.ConfiguredMixin):
+class AuthBase(config.ConfiguredMixin):
     name = "auth"
 
     def __init__(self, userInfoProvider=None):
@@ -62,7 +62,7 @@ class AuthBase(util.ConfiguredMixin):
             session.user_infos.update(infos)
 
 
-class UserInfoProviderBase(util.ConfiguredMixin):
+class UserInfoProviderBase(config.ConfiguredMixin):
     name = "noinfo"
 
     def getUserInfo(self, username):

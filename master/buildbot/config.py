@@ -24,6 +24,7 @@ from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
+from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -684,7 +685,8 @@ class MasterConfig(util.ComparableMixin):
             error("slaves are configured, but c['protocols'] not")
 
 
-class BuilderConfig(util.ConfiguredMixin):
+class BuilderConfig(util_config.ConfiguredMixin):
+
     def __init__(self, name=None, slavename=None, slavenames=None,
                  builddir=None, slavebuilddir=None, factory=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
@@ -791,6 +793,7 @@ class BuilderConfig(util.ConfiguredMixin):
         if self.description:
             rv['description'] = self.description
         return rv
+
 
 class ReconfigurableServiceMixin:
 

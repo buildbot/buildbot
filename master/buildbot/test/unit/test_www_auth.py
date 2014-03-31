@@ -13,9 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import base64
-import re
+import mock
 
 from buildbot.test.util import www
 from buildbot.www import auth
@@ -172,6 +171,7 @@ class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
 
 
 class AuthRealm(www.WwwTestMixin, unittest.TestCase):
+
     @defer.inlineCallbacks
     def test_AuthRealm(self):
         _auth = auth.BasicAuth({"foo": "bar"})

@@ -26,7 +26,7 @@ IConfigured
 
         this method should be overridden in order to describe the public configuration of the object
 
-.. py:module:: buildbot.util
+.. py:module:: buildbot.util.config
 
 .. py:class:: ConfiguredMixin
 
