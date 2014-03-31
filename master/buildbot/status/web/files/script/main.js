@@ -81,8 +81,12 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		projectDropDown.init();
 		// get all common scripts
 		helpers.init();	
-		dataTables.init($('.tablesorter-js'));	
-		dataTables.init($('#tablesorterRt'));
+		if ($('.tablesorter-js').length) {
+			dataTables.init($('.tablesorter-js'));	
+		} else {
+			dataTables.init($('#tablesorterRt'));	
+		} 
+		
         extendMoment.init();
 	});	
 });

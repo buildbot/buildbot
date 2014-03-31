@@ -7,7 +7,7 @@ define(['datatables-plugin','helpers','libs/natural-sort','popup','text!template
         init: function (tablesorterEl) {
 			//Setup sort neutral function
             dataTables.initSortNatural();
-
+       
 			// Select which columns not to sort
 			tablesorterEl.each(function(i, tableElem){
                 var $tableElem = $(tableElem);			    	
@@ -328,7 +328,7 @@ define(['datatables-plugin','helpers','libs/natural-sort','popup','text!template
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
 	        		// Parse the url and insert current codebases and branches	        		
-	        		//helpers.codeBaseBranchOverview(dtWTop); not working yet
+	        		helpers.codeBaseBranchOverview(dtWTop); 
 				}
 
 			  	// for the codebases
