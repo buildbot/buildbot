@@ -19,6 +19,7 @@
 import datetime
 import os
 import re
+import urllib
 
 from twisted.internet import defer
 from twisted.web import html
@@ -229,7 +230,11 @@ class JsonResource(resource.Resource):
                 postpath = request.postpath[:]
                 request.postpath = filter(None, item.split('/'))
                 while request.postpath and not child.isLeaf:
-                    pathElement = request.postpath.pop(0)
+                    # Twisted unquotes the querystring once. We unquote once more
+                    # to allow for "doubly escaped" elements, which makes it possible
+                    # to select on resource names with slashes in them without them being
+                    # split into separate (invalid) elements.
+                    pathElement = urllib.unquote(request.postpath.pop(0))
                     node[pathElement] = {}
                     node = node[pathElement]
                     request.prepath.append(pathElement)
