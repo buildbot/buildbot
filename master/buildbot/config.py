@@ -32,6 +32,9 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 
+from twisted.python.components import registerAdapter
+from zope.interface import implements
+
 
 class ConfigErrors(Exception):
 
@@ -792,6 +795,7 @@ class BuilderConfig(util.ConfiguredMixin):
             rv['description'] = self.description
         return rv
 
+
 class ReconfigurableServiceMixin:
 
     reconfig_priority = 128
@@ -811,3 +815,52 @@ class ReconfigurableServiceMixin:
 
         for svc in reconfigurable_services:
             yield svc.reconfigService(new_config)
+
+
+class _DefaultConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return self.value
+
+registerAdapter(_DefaultConfigured, object, interfaces.IConfigured)
+
+
+class _ListConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return [interfaces.IConfigured(e).getConfigDict() for e in self.value]
+
+registerAdapter(_ListConfigured, list, interfaces.IConfigured)
+
+
+class _DictConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict([(k, interfaces.IConfigured(v).getConfigDict())
+                     for k, v in self.value.iteritems()])
+
+registerAdapter(_DictConfigured, dict, interfaces.IConfigured)
+
+
+class _SREPatternConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict(name="re", pattern=self.value.pattern)
+
+registerAdapter(_SREPatternConfigured, type(re.compile("")), interfaces.IConfigured)
