@@ -17,9 +17,7 @@ import re
 
 from zope.interface import implements
 
-from buildbot.interfaces import IConfigured
 from buildbot.util import config
-from buildbot.util import json
 from buildbot.www import resource
 
 from twisted.cred.checkers import FilePasswordDB
@@ -157,42 +155,6 @@ class BasicAuth(TwistedICredAuthBase):
              BasicCredentialFactory("buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
-
-
-class SessionConfigResource(resource.Resource):
-    # enable reconfigResource calls
-    needsReconfig = True
-
-    def reconfigResource(self, new_config):
-        self.config = new_config.www
-
-    def render_GET(self, request):
-        return self.asyncRenderHelper(request, self.renderConfig)
-
-    @defer.inlineCallbacks
-    def renderConfig(self, request):
-        config = {}
-        request.setHeader("content-type", 'text/javascript')
-        request.setHeader("Cache-Control", "public;max-age=0")
-
-        session = request.getSession()
-        try:
-            yield self.config['auth'].maybeAutoLogin(request)
-        except Error, e:
-            config["on_load_warning"] = e.message
-
-        if hasattr(session, "user_info"):
-            config.update({"user": session.user_info})
-        else:
-            config.update({"user": {"anonymous": True}})
-        config.update(self.config)
-
-        def toJson(obj):
-            obj = IConfigured(obj).getConfigDict()
-            if isinstance(obj, dict):
-                return obj
-            return repr(obj) + " not yet IConfigured"
-        defer.returnValue("this.config = " + json.dumps(config, default=toJson))
 
 
 class LoginResource(resource.Resource):

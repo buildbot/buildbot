@@ -19,6 +19,7 @@ from buildbot import config
 from buildbot.util import service
 from buildbot.www import auth
 from buildbot.www import avatar
+from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
@@ -133,7 +134,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             root.putChild(key, self.apps[key].resource)
 
         # /config.js
-        root.putChild('config.js', auth.SessionConfigResource(self.master))
+        root.putChild('config.js', wwwconfig.SessionConfigResource(self.master))
 
         # /login
         root.putChild('login', new_config.www['auth'].getLoginResource(self.master))
