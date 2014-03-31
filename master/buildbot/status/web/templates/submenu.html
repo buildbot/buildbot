@@ -1,4 +1,4 @@
-{% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName) %}
+{% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName, selectedProject) %}
 	{% set classPath = '' %}
 
 	{% if active_page == 'jsonhelp' %}
@@ -19,6 +19,8 @@
 	{% if active_page == 'builders' %}
 		{% set classPath = 'builders' %}
 		{% set buildersPath = '' %}
+		{% set selectedProject = '- Project ' + selectedProject %}
+		
 	{% else %}
 		{% set buildersPath = buildersPath %}
 	{% endif %}
@@ -58,7 +60,6 @@
 	    ('', stepName, stepName)
 	] -%}
 
-
 	<nav id="{{classPath}}_page" class="sub-menu-container {{classPath}}">
 		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
 			<div class="container-inner">
@@ -66,11 +67,11 @@
 				  <ul class="breadcrumbs-nav">
 					{% for href, id, caption in navigation_bar %}
 						{% if id == active_page %}
-							<li>{{caption|e}}</li>
+							<li>{{caption|e}} {{selectedProject}}</li>
 						{% elif loop.index == 3 and pathNum >= 3 %}
 							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
 						{% elif loop.index <= pathNum %}
-							<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+							<li><a href="{{ href|e }}">{{ caption|e }} </a></li>
 						{% endif %}
 					{% endfor %}
 					</ul>
