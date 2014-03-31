@@ -38,7 +38,8 @@ def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
         row = c.fetchone()
         if row is None:
             break
-        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
+        (name, type_, nullable, default, primary_key) = (
+            row[1], row[2].upper(), not row[3], row[4], row[5])
         name = re.sub(r'^\"|\"$', '', name)
         # if default:
         ####     default = re.sub(r"^\'|\'$", '', default)
@@ -84,7 +85,8 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
         row = c.fetchone()
         if row is None:
             break
-        (name, type_, nullable, default, has_default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[4] is not None, row[5])
+        (name, type_, nullable, default, primary_key) = (
+            row[1], row[2].upper(), not row[3], row[4], row[5])
         name = re.sub(r'^\"|\"$', '', name)
         # if default:
         ####    default = re.sub(r"^\'|\'$", '', default)

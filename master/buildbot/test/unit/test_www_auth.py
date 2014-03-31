@@ -15,7 +15,6 @@
 
 import mock
 import base64
-import re
 
 from buildbot.test.util import www
 from buildbot.www import auth
@@ -61,7 +60,8 @@ class LoginResource(www.WwwTestMixin, unittest.TestCase):
 
         def authenticateViaLogin(request):
             request.getSession().user_infos = dict(name="me")
-        _auth.authenticateViaLogin = mock.Mock(side_effect=authenticateViaLogin)
+        _auth.authenticateViaLogin = mock.Mock(
+            side_effect=authenticateViaLogin)
         master = self.make_master(url='h:/a/b/', auth=_auth)
         rsrc = _auth.getLoginResource(master)
         rsrc.reconfigResource(master.config)
@@ -82,7 +82,8 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
 
         def updateUserInfo(request):
             session = request.getSession()
-            session.user_infos['email'] = session.user_infos['username'] + "@org"
+            session.user_infos['email'] = session.user_infos[
+                'username'] + "@org"
         _auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
         master = self.make_master(url='h:/a/b/', auth=_auth)
         rsrc = auth.PreAuthenticatedLoginResource(master, _auth, "him")
@@ -93,7 +94,8 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin.assert_not_called()
         _auth.authenticateViaLogin.assert_not_called()
         _auth.updateUserInfo.assert_called()
-        self.assertEqual(master.session.user_infos, {'email': 'him@org', 'username': 'him'})
+        self.assertEqual(
+            master.session.user_infos, {'email': 'him@org', 'username': 'him'})
 
 
 class LogoutResource(www.WwwTestMixin, unittest.TestCase):
@@ -172,6 +174,7 @@ class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
 
 
 class AuthRealm(www.WwwTestMixin, unittest.TestCase):
+
     @defer.inlineCallbacks
     def test_AuthRealm(self):
         _auth = auth.BasicAuth({"foo": "bar"})
@@ -180,4 +183,5 @@ class AuthRealm(www.WwwTestMixin, unittest.TestCase):
         _, rsrc, _ = realm.requestAvatar("me", None, IResource)
         res = yield self.render_resource(rsrc, '/')
         self.assertEqual(res, "")
-        self.assertEqual(master.session.user_infos, {'email': 'me', 'username': 'me'})
+        self.assertEqual(
+            master.session.user_infos, {'email': 'me', 'username': 'me'})

@@ -23,7 +23,6 @@ import textwrap
 
 from buildbot import buildslave
 from buildbot import config
-from buildbot import util
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import revlinks

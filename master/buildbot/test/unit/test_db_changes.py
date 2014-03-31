@@ -581,7 +581,8 @@ class RealTests(Tests):
                                  'change_properties', 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     r = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = sorted([r[0] for r in r.fetchall()])
+                    results[tbl_name] = sorted(
+                        [res[0] for res in r.fetchall()])
                 self.assertEqual(results, {
                     'scheduler_changes': [14],
                     'change_files': [14],
@@ -609,7 +610,7 @@ class RealTests(Tests):
                                  'change_properties', 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     r = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = len([r for r in r.fetchall()])
+                    results[tbl_name] = len([res for res in r.fetchall()])
                 self.assertEqual(results, {
                     'scheduler_changes': 0,
                     'change_files': 0,
