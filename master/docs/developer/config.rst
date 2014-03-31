@@ -13,34 +13,6 @@ Components which need to be notified of changes in the configuration should be
 implemented as services, subclassing :py:class:`ReconfigurableServiceMixin`, as
 described in :ref:`developer-Reconfiguration`.
 
-IConfigured
------------
-
-.. class:: buildbot.interfaces.IConfigured
-
-    Providers of this interface allow to get access to an object configuration
-
-    The goal is to be able to have a way to serialize all configured stuff for display by the UI, UI-plugins, or use in status plugins.
-
-   .. method:: getConfigDict()
-
-        this method should be overridden in order to describe the public configuration of the object
-
-.. py:module:: buildbot.util.config
-
-.. py:class:: ConfiguredMixin
-
-    This class is a basic implementation of IConfigure for classes which does not expose their internal configuration, and just expose their name.
-
-    .. py:attribute:: name
-
-        Each object configured shall have a ``name``, defined as a class attribute
-
-    .. py:method:: getConfigDict(self)
-
-        the default method returns a dict with only the name attribute
-
-
 .. py:class:: MasterConfig
 
     The master object makes much of the configuration available from an object
@@ -329,6 +301,47 @@ configuration - change sources, slaves, schedulers, build steps, and so on.
 
         Add another error message to the (presumably not-yet-raised) exception.
 
+
+Configuration in AngularJS
+==========================
+
+The AngularJS frontend often needs access to the local master configuration.
+This is accomplished automatically by converting various pieces of the master configuration to a dictionary.
+
+The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to convert any object into a JSON-able dictionary.
+
+.. class:: buildbot.interfaces.IConfigured
+
+    Providers of this interface provide a method to get their configuration as a dictionary:
+
+   .. method:: getConfigDict()
+
+        :returns: object
+
+        Return the configuration of this object.
+        Note that despite the name, the return value may not be a dictionary.
+
+    Any object can be "cast" to an :py:class:`~buildbot.interfaces.IConfigured` provider.
+    The ``getConfigDict`` method for basic Python objects simply returns the value. ::
+
+        IConfigured(someObject).getConfigDict()
+
+.. py:class:: buildbot.util.ConfiguredMixin
+
+    This class is a basic implementation of :py:class:`~buildbot.interfaces.IConfigured`.
+    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute.
+
+    .. py:attribute:: name
+
+        Each object configured must have a ``name`` attribute.
+
+    .. py:method:: getConfigDict(self)
+
+        :returns: object
+
+        Return a config dictionary representing this object.
+
+All of this is used by to serve ``/config.js`` to the JavaScript frontend.
 
 .. _developer-Reconfiguration:
 

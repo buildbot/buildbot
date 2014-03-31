@@ -17,6 +17,7 @@ This section gives some general information about Buildbot development.
     results
     formats
     www
+    auth
     master-slave
     br-claiming
     encodings
