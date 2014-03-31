@@ -36,18 +36,18 @@ class SessionConfigResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called()
-        exp = 'this.config = {"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "noauth"}, "port": null}'
+        exp = 'this.config = {"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertEqual(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
-        exp = 'this.config = {"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "noauth"}, "port": null}'
+        exp = 'this.config = {"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertEqual(res, exp)
 
         master = self.make_master(url='h:/a/c/', auth=_auth)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = 'this.config = {"url": "h:/a/c/", "user": {"anonymous": true}, "auth": {"name": "noauth"}, "port": null}'
+        exp = 'this.config = {"url": "h:/a/c/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertEqual(res, exp)
 
 
@@ -122,7 +122,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         warning = 'missing http header REMOTE_USER. Check your reverse proxy config!'
         exp = ('this.config = {"url": "h:/a/b/", "on_load_warning": "%(warning)s"'
                ', "user": {"anonymous": true},'
-               ' "auth": {"name": "remoteuserauth"}, "port": null}')
+               ' "auth": {"name": "RemoteUserAuth"}, "port": null}')
         self.assertEqual(res, exp % dict(warning=warning))
 
         res = yield self.render_resource(rsrc, '/', extraHeaders=dict(REMOTE_USER="NOGOOD"))
@@ -132,7 +132,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/', extraHeaders=dict(REMOTE_USER="GOOD@ORG"))
         exp = ('this.config = {"url": "h:/a/b/", "user": {"username": "GOOD", "realm": "ORG", '
-               '"email": "GOOD"}, "auth": {"name": "remoteuserauth"}, "port": null}')
+               '"email": "GOOD"}, "auth": {"name": "RemoteUserAuth"}, "port": null}')
         self.assertEqual(res, exp)
 
         rsrc = auth.LoginResource(master)

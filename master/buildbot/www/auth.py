@@ -35,7 +35,6 @@ from twisted.web.resource import IResource
 
 
 class AuthBase(config.ConfiguredMixin):
-    name = "auth"
 
     def __init__(self, userInfoProvider=None):
         if userInfoProvider is None:
@@ -61,6 +60,9 @@ class AuthBase(config.ConfiguredMixin):
             infos = yield self.userInfoProvider.getUserInfo(session.user_info['username'])
             session.user_info.update(infos)
 
+    def getConfigDict(self):
+        return {'name': type(self).__name__}
+
 
 class UserInfoProviderBase(config.ConfiguredMixin):
     name = "noinfo"
@@ -70,11 +72,10 @@ class UserInfoProviderBase(config.ConfiguredMixin):
 
 
 class NoAuth(AuthBase):
-    name = "noauth"
+    pass
 
 
 class RemoteUserAuth(AuthBase):
-    name = "remoteuserauth"
     header = "REMOTE_USER"
     headerRegex = re.compile(r"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
 
@@ -93,8 +94,9 @@ class RemoteUserAuth(AuthBase):
                              self.header))
         res = self.headerRegex.match(header)
         if res is None:
-            raise Error(403, 'http header does not match regex! "%s" not matching %s' %
-                        (header, self.headerRegex.pattern))
+            raise Error(
+                403, 'http header does not match regex! "%s" not matching %s' %
+                (header, self.headerRegex.pattern))
         session = request.getSession()
         if not hasattr(session, "user_info"):
             session.user_info = dict(res.groupdict())
@@ -116,13 +118,13 @@ class AuthRealm(object):
     def requestAvatar(self, avatarId, mind, *interfaces):
         if IResource in interfaces:
             return (IResource,
-                    PreAuthenticatedLoginResource(self.master, self.auth, avatarId),
+                    PreAuthenticatedLoginResource(
+                        self.master, self.auth, avatarId),
                     lambda: None)
         raise NotImplementedError()
 
 
 class TwistedICredAuthBase(AuthBase):
-    name = "icredauth"
 
     def __init__(self, credentialFactories, checkers, **kwargs):
         AuthBase.__init__(self, **kwargs)
@@ -130,8 +132,9 @@ class TwistedICredAuthBase(AuthBase):
         self.checkers = checkers
 
     def getLoginResource(self, master):
-        return HTTPAuthSessionWrapper(Portal(AuthRealm(master, self), self.checkers),
-                                      self.credentialFactories)
+        return HTTPAuthSessionWrapper(
+            Portal(AuthRealm(master, self), self.checkers),
+            self.credentialFactories)
 
 
 class HTPasswdAuth(TwistedICredAuthBase):
@@ -139,7 +142,8 @@ class HTPasswdAuth(TwistedICredAuthBase):
     def __init__(self, passwdFile, **kwargs):
         TwistedICredAuthBase.__init__(
             self,
-            [DigestCredentialFactory("md5", "buildbot"), BasicCredentialFactory("buildbot")],
+            [DigestCredentialFactory("md5", "buildbot"),
+             BasicCredentialFactory("buildbot")],
             [FilePasswordDB(passwdFile)],
             **kwargs)
 
@@ -149,7 +153,8 @@ class BasicAuth(TwistedICredAuthBase):
     def __init__(self, users, **kwargs):
         TwistedICredAuthBase.__init__(
             self,
-            [DigestCredentialFactory("md5", "buildbot"), BasicCredentialFactory("buildbot")],
+            [DigestCredentialFactory("md5", "buildbot"),
+             BasicCredentialFactory("buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
 

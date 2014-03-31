@@ -59,7 +59,7 @@ global_defaults = dict(
     multiMaster=False,
     manhole=None,
     www=dict(port=None, url='http://localhost:8080/', plugins={},
-             auth={'name': 'noauth'},
+             auth={'name': 'NoAuth'},
              avatar_methods={'name': 'gravatar'}),
 )
 
@@ -801,14 +801,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_www_default(self):
         self.cfg.load_www(self.filename, {})
         self.assertResults(www=dict(port=None, url='http://localhost:8080/',
-                                    plugins={}, auth={'name': 'noauth'},
+                                    plugins={}, auth={'name': 'NoAuth'},
                                     avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_port(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(port=9888)))
         self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
-                                    plugins={}, auth={'name': 'noauth'},
+                                    plugins={}, auth={'name': 'NoAuth'},
                                     avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_plugin(self):
@@ -816,14 +816,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                           dict(www=dict(plugins={'waterfall': {'foo': 'bar'}})))
         self.assertResults(www=dict(port=None, url='http://localhost:8080/',
                                     plugins={'waterfall': {'foo': 'bar'}},
-                                    auth={'name': 'noauth'},
+                                    auth={'name': 'NoAuth'},
                                     avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_url_no_slash(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(url='http://foo', port=20)))
         self.assertResults(www=dict(port=20, url='http://foo/',
-                                    plugins={}, auth={'name': 'noauth'},
+                                    plugins={}, auth={'name': 'NoAuth'},
                                     avatar_methods={'name': 'gravatar'}))
 
     def test_load_www_allowed_origins(self):
@@ -832,7 +832,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                         allowed_origins=['a', 'b'])))
         self.assertResults(www=dict(port=None, url='http://foo/',
                                     allowed_origins=['a', 'b'],
-                                    plugins={}, auth={'name': 'noauth'},
+                                    plugins={}, auth={'name': 'NoAuth'},
                                     avatar_methods={'name': 'gravatar'}
                                     ))
 
