@@ -963,7 +963,7 @@ for example::
    from buildbot.steps.source.repo import RepoDownloadsFromProperties
    from buildbot.process.properties import FlattenList
 
-   factory.addStep(Repo(manifestUrl='git://mygerrit.org/manifest.git',
+   factory.addStep(Repo(manifestURL='git://mygerrit.org/manifest.git',
                         repoDownloads=FlattenList([RepoDownloadsFromChangeSource(),
                                                    RepoDownloadsFromProperties("repo_downloads")
                                                    ]
