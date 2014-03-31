@@ -1,63 +1,101 @@
 Authentication
 ==============
 
-The Auth subsystem is designed to support several kind of authentication mechanism.
-There are several kind of information that can be taken from external user directories:
+Buildbot's HTTP authentication subsystem supports a rich set of information about users:
 
-    * User credentials: We use external user directory to check the user credentials
-    * User informations: We use external user directory to get more information about our users
+    * User credentials: Username and proof of ownership of that username.
 
-        * user email
-        * full username
-        * user groups
+    * User information: Additional information about the user, including
 
-    * Avatar information: some user directories can provide a picture for each users. Those pictures are not only needed for logged users, but also for users in the blame list.
+        * email address
+        * full name
+        * group membership
 
-Kerberos + Ldap
-~~~~~~~~~~~~~~~
-Kerberos is an authentication system which allows passwordless authentication on corporate networks. User authenticate once on their desktop environment, then the OS, browser, webserver, and corporate directory cooperate in a secure manner to share the authentication to a webserver.
-This mechanism only takes care about the authentication problem, and there is no user information shared other than the userid. The kerberos authentication is supported by a Apache front-end in mod_kerberos
+    * Avatar information: a small image to represent the user.
 
-Kerberos itself only manage the user credential part of the problem.
-For user information and avatars, one need to use other means. The easie mean is to talk to the ldap server associated with the kerberos servers.
+Buildbot's authentication subsystem is designed to support several authentication modes:
 
-The following process is then used in that case:
+    * Simple username/password authentication.
+      The Buildbot UI prompts for a username and password and the backend verifies them.
 
-    * web browser connects to the Apache reverse-proxy, configured with mod_kerberos.
-    * mod_kerberos performs authentication negociation between browser, and kerberos servers.
-    * once user is authenticated, the requests goes through the web proxy to buildbot webserver. The ``REMOTE_USER=homer@PLANT`` header has been added to the request.
-    * buildbot webserver recognise the header, and connects to ldap to find more information about this user.
-    * buildbot webserver store this information, and adds a cookie in the browser.
-    * browser continue loading the page, wants to display the avatar for this user.
-    * browser requests the avatar rest endpoint, which in turn goes to ldap to fetch the picture, and return the picture itself. If ldap picture is not available for this users, the avatar rest endpoint will redirect to de-facto standard gravatar web service.
+    * External authentication by an HTTP Proxy
+      An HTTP proxy in front of Buildbot performs the authentication and passes the verified username to Buildbot in an HTTP Header.
 
-OAuth2
-~~~~~~
-OAuth2 is a standard protocol for user directories in the public internet. Many big internet service companies are providing oauth2 services for website to indentify their users.
-Most Oauth2 services provides authentication and user information in the same api.
+    * Authentication by a third-party website.
+      Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworty assertion of the user's identity from that site.
 
-The following process is then used in that case:
+Username / Password Authentication
+----------------------------------
 
-    * webbrowser connects to buildbot ui
-    * session cookie is created, but user is not yet authenticated, UI adds a widget  ``Login via GitHub``
-    * web browser is redirected to github servers.
-    * github web page ask user to tell its password again, and allow this website to access its user information.
-    * on success github web page redirects to buildbot, with an authentication token.
-    * buildbot use this authentication token to talk to github server and get more information about the user.
+In this mode, the Buildbot UI displays a form allowing the user to specify a username and password.
+When this form is submitted, the UI makes an AJAX call to ``/login`` including HTTP Basic Authentication headers.
+The master verifies the contents of the header and updates the server-side session to indicate a successful login or to contain a failure message.
+Once the AJAX call is complete, the UI reloads the page, re-fetching ``/config.js``, which will include the username or failure message from the session.
 
+Subsequent access is authorized based on the information in the session; the authentication credentials are not sent again.
 
-BasicAuth
-~~~~~~~~~
-Aside from the fancy authentication mechanisms, there is a need for the simple method that have been supported by buildbot for long:
+External Authentication
+-----------------------
 
-    * buildbot UI provides a form allowing user to specify user and password
-    * The password is verified against the local database
+Buildbot's web service can be run behind an HTTP proxy.
+Many such proxies can be configured to perform authentication on HTTP connections before forwarding the request to Buildbot.
+In these cases, the results of the authentication are passed to Buildbot in an HTTP header.
 
-Potential future auth systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In this mode, authentication proceeds as follows:
+
+    * The web browser connects to the proxy, requesting the Buildbot home page
+    * The proxy negotiates authentication with the browser, as configured
+    * Once the user is authenticated, the proxy forwards the request goes to the Buildbot web service.
+      The request includes a header, typically ``Remote-User``, containing the authenticated username.
+    * Buildbot reads the header and optionally connects to another service to fetch additional user information about the user.
+    * Buildbot stores all of the collected information in the server-side session.
+    * The UI fetches ``/config.js``, which includes the user information from the server-side session.
+
+Note that in this mode, the HTTP proxy will send the header with every request, although it is only interpreted during the fetch of ``/config.js``.
+
+Kerberos Example
+~~~~~~~~~~~~~~~~
+
+Kerberos is an authentication system which allows passwordless authentication on corporate networks.
+Users authenticate once on their desktop environment, and the OS, browser, webserver, and corporate directory cooperate in a secure manner to share the authentication to a webserver.
+This mechanism only takes care about the authentication problem, and no user information is shared other than the username.
+The kerberos authentication is supported by a Apache front-end in ``mod_kerberos``.
+
+Third-Party Authentication
+--------------------------
+
+Third-party authentication involves Buildbot redirecting a user's browser to another site to establish the user's identity.
+Once that is complete, that site redirects the user back to Buildbot, including a cryptographically signed assertion about the user's identity.
+
+The most common implementation of this sort of authentication is oAuth2.
+Many big internet service companies are providing oAuth2 services to identify their users.
+Most oAuth2 services provide authentication and user information in the same api.
+
+The following process is used for third-party authentication:
+
+    * The web browser connects to buildbot ui
+    * A session cookie is created, but user is not yet authenticated.
+      The UI adds a widget entitled ``Login via GitHub`` (or whatever third party is configured)
+    * When the user clicks on the widget, the UI fetches ``/login``, which returns a bare URL on ``github.com``.
+      The UI loads that URL in the browser, with an effect similar to a redirect.
+    * GitHub authenticates the user, if necessary, and requests permission for Buildbot to access the user's information.
+    * On success, the GitHub web page redirects back to Buildbot's ``/login?code=..``, with an authentication code.
+    * Buildbot uses this code to request more information from GitHub, and stores the results in the server-side session.
+      Finally, Buildbot returns a redirect response, sending the user's browser to the root of the Buildbot UI.
+      The UI code will fetch ``/config.js``, which contains the login data from the session.
+
+Logout
+------
+
+A "logout" button is available in the simple and third-party modes.
+Such a button doesn't make sense for external authentication, since the proxy will immediately re-authenticate the user.
+
+This button fetches ``/logout``, which destroys the server-side session.
+After this point, any stored authentication information is gone and the user is logged out.
+
+Future Additions
+----------------
 
 * Browserid/Persona: This method is very similar to oauth2, and should be implemented in a similar way (i.e. two stage redirect + token-verify)
 
 * Use the User table in db: This is a very similar to the BasicAuth use cases (form + local db verification). Eventually, this method will require some work on the UI in order to populate the db, add a "register" button, verification email, etc. This has to be done in a ui plugin.
-
-
