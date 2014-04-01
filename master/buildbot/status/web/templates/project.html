@@ -5,7 +5,7 @@
 {% extends "layout.html" %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu(active_page="codebases", pathNum=2, builderName='', buildNumber='', stepName='')}}
+  {{submenu.buildsubmenu(active_page="codebases", pathNum=2, builderName='', buildNumber='', stepName='', selectedProject=selectedproject)}}
 {% endblock %}
 
 {% block content %}

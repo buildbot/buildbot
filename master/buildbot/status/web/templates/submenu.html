@@ -11,15 +11,15 @@
 
 	{% if active_page == 'codebases' %}
 		{% set classPath = 'codebases' %}
-		{% set codebasesPath = '' %}
+		{% set codebasesPath = '' %}		
 	{% else %}
+
 		{% set codebasesPath = codebasesPath %}	
 	{% endif %}
 
 	{% if active_page == 'builders' %}
 		{% set classPath = 'builders' %}
 		{% set buildersPath = '' %}
-		{% set selectedProject = '- Project ' + selectedProject %}
 		
 	{% else %}
 		{% set buildersPath = buildersPath %}
@@ -52,8 +52,8 @@
 
 	{% set navigation_bar = [
 	    ('/', 'home', 'Home'),
-	    ('/projects', 'projects', 'Projects'),
-	    (codebasesPath, 'codebases', 'Codebases'),
+	    ('/projects', 'project', 'Projects'),
+	    (codebasesPath, 'codebases', selectedProject),
 	    (buildersPath, 'builders', 'Builders'),
 	    (builderPath, builderName, builderName),
 	    (buildPath, buildNumber, buildNumber),
@@ -61,15 +61,16 @@
 	] -%}
 
 	<nav id="{{classPath}}_page" class="sub-menu-container {{classPath}}">
-		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
+		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}		
 			<div class="container-inner">
 				<div class="wrap">
 				  <ul class="breadcrumbs-nav">
 					{% for href, id, caption in navigation_bar %}
 						{% if id == active_page %}
-							<li>{{caption|e}} {{selectedProject}}</li>
+							<li>{{caption|e}}</li>
 						{% elif loop.index == 3 and pathNum >= 3 %}
-							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
+
+							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a><a id="getBtn" class="more-info" href="#"></a></li>	
 						{% elif loop.index <= pathNum %}
 							<li><a href="{{ href|e }}">{{ caption|e }} </a></li>
 						{% endif %}
