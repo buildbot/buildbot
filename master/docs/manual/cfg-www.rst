@@ -120,7 +120,7 @@ The available classes are described here:
     You can look at the Google_ oauth2 documentation on how to register your Buildbot instance to the Google systems.
     The developer console will give you the two parameters you have to give to ``GoogleAuth``
 
-    Register your Buildbot instance with the ``BUILDBOT_URL/login`` url as the allowed redirect URI.
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
 
     Example::
 
@@ -145,6 +145,8 @@ The available classes are described here:
 
     This class implements an authentication with GitHub_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
+
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
 
     Example::
 

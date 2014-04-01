@@ -28,7 +28,7 @@ Username / Password Authentication
 ----------------------------------
 
 In this mode, the Buildbot UI displays a form allowing the user to specify a username and password.
-When this form is submitted, the UI makes an AJAX call to ``/login`` including HTTP Basic Authentication headers.
+When this form is submitted, the UI makes an AJAX call to ``/auth/login`` including HTTP Basic Authentication headers.
 The master verifies the contents of the header and updates the server-side session to indicate a successful login or to contain a failure message.
 Once the AJAX call is complete, the UI reloads the page, re-fetching ``/config.js``, which will include the username or failure message from the session.
 
@@ -76,10 +76,10 @@ The following process is used for third-party authentication:
     * The web browser connects to buildbot ui
     * A session cookie is created, but user is not yet authenticated.
       The UI adds a widget entitled ``Login via GitHub`` (or whatever third party is configured)
-    * When the user clicks on the widget, the UI fetches ``/login``, which returns a bare URL on ``github.com``.
+    * When the user clicks on the widget, the UI fetches ``/auth/login``, which returns a bare URL on ``github.com``.
       The UI loads that URL in the browser, with an effect similar to a redirect.
     * GitHub authenticates the user, if necessary, and requests permission for Buildbot to access the user's information.
-    * On success, the GitHub web page redirects back to Buildbot's ``/login?code=..``, with an authentication code.
+    * On success, the GitHub web page redirects back to Buildbot's ``/auth/login?code=..``, with an authentication code.
     * Buildbot uses this code to request more information from GitHub, and stores the results in the server-side session.
       Finally, Buildbot returns a redirect response, sending the user's browser to the root of the Buildbot UI.
       The UI code will fetch ``/config.js``, which contains the login data from the session.
@@ -90,7 +90,7 @@ Logout
 A "logout" button is available in the simple and third-party modes.
 Such a button doesn't make sense for external authentication, since the proxy will immediately re-authenticate the user.
 
-This button fetches ``/logout``, which destroys the server-side session.
+This button fetches ``/auth/logout``, which destroys the server-side session.
 After this point, any stored authentication information is gone and the user is logged out.
 
 Future Additions

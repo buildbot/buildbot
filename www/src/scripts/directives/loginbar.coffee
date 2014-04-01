@@ -14,7 +14,7 @@ angular.module('app').directive 'loginbar',
                 $http.defaults.headers.common['Authorization'] = auth
                 $http
                     method: "GET"
-                    url: "#{config.url}login"
+                    url: "#{config.url}auth/login"
                 .success (data, status) ->
                     console.log data
                     window.location.reload()
@@ -23,13 +23,13 @@ angular.module('app').directive 'loginbar',
                 $http.defaults.headers.common = {}
                 $http
                     method: "GET"
-                    url: "#{config.url}logout"
+                    url: "#{config.url}auth/logout"
                 .success (data, status) ->
                     window.location.reload()
             $scope.loginoauth2 = ->
                 $http
                     method: "GET"
-                    url: "#{config.url}login"
+                    url: "#{config.url}auth/login"
                 .success (data, status) ->
                     document.location = data
     ]

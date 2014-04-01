@@ -13,145 +13,212 @@
 #
 # Copyright Buildbot Team Members
 
-import base64
 import mock
 
 from buildbot.test.util import www
 from buildbot.www import auth
-from buildbot.www import config
+from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.web._auth.wrapper import UnauthorizedResource
+from twisted.web.error import Error
+from twisted.web.guard import BasicCredentialFactory
+from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
 
-class LoginResource(www.WwwTestMixin, unittest.TestCase):
+class AuthResourceMixin:
+
+    def setUpAuthResource(self):
+        self.master = self.make_master(url='h:/a/b/')
+        self.auth = self.master.config.www['auth']
+        self.auth.master = self.master
+
+
+class AuthRootResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpAuthResource()
+        self.rsrc = auth.AuthRootResource(self.master)
+
+    def test_getChild_login(self):
+        glr = mock.Mock(name='glr')
+        self.master.config.www['auth'].getLoginResource = glr
+        child = self.rsrc.getChild('login', mock.Mock(name='req'))
+        self.assertIdentical(child, glr())
+
+    def test_getChild_logout(self):
+        glr = mock.Mock(name='glr')
+        self.master.config.www['auth'].getLogoutResource = glr
+        child = self.rsrc.getChild('logout', mock.Mock(name='req'))
+        self.assertIdentical(child, glr())
+
+
+class AuthBase(www.WwwTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.auth = auth.AuthBase()
+        self.master = self.make_master(url='h:/a/b/')
+        self.auth.master = self.master
+        self.req = self.make_request('/')
 
     @defer.inlineCallbacks
-    def test_render(self):
-        _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
+    def test_maybeAutoLogin(self):
+        self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), False)
 
-        def authenticateViaLogin(request):
-            request.getSession().user_info = dict(name="me")
-        _auth.authenticateViaLogin = mock.Mock(side_effect=authenticateViaLogin)
-        master = self.make_master(url='h:/a/b/', auth=_auth)
-        rsrc = _auth.getLoginResource(master)
-        rsrc.reconfigResource(master.config)
+    def test_authenticateViaLogin(self):
+        self.assertRaises(Error, lambda:
+                          self.auth.authenticateViaLogin(self.req))
 
-        res = yield self.render_resource(rsrc, '/')
-        _auth.maybeAutoLogin.assert_not_called()
-        self.assertEqual(res, "")
-        _auth.authenticateViaLogin.assert_called()
+    def test_getLoginResource(self):
+        self.assertIsInstance(self.auth.getLoginResource(),
+                              auth.LoginResource)
 
-
-class PreAuthenticatedLoginResource(www.WwwTestMixin, unittest.TestCase):
+    def test_getLogoutResource(self):
+        self.assertIsInstance(self.auth.getLogoutResource(),
+                              auth.LogoutResource)
 
     @defer.inlineCallbacks
-    def test_render(self):
-        _auth = auth.NoAuth()
-        _auth.maybeAutoLogin = mock.Mock()
-        _auth.authenticateViaLogin = mock.Mock()
+    def test_updateUserInfo(self):
+        self.auth.userInfoProvider.getUserInfo = lambda un: {'info': un}
+        self.req.session.user_info = {'username': 'elvira'}
+        yield self.auth.updateUserInfo(self.req)
+        self.assertEqual(self.req.session.user_info,
+                         {'info': 'elvira', 'username': 'elvira'})
 
-        def updateUserInfo(request):
-            session = request.getSession()
-            session.user_info['email'] = session.user_info['username'] + "@org"
-        _auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
-        master = self.make_master(url='h:/a/b/', auth=_auth)
-        rsrc = auth.PreAuthenticatedLoginResource(master, _auth, "him")
-        rsrc.reconfigResource(master.config)
-
-        res = yield self.render_resource(rsrc, '/')
-        self.assertEqual(res, "")
-        _auth.maybeAutoLogin.assert_not_called()
-        _auth.authenticateViaLogin.assert_not_called()
-        _auth.updateUserInfo.assert_called()
-        self.assertEqual(master.session.user_info, {'email': 'him@org', 'username': 'him'})
+    def getConfigDict(self):
+        self.assertEqual(auth.getConfigDict(),
+                         {'name': 'AuthBase'})
 
 
-class LogoutResource(www.WwwTestMixin, unittest.TestCase):
+class UseAuthInfoProviderBase(unittest.TestCase):
 
     @defer.inlineCallbacks
-    def test_render(self):
-        _auth = auth.NoAuth()
-        master = self.make_master(url='h:/a/b/', auth=_auth)
-        master.session.expire = mock.Mock()
-        rsrc = auth.LogoutResource(master)
-        rsrc.reconfigResource(master.config)
+    def test_getUserInfo(self):
+        uip = auth.UserInfoProviderBase()
+        self.assertEqual((yield uip.getUserInfo('jess')),
+                         {'email': 'jess'})
 
-        yield self.render_resource(rsrc, '/')
-        master.session.expire.assert_not_called()
+
+class NoAuth(unittest.TestCase):
+
+    def test_exists(self):
+        assert auth.NoAuth
 
 
 class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
 
-    @defer.inlineCallbacks
-    def test_RemoteUserAuth(self):
-        _auth = auth.RemoteUserAuth()
-        master = self.make_master(url='h:/a/b/', auth=_auth)
-        rsrc = config.SessionConfigResource(master)
-        rsrc.reconfigResource(master.config)
-
-        res = yield self.render_resource(rsrc, '/')
-        warning = 'missing http header REMOTE_USER. Check your reverse proxy config!'
-        exp = ('this.config = {"url": "h:/a/b/", "on_load_warning": "%(warning)s"'
-               ', "user": {"anonymous": true},'
-               ' "auth": {"name": "RemoteUserAuth"}, "port": null}')
-        self.assertEqual(res, exp % dict(warning=warning))
-
-        res = yield self.render_resource(rsrc, '/', extraHeaders=dict(REMOTE_USER="NOGOOD"))
-        warning = ('http header does not match regex! \\"NOGOOD\\" not matching'
-                   ' (?P<username>[^ @]+)@(?P<realm>[^ @]+)')
-        self.assertEqual(res, exp % dict(warning=warning))
-
-        res = yield self.render_resource(rsrc, '/', extraHeaders=dict(REMOTE_USER="GOOD@ORG"))
-        exp = ('this.config = {"url": "h:/a/b/", "user": {"username": "GOOD", "realm": "ORG", '
-               '"email": "GOOD"}, "auth": {"name": "RemoteUserAuth"}, "port": null}')
-        self.assertEqual(res, exp)
-
-        rsrc = auth.LoginResource(master)
-        rsrc.reconfigResource(master.config)
-        res = yield self.render_resource(rsrc, '/')
-        self.assertEqual(res, 'Please check with your administrator,'
-                              ' there is an issue with the reverse proxy')
-
-
-class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
-
     def setUp(self):
-        self.auth = _auth = auth.BasicAuth({"foo": "bar"})
-        self.master = master = self.make_master(url='h:/a/b/', auth=_auth)
-        self.rsrc = _auth.getLoginResource(master)
-        self.auth.reconfigAuth(master, master.config)
+        self.auth = auth.RemoteUserAuth(header='HDR')
+        self.make_master()
+        self.request = self.make_request('/')
 
     @defer.inlineCallbacks
-    def test_no_user(self):
-        res = yield self.render_resource(self.rsrc, '/')
-        self.assertTrue(isinstance(res, UnauthorizedResource))
+    def test_maybeAutoLogin(self):
+        self.request.input_headers['HDR'] = 'rachel@foo.com'
+        yield self.auth.maybeAutoLogin(self.request)
+        self.assertEqual(self.request.session.user_info, {
+                         'username': 'rachel',
+                         'realm': 'foo.com',
+                         'email': 'rachel'})
 
     @defer.inlineCallbacks
-    def test_bad_user(self):
-        auth = "Basic " + base64.b64encode("bad:guy")
-        res = yield self.render_resource(self.rsrc, '/', extraHeaders=dict(authorization=auth))
-        self.assertTrue(isinstance(res, UnauthorizedResource))
+    def test_maybeAutoLogin_no_header(self):
+        try:
+            yield self.auth.maybeAutoLogin(self.request)
+        except Error, e:
+            self.assertEqual(e.status, 403)
+        else:
+            self.fail("403 expected")
 
     @defer.inlineCallbacks
-    def test_good_user(self):
-        # to keep WwwTestMixin simple, we cannot really test more than that
-        # ICred is a bit complex, and would require a lot of fakeing
-        auth = "Basic " + base64.b64encode("foo:bar")
-        res = yield self.render_resource(self.rsrc, '/', extraHeaders=dict(authorization=auth))
-        self.assertFalse(isinstance(res, UnauthorizedResource))
+    def test_maybeAutoLogin_mismatched_value(self):
+        self.request.input_headers['HDR'] = 'rachel'
+        try:
+            yield self.auth.maybeAutoLogin(self.request)
+        except Error, e:
+            self.assertEqual(e.status, 403)
+        else:
+            self.fail("403 expected")
 
 
 class AuthRealm(www.WwwTestMixin, unittest.TestCase):
 
+    def setUp(self):
+        self.auth = auth.RemoteUserAuth(header='HDR')
+        self.auth = auth.NoAuth()
+        self.make_master()
+
+    def test_requestAvatar(self):
+        realm = auth.AuthRealm(self.master, self.auth)
+        itfc, rsrc, logout = realm.requestAvatar("me", None, IResource)
+        self.assertIdentical(itfc, IResource)
+        self.assertIsInstance(rsrc, auth.PreAuthenticatedLoginResource)
+
+
+class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
+
+    # twisted.web makes it difficult to simulate the authentication process, so
+    # this only tests the mechanics of the getLoginResource method.
+
+    def test_getLoginResource(self):
+        self.auth = auth.TwistedICredAuthBase(
+            credentialFactories=[BasicCredentialFactory("buildbot")],
+            checkers=[InMemoryUsernamePasswordDatabaseDontUse(good='guy')])
+        self.auth.master = self.make_master(url='h:/a/b/')
+        rsrc = self.auth.getLoginResource()
+        self.assertIsInstance(rsrc, HTTPAuthSessionWrapper)
+
+
+class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpAuthResource()
+        self.rsrc = auth.LoginResource(self.master)
+
     @defer.inlineCallbacks
-    def test_AuthRealm(self):
-        _auth = auth.BasicAuth({"foo": "bar"})
-        master = self.make_master(url='h:/a/b/', auth=_auth)
-        realm = auth.AuthRealm(master, _auth)
-        _, rsrc, _ = realm.requestAvatar("me", None, IResource)
-        res = yield self.render_resource(rsrc, '/')
+    def test_render(self):
+        self.auth.authenticateViaLogin = mock.Mock()
+
+        res = yield self.render_resource(self.rsrc, '/auth/login')
         self.assertEqual(res, "")
-        self.assertEqual(master.session.user_info, {'email': 'me', 'username': 'me'})
+        self.auth.authenticateViaLogin.assert_called()
+
+
+class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
+                                    unittest.TestCase):
+
+    def setUp(self):
+        self.setUpAuthResource()
+        self.rsrc = auth.PreAuthenticatedLoginResource(self.master, 'him')
+
+    @defer.inlineCallbacks
+    def test_render(self):
+        self.auth.maybeAutoLogin = mock.Mock()
+        self.auth.authenticateViaLogin = mock.Mock()
+
+        def updateUserInfo(request):
+            session = request.getSession()
+            session.user_info['email'] = session.user_info['username'] + "@org"
+        self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
+
+        res = yield self.render_resource(self.rsrc, '/auth/login')
+        self.assertEqual(res, "")
+        self.failIf(self.auth.maybeAutoLogin.called)
+        self.failIf(self.auth.authenticateViaLogin.called)
+        self.auth.updateUserInfo.assert_called()
+        self.assertEqual(self.master.session.user_info,
+                         {'email': 'him@org', 'username': 'him'})
+
+
+class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpAuthResource()
+        self.rsrc = auth.LogoutResource(self.master)
+
+    @defer.inlineCallbacks
+    def test_render(self):
+        self.master.session.expire = mock.Mock()
+        res = yield self.render_resource(self.rsrc, '/auth/logout')
+        self.assertEqual(res, "")
+        self.master.session.expire.assert_called()

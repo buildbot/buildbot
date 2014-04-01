@@ -136,11 +136,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /config.js
         root.putChild('config.js', wwwconfig.SessionConfigResource(self.master))
 
-        # /login
-        root.putChild('login', new_config.www['auth'].getLoginResource(self.master))
-
-        # /logout
-        root.putChild('logout', auth.LogoutResource(self.master))
+        # /auth
+        root.putChild('auth', auth.AuthRootResource(self.master))
 
         # /avatar
         root.putChild('avatar', avatar.AvatarResource(self.master))

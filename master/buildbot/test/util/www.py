@@ -20,8 +20,8 @@ import pkg_resources
 import urllib
 
 from buildbot.test.fake import fakemaster
-from buildbot.www import auth
 from buildbot.util import json
+from buildbot.www import auth
 from cStringIO import StringIO
 from twisted.internet import defer
 from twisted.web import server
@@ -133,17 +133,18 @@ class WwwTestMixin(RequiresWwwMixin):
 
     def render_resource(self, rsrc, path='/', accept=None, method='GET',
                         origin=None, access_control_request_method=None,
-                        extraHeaders=None):
-        request = self.make_request(path, method=method)
-        if accept:
-            request.input_headers['accept'] = accept
-        if origin:
-            request.input_headers['origin'] = origin
-        if access_control_request_method:
-            request.input_headers['access-control-request-method'] = \
-                access_control_request_method
-        if extraHeaders is not None:
-            request.input_headers.update(extraHeaders)
+                        extraHeaders=None, request=None):
+        if not request:
+            request = self.make_request(path, method=method)
+            if accept:
+                request.input_headers['accept'] = accept
+            if origin:
+                request.input_headers['origin'] = origin
+            if access_control_request_method:
+                request.input_headers['access-control-request-method'] = \
+                    access_control_request_method
+            if extraHeaders is not None:
+                request.input_headers.update(extraHeaders)
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:

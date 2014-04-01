@@ -32,6 +32,17 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
 
+class AuthRootResource(resource.Resource):
+
+    def getChild(self, path, request):
+        # return dynamically generated resources
+        if path == 'login':
+            return self.master.config.www['auth'].getLoginResource()
+        elif path == 'logout':
+            return self.master.config.www['auth'].getLogoutResource()
+        return resource.Resource.getChild(self, path, request)
+
+
 class AuthBase(config.ConfiguredMixin):
 
     def __init__(self, userInfoProvider=None):
@@ -48,8 +59,11 @@ class AuthBase(config.ConfiguredMixin):
     def authenticateViaLogin(self, request):
         raise Error(501, "not implemented")
 
-    def getLoginResource(self, master):
-        return LoginResource(master)
+    def getLoginResource(self):
+        return LoginResource(self.master)
+
+    def getLogoutResource(self):
+        return LogoutResource(self.master)
 
     @defer.inlineCallbacks
     def updateUserInfo(self, request):
@@ -116,8 +130,7 @@ class AuthRealm(object):
     def requestAvatar(self, avatarId, mind, *interfaces):
         if IResource in interfaces:
             return (IResource,
-                    PreAuthenticatedLoginResource(
-                        self.master, self.auth, avatarId),
+                    PreAuthenticatedLoginResource(self.master, avatarId),
                     lambda: None)
         raise NotImplementedError()
 
@@ -129,9 +142,9 @@ class TwistedICredAuthBase(AuthBase):
         self.credentialFactories = credentialFactories
         self.checkers = checkers
 
-    def getLoginResource(self, master):
+    def getLoginResource(self):
         return HTTPAuthSessionWrapper(
-            Portal(AuthRealm(master, self), self.checkers),
+            Portal(AuthRealm(self.master, self), self.checkers),
             self.credentialFactories)
 
 
@@ -158,43 +171,31 @@ class BasicAuth(TwistedICredAuthBase):
 
 
 class LoginResource(resource.Resource):
-    # enable reconfigResource calls
-    needsReconfig = True
-
-    def reconfigResource(self, new_config):
-        self.auth = new_config.www['auth']
 
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderLogin)
 
     @defer.inlineCallbacks
     def renderLogin(self, request):
-        yield self.auth.authenticateViaLogin(request)
+        yield self.master.config.www['auth'].authenticateViaLogin(request)
 
 
 class PreAuthenticatedLoginResource(LoginResource):
-    # a LoginResource, which is already authenticated via a HTTPAuthSessionWrapper
-    # disable reconfigResource calls
-    needsReconfig = False
+    # a LoginResource which is already authenticated via a
+    # HTTPAuthSessionWrapper
 
-    def __init__(self, master, auth, username):
+    def __init__(self, master, username):
         LoginResource.__init__(self, master)
-        self.auth = auth
         self.username = username
 
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
         session.user_info = dict(username=self.username)
-        yield self.auth.updateUserInfo(request)
+        yield self.master.config.www['auth'].updateUserInfo(request)
 
 
 class LogoutResource(resource.Resource):
-    # enable reconfigResource calls
-    needsReconfig = True
-
-    def reconfigResource(self, new_config):
-        self.auth = new_config.www['auth']
 
     def render_GET(self, request):
         session = request.getSession()

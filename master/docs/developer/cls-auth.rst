@@ -10,14 +10,16 @@ Authentication
 
     .. py:attribute:: userInfoProvider
 
-        Authentication modules are responsible for providing user information as detailed as possible. When there is a need to get additional information from another source, a userInfoProvider can optionally be specified.
+        Authentication modules are responsible for providing user information as detailed as possible.
+        When there is a need to get additional information from another source, a userInfoProvider can optionally be specified.
 
     .. py:method:: reconfigAuth(master, new_config)
 
         :param master: the reference to the master
         :param new_config: the reference to the new configuration
 
-        Auth module get information from the configuration
+        Reconfigure the authentication module.
+        In the base class, this simply sets ``self.master``.
 
     .. py:method:: maybeAutoLogin(request)
 
@@ -40,13 +42,17 @@ Authentication
         If it failed, ``resource.Error`` must be raised.
         If it is not implemented, the deferred will fire with user_info unset.
 
-    .. py:method:: getLoginResource(master)
+    .. py:method:: getLoginResource()
 
-        :param request: the request object
+        Return the resource representing ``/auth/login``.
 
-        Entry point for getting a customized loginResource. This is a mean to reuse twisted code.
+    .. py:method:: getLogout()
+
+        Return the resource representing ``/auth/logout``.
 
     .. py:method:: updateUserInfo(request)
+
+        :param request: the request object
 
         Separate entrypoint for getting user information. This is a mean to call self.userInfoProvider if provided.
 
@@ -68,13 +74,13 @@ Authentication
 
 .. py:class:: OAuth2Auth
 
-    OAuth2Auth implements oauth2 2 phases authentication. With this method ``/login`` is called twice. Once without argument. It should return the URL the browser has to redirect in order to perform oauth2 authentication, and authorization. Then the oauth2 provider will redirect to ``/login?code=???``, and buildbot web server will verify the code using the oauth2 provider.
+    OAuth2Auth implements oauth2 2 phases authentication. With this method ``/auth/login`` is called twice. Once without argument. It should return the URL the browser has to redirect in order to perform oauth2 authentication, and authorization. Then the oauth2 provider will redirect to ``/auth/login?code=???``, and buildbot web server will verify the code using the oauth2 provider.
 
     Typical login process is:
 
-    * UI calls the ``/login`` api, and redirect the browser to the returned oauth2 provider url
+    * UI calls the ``/auth/login`` api, and redirect the browser to the returned oauth2 provider url
     * oauth2 provider shows a web page with a form for the user to authenticate, and ask the user the permission for buildbot to access its account.
-    * oauth2 provider redirects the browser to ``/login?code=???``
+    * oauth2 provider redirects the browser to ``/auth/login?code=???``
     * OAuth2Auth module verifies the code, and get the user's additional information
     * buildbot UI is reloaded, with the user authenticated.
 
