@@ -5,6 +5,29 @@
 * @section page-elements
 * @author Simon Holm
 */
+ 
+.info-box {
+	background-color: #B6BFC9;
+	border: 1px solid #6A7A8B;
+	@include border-radius(4px);
+	float: left;	
+	padding: 7px;
+	@include text-shadow(0 1px 0 #FFF);
+	font-size: 11px;
+	@include box-shadow(0 1px 0 #FFF);
+	float: left;
+	margin-top: 9px;	
+	h4 {
+		float: left;		
+		margin: 0;
+		padding: 0;
+	}
+	span {
+		display: block;
+		float: left;
+		margin-left: 8px;
+	}
+}
 
 .top-menu-container {
 	@include bgimage (linear-gradient(top, #EBEBEB 0%, #D9D9D9 100%));
