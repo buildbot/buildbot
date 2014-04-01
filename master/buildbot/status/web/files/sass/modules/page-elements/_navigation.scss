@@ -11,12 +11,46 @@
 	@include pie-clearfix;
 }
 
+.outer-bar {
+	float:right;
+	height:16px;
+	@include border-radius (3px);
+	border:1px solid #477cb4;
+	display:block;
+	margin: -2px 0 0 5px;
+    position: relative;
+    width: 10px;
+    @include box-shadow (0 1px 0 #FFF);
+}
+
+.inner-bar {
+	background-color: #477CB4;
+    bottom: 0;
+    display: block;
+    left: 0;
+    position: absolute;
+    width: 100%;
+}
+
 .top-menu {
 	list-style: none;
 	padding: 0;
 	margin:0;
 	float:left;
 	@include pie-clearfix;
+	.menu-bubble {		
+		display: block; 
+		float: right; 
+		color: rgb(255, 255, 255); 
+		font-size: 10px; 
+		margin: -2px 0 0 13px; 
+		letter-spacing: 1px; 
+		@include border-radius (9px); 
+		padding: 2px 7px 3px 8px; 
+		@include box-shadow ( 0 1px 0 #FFFFFF, 0 0 3px rgba(0, 0, 0, 0.38) inset); 
+		background-color: rgb(71, 124, 180);
+		font-weight: normal;
+	}
 	&> li {
 		float:left;
 		padding: 0;

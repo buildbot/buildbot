@@ -1,0 +1,1 @@
+define(["jquery","realtimePages","helpers"],function(e,t,n){var r=e("#buildQueueTotal"),i=e("#buildSlavesTotal"),s=e("#verticalProgressBar"),o={init:function(){t.initRealtime(o.processGlobal)},processGlobal:function(e){try{n.verticalProgressBar(s.children(),e),s.attr("title","16 builds are running, 43 agents are idle ")}catch(t){}}};return o});

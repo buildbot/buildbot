@@ -19,6 +19,7 @@ require.config({
 		'rtbuilders': 'project/rtBuilders',
 		'rtbuildslaves': 'project/rtBuildSlaves',
 		'rtbuildqueue': 'project/rtBuildqueue',
+		'rtglobal': 'project/rtGlobal',
 		'jqache': 'plugins/jqache-0-1-1-min',
 		'overscroll': 'plugins/jquery-overscroll',		
 		'moment': 'plugins/moment-with-langs',

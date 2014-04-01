@@ -83,7 +83,7 @@
 
         <ul class="top-menu">
           
-          <li title="testing testing testing">
+          <li>
             <a id="home" href="{{ path_to_root or '.' }}">Home</a>
           </li>
           <!--
@@ -101,14 +101,17 @@
           </li>
           -->
           <li class="project-dropdown">
-            <a id="projects" href="{{ path_to_root }}projects">Projects</a>
-            
-            <span id="projectDropdown" class="arrow-down-btn"></span>
-            
+            <a id="projects" href="{{ path_to_root }}projects">Projects</a>            
+            <span id="projectDropdown" class="arrow-down-btn"></span>            
           </li>
           
           <li>
-            <a id="buildqueue" href="{{ path_to_root }}buildqueue">Build queue</a>
+            <a id="buildqueue" href="{{ path_to_root }}buildqueue">
+              <span id="verticalProgressBar" class="outer-bar tooltip">
+                <span class="inner-bar">                  
+                </span>
+              </span>
+              <span id="buildQueueTotal" class="menu-bubble">8</span> Build queue</a>            
           </li>
           <!--
           <li>
@@ -116,7 +119,12 @@
           </li>
           -->
           <li>
-            <a id="buildslaves" href="{{ path_to_root }}buildslaves">Build slaves</a>
+            <a id="buildslaves"  href="{{ path_to_root }}buildslaves">
+              <span id="buildSlavesTotal" class="menu-bubble">
+                88
+              </span> 
+              Build slaves
+            </a>
           </li>
           <li>
             <a id="json" href="{{ path_to_root }}json/help">JSON API</a>

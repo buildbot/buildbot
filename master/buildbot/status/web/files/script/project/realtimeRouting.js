@@ -3,7 +3,13 @@ define(['jquery', 'helpers'], function ($, helpers) {
     var realtimeRouting;
     
     realtimeRouting = {
-        init: function () {
+        init: function () {        	
+
+        	// For common elementupdates 
+        	require(['rtglobal'],
+				function(rtGlobal) {
+				rtGlobal.init();
+			});
 
         	switch(helpers.getCurrentPage()) { 
 				case 'builddetail':        	
@@ -39,6 +45,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
 			       break;
 
 			}
+
 		
 		}
 	};
