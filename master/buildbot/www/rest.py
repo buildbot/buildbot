@@ -309,7 +309,6 @@ class V2RootResource(resource.Resource):
 
             # annotate the result with some metadata
             meta = {}
-            links = meta['links'] = []
             ignore = set(['limit', 'offset'])
             query = [(k, v)
                      for (k, vs) in request.args.iteritems()
@@ -319,9 +318,6 @@ class V2RootResource(resource.Resource):
             def mklink(rel, offset, limit):
                 o = [('offset', offset)] if offset else []
                 l = [('limit', limit)] if limit else []
-                links.append({'rel': rel,
-                              'href': base.Link(tuple(request.postpath),
-                                                query + o + l)})
 
             if ep.isCollection:
                 offset, total, limit = data.offset, data.total, data.limit
@@ -331,8 +327,6 @@ class V2RootResource(resource.Resource):
                 # add total, if known
                 if total is not None:
                     meta['total'] = total
-
-                links = meta['links'] = []
 
                 # add pagination links
                 mklink('self', offset, limit)
@@ -477,9 +471,7 @@ class V2RootResource(resource.Resource):
         return server.NOT_DONE_YET
 
     def _toJson(self, obj):
-        if isinstance(obj, base.Link):
-            return obj.makeUrl(self.base_url, self.apiVersion)
-        elif isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime.datetime):
             return datetime2epoch(obj)
 
 RestRootResource.addApiVersion(2, V2RootResource)

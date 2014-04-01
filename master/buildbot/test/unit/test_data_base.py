@@ -128,38 +128,3 @@ class ListResult(unittest.TestCase):
         self.assertEqual(lr3, list)
         lr4 = base.ListResult([1, 2, 3], total=4)
         self.assertNotEqual(lr4, list)
-
-
-class Link(unittest.TestCase):
-
-    def test_path(self):
-        l = base.Link(('a', 'b'))
-        self.assertEqual(l.path, ('a', 'b'))
-
-    def test_repr(self):
-        l = base.Link(('a', 'b'))
-        self.assertEqual(repr(l), "Link(('a', 'b'), [])")
-
-    def test_cmp(self):
-        self.failUnless(base.Link(('a', 'b'))
-                        < base.Link(('b', 'b')))
-        self.failUnless(base.Link(('a',), [('f', 1)])
-                        < base.Link(('a',), [('g', 1)]))
-
-    def test_makeUrl(self):
-        self.assertEqual(
-            base.Link(('a', 'b'))
-            .makeUrl('//h/', 3),
-            '//h/api/v3/a/b')
-
-    def test_makeUrl_root(self):
-        self.assertEqual(
-            base.Link(())
-            .makeUrl('//h/', 3),
-            '//h/api/v3')  # note no trailing /
-
-    def test_makeUrl_query(self):
-        self.assertEqual(
-            base.Link(('a', 'b'), [('x', '10'), ('y', '20')])
-            .makeUrl('//h/', 3),
-            '//h/api/v3/a/b?x=10&y=20')

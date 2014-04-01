@@ -87,7 +87,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         The ``filters``, ``fields``, ``order``, ``limit``, and ``offset`` are passed to the :py:class:`~buildbot.data.resultspec.ResultSpec` constructor.
 
-        The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None, along with :py:class:`~buildbot.data.base.Link` instances giving paths to other resources.
+        The return value is composed of simple Python objects - lists, dicts, strings, numbers, and None.
 
     .. py:method:: getEndpoint(path)
 
@@ -156,33 +156,6 @@ The updates section is available at `self.master.data.updates`, and contains a n
     The update methods are implemented in resource type classes, but through some initialization-time magic, all appear as attributes of ``self.master.data.updates``.
 
 The update methods are found in the resource type pages.
-
-Links
-.....
-
-.. py:module:: buildbot.data.base
-
-.. py:class:: Link(path, query=[])
-
-    A link giving the path for this or another object.
-    Instances of this class should be serialized appropriately for the medium, e.g., URLs in an HTTP API.
-
-    .. py:attribute:: path
-
-        The path, represented as a list of path elements.
-
-    .. py:attribute:: query
-
-        Query parameters, given as a list of key/value tuples.
-
-    .. py:method:: makeUrl(baseUrl, apiVersion)
-
-        :param baseUrl: ``/``-terminated base URL
-        :param apiVersion: numeric API version to include in the URL
-        :returns: full URL containing the path and query parameters
-
-        Generate a fully qualified URL for this link.
-
 
 Exceptions
 ..........
@@ -483,12 +456,6 @@ Basic Types
 
         complete = types.Boolean()
 
-.. py:class:: Link()
-
-    A REST link. ::
-
-        link = types.Link()
-
 .. py:class:: Identifier(length)
 
     An identifier; see :ref:`Identifier <type-identifier>`.
@@ -535,7 +502,6 @@ Entity Type
                 name = types.String()
                 data = types.Binary()
                 complete = types.Boolean()
-                link = types.Link()
                 ident = types.Identifier(25)
                 category = types.NoneOk(types.String())
                 tags = types.List(of=types.String())

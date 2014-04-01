@@ -12,7 +12,6 @@ Buildslaves
     :type configured_on: list of objects with keys ``masterid``, ``builderid``, and ``link``
     :attr slaveinfo: information about the slave
     :type slaveinfo: dictionary
-    :attr Link link: link for this buildslave
 
     The contents of the ``connected_to`` and ``configured_on`` attributes are sensitive to the context of the request.
     If a builder or master is specified in the path, then only the corresponding connections and configurations are included in the result.

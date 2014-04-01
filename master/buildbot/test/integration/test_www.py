@@ -149,9 +149,6 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             ],
             'meta': {
                 'total': 2,
-                'links': [
-                    {'href': self.link('masters'), 'rel': 'self'}
-                ],
             }})
 
         res = yield self.apiGet(self.link('masters/7'))
@@ -161,7 +158,4 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                  'last_active': SOMETIME},
             ],
             'meta': {
-                'links': [
-                    {'href': self.link('masters/7'), 'rel': 'self'}
-                ],
             }})
