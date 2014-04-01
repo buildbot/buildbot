@@ -181,7 +181,7 @@ class SVN(Source):
                 export_cmd.extend(["--revision", str(self.revision)])
             if self.username:
                 export_cmd.extend(['--username', self.username])
-            if self.password:
+            if self.password is not None:
                 export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
