@@ -152,44 +152,51 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 
 			$('body').append(preloader).show();
 			var mib = popup.htmlModule ('Select branches');
-			mib.appendTo('body');
+			
+			$(mib).appendTo('body');
 
 
 			$.get(path)
 			.done(function(data) {
 				require(['selectors'],function(selectors) {		        	
 		        	
-				var formContainer = $('#content1');	
-				preloader.remove();
-				
-				var fw = $(data).find('#formWrapper');
-				var getForm = fw.children('#getForm').prepend('<div class="filter-table-input">'+
-	    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
-	  				'</div>');
-				
-				
-				fw.appendTo(formContainer);												
+					var formContainer = $('#content1');	
+					preloader.remove();
 					
-					helpers.jCenter(mib).fadeIn('fast',function(){					
-						selectors.init();
+					var fw = $(data).find('#formWrapper');
+					var getForm = fw.children('#getForm').prepend('<div class="filter-table-input">'+
+		    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
+		  				'</div>');
+					
+					
+					fw.appendTo(formContainer);												
 
-						getForm
-						.attr('action', window.location.href)
-						.find('.blue-btn[type="submit"]')
-						.focus()
-						.click(function(){
-							mib.hide();				
-						});
-						helpers.closePopup(mib);
+					helpers.jCenter(mib).fadeIn('fast',function(){					
+						$('#getForm .blue-btn').focus();
 					});
 					
 					$(window).resize(function() {					
 						helpers.jCenter(mib);
 					});
-				
-				});			
-			});
-		}, customTabs: function (){ // tab list for custom build
+
+					        	
+			        	selectors.init();
+						$(window).resize(function() {
+							helpers.jCenter($('.more-info-box-js'));
+							
+						});
+					
+					
+					$('#getForm').attr('action', window.location.href);	
+					$('#getForm .blue-btn[type="submit"]').click(function(){
+						$('.more-info-box-js').hide();				
+					});
+
+					helpers.closePopup(mib);
+				});
+			});		
+		},
+		customTabs: function (){ // tab list for custom build
 			$('.tabs-list li').click(function(i){
 				var indexLi = $(this).index();
 				$(this).parent().find('li').removeClass('selected');
@@ -258,6 +265,7 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
                 });
 
 			});
+
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 
 				$('<div class="more-info-box remove-js">' +

@@ -559,6 +559,7 @@ class BuildersResource(HtmlResource):
         project_dict = FilterOut(project_dict)
         cxt['instant_json'] = json.dumps(project_dict)
 
+
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))
 

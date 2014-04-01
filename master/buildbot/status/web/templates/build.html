@@ -9,7 +9,7 @@
 {% set dataRealtimerServer = realTimeServer %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu(active_page=build_number, pathNum=5, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, stepName='')}}
+  {{submenu.buildsubmenu(active_page=build_number, pathNum=5, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, stepName='', selectedProject=selectedproject)}}
 {% endblock %}
 
 {% block content %}

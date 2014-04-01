@@ -104,14 +104,14 @@
       {% endif %}
        <span class="label">{{f.label}}</span>
       {% if 'Reason' in f.label %}
-          <span title="This will be filled out automatically if a build is triggered as a dependency. Otherwise, you can write a reason here for while you are requesting the build (this information will show up on the build details page)." class="question-icon tooltip">
+          <span title="This will be filled out automatically if a build is triggered as a dependency. Otherwise, you can write a reason here for why you are requesting the build (this information will show up on the build details page)." class="question-icon tooltip">
           </span>
       {% endif %}
        <input type='text' size='{{f.size}}'  name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
      
     {% elif 'bool' in f.type%}      
        <span class="label">{{f.label}}</span>
-        <span title="Checking this box will force the built to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt" class="tooltip question-icon">
+        <span title="Checking this box will force the built to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
       </span>
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'textarea' in f.type %}

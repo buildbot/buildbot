@@ -7,7 +7,6 @@ define(['select2'], function () {
 
         //Set the highest with on both selectors
         init: function () {
-            
             var selectBranches = $(".select-tools-js");
             var commonbranchSelect = $("#commonBranch_select");
 
@@ -61,7 +60,7 @@ define(['select2'], function () {
             $('option', selector).each(function () {
                 $(this).clone().prop('selected', false).appendTo(commonbranchSelect)
             });
-            
+
             // remove the duplicates
             var removedDuplicatesOptions = {};
             $('option', commonbranchSelect).each(function () {

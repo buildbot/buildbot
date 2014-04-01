@@ -104,7 +104,7 @@ class CodeBasesResource(HtmlResource):
 
         cxt['codebases'] = self.project.codebases
         cxt['selectedproject'] = self.project.name
-        template = request.site.buildbot_service.templates.get_template("codebases.html")
+        template = request.site.buildbot_service.templates.get_template("project.html")
         template.autoescape = True
         defer.returnValue(template.render(**cxt))
 

@@ -45,7 +45,8 @@ class StatusResourceBuildStep(HtmlResource):
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
         cxt['step_name'] = s.getName()
-
+        cxt['selectedproject'] = project
+        
         logs = cxt['logs'] = []        
         for l in s.getLogs():
             # FIXME: If the step name has a / in it, this is broken
@@ -70,13 +71,14 @@ class StatusResourceBuildStep(HtmlResource):
                 cxt['end'] = ctime(end)
                 cxt['elapsed'] = util.formatInterval(end - start)
             else:
-                cxt['end'] = "Not Finished"
+                cxt['end'] = "Not Finished"                
                 cxt['elapsed'] = util.formatInterval(util.now() - start)
                 
         cxt.update(dict(b = b,
                         s = s,
                         result_css = css_classes[s.getResults()[0]]))
-        
+    
+
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
         return template.render(**cxt)
 
