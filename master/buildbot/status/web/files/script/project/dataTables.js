@@ -103,22 +103,12 @@ define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function 
 
                 options.aoColumns = aoColumns;
             }
-
             if ($tableElem.hasClass('branches-selectors-js') && options.sDom === undefined) {
                 options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
             }
 
             //initialize datatable with options
             var oTable = $tableElem.dataTable(options);
-
-            // for the codebases
-            if ($tableElem.hasClass('branches-selectors-js')) {
-                var $dtWTop = $('.dataTables_wrapper .top');
-                $dtWTop.append('<div class="filter-table-input">' +
-                    '<input value="Show builders" class="blue-btn var-2" type="submit" />' +
-                    '<h4 class="help-txt">Select branch for each codebase before showing builders</h4>' +
-                    '</div>');
-            }
 
             // Set the marquee in the input field on load and listen for key event
             $tableElem.parents('.dataTables_wrapper').find('.dataTables_filter input').attr('placeholder', 'Filter results').focus();

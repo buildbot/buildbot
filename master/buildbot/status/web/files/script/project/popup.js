@@ -164,15 +164,17 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 					preloader.remove();
 					
 					var fw = $(data).find('#formWrapper');
-					var getForm = fw.children('#getForm').prepend('<div class="filter-table-input">'+
-		    			'<input value="Update" class="blue-btn var-2" type="submit" />'+	    			
-		  				'</div>');
+				    fw.children('#getForm').attr('action', window.location.href);
+				    var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
 					
 					
 					fw.appendTo(formContainer);												
 
 					helpers.jCenter(mib).fadeIn('fast',function(){					
-						$('#getForm .blue-btn').focus();
+						selectors.init();
+						blueBtn.focus();						
+						helpers.closePopup(mib);
+						
 					});
 					
 					$(window).resize(function() {					
