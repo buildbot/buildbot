@@ -126,6 +126,8 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
         },
         getInstantJSON: function () {
             var script = $('#instant-json');
+            // remove prelaoder
+            $('#bowlG').remove();
             if (script.length) {
                 script.remove();
                 return instantJSON;

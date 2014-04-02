@@ -29,8 +29,8 @@ require.config({
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache) {
 		
 	'use strict';
 
@@ -76,6 +76,11 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		if ($('#builddetail_page').length > 0) {
 			helpers.summaryArtifactTests();
 		}
+
+		if (helpers.isRealTimePage() === true) {
+			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
+	    	$('body').append(preloader);        	
+        }
 				
 		// get scripts for general popups
 		popup.init();
