@@ -5,12 +5,6 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
     realtimeRouting = {
         init: function () {        	
 
-        	// For common elementupdates 
-        	require(['rtglobal'],
-				function(rtGlobal) {
-				rtGlobal.init();
-			});
-
         	switch(helpers.getCurrentPage()) { 
 				case 'builddetail':        	
 					// For the builddetailpage
@@ -43,7 +37,13 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                             rtBuildqueue.init();
                         });
                     break;
-
+            	default:
+                    // For pages without overriden realtime
+                    require(['rtglobal'],
+                        function (rtGlobal) {
+                    	rtGlobal.init();
+                    });
+                    break;
 			}
 
 		
