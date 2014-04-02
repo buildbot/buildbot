@@ -42,13 +42,11 @@ div.common-branch-select {
 .help-txt {
     color: #787878;
     display: block;
-    position: absolute;
-    right: 10px;
-    top: 20px;
+    float: right;
     font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
-    width: 340px;
-    text-align:right;
+    width: 188px;    
+    margin: 0px 17px 10px 0;
 }
 
 .select2-container {
@@ -455,6 +453,12 @@ disabled look for disabled choices in the results dropdown
     width: 100px;
     height: 100px;
     overflow: scroll;
+}
+
+@include breakpoint($bkpt-small) {
+    .help-txt {
+        display: none;
+    }
 }
 
 @include breakpoint($bkpt-small-portrait) {

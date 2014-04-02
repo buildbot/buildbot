@@ -96,14 +96,7 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 			  	var oTable = $(this).dataTable(optionTable);			  	
 			  	var dtWTop = $('.dataTables_wrapper .top');
 			  	// special for the codebasespage
-			  	if ($('#codebases_page').length != 0) {
-					dtWTop.append('<div class="filter-table-input">'+
-	    			'<input value="Show builders" class="blue-btn var-2" type="submit" />'+
-	    			'<h4 class="help-txt">Select branch for each codebase before showing builders</h4>'+    
-	  				'</div>');
-				}
-
-
+			  	
 			  	var filterTableInput = $('.dataTables_filter input');
 
 			  	// insert codebase and branch on the builders page
