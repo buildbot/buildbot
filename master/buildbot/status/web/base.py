@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+import json
 
 import urlparse, urllib, time, re
 import os, cgi, sys, locale
@@ -165,7 +165,7 @@ def path_to_json_builders(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:
         codebases_arg = getCodebasesArg(request=request)
-    return "/json/projects/{0}/{1}".format(urllib.quote(projectName, safe=''), codebases_arg)
+    return "json/projects/{0}/{1}".format(urllib.quote(projectName, safe=''), codebases_arg)
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -206,6 +206,18 @@ def path_to_slave(request, slave):
 def path_to_change(request, change):
     return (path_to_root(request) +
             "changes/%s" % change.number)
+
+def path_to_json_global_status(request):
+    return path_to_root(request) + "json/globalstatus/"
+
+def path_to_json_slaves(request):
+    return path_to_root(request) + "json/slaves/"
+
+def path_to_json_build(status, request, builderName, buildID):
+    return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
+
+def path_to_json_build_queue(request):
+    return path_to_root(request) + "json/buildqueue/"
 
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
@@ -384,8 +396,10 @@ class HtmlResource(resource.Resource, ContextMixin):
             return ''
 
         ctx = self.getContext(request)
+        ctx['instant_json'] = self.getInstantJSON(request)
 
         d = defer.maybeDeferred(lambda : self.content(request, ctx))
+
         def handle(data):
             if isinstance(data, unicode):
                 data = data.encode("utf-8")
@@ -408,6 +422,14 @@ class HtmlResource(resource.Resource, ContextMixin):
             return None # processingFailed will log this for us
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
+
+    def getInstantJSON(self, request):
+        return dict({
+            "global": {
+                "url": self.getStatus(request).getBuildbotURL() + path_to_json_global_status(request),
+                "data": json.dumps({"temporary": True})
+            }
+        })
 
 class StaticHTML(HtmlResource):
     def __init__(self, body, pageTitle):

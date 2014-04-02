@@ -3,7 +3,9 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
     var tbsorter = $('#tablesorterRt').dataTable();
     var rtBuildqueue = {
         init: function () {
-            realtimePages.initRealtime(rtBuildqueue.processBuildQueue);
+            var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
+            realtimeFunctions["queue"] = rtBuildqueue.processBuildQueue
+            realtimePages.initRealtime(realtimeFunctions);
         }, processBuildQueue: function(data) {        	
         	tbsorter.fnClearTable();
         	try {
