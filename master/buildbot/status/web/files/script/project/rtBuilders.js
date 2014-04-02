@@ -1,12 +1,14 @@
-define(['jquery', 'project/realtimePages', 'helpers', 'libs/jquery.form'], function ($, realtimePages, helpers, form) {
+define(['jquery', 'realtimePages', 'helpers', 'libs/jquery.form'], function ($, realtimePages, helpers, form) {
          "use strict";
     var rtBuilders;
     var tbsorter = $('#tablesorterRt').dataTable();
     rtBuilders = {
         init: function () {
-            realtimePages.initRealtime(rtBuilders.processBuilders);
+            var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
+            realtimeFunctions['builders'] = rtBuilders.realtimeFunctionsProcessBuilders
+            realtimePages.initRealtime(realtimeFunctions);
         }, 
-        processBuilders: function(data) {        	
+        realtimeFunctionsProcessBuilders: function(data) {
         	tbsorter.fnClearTable();        
         	
         	try {

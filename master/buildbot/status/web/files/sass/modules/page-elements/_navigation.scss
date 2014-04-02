@@ -6,6 +6,8 @@
 */
   
 .info-box {
+	background-color: #B6BFC9;
+	border: 1px solid #6A7A8B;
 	@include border-radius(4px);
 	float: left;	
 	padding: 7px;
@@ -51,7 +53,7 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 	height:16px;
 	@include border-radius (3px);
 	border:1px solid #477cb4;
-	display:block;
+	display:none;
 	margin: -2px 0 0 5px;
     position: relative;
     width: 10px;
@@ -73,11 +75,11 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 	margin:0;
 	float:left;
 	@include pie-clearfix;
-	.menu-bubble {		
-		display: block; 
-		float: right; 
-		color: rgb(255, 255, 255); 
-		font-size: 10px; 
+	.menu-bubble {
+		display: none;
+		float: right;
+		color: rgb(255, 255, 255);
+		font-size: 11px;
 		margin: -2px 0 0 13px; 
 		letter-spacing: 1px; 
 		@include border-radius (9px); 

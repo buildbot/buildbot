@@ -21,7 +21,7 @@ from twisted.web.resource import NoResource
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder, path_to_json_slaves
 from buildbot import util
 from buildbot.status.web.status_json import SlavesJsonResource, FilterOut
 
@@ -128,7 +128,9 @@ class BuildSlavesResource(HtmlResource):
         slaves = SlavesJsonResource(s)
         slaves_dict = yield slaves.asDict(request)
         slaves_dict = FilterOut(slaves_dict)
-        cxt['instant_json'] = json.dumps(slaves_dict)
+
+        cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
+                                         "data": json.dumps(slaves_dict)}
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
         defer.returnValue(template.render(**cxt))

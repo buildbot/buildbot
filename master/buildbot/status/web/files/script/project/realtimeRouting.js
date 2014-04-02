@@ -1,11 +1,15 @@
-define(['jquery', 'helpers'], function ($, helpers) {
-         "use strict";
+define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePages) {
+    "use strict";
     var realtimeRouting;
-    
+
     realtimeRouting = {
         init: function () {        	
 
-
+        	// For common elementupdates 
+        	require(['rtglobal'],
+				function(rtGlobal) {
+				rtGlobal.init();
+			});
 
         	switch(helpers.getCurrentPage()) { 
 				case 'builddetail':        	
@@ -24,30 +28,25 @@ define(['jquery', 'helpers'], function ($, helpers) {
 			        });
 			       break;
 
-			    case 'buildslaves':							
-					// For the frontpage
-					require(['rtbuildslaves'],
-			        function(rtBuildSlaves) {
-			        	rtBuildSlaves.init();
-			        });
-			       break;
-				
-				case 'buildqueue':
-					// For the frontpage
-					require(['rtbuildqueue'],
-			        function(rtBuildqueue) {
-			        	rtBuildqueue.init();
-			        });
-			       break;
+                case 'buildslaves':
+                    // For the frontpage
+                    require(['rtbuildslaves'],
+                        function (rtBuildSlaves) {
+                            rtBuildSlaves.init();
+                        });
+                    break;
+
+                case 'buildqueue':
+                    // For the frontpage
+                    require(['rtbuildqueue'],
+                        function (rtBuildqueue) {
+                            rtBuildqueue.init();
+                        });
+                    break;
 
 			}
 
-			// For common elementupdates 
-        	require(['rtglobal'],
-				function(rtGlobal) {
-				rtGlobal.init();
-			});
-			
+		
 		}
 	};
    return realtimeRouting

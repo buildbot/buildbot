@@ -5,8 +5,10 @@ define(['jquery', 'realtimePages', 'helpers','popup','text!templates/builders.mu
     var currentstepJS = $('.current-step-js');
 
     rtBuildDetail = {
-        init: function () {        	
-            realtimePages.initRealtime(rtBuildDetail.processBuildDetail)
+        init: function () {
+            var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
+            realtimeFunctions["build"] = rtBuildDetail.processBuildDetail
+            realtimePages.initRealtime(realtimeFunctions);
         }, processBuildDetail: function(data) { 
 
         	 try {

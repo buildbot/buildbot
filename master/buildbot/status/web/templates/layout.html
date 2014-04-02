@@ -18,7 +18,7 @@
     
     <script type="text/javascript">
       var require = {
-          baseUrl: "/script/",
+          baseUrl: "/prod/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
@@ -30,7 +30,7 @@
     {% endif %}
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
-    <link rel="stylesheet" href="/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     
@@ -41,12 +41,6 @@
     {% set bodyId = bodyId %}
   {% else %}
     {% set bodyId = '' %}
-  {% endif %}
- 
-  {% if dataRealtimerServer %}
-    {% set realTimeServer = dataRealtimerServer %}
-  {% else %}
-    {% set realTimeServer = '' %}
   {% endif %}
 
    <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
@@ -121,7 +115,7 @@
                 </span>
               </span>
               <span id="buildSlavesTotal" class="menu-bubble">
-                88
+                0
               </span> 
               Build slaves
             </a>
@@ -155,7 +149,7 @@
         </ul>
         <div class="info-box green">
           <h4>Build Load</h4>
-          <span>37</span>
+          <span>0</span>
         </div>
         <div class="info-box red">
           <h4>Attention</h4>

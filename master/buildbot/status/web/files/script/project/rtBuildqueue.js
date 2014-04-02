@@ -1,9 +1,11 @@
 define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpers) {
          "use strict";
     var tbsorter = $('#tablesorterRt').dataTable();
-    var rtBuildqueue = {
+    var rtBuildQueue = {
         init: function () {
-            realtimePages.initRealtime(rtBuildqueue.processBuildQueue);
+            var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
+            realtimeFunctions["queue"] = rtBuildQueue.processBuildQueue
+            realtimePages.initRealtime(realtimeFunctions);
         }, processBuildQueue: function(data) {        	
         	tbsorter.fnClearTable();
         	try {
@@ -16,5 +18,5 @@ define(['jquery', 'realtimePages', 'helpers'], function ($, realtimePages, helpe
         }
     };
 
-    return rtBuildqueue;
+    return rtBuildQueue;
 });

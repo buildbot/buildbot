@@ -258,7 +258,7 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
                 helpers.closePopup(mib);
 
                 exContent.find('form').ajaxForm(function(data) {
-                    requirejs(['project/realtimePages'], function (realtimePages) {
+                    requirejs(['realtimePages'], function (realtimePages) {
                         exContent.closest('.more-info-box').find('.close-btn').click();
                         realtimePages.updateRealTimeData(data);
                     });

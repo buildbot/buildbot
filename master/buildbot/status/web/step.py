@@ -79,7 +79,7 @@ class StatusResourceBuildStep(HtmlResource):
                         result_css = css_classes[s.getResults()[0]]))
     
 
-        template = req.site.buildbot_service.templates.get_template("buildstep.html");        
+        template = req.site.buildbot_service.templates.get_template("buildstep.html")
         return template.render(**cxt)
 
     def getChild(self, path, req):

@@ -16,7 +16,7 @@ import json
 
 import time
 from twisted.internet import defer
-from buildbot.status.web.base import HtmlResource, path_to_buildqueue_json
+from buildbot.status.web.base import HtmlResource, path_to_buildqueue_json, path_to_json_build_queue
 from buildbot import util
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import path_to_builder, BuildLineMixin, ActionResource, path_to_buildqueue, path_to_root
@@ -41,7 +41,8 @@ class BuildQueueResource(HtmlResource):
         queue = QueueJsonResource(status)
         queue_json = yield queue.asDict(req)
         queue_json = FilterOut(queue_json)
-        cxt['instant_json'] = json.dumps(queue_json)
+        cxt['instant_json']['queue'] = {"url": status.getBuildbotURL() + path_to_json_build_queue(req),
+                                        "data": json.dumps(queue_json)}
         
         template = req.site.buildbot_service.templates.get_template("buildqueue.html")
         defer.returnValue(template.render(**cxt))

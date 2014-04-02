@@ -252,7 +252,7 @@ define(['datatables-plugin','helpers','libs/natural-sort','popup','text!template
 						"mRender": function (data,full,type)  {
 							var statusTxt;
 							var overtime = 0;
-							if (type.connected === undefined) {
+							if (type.connected === undefined || type.connected === false) {
 								statusTxt = 'Offline';							
 							} 
 							else if (type.connected === true && type.runningBuilds === undefined) {

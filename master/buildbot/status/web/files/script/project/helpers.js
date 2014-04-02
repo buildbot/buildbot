@@ -204,7 +204,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
 
                     formContainer.find('form').ajaxForm(function(data) {
-                        requirejs(['project/realtimePages'], function (realtimePages) {
+                        requirejs(['realtimePages'], function (realtimePages) {
                             realtimePages.updateRealTimeData(data);
                         });
                     });
@@ -487,10 +487,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
                 helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
             });
 
-		}, verticalProgressBar: function(el,data) {
+		}, verticalProgressBar: function(el,per) {
 			// must be replaced with json values
-			var percentage = (2 / 30) * 100 + '%';			
-			el.height(percentage);
+			el.height("{0}%".format(per));
 
 		}, progressBar: function(etaTime, el, startTime, overTime) {
 			var start = moment.unix(startTime),
@@ -586,47 +585,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
             return slavesResult === 'Not connected' ? 'status-td offline' : slavesResult === 'Running' ? 'status-td building' : 'status-td idle';
 
-        }, getJsonUrl: function () {
-
-    		var currentUrl = document.URL;
-			               	
-		    var parser = document.createElement('a');
-		    parser.href = currentUrl;
-
-		    var fullURL = "";
-            var urlParams = {"filter" : "1"};
-			if (helpers.getCurrentPage() === 'builders') {
-                var projectsPath = parser.pathname.match(/\/projects\/([^\/]+)/);
-				fullURL = parser.protocol + '//' + parser.host + '/json/projects/'+ projectsPath[1] + '/?';
-			}
-
-		    else if (helpers.getCurrentPage() === 'builddetail') {
-                var buildersPath = parser.pathname.match(/\/builders\/([^\/]+)/);
-                var buildPath = parser.pathname.match(/\/builds\/([^\/]+)/);
-		    	fullURL = parser.protocol + '//' + parser.host + '/json/builders/'+ buildersPath[1] +'/builds?select='+ buildPath[1] +'&';
-                urlParams = {}; //We don't want filter here yet
-		    }
-
-		    else if (helpers.getCurrentPage() === 'buildslaves') {
-		    	fullURL = parser.protocol + '//' + parser.host + '/json/slaves/?';
-		    }
-
-		    else if (helpers.getCurrentPage() === 'buildqueue') {
-		    	fullURL = parser.protocol + '//' + parser.host + '/json/buildqueue/?';
-		    }
-
-            urlParams = helpers.codebasesFromURL(urlParams);
-            var ret = [];
-            for (var d in urlParams) {
-                if (urlParams.hasOwnProperty(d)) {
-                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
-                }
-            }
-            var paramsString = ret.join("&");
-            fullURL = fullURL + paramsString;
-            console.log(fullURL);
-
-		    return fullURL;
         }, getCurrentPage: function () {
         	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];
         	var currentPageNoHash = "";

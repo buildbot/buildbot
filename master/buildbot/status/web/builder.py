@@ -173,7 +173,8 @@ class ForceBuildActionResource(ActionResource):
         elif "builders" in returnpage:
             defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
         elif "builders_json" in returnpage:
-            defer.returnValue((path_to_json_builders(req, self.builder_status.getProject()), msg))
+            s = self.getStatus(req)
+            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject()), msg))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
@@ -557,7 +558,8 @@ class BuildersResource(HtmlResource):
         project_json = SingleProjectJsonResource(status, self.project)
         project_dict = yield project_json.asDict(req)
         project_dict = FilterOut(project_dict)
-        cxt['instant_json'] = json.dumps(project_dict)
+        cxt['instant_json']['builders'] = {"url": status.getBuildbotURL() + path_to_json_builders(req, self.project.name),
+                                           "data": json.dumps(project_dict)}
 
 
         template = req.site.buildbot_service.templates.get_template("builders.html")

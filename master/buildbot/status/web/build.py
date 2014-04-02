@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
     path_to_codebases, path_to_builders, path_to_step, getCodebasesArg, \
      getAndCheckProperties, ActionResource, path_to_authzfail, \
-     getRequestCharset
+     getRequestCharset, path_to_json_build
 from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
@@ -279,6 +279,9 @@ class StatusResourceBuild(HtmlResource):
         cxt['exactly'] = (exactly) or b.getChanges()
         cxt['has_changes'] = has_changes
         cxt['authz'] = self.getAuthz(req)
+
+        cxt['instant_json']['build'] = {"url": path_to_json_build(status, req, builder.name, b.getNumber()),
+                                        "data": "{}"}
 
         template = req.site.buildbot_service.templates.get_template("build.html")
         return template.render(**cxt)
