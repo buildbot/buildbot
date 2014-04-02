@@ -7,7 +7,7 @@
 {% set bodyId = 'id="builder_page"' %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='')}}
+  {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='',selectedProject=selectedproject)}}
 {% endblock %}
 
 {% block content %}

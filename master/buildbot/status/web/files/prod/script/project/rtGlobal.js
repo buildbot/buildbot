@@ -1,0 +1,1 @@
+define(["jquery","helpers"],function(e,t){var n=e("#buildQueueTotal"),r=e("#buildSlavesTotal"),i=e("#verticalProgressBar"),s={init:function(){t.verticalProgressBar(i.children()),i.attr("title","16 builds are running, 43 agents are idle ")}};return s});

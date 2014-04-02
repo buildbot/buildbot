@@ -561,6 +561,7 @@ class BuildersResource(HtmlResource):
         cxt['instant_json']['builders'] = {"url": status.getBuildbotURL() + path_to_json_builders(req, self.project.name),
                                            "data": json.dumps(project_dict)}
 
+
         template = req.site.buildbot_service.templates.get_template("builders.html")
         defer.returnValue(template.render(**cxt))
 

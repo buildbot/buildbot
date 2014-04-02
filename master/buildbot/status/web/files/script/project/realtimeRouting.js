@@ -3,7 +3,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
     var realtimeRouting;
 
     realtimeRouting = {
-        init: function () {
+        init: function () {        	
 
             switch (helpers.getCurrentPage()) {
                 case 'builddetail':
