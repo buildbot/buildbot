@@ -592,7 +592,8 @@ depot for changes. It accepts the following arguments:
     How often to poll, in seconds. Defaults to 600 (10 minutes).
 
 ``project``
-    The project name in the Perforce base depot path.
+    Set the name of the project to be used for the :bb:chsrc:`P4Source`. This will then be set in any changes generated
+    by the ``P4Source``, and can be used in a Change Filter for triggering particular builders.
 
 ``pollAtLaunch``
     Determines when the first poll occurs. True = immediately on launch,
