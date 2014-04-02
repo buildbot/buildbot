@@ -1,4 +1,4 @@
-define(['jquery', 'helpers'], function ($, helpers) {
+define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
     "use strict";
     var buildQueueTotal = $('#buildQueueTotal');
     var buildSlavesTotal = $('#buildSlavesTotal');
@@ -9,6 +9,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
     var rtGlobal = {
         init: function () {
             requirejs(['realtimePages'], function (realtimePages) {
+                rtGlobal.initDataTable();
                 var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
                 realtimePages.initRealtime(realtimeFunctions);
             });
@@ -30,6 +31,16 @@ define(['jquery', 'helpers'], function ($, helpers) {
 
             buildSlavesTotal.text(slaveCount);
             infoSpan.text(buildLoad);
+        },
+        initDataTable : function() {
+            var table = undefined;
+            if ($('.tablesorter-js').length) {
+                table = $('.tablesorter-js');
+            } else {
+                table = $('#tablesorterRt');
+            }
+
+            return dt.initTable(table, {});
         }
     };
 
