@@ -3,8 +3,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
     var realtimeRouting;
 
     realtimeRouting = {
-        init: function () {        	
-
+        init: function () {
             switch (helpers.getCurrentPage()) {
                 case 'builddetail':
                     // For the builddetailpage
@@ -39,8 +38,12 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                     break;
 
                 default:
-                    var realtimeFunctions = {"global": realtimePages.processGlobalInfo};
-                    realtimePages.initRealtime(realtimeFunctions);
+                    // For pages without overriden realtime
+                    require(['rtglobal'],
+                        function (rtGlobal) {
+                            rtGlobal.init();
+                        });
+                    break;
             }
         }
     };

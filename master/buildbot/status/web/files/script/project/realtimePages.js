@@ -1,7 +1,5 @@
-define(['jquery', 'helpers'], function ($) {
+define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
     "use strict";
-    var realtimePages;
-
     var sock = null;
     var realTimeFunctions = {};
     var realtimeURLs = {};
@@ -15,7 +13,7 @@ define(['jquery', 'helpers'], function ($) {
     var iURLDroppedTimeout = 30000;
     var iServerDisconnectTimeout = 30000;
 
-    realtimePages = {
+    var realtimePages = {
         createWebSocket: function (wsURI) {
             if (sock == null) {
 
@@ -77,7 +75,7 @@ define(['jquery', 'helpers'], function ($) {
                 realtimePages.createWebSocket(wsURI);
             }
             else {
-                console.log("Realtime server not found, disabling realtime.")
+                console.log("Realtime server not found, disabling realtime.");
             }
         },
         sendCommand: function (cmd, data) {
@@ -136,11 +134,8 @@ define(['jquery', 'helpers'], function ($) {
         },
         defaultRealtimeFunctions: function () {
             return {
-                "global": realtimePages.processGlobalInfo
+                "global": rtGlobal.processGlobalInfo
             };
-        },
-        processGlobalInfo: function (data) {
-            console.log("Loading global data");
         }
     };
 

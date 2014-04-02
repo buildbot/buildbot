@@ -27,6 +27,7 @@ from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
 
+
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
     which shows the status of the last build for each builder."""
@@ -207,8 +208,8 @@ def path_to_change(request, change):
     return (path_to_root(request) +
             "changes/%s" % change.number)
 
-def path_to_json_global_status(request):
-    return path_to_root(request) + "json/globalstatus/"
+def path_to_json_global_status(status, request):
+    return status.getBuildbotURL() + "json/globalstatus"
 
 def path_to_json_slaves(request):
     return path_to_root(request) + "json/slaves/"
@@ -360,7 +361,6 @@ class HtmlResource(resource.Resource, ContextMixin):
             "empty.html")
         return template.render(**context)
 
-
     def render(self, request):
         # tell the WebStatus about the HTTPChannel that got opened, so they
         # can close it if we get reconfigured and the WebStatus goes away.
@@ -396,9 +396,14 @@ class HtmlResource(resource.Resource, ContextMixin):
             return ''
 
         ctx = self.getContext(request)
-        ctx['instant_json'] = self.getInstantJSON(request)
 
-        d = defer.maybeDeferred(lambda : self.content(request, ctx))
+        @defer.inlineCallbacks
+        def renderPage():
+            ctx['instant_json'] = yield self.getInstantJSON(request)
+            result = yield self.content(request, ctx)
+            defer.returnValue(result)
+
+        d = defer.maybeDeferred(lambda : renderPage())
 
         def handle(data):
             if isinstance(data, unicode):
@@ -423,11 +428,16 @@ class HtmlResource(resource.Resource, ContextMixin):
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
 
+    @defer.inlineCallbacks
     def getInstantJSON(self, request):
-        return dict({
+        from buildbot.status.web.status_json import GlobalJsonResource
+        status = self.getStatus(request)
+        globalInfo = GlobalJsonResource(status)
+        global_json = yield globalInfo.asDict(request)
+        defer.returnValue({
             "global": {
-                "url": self.getStatus(request).getBuildbotURL() + path_to_json_global_status(request),
-                "data": json.dumps({"temporary": True})
+                "url": path_to_json_global_status(status, request),
+                "data": json.dumps(global_json)
             }
         })
 

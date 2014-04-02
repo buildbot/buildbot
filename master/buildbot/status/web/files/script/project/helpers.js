@@ -487,10 +487,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
                 helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
             });
 
-		}, verticalProgressBar: function(el,data) {
+		}, verticalProgressBar: function(el,per) {
 			// must be replaced with json values
-			var percentage = (2 / 30) * 100 + '%';			
-			el.height(percentage);
+			el.height("{0}%".format(per));
 
 		}, progressBar: function(etaTime, el, startTime, overTime) {
 			var start = moment.unix(startTime),

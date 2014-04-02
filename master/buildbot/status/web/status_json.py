@@ -17,16 +17,14 @@
 """Simple JSON exporter."""
 
 import datetime
-import os
 import re
-from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot import master
 
 from twisted.internet import defer
 from twisted.web import html, resource, server
 
+from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset
-from buildbot.util import json
+import json
 
 
 _IS_INT = re.compile(r'^[-+]?\d+$')
@@ -98,6 +96,8 @@ EXAMPLES = """\
     - The current build queue
   - /json/pending/<A_BUILDER>/
     - The current pending builds for a builder (Can be filtered by codebases)
+  - /json/globalstatus/
+    - Global information about the current builds and slaves in use
 """
 
 
@@ -866,6 +866,38 @@ class MetricsJsonResource(JsonResource):
             return None
 
 
+class GlobalJsonResource(JsonResource):
+    help = """Gives information that can be used on all realtime pages"""
+    pageTitle = 'Global Info'
+
+    def __init__(self, status):
+        JsonResource.__init__(self, status)
+        self.slaves = status.getSlaveNames()
+
+    @defer.inlineCallbacks
+    def asDict(self, request):
+        connected_slaves = []
+        slave_busy = []
+        for s in self.slaves:
+            ss = self.status.getSlave(s)
+            if ss.isConnected:
+                connected_slaves.append(s)
+            if len(ss.getRunningBuilds()) > 0:
+                slave_busy.append(s)
+
+        current_builds = set()
+        for b_name in self.status.getBuilderNames():
+            b = self.status.getBuilder(b_name)
+            current_builds |= set(b.getCurrentBuilds())
+
+        queue = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=False)
+        result = {"slaves_count": len(connected_slaves),
+                  "slaves_busy": len(slave_busy),
+                  "running_builds": len(current_builds),
+                  "build_load": len(queue) + len(current_builds)}
+
+        defer.returnValue(result)
+
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""
     help = """JSON status
@@ -888,6 +920,7 @@ For help on any sub directory, use url /child/help
         self.putChild('metrics', MetricsJsonResource(status))
         self.putChild('buildqueue', QueueJsonResource(status))
         self.putChild('pending', PendingBuildsJsonResource(status))
+        self.putChild('globalstatus', GlobalJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 
