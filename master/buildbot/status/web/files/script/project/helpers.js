@@ -586,28 +586,35 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
             return slavesResult === 'Not connected' ? 'status-td offline' : slavesResult === 'Running' ? 'status-td building' : 'status-td idle';
 
         }, getCurrentPage: function () {
-        	var currentPage = [$('#builddetail_page'), $('#builders_page'), $('#buildslaves_page'),$('#buildqueue_page')];
-        	var currentPageNoHash = "";
-
-        	$.each(currentPage, function(key, value) {
-        		if (value.length === 1) {        			
-        			currentPage = value;        			
-        			currentPageNoHash = currentPage.selector.split('#')[1].split('_page')[0];        		
-        		}
-			});	
-
-        	// return the name of the page 
-			return currentPageNoHash;
+        	var currentPage = document.getElementsByTagName('body')[0].id;
+        	// return the id of the page        
+			return currentPage;			
 			 
-		}, isRealTimePage: function () {
-			var isRealTimePage = false;
+		}, hasfinished: function () {
+			var hasfinished = false;
 			var isFinishedAttr = $('#isFinished').attr('data-isfinished');
 			
 			if (isFinishedAttr === undefined) {
-				isRealTimePage = true;
+				hasfinished = false;
         	}
-        	return isRealTimePage
 
+        	if (isFinishedAttr === true) {
+				hasfinished = true;
+        	}
+
+        	return hasfinished
+
+		}, isRealTimePage: function() {
+			var isRealtimePage = false
+			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page'];
+			var current = helpers.getCurrentPage();
+			$.each(currentRtPages, function(key,value) {
+				if (value === current) {
+					isRealtimePage = true;
+				}
+			});
+			return isRealtimePage;
+			
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
 		  	var value = re.exec(document.cookie); 

@@ -5,6 +5,7 @@ define(['jquery', 'helpers'], function ($, helpers) {
     var outerBar = $('#verticalProgressBar');
     var $buildLoadBox = $('#buildLoad');
     var infoSpan = $buildLoadBox.find('span');
+    var $attentionBox = $('#attentionBox');
 
     var rtGlobal = {
         init: function () {
@@ -14,6 +15,10 @@ define(['jquery', 'helpers'], function ($, helpers) {
             });
         },
         processGlobalInfo: function (data) {
+            console.log(helpers.isRealTimePage())
+            if (helpers.isRealTimePage() === false) {
+                $attentionBox.show();
+            }
             buildQueueTotal.show();
             buildSlavesTotal.show();
             outerBar.show();

@@ -65,12 +65,13 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		    });
 		}
 
-		if (helpers.isRealTimePage() === true) {						
+		if (helpers.hasfinished() === false) {	
+		
 			require(['realtimerouting'],
 	        function(realtimeRouting) {	        		        	
 	        	realtimeRouting.init();
 	        });
-		}
+		}	
 
 		if ($('#builddetail_page').length > 0) {
 			helpers.summaryArtifactTests();

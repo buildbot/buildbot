@@ -6,7 +6,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
         init: function () {        	
 
         	switch(helpers.getCurrentPage()) { 
-				case 'builddetail':        	
+				case 'builddetail_page':        	
 					// For the builddetailpage
 					require(['rtbuilddetail'],
 			        function(rtBuildDetail) {
@@ -14,7 +14,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
 			        });
 			      	break;
 				
-				case 'builders':							
+				case 'builders_page':							
 					// For the builderspage
 					require(['rtbuilders'],
 			        function(rtBuilders) {
@@ -22,7 +22,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
 			        });
 			       break;
 
-                case 'buildslaves':
+                case 'buildslaves_page':
                     // For the frontpage
                     require(['rtbuildslaves'],
                         function (rtBuildSlaves) {
@@ -30,7 +30,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                         });
                     break;
 
-                case 'buildqueue':
+                case 'buildqueue_page':
                     // For the frontpage
                     require(['rtbuildqueue'],
                         function (rtBuildqueue) {

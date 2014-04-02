@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
+
+{% set bodyId = 'id="buildstep_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu(active_page=step_name, pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName=step_name, selectedProject=selectedproject)}}
 {% endblock %}
