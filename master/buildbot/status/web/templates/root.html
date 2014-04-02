@@ -2,6 +2,8 @@
 {% import 'forms.html' as forms %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="home_page"' %}
+
 {% block submenu %}
     {{submenu.buildsubmenu(active_page="frontpage",builderName='', buildNumber='', stepName='')}}
 {% endblock %}

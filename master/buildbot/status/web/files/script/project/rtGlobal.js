@@ -3,8 +3,9 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
     var buildQueueTotal = $('#buildQueueTotal');
     var buildSlavesTotal = $('#buildSlavesTotal');
     var outerBar = $('#verticalProgressBar');
-    var $infoBox = $('.info-box');
-    var infoSpan = $infoBox.find('span');
+    var $buildLoadBox = $('#buildLoad');
+    var infoSpan = $buildLoadBox.find('span');
+    var $attentionBox = $('#attentionBox');
 
     var rtGlobal = {
         init: function () {
@@ -15,10 +16,14 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
             });
         },
         processGlobalInfo: function (data) {
+            console.log(helpers.isRealTimePage())
+            if (helpers.isRealTimePage() === false) {
+                $attentionBox.show();
+            }
             buildQueueTotal.show();
             buildSlavesTotal.show();
             outerBar.show();
-            $infoBox.show();
+            $buildLoadBox.show();
 
             var slaveCount = data['slaves_count'];
             var slavesInUsePer = (data['slaves_busy'] / slaveCount) * 100.0;

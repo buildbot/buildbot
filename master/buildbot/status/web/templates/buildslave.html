@@ -3,6 +3,8 @@
 {% import 'submenu.html' as submenu %}
 {% extends "layout.html" %}
 
+{% set bodyId = 'id="buildslave_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename)}}
 {% endblock %}
