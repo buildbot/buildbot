@@ -126,13 +126,6 @@ class Boolean(TypeMixin, unittest.TestCase):
     ]
 
 
-class Link(TypeMixin, unittest.TestCase):
-
-    klass = types.Link
-    good = [base.Link(('a', 'b'))]
-    bad = [None, ('a', 'b')]
-
-
 class Identifier(TypeMixin, unittest.TestCase):
 
     def makeInstance(self):

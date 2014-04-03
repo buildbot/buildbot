@@ -25,20 +25,14 @@ class Db2DataMixin(object):
             'buildid': dbdict['id'],
             'number': dbdict['number'],
             'builderid': dbdict['builderid'],
-            'builder_link': base.Link(('builders', str(dbdict['builderid']))),
             'buildrequestid': dbdict['buildrequestid'],
-            'buildrequest_link': base.Link(('buildrequests',
-                                           str(dbdict['buildrequestid']))),
             'buildslaveid': dbdict['buildslaveid'],
-            'slave_link': base.Link(('slaves', str(dbdict['buildslaveid']))),
             'masterid': dbdict['masterid'],
-            'master_link': base.Link(('masters', str(dbdict['masterid']))),
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],
             'complete': dbdict['complete_at'] is not None,
             'state_strings': dbdict['state_strings'],
             'results': dbdict['results'],
-            'link': base.Link(('builds', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -123,19 +117,14 @@ class Build(base.ResourceType):
         buildid = types.Integer()
         number = types.Integer()
         builderid = types.Integer()
-        builder_link = types.Link()
         buildrequestid = types.Integer()
-        buildrequest_link = types.Link()
         buildslaveid = types.Integer()
-        slave_link = types.Link()
         masterid = types.Integer()
-        master_link = types.Link()
         started_at = types.DateTime()
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
         state_strings = types.List(of=types.String())
-        link = types.Link()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks

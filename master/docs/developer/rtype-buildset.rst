@@ -11,7 +11,6 @@ Buildsets
     :attr timestamp complete_at: the time this buildset was completed, or None if not complete
     :attr integer results: the results of the buildset (see :ref:`Build-Result-Codes`), or None if not complete
     :attr list sourcestamps: the sourcestamps for this buildset; each element is a valid :bb:rtype:`sourcestamp` entity
-    :attr Link link: link for this buildset
 
     A buildset gathers build requests that were scheduled at the same time, and which share a source stamp, properties, and so on.
 

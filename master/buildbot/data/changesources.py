@@ -32,7 +32,6 @@ class Db2DataMixin(object):
             'changesourceid': dbdict['id'],
             'name': dbdict['name'],
             'master': master,
-            'link': base.Link(('changesources', str(dbdict['id']))),
         }
         defer.returnValue(data)
 
@@ -89,7 +88,6 @@ class ChangeSource(base.ResourceType):
         changesourceid = types.Integer()
         name = types.String()
         master = types.NoneOk(masters.Master.entityType)
-        link = types.Link()
     entityType = EntityType(name)
 
     @base.updateMethod

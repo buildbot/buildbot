@@ -6,20 +6,15 @@ Builds
     :attr integer buildid: the unique ID of this build
     :attr integer number: the number of this build (sequential for a given builder)
     :attr integer builderid: id of the builder for this build
-    :attr Link builder_link: link to the builder for this build
     :attr integer buildrequestid: build request for which this build was performed, or None if no such request exists
-    :attr Link buildrequest_link: link to the indicated build request
     :attr integer slaveid: the slave this build ran on
-    :attr Link slave_link: link to the slave that this build ran on
     :attr integer masterid: the master this build ran on
-    :attr Link master_link: link to the master that this build ran on
     :attr timestamp started_at: time at which this build started
     :attr boolean complete: true if this build is complete
     :attr timestamp complete_at: time at which this build was complete, or None if it's still running
     :attr integer results: the results of the build (see :ref:`Build-Result-Codes`), or None if not complete
     :attr list state_strings: a list of strings giving progressively more detail on the state of the build.
         The first is usually one word or phrase; the remainder are sized for one-line display.
-    :attr Link link: link for this build
 
     .. todo::
 

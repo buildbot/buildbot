@@ -8,10 +8,8 @@ Logs
     :attr slug: the "slug", suitable for use in a URL, of this log (e.g., ``err_html``)
     :type slug: 50-character :ref:`identifier <type-identifier>`
     :attr integer stepid: id of the step containing this log
-    :attr Link step_link: link to the step containing this log
     :attr boolean complete: true if this log is complete and will not generate additional logchunks
     :attr character type: log type, identified by a single ASCII letter; see :bb:rtype:`logchunk` for details.
-    :attr Link link: link for this log
 
     A log represents a stream of textual output from a step.
     The actual output is encoded as a sequence of :bb:rtype:`logchunk` resources.

@@ -28,8 +28,7 @@ def _db2data(master):
     return dict(masterid=master['id'],
                 name=master['name'],
                 active=master['active'],
-                last_active=master['last_active'],
-                link=base.Link(('masters', str(master['id']))))
+                last_active=master['last_active'])
 
 
 class MasterEndpoint(base.Endpoint):
@@ -95,7 +94,6 @@ class Master(base.ResourceType):
         name = types.String()
         active = types.Boolean()
         last_active = types.DateTime()
-        link = types.Link()
     entityType = EntityType(name)
 
     @base.updateMethod

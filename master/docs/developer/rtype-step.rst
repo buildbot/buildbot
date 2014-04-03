@@ -8,7 +8,6 @@ Steps
     :attr name: the step name, unique within the build
     :type name: 50-character :ref:`identifier <type-identifier>`
     :attr integer buildid: id of the build containing this step
-    :attr Link build_link: link to the build containing this step
     :attr timestamp started_at: time at which this step started, or None if it hasn't started yet 
     :attr boolean complete: true if this step is complete
     :attr timestamp complete_at: time at which this step was complete, or None if it's still running
@@ -17,7 +16,6 @@ Steps
         The first is usually one word or phrase; the remainder are sized for one-line display.
     :attr urls: a list of URLs associated with this step.
     :type urls: list of dictionaries with keys `name` and `url`
-    :attr Link link: link for this step
 
     This resource type describes a step in a build.
     Steps have unique IDs, but are most commonly accessed by name in the context of their containing builds.

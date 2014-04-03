@@ -33,7 +33,6 @@ class Root(base.ResourceType):
 
     class EntityType(types.Entity):
         name = types.String()
-        link = types.Link()
     entityType = EntityType(name)
 
 
