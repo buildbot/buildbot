@@ -198,7 +198,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         args = ["info", "--xml", "--non-interactive", self.svnurl]
         if self.svnuser:
             args.append("--username=%s" % self.svnuser)
-        if self.svnpasswd:
+        if self.svnpasswd is not None:
             args.append("--password=%s" % self.svnpasswd)
         if self.extra_args:
             args.extend(self.extra_args)
@@ -239,7 +239,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         args.extend(["log", "--xml", "--verbose", "--non-interactive"])
         if self.svnuser:
             args.extend(["--username=%s" % self.svnuser])
-        if self.svnpasswd:
+        if self.svnpasswd is not None:
             args.extend(["--password=%s" % self.svnpasswd])
         if self.extra_args:
             args.extend(self.extra_args)
