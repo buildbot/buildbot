@@ -61,11 +61,7 @@
               <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
             </tr>
           {% endfor %}
-          </table>
-
-        {% else %}
-          <p>To stop this build, fill out the following field and
-          push the <i>Stop {{ label }}</i> button</p>
+          </table>        
         {% endif %}
       {% endif %}
 
