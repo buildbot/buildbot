@@ -177,7 +177,7 @@
     {{ force_build_scheduler_parameter(f, authz, request, sch, default_props) }}
   {% endfor %}
 
-  <input type="submit" value="Force Build" />
+  <input type="submit" value="{{ sch.buttonName }}" />
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}) %}
