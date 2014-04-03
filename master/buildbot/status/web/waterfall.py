@@ -417,8 +417,8 @@ class WaterfallStatusResource(HtmlResource):
         # failing.
         currentBuilds = builderStatus.getCurrentBuilds()
         if currentBuilds:
-            for build in currentBuilds:
-                for step in build.getSteps():
+            for bld in currentBuilds:
+                for step in bld.getSteps():
                     if step.getResults()[0] == builder.FAILURE:
                         return False
 
