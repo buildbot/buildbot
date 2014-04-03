@@ -598,6 +598,7 @@ class BuilderStatus(styles.Versioned):
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['name'] = self.name
+        result['url'] = self.status.getURLForThing(self)
         result['friendly_name'] = self.getFriendlyName()
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category

@@ -46,7 +46,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                             ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
                         });
                         var paramsString = ret.join("&");
-                        return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, builderParam: paramsString});
+                        return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url, builderParam: paramsString});
                     }
                 },
                 {
