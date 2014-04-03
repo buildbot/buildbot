@@ -183,13 +183,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
-    def _expLinks(self, links):
-        sub = {'self': 'h:/api/v2' + self.request.path}
-        return sorted([{u'rel': unicode(k), u'href': unicode(v % sub)}
-                       for k, v in links.iteritems()],
-                      key=lambda l: (l['rel'], l['href']))
-
-    def assertRestCollection(self, typeName, items, links={'self': '%(self)s'},
+    def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
         self.failIf(isinstance(self.request.written, unicode))
         got = {}
@@ -197,7 +191,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         got['contentType'] = self.request.headers['content-type']
         got['responseCode'] = self.request.responseCode
 
-        meta = {'links': self._expLinks(links)}
+        meta = {}
         if total is not None:
             meta['total'] = total
 
@@ -217,7 +211,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
         self.assertEqual(got, exp)
 
-    def assertRestDetails(self, typeName, item, links={'self': '%(self)s'},
+    def assertRestDetails(self, typeName, item,
                           contentType=None):
         got = {}
         got['content'] = json.loads(self.request.written)
@@ -227,7 +221,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         exp = {}
         exp['content'] = {
             typeName: [item],
-            'meta': {'links': self._expLinks(links)},
+            'meta': {},
         }
         exp['contentType'] = [contentType or 'text/plain; charset=utf-8']
         exp['responseCode'] = 200
@@ -282,7 +276,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=[v for k, v in endpoint.testData.iteritems()
                                          if k in ids],
-                                  links=links, total=8)
+                                  total=8)
 
     def test_api_collection_limit(self):
         return self.do_test_api_collection_pagination('?limit=2',
@@ -369,8 +363,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=[{'success': v['success'], 'info': v['info']}
                                          for v in endpoint.testData.values()],
-                                  total=8,
-                                  links={'self': '%(self)s?field=success&field=info'})
+                                  total=8)
 
     @defer.inlineCallbacks
     def test_api_collection_invalid_field(self):
@@ -386,8 +379,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=[v for v in endpoint.testData.values()
                                          if v['success']],
-                                  total=5,
-                                  links={'self': '%(self)s?success=yes'})
+                                  total=5)
 
     @defer.inlineCallbacks
     def test_api_collection_operator_filter(self):
@@ -395,8 +387,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=[v for v in endpoint.testData.values()
                                          if v['info'] < 'skipped'],
-                                  total=4,
-                                  links={'self': '%(self)s?info__lt=skipped'})
+                                  total=4)
 
     @defer.inlineCallbacks
     def test_api_collection_order(self):
@@ -404,8 +395,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=sorted(endpoint.testData.values(),
                                                key=lambda v: v['info']),
-                                  total=8, orderSignificant=True,
-                                  links={'self': '%(self)s?order=info'})
+                                  total=8, orderSignificant=True)
 
     @defer.inlineCallbacks
     def test_api_collection_order_on_unselected(self):
@@ -426,11 +416,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestCollection(typeName='tests',
                                   items=sorted([v for v in endpoint.testData.values()
                                                 if not v['success']], key=lambda v: v['id'])[:2],
-                                  total=3,
-                                  links={
-                                      'self': '%(self)s?success=false&limit=2',
-                                      'next': '%(self)s?success=false&offset=2&limit=2',
-                                  })
+                                  total=3)
 
     @defer.inlineCallbacks
     def test_api_details(self):
@@ -458,8 +444,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_details_fields(self):
         yield self.render_resource(self.rsrc, '/test/13?field=info')
         self.assertRestDetails(typeName='tests',
-                               item={'info': endpoint.testData[13]['info']},
-                               links={'self': '%(self)s?field=info'})
+                               item={'info': endpoint.testData[13]['info']})
 
     @defer.inlineCallbacks
     def test_api_with_accept(self):

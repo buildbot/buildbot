@@ -52,7 +52,6 @@ class Db2DataMixin(object):
         # minor modifications
         buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
         buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
-        buildset['link'] = base.Link(('buildsets', str(buildset['bsid'])))
 
         defer.returnValue(buildset)
 
@@ -120,7 +119,6 @@ class Buildset(base.ResourceType):
         results = types.NoneOk(types.Integer())
         sourcestamps = types.List(
             of=sourcestampsapi.SourceStamp.entityType)
-        link = types.Link()
         parent_buildid = types.NoneOk(types.Integer())
         parent_relationship = types.NoneOk(types.String())
     entityType = EntityType(name)
@@ -144,10 +142,6 @@ class Buildset(base.ResourceType):
         sourcestamps = [
             (yield self.master.data.get(('sourcestamps', str(ssid)))).copy()
             for ssid in bsdict['sourcestamps']]
-
-        # strip the links from those sourcestamps
-        for ss in sourcestamps:
-            del ss['link']
 
         # notify about the component build requests
         # TODO: needs to be refactored when buildrequests are in the DB
@@ -232,10 +226,6 @@ class Buildset(base.ResourceType):
             copy.deepcopy((yield self.master.data.get(
                 ('sourcestamps', str(ssid)))))
             for ssid in bsdict['sourcestamps']]
-
-        # strip the links from those sourcestamps
-        for ss in sourcestamps:
-            del ss['link']
 
         msg = dict(
             bsid=bsid,

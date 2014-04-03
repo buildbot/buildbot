@@ -143,25 +143,19 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('masters/7')},
+                 'last_active': SOMETIME},
                 {'active': True, 'masterid': 8, 'name': 'other:master',
-                 'last_active': OTHERTIME, 'link': self.link('masters/8')},
+                 'last_active': OTHERTIME},
             ],
             'meta': {
                 'total': 2,
-                'links': [
-                    {'href': self.link('masters'), 'rel': 'self'}
-                ],
             }})
 
         res = yield self.apiGet(self.link('masters/7'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('masters/7')},
+                 'last_active': SOMETIME},
             ],
             'meta': {
-                'links': [
-                    {'href': self.link('masters/7'), 'rel': 'self'}
-                ],
             }})

@@ -6,7 +6,6 @@ Builders
     :attr integer builderid: the ID of this builder
     :attr unicode name: builder name
     :attr integer masterid: the ID of the master this builder is running on (only for messages; see below)
-    :attr Link link: link for this builder
 
     This resource type describes a builder.
 

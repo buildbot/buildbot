@@ -18,7 +18,6 @@ import mock
 
 from buildbot.data import buildrequests
 from buildbot.data import resultspec
-from buildbot.data.base import Link
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -73,15 +72,11 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['results'], 75)
         self.assertEqual(buildrequest['claimed_by_masterid'],
                          fakedb.FakeBuildRequestsComponent.MASTER_ID)
-        self.assertEqual(buildrequest['link'].__repr__(),
-                         Link(('buildrequests', '44'), []).__repr__())
         self.assertEqual(buildrequest['claimed'], True)
         self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT)
         self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
         self.assertEqual(buildrequest['buildsetid'], 8822)
         self.assertEqual(buildrequest['priority'], 7)
-        self.assertEqual(buildrequest['buildset_link'].__repr__(),
-                         Link(('buildsets', '8822'), []).__repr__())
 
     @defer.inlineCallbacks
     def testGetMissing(self):

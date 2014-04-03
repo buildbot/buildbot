@@ -66,11 +66,6 @@ class BooleanValidator(InstanceValidator):
     name = 'boolean'
 
 
-class LinkValidator(InstanceValidator):
-    types = (base.Link,)
-    name = 'Link'
-
-
 class StringValidator(InstanceValidator):
     # strings must be unicode
     types = (unicode,)

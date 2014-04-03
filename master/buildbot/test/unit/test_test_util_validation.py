@@ -53,14 +53,6 @@ class VerifyDict(unittest.TestCase):
                                   "yes", "no", 1, 0, None
                               ])
 
-    def test_LinkValidator(self):
-        self.doValidationTest(validation.LinkValidator(),
-                              good=[
-                                  base.Link(('a', 'b'))
-                              ], bad=[
-                                  None, "http://foo"
-                              ])
-
     def test_StringValidator(self):
         self.doValidationTest(validation.StringValidator(),
                               good=[

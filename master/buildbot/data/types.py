@@ -124,12 +124,6 @@ class Boolean(Instance):
         return util.string2boolean(arg)
 
 
-class Link(Instance):
-
-    name = "link"
-    types = (base.Link,)
-
-
 class Identifier(Type):
 
     name = "identifier"

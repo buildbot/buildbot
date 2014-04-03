@@ -28,7 +28,6 @@ class Db2DataMixin(object):
         data = {
             'buildrequestid': dbdict['buildrequestid'],
             'buildsetid': dbdict['buildsetid'],
-            'buildset_link': base.Link(('buildsets', str(dbdict['buildsetid']))),
             'builderid': dbdict['builderid'],
             'buildername': dbdict['buildername'],
             'priority': dbdict['priority'],
@@ -40,7 +39,6 @@ class Db2DataMixin(object):
             'submitted_at': dbdict['submitted_at'],
             'complete_at': dbdict['complete_at'],
             'waited_for': dbdict['waited_for'],
-            'link': base.Link(('buildrequests', str(dbdict['buildrequestid']))),
         }
         return defer.succeed(data)
 
@@ -145,7 +143,6 @@ class BuildRequest(base.ResourceType):
     class EntityType(types.Entity):
         buildrequestid = types.Integer()
         buildsetid = types.Integer()
-        buildset_link = types.Link()
         builderid = types.Integer()
         buildername = types.Identifier(20)
         priority = types.Integer()
@@ -157,7 +154,6 @@ class BuildRequest(base.ResourceType):
         submitted_at = types.DateTime()
         complete_at = types.NoneOk(types.DateTime())
         waited_for = types.Boolean()
-        link = types.Link()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks

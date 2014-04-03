@@ -161,7 +161,7 @@ class DataConnector(unittest.TestCase):
 
         # and that it added the single root link
         self.assertEqual(self.data.rootLinks,
-                         [{'name': 'tests', 'link': base.Link(('test',))}])
+                         [{'name': 'tests'}])
 
         # and that it added an attribute
         self.assertIsInstance(self.data.rtypes.test, TestResourceType)

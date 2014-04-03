@@ -27,11 +27,9 @@ class EndpointMixin(object):
             'name': dbdict['name'],
             'slug': dbdict['slug'],
             'stepid': dbdict['stepid'],
-            'step_link': base.Link(('steps', str(dbdict['stepid']))),
             'complete': dbdict['complete'],
             'num_lines': dbdict['num_lines'],
             'type': dbdict['type'],
-            'link': base.Link(('logs', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -103,11 +101,9 @@ class Log(base.ResourceType):
         name = types.String()
         slug = types.Identifier(50)
         stepid = types.Integer()
-        step_link = types.Link()
         complete = types.Boolean()
         num_lines = types.Integer()
         type = types.Identifier(1)
-        link = types.Link()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
