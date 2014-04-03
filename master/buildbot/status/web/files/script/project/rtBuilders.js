@@ -58,7 +58,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                             (type.currentBuilds === undefined || type.currentBuilds == 0)) {
                             noJobs = true;
                         }
-                        return mustache.render(builders, {showNoJobs: noJobs, pendingBuilds: type.pendingBuilds, currentBuilds: type.currentBuilds, builderName: type.name, projects: type.project});
+                        return mustache.render(builders, {showNoJobs: noJobs, pendingBuilds: type.pendingBuilds, currentBuilds: type.currentBuilds, builder_url: type.url});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.currentBuilds != undefined) {

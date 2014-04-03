@@ -13,7 +13,7 @@
 {{#currentBuilds}}
     <ul class="list current-job-js">	    	    		
 			<li>
-				<a href="../{{projects}}/builders/{{builderName}}/builds/{{number}}{{^number}}0{{/number}}">{{number}}{{^number}}0{{/number}}</a>
+				<a href="{{builder_url}}/builds/{{number}}{{^number}}0{{/number}}">{{number}}{{^number}}0{{/number}}</a>
 				{{#currentStep}}
 					{{name}}{{^name}}0{{/name}}<span class="spin-icon animate-spin"></span>
 				{{/currentStep}}
