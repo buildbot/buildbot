@@ -1,4 +1,4 @@
-{% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName) %}
+{% macro buildsubmenu(active_page, pathNum, codebasesPath, builderName, buildersPath, builderPath, buildNumber, buildPath, stepName, selectedProject) %}
 	{% set classPath = '' %}
 
 	{% if active_page == 'jsonhelp' %}
@@ -11,14 +11,16 @@
 
 	{% if active_page == 'codebases' %}
 		{% set classPath = 'codebases' %}
-		{% set codebasesPath = '' %}
+		{% set codebasesPath = '' %}		
 	{% else %}
+
 		{% set codebasesPath = codebasesPath %}	
 	{% endif %}
 
 	{% if active_page == 'builders' %}
 		{% set classPath = 'builders' %}
 		{% set buildersPath = '' %}
+		
 	{% else %}
 		{% set buildersPath = buildersPath %}
 	{% endif %}
@@ -50,17 +52,16 @@
 
 	{% set navigation_bar = [
 	    ('/', 'home', 'Home'),
-	    ('/projects', 'projects', 'Projects'),
-	    (codebasesPath, 'codebases', 'Codebases'),
+	    ('/projects', 'project', 'Projects'),
+	    (codebasesPath, 'codebases', selectedProject),
 	    (buildersPath, 'builders', 'Builders'),
 	    (builderPath, builderName, builderName),
 	    (buildPath, buildNumber, buildNumber),
 	    ('', stepName, stepName)
 	] -%}
 
-
 	<nav id="{{classPath}}_page" class="sub-menu-container {{classPath}}">
-		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
+		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}		
 			<div class="container-inner">
 				<div class="wrap">
 				  <ul class="breadcrumbs-nav">
@@ -68,9 +69,10 @@
 						{% if id == active_page %}
 							<li>{{caption|e}}</li>
 						{% elif loop.index == 3 and pathNum >= 3 %}
-							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">Codebases</a><a id="getBtn" class="more-info" href="#"></a></li>	
+
+							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a><a id="getBtn" class="more-info" href="#"></a></li>	
 						{% elif loop.index <= pathNum %}
-							<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+							<li><a href="{{ href|e }}">{{ caption|e }} </a></li>
 						{% endif %}
 					{% endfor %}
 					</ul>

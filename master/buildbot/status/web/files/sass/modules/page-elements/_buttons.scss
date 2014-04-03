@@ -99,18 +99,11 @@ a.grey-btn,
 
 
 .codebases .blue-btn {
-    position: absolute;
-    right: 10px;
-    top: -6px;
+    float: right;    
     &:focus {
         outline: none;   
         @include box-shadow($focusShadow);
     }
-}
-
-.more-info-box .codebases .blue-btn {
-    right: 20px;
-    top: 30px;   
 }
 
 .rebuild, 

@@ -498,9 +498,15 @@ class BuildLineMixin:
                     rev = "multiple rev."
                 else:
                     rev = None
+
+            if len(ss_list) == 1:
+                branch = ss_list[0].branch
+            else:
+                branch = "multiple codebases"
         else:
             repo = 'unknown, no information in build'
             rev = 'unknown'
+            branch = 'unknown'
 
         if type(text) == list:
             text = " ".join(text)
@@ -517,7 +523,8 @@ class BuildLineMixin:
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,
-                  'include_builder': include_builder
+                  'include_builder': include_builder,
+                  'branch': branch
                   }
         return values
 

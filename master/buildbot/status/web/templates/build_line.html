@@ -21,6 +21,9 @@
             None
           {% endif %}
       </td>
+      <td class="txt-align-left">
+          {{ b.branch }}
+      </td>
       <td class="{{ b.class }}">{{ b.results }}</td>
     {%- if include_builder %}    
       <td class="txt-align-left"><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
@@ -41,6 +44,7 @@
     <tr>
       <th class="txt-align-left">Time</th>
       <th class="txt-align-left">Revision</th>
+      <th class="txt-align-left">Branch</th>
       <th>Result</th>
        {%- if include_builder %}   
       <th class="txt-align-left">Builder</th>

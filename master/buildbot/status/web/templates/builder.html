@@ -5,7 +5,7 @@
 {% extends "layout.html" %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='')}}
+  {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='',selectedProject=selectedproject)}}
 {% endblock %}
 
 {% block content %}
@@ -46,7 +46,7 @@
         </ul>
       {% else %}
       <h2 class="small-head">
-         current builds
+         Current Builds
       </h2> 
       <ul class="pending-job-list">
         <li>

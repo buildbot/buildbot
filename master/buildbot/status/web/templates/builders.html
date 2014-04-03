@@ -6,7 +6,8 @@
   {% from "box_macros.html" import box %}
 
   {% block submenu %}
-    {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='')}}
+  
+    {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='', selectedProject=selectedproject)}}
   {% endblock %}
 
   {% block content %}

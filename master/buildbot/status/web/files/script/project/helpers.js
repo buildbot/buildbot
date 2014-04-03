@@ -103,17 +103,15 @@ define(['screensize'], function (screenSize) {
 				});	
 				toolTipCont.html(this.t)
 				.appendTo('body')
-				.css({'top':cursorPosTop,'left':cursorPosLeft})
-				.delay(600)
-				.fadeIn('250')
-				.delay(10000)
-				.fadeOut('250', function(){					
-					$(this).remove();
-				});
+				.css({'top':cursorPosTop,'left':cursorPosLeft})				
+				.fadeIn('fast');
+				
 			}, function() {
 				this.title = this.t;
 				var toolTipCont = $('.tooltip-cont');	
-				toolTipCont.remove();
+				toolTipCont.fadeOut('fast', function(){					
+					$(this).remove();
+				});
 			});
 			
 		}, authorizeUser: function() {
@@ -419,19 +417,11 @@ define(['screensize'], function (screenSize) {
 
 		}, closePopup: function(boxElement, clearEl) {
 			
-			var closeBtn = $('.close-btn').add('body');
-			
-			if ($('body').hasClass('win')) {
-				var hasSelect2 = boxElement.find('.select-tools-js').length;
-				if (hasSelect2) {
-					closeBtn = closeBtn.not(document);
-				}
-			} 			
+			var closeBtn = $('.close-btn').add(document);
 			
 			closeBtn.bind('click touchstart', function(e){
-				console.log($(e.target).children($('#select2-drop-mask')).length)
-				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {
-					$('body').removeClass('close') 
+				
+				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
 				
 						if (clearEl === undefined ) {
 

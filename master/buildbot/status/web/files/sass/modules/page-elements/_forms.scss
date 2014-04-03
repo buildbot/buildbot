@@ -7,6 +7,11 @@
 	}
 }
 
+.select {
+    clear: both;
+    display: block;
+}
+
 // codebases combobox
 .select-tools {
 	font-size: 12px;
@@ -53,6 +58,7 @@ form.command_forcebuild {
     clear:both;
     .grey-btn {
         float:right;
+        margin-top: -34px;
     }
 }
 
