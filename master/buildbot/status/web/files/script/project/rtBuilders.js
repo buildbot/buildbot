@@ -41,11 +41,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         var urlParams = helpers.codebasesFromURL({});
-                        var ret = [];
-                        $.each(urlParams, function(i, d){
-                            ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(urlParams[d]));
-                        });
-                        var paramsString = ret.join("&");
+                        var paramsString = helpers.urlParamsToString(urlParams);
                         return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url, builderParam: paramsString});
                     }
                 },

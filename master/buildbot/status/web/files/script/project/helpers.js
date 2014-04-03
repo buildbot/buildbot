@@ -655,6 +655,14 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
             });
 
             return urlParams;
+        },
+        urlParamsToString: function (urlParams) {
+            var ret = [];
+            $.each(urlParams, function (name, value) {
+                ret.push(encodeURIComponent(name) + "=" + encodeURIComponent(value));
+            });
+
+            return ret.join("&");
         }
 	};
 

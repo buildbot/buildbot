@@ -557,8 +557,8 @@ class BuildersResource(HtmlResource):
 
         project_json = SingleProjectJsonResource(status, self.project)
         project_dict = yield project_json.asDict(req)
-        project_dict = FilterOut(project_dict)
-        cxt['instant_json']['builders'] = {"url": status.getBuildbotURL() + path_to_json_builders(req, self.project.name),
+        url = status.getBuildbotURL() + path_to_json_builders(req, self.project.name)
+        cxt['instant_json']['builders'] = {"url": url,
                                            "data": json.dumps(project_dict)}
 
 
