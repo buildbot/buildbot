@@ -659,7 +659,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
         urlParamsToString: function (urlParams) {
             var ret = [];
             $.each(urlParams, function (name, value) {
-                ret.push(encodeURIComponent(name) + "=" + encodeURIComponent(value));
+                ret.push(name + "=" + value);
             });
 
             return ret.join("&");
