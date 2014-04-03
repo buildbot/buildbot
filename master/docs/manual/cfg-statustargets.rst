@@ -990,10 +990,6 @@ GerritStatusPush
         message = "Buildbot started compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
 
-        if arg:
-            message += "\nFor more details visit:\n"
-            message += status.getURLForThing(build) + "\n"
-
         return message
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
