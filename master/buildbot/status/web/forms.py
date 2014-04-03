@@ -84,7 +84,7 @@ class ForceBuildDialogPage(HtmlResource):
             #Add scheduler info
             buildForceContext(cxt, request, self.getBuildmaster(request), builder_status.getName())
 
-            cxt['fbuildsch'] = args
+            cxt['force_url'] = args['datab'][0] + "/force" + codebases_arg + return_page
             cxt['rt_update'] = args
             request.args = args
 

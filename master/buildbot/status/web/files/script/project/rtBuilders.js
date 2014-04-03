@@ -94,7 +94,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "aTargets": [ 4 ],
                     "mRender": function (data, full, type) {
                         var builderUrl = location.protocol + "//" + location.host;
-                        return mustache.render(builders, {customBuild: true, builderUrlShow: builderUrl, project: type.project, builderName: type.name});
+                        return mustache.render(builders, {customBuild: true, url:type.url, builderName: type.name});
                     }
                 }
             ];
