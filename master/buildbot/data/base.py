@@ -16,7 +16,6 @@
 import UserList
 import copy
 import re
-import urllib
 
 from buildbot.data import exceptions
 from twisted.internet import defer

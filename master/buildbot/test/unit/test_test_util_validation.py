@@ -15,7 +15,6 @@
 
 import datetime
 
-from buildbot.data import base
 from buildbot.test.util import validation
 from buildbot.util import UTC
 from twisted.python import log

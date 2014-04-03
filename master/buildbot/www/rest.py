@@ -20,7 +20,6 @@ import fnmatch
 import re
 import types
 
-from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.util import datetime2epoch
@@ -309,16 +308,6 @@ class V2RootResource(resource.Resource):
 
             # annotate the result with some metadata
             meta = {}
-            ignore = set(['limit', 'offset'])
-            query = [(k, v)
-                     for (k, vs) in request.args.iteritems()
-                     for v in vs
-                     if k not in ignore]
-
-            def mklink(rel, offset, limit):
-                o = [('offset', offset)] if offset else []
-                l = [('limit', limit)] if limit else []
-
             if ep.isCollection:
                 offset, total, limit = data.offset, data.total, data.limit
                 if offset is None:
@@ -328,24 +317,9 @@ class V2RootResource(resource.Resource):
                 if total is not None:
                     meta['total'] = total
 
-                # add pagination links
-                mklink('self', offset, limit)
-                if offset != 0:
-                    mklink('first', 0, limit)
-                if limit:
-                    prev = offset - limit
-                    if prev >= 0:
-                        mklink('prev', prev, limit)
-                    elif offset != 0:
-                        mklink('prev', 0, offset)
-                if limit is not None:
-                    if total is None or offset + limit < total:
-                        mklink('next', offset + limit, limit)
-
                 # get the real list instance out of the ListResult
                 data = data.data
             else:
-                mklink('self', None, None)
                 data = [data]
 
             typeName = ep.rtype.plural

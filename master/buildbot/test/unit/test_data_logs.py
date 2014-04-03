@@ -15,7 +15,6 @@
 
 import mock
 
-from buildbot.data import base
 from buildbot.data import logs
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster

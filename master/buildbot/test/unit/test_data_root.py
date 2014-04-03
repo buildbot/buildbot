@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import base
 from buildbot.data import connector
 from buildbot.data import root
 from buildbot.test.util import endpoint

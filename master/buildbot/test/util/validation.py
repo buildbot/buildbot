@@ -18,7 +18,6 @@
 import datetime
 import re
 
-from buildbot.data import base
 from buildbot.util import UTC
 from buildbot.util import json
 
