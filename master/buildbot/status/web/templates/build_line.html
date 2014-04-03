@@ -15,7 +15,11 @@
     <tr>  
       <td class="txt-align-left">{{ b.time }} </td>
       <td class="txt-align-left">
-          {{ b.rev|shortrev(b.rev_repo) }}
+          {% if b.rev != None %}
+            {{ b.rev|shortrev(b.rev_repo) }}
+          {% else %}
+            None
+          {% endif %}
       </td>
       <td class="{{ b.class }}">{{ b.results }}</td>
     {%- if include_builder %}    

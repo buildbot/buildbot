@@ -488,7 +488,7 @@ class BuildLineMixin:
             repo = ss_list[0].repository
             if all_got_revision:
                 if len(ss_list) == 1:
-                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                    rev = all_got_revision.get(ss_list[0].codebase, None)
                 else:
                     rev = "multiple rev."
             else:
@@ -497,7 +497,7 @@ class BuildLineMixin:
                 elif len(ss_list) > 1:
                     rev = "multiple rev."
                 else:
-                    rev = "??"
+                    rev = None
         else:
             repo = 'unknown, no information in build'
             rev = 'unknown'
