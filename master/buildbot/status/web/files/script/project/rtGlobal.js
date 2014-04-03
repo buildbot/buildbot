@@ -16,7 +16,7 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
             });
         },
         processGlobalInfo: function (data) {
-            console.log(helpers.isRealTimePage())
+            
             if (helpers.isRealTimePage() === false) {
                 $attentionBox.show();
             }
