@@ -414,7 +414,7 @@ class Git(Source):
         """Retry if clone failed"""
 
         args = []
-        if self.supportsBranch and self.branch != 'HEAD':
+        if self.supportsBranch and self.branch != 'HEAD' and self.branch.startswith("refs/changes") == 0:
             args += ['--branch', self.branch]
         if shallowClone:
             args += ['--depth', '1']
