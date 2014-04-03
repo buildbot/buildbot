@@ -211,7 +211,7 @@ class SVN(Source):
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
-        if self.password:
+        if self.password is not None:
             command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
         if self.depth:
             command.extend(['--depth', self.depth])
