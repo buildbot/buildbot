@@ -45,7 +45,9 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
                 table = $('#tablesorterRt');
             }
 
-            return dt.initTable(table, {});
+            $.each(table, function(i, elem) {
+                dt.initTable($(elem), {});
+            });
         }
     };
 
