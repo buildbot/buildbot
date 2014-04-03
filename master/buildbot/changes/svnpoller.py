@@ -57,7 +57,7 @@ def split_file_branches(path):
 
 def split_file_projects_branches(path):
     # turn projectname/trunk/subdir/file.c into dict(project=projectname, branch=trunk, path=subdir/file.c)
-    if not "/" in path:
+    if "/" not in path:
         return None
     project, path = path.split("/", 1)
     f = split_file_branches(path)
@@ -108,8 +108,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         self.revlinktmpl = revlinktmpl
 
-        self.environ = os.environ.copy()  # include environment variables
-                                         # required for ssh-agent auth
+        # include environment variables required for ssh-agent auth
+        self.environ = os.environ.copy()
 
         self.svnbin = svnbin
         self.histmax = histmax
@@ -361,7 +361,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 if where:
                     branch = where.get("branch", None)
                     filename = where["path"]
-                    if not branch in branches:
+                    if branch not in branches:
                         branches[branch] = {'files': [], 'number_of_directories': 0}
                     if filename == "":
                         # root directory of branch

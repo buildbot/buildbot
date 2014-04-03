@@ -387,7 +387,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         if password is not None:
             args.append('--password=' + password)
         return gpo.Expect(*args)
-                          
+
     def makeLogExpect(self, password='bbrocks'):
         args = ['svn', 'log', '--xml', '--verbose', '--non-interactive',
                 '--username=dustin']
