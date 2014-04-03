@@ -272,7 +272,9 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
-        client_spec += "Root:\t%s\n\n" % os.path.normpath(self.build.path_module.join(builddir, self.workdir))
+        client_spec += "Root:\t%s\n\n" % self.build.path_module.normpath(
+            self.build.path_module.join(builddir, self.workdir)
+        )
         client_spec += "Options:\t%s\n\n" % self.p4client_spec_options
         if self.p4line_end:
             client_spec += "LineEnd:\t%s\n\n" % self.p4line_end
