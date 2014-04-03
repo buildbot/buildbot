@@ -199,21 +199,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
                 var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
                 urlParams = helpers.codebasesFromURL(urlParams);
 
-				$.get(url, urlParams).done(function(data) {
+				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
 					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
+                    // Add the value from the cookie to the disabled and hidden field
+                    helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
 
-                    formContainer.find('form').ajaxForm(function(data) {
+                    var form = formContainer.find('form').ajaxForm();
+
+                    $(form).ajaxSubmit(function(data) {
                         requirejs(['realtimePages'], function (realtimePages) {
-                            realtimePages.updateRealTimeData(data);
+                            var name = dataReturnPage.replace("_json", "");
+                            realtimePages.updateSingleRealTimeData(name, data);
                         });
                     });
-					
-					// Add the value from the cookie to the disabled and hidden field
-
-					helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
-
-					$('.command_forcebuild', formContainer).submit();
 				});
 			});			
 			
@@ -331,7 +330,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 		}, codeBaseBranchOverview: function(El) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
-			var parsedUrl = decodedUri.split('&')
+			var parsedUrl = decodedUri.split('&');
 			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');

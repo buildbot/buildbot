@@ -234,7 +234,6 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
                 var sParameterName = val.split('=');
                 if (sParameterName[0].indexOf("_branch") >= 0) {
                     urlParams[sParameterName[0]] = sParameterName[1];
-                    console.log(val)
                 }
             });
 			
@@ -259,13 +258,15 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 				// popup.customTabs();
                 helpers.closePopup(mib);
 
-                exContent.find('form').ajaxForm(function(data) {
-                    requirejs(['realtimePages'], function (realtimePages) {
-                        exContent.closest('.more-info-box').find('.close-btn').click();
-                        realtimePages.updateRealTimeData(data);
+                if (dataReturnPage !== undefined) {
+                    exContent.find('form').ajaxForm(function(data) {
+                        requirejs(['realtimePages'], function (realtimePages) {
+                            exContent.closest('.more-info-box').find('.close-btn').click();
+                            var name = dataReturnPage.replace("_json", "");
+                            realtimePages.updateSingleRealTimeData(name, data);
+                        });
                     });
-                });
-
+                }
 			});
 
 		}, htmlModule: function (headLine) { // html chunks

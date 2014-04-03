@@ -86,7 +86,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
         },
         parseRealtimeCommand: function (data) {
             if (data["cmd"] === KRT_JSON_DATA) {
-                realtimePages.updateRealTimeData(data["data"]);
+                realtimePages.updateRealTimeData(data["data"], false);
             }
             if (data["cmd"] === KRT_URL_DROPPED) {
                 console.log("URL Dropped by server will retry in {0} seconds... ({1})".format((iURLDroppedTimeout / 1000), data["data"]));
@@ -107,16 +107,21 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
                 });
             }
             else {
-                var name = "";
-                $.each(realtimeURLs, function(n, url){
-                    if (url === json['url']) {
-                        name = n;
-                        return false;
-                    }
-                    return true;
-                });
+                var name = realtimePages.getRealtimeNameFromURL(json['url']);
                 realtimePages.updateSingleRealTimeData(name, json['data'])
             }
+        },
+        getRealtimeNameFromURL: function(url) {
+            var name = undefined;
+            $.each(realtimeURLs, function(n, u){
+                if (u === url) {
+                    name = n;
+                    return false;
+                }
+                return true;
+            });
+
+            return name;
         },
         updateSingleRealTimeData: function(name, data) {
             if (realTimeFunctions.hasOwnProperty(name)) {
