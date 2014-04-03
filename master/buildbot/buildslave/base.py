@@ -37,7 +37,7 @@ from buildbot.util.eventual import eventually
 
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin,
-                         service.AsyncMultiService):
+                         service.AsyncMultiService, object):
 
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the

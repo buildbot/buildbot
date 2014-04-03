@@ -357,6 +357,10 @@ This is a global default value for builders' :bb:cfg:`mergeRequests` parameter, 
 This parameter can be overridden on a per-builder basis.
 See :ref:`Merging-Build-Requests` for the allowed values for this parameter.
 
+.. note::
+
+    This feature is currently not working in buildbot nine. http://trac.buildbot.net/ticket/2645
+
 .. index:: Builders; priority
 
 .. bb:cfg:: prioritizeBuilders
@@ -691,6 +695,200 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     Each origin is interpreted as filename match expression, with ``?`` matching one character and ``*`` matching anything.
     Thus ``['*']`` will match all origins, and ``['https://*.buildbot.net']`` will match secure sites under ``buildbot.net``.
     The Buildbot UI will operate correctly without this parameter; it is only useful for allowing access from other web applications.
+
+``auth``
+   Authentication module to use for the web server. See :bb:cfg:`auth`
+
+``avatar_methods``
+    List of methods that can be used to get avatar pictures to use for the web server.
+    By default, buildbot uses Gravatar to get images associated with each users, if you want to disable this you can just specify empty list::
+
+        c['www'] = {
+            'avatar_methods': []
+        }
+
+    For use of corporate pictures, you can use LdapUserInfos, which can also acts as an avatar provider.  See :bb:cfg:`auth`
+
+.. bb:cfg:: auth
+
+Authentication plugins
+~~~~~~~~~~~~~~~~~~~~~~
+
+By default, buildbot does not require people to authenticate in order to see the readonly data.
+In order to access control feature in the web UI, you will need to configure an authentication plugin.
+
+.. py:class:: buildbot.www.auth.NoAuth
+
+    This class is the default authentication plugin, which disables authentication
+
+.. py:class:: buildbot.www.auth.BasicAuth
+
+    This class implements a basic authentication mechanism using a list of user/password tuples provided from the configuration file.
+
+    * ``users``: list of ``("user","password")`` tuples, or dictionary ``dict(user="passwd")``
+
+    example::
+
+        from buildbot.www.auth import BasicAuth
+        auth=BasicAuth({"homer": "doh!"})
+
+.. py:class:: buildbot.www.auth.HTPasswdAuth
+
+    This class implements an authentication against a standard :file:`.htpasswd` file.
+
+    * ``passwdFile``: ``.htpasswd`` file to read
+
+    example::
+
+        from buildbot.www.auth import HTPasswdAuth
+        auth=HTPasswdAuth("my_htpasswd")
+
+.. py:class:: buildbot.www.oauth2.GoogleAuth
+
+    This class implements an authentication with Google_ single sign-on.
+    You can look at the Google_ oauth2 documentation on how to register your buildbot to the Google systems. The developer console will give you the two parameters you have to give to ``GoogleAuth``
+
+    Please make sure you register your application with the ``BUILDBOT_URL/login`` url as the allowed redirect URIs.
+
+    * ``clientId``: The client ID of your buildbot application
+
+    * ``clientSecret``: The client secret of your buildbot application
+
+    example::
+
+        from buildbot.www.oauth2 import GoogleAuth
+        auth=GoogleAuth("clientid", "clientsecret")
+
+    in order to use this module, you need to install the python ``sanction`` module
+
+    .. code-block:: bash
+
+            pip install sanction
+
+.. _Google: https://developers.google.com/accounts/docs/OAuth2
+
+.. py:class:: buildbot.www.oauth2.GitHubAuth
+
+    This class implements an authentication with GitHub_ single sign-on.
+    You can look at the GitHub_ oauth2 documentation on how to register your buildbot to the GitHub systems. The developer console will give you the two parameters you have to give to ``GitHubAuth``
+
+    Please make sure you register your application with the ``BUILDBOT_URL/login`` url as the allowed redirect URIs.
+
+    * ``clientId``: The client ID of your buildbot application
+
+    * ``clientSecret``: The client secret of your buildbot application
+
+    example::
+
+        from buildbot.www.oauth2 import GitHubAuth
+        auth=GitHubAuth("clientid", "clientsecret")
+
+    in order to use this module, you need to install the python ``sanction`` module
+
+    .. code-block:: bash
+
+            pip install sanction
+
+.. _GitHub: http://developer.github.com/v3/oauth_authorizations/
+
+.. py:class:: buildbot.www.auth.RemoteUserAuth
+
+    In case if buildbot web ui is served through reverse proxy that supports HTTP-based authentication (like apache, lighttpd), it's possible to to tell buildbot to trust web server and get username from request headers.
+
+    Administrator must make sure that it's impossible to get access to buildbot using other way than through frontend. Usually this means that buildbot should listen for incoming connections only on localhost (or on some firewall-protected port). Frontend must require HTTP authentication to access buildbot pages (using any source for credentials, such as htpasswd, PAM, LDAP, Kerberos).
+
+    * ``header``: header to use to get the username (defaults to ``REMOTE_USER``)
+    * ``headerRegex``: regular expression to get the username from header value. (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)"). Note that your at least need to specify a ``?P<username>`` regular expression named group.
+
+    example::
+
+        from buildbot.www.auth import RemoteUserAuth
+        auth=RemoteUserAuth()
+
+    A corresponding Apache configuration example
+
+     .. code-block:: none
+
+        <Location "/">
+                AuthType Kerberos
+                AuthName "Buildbot login via Kerberos"
+                KrbMethodNegotiate On
+                KrbMethodK5Passwd On
+                KrbAuthRealms <<YOUR CORP REALMS>>
+                KrbVerifyKDC off
+                KrbServiceName Any
+                Krb5KeyTab /etc/krb5/krb5.keytab
+                KrbSaveCredentials Off
+                require valid-user
+                Order allow,deny
+
+                Satisfy Any
+
+                #] SSO
+                RewriteEngine On
+                RewriteCond %{LA-U:REMOTE_USER} (.+)$
+                RewriteRule . - [E=RU:%1,NS]
+                RequestHeader set REMOTE_USER %{RU}e
+
+        </Location>
+
+    The advantage of http auth is that it is uses a proven and fast implementation for authentication. The problem is that the only information that is passed is the username, and there is no way to pass any other information like user email, user groups, etc.
+    Those information can be very useful to the mailstatus plugin, or the authorization criterias.
+
+    You can configure RemoteUserAuth to use ldap directory to fill remaining user info data
+
+.. py:class:: buildbot.ldapuserinfos.LdapUserInfos
+
+        * ``uri``: uri of the ldap server
+        * ``bind_user``: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
+        * ``bind_pw``: password of the ``bind_user``
+        * ``accountBase``: the base dn (distinguished name)of the user database
+        * ``groupBase``: the base dn of the groups database
+        * ``accountPattern``: the pattern for searching in the account database. This must contain the ``%(username)s`` string, which is replaced by the searched username
+        * ``groupMemberPattern``: the pattern for searching in the group database. This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
+        * ``accountFullName``: the name of the field in account ldap database where the full user name is to be found.
+        * ``accountEmail``: the name of the field in account ldap database where the user email is to be found.
+        * ``groupName``: the name of the field in groups ldap database where the group name is to be found.
+        * ``avatarPattern``: the pattern for searching avatars from emails in the account database. This must contain the ``%(email)s`` string, which is replaced by the searched email
+        * ``avatarData``: the name of the field in groups ldap database where the avatar picture is to be found. This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
+        * ``accountExtraFields``: extra fields to extracts for use with the authorization policies.
+
+        Example::
+
+            from buildbot.www.auth import RemoteUserAuth
+            from buildbot.www.ldapuserinfos import LdapUserInfos
+            from buildbot.www.avatar import AvatarGravatar
+
+            # this configuration works for MS Active Directory ldap implementation
+            # we use it for user info, and avatars
+            userInfos = LdapUserInfos(
+                uri='ldap://ldap.mycompany.com:3268',
+                bind_user='ldap_user',
+                bind_pw='p4$$wd',
+                accountBase='dc=corp,dc=mycompany,dc=com',
+                groupBase='dc=corp,dc=mycompany,dc=com',
+                accountPattern='(&(objectClass=person)(sAMAccountName=%(username)s))',
+                accountFullName='displayName',
+                accountEmail='mail',
+                groupMemberPattern='(&(objectClass=group)(member=%(dn)s))',
+                groupName='cn',
+                avatarPattern='(&(objectClass=person)(mail=%(email)s))',
+                avatarData='thumbnailPhoto',
+            )
+            c['www'] = dict(port=PORT, allowed_origins=["*"],
+                            url=c['buildbotURL'],
+                            auth=RemoteUserAuth(userInfos=userInfos),
+                            avatar_methods=[userInfos, AvatarGravatar()]
+                            )
+
+        in order to use this module, you need to install the python ``ldap`` module
+
+        .. code-block:: bash
+
+                # its not a pure python, so you need to install some c library dependancies
+                sudo apt-get builddep python-ldap
+                pip install python-ldap
+
 
 .. bb:cfg:: codebaseGenerator
 

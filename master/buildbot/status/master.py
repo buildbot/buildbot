@@ -262,9 +262,9 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             if builders:
                 return bn in builders
             return True
-        builder_names = [bn
-                         for bn in self.getBuilderNames()
-                         if want_builder(bn)]
+        builder_names = [_bn
+                         for _bn in self.getBuilderNames()
+                         if want_builder(_bn)]
 
         # 'sources' is a list of generators, one for each Builder we're
         # using. When the generator is exhausted, it is replaced in this list
@@ -298,9 +298,9 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         while True:
             refill()
             # find the latest build among all the candidates
-            candidates = [(i, b, b.getTimes()[1])
-                          for i, b in enumerate(next_build)
-                          if b is not None]
+            candidates = [(i, build, build.getTimes()[1])
+                          for i, build in enumerate(next_build)
+                          if build is not None]
             candidates.sort(lambda x, y: cmp(x[2], y[2]))
             if not candidates:
                 return

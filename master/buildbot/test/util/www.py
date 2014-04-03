@@ -20,6 +20,7 @@ import pkg_resources
 import urllib
 
 from buildbot.test.fake import fakemaster
+from buildbot.www import auth
 from buildbot.util import json
 from cStringIO import StringIO
 from twisted.internet import defer
@@ -27,10 +28,15 @@ from twisted.web import server
 from uuid import uuid1
 
 
+class FakeSession(object):
+    pass
+
+
 class FakeRequest(object):
     written = ''
     finished = False
     redirected_to = None
+    rendered_resource = None
     failure = None
     method = 'GET'
     path = '/req.path'
@@ -40,7 +46,6 @@ class FakeRequest(object):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-
         x = path.split('?', 1)
         if len(x) == 1:
             self.path = path
@@ -59,9 +64,16 @@ class FakeRequest(object):
     def redirect(self, url):
         self.redirected_to = url
 
+    def render(self, rsrc):
+        rendered_resource = rsrc
+        self.deferred.callback(rendered_resource)
+
     def finish(self):
         self.finished = True
-        self.deferred.callback(self.written)
+        if self.redirected_to is not None:
+            self.deferred.callback(dict(redirected=self.redirected_to))
+        else:
+            self.deferred.callback(self.written)
 
     def setResponseCode(self, code):
         self.responseCode = code
@@ -84,6 +96,9 @@ class FakeRequest(object):
             return res
         return d
 
+    def getSession(self):
+        return self.session
+
 
 class RequiresWwwMixin(object):
     # mix this into a TestCase to skip if buildbot-www is not installed
@@ -101,19 +116,24 @@ class WwwTestMixin(RequiresWwwMixin):
 
     def make_master(self, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
+        self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
-        cfg = dict(url='//', port=None)
+        cfg = dict(url='//', port=None, auth=auth.NoAuth())
         cfg.update(kwargs)
         master.config.www = cfg
+        self.master.session = FakeSession()
+
         return master
 
     def make_request(self, path=None, method='GET'):
         self.request = FakeRequest(path)
+        self.request.session = self.master.session
         self.request.method = method
         return self.request
 
     def render_resource(self, rsrc, path='/', accept=None, method='GET',
-                        origin=None, access_control_request_method=None):
+                        origin=None, access_control_request_method=None,
+                        extraHeaders=None):
         request = self.make_request(path, method=method)
         if accept:
             request.input_headers['accept'] = accept
@@ -122,6 +142,8 @@ class WwwTestMixin(RequiresWwwMixin):
         if access_control_request_method:
             request.input_headers['access-control-request-method'] = \
                 access_control_request_method
+        if extraHeaders is not None:
+            request.input_headers.update(extraHeaders)
 
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:

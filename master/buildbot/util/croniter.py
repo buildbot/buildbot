@@ -161,7 +161,7 @@ class croniter(object):
         offset = len(expanded) == 6 and 1 or 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
-        day, month, year = dst.day, dst.month, dst.year
+        month, year = dst.month, dst.year
         current_year = now.year
         DAYS = self.DAYS
 

@@ -49,6 +49,9 @@ package.
     compare_attrs, the subclass' compare_attrs also includes the parent
     class' compare_attrs.
 
+    This class also implements the :py:class:`buildbot.interfaces.IConfigured` interface.
+    The configuration is automatically generated, beeing the dict of all ``compare_attrs``.
+
 .. py:function:: safeTranslate(str)
 
     :param str: input string

@@ -618,12 +618,12 @@ class RunProcess:
         concatenate all the chunks into a single string
         """
         retval = {}
-        for log in msg:
-            data = "".join(msg[log])
-            if isinstance(log, tuple) and log[0] == 'log':
-                retval['log'] = (log[1], data)
+        for loog in msg:
+            data = "".join(msg[loog])
+            if isinstance(loog, tuple) and loog[0] == 'log':
+                retval['log'] = (loog[1], data)
             else:
-                retval[log] = data
+                retval[loog] = data
         return retval
 
     def _sendMessage(self, msg):

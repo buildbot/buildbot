@@ -20,6 +20,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import www
 from buildbot.www import resource
 from buildbot.www import rest
+from buildbot.www import auth
 from buildbot.www import service
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -42,7 +43,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def makeConfig(self, **kwargs):
         pwd = os.getcwd()
-        w = dict(url='h:/', port=None, public_html=pwd)
+        w = dict(url='h:/', port=None, public_html=pwd, auth=auth.NoAuth())
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w

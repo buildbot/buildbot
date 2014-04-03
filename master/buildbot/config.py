@@ -25,10 +25,15 @@ from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import safeTranslate
+from buildbot.www import auth
+from buildbot.www import avatar
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
+
+from twisted.python.components import registerAdapter
+from zope.interface import implements
 
 
 class ConfigErrors(Exception):
@@ -55,7 +60,7 @@ def error(error):
         raise ConfigErrors([error])
 
 
-class MasterConfig(object):
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -110,7 +115,9 @@ class MasterConfig(object):
         self.www = dict(
             port=None,
             url='http://localhost:8080/',
-            plugins=dict()
+            plugins=dict(),
+            auth=auth.NoAuth(),
+            avatar_methods=avatar.AvatarGravatar()
         )
 
     _known_config_keys = set([
@@ -124,6 +131,7 @@ class MasterConfig(object):
         "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
+    compare_attrs = list(_known_config_keys)
 
     @classmethod
     def loadConfig(cls, basedir, filename):
@@ -558,7 +566,7 @@ class MasterConfig(object):
         www_cfg = config_dict['www']
         allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins'])
+                       'plugins', 'auth', 'avatar_methods'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
@@ -679,8 +687,7 @@ class MasterConfig(object):
             error("slaves are configured, but c['protocols'] not")
 
 
-class BuilderConfig:
-
+class BuilderConfig(util.ConfiguredMixin):
     def __init__(self, name=None, slavename=None, slavenames=None,
                  builddir=None, slavebuilddir=None, factory=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
@@ -808,3 +815,52 @@ class ReconfigurableServiceMixin:
 
         for svc in reconfigurable_services:
             yield svc.reconfigService(new_config)
+
+
+class _DefaultConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return self.value
+
+registerAdapter(_DefaultConfigured, object, interfaces.IConfigured)
+
+
+class _ListConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return [interfaces.IConfigured(e).getConfigDict() for e in self.value]
+
+registerAdapter(_ListConfigured, list, interfaces.IConfigured)
+
+
+class _DictConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict([(k, interfaces.IConfigured(v).getConfigDict())
+                     for k, v in self.value.iteritems()])
+
+registerAdapter(_DictConfigured, dict, interfaces.IConfigured)
+
+
+class _SREPatternConfigured(object):
+    implements(interfaces.IConfigured)
+
+    def __init__(self, value):
+        self.value = value
+
+    def getConfigDict(self):
+        return dict(name="re", pattern=self.value.pattern)
+
+registerAdapter(_SREPatternConfigured, type(re.compile("")), interfaces.IConfigured)
