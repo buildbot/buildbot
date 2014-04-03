@@ -693,6 +693,14 @@ class MailNotifier(base.StatusReceiverMultiService):
                                   log.getName())
                 if (self._shouldAttachLog(log.getName()) or
                         self._shouldAttachLog(name)):
+                    # Use distinct filenames for the e-mail summary
+                    if self.buildSetSummary:
+                        filename="%s.%s.%s" % (log.getStep().getBuild().getBuilder().getName(),
+                                               log.getStep().getName(),
+                                               log.getName())
+                    else:
+                        filename=name
+
                     text = log.getText()
                     if not isinstance(text, unicode):
                         # guess at the encoding, and use replacement symbols
@@ -701,7 +709,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                     a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
-                                 filename=name)
+                                 filename=filename)
                     m.attach(a)
 
         #@todo: is there a better way to do this?
