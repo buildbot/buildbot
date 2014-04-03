@@ -898,6 +898,11 @@ The scheduler takes the following parameters:
     taken as the property name, or ``AnyPropertyParameter``, which allows the
     web user to specify the property name.
 
+``buttonName``
+
+    The name of the "submit" button on the resulting force-build form.
+    This defaults to "Force Build".
+
 An example may be better than long explanation.  What you need in your config
 file is something like::
 
