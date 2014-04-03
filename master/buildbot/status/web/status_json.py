@@ -19,6 +19,7 @@
 import datetime
 import os
 import re
+from twisted.python import log
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot import master
 
@@ -203,8 +204,11 @@ class JsonResource(resource.Resource):
         d.addCallback(handle)
 
         def ok(data):
-            request.write(data)
-            request.finish()
+            try:
+                request.write(data)
+                request.finish()
+            except RuntimeError:
+                log.msg("Connection from {0} lost".format(request.client.host))
 
         def fail(f):
             request.processingFailed(f)
