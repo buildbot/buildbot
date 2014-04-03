@@ -492,7 +492,7 @@ class BuildLineMixin:
                 else:
                     rev = "multiple rev."
             else:
-                if len(ss_list) == 1 and len(ss_list[0].revision):
+                if len(ss_list) == 1 and ss_list[0].revision is not None and len(ss_list[0].revision):
                     rev = ss_list[0].revision
                 elif len(ss_list) > 1:
                     rev = "multiple rev."
