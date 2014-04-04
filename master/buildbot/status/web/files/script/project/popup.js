@@ -24,7 +24,7 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 				var currentUrl = document.URL;			              	
 			    var parser = document.createElement('a');
 			    parser.href = currentUrl;
-                var builder_name = $(this).attr('data-builderName');
+                var builder_name = encodeURI($(this).attr('data-builderName'));
                 var url = "{0}//{1}/json/pending/{2}/?".format(parser.protocol, parser.host, builder_name);
                 var urlParams = helpers.codebasesFromURL({});
                 var paramsString = helpers.urlParamsToString(urlParams);
