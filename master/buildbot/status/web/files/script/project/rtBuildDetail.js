@@ -36,6 +36,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             //Process Page
             rtBuildDetail.processBuildResult(data, buildStartTime, eta, buildFinished);
             rtBuildDetail.processSteps(data);
+            helpers.summaryArtifactTests();
 
             //If build is running
             if (buildEndTime === null) {

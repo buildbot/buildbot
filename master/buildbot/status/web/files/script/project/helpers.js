@@ -418,6 +418,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
+                noArtifactsJS.html("");
+                
 				showArtifactsJS
 				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
