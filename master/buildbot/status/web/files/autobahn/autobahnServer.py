@@ -141,7 +141,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 #in busy times
                 self.urlCacheDict[url].errorCount = 0
             except Exception as e:
-                logging.error(e)
+                logging.error("{0}: {1}".format(e, url))
                 self.urlCacheDict[url].errorCount += 1
             finally:
                 updateLock.release()
