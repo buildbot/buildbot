@@ -125,7 +125,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
         if urlCache.pollNeeded():
             updateLock.acquire()
             try:
-                logging.info("Polling: {0}".format(url))
+                #logging.info("Polling: {0}".format(url))
                 response = urllib2.urlopen(url, timeout=POLL_INTERVAL-1)
                 jsonObj = json.load(response)
                 urlCache.lastChecked = time.time()
@@ -162,9 +162,8 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
                 if len(urlCache.clients) == 0:
                     del self.urlCacheDict[url]
-                    logging.info("Removed stale cached URL")
+                    logging.info("Removed stale cached URL {0}".format(url))
 
-                break
 
     def clientMessage(self, msg, client):
         try:
