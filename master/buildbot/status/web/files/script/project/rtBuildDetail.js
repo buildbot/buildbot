@@ -5,7 +5,6 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
     var buildHandle = Handlebars.compile(build);
     var isLoaded = false;
     var timerCreated = false;
-    var eta = undefined;
 
     //Global helper for Handlebar
     //TODO: Move this when it's used by more pages
@@ -30,9 +29,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             var buildEndTime = data["times"][1];
             var buildFinished = (buildEndTime !== null);
 
-            if (eta == undefined) {
-                eta = data["eta"];
-            }
+            var eta = data["eta"];
 
             rtBuildDetail.refreshIfRequired(buildFinished);
 
@@ -53,7 +50,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
         processBuildResult: function(data, startTime, eta, buildFinished) {
             var $buildResult = $('#buildResult');
             var progressBar = "";
-            if (eta > 0) {
+            if (eta != 0) {
                 progressBar = mustache.render(builders,
                     {progressBar: true, etaStart: startTime, etaCurrent: eta});
             }
