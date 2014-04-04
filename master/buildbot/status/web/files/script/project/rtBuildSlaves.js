@@ -72,16 +72,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                             statusTxt = type.runningBuilds.length + ' build(s) ';
                             var spinIcon = true;
                         }
-                        if (type.runningBuilds != undefined) {
-
-                            $.each(type.runningBuilds, function (key, value) {
-                                if (value.eta != undefined && value.eta < 0) {
-                                    overtime++
-                                }
-                            });
-                            overtime = overtime > 0 ? overtime : false;
-                        }
-                        return mustache.render(buildslaves, {showStatusTxt: statusTxt, showSpinIcon: spinIcon, showOvertime: overtime});
+                        return mustache.render(buildslaves, {showStatusTxt: statusTxt, showSpinIcon: spinIcon});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.connected === undefined) {
@@ -90,7 +81,26 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         else if (oData.connected === true && oData.runningBuilds === undefined) {
                             $(nTd).addClass('idle');
                         } else if (oData.connected === true && oData.runningBuilds.length > 0) {
+                            var overtime = 0;
+                            if (oData.runningBuilds != undefined) {
+
+                                $.each(oData.runningBuilds, function (key, value) {
+                                    if (value.eta != undefined && value.eta < 0) {
+                                        overtime++
+                                    }
+                                });
+                                overtime = overtime > 0 ? overtime : false;
+                            }
+
                             $(nTd).addClass('building').find('a.popup-btn-json-js').data({showRunningBuilds: oData});
+
+                            if (overtime){
+                                $(nTd).removeClass('building')
+                                    .addClass('overtime tooltip')
+                                    .attr('title', "One or more builds on overtime");
+
+                                helpers.tooltip($(nTd));
+                            }
                         }
                     }
 
