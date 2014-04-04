@@ -1,132 +1,118 @@
-define(['jquery', 'realtimePages', 'helpers','popup','text!templates/builders.mustache','mustache'], function ($, realtimePages, helpers,popup,builders,Mustache) {
-         "use strict";
+define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders) {
+    "use strict";
     var rtBuildDetail;
-    var stepList = $('#stepList > li');
-    var currentstepJS = $('.current-step-js');
+    var stepList = $('#stepList').find('> li');
+    var buildHandle = Handlebars.compile(build);
+    var isLoaded = false;
+    var timerCreated = false;
+    var eta = undefined;
+
+    //Global helper for Handlebar
+    //TODO: Move this when it's used by more pages
+    Handlebars.registerHelper('buildCSSClass', function(value) {
+        return helpers.getCssClassFromStatus(value);
+    });
 
     rtBuildDetail = {
         init: function () {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
-            realtimeFunctions["build"] = rtBuildDetail.processBuildDetail
+            realtimeFunctions["build"] = rtBuildDetail.processBuildDetailPage;
             realtimePages.initRealtime(realtimeFunctions);
-        }, processBuildDetail: function(data) { 
+        }, processBuildDetailPage: function (data) {
 
-        	 try {
-                 $.each(data, function (key, value) {
-                  	
-                  	// update timing table
-                  	var startTime = value.times[0];
-                  	var endTime = value.times[1];
- 					        
+            //We get slighlty different data objects from autobahn
+            var keys = Object.keys(data);
+            if (keys.length == 1) {
+                data = data[keys[0]];
+            }
 
-                    if (value.currentStep != null && value.currentStep != undefined) {                      
-                      var currentStepEta = value.currentStep.eta;                      
-                      $('.percent-outer-js').remove();
-                      var mustacheTmpl = $(Mustache.render(builders, {progressBar:true,etaStart:startTime,etaCurrent:currentStepEta}))
-                      .addClass('build-detail-progress')             
-                      .insertAfter(currentstepJS);                      
-                      helpers.delegateToProgressBar($('.percent-outer-js'));  
-                    } 
-                  	var resultTxt = value.text;	
-            		    	
-                  			// timetable
-                  			helpers.startCounter($('#elapsedTimeJs'), startTime);
+            var buildStartTime = data["times"][0];
+            var buildEndTime = data["times"][1];
+            var buildFinished = (buildEndTime !== null);
 
-							if (endTime) { 
+            if (eta == undefined) {
+                eta = data["eta"];
+            }
 
-								// If the build is finished
-								  
-								// get the rest of the content
-								if(!window.location.hash) {
-							        window.location = window.location + '#finished';
-							        window.location.reload();
-									
-								}
-								sock.close();
+            rtBuildDetail.refreshIfRequired(buildFinished);
 
-							} 
+            //Process Page
+            rtBuildDetail.processBuildResult(data, buildStartTime, eta, buildFinished);
+            rtBuildDetail.processSteps(data);
 
-							// build steps
-		            var i = 0;		                          
+            //If build is running
+            if (buildEndTime === null) {
 
-		            $.each(value.steps, function (key, value) {
-		                  		
-                		 var isStarted = value.isStarted;
-                		 var isFinished = value.isFinished === true;
-                		 var isRunning = isStarted && !isFinished;
-                		 var startTime = value.times[0];
-                		 var endTime = value.times[1];
-                		 var resultsClass = helpers.getResult(value.results[0]);
-                		 var isHidden = value.hidden === true;
+                //Elapsed Time & Progress Bar
+                if (timerCreated == false) {
+                    helpers.startCounter($('#elapsedTimeJs'), buildStartTime);
+                    timerCreated = true;
+                }
+            }
+        },
+        processBuildResult: function(data, startTime, eta, buildFinished) {
+            var $buildResult = $('#buildResult');
+            var progressBar = "";
+            if (eta > 0) {
+                progressBar = mustache.render(builders,
+                    {progressBar: true, etaStart: startTime, etaCurrent: eta});
+            }
 
-                		 if (isHidden != true) {
-                		 	
-                			i = ++i;
-                			 
-                  		// update step list if it's not finished
+            var props = {
+                buildResults: true,
+                b: data,
+                buildIsFinished: buildFinished,
+                progressBar: progressBar
+            };
 
-                			if (isRunning) {
-                					
-              					// loop through the logs
-              					
-              					var hasLogs = value.logs.length > 0; 
-              					var hasUrls = value.urls.length > 0; 
-              					
-              					if (hasLogs) {
-              						
-              						var logList = '';  
-              						stepList.children('.logs-txt').eq(i-1).text('Logs');
-                    			$.each(value.logs, function (key, value) {
-                    				var logText = value[0];
-                    				var logUrl = value[1];
-                    				logList += '<li class="s-logs-js"><a href='+ logUrl +'>'+ logText +'</a></li>';	
-                    			});
-                    			stepList.children('.log-list-js').eq(i-1).html(logList);
-                    	}
-											// loop through urls
-											if (hasUrls) {
-                  			var urlList = '';  
-												$.each(value.urls, function (key, value) {
-													 urlList += '<li class="urls-mod log-list-'+ helpers.getResult(value.results) +'"><a href="'+ value.url +'">'+ key +'</a></li>'; 
-												});				                  			
-					              stepList.children('.log-list-js').eq(i-1).append(urlList);
-				              }
+            var html = buildHandle(props);
+            $buildResult.html(html);
 
-	                  			//Running text                  				
-                  				stepList.children('.update-time-js').eq(i-1).html('Running');                  				
+            var $progressBar = $buildResult.find(".percent-outer-js");
+            $progressBar.addClass("build-detail-progress");
+            helpers.delegateToProgressBar($progressBar);
+        },
+        processSteps: function(data) {
+            var html = "";
+            var $stepList = $('#stepList');
+            $.each(data["steps"], function (i, stepData) {
+                var started = stepData['isStarted'];
+                var finished = stepData['isFinished'];
 
-                  				// update build text
-	          							stepList.children('.s-text-js').eq(i-1).html(value.text.join(' '));
+                var status = stepData["results"][0];
+                if (!started) {
+                      status = 8;
+                }
+                else if (started && !finished) {
+                    status = 7;
+                }
 
-	          							// update result class
-		          						stepList.children('.s-result-js').eq(i-1).removeClass().addClass('running result s-result-js');	
-		          						stepList.eq(i-1).removeClass().addClass('status-running');
-		          						
-		          						currentstepJS.text(value.name);
+                var cssClass = helpers.getCssClassFromStatus(status);
+                var startTime = stepData.times[0];
+                var endTime = stepData.times[1];
+                var runTime = helpers.getTime(startTime, endTime);
+                var props = {
+                    step: true,
+                    index: i,
+                    stepStarted: stepData['isStarted'],
+                    run_time: runTime,
+                    css_class: cssClass,
+                    s: stepData,
+                    url: stepData['url']
+                };
+                html += buildHandle(props);
+            });
 
-                          
-		          						
-		          						
-		              				} else if (isFinished) {
-		              					
-		              					// Apply the updates from the finished state before applying finished class
-		              					
-		              					stepList.children('.update-time-js').eq(i-1).html(helpers.getTime(startTime, endTime));
-		              					stepList.children('.s-result-js').eq(i-1).removeClass().addClass(resultsClass + ' result s-result-js');					              							              					
-		              					stepList.eq(i-1).removeClass().addClass('finished status-'+resultsClass);
-		              					
-		              				}
-		              			}
-		              			
-		                });
-
-	               });
-				
-          		}
-	            catch(err) {
-	            	//console.log(err);
-	            }
-        }       	
+            $stepList.html(html);
+        },
+        refreshIfRequired: function(buildFinished) {
+            //Deal with page reload
+            if (isLoaded == true && buildFinished) {
+                window.location = window.location + '#finished';
+                window.location.reload();
+            }
+            isLoaded = true;
+        }
     };
 
     return rtBuildDetail;

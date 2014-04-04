@@ -25,6 +25,7 @@ require.config({
 		'moment': 'plugins/moment-with-langs',
         'extend-moment': 'project/extendMoment',
 		'mustache': "libs/mustache-wrap",
+        'handlebars': "libs/handlebars",
 		'livestamp': "plugins/livestamp"
 	}
 });

@@ -364,7 +364,7 @@ class BuildStepStatus(styles.Versioned):
             self.hidden = False
         self.wasUpgraded = True
 
-    def asDict(self):
+    def asDict(self, request=None):
         result = {}
         # Constant
         result['name'] = self.getName()
@@ -384,6 +384,11 @@ class BuildStepStatus(styles.Versioned):
         result['logs'] = [[l.getName(),
             self.build.builder.status.getURLForThing(l)]
                 for l in self.getLogs()]
+
+        if request is not None:
+            from buildbot.status.web.base import path_to_step
+            result['url'] = path_to_step(request, self)
+
         return result
 
 

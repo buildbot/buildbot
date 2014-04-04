@@ -3,6 +3,18 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
     "use strict";
     var helpers;
 
+    var css_classes = {SUCCESS: "success",
+        WARNINGS: "warnings",
+        FAILURE: "failure",
+        SKIPPED: "skipped",
+        EXCEPTION: "exception",
+        RETRY: "retry",
+        CANCELED: "exception",
+        RUNNING: "running",
+        NOT_STARTED: "not_started",
+        None: ""
+    };
+
     String.prototype.format = function () {
         var args = arguments;
         return this.replace(/{(\d+)}/g, function (match, number) {
@@ -663,6 +675,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
             });
 
             return ret.join("&");
+        },
+        getCssClassFromStatus: function(status) {
+            var values = Object.keys(css_classes).map(function (key) {
+                return css_classes[key];
+            });
+            return values[status];
         }
 	};
 

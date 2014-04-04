@@ -1,0 +1,79 @@
+{{#step}}
+    <li class="status-{{ css_class }}">
+        <div class="index-count">
+            {{index}}
+        </div>
+
+    <span class="{{css_class}} result s-result-js">
+    </span>
+
+    <a class="step-head" href="{{ url }}">
+        {{ s.name }}
+    </a>
+
+    {{#stepStarted}}
+        <p>
+            <span class="s-text-js">{{#each s.text }}{{this}} {{/each}}</span>
+            {{#s.isFinished}}
+                <span class="update-time-js">{{run_time}}</span>
+            {{/s.isFinished}}
+            {{^s.isFinished}}
+                <span class="update-time-js">running</span>
+            {{/s.isFinished}}
+        </p>
+
+            {{#s.logs}}
+                <div class="logs-txt">
+                    Logs
+                </div>
+            {{/s.logs}}
+
+            <ul class="log-list log-list-js">
+                {{#each s.logs}}
+                        <li class="s-logs-js"><a target="_blank" href="{{this.[1]}}">{{this.[0]}}</a></li>
+                {{/each}}
+
+              {{^s.logs}}
+                  <li><span>no logs</span></li>
+              {{/s.logs}}
+
+
+                {{#each s.urls }}
+                    {{#if results includeZero=true}}
+                        <li class="log-list-{{buildCSSClass this.results }} urls-mod"><a title="{{ this.results }}" target="_blank"
+                                                                     href="{{ this.url }}">{{ @key }}</a></li>
+                    {{else}}
+                        {{results}}
+                        <li class="artifact-js"><a target="_blank" href="{{ this }}">{{ @key }}</a></li>
+                    {{/if}}
+                {{/each}}
+
+            </ul>
+        </li>
+    {{/stepStarted}}
+
+{{/step}}
+
+{{#buildResults}}
+    {{#unless buildIsFinished}}
+      <h2 class="head-2">
+        Build In Progress
+      </h2>
+
+      <span class="current-step current-step-js result">
+        {{ b.currentStep.name }}
+      </span>
+
+      {{{progressBar}}}
+
+    {{else}}
+      <h2 id="isFinished" data-isfinished="true" class="head-2">
+        Results
+      </h2>
+
+      <span class="{{buildCSSClass b.results }} result overall-result-js overall-result">
+          {{#each b.text}}{{this}} {{/each}}
+      </span>
+    {{/unless}}
+
+{{/buildResults}}

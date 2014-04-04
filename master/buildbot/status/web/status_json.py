@@ -459,7 +459,7 @@ class BuildJsonResource(JsonResource):
         self.putChild('steps', BuildStepsJsonResource(status, build_status))
 
     def asDict(self, request):
-        return self.build_status.asDict()
+        return self.build_status.asDict(request)
 
 
 class AllBuildsJsonResource(JsonResource):
@@ -571,7 +571,7 @@ class BuildStepsJsonResource(JsonResource):
         results = {}
         index = 0
         for step in self.build_status.getSteps():
-            results[index] = step.asDict()
+            results[index] = step.asDict(request)
             index += 1
         return results
 

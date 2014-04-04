@@ -481,7 +481,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         return result
 
-    def asDict(self):
+    def asDict(self, request=None):
         result = self.asBaseDict()
 
         # Constant
@@ -495,7 +495,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['logs'] = [[l.getName(),
             self.builder.status.getURLForThing(l)] for l in self.getLogs()]
 
-        result['steps'] = [bss.asDict() for bss in self.steps]
+        result['steps'] = [bss.asDict(request) for bss in self.steps]
         if self.getCurrentStep():
             result['currentStep'] = self.getCurrentStep().asDict()
         else:
