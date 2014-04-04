@@ -4,12 +4,13 @@ import sys
 from threading import Lock, Thread
 import urllib2
 import time
+from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory, listenWS
 from twisted.web.client import Agent
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web.server import Site
 from twisted.web.static import File
-from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
+
 
 PORT = 8010
 POLL_INTERVAL = 5
@@ -187,7 +188,7 @@ def createDeamon():
     import os, sys
     fpid = os.fork()
     if fpid is not 0:
-        f = open('autobahn.pid','w')
+        f = open('autobahnServer.pid','w')
         f.write(str(fpid))
         f.close()
         sys.exit(0)
@@ -204,7 +205,7 @@ if __name__ == '__main__':
 
     logFormat = '%(asctime)s %(levelname)s: %(message)s'
     dateFormat = '%m/%d/%Y %I:%M:%S %p'
-    logging.basicConfig(format=logFormat, filename='autobahn.log', level=logging.INFO, datefmt=dateFormat)
+    logging.basicConfig(format=logFormat, filename='autobahnServer.log', level=logging.INFO, datefmt=dateFormat)
 
     if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != 'daemon'):
         #Add console logging
