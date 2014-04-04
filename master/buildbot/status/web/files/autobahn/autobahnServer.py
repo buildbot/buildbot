@@ -119,7 +119,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
     def checkURL(self, urlCache):
         url = urlCache.url
         if self.urlCacheDict[url].errorCount > 5:
-            logging.info("Removing cached URL as it has too many errors")
+            logging.info("Removing cached URL as it has too many errors {0}".format(url))
             self.sendClientCommand(self.urlCacheDict[url].clients, KRT_URL_DROPPED, url)
             del self.urlCacheDict[url]
             return
