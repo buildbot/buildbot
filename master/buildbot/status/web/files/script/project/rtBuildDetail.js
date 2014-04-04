@@ -5,6 +5,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
     var buildHandle = Handlebars.compile(build);
     var isLoaded = false;
     var timerCreated = false;
+    var noMoreReloads = false;
 
     //Global helper for Handlebar
     //TODO: Move this when it's used by more pages
@@ -105,10 +106,13 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
         },
         refreshIfRequired: function(buildFinished) {
             //Deal with page reload
-            if (isLoaded == true && buildFinished) {
+            if (!noMoreReloads && isLoaded && buildFinished) {
                 window.location = window.location + '#finished';
                 window.location.reload();
             }
+            if (noMoreReloads == false)
+                noMoreReloads = buildFinished;
+
             isLoaded = true;
         }
     };
