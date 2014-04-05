@@ -210,6 +210,10 @@ The following selectors are supported.
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
 
+``slave``
+    The key to the per-buildslave "info" dictionary (e.g., the "Slave information" properties shown
+    in the buildslave web page for each buildslave)
+
 The following ways of interpreting the value are available.
 
 ``-replacement``

@@ -147,6 +147,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         access_uri=slave.getAccessURI(),
                         admin=slave.getAdmin() or u'',
                         host=slave.getHost() or u'',
+                        info = slave.getInfoAsDict(),
                         slave_version=slave.getVersion(),
                         show_builder_column=True,
                         connect_count=connect_count))
