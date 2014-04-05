@@ -238,6 +238,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
+
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~
 
