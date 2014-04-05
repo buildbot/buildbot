@@ -18,6 +18,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
+from twisted.internet import reactor
 
 # use the 'requests' lib: http://python-requests.org
 try:
@@ -40,6 +41,7 @@ def getSession():
     global _session
     if _session is None:
         _session = txrequests.Session()
+        reactor.addSystemEventTrigger('before', 'shutdown', closeSession)
     return _session
 
 
@@ -67,12 +69,11 @@ class HTTPStep(BuildStep):
     renderables = requestsParams
     session = None
 
-    def __init__(self, url, method, description=None, sharedSession=False, descriptionDone=None, **kwargs):
+    def __init__(self, url, method, description=None, descriptionDone=None, **kwargs):
         if txrequests is None or requests is None:
             config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
         self.method = method
         self.url = url
-        self.sharedSession = sharedSession
         self.requestkwargs = {'method': method, 'url': url}
         for p in HTTPStep.requestsParams:
             v = kwargs.pop(p, None)
@@ -119,10 +120,6 @@ class HTTPStep(BuildStep):
             log.addStderr('An exception occured while performing the request: %s' % e)
             self.finished(FAILURE)
             return
-        finally:
-            # close session if shared session is disabled
-            if not self.sharedSession:
-                closeSession()
 
         if r.history:
             log.addStdout('\nRedirected %d times:\n\n' % len(r.history))
