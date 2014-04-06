@@ -946,7 +946,7 @@ class Buildbot(AddressableBaseDataNode):
                 remaining = (datetime.timedelta(seconds=self.auto_throttle) -
                              delta)
                 if remaining > datetime.timedelta(seconds=0):
-                    logging.debug('Sleeping for %ss' % remaining)
+                    logging.debug('Sleeping for %ss', remaining)
                     time.sleep(remaining.seconds)
             self.last_fetch = datetime.datetime.utcnow()
         url = '%s/%s' % (self.url, suburl)
@@ -954,7 +954,7 @@ class Buildbot(AddressableBaseDataNode):
             url += '&filter=1'
         else:
             url += '?filter=1'
-        logging.info('read(%s)' % suburl)
+        logging.info('read(%s)', suburl)
         channel = urllib.urlopen(url)
         data = channel.read()
         try:

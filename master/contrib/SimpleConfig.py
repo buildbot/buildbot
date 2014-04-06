@@ -87,7 +87,6 @@
 import json
 import os
 import random
-import re
 import socket
 
 from buildbot.buildslave import BuildSlave
@@ -95,12 +94,10 @@ from buildbot.changes import filter
 from buildbot.changes.gitpoller import GitPoller
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
-from buildbot.process.properties import WithProperties
 from buildbot.schedulers import triggerable
 from buildbot.schedulers.basic import SingleBranchScheduler
 from buildbot.schedulers.forcesched import FixedParameter
 from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.schedulers.forcesched import StringParameter
 from buildbot.status import html
 from buildbot.status.mail import MailNotifier
 from buildbot.status.web import auth
@@ -273,7 +270,7 @@ class SimpleConfig(dict):
             sos = slaveconfig["os"].encode('ascii', 'ignore')
             # Restrict to a single build at a time because our buildshims
             # typically assume they have total control of machine, and use sudo apt-get, etc. with abandon.
-            s = BuildSlave(sname, self.slavepass, max_builds=1, properties=props)
+            s = BuildSlave(sname, self.slavepass, max_builds=1)
             self['slaves'].append(s)
             if sos not in self._os2slaves:
                 self._os2slaves[sos] = []
@@ -367,7 +364,6 @@ class SimpleConfig(dict):
             # The rest of the OSes in the list, if any, are triggered when the previous OS in the list finishes
             while len(sosses) > 0:
                 prev_factory = factory
-                prev_buildername = buildername
                 sos = sosses.pop()
                 buildername = name + '-' + sos + '-' + sbranch + bsuffix
                 factory = self.addSimpleBuilder(name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)

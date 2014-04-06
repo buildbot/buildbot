@@ -72,7 +72,7 @@ fi
 # get a list of changed files, used below; this uses a tempfile to work around
 # shell behavior when piping to 'while'
 tempfile=$(mktemp)
-trap 'rm -f ${tempfile}' 1 2 3 15
+trap 'rm -f ${tempfile}; exit 1' 1 2 3 15
 git diff --name-only $REVRANGE | grep '\.py$' | grep -v '\(^master/docs\|/setup\.py\)' > ${tempfile}
 py_files=()
 while read line; do

@@ -19,11 +19,11 @@
 #
 # See the Buildbot manual for configuration instructions.
 
-## WARNING
+# WARNING
 # This code does not work with recent versions of Twisted and Mercurial.  It
 # was never a good idea to try to run Twisted code within Mercurial, and now it
 # doesn't work.  Use this code with caution.
-##
+#
 
 import os
 
