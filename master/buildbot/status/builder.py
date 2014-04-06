@@ -308,7 +308,7 @@ class BuilderStatus(styles.Versioned):
 
         def make_statuses(brdicts):
             return [BuildRequestStatus(self.name, brdict['brid'],
-                                       self.status)
+                                       self.status, brdict=brdict)
                     for brdict in brdicts]
         d.addCallback(make_statuses)
         return d
