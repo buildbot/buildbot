@@ -361,7 +361,7 @@ class Git(Source):
         return d
 
     def _fetch(self, _):
-        command = ['fetch', '-t', self.repourl, self.branch]
+        command = ['fetch', '-t', self.repourl]
         # If the 'progress' option is set, tell git fetch to output
         # progress information to the log. This can solve issues with
         # long fetches killed due to lack of output, but only works
