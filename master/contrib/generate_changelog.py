@@ -51,7 +51,7 @@ def main(args):
     try:
         git_bin = args[0]
         since = args[1]
-    except IndexError, ie:
+    except IndexError:
         usage()
         return 1
 

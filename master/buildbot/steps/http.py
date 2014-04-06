@@ -18,6 +18,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
+from twisted.internet import reactor
 
 # use the 'requests' lib: http://python-requests.org
 try:
@@ -40,6 +41,7 @@ def getSession():
     global _session
     if _session is None:
         _session = txrequests.Session()
+        reactor.addSystemEventTrigger("before", "shutdown", closeSession)
     return _session
 
 

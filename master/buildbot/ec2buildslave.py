@@ -23,4 +23,5 @@ deprecatedModuleAttribute(Version("Buildbot", 0, 8, 8),
                           "buildbot.libvirtbuildslave", "EC2LatentBuildSlave")
 
 _hush_pyflakes = [
-    EC2LatentBuildSlave]
+    EC2LatentBuildSlave,
+]

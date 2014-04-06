@@ -54,7 +54,6 @@ def makeChange(p):
             filename = getText(filenode).strip()
             files.append(filename)
         elif filenode.nodeName == "move":
-            from_name = filenode.getAttribute("from")
             to_name = filenode.getAttribute("to")
             files.append(to_name)
 

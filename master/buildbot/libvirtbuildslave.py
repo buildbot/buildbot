@@ -27,4 +27,7 @@ for _attr in ["LibVirtSlave", "Connection", "Domain"]:
                               "buildbot.libvirtbuildslave", _attr)
 
 _hush_pyflakes = [
-    LibVirtSlave, Domain, Connection]
+    LibVirtSlave,
+    Domain,
+    Connection,
+]

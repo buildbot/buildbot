@@ -27,7 +27,6 @@ The rest of the command line arguments are:
 """
 __version__ = '$Revision: 1.3 $'
 
-import getopt
 import optparse
 import os
 import re
@@ -131,7 +130,7 @@ X-Mailer: Python buildbot-cvs-mail %(version)s
         print >> s, 'Project: %s' % options.project
         s.write(sys.stdin.read())
         print >> s
-        resp = conn.sendmail(address, options.email, s.getvalue())
+        conn.sendmail(address, options.email, s.getvalue())
         conn.close()
 
 

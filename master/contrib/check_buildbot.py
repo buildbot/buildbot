@@ -73,7 +73,6 @@ def main():
 
         try:
             alarm_code = STATUS_CODES[alarm_state[0]]
-            alarm_msg = alarm_state[1]
         except:
             status = UNKNOWN
             messages.append("%s has unknown alarm state %s" % (alarm_name, alarm_state))
