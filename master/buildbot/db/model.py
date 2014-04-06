@@ -596,6 +596,10 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
              unique=True)
     sa.Index('sourcestamps_ss_hash_key', sourcestamps.c.ss_hash, unique=True)
+    sa.Index('sourcestamps_branch', sourcestamps.c.branch)
+    sa.Index('sourcestamps_revision', sourcestamps.c.revision)
+    sa.Index('sourcestamps_repository', sourcestamps.c.repository)
+    sa.Index('sourcestamps_project', sourcestamps.c.project)
     sa.Index('buildset_sourcestamps_buildsetid',
              buildset_sourcestamps.c.buildsetid)
     sa.Index('buildset_sourcestamps_unique',
