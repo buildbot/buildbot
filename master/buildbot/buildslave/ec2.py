@@ -138,7 +138,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                        aws_access_key_id=identifier,
                                                        aws_secret_access_key=secret_identifier)
             else:
-                raise ValueError('The specified region does not exist: {0}'.format(region))
+                raise ValueError(
+                    'The specified region does not exist: {0}'.format(region))
 
         else:
             self.conn = boto.connect_ec2(identifier, secret_identifier)
@@ -270,7 +271,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             instance_type=self.instance_type, user_data=self.user_data,
             placement=self.placement)
         self.instance = reservation.instances[0]
-        instance_id, image_id, start_time = self._wait_for_instance(reservation)
+        instance_id, image_id, start_time = self._wait_for_instance(
+            reservation)
         if None not in [instance_id, image_id, start_time]:
             if len(self.tags) > 0:
                 self.conn.create_tags(instance_id, self.tags)
@@ -330,10 +332,12 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     def _request_spot_instance(self):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
-        spot_history_starttime = time.strftime('%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
-        spot_prices = self.conn.get_spot_price_history(start_time=spot_history_starttime,
-                                                       product_description='Linux/UNIX (Amazon VPC)',
-                                                       availability_zone=self.placement)
+        spot_history_starttime = time.strftime(
+            '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
+        spot_prices = self.conn.get_spot_price_history(
+            start_time=spot_history_starttime,
+            product_description='Linux/UNIX (Amazon VPC)',
+            availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
         for price in spot_prices:
@@ -353,11 +357,13 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             log.msg('%s %s requesting spot instance with price %0.2f.' %
                     (self.__class__.__name__, self.slavename, target_price))
-        reservations = self.conn.request_spot_instances(target_price, self.ami, key_name=self.keypair_name,
-                                                        security_groups=[self.security_name],
-                                                        instance_type=self.instance_type,
-                                                        user_data=self.user_data,
-                                                        placement=self.placement)
+        reservations = self.conn.request_spot_instances(
+            target_price, self.ami, key_name=self.keypair_name,
+            security_groups=[
+                self.security_name],
+            instance_type=self.instance_type,
+            user_data=self.user_data,
+            placement=self.placement)
         request = self._wait_for_request(reservations[0])
         instance_id = request.instance_id
         reservations = self.conn.get_all_instances(instance_ids=[instance_id])
@@ -388,7 +394,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                      self.output.output))
             if self.elastic_ip is not None:
                 self.instance.use_ip(self.elastic_ip)
-            start_time = '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)
+            start_time = '%02d:%02d:%02d' % (
+                minutes // 60, minutes % 60, seconds)
             if len(self.volumes) > 0:
                 self._attach_volumes()
             return self.instance.id, image.id, start_time
@@ -400,7 +407,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 (self.__class__.__name__, self.slavename))
         duration = 0
         interval = self._poll_resolution
-        requests = self.conn.get_all_spot_instance_requests(request_ids=[reservation.id])
+        requests = self.conn.get_all_spot_instance_requests(
+            request_ids=[reservation.id])
         request = requests[0]
         request_status = request.status.code
         while request_status in SPOT_REQUEST_PENDING_STATES:
@@ -410,7 +418,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 log.msg('%s %s has waited %d minutes for spot request %s' %
                         (self.__class__.__name__, self.slavename, duration // 60,
                          request.id))
-            requests = self.conn.get_all_spot_instance_requests(request_ids=[request.id])
+            requests = self.conn.get_all_spot_instance_requests(
+                request_ids=[request.id])
             request = requests[0]
             request_status = request.status.code
         if request_status == FULFILLED:

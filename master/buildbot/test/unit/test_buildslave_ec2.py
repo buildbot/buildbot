@@ -16,13 +16,25 @@
 
 try:
     from moto import mock_ec2
-except ImportError:
-    mock_ec2 = lambda x: x
-    boto = None
-else:
+    assert mock_ec2
     import boto
-from buildbot.buildslave import ec2
+    assert boto
+except ImportError:
+    boto = None
+    ec2 = None
+
+if boto is not None:
+    from buildbot.buildslave import ec2
+
 from twisted.trial import unittest
+
+
+# redefine the mock_ec2 decorator to skip the test if boto isn't installed
+def skip_ec2(f):
+    f.skip = "boto not installed"
+    return f
+if boto is None:
+    mock_ec2 = skip_ec2
 
 
 class TestEC2LatentBuildSlave(unittest.TestCase):
