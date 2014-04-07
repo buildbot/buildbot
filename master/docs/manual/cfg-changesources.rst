@@ -68,6 +68,7 @@ Mercurial
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
+ * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 
 Bzr (the newer Bazaar)
  * :bb:chsrc:`PBChangeSource` (listening for connections from
@@ -89,6 +90,7 @@ Git
  * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
+ * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 
 
 Repo/Git
@@ -1032,6 +1034,103 @@ A configuration for the Mercurial poller might look like this::
     c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
+
+.. bb:chsrc:: BitbucketPullrequestPoller
+
+.. _BitbucketPullrequestPoller:
+
+BitbucketPullrequestPoller
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.changes.bitbucket.BitbucketPullrequestPoller
+
+This :bb:chsrc:`BitbucketPullrequestPoller` periodically polls Bitbucket for new or updated pull requests.
+It uses Bitbuckets powerful `Pull Request REST API`_ to gather the information needed.
+
+The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
+
+``owner``
+    The owner of the Bitbucket repository. All Bitbucket Urls are of the form https://bitbucket.org/owner/slug/.
+
+``slug``
+    The name of the Bitbucket repository.
+
+``branch``
+    A single branch or a list of branches which should be processed.
+    If it is ``None`` (the default) all pull requests are used.
+
+``pollInterval``
+    Interval in seconds between polls, default is 10 minutes.
+
+``pollAtLaunch``
+    Determines when the first poll occurs. ``True`` = immediately on launch,
+    ``False`` = wait for one ``pollInterval`` (default).
+
+``category``
+    Set the category to be used for the changes produced by the
+    :bb:chsrc:`BitbucketPullrequestPoller`. This will then be set in any changes generated
+    by the :bb:chsrc:`BitbucketPullrequestPoller`, and can be used in a Change Filter for
+    triggering particular builders.
+
+``project``
+    Set the name of the project to be used for the
+    :bb:chsrc:`BitbucketPullrequestPoller`. This will then be set in any changes generated
+    by the ``BitbucketPullrequestPoller``, and can be used in a Change Filter for
+    triggering particular builders.
+
+``pullrequest_filter``
+    A callable which takes one parameter, the decoded Python object of the pull request JSON.
+    If the it returns ``False`` the pull request is ignored.
+    It can be used to define custom filters based on the content of the pull request.
+    See the Bitbucket documentation for more information about the format of the response.
+    By default the filter always returns ``True``.
+
+``usetimestamps``
+    parse each revision's commit timestamp (default is ``True``),
+    or ignore it in favor of the current time (so recently processed
+    commits appear together in the waterfall page)
+
+``encoding``
+    Set encoding will be used to parse author's name and commit
+    message. Default encoding is ``'utf-8'``.
+
+A minimal configuration for the Bitbucket pull request poller might look like this::
+
+    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+    c['change_source'] = BitbucketPullrequestPoller(
+        owner='myname',
+        slug='myrepo',
+      )
+
+Here is a more complex configuration using a ``pullrequest_filter``.
+The pull request is only processed if at least 3 people have already approved it::
+
+    def approve_filter(pr, threshold):
+        approves = 0
+        for participant in pr['participants']:
+            if participant['approved']:
+                approves = approves + 1
+
+        if approves < threshold:
+            return False
+        return True
+
+    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+    c['change_source'] = BitbucketPullrequestPoller(
+        owner='myname',
+        slug='myrepo',
+        branch='mybranch',
+        project='myproject',
+        pullrequest_filter=lambda pr : approve_filter(pr,3),
+        pollInterval=600,
+      )
+
+.. warning::
+
+    Anyone who can create pull requests for the Bitbucket repository can initiate a change,
+    potentially causing the buildmaster to run arbitrary code.
+
+.. _Pull Request REST API: https://confluence.atlassian.com/display/BITBUCKET/pullrequests+Resource
 
 .. bb:chsrc:: GerritChangeSource
 

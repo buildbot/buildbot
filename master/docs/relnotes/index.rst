@@ -113,6 +113,7 @@ Features
    * String parameter ``placement`` is appended to the ``region`` parameter, e.g. ``region='us-west-2', placement='b'``
      will result in the spot request being placed in us-west-2b.
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
+   * Dict parameter ``tags`` specifies AWS tags as key/value pairs to be applied to new instances.
   
   With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
   price, placement, and so on.
@@ -239,6 +240,8 @@ Features
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+
+* Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
 
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
