@@ -350,6 +350,18 @@ specify it in your configuration using the ``elastic_ip`` argument. ::
                                        elastic_ip='208.77.188.166'
                                        )]
 
+One other way to configure a slave is by settings AWS tags. They can for example be used to 
+have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy. To get Buildbot to tag the latent slave 
+specify the tag keys and values in your configuration using the ``tags`` argument. ::
+
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                       'ami-12345',
+                                       identifier='publickey',
+                                       secret_identifier='privatekey',
+                                       tags={'SomeTag': 'foo'}
+                                       )]
+
 The :class:`EC2LatentBuildSlave` supports all other configuration from the standard
 :class:`BuildSlave`.  The ``missing_timeout`` and ``notify_on_missing`` specify how long
 to wait for an EC2 instance to attach before considering the attempt to have
