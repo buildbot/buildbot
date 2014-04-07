@@ -242,6 +242,8 @@ Features
 
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
+* A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
+
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -264,6 +266,8 @@ Fixes
 * The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:bb:pull:`1114`).
 
 * The source steps now correctly interpolate properties in ``env``.
+
+* ``GerritStatusPush`` now supports setting scores with Gerrit 2.6 and newer
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

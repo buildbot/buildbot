@@ -16,6 +16,7 @@
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.status.buildrequest import BuildRequestStatus
+from twisted.internet import defer
 from zope.interface import implements
 
 
@@ -72,3 +73,53 @@ class BuildSetStatus:
         d = dict(self.bsdict)
         d["submitted_at"] = str(self.bsdict["submitted_at"])
         return d
+
+
+class BuildSetSummaryNotifierMixin:
+
+    def summarySubscribe(self):
+        self._buildsetCompleteConsumer = self.master.mq.startConsuming(
+            self._buildsetComplete,
+            ('buildsets', None, 'complete'))
+
+    def summaryUnsubscribe(self):
+        if self._buildsetCompleteConsumer is not None:
+            self._buildsetCompleteConsumer.stopConsuming()
+            self._buildsetCompleteConsumer = None
+
+    def sendBuildSetSummary(self, buildset, builds):
+        raise NotImplementedError
+
+    @defer.inlineCallbacks
+    def _buildsetComplete(self, key, msg):
+        bsid = msg['bsid']
+
+        # first, just get the buildset and all build requests for our buildset
+        # id
+        dl = [self.master.db.buildsets.getBuildset(bsid=bsid),
+              self.master.db.buildrequests.getBuildRequests(bsid=bsid)]
+        (buildset, breqs) = yield defer.gatherResults(dl)
+
+        # next, get the bdictlist for each build request
+        dl = []
+        for breq in breqs:
+            d = self.master.db.builds.getBuilds(
+                buildrequestid=breq['buildrequestid'])
+            dl.append(d)
+
+        buildinfo = yield defer.gatherResults(dl)
+
+        # next, get the builder for each build request, and for each bdict,
+        # look up the actual build object, using the bdictlist retrieved above
+        builds = []
+        for (breq, bdictlist) in zip(breqs, buildinfo):
+            builder = self.master_status.getBuilder(breq['buildername'])
+            for bdict in bdictlist:
+                build = builder.getBuild(bdict['number'])
+                if build is not None:
+                    builds.append(build)
+
+        if builds:
+            # We've received all of the information about the builds in this
+            # buildset; now send out the summary
+            self.sendBuildSetSummary(buildset, builds)
