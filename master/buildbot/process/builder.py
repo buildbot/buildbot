@@ -475,6 +475,17 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
+    def stopAllBuilds(self, reason):
+        # stop all currently running builds
+        current_builds = self.builder_status.getCurrentBuilds()
+        for build_status in current_builds:
+            self.getBuild(build_status.getNumber()).stopBuild(reason)
+
+        # wait for all the builds to finish
+        for build_status in current_builds:
+            yield build_status.waitUntilFinished()
+
+    @defer.inlineCallbacks
     def _maybeBuildsetsComplete(self, requests):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
@@ -606,7 +617,7 @@ class BuilderControl:
             defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestControls(self):
+    def _getPendingBuildRequests(self):
         master = self.original.master
         brdicts = yield master.db.buildrequests.getBuildRequests(
             buildername=self.original.name,
@@ -619,9 +630,22 @@ class BuilderControl:
                 self.control.master, brdict)
             buildrequests.append(br)
 
+        defer.returnValue(buildrequests)
+
+    @defer.inlineCallbacks
+    def getPendingBuildRequestControls(self):
+        # fetch build requests
+        buildrequests = yield self._getPendingBuildRequests()
+
         # and return the corresponding control objects
         defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
                            for r in buildrequests])
+
+    @defer.inlineCallbacks
+    def cancelAllPendingBuildRequests(self):
+        build_reqs = yield self._getPendingBuildRequests()
+        for build_req in build_reqs:
+            yield build_req.cancelBuildRequest()
 
     def getBuild(self, number):
         return self.original.getBuild(number)

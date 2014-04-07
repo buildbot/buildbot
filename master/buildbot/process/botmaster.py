@@ -251,8 +251,15 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
             for n in removed_names:
                 builder = old_by_name[n]
 
+                # cancel all pending build requests for this builder
+                builder_control = \
+                    interfaces.IControl(self.master).getBuilder(n)
+                yield builder_control.cancelAllPendingBuildRequests()
+
+                # stop any running builds for this builder
+                yield builder.stopAllBuilds("builder removed")
+
                 del self.builders[n]
-                builder.master = None
                 builder.botmaster = None
 
                 yield defer.maybeDeferred(lambda:
