@@ -157,6 +157,8 @@ class HTTPStep(BuildStep):
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout(' ------ Content ------\n%s' % response.text)
+        
+        self.addLog('content').addStdout(response.text)
 
     def describe(self, done=False):
         if done:
