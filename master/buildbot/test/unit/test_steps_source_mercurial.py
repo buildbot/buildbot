@@ -243,7 +243,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'clone',
+                        command=['hg', '--verbose', 'clone', '--uncompressed',
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -352,7 +352,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'clone',
+                        command=['hg', '--verbose', 'clone', '--uncompressed',
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -391,7 +391,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'clone',
+                        command=['hg', '--verbose', 'clone', '--uncompressed',
                                  'http://hg.mozilla.org', '.', '--noupdate'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -463,7 +463,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'clone',
+                        command=['hg', '--verbose', 'clone', '--uncompressed',
                                  'http://hg.mozilla.org', '.', '--noupdate'])
             + 0,
             ExpectShell(workdir='wkdir',

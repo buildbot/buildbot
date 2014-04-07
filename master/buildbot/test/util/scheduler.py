@@ -17,6 +17,12 @@ import os
 import mock
 from buildbot.test.fake import fakedb
 
+
+class FakeStatus(object):
+
+    def getChangeSources(self):
+        return {}
+
 class FakeMaster(object):
 
     def __init__(self, basedir, db):
@@ -28,6 +34,7 @@ class FakeMaster(object):
         self.caches = mock.Mock(name="caches")
         self.caches.get_cache = self.get_cache
         self.configured_poll_interval = None
+        self.status = FakeStatus()
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
@@ -56,6 +63,9 @@ class FakeMaster(object):
         assert not self.bset_completion_subscr_cb
         self.bset_completion_subscr_cb = callback
         return self._makeSubscription('bset_completion_subscr_cb')
+
+    def getStatus(self):
+        return self.status
 
     # caches
 
