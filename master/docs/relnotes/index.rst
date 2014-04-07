@@ -148,6 +148,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
+
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
 * A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
