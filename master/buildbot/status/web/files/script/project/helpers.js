@@ -410,7 +410,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
 			
 			// Artifacts produced in the buildsteplist
-			var artifactJS = $('li.artifact-js').clone();
+			var artifactJS = $('li.artifact-js');
 			
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
@@ -418,20 +418,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
-                noArtifactsJS.html("");
+                noArtifactsJS.hide();
                 
-				showArtifactsJS
+				var html = showArtifactsJS
 				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);				
+				.html(artifactJS);
 			} else {
 				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult
-			var sLogs = $('.s-logs-js').clone();
+			var sLogs = $('.s-logs-js');
 
 			// Container to display the testresults
 			var testlistResultJS = $('#testsListJS');
@@ -449,7 +449,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 						
 			// Show the testresultlinks in the top if there are any
 			if (alist.length > 0) { 
-				testlistResultJS.append($('<li>Test Results</li>'));
+				testlistResultJS.html($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
 
