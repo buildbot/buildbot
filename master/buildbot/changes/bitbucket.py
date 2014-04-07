@@ -112,7 +112,9 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     prlink = pr['links']['html']['href']
                     # Get time updated time. Note that the timezone offset is ignored.
                     if self.useTimestamps:
-                        updated = datetime.strptime(pr['updated_on'][:-6], '%Y-%m-%dT%H:%M:%S.%f')
+                        updated = datetime.strptime(
+                            pr['updated_on'].split('.')[0],
+                            '%Y-%m-%dT%H:%M:%S')
                     else:
                         updated = datetime.now()
                     title = pr['title']

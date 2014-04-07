@@ -255,6 +255,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
     def setUp(self):
         # create pull requests
         self.date = "2013-10-15T20:38:20.001797+00:00"
+        self.date_epoch = datetime.strptime(self.date.split('.')[0],
+                                            '%Y-%m-%dT%H:%M:%S')
         src = SourceRest(
             owner="contributor",
             slug="slug",
@@ -368,7 +370,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                             self.date_epoch)
 
         d.addCallback(check)
         return d
@@ -385,7 +387,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                             self.date_epoch)
 
             # repoll
             d = self.changesource.poll()
@@ -410,7 +412,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                             self.date_epoch)
 
             self.patch(client, "getPage", self.pr_list2.getPage)
             d = self.changesource.poll()
@@ -420,7 +422,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 self.assertEqual(self.changes_added[1]['author'], "contributor")
                 self.assertEqual(int(self.changes_added[1]['revision']), 2)
                 self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                 datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                                 self.date_epoch)
 
             d.addCallback(check2)
             return d
@@ -463,7 +465,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                             self.date_epoch)
 
         d.addCallback(check)
         return d
@@ -485,7 +487,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.assertEqual(self.changes_added[0]['author'], "contributor")
             self.assertEqual(int(self.changes_added[0]['revision']), 1)
             self.assertNotEqual(self.changes_added[0]['when_timestamp'],
-                                datetime.strptime(self.date[:-6], '%Y-%m-%dT%H:%M:%S.%f'))
+                                self.date_epoch)
 
         d.addCallback(check)
         return d
