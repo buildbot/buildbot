@@ -504,15 +504,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			// must be replaced with json values
 			el.height("{0}%".format(per));
 
-		}, progressBar: function(etaTime, el, startTime, overTime) {
+		}, progressBar: function(etaTime, el, startTime) {
 			var start = moment.unix(startTime),
 			percentInner = el.children('.percent-inner-js'),
 			timeTxt = el.children('.time-txt-js');
-            var hasETA = etaTime > 0;
-
-			if (overTime) {
-				el.addClass('overtime');
-			}
+            var hasETA = etaTime != 0;
+            var overtime = etaTime < 0;
 
 			function timeVars() {
                 var percent = 100;
@@ -520,7 +517,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
                 if (hasETA) {
                     var now = moment(),
-                    addSubtract = overTime === undefined? etaTime-- : etaTime++,
+                    addSubtract = overtime ? etaTime++ : etaTime--,
                     then = moment().add('s',addSubtract),
                     etaEpoch = now + (etaTime * 1000.0);
 
