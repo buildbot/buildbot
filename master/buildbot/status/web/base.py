@@ -533,11 +533,16 @@ class BuildLineMixin:
             repo = ss_list[0].repository
             if all_got_revision:
                 if len(ss_list) == 1:
-                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                    rev = all_got_revision.get(ss_list[0].codebase, None)
                 else:
                     rev = "multiple rev."
             else:
-                rev = "??"
+                if len(ss_list) == 1 and ss_list[0].revision is not None and len(ss_list[0].revision):
+                    rev = ss_list[0].revision
+                elif len(ss_list) > 1:
+                    rev = "multiple rev."
+                else:
+                    rev = None
 
             if len(ss_list) == 1:
                 branch = ss_list[0].branch

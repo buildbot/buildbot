@@ -408,34 +408,32 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			displayEl.text(countEl.length);
 
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
-			
-			// Artifacts produced in the buildsteplist
-			var artifactJS = $('li.artifact-js').clone();
-			
+
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
+            showArtifactsJS.next().find('.builders-list').empty();
 			var noArtifactsJS = $('#noArtifactsJS');
+
+            // Artifacts produced in the buildsteplist
+			var artifactJS = $('li.artifact-js');
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
-                noArtifactsJS.html("");
+                noArtifactsJS.hide();
                 
 				showArtifactsJS
 				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);				
+				.html(artifactJS.clone());
 			} else {
 				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult
-			var sLogs = $('.s-logs-js').clone();
-
-			// Container to display the testresults
-			var testlistResultJS = $('#testsListJS');
-
+            var testlistResultJS = $('#testsListJS').empty();
+			var sLogs = $('.s-logs-js');
 			var alist = [];
 			
 			$(sLogs).each(function() {	
@@ -443,13 +441,13 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				var str = $(this).text().split('.').pop();
 				
 				if (str === 'xml' || str === 'html') {
-					alist.push($(this));
+					alist.push($(this).clone());
 				}
 			});
 						
 			// Show the testresultlinks in the top if there are any
-			if (alist.length > 0) { 
-				testlistResultJS.append($('<li>Test Results</li>'));
+			if (alist.length > 0) {
+				testlistResultJS.html($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
 
@@ -504,15 +502,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			// must be replaced with json values
 			el.height("{0}%".format(per));
 
-		}, progressBar: function(etaTime, el, startTime, overTime) {
+		}, progressBar: function(etaTime, el, startTime) {
 			var start = moment.unix(startTime),
 			percentInner = el.children('.percent-inner-js'),
 			timeTxt = el.children('.time-txt-js');
-            var hasETA = etaTime > 0;
-
-			if (overTime) {
-				el.addClass('overtime');
-			}
+            var hasETA = etaTime != 0;
+            var overtime = etaTime < 0;
 
 			function timeVars() {
                 var percent = 100;
@@ -520,7 +515,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 
                 if (hasETA) {
                     var now = moment(),
-                    addSubtract = overTime === undefined? etaTime-- : etaTime++,
+                    addSubtract = overtime ? etaTime++ : etaTime--,
                     then = moment().add('s',addSubtract),
                     etaEpoch = now + (etaTime * 1000.0);
 

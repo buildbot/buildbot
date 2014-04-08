@@ -15,7 +15,11 @@
     <tr>  
       <td class="txt-align-left">{{ b.time }} </td>
       <td class="txt-align-left">
-          {{ b.rev|shortrev(b.rev_repo) }}
+          {% if b.rev != None %}
+            {{ b.rev|shortrev(b.rev_repo) }}
+          {% else %}
+            None
+          {% endif %}
       </td>
       <td class="txt-align-left">
           {{ b.branch }}
@@ -40,7 +44,7 @@
     <tr>
       <th class="txt-align-left">Time</th>
       <th class="txt-align-left">Revision</th>
-      <th class="txt-align-left">Codebase</th>
+      <th class="txt-align-left">Branch</th>
       <th>Result</th>
        {%- if include_builder %}   
       <th class="txt-align-left">Builder</th>

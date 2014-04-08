@@ -22,11 +22,11 @@
             {{/s.isFinished}}
         </p>
 
-            {{#s.logs}}
+            {{#if s.logs.length}}
                 <div class="logs-txt">
                     Logs
                 </div>
-            {{/s.logs}}
+            {{/if}}
 
             <ul class="log-list log-list-js">
                 {{#each s.logs}}

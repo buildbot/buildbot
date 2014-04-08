@@ -75,7 +75,6 @@ def makeSampleConfig(config):
 def makePublicHtml(config):
     files = {
         'bg_gradient.jpg' : "../status/web/files/bg_gradient.jpg",
-        'default.css' : "../status/web/files/css/default.css",
         'robots.txt' : "../status/web/files/robots.txt",
         'favicon.ico' : "../status/web/files/favicon.ico",
     }
