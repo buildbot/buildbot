@@ -74,7 +74,12 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
         processSteps: function(data) {
             var html = "";
             var $stepList = $('#stepList');
+            var count = 1;
             $.each(data["steps"], function (i, stepData) {
+                if (stepData.hidden) {
+                    return true;
+                }
+
                 var started = stepData['isStarted'];
                 var finished = stepData['isFinished'];
 
@@ -92,7 +97,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                 var runTime = helpers.getTime(startTime, endTime);
                 var props = {
                     step: true,
-                    index: i,
+                    index: count,
                     stepStarted: stepData['isStarted'],
                     run_time: runTime,
                     css_class: cssClass,
@@ -100,6 +105,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                     url: stepData['url']
                 };
                 html += buildHandle(props);
+                count++;
             });
 
             $stepList.html(html);
