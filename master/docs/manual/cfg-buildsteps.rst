@@ -2076,8 +2076,14 @@ Available constructor arguments are:
 ``move``
     Delete the source directory after the copy is complete (``/MOVE`` parameter).
 
-``exclude``
+``exclude_files``
     An array of file names or patterns to exclude from the copy (``/XF`` parameter).
+
+``exclude_dirs``
+    An array of directory names or patterns to exclude from the copy (``/XD`` parameter).
+
+``custom_opts``
+    An array of custom parameters to pass directly to the ``robocopy`` command.
 
 ``verbose``
     Whether to output verbose information (``/V /TS /TP`` parameters).
