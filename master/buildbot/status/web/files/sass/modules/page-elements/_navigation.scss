@@ -33,26 +33,27 @@
 }
 
 .green {
-background-color: #2D6721;
-border: 1px solid #487E3C;
+background-color: #237B74;
+border: 1px solid #3F8E87;
 }
 .red {
 	/*
 	    background-color: rgba(255, 161, 154, 0.1);
 	    border: 1px solid rgba(255, 161, 154, 0.62);
 	*/
- background-color: rgba(112, 21, 21, 0.67);
-    border: 1px solid rgba(171, 87, 87, 0.75);
+background-color: #A76255;
+border: 1px solid #BC8579;
 } 
 
 .yellow {
-	background-color: rgba(218, 217, 47, 0.14);
-	border: 1px solid rgba(135, 134, 40, 0.36);
+	background-color: #7A760D;
+border: 1px solid #9F9B41;
 }
 
 .top-menu-container {
-	@include bgimage (linear-gradient(center top , #215076 0%, #22435E 100%));
+	@include bgimage (linear-gradient(top , #215076 0%, #22435E 100%));
 	@include pie-clearfix;
+	border-bottom: 1px solid #4798D9;
 }
 
 .outer-bar {
@@ -64,7 +65,7 @@ border: 1px solid #487E3C;
 	margin: -3px 0 -2px 5px;
     position: relative;
     width: 10px;
-    @include box-shadow (0 1px 0 #FFF);
+    //@include box-shadow (0 1px 0 #FFF);
 }
 
 .inner-bar {
@@ -94,7 +95,7 @@ border: 1px solid #487E3C;
     letter-spacing: 1px;
     margin: -2px 0 0 13px;
     padding: 2px 7px 3px 8px;
-    text-shadow: 0 1px 0 #FFFFFF;
+    @include text-shadow ( 0 1px 0 #FFFFFF);
 	}
 	&> li {
 		float:left;
@@ -129,7 +130,7 @@ border: 1px solid #487E3C;
 			    text-decoration: none;
 
 			    text-transform: uppercase;
-			    transition: opacity 0.2s ease-in-out 0s;
+			    @include transition( opacity 0.2s ease-in-out 0s);
 			&:hover {
 				opacity: 0.5;
 			}
@@ -141,7 +142,7 @@ border: 1px solid #487E3C;
 		.arrow-down-btn {
 			cursor: pointer;
 			&:after {
-			    background-image: -moz-linear-gradient(center top , #DFE2EA 0%, #EEF0F5 100%);
+			    @include bgimage (linear-gradient(top , #DFE2EA 0%, #EEF0F5 100%));
     border: 1px solid #C4C4C4;
     border-radius: 4px;
     
@@ -153,11 +154,11 @@ border: 1px solid #487E3C;
     padding: 1px 6px 1px 7px;
     position: absolute;
     right: 0;
-    text-shadow: 1px 1px 0 #FFFFFF;
+    @include text-shadow( 1px 1px 0 #FFFFFF);
     top: 13px;
 			}
 			&:hover:after {
-				@include bgimage(linear-gradient(top, #F2F6FE 0%, #F8FAFF 100%));
+				@include bgimage(linear-gradient(center top , rgba(223, 226, 234, 0.76) 0%, rgba(238, 240, 245, 0.88) 100%));
 			}
 		}
 		.more-info-box { 
@@ -252,7 +253,7 @@ border: 1px solid #487E3C;
 
 .sub-menu-container {
     //background-color: #90B6D5;
-    @include bgimage (linear-gradient(center top , #AAC5DC 0%, #8DA3B5 100%));
+    @include bgimage (linear-gradient(top , #3F81B5 0%, #37709D 100%));
     border-bottom: 1px solid #FFFFFF;
     margin-bottom: 22px;
 	&.frontpage,
@@ -265,7 +266,7 @@ border: 1px solid #487E3C;
 		display:inline-block;
 		padding:13px 0 11px 0;
 		& > li {
-		color: #fff;
+		color: rgba(255, 255, 255, 0.52);
 		font-size: 11px;
 		float: left;
 		list-style: none outside none;
@@ -274,13 +275,13 @@ border: 1px solid #487E3C;
 		font-weight: bold;
 		letter-spacing:1.1px;
 		line-height:12px;
-		@include text-shadow(0 1px 0 rgba(0, 0, 0, 0.13));
+		//@include text-shadow(0 1px 0 rgba(0, 0, 0, 0.13));
 		&:first-child {
 			padding-left:123px;
 		}
 		a {
-			@include text-shadow (0 1px 0 rgba(255, 255, 255, 0.47));
-			 color: rgba(0, 0, 0, 0.61);
+			//@include text-shadow (0 1px 0 rgba(255, 255, 255, 0.47));
+			 color: #fff;
     
 			&:hover{
 				color: rgba(255, 255, 255, 0.75);
@@ -306,7 +307,7 @@ border: 1px solid #487E3C;
 			content: "";
 			padding-right: 12px;
 			font-size: 9px;
-			color: rgba(0, 0, 0, 0.61);
+			color: #fff;
 			font-weight: normal;
 		}
 	}

@@ -26,19 +26,27 @@ require.config({
         'extend-moment': 'project/extendMoment',
 		'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
-		'livestamp': "plugins/livestamp"
+		'livestamp': "plugins/livestamp",
+		'noise': "plugins/jquery.noisy"
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','noise'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,noisy) {
 		
 	'use strict';
 
 	 // reveal the page when all scripts are loaded
 	  
 	  $(document).ready(function() {
-        $('body').show();
+        $('body').show().noisy({
+		    'intensity' : 1,
+		    'size' : 200,
+		    'opacity' : 0.03,
+		    'fallback' : '',
+		    'monochrome' : false
+		});
+
 	  	// swipe or scroll in the codebases overview
 	  	if ($('#builders_page').length || $('#builder_page').length) {
 	  	require(['overscroll'],
