@@ -18,7 +18,7 @@
     
     <script type="text/javascript">
       var require = {
-          baseUrl: "/script/",
+          baseUrl: "/prod/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
@@ -30,7 +30,7 @@
     {% endif %}
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
-    <link rel="stylesheet" href="/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     
@@ -161,7 +161,7 @@
          </nav>
       
        </header>
-<div class="clear"></div>
+
     {% endblock %}
 
     {%- block barecontent -%}

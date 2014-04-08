@@ -18,7 +18,7 @@
 	
 	float: left;
 	display:none;
-	margin-top: 9px;	
+	margin-top: 8px;	
 	margin-left:15px;
 	h4 {
 		float: left;		
@@ -53,7 +53,6 @@ border: 1px solid #9F9B41;
 .top-menu-container {
 	@include bgimage (linear-gradient(top , #215076 0%, #22435E 100%));
 	@include pie-clearfix;
-	border-bottom: 1px solid #4798D9;
 }
 
 .outer-bar {
@@ -255,11 +254,17 @@ border: 1px solid #9F9B41;
     //background-color: #90B6D5;
     @include bgimage (linear-gradient(top , #3F81B5 0%, #37709D 100%));
     border-bottom: 1px solid #FFFFFF;
+    border-top:1px solid #4798D9;
     margin-bottom: 22px;
 	&.frontpage,
 	&.jsonhelp {
 		height: 39px;
 	}
+	
+}
+
+.header + .container-inner {
+		margin-top: 30px;
 }
 
 .breadcrumbs-nav {
