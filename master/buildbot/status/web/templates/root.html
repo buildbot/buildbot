@@ -50,39 +50,18 @@ Master is shutting down<br/>
 {%- endif -%}
 
 </div>
-<div class="column-2 last">
-<h2 class="head-2">
-  Summary
-</h2>
-<table id="tb-root" class="table-1 summary-circles">
-    <thead>
-      <tr>
-        <th>Slaves</th>
-        <th>Current builds</th>
-        <th>Pending builds</th>  
-      </tr>
-    </thead>
-    <body>
-      <tr class="summary-td">
-          <td>
-            <span id="slavesNr">
-                {{ slaves|length }}
-            </span>
-          </td>
-          <td>
-            <span id="currentBuilds">
-                {{ current_builds|length }}
-            </span>
-          </td>
-          <td>
-            <span id="pendingBuilds">
-                {{ pending_builds|length }}
-            </span>
-          </td>
-      </tr>
-    </body>
-</table>
-
+<div class="column-2 last welcome-txt">
+  <h1 class="head-2">
+    More info
+  </h1>
+  <ul>
+    <li>
+      <b><a href="http://buildbot.net/">Buildbot</a></b> The continuous integration framework.
+    </li>
+      <li>
+      <b><a href="http://confluence.hq.unity3d.com/display/DEV/Katana?src=breadcrumbs-parent">Katana</a></b> The katana homepage on Confluence.
+    </li>
+  </ul>
 </div>
 </div>
 
