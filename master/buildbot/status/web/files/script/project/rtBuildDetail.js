@@ -106,6 +106,8 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                 };
                 html += buildHandle(props);
                 count++;
+
+                return true;
             });
 
             $stepList.html(html);
