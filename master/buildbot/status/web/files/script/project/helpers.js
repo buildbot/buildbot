@@ -114,7 +114,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 				var toolTipCont = $('<div class="tooltip-cont" />');
 				this.t = this.title;
 				this.title = "";
-				var cursorPosTop = e.pageY + 5;
+				var cursorPosTop = e.pageY + 20;
 				var cursorPosLeft = e.pageX + 5;
 				$(e.target).click(function(){
 					toolTipCont.remove();					
