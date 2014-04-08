@@ -8,6 +8,7 @@
   
 .info-box {
 	background-color: #B6BFC9;
+	@include transition (background-color 1.3s ease,border-color 1.3s ease);
 	border: 1px solid #6A7A8B;
 	@include border-radius(4px);
 	float: left;	
@@ -17,6 +18,7 @@
 	font-size: 11px;
 	@include box-shadow(0 1px 0 #FFF);
 	float: left;
+	display:none;
 	margin-top: 9px;	
 	margin-left:15px;
 	h4 {
@@ -36,13 +38,18 @@
 	border: 1px solid rgba(39, 162, 155, 0.42);
 }
 .red {
-/*
-    background-color: rgba(255, 161, 154, 0.1);
-    border: 1px solid rgba(255, 161, 154, 0.62);
-*/
-background-color: rgba(210, 160, 155, 0.17);
-border: 1px solid rgba(210, 160, 155, 0.89);
+	/*
+	    background-color: rgba(255, 161, 154, 0.1);
+	    border: 1px solid rgba(255, 161, 154, 0.62);
+	*/
+	background-color: rgba(210, 160, 155, 0.17);
+	border: 1px solid rgba(210, 160, 155, 0.89);
 } 
+
+.yellow {
+	background-color: rgba(218, 217, 47, 0.14);
+	border: 1px solid rgba(135, 134, 40, 0.36);
+}
 
 .top-menu-container {
 	@include bgimage (linear-gradient(top, #EBEBEB 0%, #D9D9D9 100%));
@@ -55,7 +62,7 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 	@include border-radius (3px);
 	border:1px solid #477cb4;
 	display:none;
-	margin: -2px 0 0 5px;
+	margin: -3px 0 -2px 5px;
     position: relative;
     width: 10px;
     @include box-shadow (0 1px 0 #FFF);
@@ -81,7 +88,7 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 		float: right;
 		color: rgb(255, 255, 255);
 		font-size: 11px;
-		margin: -2px 0 0 13px; 
+		margin: -3px 0 -2px 13px; 
 		letter-spacing: 1px; 
 		@include border-radius (9px); 
 		padding: 2px 7px 3px 8px; 
@@ -113,6 +120,7 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 		}
 
 		&> a {
+			float:Left;
 		    color: rgba(31, 81, 133, 0.84);
 		    display: block;
 		    font-size: 11px;
@@ -338,4 +346,12 @@ border: 1px solid rgba(210, 160, 155, 0.89);
 		font-size: 16px;
 		padding-left: 3px;
 	}
+}
+
+@include breakpoint($bkpt-xxlarge) {
+
+	.show {
+		display: block;
+	}
+
 }

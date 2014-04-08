@@ -18,18 +18,24 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
         processGlobalInfo: function (data) {
             
             if (helpers.isRealTimePage() === false) {
-                $attentionBox.show();
+                $attentionBox.removeClass('hide').addClass('show');
             }
+
+            var buildLoad = data['build_load'];
+
             buildQueueTotal.show();
             buildSlavesTotal.show();
-            outerBar.show();
-            $buildLoadBox.show();
+            outerBar.show();             
+                
+            var statusColorClass = buildLoad <= 100? 'green': buildLoad >= 101 && buildLoad <= 200? 'yellow' : 'red';
+            
+            $buildLoadBox.attr({'class':'info-box show '+statusColorClass});            
 
             var slaveCount = data['slaves_count'];
             var slavesInUsePer = (data['slaves_busy'] / slaveCount) * 100.0;
             var slavesFree = slaveCount - data['slaves_busy'];
             var runningBuilds = data['running_builds'];
-            var buildLoad = data['build_load'];
+            
 
             helpers.verticalProgressBar(outerBar.children(), slavesInUsePer);
             outerBar.attr("title", "{0} builds are running, {1}, agents are idle".format(runningBuilds, slavesFree));
