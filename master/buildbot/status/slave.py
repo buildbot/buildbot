@@ -114,7 +114,9 @@ class SlaveStatus:
         result['admin'] = self.getAdmin()
         result['version'] = self.getVersion()
         result['connected'] = self.isConnected()
-        result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
+        builds = [b.asDict() for b in self.getRunningBuilds()]
+        builds = sorted(builds, key=lambda b: b['isWaiting'])
+        result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()
         return result
 
