@@ -28,6 +28,7 @@ class TestBuildStepStatus(unittest.TestCase):
         self.master.basedir = '/basedir'
 
         b = builder.BuilderStatus(buildername, self.master, category)
+        b.project = "Project"
         b.master = self.master
         # Ackwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())
@@ -45,9 +46,9 @@ class TestBuildStepStatus(unittest.TestCase):
         b = self.setupBuilder('builder_1')
         bs = b.newBuild()
         self.assertEquals(0, bs.getNumber())
-        bss1 = bs.addStepWithName('step_1')
+        bss1 = bs.addStepWithName('step_1', None)
         self.assertEquals('step_1', bss1.getName())
-        bss2 = bs.addStepWithName('step_2')
+        bss2 = bs.addStepWithName('step_2', None)
         self.assertEquals(0, bss1.asDict()['step_number'])
         self.assertEquals('step_2', bss2.getName())
         self.assertEquals(1, bss2.asDict()['step_number'])
@@ -57,11 +58,11 @@ class TestBuildStepStatus(unittest.TestCase):
         b = self.setupBuilder('builder_1')
         self.setupStatus(b)
         bs = b.newBuild()
-        bss1 = bs.addStepWithName('step_1')
+        bss1 = bs.addStepWithName('step_1', None)
         bss1.stepStarted()
         bss1.addLog('log_1')
         self.assertEquals(
             bss1.asDict()['logs'],
-            [['log_1', ('http://localhost:8080/builders/builder_1/'
+            [['log_1', ('http://localhost:8080/projects/Project/builders/builder_1/'
                         'builds/0/steps/step_1/logs/log_1')]]
             )

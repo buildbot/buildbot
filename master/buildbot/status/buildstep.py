@@ -62,7 +62,7 @@ class BuildStepStatus(styles.Versioned):
     step_number = None
     hidden = False
 
-    def __init__(self, parent, master, step_number):
+    def __init__(self, parent, master, step_number, step_type):
         assert interfaces.IBuildStatus(parent)
         self.build = parent
         self.step_number = step_number
@@ -78,6 +78,7 @@ class BuildStepStatus(styles.Versioned):
         self.master = master
 
         self.waitingForLocks = False
+        self.step_type = step_type
 
     def getName(self):
         """Returns a short string with the name of this step. This string
@@ -107,6 +108,9 @@ class BuildStepStatus(styles.Versioned):
 
     def getURLs(self):
         return self.urls.copy()
+
+    def getStepType(self):
+        return self.step_type
 
     def isStarted(self):
         return (self.started is not None)
