@@ -33,16 +33,6 @@ Authentication
         If the login fails unexpectedly, it raises ``resource.Error``.
         The default implementation simply returns without setting ``user_info``.
 
-    .. py:method:: authenticateViaLogin(request)
-
-        :param request: the request object
-
-        Entry point for login via /login request. The default UI is passing the login credential via BasicAuth method. One can verify the login credential via deferred using this simple API. Once the user is authenticated, this method is responsible for filling ``request.getSession().user_info``, by calling ``updateUserInfo()``
-        returns a deferred which fires with ignored results, when the authentication task is done.
-        If it succeeded, ``request.getSession().user_info`` is defined.
-        If it failed, ``resource.Error`` must be raised.
-        If it is not implemented, the deferred will fire with user_info unset.
-
     .. py:method:: getLoginResource()
 
         Return the resource representing ``/auth/login``.

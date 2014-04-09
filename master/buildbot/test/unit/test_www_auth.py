@@ -65,17 +65,11 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
     def test_maybeAutoLogin(self):
         self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), None)
 
-    def test_authenticateViaLogin(self):
-        self.assertRaises(Error, lambda:
-                          self.auth.authenticateViaLogin(self.req))
-
     def test_getLoginResource(self):
-        self.assertIsInstance(self.auth.getLoginResource(),
-                              auth.LoginResource)
+        self.assertRaises(Error, self.auth.getLoginResource)
 
     def test_getLogoutResource(self):
-        self.assertIsInstance(self.auth.getLogoutResource(),
-                              auth.LogoutResource)
+        self.assertRaises(Error, self.auth.getLogoutResource)
 
     @defer.inlineCallbacks
     def test_updateUserInfo(self):
@@ -171,17 +165,15 @@ class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
 
 class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
 
-    def setUp(self):
-        self.setUpAuthResource()
-        self.rsrc = auth.LoginResource(self.master)
-
     @defer.inlineCallbacks
     def test_render(self):
-        self.auth.authenticateViaLogin = mock.Mock()
+        self.setUpAuthResource()
+        self.rsrc = auth.LoginResource(self.master)
+        self.rsrc.renderLogin = mock.Mock(
+            spec=self.rsrc.renderLogin, return_value=defer.succeed('hi'))
 
-        res = yield self.render_resource(self.rsrc, '/auth/login')
-        self.assertEqual(res, "")
-        self.auth.authenticateViaLogin.assert_called()
+        yield self.render_resource(self.rsrc, '/auth/login')
+        self.rsrc.renderLogin.assert_called_with(mock.ANY)
 
 
 class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
@@ -194,7 +186,6 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
     @defer.inlineCallbacks
     def test_render(self):
         self.auth.maybeAutoLogin = mock.Mock()
-        self.auth.authenticateViaLogin = mock.Mock()
 
         def updateUserInfo(request):
             session = request.getSession()
@@ -204,7 +195,6 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
         res = yield self.render_resource(self.rsrc, '/auth/login')
         self.assertEqual(res, "")
         self.failIf(self.auth.maybeAutoLogin.called)
-        self.failIf(self.auth.authenticateViaLogin.called)
         self.auth.updateUserInfo.assert_called()
         self.assertEqual(self.master.session.user_info,
                          {'email': 'him@org', 'username': 'him'})

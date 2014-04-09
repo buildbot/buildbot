@@ -56,14 +56,11 @@ class AuthBase(config.ConfiguredMixin):
     def maybeAutoLogin(self, request):
         return defer.succeed(None)
 
-    def authenticateViaLogin(self, request):
+    def getLoginResource(self):
         raise Error(501, "not implemented")
 
-    def getLoginResource(self):
-        return LoginResource(self.master)
-
     def getLogoutResource(self):
-        return LogoutResource(self.master)
+        raise Error(501, "not implemented")
 
     @defer.inlineCallbacks
     def updateUserInfo(self, request):
@@ -81,6 +78,16 @@ class UserInfoProviderBase(config.ConfiguredMixin):
 
     def getUserInfo(self, username):
         return defer.succeed({'email': username})
+
+
+class LoginResource(resource.Resource):
+
+    def render_GET(self, request):
+        return self.asyncRenderHelper(request, self.renderLogin)
+
+    @defer.inlineCallbacks
+    def renderLogin(self, request):
+        raise NotImplementedError
 
 
 class NoAuth(AuthBase):
@@ -114,10 +121,6 @@ class RemoteUserAuth(AuthBase):
             session.user_info = dict(res.groupdict())
             yield self.updateUserInfo(request)
 
-    def authenticateViaLogin(self, request):
-        raise Error(403, "Please check with your administrator"
-                         ", there is an issue with the reverse proxy")
-
 
 class AuthRealm(object):
     implements(IRealm)
@@ -146,6 +149,9 @@ class TwistedICredAuthBase(AuthBase):
             Portal(AuthRealm(self.master, self), self.checkers),
             self.credentialFactories)
 
+    def getLogoutResource(self):
+        return LogoutResource(self.master)
+
 
 class HTPasswdAuth(TwistedICredAuthBase):
 
@@ -167,16 +173,6 @@ class BasicAuth(TwistedICredAuthBase):
              BasicCredentialFactory("buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
-
-
-class LoginResource(resource.Resource):
-
-    def render_GET(self, request):
-        return self.asyncRenderHelper(request, self.renderLogin)
-
-    @defer.inlineCallbacks
-    def renderLogin(self, request):
-        yield self.master.config.www['auth'].authenticateViaLogin(request)
 
 
 class PreAuthenticatedLoginResource(LoginResource):
