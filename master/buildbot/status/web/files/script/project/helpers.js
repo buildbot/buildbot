@@ -222,7 +222,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                     $(form).ajaxSubmit(function(data) {
                         requirejs(['realtimePages'], function (realtimePages) {
                             var name = dataReturnPage.replace("_json", "");
-                            realtimePages.updateSingleRealTimeData(name, data);
+                            realtimePages.updateSingleRealTimeData(name, data, true);
                         });
                     });
 				});
