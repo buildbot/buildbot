@@ -45,11 +45,12 @@ class LRUCache(object):
         self.miss_fn = miss_fn
 
     def put(self, key, value):
-        if key in self.cache:
-            self.cache[key] = value
-            self.weakrefs[key] = value
-        elif key in self.weakrefs:
-            self.weakrefs[key] = value
+        cached = key in self.cache or key in self.weakrefs
+        self.cache[key] = value
+        self.weakrefs[key] = value
+        self._ref_key(key)
+        if not cached:
+            self._purge()
 
     def get(self, key, **miss_fn_kwargs):
         try:

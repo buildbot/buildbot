@@ -46,6 +46,9 @@ class FakeCache(object):
         d.addCallback(mkref)
         return d
 
+    def put(self, key, val):
+        pass
+
 
 class FakeCaches(object):
 
