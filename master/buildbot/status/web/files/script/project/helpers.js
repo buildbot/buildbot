@@ -1,4 +1,4 @@
-define(['screensize','text!templates/popups.mustache', 'mustache'], function (screenSize,popups,Mustache) {
+define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment"], function (screenSize,popups,Mustache, extendMoment) {
 
     "use strict";
     var helpers;
@@ -458,38 +458,25 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
 			
-		}, startCounter: function(el, myStartTimestamp) { 
-			var startTimestamp = parseInt(myStartTimestamp);			    
-		    var end = Math.round(+new Date()/1000);	
-		    var time = end - startTimestamp;	
-			var getTime = Math.round(time);
+		}, startCounter: function(el, myStartTimestamp) {
+			var startTimestamp = parseInt(myStartTimestamp),
+            old_lang = moment.lang();
+
 			function timeVars() {
-			var 
-				days = Math.floor(getTime / 86400),
-				hours = Math.floor(getTime / 3600) % 24,
-		        minutes = Math.floor(getTime / 60 % 60),
-		        seconds = Math.floor(getTime % 60),
-		        arr = [];
-		   		 if (days > 0) {
-				    arr.push(days == 1 ? '1 day ' : days + ' days');
-				 }
-		         if (hours > 0) {
-				    arr.push(hours == 1 ? '1 hr ' : hours + ' hrs');
-				 }
-				 if (minutes > 0 || hours > 0) {
-				    arr.push(minutes > 1 ? minutes + ' mins' : minutes + ' min');
-				 }
-				 if (seconds > 0 || minutes > 0 || hours > 0) {
-				    arr.push(seconds > 1 ? seconds + ' secs' : seconds + ' sec');
-				 }
-				 el.html(arr.join(' '));
+                var now = extendMoment.getServerTime().unix(),
+                time = now - startTimestamp;
+
+                moment.lang('waiting-en');
+                $(el).html(moment.duration(time, 'seconds').humanize(true));
+                moment.lang(old_lang);
 			}
 			timeVars();
 			(function repeatTimeout(){
-				getTime++;
-				timeVars();
-				setTimeout(repeatTimeout, 1000);			 
-			})();		    	
+                if (!$.contains(document, el)) {
+				    timeVars();
+				    setTimeout(repeatTimeout, 1000);
+                }
+			})();
         }, inDOM: function(element) {
             return element.closest(document.documentElement).size() > 0;
 		}, delegateToProgressBar: function (bars) {
@@ -503,66 +490,69 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			el.height("{0}%".format(per));
 
 		}, progressBar: function(etaTime, el, startTime) {
-			var start = moment.unix(startTime),
-			percentInner = el.children('.percent-inner-js'),
-			timeTxt = el.children('.time-txt-js');
-            var hasETA = etaTime != 0;
-            var overtime = etaTime < 0;
+            var serverOffset = extendMoment.getServerOffset(),
+                start = moment.unix(startTime),
+                percentInner = el.children('.percent-inner-js'),
+                timeTxt = el.children('.time-txt-js'),
+                hasETA = etaTime != 0,
+                overtime = etaTime < 0;
 
-			function timeVars() {
+            function timeVars() {
                 var percent = 100;
                 var old_lang = moment.lang();
 
                 if (hasETA) {
-                    var now = moment(),
-                    addSubtract = overtime ? etaTime++ : etaTime--,
-                    then = moment().add('s',addSubtract),
-                    etaEpoch = now + (etaTime * 1000.0);
+                    var now = moment() + serverOffset,
+                        addSubtract = overtime ? etaTime++ : etaTime--,
+                        then = moment().add('s', addSubtract) + serverOffset,
+                        etaEpoch = now + (etaTime * 1000.0);
 
                     percent = 100 - (then - now) / (then - start) * 100;
-                    percent = percent.clamp(0,100);
+                    percent = percent.clamp(0, 100);
 
                     moment.lang('progress-bar-en');
-                    timeTxt.html(moment(etaEpoch).fromNow());
+                    timeTxt.html(moment(etaEpoch).fromServerNow());
 
                     if (now > etaEpoch)
                         el.addClass('overtime');
                 }
                 else {
                     moment.lang('progress-bar-no-eta-en');
-                    timeTxt.html(moment(parseInt(startTime * 1000)).fromNow());
+                    timeTxt.html(moment(parseInt(startTime * 1000)).fromServerNow());
                 }
 
                 //Reset language to original
                 moment.lang(old_lang);
-                percentInner.css('width',percent + "%");
-			}
-			timeVars();
+                percentInner.css('width', percent + "%");
+            }
 
-			(function repeatTimeout() {	 
-	        	timeVars();
-                setTimeout(function(){
+            timeVars();
+
+            (function repeatTimeout() {
+                timeVars();
+                setTimeout(function () {
                     if (helpers.inDOM(percentInner)) {
                         repeatTimeout()
                     }
                 }, 1000);
-			})();
+            })();
 		}, startCounterTimeago: function(el, myStartTimestamp) {
-			function timeVars() {
-				var startTimestamp = parseInt(myStartTimestamp);			    		    
-				var lastMessageTimeAgo = moment.unix(startTimestamp).fromNow();							
-				el.html(lastMessageTimeAgo);	
-			}
-			timeVars();		    
-		    (function repeatTimeout(){
-		    	timeVars();
-		    	setTimeout(function() {
+            function timeVars() {
+                var startTimestamp = parseInt(myStartTimestamp);
+                var lastMessageTimeAgo = moment.unix(startTimestamp).fromServerNow();
+                el.html(lastMessageTimeAgo);
+            }
+
+            timeVars();
+            (function repeatTimeout() {
+                timeVars();
+                setTimeout(function () {
                     if (helpers.inDOM(el)) {
                         repeatTimeout();
                     }
                 }, 1000);
-		    })()
-		}, getTime: function  (start, end) {
+            })()
+        }, getTime: function  (start, end) {
 	
 			if (end === null) {
 				end = Math.round(+new Date()/1000);	
