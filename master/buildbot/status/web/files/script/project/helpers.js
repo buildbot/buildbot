@@ -108,6 +108,10 @@ define(['screensize','text!templates/popups.mustache', 'mustache'], function (sc
 			});
 			helpers.tooltip($('.tooltip'));
 
+		}, randomImage: function (el) {
+			var images = ['48273828.jpg'];						
+			el.attr('src', 'images/' + images[Math.floor(Math.random() * images.length)]);
+
 		}, tooltip: function (el) {
 			
 			el.hover(function(e) {

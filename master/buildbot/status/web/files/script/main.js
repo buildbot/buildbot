@@ -90,6 +90,12 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
 	    	$('body').append(preloader);        	
         }
+
+        if ($('#home_page').length > 0) {
+        	helpers.randomImage($('#image img'));	
+        }
+
+        
 				
 		// get scripts for general popups
 		popup.init();
