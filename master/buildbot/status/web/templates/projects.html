@@ -3,6 +3,8 @@
 {% import 'submenu.html' as submenu %}
 {% extends "layout.html" %}
 
+{% set bodyId = 'id="projects_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu(active_page="projects", pathNum=2, builderName='', buildNumber='', stepName='', codebasesPath='')}}
 {% endblock %}

@@ -147,7 +147,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
             var script = $('#instant-json');
             // remove prelaoder
             $('#bowlG').remove();
-            $('#tablesorterRt').show();
+            $('#tablesorterRt, .initjson').show();
             if (script.length) {
                 script.remove();
                 return instantJSON;

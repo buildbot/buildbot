@@ -124,7 +124,7 @@ border: 1px solid #9F9B41;
 			    letter-spacing: 0.9px;
 			    padding: 17px 25px 16px;
 			    text-decoration: none;
-
+				float:left;
 			    text-transform: uppercase;
 			    @include transition( opacity 0.2s ease-in-out 0s);
 			&:hover {
@@ -138,7 +138,7 @@ border: 1px solid #9F9B41;
 		.arrow-down-btn {
 			cursor: pointer;
 			&:after {
-			    @include bgimage (linear-gradient(center top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
+			    @include bgimage (linear-gradient(top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
     border: 1px solid #C4C4C4;
     border-radius: 4px;
     
