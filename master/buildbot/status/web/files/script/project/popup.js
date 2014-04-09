@@ -256,12 +256,18 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
                 helpers.closePopup(mib);
 
                 if (dataReturnPage !== undefined) {
-                    exContent.find('form').ajaxForm(function(data) {
-                        requirejs(['realtimePages'], function (realtimePages) {
+                    exContent.find('form').ajaxForm({
+                        beforeSubmit: function () {
+                            body.append(preloader);
                             exContent.closest('.more-info-box').find('.close-btn').click();
-                            var name = dataReturnPage.replace("_json", "");
-                            realtimePages.updateSingleRealTimeData(name, data);
-                        });
+                        },
+                        success: function (data) {
+                            requirejs(['realtimePages'], function (realtimePages) {
+                                preloader.remove();
+                                var name = dataReturnPage.replace("_json", "");
+                                realtimePages.updateSingleRealTimeData(name, data);
+                            });
+                        }
                     });
                 }
 			});

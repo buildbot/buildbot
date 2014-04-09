@@ -3,6 +3,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
     var sock = null;
     var realTimeFunctions = {};
     var realtimeURLs = {};
+    var realTimeLastUpdated = {};
 
     //Realtime commands
     var KRT_JSON_DATA = "krtJSONData";
@@ -12,6 +13,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
     //Timeouts
     var iURLDroppedTimeout = 30000;
     var iServerDisconnectTimeout = 30000;
+    var KRT_RELOAD_CD = 5000; //Amount of time before we can reload data
 
     var realtimePages = {
         createWebSocket: function (wsURI) {
@@ -79,7 +81,8 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
             }
 
             //Stop caching on browser back button for realtime pages
-            window.onbeforeunload = function() {};
+            window.onbeforeunload = function () {
+            };
         },
         sendCommand: function (cmd, data) {
             if (sock) {
@@ -114,9 +117,9 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
                 realtimePages.updateSingleRealTimeData(name, json['data'])
             }
         },
-        getRealtimeNameFromURL: function(url) {
+        getRealtimeNameFromURL: function (url) {
             var name = undefined;
-            $.each(realtimeURLs, function(n, u){
+            $.each(realtimeURLs, function (n, u) {
                 if (u === url) {
                     name = n;
                     return false;
@@ -126,9 +129,17 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
 
             return name;
         },
-        updateSingleRealTimeData: function(name, data) {
-            if (realTimeFunctions.hasOwnProperty(name)) {
+        updateSingleRealTimeData: function (name, data, force) {
+            var shouldUpdate = true;
+            var now = new Date();
+            if ((force == undefined || !force) && realTimeLastUpdated.hasOwnProperty(name)) {
+                if ((now - realTimeLastUpdated[name]) < KRT_RELOAD_CD) {
+                    shouldUpdate = false;
+                }
+            }
+            if (shouldUpdate && realTimeFunctions.hasOwnProperty(name)) {
                 realTimeFunctions[name](data);
+                realTimeLastUpdated[name] = now;
                 console.log("Reloading data for {0}...".format(name));
             }
         },
