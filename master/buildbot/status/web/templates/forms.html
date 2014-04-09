@@ -165,11 +165,11 @@
   <input type='hidden' name='forcescheduler' value='{{sch.name}}' />
 <div class="content-blocks">
   <div class="general">
-    <p class="form-message">Fill out revision information for all codebases or leave all revision information blank and click the 'Run' button.</p>
+    <p class="form-message">Fill out revision information for all codebases (or leave all revision information blank to use the latest revision on the selected branch) and click the 'Run' button.</p>
 
     <div class="row force-text" id="force-{{ sch.name }}-slave">
     {% if slaves %}
-        <span class="label">Specify slave</span>
+        <span class="label">Specify Slave</span>
            <span title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases." class="tooltip question-icon">
       </span>
         <select id="selected_slave" name="selected_slave" class="select"> 
@@ -259,20 +259,6 @@
         </tr>
       </tbody>
     </table>
-    
-  </div>
-  <div class="slaves-block">
-    <div id="force-allBranches-username" class="row force-text">
-     <span class="label">Slaves</span>
-      <select>
-        <option>
-          mac-ios-slave-07 
-        </option>
-        <option>
-          mac-slave-01.local 
-        </option>
-      </select>  
-    </div>
     
   </div>
   #}
