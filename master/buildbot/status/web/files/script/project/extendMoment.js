@@ -40,8 +40,8 @@ define(['moment', 'helpers'], function (moment) {
             moment.lang('progress-bar-no-eta-en', {relativeTime: timeDict});
 
             timeDict = momentExtend.getRelativeTimeDict();
-            timeDict['past'] = "Waiting %s";
-            timeDict['future'] = "Waiting %s";
+            timeDict['past'] = "%s";
+            timeDict['future'] = "%s";
             moment.lang('waiting-en', {relativeTime: timeDict});
 
             //Set default language
