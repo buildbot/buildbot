@@ -735,7 +735,7 @@ Here's a simple example that you might have in your
 .. bb:chsrc:: P4Source
 
 .. _P4Source:
-    
+
 P4Source
 ~~~~~~~~
 
@@ -783,6 +783,14 @@ depot for changes. It accepts the following arguments:
     The timezone of the Perforce server, using the usual timezone format
     (e.g: ``Europe/Stockholm``) in case it's in a different timezone than the
     buildbot master.
+
+``use_tickets``
+    Set to ``True`` to use ticket-based authentication, instead of passwords (but
+    you still need to specify ``p4passwd``).
+
+``ticket_login_interval``
+    How often to get a new ticket, in seconds, when ``use_tickets`` is enabled.
+    Defaults to 86400 (24 hours).
 
 Example
 +++++++

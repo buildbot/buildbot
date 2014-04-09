@@ -813,6 +813,9 @@ you will receive a configuration error exception.
 
         P4(p4extra_args=['-Zproxyload'], ...)
 
+``use_tickets``
+    Set to ``True`` to use ticket-based authentication, instead of passwords (but
+    you still need to specify ``p4passwd``).
 
 
 .. index:: double: Gerrit integration; Repo Build Step

@@ -34,6 +34,8 @@ Features
 
 * P4 source step now supports more advanced options.
 
+* Both the P4 source step and P4 change source support ticket-based authentication.
+
 * The ``comments`` field of changes is no longer limited to 1024 characters on MySQL and Postgres.  See :bb:bug:`2367` and :bb:pull:`736`.
 
 * The WebStatus builder page can now filter pending/current/finished builds by property parameters of the form ``?property.<name>=<value>``.
