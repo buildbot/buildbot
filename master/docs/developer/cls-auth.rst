@@ -24,13 +24,14 @@ Authentication
     .. py:method:: maybeAutoLogin(request)
 
         :param request: the request object
+        :returns: Deferred
 
-        Automatically login the user on one of the first request (when browser fetches ``/config.js``). This is the entry-point for reverse-proxy driven authentication.
+        This method is called when ``/config.js`` is fetched.
+        If the authentication method supports automatic login, e.g., from a header provided by a frontend proxy, this method handles the login.
 
-        returns a deferred which fires with ignored results, when the authentication task is done.
-        If it succeeded, ``request.getSession().user_info`` is defined.
-        If it failed, ``resource.Error`` must be raised.
-        If it is not implemented, the deferred will fire with user_info unset.
+        If it succeeds, the method sets ``request.getSession().user_info``.
+        If the login fails unexpectedly, it raises ``resource.Error``.
+        The default implementation simply returns without setting ``user_info``.
 
     .. py:method:: authenticateViaLogin(request)
 

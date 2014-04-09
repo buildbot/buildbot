@@ -54,7 +54,7 @@ class AuthBase(config.ConfiguredMixin):
         self.master = master
 
     def maybeAutoLogin(self, request):
-        return defer.succeed(False)
+        return defer.succeed(None)
 
     def authenticateViaLogin(self, request):
         raise Error(501, "not implemented")
@@ -113,7 +113,6 @@ class RemoteUserAuth(AuthBase):
         if not hasattr(session, "user_info"):
             session.user_info = dict(res.groupdict())
             yield self.updateUserInfo(request)
-        defer.returnValue(True)
 
     def authenticateViaLogin(self, request):
         raise Error(403, "Please check with your administrator"

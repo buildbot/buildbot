@@ -63,7 +63,7 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
-        self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), False)
+        self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), None)
 
     def test_authenticateViaLogin(self):
         self.assertRaises(Error, lambda:
