@@ -494,8 +494,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 start = moment.unix(startTime),
                 percentInner = el.children('.percent-inner-js'),
                 timeTxt = el.children('.time-txt-js'),
-                hasETA = etaTime != 0,
-                overtime = etaTime < 0;
+                hasETA = etaTime != 0;
 
             function timeVars() {
                 var percent = 100;
@@ -503,9 +502,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
                 if (hasETA) {
                     var now = moment() + serverOffset,
-                        addSubtract = overtime ? etaTime++ : etaTime--,
-                        then = moment().add('s', addSubtract) + serverOffset,
-                        etaEpoch = now + (etaTime * 1000.0);
+                        etaEpoch = now + (etaTime * 1000.0),
+                        overtime = etaTime < 0,
+                        then = moment().add('s', etaTime) + serverOffset;
 
                     percent = 100 - (then - now) / (then - start) * 100;
                     percent = percent.clamp(0, 100);
@@ -513,8 +512,10 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                     moment.lang('progress-bar-en');
                     timeTxt.html(moment(etaEpoch).fromServerNow());
 
-                    if (now > etaEpoch)
+                    if (overtime)
                         el.addClass('overtime');
+
+                    etaTime--;
                 }
                 else {
                     moment.lang('progress-bar-no-eta-en');
