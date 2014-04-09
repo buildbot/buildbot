@@ -107,7 +107,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  split_file=lambda branchfile: (None, branchfile),
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
-                 use_tickets=False, ticket_login_interval=60 * 24,
+                 use_tickets=False, ticket_login_interval=60 * 60 * 24,
                  server_tz=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
