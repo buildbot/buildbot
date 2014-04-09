@@ -212,7 +212,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 urlParams = helpers.codebasesFromURL(urlParams);
 
 				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
-					$('#bowlG').remove();
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
                     // Add the value from the cookie to the disabled and hidden field
                     helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
@@ -223,6 +222,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                         requirejs(['realtimePages'], function (realtimePages) {
                             var name = dataReturnPage.replace("_json", "");
                             realtimePages.updateSingleRealTimeData(name, data, true);
+                            $('#bowlG').remove();
                         });
                     });
 				});
