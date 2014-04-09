@@ -35,9 +35,11 @@ define(['moment', 'helpers'], function (moment) {
             timeDict['past'] = "Overtime: %s";
             moment.lang('progress-bar-en', {relativeTime: timeDict});
 
+            timeDict = momentExtend.getRelativeTimeDict();
             timeDict['past'] = "Elapsed: %s";
             moment.lang('progress-bar-no-eta-en', {relativeTime: timeDict});
 
+            timeDict = momentExtend.getRelativeTimeDict();
             timeDict['past'] = "Waiting %s";
             timeDict['future'] = "Waiting %s";
             moment.lang('waiting-en', {relativeTime: timeDict});
