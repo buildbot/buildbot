@@ -31,7 +31,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
                 // if the socket connection is success
                 if (sock) {
                     sock.onopen = function () {
-                        $('#bowlG').remove();
+                        $('#bowlG').remove();                        
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
                             realtimePages.sendCommand(KRT_REGISTER_URL, url);
@@ -147,6 +147,7 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
             var script = $('#instant-json');
             // remove prelaoder
             $('#bowlG').remove();
+            $('#tablesorterRt').show();
             if (script.length) {
                 script.remove();
                 return instantJSON;
