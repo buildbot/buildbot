@@ -37,10 +37,6 @@ background-color: #237B74;
 border: 1px solid #3F8E87;
 }
 .red {
-	/*
-	    background-color: rgba(255, 161, 154, 0.1);
-	    border: 1px solid rgba(255, 161, 154, 0.62);
-	*/
 background-color: #A76255;
 border: 1px solid #BC8579;
 } 
@@ -51,6 +47,7 @@ border: 1px solid #9F9B41;
 }
 
 .top-menu-container {
+	//-moz-linear-gradient(center top , #275F8C 0%, #22435E 100%) lighter!
 	@include bgimage (linear-gradient(top , #215076 0%, #22435E 100%));
 	@include pie-clearfix;
 }
@@ -141,7 +138,7 @@ border: 1px solid #9F9B41;
 		.arrow-down-btn {
 			cursor: pointer;
 			&:after {
-			    @include bgimage (linear-gradient(top , #DFE2EA 0%, #EEF0F5 100%));
+			    @include bgimage (linear-gradient(center top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
     border: 1px solid #C4C4C4;
     border-radius: 4px;
     
@@ -187,7 +184,7 @@ border: 1px solid #9F9B41;
 	
 	ul.top-menu {
 		display: none;
-		z-index:1;
+		z-index:2;
 		float:none;
 		position:absolute;
 		background-color: #eee;
@@ -217,9 +214,9 @@ border: 1px solid #9F9B41;
 				border-bottom: 1px solid #CCCCCC;
 			}
 			&.selected > a {
-				   border-top: 4px solid rgba(255, 255, 255, 0.84);
-    margin: 0 25px;
-    padding: 13px 0 0;
+				   border-top: 4px solid #2B6194;
+				    margin: 0 25px;
+				    padding: 13px 0 0;
 			}
 			&.selected > a, 
 			& > a {
@@ -227,6 +224,7 @@ border: 1px solid #9F9B41;
 				text-transform: none;
 				font-size: 11px;
 				margin: 0;
+				color:#2B6194;
 			}
 		}
 	}
@@ -280,12 +278,12 @@ border: 1px solid #9F9B41;
 		font-weight: bold;
 		letter-spacing:1.1px;
 		line-height:12px;
-		//@include text-shadow(0 1px 0 rgba(0, 0, 0, 0.13));
+		@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.3));
 		&:first-child {
 			padding-left:123px;
 		}
 		a {
-			//@include text-shadow (0 1px 0 rgba(255, 255, 255, 0.47));
+			@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.44));
 			 color: #fff;
     
 			&:hover{
