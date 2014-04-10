@@ -319,7 +319,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
         buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
-        text = "katana working for '%s'\n" % status.getTitle()
+        text = "Katana working for '%s'\n" % status.getTitle()
         text += ("has noticed that the buildslave named %s went away\n" %
                  self.slavename)
         text += "\n"
