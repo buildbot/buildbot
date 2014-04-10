@@ -1,4 +1,4 @@
-define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
+define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helpers, dt, extendMoment) {
     "use strict";
     var buildQueueTotal = $('#buildQueueTotal');
     var buildSlavesTotal = $('#buildSlavesTotal');
@@ -16,6 +16,7 @@ define(['jquery', 'helpers', 'dataTables'], function ($, helpers, dt) {
             });
         },
         processGlobalInfo: function (data) {
+            extendMoment.setServerTime(data['utc']);
             
             if (helpers.isRealTimePage() === false) {
                 $attentionBox.removeClass('hide').addClass('show');

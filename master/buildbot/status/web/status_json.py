@@ -882,6 +882,7 @@ class GlobalJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
+        import time
         connected_slaves = []
         slave_busy = []
         for s in self.slaves:
@@ -900,9 +901,11 @@ class GlobalJsonResource(JsonResource):
         result = {"slaves_count": len(connected_slaves),
                   "slaves_busy": len(slave_busy),
                   "running_builds": len(current_builds),
-                  "build_load": len(queue) + len(current_builds)}
+                  "build_load": len(queue) + len(current_builds),
+                  "utc": time.time() * 1000}
 
         defer.returnValue(result)
+
 
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""

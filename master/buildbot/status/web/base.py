@@ -280,7 +280,6 @@ class ContextMixin(AccessorMixin):
                     path_to_root = rootpath,
                     version = version,
                     realTimeServer = self.getRealTimeServer(request),
-                    utc = time.time() * 1000,
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
                     tz = locale_tz,
