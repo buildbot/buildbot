@@ -649,8 +649,8 @@ class BuildStep(object, properties.PropertiesMixin):
             # due to slave lost
             results = EXCEPTION
             self.step_status.setText(self.describe(True) +
-                                 ["interrupted"])
-            self.step_status.setText2(["interrupted"])
+                                 ["(build was interrupted)"])
+            self.step_status.setText2(["(build was interrupted)"])
         self._finishFinished(results)
 
     def addErrorResult(self, why):
@@ -911,8 +911,8 @@ class LoggingBuildStep(BuildStep):
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
         self.step_status.setText(self.describe(True) +
-                                 ["exception", "slave", "lost"])
-        self.step_status.setText2(["exception", "slave", "lost"])
+                                 ["(lost connection with slave)"])
+        self.step_status.setText2(["(lost connection with slave)"])
         return self.finished(RETRY)
 
     def commandComplete(self, cmd):

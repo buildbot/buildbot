@@ -495,16 +495,16 @@ class Build(properties.PropertiesMixin):
 
     def allStepsDone(self):
         if self.result == FAILURE:
-            text = ["failed"]
+            text = ["Build Failed"]
         elif self.result == WARNINGS:
-            text = ["warnings"]
+            text = ["Build Finished with Warnings"]
         elif self.result == EXCEPTION:
-            text = ["exception"]
+            text = ["Build Caught Exception (probably an interruption)"]
         elif self.result == RETRY:
-            text = ["retry"]
+            text = ["Build Caught Exception, Will Retry"]
         else:
-            text = ["build", "successful"]
-        text.extend(self.text)
+            text = ["Build Finished Successfully"]
+        #text.extend(self.text)
         return self.buildFinished(text, self.result)
 
     def buildException(self, why):
