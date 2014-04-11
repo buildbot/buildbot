@@ -79,10 +79,6 @@ define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
             else {
                 console.log("Realtime server not found, disabling realtime.");
             }
-
-            //Stop caching on browser back button for realtime pages
-            window.onbeforeunload = function () {
-            };
         },
         sendCommand: function (cmd, data) {
             if (sock) {

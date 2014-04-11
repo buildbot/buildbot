@@ -409,6 +409,7 @@ class HtmlResource(resource.Resource, ContextMixin):
             if isinstance(data, unicode):
                 data = data.encode("utf-8")
             request.setHeader("content-type", self.contentType)
+            request.setHeader("Cache-Control", "no-cache, max-age=0, must-revalidate, no-store")
             if request.method == "HEAD":
                 request.setHeader("content-length", len(data))
                 return ''
