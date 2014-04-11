@@ -380,3 +380,13 @@ body.log.interface {
 @include breakpoint($bkpt-xxlarge) {
 	.hide-mobile {display:inline;}		
 }
+
+.builders-status-truncate {
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    display: -moz-inline-stack;
+    display: inline-block;
+}

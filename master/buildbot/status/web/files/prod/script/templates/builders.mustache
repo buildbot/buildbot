@@ -13,10 +13,11 @@
 {{#currentBuilds}}
     <ul class="list current-job-js building">	    	    		
 			<li>
-				<a href="{{builder_url}}/builds/{{number}}">{{number}}</a>
+				<div class="builders-status-truncate"><a href="{{builder_url}}/builds/{{number}}">{{number}}</a>
 				{{#currentStep}}
-					{{name}}{{^name}}0{{/name}}<span class="spin-icon animate-spin"></span>
+					{{name}}</div>
 				{{/currentStep}}
+                <span class="spin-icon animate-spin"></span>
 				{{#eta}}
 					<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
 						<span class="time-txt-js time-txt"></span>
