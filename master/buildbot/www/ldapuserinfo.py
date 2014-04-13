@@ -24,7 +24,7 @@ from twisted.internet import threads
 class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
     name = 'ldap'
 
-    def __init__(self, uri, bind_user, bind_pw,
+    def __init__(self, uri, bindUser, bindPw,
                  accountBase, groupBase,
                  accountPattern, groupMemberPattern,
                  accountFullName,
@@ -36,8 +36,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         avatar.AvatarBase.__init__(self)
         auth.UserInfoProviderBase.__init__(self)
         self.uri = uri
-        self.bind_user = bind_user
-        self.bind_pw = bind_pw
+        self.bindUser = bindUser
+        self.bindPw = bindPw
         self.accountBase = accountBase
         self.accountEmail = accountEmail
         self.accountPattern = accountPattern
@@ -53,7 +53,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         def thd():
             infos = {'username': username}
             l = ldap.initialize(self.uri)
-            l.simple_bind_s(self.bind_user, self.bind_pw)
+            l.simple_bind_s(self.bindUser, self.bindPw)
             pattern = self.accountPattern % dict(username=username)
             res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [
                 self.accountEmail, self.accountFullName, 'dn'] + self.accountExtraFields)
@@ -87,7 +87,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
     def getUserAvatar(self, user_email, size, defaultAvatarUrl):
         def thd():
             l = ldap.initialize(self.uri)
-            l.simple_bind_s(self.bind_user, self.bind_pw)
+            l.simple_bind_s(self.bindUser, self.bindPw)
             pattern = self.avatarPattern % dict(email=user_email)
             res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [self.avatarData])
             if len(res) == 0:

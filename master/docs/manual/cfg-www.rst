@@ -223,11 +223,11 @@ These can be passed to :py:class:`~buildbot.www.auth.RemoteUserAuth` and as an e
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bind_user, bind_pw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
+.. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
 
         :param uri: uri of the ldap server
         :param bind_user: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
-        :param bind_pw: password of the ``bind_user``
+        :param bind_pw: password of the ``bindUser``
         :param accountBase: the base dn (distinguished name)of the user database
         :param groupBase: the base dn of the groups database
         :param accountPattern: the pattern for searching in the account database. This must contain the ``%(username)s`` string, which is replaced by the searched username

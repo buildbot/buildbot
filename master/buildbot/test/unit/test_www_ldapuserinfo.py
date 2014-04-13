@@ -47,7 +47,7 @@ class LdapUserInfo(unittest.TestCase):
         fake_ldap.initialize = lambda uri: self.ldap
 
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bind_user="user", bind_pw="pass",
+            uri="ldap://uri", bindUser="user", bindPw="pass",
             accountBase="accbase", groupBase="groupbase",
             accountPattern="accpattern", groupMemberPattern="groupMemberPattern",
             accountFullName="accountFullName",
