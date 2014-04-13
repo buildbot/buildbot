@@ -31,6 +31,7 @@ class AuthResourceMixin:
     def setUpAuthResource(self):
         self.master = self.make_master(url='h:/a/b/')
         self.auth = self.master.config.www['auth']
+        self.master.www.auth = self.auth
         self.auth.master = self.master
 
 
@@ -42,13 +43,13 @@ class AuthRootResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
 
     def test_getChild_login(self):
         glr = mock.Mock(name='glr')
-        self.master.config.www['auth'].getLoginResource = glr
+        self.master.www.auth.getLoginResource = glr
         child = self.rsrc.getChild('login', mock.Mock(name='req'))
         self.assertIdentical(child, glr())
 
     def test_getChild_logout(self):
         glr = mock.Mock(name='glr')
-        self.master.config.www['auth'].getLogoutResource = glr
+        self.master.www.auth.getLogoutResource = glr
         child = self.rsrc.getChild('logout', mock.Mock(name='req'))
         self.assertIdentical(child, glr())
 

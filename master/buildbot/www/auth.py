@@ -37,9 +37,9 @@ class AuthRootResource(resource.Resource):
     def getChild(self, path, request):
         # return dynamically generated resources
         if path == 'login':
-            return self.master.config.www['auth'].getLoginResource()
+            return self.master.www.auth.getLoginResource()
         elif path == 'logout':
-            return self.master.config.www['auth'].getLogoutResource()
+            return self.master.www.auth.getLogoutResource()
         return resource.Resource.getChild(self, path, request)
 
 
@@ -187,7 +187,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     def renderLogin(self, request):
         session = request.getSession()
         session.user_info = dict(username=self.username)
-        yield self.master.config.www['auth'].updateUserInfo(request)
+        yield self.master.www.auth.updateUserInfo(request)
 
 
 class LogoutResource(resource.Resource):

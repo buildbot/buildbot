@@ -62,6 +62,10 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         if 'base' not in self.apps:
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
+    @property
+    def auth(self):
+        return self.master.config.www['auth']
+
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
         www = new_config.www

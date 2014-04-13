@@ -24,6 +24,13 @@ Buildbot's authentication subsystem is designed to support several authenticatio
     * Authentication by a third-party website.
       Buildbot sends the user to another site such as GitHub to authenticate and receives a trustworty assertion of the user's identity from that site.
 
+Implementation
+--------------
+
+Authentication is implemented by an instance of :py:class:`~buildbot.www.auth.AuthBase`.
+This instance is supplied directly by the user in the configuration file.
+A reference to the instance is available at ``self.master.www.auth``.
+
 Username / Password Authentication
 ----------------------------------
 
