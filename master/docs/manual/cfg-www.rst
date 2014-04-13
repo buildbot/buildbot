@@ -87,16 +87,16 @@ The available classes are described here:
 
     This class is the default authentication plugin, which disables authentication
 
-.. py:class:: buildbot.www.auth.BasicAuth(users)
+.. py:class:: buildbot.www.auth.UserPasswordAuth(users)
 
     :param users: list of ``("user","password")`` tuples, or a dictionary of ``{"user": "password", ..}``
 
     Simple username/password authentication using a list of user/password tuples provided in the configuration file. ::
 
-        from buildbot.www.auth import BasicAuth
+        from buildbot.www.auth import UserPasswordAuth
         c['www'] = {
             # ...
-            auth=BasicAuth({"homer": "doh!"}),
+            auth=UserPasswordAuth({"homer": "doh!"}),
         }
 
 .. py:class:: buildbot.www.auth.HTPasswdAuth(passwdFile)

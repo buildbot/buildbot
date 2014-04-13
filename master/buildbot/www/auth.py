@@ -164,7 +164,7 @@ class HTPasswdAuth(TwistedICredAuthBase):
             **kwargs)
 
 
-class BasicAuth(TwistedICredAuthBase):
+class UserPasswordAuth(TwistedICredAuthBase):
 
     def __init__(self, users, **kwargs):
         TwistedICredAuthBase.__init__(
