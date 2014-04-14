@@ -1,7 +1,7 @@
 define(['jquery','noise'], function ($,noisy) {
 
     "use strict";
-
+ 
 	$(document).ready(function(){
 
 			$('body').noisy({

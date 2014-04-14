@@ -74,9 +74,10 @@ module.exports = function(grunt) {
           debugInfo: true,
           paths: {
           jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
-          //jquery: 'empty:' //Use this to continue using CDN loading
-          
-          datatables: '../plugins/jquery-datatables'
+          //jquery: 'empty:' //Use this to continue using CDN loading          
+          datatables: '../plugins/jquery-datatables',
+          noise: '../plugins/jquery.noisy'
+
         },
           name: 'testresults-main',
           out: 'prod/script/testresults/testresults-main.js',
