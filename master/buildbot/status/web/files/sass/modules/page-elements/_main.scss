@@ -108,6 +108,10 @@ left: 0;
 position: fixed;
 top: 0;
 width: 100%;
+	.content & {
+		position: absolute;
+		margin-top: -10px;
+	}
 }
 
 #bowl_ringG{

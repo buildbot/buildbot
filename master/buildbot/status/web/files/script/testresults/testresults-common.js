@@ -1,8 +1,16 @@
-define(['jquery'], function ($) {
+define(['jquery','noise'], function ($,noisy) {
 
     "use strict";
 
 	$(document).ready(function(){
+
+			$('body').noisy({
+			    'intensity' : 1,
+			    'size' : 200,
+			    'opacity' : 0.03,
+			    'fallback' : '',
+			    'monochrome' : false
+			});
 
     		$("#filterinput").val("");
 			

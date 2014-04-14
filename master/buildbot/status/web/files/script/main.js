@@ -88,7 +88,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 
 		if (helpers.isRealTimePage() === true) {
 			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
-	    	$('body').append(preloader);        	
+	    	$('div.content').append(preloader);        	
         }
 
         if ($('#home_page').length > 0) {

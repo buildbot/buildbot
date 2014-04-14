@@ -18,6 +18,10 @@ $bkpt-xxlarge: min-width 1600px;
 $bkpt-small-height: (max-height 460px)(orientation landscape);
 $bkpt-large-height: min-height 600px;
 
+.content {
+	min-height:150px;
+}
+
 .container-inner {
 	clear:both;
 	margin: 0 auto;

@@ -114,38 +114,38 @@
 -->
 <xsl:template name="header">
 	<xsl:param name="path"/>
+<header class="header">
+	<nav class="top-menu-container">
+		<div class="container-inner">
+			
+				
+			<div id="dataTablesFilter" class="dataTables_filter">
+				
+				<label class="input-label">
+					<input type="text" placeholder="Free text filter" id="filterinput" />
+				</label>
+					<button class="grey-btn" id="submitFilter">Filter</button>
+					<button class="grey-btn" id="clearFilter">Clear</button>
 
-<nav class="sub-menu-container">
-<div class="container-inner">
-	
-		
-	<div id="dataTablesFilter" class="dataTables_filter">
-		
-		<label class="input-label">
-			<input type="text" placeholder="Free text filter" id="filterinput" />
-		</label>
-			<button class="grey-btn" id="submitFilter">Filter</button>
-			<button class="grey-btn" id="clearFilter">Clear</button>
+				<div id="CheckBoxesList" class="check-boxes-list">
+					<label for="passinput">Passed</label>
+					<input checked="checked" type="checkbox" value="Pass" id="passinput"/>
+					<label for="ignoreinput">ignored</label>
+					<input checked="checked" type="checkbox" value="Ignored" id="ignoreinput"/>
+					<label for="failedinput">Failed</label>
+					<input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
+				</div>
 
-		<div id="CheckBoxesList" class="check-boxes-list">
-			<label for="passinput">Passed</label>
-			<input checked="checked" type="checkbox" value="Pass" id="passinput"/>
-			<label for="ignoreinput">ignored</label>
-			<input checked="checked" type="checkbox" value="Ignored" id="ignoreinput"/>
-			<label for="failedinput">Failed</label>
-			<input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
+			</div>
+			<h1 class="logo">
+		      <a href="/">
+		        <span>K</span>atana
+		      </a>
+		    </h1>
+
 		</div>
-
-	</div>
-	<h1 class="logo">
-      <a href="/">
-        <span>K</span>atana
-      </a>
-    </h1>
-
-</div>
-</nav>
-
+	</nav>
+</header>
 </xsl:template>
 
 <xsl:template name="summaryHeader">

@@ -111,7 +111,10 @@ define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function 
             var oTable = $tableElem.dataTable(options);
 
             // Set the marquee in the input field on load and listen for key event
-            $tableElem.parents('.dataTables_wrapper').find('.dataTables_filter input').attr('placeholder', 'Filter results').focus();
+            var $filterInput = $tableElem.parents('.dataTables_wrapper')
+                .find('.dataTables_filter input')
+                .attr('placeholder', 'Filter results')
+                .focus();                                  
 
             return oTable;
         },

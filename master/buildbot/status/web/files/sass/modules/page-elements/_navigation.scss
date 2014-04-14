@@ -48,7 +48,7 @@ border: 1px solid #9F9B41;
 
 .top-menu-container {
 	//-moz-linear-gradient(center top , #275F8C 0%, #22435E 100%) lighter!
-	@include bgimage (linear-gradient(top , #215076 0%, #22435E 100%));
+	@include bgimage (linear-gradient(top, #215076 0%, #22435E 100%));
 	@include pie-clearfix;
 }
 
