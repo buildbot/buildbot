@@ -183,7 +183,13 @@
 -->
 
 	<xsl:template name="summary">
-		<a id="btd" href="#" class="back-to-detail"></a>
+		<xsl:if test="builders">
+			<a id="btd" class="back-to-detail">
+				<xsl:attribute name="href"><xsl:value-of select="builders/@shorturl" /></xsl:attribute>	
+				<xsl:value-of select="builders/@name"  />
+			</a>
+		</xsl:if>
+		
 		<h1 class="main-head" id=":i18n:Summary">Summary</h1>
 		
 		<xsl:variable name="lcletters">abcdefghijklmnopqrstuvwxyz</xsl:variable>
