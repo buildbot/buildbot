@@ -65,7 +65,7 @@ class _SREPatternConfigured(object):
     def getConfigDict(self):
         return dict(name="re", pattern=self.value.pattern)
 
-registerAdapter(_SREPatternConfigured, re.compile("").__class__, IConfigured)
+registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 
 
 class ConfiguredMixin(object):
