@@ -284,6 +284,25 @@ The type spec encoding can have several forms:
         type: "(string|integer|boolean|binary|identifier|jsonobject|sourced-properties)"
     }
 
+Server-Side Session
+-------------------
+
+The web server keeps a session state for each user, keyed on a session cookie.
+This session is available from ``request.getSession()``, and data is stored as attributes.
+The following attributes may be available:
+
+* ``user_info`` -- a dictionary maintained by the :doc:`authentication subsystem <auth>`.
+  It may have the following information about the logged-in user:
+
+  * ``username``
+  * ``email``
+  * ``full_name``
+  * ``groups`` (a list of group names)
+
+  As well as additional fields specific to the user info implementation.
+
+  The contents of the ``user_info`` dictionary are made available to the UI as ``config.user``.
+
 Message API
 -----------
 

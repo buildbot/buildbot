@@ -24,7 +24,10 @@ from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
+from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
+from buildbot.www import auth
+from buildbot.www import avatar
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
@@ -55,7 +58,7 @@ def error(error):
         raise ConfigErrors([error])
 
 
-class MasterConfig(object):
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -110,7 +113,9 @@ class MasterConfig(object):
         self.www = dict(
             port=None,
             url='http://localhost:8080/',
-            plugins=dict()
+            plugins=dict(),
+            auth=auth.NoAuth(),
+            avatar_methods=avatar.AvatarGravatar()
         )
 
     _known_config_keys = set([
@@ -124,6 +129,7 @@ class MasterConfig(object):
         "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
+    compare_attrs = list(_known_config_keys)
 
     @classmethod
     def loadConfig(cls, basedir, filename):
@@ -558,7 +564,7 @@ class MasterConfig(object):
         www_cfg = config_dict['www']
         allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins'])
+                       'plugins', 'auth', 'avatar_methods'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
@@ -679,7 +685,7 @@ class MasterConfig(object):
             error("slaves are configured, but c['protocols'] not")
 
 
-class BuilderConfig:
+class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, slavename=None, slavenames=None,
                  builddir=None, slavebuilddir=None, factory=None, category=None,

@@ -13,53 +13,83 @@
 .log_h {
     color: blue;
 }
-
-.results_SUCCESS {
+.label,.badge-status {
+&.results_SUCCESS {
     color: #000;
     background-color: #8d4;
     border-color: #4F8530;
 }
 
-.results_WARNINGS {
+&.results_WARNINGS {
     color: #FFFFFF;
     background-color: #fa3;
     border-color: #C29D46;
 }
 
-.results_FAILURE {
+&.results_FAILURE {
     color: #000;
     background-color: #e88;
     border-color: #A77272;
 }
 
-.results_SKIPPED {
+&.results_SKIPPED {
     color: #000;
     background: #AADDEE;
     border-color: #AADDEE;
 }
 
-.results_EXCEPTION {
+&.results_EXCEPTION {
     color: #FFFFFF;
     background-color: #c6c;
     border-color: #ACA0B3;
 }
-.results_RETRY {
+&.results_RETRY {
     color: #000;
     background-color: #ecc;
     border-color: #ACA0B3;
 }
-.results_CANCELLED {
+&.results_CANCELLED {
     color: #000;
     background-color: #ecc;
     border-color: #ACA0B3;
 }
-.results_PENDING {
+&.results_PENDING {
     color: #000;
     background-color: #E7D100;
     border-color: #ACA0B3;
 }
-.results_UNKNOWN {
+&.results_UNKNOWN {
     color: #000;
     background-color: #EEE;
     border-color: #ACA0B3;
+}
+}
+.panel,.badge-status {
+&.results_SUCCESS {
+    border-color: #4F8530;
+}
+&.results_WARNINGS {
+    border-color: #C29D46;
+}
+&.results_FAILURE {
+    border-color: #A77272;
+}
+&.results_SKIPPED {
+    border-color: #AADDEE;
+}
+&.results_EXCEPTION {
+    border-color: #ACA0B3;
+}
+&.results_RETRY {
+    border-color: #ACA0B3;
+}
+&.results_CANCELLED {
+    border-color: #ACA0B3;
+}
+&.results_PENDING {
+    border-color: #ACA0B3;
+}
+&.results_UNKNOWN {
+    border-color: #ACA0B3;
+}
 }

@@ -16,8 +16,10 @@
 import pkg_resources
 
 from buildbot import config
-from buildbot.util import json
 from buildbot.util import service
+from buildbot.www import auth
+from buildbot.www import avatar
+from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
@@ -25,7 +27,6 @@ from twisted.application import strports
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import server
-from twisted.web import static
 
 
 class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -60,6 +61,10 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if 'base' not in self.apps:
             raise RuntimeError("could not find buildbot-www; is it installed?")
+
+    @property
+    def auth(self):
+        return self.master.config.www['auth']
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
@@ -133,9 +138,13 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             root.putChild(key, self.apps[key].resource)
 
         # /config.js
-        root.putChild('config.js', static.Data("this.config = "
-                                               + json.dumps(new_config.www),
-                                               "text/javascript"))
+        root.putChild('config.js', wwwconfig.SessionConfigResource(self.master))
+
+        # /auth
+        root.putChild('auth', auth.AuthRootResource(self.master))
+
+        # /avatar
+        root.putChild('avatar', avatar.AvatarResource(self.master))
 
         # /api
         root.putChild('api', rest.RestRootResource(self.master))
@@ -146,7 +155,12 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /sse
         root.putChild('sse', sse.EventResource(self.master))
 
+        self.root = root
         self.site = server.Site(root)
+
+        # todo: need to store session infos in the db for multimaster
+        # rough examination, it looks complicated, as all the session APIs are sync
+        self.site.sessionFactory = server.Session
 
         # convert this to a tuple so it can't be appended anymore (in
         # case some dynamically created resources try to get reconfigs)
@@ -157,5 +171,6 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.reconfigurableResources.append(resource)
 
     def reconfigSite(self, new_config):
+        new_config.www['auth'].reconfigAuth(self.master, new_config)
         for rsrc in self.reconfigurableResources:
             rsrc.reconfigResource(new_config)

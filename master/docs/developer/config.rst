@@ -99,11 +99,11 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`prioritizeBuilders`.
 
     .. py:attribute:: codebaseGenerator
-    
-        A callable, or None, used to determine the codebase from an incoming 
+
+        A callable, or None, used to determine the codebase from an incoming
         :py:class:`~buildbot.changes.changes.Change`,
         from :bb:cfg:`codebaseGenerator`
-        
+
     .. py:attribute:: protocols
 
         The per-protocol port specification for slave connections.
@@ -301,6 +301,47 @@ configuration - change sources, slaves, schedulers, build steps, and so on.
 
         Add another error message to the (presumably not-yet-raised) exception.
 
+
+Configuration in AngularJS
+==========================
+
+The AngularJS frontend often needs access to the local master configuration.
+This is accomplished automatically by converting various pieces of the master configuration to a dictionary.
+
+The :py:class:`~buildbot.interfaces.IConfigured` interface represents a way to convert any object into a JSON-able dictionary.
+
+.. class:: buildbot.interfaces.IConfigured
+
+    Providers of this interface provide a method to get their configuration as a dictionary:
+
+   .. method:: getConfigDict()
+
+        :returns: object
+
+        Return the configuration of this object.
+        Note that despite the name, the return value may not be a dictionary.
+
+    Any object can be "cast" to an :py:class:`~buildbot.interfaces.IConfigured` provider.
+    The ``getConfigDict`` method for basic Python objects simply returns the value. ::
+
+        IConfigured(someObject).getConfigDict()
+
+.. py:class:: buildbot.util.ConfiguredMixin
+
+    This class is a basic implementation of :py:class:`~buildbot.interfaces.IConfigured`.
+    Its :py:meth:`getConfigDict` method simply returns the instance's ``name`` attribute.
+
+    .. py:attribute:: name
+
+        Each object configured must have a ``name`` attribute.
+
+    .. py:method:: getConfigDict(self)
+
+        :returns: object
+
+        Return a config dictionary representing this object.
+
+All of this is used by to serve ``/config.js`` to the JavaScript frontend.
 
 .. _developer-Reconfiguration:
 

@@ -23,8 +23,11 @@ import types
 
 from twisted.python import reflect
 
+from buildbot.interfaces import IConfigured
 from buildbot.util.misc import SerializedInvocation
 from buildbot.util.misc import deferredLocked
+
+from zope.interface import implements
 
 
 def naturalSort(l):
@@ -76,8 +79,8 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
-class ComparableMixin:
-
+class ComparableMixin(object):
+    implements(IConfigured)
     compare_attrs = []
 
     class _None:
@@ -108,6 +111,12 @@ class ComparableMixin:
         them_list = [getattr(them, name, self._None)
                      for name in compare_attrs]
         return cmp(self_list, them_list)
+
+    def getConfigDict(self):
+        compare_attrs = []
+        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
+        return dict([(k, getattr(self, k)) for k in compare_attrs
+                    if hasattr(self, k) and k not in ("passwd", "password")])
 
 
 def diffSets(old, new):
