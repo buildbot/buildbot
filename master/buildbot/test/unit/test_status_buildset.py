@@ -95,3 +95,7 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             self.assertEqual(builds, info['builds'])
 
             self.assertEqual(buildset['bsid'], info['bsid'])
+
+    def test_unsub_with_no_sub(self):
+        notifier = BuildSetSummaryNotifierMixin()
+        notifier.summaryUnsubscribe()

@@ -74,6 +74,8 @@ class BuildSetStatus:
 
 class BuildSetSummaryNotifierMixin:
 
+    _buildSetSubscription = None
+
     def summarySubscribe(self):
         self._buildSetSubscription = self.master.subscribeToBuildsetCompletions(self._buildsetComplete)
 
