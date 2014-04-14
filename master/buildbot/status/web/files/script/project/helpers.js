@@ -46,7 +46,20 @@ define(['screensize'], function (screenSize) {
 				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
 			}
 
-
+			// keyboard shortcuts
+			$('body').keyup(function(event) {
+                
+                if (event.which === 81) {
+                    location.href = '/projects'
+                }
+                if (event.which === 87) {
+                    location.href = '/buildqueue'
+                }
+                if (event.which === 69) {
+                    location.href = '/buildslaves'
+                }
+                
+            });
 
        		// submenu overflow on small screens
 
