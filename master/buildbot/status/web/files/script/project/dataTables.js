@@ -97,7 +97,7 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 			  	var dtWTop = $('.dataTables_wrapper .top');
 			  	// special for the codebasespage
 			  	
-			  	var filterTableInput = $('.dataTables_filter input');
+			  	var filterTableInput = $('.dataTables_filter input').attr('placeholder','Filter results');
 
 			  	// insert codebase and branch on the builders page
 	        	if ($('#builders_page').length && window.location.search != '') {
@@ -106,9 +106,13 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
 				}
 
 				// Set the marquee in the input field on load and listen for key event	
-				filterTableInput.attr('placeholder','Filter results').focus().keydown(function(event) {
-					oTable.fnFilter($(this).val());
-				});
+				
+                $('body').keyup(function(event) {                                       
+                    if (event.which === 70) {
+                        filterTableInput.focus();
+                    } 
+                });
+                 
 
 			});
 		}, initSortNatural: function() {
