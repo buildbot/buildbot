@@ -177,21 +177,7 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 					$(window).resize(function() {					
 						helpers.jCenter(mib);
 					});
-
-					        	
-			        	selectors.init();
-						$(window).resize(function() {
-							helpers.jCenter($('.more-info-box-js'));
-							
-						});
 					
-					
-					$('#getForm').attr('action', window.location.href);	
-					$('#getForm .blue-btn[type="submit"]').click(function(){
-						$('.more-info-box-js').hide();				
-					});
-
-					helpers.closePopup(mib);
 				});
 			});		
 		},
