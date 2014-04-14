@@ -499,12 +499,11 @@ class Build(properties.PropertiesMixin):
         elif self.result == WARNINGS:
             text = ["Build Finished with Warnings"]
         elif self.result == EXCEPTION:
-            text = ["Build Caught Exception (probably an interruption)"]
+            text = ["Build Caught Exception"]
         elif self.result == RETRY:
             text = ["Build Caught Exception, Will Retry"]
         else:
             text = ["Build Finished Successfully"]
-        #text.extend(self.text)
         return self.buildFinished(text, self.result)
 
     def buildException(self, why):
@@ -513,7 +512,7 @@ class Build(properties.PropertiesMixin):
         # try to finish the build, but since we've already faced an exception,
         # this may not work well.
         try:
-            self.buildFinished(["build", "exception"], EXCEPTION)
+            self.buildFinished(["Build Caught Exception"], EXCEPTION)
         except:
             log.err(Failure(), 'while finishing a build with an exception')
 

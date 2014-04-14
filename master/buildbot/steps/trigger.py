@@ -191,8 +191,12 @@ class Trigger(LoggingBuildStep):
 
         if was_exception:
             result = EXCEPTION
+            self.step_status.setText(["Dependency failed to build."])
+            self.step_status.setText2(["(dependency failed to build)"])
         elif was_failure:
             result = FAILURE
+            self.step_status.setText(["Dependency failed to build."])
+            self.step_status.setText2(["(dependency failed to build)"])
         else:
             result = SUCCESS
 

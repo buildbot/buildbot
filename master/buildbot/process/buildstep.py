@@ -693,8 +693,8 @@ class BuildStep(object, properties.PropertiesMixin):
             self.addHTMLLog("err.html", formatFailure(why))
             self.addCompleteLog("err.text", why.getTraceback())
             # could use why.getDetailedTraceback() for more information
-            self.step_status.setText([self.name, "exception"])
-            self.step_status.setText2([self.name])
+            self.step_status.setText(["'%s'" % self.name, "exception"])
+            self.step_status.setText2(["'%s'" % self.name])
             self.step_status.stepFinished(EXCEPTION)
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
@@ -937,7 +937,7 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["failed"]
 
     def getText2(self, cmd, results):
-        return [self.name]
+        return ["Step \"%s\"" % self.name]
 
     def maybeGetText2(self, cmd, results):
         if results == SUCCESS:
