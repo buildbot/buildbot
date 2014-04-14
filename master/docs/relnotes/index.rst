@@ -91,7 +91,7 @@ The ``debugPassword`` configuration option is no longer needed and is thus depre
 
 * The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
 
-* Buildslave is no longer available via :ref:`Interpolate` and the :bb:step:`SetSlaveInfo` buildstep has been removed.
+* Buildslave is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
@@ -233,7 +233,7 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
-* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new ``SetSlaveInfo`` buildstep.
 
 * The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
 
