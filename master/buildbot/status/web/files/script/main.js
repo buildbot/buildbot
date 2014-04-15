@@ -27,25 +27,19 @@ require.config({
 		'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
 		'livestamp': "plugins/livestamp",
-		'noise': "plugins/jquery.noisy"
+		//'noise': "plugins/jquery.noisy"
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','noise'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,noisy) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache) {
 		
 	'use strict';
 
 	 // reveal the page when all scripts are loaded
 	  
 	  $(document).ready(function() {
-        $('body').show().noisy({
-		    'intensity' : 1,
-		    'size' : 200,
-		    'opacity' : 0.03,
-		    'fallback' : '',
-		    'monochrome' : false
-		});
+        $('body').show();
 
 	  	// swipe or scroll in the codebases overview
 	  	if ($('#builders_page').length || $('#builder_page').length) {

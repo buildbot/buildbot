@@ -31,19 +31,22 @@
 		margin-left: 5px;
 	}
 }
-
+ 
 .green {
 background-color: #237B74;
 border: 1px solid #3F8E87;
+@include box-shadow(0 0 4px #3F8E87 inset);
 }
 .red {
 background-color: #A76255;
 border: 1px solid #BC8579;
+@include box-shadow(0 0 4px #BC8579 inset);
 } 
 
 .yellow {
-	background-color: #7A760D;
+background-color: #7A760D;
 border: 1px solid #9F9B41;
+@include box-shadow(0 0 4px #9F9B41 inset);
 }
 
 .top-menu-container {
@@ -267,7 +270,7 @@ border: 1px solid #9F9B41;
 
 .breadcrumbs-nav {
 		display:inline-block;
-		padding:13px 0 11px 0;
+		padding:11px 0 10px;
 		& > li {
 		color: rgba(255, 255, 255, 0.52);
 		font-size: 11px;
@@ -280,7 +283,7 @@ border: 1px solid #9F9B41;
 		line-height:12px;
 		@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.3));
 		&:first-child {
-			padding-left:123px;
+			padding-left:124px;
 		}
 		a {
 			@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.44));
@@ -353,10 +356,15 @@ border: 1px solid #9F9B41;
 	}
 }
 
-@include breakpoint($bkpt-xxlarge) {
-
+@include breakpoint($bkpt-xlarge) {
 	.show {
 		display: block;
 	}
 
+}
+
+@include breakpoint($bkpt-xxlarge) {
+	.show-desktop {
+		display: block;
+	}
 }

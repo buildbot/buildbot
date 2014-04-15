@@ -203,9 +203,17 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var contentType = thisEl.attr('data-contenttype');
             var builder_name = thisEl.attr('data-b_name');
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
+
+			var mustacheTmplTxt = '<h2 class="small-head">Your build will show up soon</h2>';		
+			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmplTxt}));
+			
+
             var body = $('body');
 			body.append(preloader);
+			//mustacheTmplShell.appendTo(body);
+			
 			var mib = popup.htmlModule (popupTitle);
 			mib.appendTo(body);
 
@@ -243,13 +251,21 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 
                 if (dataReturnPage !== undefined) {
                     exContent.find('form').ajaxForm({
-                        beforeSubmit: function () {
-                            body.append(preloader);
+                        beforeSubmit: function () {                        	
+                            body.append(mustacheTmplShell);
+
+                            helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+								helpers.closePopup($(this));
+								$(this).delay(1500).fadeOut('fast', function() {
+									$(this).remove();	
+								});	
+							});
+
                             exContent.closest('.more-info-box').find('.close-btn').click();
                         },
                         success: function (data) {
                             requirejs(['realtimePages'], function (realtimePages) {
-                                preloader.remove();
+                                mustacheTmplShell.remove();
                                 var name = dataReturnPage.replace("_json", "");
                                 realtimePages.updateSingleRealTimeData(name, data);
                             });

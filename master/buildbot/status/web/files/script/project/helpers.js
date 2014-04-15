@@ -204,10 +204,21 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 var prevElem = $(this).prev();
 				var datab = prevElem.attr('data-b');
 				var dataindexb = prevElem.attr('data-indexb');
-                var dataReturnPage = prevElem.attr('data-returnpage');
-				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
-                var builder_name = $(this).prev().attr('data-b_name');
-				$('body').append(preloader).show();
+                var dataReturnPage = prevElem.attr('data-returnpage');            
+
+				var mustacheTmpl = '<h2 class="small-head">Your build will show up soon</h2>';		
+				var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));
+				mustacheTmplShell.appendTo($('body'));
+				
+                var builder_name = $(this).prev().attr('data-b_name');				
+				
+				helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+					helpers.closePopup($(this));
+					$(this).delay(1500).fadeOut('fast', function() {
+						$(this).remove();	
+					});	
+				});
+				
 				// get the current url with parameters append the form to the DOM and submit it
                 var url = location.protocol + "//" + location.host + "/forms/forceBuild";
 
@@ -224,9 +235,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
                     $(form).ajaxSubmit(function(data) {
                         requirejs(['realtimePages'], function (realtimePages) {
+                        	mustacheTmplShell.remove();
                             var name = dataReturnPage.replace("_json", "");
-                            realtimePages.updateSingleRealTimeData(name, data, true);
-                            $('#bowlG').remove();
+                            realtimePages.updateSingleRealTimeData(name, data, true);                            
                         });
                     });
 				});

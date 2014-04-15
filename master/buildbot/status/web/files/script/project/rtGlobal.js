@@ -19,7 +19,7 @@ define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helper
             extendMoment.setServerTime(data['utc']);
             
             if (helpers.isRealTimePage() === false) {
-                $attentionBox.removeClass('hide').addClass('show');
+                $attentionBox.removeClass('hide').addClass('show-desktop');
             }
 
             var buildLoad = data['build_load'];
