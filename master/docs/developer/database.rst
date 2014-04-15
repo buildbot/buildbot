@@ -101,9 +101,6 @@ buildrequests
     * ``complete_at`` (datetime object, time this request was completed)
     * ``submitted_at`` (datetime object, time this request was completed)
     * ``results`` (integer result code)
-    * ``branch`` (string, the branch associated with the request)
-    * ``repository`` (string, the repository associated with the request)
-    * ``codebase`` (string, the codebase associated with the request)
     * ``waited_for`` (boolean)
 
     .. py:method:: getBuildRequest(brid)
