@@ -1482,7 +1482,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 self.claims[row.brid] = row
 
     # component methods
-
     def getBuildRequest(self, brid):
         row = self.reqs.get(brid)
         if row:

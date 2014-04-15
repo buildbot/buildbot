@@ -121,7 +121,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     'priority': 0,
                     'results': -1,
                     'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
-                    'waited_for': waited_for,
+                    'waited_for': waited_for
                 }
             )
 

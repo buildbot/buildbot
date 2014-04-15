@@ -297,12 +297,10 @@ class V2RootResource(resource.Resource):
             ep, kwargs = self.getEndpoint(request)
 
             rspec = self.decodeResultSpec(request, ep)
-
             data = yield ep.get(rspec, kwargs)
             if data is None:
                 writeError("not found", errcode=404)
                 return
-
             # post-process any remaining parts of the resultspec
             data = rspec.apply(data)
 
