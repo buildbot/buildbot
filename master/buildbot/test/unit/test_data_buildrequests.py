@@ -150,11 +150,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.callGet(('buildrequests',))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=None,
-            claimed=None,
             bsid=None,
-            branch=None,
-            repository=None)
+            complete=None,
+            claimed=None)
 
     @defer.inlineCallbacks
     def testGetFilters(self):
@@ -170,11 +168,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=False,
-            claimed=True,
             bsid=55,
-            branch='mybranch',
-            repository='myrepo')
+            complete=False,
+            claimed=True)
 
     @defer.inlineCallbacks
     def testGetClaimedByMasterIdFilters(self):
@@ -188,11 +184,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=None,
-            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
             bsid=None,
-            branch=None,
-            repository=None)
+            complete=None,
+            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID)
 
 
 class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):

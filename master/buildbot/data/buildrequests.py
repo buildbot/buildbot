@@ -104,16 +104,12 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         else:
             claimed = resultSpec.popBooleanFilter('claimed')
 
-        bsid = resultSpec.popBooleanFilter('buildsetid')
-        branch = resultSpec.popBooleanFilter('branch')
-        repository = resultSpec.popBooleanFilter('repository')
+        bsid = resultSpec.popOneFilter('buildsetid', 'eq')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             buildername=buildername,
             complete=complete,
             claimed=claimed,
-            bsid=bsid,
-            branch=branch,
-            repository=repository)
+            bsid=bsid)
         if buildrequests:
 
             @defer.inlineCallbacks
