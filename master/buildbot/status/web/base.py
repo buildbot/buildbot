@@ -239,6 +239,9 @@ class AccessorMixin(object):
     def getBuildmaster(self, request):
         return request.site.buildbot_service.master
 
+    def getAnalyticsCode(self, request):
+        return request.site.buildbot_service.master.config.analytics_code
+
 
 class ContextMixin(AccessorMixin):
     def getContext(self, request):
@@ -263,6 +266,7 @@ class ContextMixin(AccessorMixin):
                     authz = self.getAuthz(request),
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
+                    analytics_code = self.getAnalyticsCode(request)
                     )
 
 
@@ -488,11 +492,16 @@ class BuildLineMixin:
             repo = ss_list[0].repository
             if all_got_revision:
                 if len(ss_list) == 1:
-                    rev = all_got_revision.get(ss_list[0].codebase, "??")
+                    rev = all_got_revision.get(ss_list[0].codebase, None)
                 else:
                     rev = "multiple rev."
             else:
-                rev = "??"
+                if len(ss_list) == 1 and ss_list[0].revision is not None and len(ss_list[0].revision):
+                    rev = ss_list[0].revision
+                elif len(ss_list) > 1:
+                    rev = "multiple rev."
+                else:
+                    rev = None
 
             if len(ss_list) == 1:
                 branch = ss_list[0].branch

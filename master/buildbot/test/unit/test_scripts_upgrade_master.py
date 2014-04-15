@@ -217,7 +217,6 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         for f in [
                 'test/public_html',
                 'test/public_html/bg_gradient.jpg',
-                'test/public_html/css/default.css',
                 'test/public_html/robots.txt',
                 'test/public_html/favicon.ico',
                 'test/templates',

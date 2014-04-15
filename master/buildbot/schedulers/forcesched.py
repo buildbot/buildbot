@@ -181,7 +181,7 @@ class UserNameParameter(StringParameter):
     size = 30
     need_email = True
 
-    def __init__(self, name="username", label="Your name", **kw):
+    def __init__(self, name="username", label="Your Name", **kw):
         BaseParameter.__init__(self, name, label, **kw)
 
     def parse_from_arg(self, s):

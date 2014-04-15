@@ -47,7 +47,7 @@ define(['screensize'], function (screenSize) {
 			}
 
 			// keyboard shortcuts
-			$('body').keyup(function(event) {
+			/*$('body').keyup(function(event) {
                 
                 if (event.which === 81) {
                     location.href = '/projects'
@@ -59,7 +59,7 @@ define(['screensize'], function (screenSize) {
                     location.href = '/buildslaves'
                 }
                 
-            });
+            });*/
 
        		// submenu overflow on small screens
 

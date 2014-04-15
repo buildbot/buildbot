@@ -23,7 +23,20 @@
           deps : ['main']
       };
     </script>      
-    <script src="/prod/script/require.js?cachebust={{version}}"></script>    
+    <script src="/prod/script/require.js?cachebust={{version}}"></script>
+
+    {% if analytics_code %}
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', '{{ analytics_code }}', 'unity3d.com');
+      ga('send', 'pageview');
+
+    </script>
+    {% endif %}
 
     <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
@@ -158,7 +171,7 @@
     <footer class="footer" style="clear:both">
       <div class="container-inner">
         <h3 class="buildbot-version">
-          <a href="http://buildbot.net/">BuildBot</a> 
+          <a href="https://github.com/Unity-Technologies/buildbot/tree/katana">Katana</a> - a fork of <a href="http://buildbot.net/">BuildBot</a>
           <span>
             ({{version}})
           </span>

@@ -139,11 +139,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return builder_path
 
-    def getURLForBuild(self, builder_name, build_number):
+    def getURLForBuild(self, builder_name, build_number, friendly_name=None):
+        if friendly_name is None:
+            friendly_name = builder_name
+
         url = {}
         prefix = self.getBuildbotURL()
         url['path'] = prefix + self.getBuildersPath(builder_name, build_number)
-        url['text'] = self.getURLText(builder_name, build_number)
+        url['text'] = self.getURLText(friendly_name, build_number)
         return url
 
     def getURLText(self, builder_name, build_number):

@@ -75,8 +75,9 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             # in this case we will display all the builds related to this build request
             for build in build_list:
                 build_num = build['number']
+                friendly_name = self.build.builder.builder_status.getFriendlyName()
                 url = yield self.master.status.getURLForBuildRequest(prevBuildRequest['brid'],
-                                                                     self.build.builder.config.name, build_num)
+                                                                     self.build.builder.config.name, build_num, friendly_name)
                 self.addURL(url['text'], url['path'])
             # we are not building but reusing a previous build
             reuse = yield self.master.db.buildrequests.reusePreviousBuild(self.build.requests, prevBuildRequest['brid'])
