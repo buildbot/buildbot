@@ -92,7 +92,7 @@ transform:rotate(360deg)}
   animation: spin 2s infinite linear;  
   display: inline-block;  
   .firefox & {
-    display: none;
+    //display: none;
     animation: none;
   }
 }

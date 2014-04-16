@@ -22,8 +22,7 @@
 	@include bgimage (linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent));
 	background-size: 40px 40px;	
 	background-color: #39719F;
-	@include box-shadow(0 -1px 0 rgba(0, 0, 0, 0.15) inset);
-	color: #FFFFFF;
+	@include box-shadow(0 -1px 0 rgba(0, 0, 0, 0.15) inset);	
 	float: left;
 	height: 100%;
 	line-height: 20px;
@@ -41,6 +40,7 @@
 	}
 }
 .time-txt {
+	@include text-shadow (0 -1px 0 rgba(68, 68, 68, 0.78));
 	position:absolute;
 	padding:2px 0 0 5px;
 	color:#fff;
