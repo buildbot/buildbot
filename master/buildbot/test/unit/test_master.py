@@ -336,7 +336,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            self.master.reconfigService.called
+            self.master.reconfigService.assert_called_with(mock.ANY)
         return d
 
     @defer.inlineCallbacks
