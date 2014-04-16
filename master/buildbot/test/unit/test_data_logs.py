@@ -15,7 +15,6 @@
 
 import mock
 
-from buildbot.data import base
 from buildbot.data import logs
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -58,12 +57,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'logid': 60,
             'name': u'stdio',
             'slug': u'stdio',
-            'step_link': base.Link(('steps', '50')),
             'stepid': 50,
             'complete': False,
             'num_lines': 0,
-            'type': u's',
-            'link': base.Link(('logs', '60'))})
+            'type': u's'})
 
     @defer.inlineCallbacks
     def test_get_missing(self):

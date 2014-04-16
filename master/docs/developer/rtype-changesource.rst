@@ -6,7 +6,6 @@ ChangeSource
     :attr integer changesourceid: the ID of this changesource
     :attr string name: name of this changesource
     :attr master master: the master on which this slave is running, or None if it is inactive
-    :attr Link link: link for this changesource
 
     A changesource generates change objects, for example in response to an update in some
     repository. A particular changesource (by name) runs on at most one master at a time.

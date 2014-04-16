@@ -16,7 +16,6 @@
 import UserList
 import copy
 import re
-import urllib
 
 from buildbot.data import exceptions
 from twisted.internet import defer
@@ -59,9 +58,6 @@ class ResourceType(object):
     @staticmethod
     def sanitizeMessage(msg):
         msg = copy.deepcopy(msg)
-        for k, v in msg.items():
-            if isinstance(v, Link):
-                del msg[k]
         return msg
 
     def produceEvent(self, msg, event):
@@ -168,34 +164,6 @@ class ListResult(UserList.UserList):
 
     def __ne__(self, other):
         return not (self == other)
-
-
-class Link(object):
-
-    "A Link points to another resource, specified by path"
-
-    __slots__ = ['path', 'query']
-
-    def __init__(self, path, query=None):
-        assert isinstance(path, tuple)
-        self.path = path
-        self.query = query
-
-    def __repr__(self):
-        return "Link(%r, %r)" % (self.path, self.query or [])
-
-    def __cmp__(self, other):
-        return cmp(self.__class__, other.__class__) \
-            or cmp(self.path, other.path) \
-            or cmp(self.query, other.query)
-
-    def makeUrl(self, baseUrl, apiVersion):
-        querystr = ''
-        if self.query:
-            querystr = '?' + urllib.urlencode(self.query)
-        base = '/'.join([baseUrl + 'api', 'v%d' % (apiVersion,)]
-                        + list(self.path))
-        return base + querystr
 
 
 def updateMethod(func):

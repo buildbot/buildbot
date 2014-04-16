@@ -5,7 +5,6 @@ BuildRequests
 
     :attr integer buildrequestid: the unique ID of this buildrequest
     :attr integer buildsetid: the id of the buildset that contains this buildrequest
-    :attr Link buildset_link: the link to the buildset that contains this buildrequest
     :attr integer builderid: the id of the builder linked to this buildrequest
     :attr integer priority: the priority of this buildrequest
     :attr boolean claimed: true if this buildrequest has been claimed
@@ -20,7 +19,6 @@ BuildRequests
     :attr timestamp complete_at: time at which this buildrequest was completed,
           or None if it's still running
     :attr boolean waited_for: true if the entity that triggered this buildrequest is waiting for it to complete (should be used by clean shutdown to only start br that are waited_for)
-    :attr Link link: link for this buildrequest
 
     This resource type describes completed and in-progress buildrequests.
     Much of the contextual data for a buildrequest is associated with the buildset that contains this buildrequest.

@@ -284,6 +284,25 @@ The type spec encoding can have several forms:
         type: "(string|integer|boolean|binary|identifier|jsonobject|sourced-properties)"
     }
 
+Server-Side Session
+-------------------
+
+The web server keeps a session state for each user, keyed on a session cookie.
+This session is available from ``request.getSession()``, and data is stored as attributes.
+The following attributes may be available:
+
+* ``user_info`` -- a dictionary maintained by the :doc:`authentication subsystem <auth>`.
+  It may have the following information about the logged-in user:
+
+  * ``username``
+  * ``email``
+  * ``full_name``
+  * ``groups`` (a list of group names)
+
+  As well as additional fields specific to the user info implementation.
+
+  The contents of the ``user_info`` dictionary are made available to the UI as ``config.user``.
+
 Message API
 -----------
 
@@ -451,6 +470,64 @@ Several methods are added to each "restangularized" objects, aside from get(), p
     * ``.control(method, params)``
 
         Call the control data api. This builds up a POST with jsonapi encoded parameters
+
+RecentStorage
+.............
+The service provides methods for adding, retrieving and clearing recently viewed builders and builds.
+It uses IndexedDB to store data inside the user’s browser. You can see the list of supported browsers here: http://caniuse.com/indexeddb.
+
+builder and build object properties:
+    * ``link`` - string: this specifies the builder’s or build’s link
+
+    * ``caption`` - string: this specifies the builder’s or build’s shown caption
+
+Sample:
+
+.. code-block:: coffeescript
+
+    {
+        link: '#/builders/1'
+        caption: 'Mac'
+    }
+
+Methods:
+
+    * ``.addBuild(build)``: stores the build passed as argument
+
+    * ``.addBuild(builder)``: stores the builder passed as argument
+
+    * ``.getBuilds()``: returns a promise, the result will be an array of builds when the promise is resolved
+        example:
+
+        .. code-block:: coffeescript
+
+            recentStorage.getBuilds().then (e) ->
+                $scope.builds = e
+
+    * ``.getBuilders()``: returns a promise, the result will be an array of builders when the promise is resolved
+        example:
+
+        .. code-block:: coffeescript
+
+            recentStorage.getBuilders().then (e) ->
+                $scope.builders = e
+
+    * ``.getAll()``: returns a promise, the result will be an object with two fields, recent_builds and recent_builders
+        example:
+
+        .. code-block:: coffeescript
+
+            recentStorage.getAll().then (e) ->
+                $scope.builds = e.recent_builds
+                $scope.builders = e.recent_builders
+
+    * ``.clearAll()``: removes the stored builds and builders
+        example:
+
+        .. code-block:: coffeescript
+
+            recentStorage.clearAll()
+
 
 Mocks and testing utils
 ~~~~~~~~~~~~~~~~~~~~~~~

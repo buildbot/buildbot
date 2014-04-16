@@ -20,7 +20,6 @@ import fnmatch
 import re
 import types
 
-from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.util import datetime2epoch
@@ -29,7 +28,7 @@ from buildbot.www import resource
 from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
-from twisted.web import server
+from twisted.web.error import Error
 
 
 class BadRequest(Exception):
@@ -298,33 +297,17 @@ class V2RootResource(resource.Resource):
             ep, kwargs = self.getEndpoint(request)
 
             rspec = self.decodeResultSpec(request, ep)
-
             data = yield ep.get(rspec, kwargs)
             if data is None:
                 writeError("not found", errcode=404)
                 return
-
             # post-process any remaining parts of the resultspec
             data = rspec.apply(data)
 
             # annotate the result with some metadata
             meta = {}
-            links = meta['links'] = []
-            ignore = set(['limit', 'offset'])
-            query = [(k, v)
-                     for (k, vs) in request.args.iteritems()
-                     for v in vs
-                     if k not in ignore]
-
-            def mklink(rel, offset, limit):
-                o = [('offset', offset)] if offset else []
-                l = [('limit', limit)] if limit else []
-                links.append({'rel': rel,
-                              'href': base.Link(tuple(request.postpath),
-                                                query + o + l)})
-
             if ep.isCollection:
-                offset, total, limit = data.offset, data.total, data.limit
+                offset, total = data.offset, data.total
                 if offset is None:
                     offset = 0
 
@@ -332,26 +315,9 @@ class V2RootResource(resource.Resource):
                 if total is not None:
                     meta['total'] = total
 
-                links = meta['links'] = []
-
-                # add pagination links
-                mklink('self', offset, limit)
-                if offset != 0:
-                    mklink('first', 0, limit)
-                if limit:
-                    prev = offset - limit
-                    if prev >= 0:
-                        mklink('prev', prev, limit)
-                    elif offset != 0:
-                        mklink('prev', 0, offset)
-                if limit is not None:
-                    if total is None or offset + limit < total:
-                        mklink('next', offset + limit, limit)
-
                 # get the real list instance out of the ListResult
                 data = data.data
             else:
-                mklink('self', None, None)
                 data = [data]
 
             typeName = ep.rtype.plural
@@ -411,6 +377,10 @@ class V2RootResource(resource.Resource):
             request.setHeader('content-type', 'text/plain; charset=utf-8')
             request.write(json.dumps(dict(error=msg)))
             request.finish()
+        return self.asyncRenderHelper(request, self.asyncRender, writeError)
+
+    @defer.inlineCallbacks
+    def asyncRender(self, request):
 
         # Handle CORS, if necessary.
         origins = self.origins
@@ -429,8 +399,7 @@ class V2RootResource(resource.Resource):
                         err = 'invalid method'
                     isPreflight = True
                 if err:
-                    writeError(err)
-                    return server.NOT_DONE_YET
+                    raise Error(400, err)
 
                 # If it's OK, then let the browser know we checked it out.  The
                 # Content-Type header is included here because CORS considers
@@ -443,43 +412,20 @@ class V2RootResource(resource.Resource):
 
                 # if this was a preflight request, we're done
                 if isPreflight:
-                    request.finish()
-                    return server.NOT_DONE_YET
+                    defer.returnValue("")
 
         # based on the method, this is either JSONRPC or REST
         if request.method == 'POST':
-            d = self.renderJsonRpc(request)
+            res = yield self.renderJsonRpc(request)
         elif request.method in ('GET', 'HEAD'):
-            d = self.renderRest(request)
+            res = yield self.renderRest(request)
         else:
-            writeError("invalid HTTP method")
-            return server.NOT_DONE_YET
+            raise Error(400, "invalid HTTP method")
 
-        @d.addCallback
-        def finish(_):
-            try:
-                request.finish()
-            except RuntimeError:  # pragma: no-cover
-                # this occurs when the client has already disconnected; ignore
-                # it (see #2027)
-                log.msg("http client disconnected before results were sent")
-
-        @d.addErrback
-        def fail(f):
-            log.err(f, 'While rendering resource:')
-            try:
-                writeError('internal error - see logs', errcode=500)
-            except Exception:
-                try:
-                    request.finish()
-                except:
-                    pass
-        return server.NOT_DONE_YET
+        defer.returnValue(res)
 
     def _toJson(self, obj):
-        if isinstance(obj, base.Link):
-            return obj.makeUrl(self.base_url, self.apiVersion)
-        elif isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime.datetime):
             return datetime2epoch(obj)
 
 RestRootResource.addApiVersion(2, V2RootResource)

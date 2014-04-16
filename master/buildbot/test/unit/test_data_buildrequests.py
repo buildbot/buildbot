@@ -18,7 +18,6 @@ import mock
 
 from buildbot.data import buildrequests
 from buildbot.data import resultspec
-from buildbot.data.base import Link
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -73,15 +72,11 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['results'], 75)
         self.assertEqual(buildrequest['claimed_by_masterid'],
                          fakedb.FakeBuildRequestsComponent.MASTER_ID)
-        self.assertEqual(buildrequest['link'].__repr__(),
-                         Link(('buildrequests', '44'), []).__repr__())
         self.assertEqual(buildrequest['claimed'], True)
         self.assertEqual(buildrequest['submitted_at'], self.SUBMITTED_AT)
         self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
         self.assertEqual(buildrequest['buildsetid'], 8822)
         self.assertEqual(buildrequest['priority'], 7)
-        self.assertEqual(buildrequest['buildset_link'].__repr__(),
-                         Link(('buildsets', '8822'), []).__repr__())
 
     @defer.inlineCallbacks
     def testGetMissing(self):
@@ -155,11 +150,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         yield self.callGet(('buildrequests',))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=None,
-            claimed=None,
             bsid=None,
-            branch=None,
-            repository=None)
+            complete=None,
+            claimed=None)
 
     @defer.inlineCallbacks
     def testGetFilters(self):
@@ -175,11 +168,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=False,
-            claimed=True,
             bsid=55,
-            branch='mybranch',
-            repository='myrepo')
+            complete=False,
+            claimed=True)
 
     @defer.inlineCallbacks
     def testGetClaimedByMasterIdFilters(self):
@@ -193,11 +184,9 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
             buildername=None,
-            complete=None,
-            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
             bsid=None,
-            branch=None,
-            repository=None)
+            complete=None,
+            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID)
 
 
 class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):

@@ -91,9 +91,7 @@ class DataConnector(service.AsyncService):
                         self.matcher[pp] = ep
                     rootLinkName = clsdict.get('rootLinkName')
                     if rootLinkName:
-                        link = base.Link(pathPatterns[0])
-                        self.rootLinks.append({'name': rootLinkName,
-                                               'link': link})
+                        self.rootLinks.append({'name': rootLinkName})
 
     def _setup(self):
         self.updates = Updates()

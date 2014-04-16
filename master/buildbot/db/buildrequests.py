@@ -39,16 +39,32 @@ class BrDict(dict):
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    def _saSelectQuery(self):
+        reqs_tbl = self.db.model.buildrequests
+        claims_tbl = self.db.model.buildrequest_claims
+        bsets_tbl = self.db.model.buildsets
+        bsss_tbl = self.db.model.buildset_sourcestamps
+        sstamps_tbl = self.db.model.sourcestamps
+
+        from_clause = reqs_tbl.outerjoin(claims_tbl,
+                                         reqs_tbl.c.id == claims_tbl.c.brid)
+        from_clause = from_clause.join(bsets_tbl,
+                                       reqs_tbl.c.buildsetid == bsets_tbl.c.id)
+        from_clause = from_clause.join(bsss_tbl,
+                                       bsets_tbl.c.id == bsss_tbl.c.buildsetid)
+        from_clause = from_clause.join(sstamps_tbl,
+                                       bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+
+        return sa.select([reqs_tbl, claims_tbl, sstamps_tbl.c.branch,
+                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase]).select_from(from_clause)
+
     def getBuildRequest(self, brid):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
-            claims_tbl = self.db.model.buildrequest_claims
-            res = conn.execute(sa.select([
-                reqs_tbl.outerjoin(claims_tbl,
-                                   (reqs_tbl.c.id == claims_tbl.c.brid))],
-                whereclause=(reqs_tbl.c.id == brid)), use_labels=True)
+            q = self._saSelectQuery()
+            q.where(reqs_tbl.c.id == brid)
+            res = conn.execute(q)
             row = res.fetchone()
-
             rv = None
             if row:
                 rv = self._brdictFromRow(row, self.db.master.masterid)
@@ -61,24 +77,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
-            bsets_tbl = self.db.model.buildsets
-            bsss_tbl = self.db.model.buildset_sourcestamps
             sstamps_tbl = self.db.model.sourcestamps
-
-            from_clause = reqs_tbl.outerjoin(claims_tbl,
-                                             reqs_tbl.c.id == claims_tbl.c.brid)
-
-            # for branches, we need to join to the buildset and its
-            # sourcestamps
-            if branch or repository:
-                from_clause = from_clause.join(bsets_tbl,
-                                               reqs_tbl.c.buildsetid == bsets_tbl.c.id)
-                from_clause = from_clause.join(bsss_tbl,
-                                               bsets_tbl.c.id == bsss_tbl.c.buildsetid)
-                from_clause = from_clause.join(sstamps_tbl,
-                                               bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
-
-            q = sa.select([reqs_tbl, claims_tbl]).select_from(from_clause)
+            q = self._saSelectQuery()
             if claimed is not None:
                 if isinstance(claimed, bool):
                     if not claimed:

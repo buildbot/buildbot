@@ -19,7 +19,6 @@ import datetime
 import re
 
 from buildbot import util
-from buildbot.data import base
 from buildbot.util import json
 
 
@@ -122,12 +121,6 @@ class Boolean(Instance):
 
     def valueFromString(self, arg):
         return util.string2boolean(arg)
-
-
-class Link(Instance):
-
-    name = "link"
-    types = (base.Link,)
 
 
 class Identifier(Type):

@@ -32,7 +32,6 @@ class Db2DataMixin(object):
             'schedulerid': dbdict['id'],
             'name': dbdict['name'],
             'master': master,
-            'link': base.Link(('schedulers', str(dbdict['id']))),
         }
         defer.returnValue(data)
 
@@ -90,7 +89,6 @@ class Scheduler(base.ResourceType):
         schedulerid = types.Integer()
         name = types.String()
         master = types.NoneOk(masters.Master.entityType)
-        link = types.Link()
     entityType = EntityType(name)
 
     @base.updateMethod

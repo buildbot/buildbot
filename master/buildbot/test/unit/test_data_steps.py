@@ -15,7 +15,6 @@
 
 import mock
 
-from buildbot.data import base
 from buildbot.data import steps
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -63,11 +62,9 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         step = yield self.callGet(('steps', 72))
         self.validateData(step)
         self.assertEqual(step, {
-            'build_link': base.Link(('builds', '30')),
             'buildid': 30,
             'complete': False,
             'complete_at': None,
-            'link': base.Link(('builds', '72')),
             'name': u'three',
             'number': 2,
             'results': None,

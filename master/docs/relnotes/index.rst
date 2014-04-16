@@ -91,7 +91,7 @@ The ``debugPassword`` configuration option is no longer needed and is thus depre
 
 * The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
 
-
+* Buildslave is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
@@ -113,6 +113,7 @@ Features
    * String parameter ``placement`` is appended to the ``region`` parameter, e.g. ``region='us-west-2', placement='b'``
      will result in the spot request being placed in us-west-2b.
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
+   * Dict parameter ``tags`` specifies AWS tags as key/value pairs to be applied to new instances.
   
   With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
   price, placement, and so on.
@@ -232,11 +233,19 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new ``SetSlaveInfo`` buildstep.
+
 * The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+
+* Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
+
+* The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
+
+* A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
 
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~
@@ -257,7 +266,11 @@ Fixes
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
 
+* The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:bb:pull:`1114`).
+
 * The source steps now correctly interpolate properties in ``env``.
+
+* ``GerritStatusPush`` now supports setting scores with Gerrit 2.6 and newer
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

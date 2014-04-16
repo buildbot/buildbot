@@ -39,8 +39,7 @@ class BuilderEndpoint(base.Endpoint):
                 return
         defer.returnValue(
             dict(builderid=builderid,
-                 name=bdict['name'],
-                 link=base.Link(('builders', str(kwargs['builderid'])))))
+                 name=bdict['name']))
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -58,8 +57,7 @@ class BuildersEndpoint(base.Endpoint):
             masterid=kwargs.get('masterid', None))
         defer.returnValue([
             dict(builderid=bd['id'],
-                 name=bd['name'],
-                 link=base.Link(('builders', str(bd['id']))))
+                 name=bd['name'])
             for bd in bdicts])
 
     def startConsuming(self, callback, options, kwargs):
@@ -77,7 +75,6 @@ class Builder(base.ResourceType):
     class EntityType(types.Entity):
         builderid = types.Integer()
         name = types.Identifier(20)
-        link = types.Link()
     entityType = EntityType(name)
 
     def __init__(self, master):

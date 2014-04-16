@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import base
 from buildbot.data import connector
 from buildbot.data import root
 from buildbot.test.util import endpoint
@@ -29,7 +28,7 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.master.data.rootLinks = [
-            {'name': u'abc', 'link': base.Link(('abc',))},
+            {'name': u'abc'},
         ]
 
     def tearDown(self):
@@ -40,7 +39,7 @@ class RootEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         rootlinks = yield self.callGet(('',))
         [self.validateData(root) for root in rootlinks]
         self.assertEqual(rootlinks, [
-            {'name': u'abc', 'link': base.Link(('abc',))},
+            {'name': u'abc'},
         ])
 
 

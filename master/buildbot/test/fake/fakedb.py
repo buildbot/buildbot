@@ -76,7 +76,7 @@ class Row(object):
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
-            assert col in kwargs, "%s not specified: %s" % col
+            assert col in kwargs, "%s not specified: %s" % (col, kwargs)
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:
@@ -1483,7 +1483,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 self.claims[row.brid] = row
 
     # component methods
-
     def getBuildRequest(self, brid):
         row = self.reqs.get(brid)
         if row:

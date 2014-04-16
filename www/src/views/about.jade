@@ -20,13 +20,14 @@
           small
 
             | buildbot-www is configured using:
-            pre {{config.config}}
+            rawdata(data='config.config')
             | buildbot-www is using the following open-source JavaScript libraries:
-            ul
-              li(ng-repeat='module in bower_configs')
-                a(ng-show='module.http_url', href='{{module.http_url}}') {{module.name}}
-                span(ng-hide='module.http_url') {{module.name}}
-                | : {{module.version}}
+            dl.dl-horizontal
+              div(ng-repeat='module in bower_configs')
+                dt
+                  a(ng-show='module.http_url', href='{{module.http_url}}') {{module.name}}
+                  span(ng-hide='module.http_url') {{module.name}}
+                dd {{module.version}}
   .row
     .well
       h2 API description

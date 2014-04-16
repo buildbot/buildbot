@@ -182,7 +182,7 @@ class SVN(Source):
                 export_cmd.extend(["--revision", str(self.revision)])
             if self.username:
                 export_cmd.extend(['--username', self.username])
-            if self.password:
+            if self.password is not None:
                 export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
@@ -212,7 +212,7 @@ class SVN(Source):
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
-        if self.password:
+        if self.password is not None:
             command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
         if self.depth:
             command.extend(['--depth', self.depth])

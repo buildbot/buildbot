@@ -18,7 +18,6 @@
 import datetime
 import re
 
-from buildbot.data import base
 from buildbot.util import UTC
 from buildbot.util import json
 
@@ -64,11 +63,6 @@ class IntValidator(InstanceValidator):
 class BooleanValidator(InstanceValidator):
     types = (bool,)
     name = 'boolean'
-
-
-class LinkValidator(InstanceValidator):
-    types = (base.Link,)
-    name = 'Link'
 
 
 class StringValidator(InstanceValidator):

@@ -15,7 +15,6 @@
 
 import datetime
 
-from buildbot.data import base
 from buildbot.test.util import validation
 from buildbot.util import UTC
 from twisted.python import log
@@ -51,14 +50,6 @@ class VerifyDict(unittest.TestCase):
                                   True, False
                               ], bad=[
                                   "yes", "no", 1, 0, None
-                              ])
-
-    def test_LinkValidator(self):
-        self.doValidationTest(validation.LinkValidator(),
-                              good=[
-                                  base.Link(('a', 'b'))
-                              ], bad=[
-                                  None, "http://foo"
                               ])
 
     def test_StringValidator(self):

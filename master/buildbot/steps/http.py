@@ -18,6 +18,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
+from twisted.internet import reactor
 
 # use the 'requests' lib: http://python-requests.org
 try:
@@ -40,6 +41,7 @@ def getSession():
     global _session
     if _session is None:
         _session = txrequests.Session()
+        reactor.addSystemEventTrigger("before", "shutdown", closeSession)
     return _session
 
 
@@ -65,11 +67,11 @@ class HTTPStep(BuildStep):
                       "timeout", "allow_redirects", "proxies",
                       "hooks", "stream", "verify", "cert"]
     renderables = requestsParams
+    session = None
 
     def __init__(self, url, method, description=None, descriptionDone=None, **kwargs):
         if txrequests is None or requests is None:
             config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
-        self.session = getSession()
         self.method = method
         self.url = url
         self.requestkwargs = {'method': method, 'url': url}
@@ -91,7 +93,11 @@ class HTTPStep(BuildStep):
 
     @defer.inlineCallbacks
     def doRequest(self):
+        # create a new session if it doesn't exist
+        self.session = getSession()
+
         log = self.addLog('log')
+
         # known methods already tested in __init__
 
         log.addHeader('Performing %s request to %s\n' % (self.method, self.url))

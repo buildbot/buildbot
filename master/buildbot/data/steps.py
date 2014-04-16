@@ -26,14 +26,12 @@ class Db2DataMixin(object):
             'number': dbdict['number'],
             'name': dbdict['name'],
             'buildid': dbdict['buildid'],
-            'build_link': base.Link(('builds', str(dbdict['buildid']))),
             'started_at': dbdict['started_at'],
             'complete': dbdict['complete_at'] is not None,
             'complete_at': dbdict['complete_at'],
             'state_strings': dbdict['state_strings'],
             'results': dbdict['results'],
             'urls': dbdict['urls'],
-            'link': base.Link(('builds', str(dbdict['id']))),
         }
         return defer.succeed(data)
 
@@ -115,7 +113,6 @@ class Step(base.ResourceType):
         number = types.Integer()
         name = types.Identifier(50)
         buildid = types.Integer()
-        build_link = types.Link()
         started_at = types.NoneOk(types.DateTime())
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
@@ -126,7 +123,6 @@ class Step(base.ResourceType):
                 name=types.String(),
                 url=types.String()
             ))
-        link = types.Link()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks

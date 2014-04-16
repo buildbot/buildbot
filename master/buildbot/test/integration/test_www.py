@@ -21,13 +21,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import json
+from buildbot.www import auth
 from buildbot.www import service as wwwservice
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
-
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
 
@@ -74,7 +74,10 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
-            debug=True)
+            debug=True,
+            auth=auth.NoAuth(),
+            url="not yet known",
+            avatar_methods=[])
         master.www = wwwservice.WWWService(master)
         yield master.www.startService()
         yield master.www.reconfigService(master.config)
@@ -143,25 +146,19 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('masters/7')},
+                 'last_active': SOMETIME},
                 {'active': True, 'masterid': 8, 'name': 'other:master',
-                 'last_active': OTHERTIME, 'link': self.link('masters/8')},
+                 'last_active': OTHERTIME},
             ],
             'meta': {
                 'total': 2,
-                'links': [
-                    {'href': self.link('masters'), 'rel': 'self'}
-                ],
             }})
 
         res = yield self.apiGet(self.link('masters/7'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
-                 'last_active': SOMETIME, 'link': self.link('masters/7')},
+                 'last_active': SOMETIME},
             ],
             'meta': {
-                'links': [
-                    {'href': self.link('masters/7'), 'rel': 'self'}
-                ],
             }})

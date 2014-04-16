@@ -84,6 +84,11 @@ class InterfaceTests(object):
         import zope.interface.interface
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
+                if not hasattr(cls, attr):
+                        msg = "Expected: %r; to implement: %s as specified in %r" % (
+                            cls, attr,
+                            interface)
+                        self.fail(msg)
                 actual_argspec = getattr(cls, attr)
                 actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
 

@@ -23,12 +23,13 @@ from zope.interface import implements
 class BuildRequestStatus:
     implements(interfaces.IBuildRequestStatus)
 
-    def __init__(self, buildername, brid, status):
+    def __init__(self, buildername, brid, status, brdict=None):
         self.buildername = buildername
         self.brid = brid
         self.status = status
         self.master = status.master
 
+        self._brdict = brdict
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
 
@@ -52,11 +53,13 @@ class BuildRequestStatus:
 
         try:
             if not self._buildrequest:
-                brd = yield self.master.db.buildrequests.getBuildRequest(
-                    self.brid)
+                if self._brdict is None:
+                    self._brdict = (
+                        yield self.master.db.buildrequests.getBuildRequest(
+                            self.brid))
 
                 br = yield buildrequest.BuildRequest.fromBrdict(self.master,
-                                                                brd)
+                                                                self._brdict)
                 self._buildrequest = br
         except:  # try/finally isn't allowed in generators in older Pythons
             self._buildrequest_lock.release()

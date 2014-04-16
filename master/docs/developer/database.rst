@@ -94,6 +94,9 @@ buildrequests
     * ``claimed_by_masterid`` (integer, the id of the master that claimed this buildrequest)
     * ``complete`` (boolean, true if the request is complete)
     * ``complete_at`` (datetime object, time this request was completed)
+    * ``submitted_at`` (datetime object, time this request was completed)
+    * ``results`` (integer result code)
+    * ``waited_for`` (boolean)
 
     .. py:method:: getBuildRequest(brid)
 
@@ -611,7 +614,7 @@ buildsets
                            complete=None):
 
         :param count: maximum number of buildsets to retrieve (required).
-        :type branch: integer
+        :type count: integer
         :param branch: optional branch name. If specified, only buildsets
             affecting such branch will be returned.
         :type branch: string

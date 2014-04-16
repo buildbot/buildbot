@@ -11,7 +11,6 @@ Source Stamps
     :attr string codebase: codebase in this repository
     :attr integer created_at: the timestamp when this sourcestamp was created
     :attr patch patch: the patch for this sourcestamp, or none
-    :attr Link link: link for this sourcestamp
 
     A source stamp represents a particular version of the source code.
     Absolute sourcestamps specify this completely, while relative sourcestamps (with revision = None) specify the latest source at the current time.

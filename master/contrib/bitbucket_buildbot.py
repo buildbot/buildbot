@@ -105,7 +105,7 @@ class BitBucketBuildBot(resource.Resource):
         factory = pb.PBClientFactory()
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
-        logging.debug('Trying to connect to: %s:%d' % (host, port))
+        logging.debug('Trying to connect to: %s:%d', host, port)
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
@@ -114,24 +114,24 @@ class BitBucketBuildBot(resource.Resource):
         """
         If connection is failed.  Logs the error.
         """
-        logging.error("Could not connect to master: %s"
-                      % error.getErrorMessage())
+        logging.error("Could not connect to master: %s",
+                      error.getErrorMessage())
         return error
 
     def addChange(self, dummy, remote, changei, src='hg'):
         """
         Sends changes from the commit to the buildmaster.
         """
-        logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
+        logging.debug("addChange %s, %s", repr(remote), repr(changei))
         try:
             change = changei.next()
         except StopIteration:
             remote.broker.transport.loseConnection()
             return None
 
-        logging.info("New revision: %s" % change['revision'][:8])
+        logging.info("New revision: %s", change['revision'][:8])
         for key, value in change.iteritems():
-            logging.debug("  %s: %s" % (key, value))
+            logging.debug("  %s: %s", key, value)
 
         change['src'] = src
         deferred = remote.callRemote('addChange', change)

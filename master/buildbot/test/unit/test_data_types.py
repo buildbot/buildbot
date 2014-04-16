@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.data import base
 from buildbot.data import types
 from twisted.trial import unittest
 
@@ -124,13 +123,6 @@ class Boolean(TypeMixin, unittest.TestCase):
         (False, 'no', 0),
         (True, 'true', 0),
     ]
-
-
-class Link(TypeMixin, unittest.TestCase):
-
-    klass = types.Link
-    good = [base.Link(('a', 'b'))]
-    bad = [None, ('a', 'b')]
 
 
 class Identifier(TypeMixin, unittest.TestCase):
