@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache'lay], function ($, realtimePages, helpers, dt, mustache, form, builders) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache'], function ($, realtimePages, helpers, dt, mustache, form, builders) {
     "use strict";
     var rtBuilders;
     var tbsorter = undefined;

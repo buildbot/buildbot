@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders) {
+define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders, timeElements) {
     "use strict";
     var rtBuildDetail;
     var stepList = $('#stepList').find('> li');
@@ -18,6 +18,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions["build"] = rtBuildDetail.processBuildDetailPage;
             realtimePages.initRealtime(realtimeFunctions);
+            timeElements.setHeartbeat(1000);
         }, processBuildDetailPage: function (data) {
 
             //We get slighlty different data objects from autobahn
@@ -41,16 +42,15 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
 
             //If build is running
             if (buildEndTime === null) {
-
                 //Elapsed Time & Progress Bar
-                if (timerCreated == false) {
-                    helpers.startCounter($('#elapsedTimeJs'), buildStartTime);
-                    timerCreated = true;
-                }
+                timeElements.addElapsedElem($('#elapsedTimeJs'), buildStartTime);
             }
+
+            timeElements.updateTimeObjects();
         },
         processBuildResult: function(data, startTime, eta, buildFinished) {
             var $buildResult = $('#buildResult');
+            timeElements.clearTimeObjects($buildResult);
             var progressBar = "";
             if (eta != 0) {
                 progressBar = mustache.render(builders,

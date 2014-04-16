@@ -1,4 +1,4 @@
-define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment"], function (screenSize,popups,Mustache, extendMoment) {
+define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function (screenSize,popups,Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
@@ -471,109 +471,29 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				testlistResultJS.append(alist);
 			}
 
-		}, setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
+		},
+        setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
 
 			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
 			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
 			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
 			
-		}, startCounter: function(el, myStartTimestamp) {
-			var startTimestamp = parseInt(myStartTimestamp),
-            old_lang = moment.lang();
-
-			function timeVars() {
-                var now = extendMoment.getServerTime().unix(),
-                time = now - startTimestamp;
-
-                moment.lang('waiting-en');
-                $(el).html(moment.duration(time, 'seconds').humanize(true));
-                moment.lang(old_lang);
-			}
-			timeVars();
-			(function repeatTimeout(){
-                if (!$.contains(document, el)) {
-				    timeVars();
-				    setTimeout(repeatTimeout, 1000);
-                }
-			})();
-        }, inDOM: function(element) {
-            return element.closest(document.documentElement).size() > 0;
-		}, delegateToProgressBar: function (bars) {
-            $.each(bars, function(key, elem) {
+		},
+        inDOM: function(element) {
+            return $.contains(document.documentElement, element[0]);
+		},
+        delegateToProgressBar: function (bars) {
+            $.each(bars, function (key, elem) {
                 var obj = $(elem);
-                helpers.progressBar(obj.attr('data-etatime'),obj,obj.attr('data-starttime'));
+                timeElements.addProgressBarElem(obj, obj.attr('data-starttime'), obj.attr('data-etatime'));
             });
-
-		}, verticalProgressBar: function(el,per) {
+		},
+        verticalProgressBar: function(el,per) {
 			// must be replaced with json values
 			el.height("{0}%".format(per));
-
-		}, progressBar: function(etaTime, el, startTime) {
-            var serverOffset = extendMoment.getServerOffset(),
-                start = moment.unix(startTime),
-                percentInner = el.children('.percent-inner-js'),
-                timeTxt = el.children('.time-txt-js'),
-                hasETA = etaTime != 0;
-
-            function timeVars() {
-                var percent = 100;
-                var old_lang = moment.lang();
-
-                if (hasETA) {
-                    var now = moment() + serverOffset,
-                        etaEpoch = now + (etaTime * 1000.0),
-                        overtime = etaTime < 0,
-                        then = moment().add('s', etaTime) + serverOffset;
-
-                    percent = 100 - (then - now) / (then - start) * 100;
-                    percent = percent.clamp(0, 100);
-
-                    moment.lang('progress-bar-en');
-                    timeTxt.html(moment(etaEpoch).fromServerNow());
-
-                    if (overtime)
-                        el.addClass('overtime');
-
-                    etaTime--;
-                }
-                else {
-                    moment.lang('progress-bar-no-eta-en');
-                    timeTxt.html(moment(parseInt(startTime * 1000)).fromServerNow());
-                }
-
-                //Reset language to original
-                moment.lang(old_lang);
-                percentInner.css('width', percent + "%");
-            }
-
-            timeVars();
-
-            (function repeatTimeout() {
-                timeVars();
-                setTimeout(function () {
-                    if (helpers.inDOM(percentInner)) {
-                        repeatTimeout()
-                    }
-                }, 1000);
-            })();
-		}, startCounterTimeago: function(el, myStartTimestamp) {
-            function timeVars() {
-                var startTimestamp = parseInt(myStartTimestamp);
-                var lastMessageTimeAgo = moment.unix(startTimestamp).fromServerNow();
-                el.html(lastMessageTimeAgo);
-            }
-
-            timeVars();
-            (function repeatTimeout() {
-                timeVars();
-                setTimeout(function () {
-                    if (helpers.inDOM(el)) {
-                        repeatTimeout();
-                    }
-                }, 1000);
-            })()
-        }, getTime: function  (start, end) {
+		},
+        getTime: function  (start, end) {
 	
 			if (end === null) {
 				end = Math.round(+new Date()/1000);	
@@ -604,12 +524,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
             return slavesResult === 'Not connected' ? 'status-td offline' : slavesResult === 'Running' ? 'status-td building' : 'status-td idle';
 
-        }, getCurrentPage: function () {
-        	var currentPage = document.getElementsByTagName('body')[0].id;
-        	// return the id of the page        
-			return currentPage;			
-			 
-		}, hasfinished: function () {
+        },
+        getCurrentPage: function () {
+            // return the id of the page
+			return document.getElementsByTagName('body')[0].id;
+		},
+        hasfinished: function () {
 			var hasfinished = false;
 			var isFinishedAttr = $('#isFinished').attr('data-isfinished');
 			
@@ -624,7 +544,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
         	return hasfinished
 
 		}, isRealTimePage: function() {
-			var isRealtimePage = false
+			var isRealtimePage = false;
 			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {

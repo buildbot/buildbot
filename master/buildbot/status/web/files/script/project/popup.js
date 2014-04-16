@@ -1,4 +1,4 @@
-define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache'], function (helpers,form,popups,Mustache) {
+define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache', 'timeElements'], function (helpers,form,popups,Mustache, timeElements) {
 
     "use strict";
     var popup;
@@ -11,7 +11,8 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 
 			tableSorterRt.delegate('a.popup-btn-json-js', 'click', function(e){
 				e.preventDefault();												
-				popup.showjsonPopup($(this).data());												
+				popup.showjsonPopup($(this).data());
+                timeElements.updateTimeObjects();
 			});
 
 			$('.popup-btn-js-2').click(function(e){			
@@ -130,7 +131,8 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 					var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));						
 					var waitingtime = mustacheTmplShell.find('.waiting-time-js');
 					waitingtime.each(function(i){						
-						helpers.startCounter($(this),data[i].submittedAt);
+						timeElements.addElapsedElem($(this),data[i].submittedAt);
+                        timeElements.updateTimeObjects();
 					});					
 					mustacheTmplShell.appendTo('body');					
 					helpers.jCenter(mustacheTmplShell).fadeIn('fast', function(){

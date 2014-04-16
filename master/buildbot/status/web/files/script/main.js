@@ -26,13 +26,14 @@ require.config({
         'extend-moment': 'project/extendMoment',
 		'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
-		'livestamp': "plugins/livestamp"
-		//'noise': "plugins/jquery.noisy"
+		'livestamp': "plugins/livestamp",
+		'noise': "plugins/jquery.noisy",
+        'timeElements': "project/timeElements"
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','noise', 'timeElements'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,noisy, timeElements) {
 		
 	'use strict';
 
@@ -100,5 +101,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		helpers.init();
         dataTables.init();
         extendMoment.init();
+        timeElements.init();
 	});	
 });
