@@ -28,7 +28,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
     
     helpers = {
         init: function () {
-    
+
         	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
@@ -78,14 +78,19 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			helpers.selectBuildsAction();
 			
 			// chrome font problem fix
-			$(function chromeWin() {
+			$(function userAgent() {
 				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());
+				var isFirefox = /firefox/.test( navigator.userAgent.toLowerCase());
 				var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
 				if (is_chrome) {
 					$('body').addClass('chrome');
 				}
 				if (isWindows) {
 					$('body').addClass('win');
+				}
+
+				if (isFirefox) {
+					$('body').addClass('firefox');
 				}
 								
 			});		

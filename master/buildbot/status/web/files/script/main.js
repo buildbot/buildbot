@@ -26,7 +26,7 @@ require.config({
         'extend-moment': 'project/extendMoment',
 		'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
-		'livestamp': "plugins/livestamp",
+		'livestamp': "plugins/livestamp"
 		//'noise': "plugins/jquery.noisy"
 	}
 });

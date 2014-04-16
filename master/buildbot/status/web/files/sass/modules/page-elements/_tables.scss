@@ -27,14 +27,17 @@
 	float: left;
 	height: 100%;
 	line-height: 20px;
-	text-align: center;
-	transition: width 0.6s ease 0s;
+	text-align: center;	
+	transition: width 0.6s ease 0s;		
 	width: 0;
-	-webkit-animation: progress-bar-stripes 2s linear infinite;
-    animation: progress-bar-stripes 2s linear infinite;
+	-webkit-animation: progress-bar-stripes 2s linear infinite;	
+    animation: progress-bar-stripes 2s linear infinite;        
+    .firefox & {
+    	animation: none;
+    	transition: none;
+  	}
     .overtime & {
-    	background-color:#857373;
-	
+    	background-color:#857373;	
 	}
 }
 .time-txt {

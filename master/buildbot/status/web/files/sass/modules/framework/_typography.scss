@@ -138,6 +138,9 @@ div.welcome-txt {
     padding: 0;
     font-weight:bold;
     position: relative;
+ 	.firefox & {
+    	display: none;
+  	}
 }
  
 .building .spin-icon {

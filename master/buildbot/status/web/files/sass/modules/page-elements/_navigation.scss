@@ -68,7 +68,7 @@ border: 1px solid #9F9B41;
 }
 
 .inner-bar {
- background-color: #FFFFFF;
+ 	background-color: rgba(244, 249, 255, 0.84);
     bottom: 0;
     display: block;
     left: 0;
@@ -83,18 +83,17 @@ border: 1px solid #9F9B41;
 	float:left;
 	@include pie-clearfix;
 	.menu-bubble {
-	background-color: #D6E4EE;
-    border-radius: 9px;
-    
-    color: #000000;
-    display: block;
-    float: right;
-    font-size: 10px;
-    font-weight: normal;
-    letter-spacing: 1px;
-    margin: -2px 0 0 13px;
-    padding: 2px 7px 3px 8px;
-    @include text-shadow ( 0 1px 0 #FFFFFF);
+		background-color: #D6E4EE;
+	    @include border-radius ( 9px);	    
+	    color: #000000;
+	    display: block;
+	    float: right;
+	    font-size: 10px;
+	    font-weight: normal;
+	    letter-spacing: 1px;
+	    margin: -2px 0 0 13px;
+	    padding: 2px 7px 3px 8px;
+	    @include text-shadow ( 0 1px 0 #FFFFFF);
 	}
 	&> li {
 		float:left;
