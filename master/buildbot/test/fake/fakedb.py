@@ -442,7 +442,8 @@ class FakeChangesComponent(FakeDBComponent):
 
     def _chdict(self, row):
         chdict = row.copy()
-        del chdict['uids']
+        if 'uids' in chdict:
+            del chdict['uids']
         chdict['when_timestamp'] = _mkdt(chdict['when_timestamp'])
         return chdict
 
