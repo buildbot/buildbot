@@ -155,6 +155,8 @@ Features
 
 * A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
 
+* ::bb:step:`Repo` now supports a ``depth`` flag when initializing the repo. This controls the amount of git history to download.
+
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~
 
