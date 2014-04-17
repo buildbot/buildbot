@@ -281,8 +281,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.reason = reason
 
     def setBlamelist(self, blamelist):
-        self.blamelist = blamelist
-
+        self.blamelist = list(set(blamelist))   # remove duplicates
     def setProgress(self, progress):
         self.progress = progress
 

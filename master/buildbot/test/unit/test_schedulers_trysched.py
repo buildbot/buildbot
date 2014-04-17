@@ -621,22 +621,23 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.db.buildsets.assertBuildset('?',
-                                             dict(reason="'try' job",
-                                                  external_idstring=None,
-                                                  properties=[
-                                                      ('frm', ('schd', 'Scheduler')),
-                                                      ('pr', ('op', 'try build')),
-                                                      ('scheduler', ('tsched', 'Scheduler')),
-                                                  ],
-                                                  sourcestampsetid=100,
-                                                  ),
-                                             {'':
-                                              dict(branch='default', repository='repo', codebase='',
-                                                   project='proj', revision='abcdef',
-                                                   sourcestampsetid=100,
-                                                   patch_body='-- ++', patch_level=1, patch_subdir='',
-                                                   patch_author="", patch_comment="")
-                                              })
+                    dict(reason="'try' job",
+                        external_idstring=None,
+                        properties=[
+                            ('frm', ('schd', 'Scheduler')),
+                            ('pr', ('op', 'try build')),
+                            ('scheduler', ('tsched', 'Scheduler')),
+                        ],
+                        sourcestampsetid=100,
+                        ),
+                    {'':
+                     dict(branch='default', repository='repo', codebase='',
+                        project='proj', revision='abcdef',
+                        sourcestampsetid=100,
+                        patch_body='-- ++', patch_level=1, patch_subdir='',
+                        patch_author="", patch_comment="",
+                        changeids=set([500]))
+                    })
         d.addCallback(check)
         return d
 
@@ -647,22 +648,23 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.db.buildsets.assertBuildset('?',
-                                             dict(reason="'try' job by user who (comment)",
-                                                  external_idstring=None,
-                                                  properties=[
-                                                      ('frm', ('schd', 'Scheduler')),
-                                                      ('pr', ('op', 'try build')),
-                                                      ('scheduler', ('tsched', 'Scheduler')),
-                                                  ],
-                                                  sourcestampsetid=100,
-                                                  ),
-                                             {'':
-                                              dict(branch='default', repository='repo', codebase='',
-                                                   project='proj', revision='abcdef',
-                                                   sourcestampsetid=100,
-                                                   patch_body='-- ++', patch_level=1, patch_subdir='',
-                                                   patch_author='who', patch_comment="comment")
-                                              })
+                    dict(reason="'try' job by user who (comment)",
+                        external_idstring=None,
+                        properties=[
+                            ('frm', ('schd', 'Scheduler')),
+                            ('pr', ('op', 'try build')),
+                            ('scheduler', ('tsched', 'Scheduler')),
+                        ],
+                        sourcestampsetid=100,
+                        ),
+                    {'':
+                     dict(branch='default', repository='repo',  codebase='',
+                        project='proj', revision='abcdef',
+                        sourcestampsetid=100,
+                        patch_body='-- ++', patch_level=1, patch_subdir='',
+                        patch_author='who', patch_comment="comment",
+                        changeids=set([500]))
+                    })
         d.addCallback(check)
         return d
 

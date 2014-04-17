@@ -149,9 +149,10 @@ function checkMouseLeave(element, event) {
   
 {% if categories|length > 1 %}
   <tr>
-    <td width="1%">
-    </td>
-    <td width="1%">
+    <td width="1%" />
+    <td width="1%" />
+    <td width="1%" />
+    <td width="1%" />
     </td>
   {% for c in categories %}
       <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
@@ -167,10 +168,10 @@ function checkMouseLeave(element, event) {
 
 {% if slaves %}
   <tr>
-    <td width="1%">
-    </td>
-    <td width="1%">
-    </td>
+    <td width="1%" />
+    <td width="1%" />
+    <td width="1%" />
+    <td width="1%" />
   {% for c in categories %}
     <td class='DevSlave {{ alt_class.next() }}'>
       <table width="100%">
@@ -188,12 +189,20 @@ function checkMouseLeave(element, event) {
   </tr>
 {% endif %}
   
-{% for r in revisions %}
+{% for r in changes %}
   {% set alt = alt_class.next() %}
   {% set firstrev = "first" if loop.first else '' %}
 
   <tr>
     <td class='DevRev {{ alt }}' width="1%">
+      {{ r.date }}
+    </td>
+    <td class='DevName {{ alt }}' width="1%">
+    {% if r.link %}
+        <a href="{{ r.link }}">View diff</a>
+    {% endif %}
+    </td>
+    <td class='DevName {{ alt }}' width="1%">
       {{ r.id|shortrev(r.repository) }}
     </td>
     <td class='DevName {{ alt }}' width="1%">
@@ -246,7 +255,7 @@ function checkMouseLeave(element, event) {
   </tr>  
 
 {% else %}
- <tr><td>No revisions available</td></tr>
+ <tr><td>No changes available</td></tr>
 {% endfor %}
   
 </table>
@@ -274,5 +283,5 @@ window.onload = function() {
 {% block footer %}
 
 {{ super() }}
-{# <p>Debug info: {{ debuginfo }}</p> #}
+<p>Debug info: {{ debuginfo }}</p>
 {% endblock %}
