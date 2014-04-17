@@ -768,12 +768,12 @@ class RunProcess:
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = "command timed out: %d seconds without output" % self.timeout
+        msg = "command timed out: %d seconds without output running %s" % (self.timeout, self.fake_command)
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
-        msg = "command timed out: %d seconds elapsed" % self.maxTime
+        msg = "command timed out: %d seconds elapsed running %s" % (self.maxTime, self.fake_command)
         self.kill(msg)
 
     def isDead(self):

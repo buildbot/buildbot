@@ -77,6 +77,8 @@ class BuildSetStatus:
 
 class BuildSetSummaryNotifierMixin:
 
+    _buildsetCompleteConsumer = None
+
     def summarySubscribe(self):
         self._buildsetCompleteConsumer = self.master.mq.startConsuming(
             self._buildsetComplete,
