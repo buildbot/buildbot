@@ -26,7 +26,8 @@ from buildbot.status.web.base import HtmlResource
 from twisted.internet import defer
 
 
-class DoesNotPassFilter(Exception): pass # Used for filtering changes
+class DoesNotPassFilter(Exception):
+    pass  # Used for filtering changes
 
 
 def getResultsClass(results, prevResults, inProgress, inBuilder):
@@ -218,7 +219,7 @@ class ConsoleStatusResource(HtmlResource):
                     for log in step.getLogs():
                         logname = log.getName()
                         logurl = request.childLink(
-                          "../builders/%s/builds/%s/steps/%s/logs/%s" %
+                            "../builders/%s/builds/%s/steps/%s/logs/%s" %
                             (urllib.quote(builderName),
                              build.getNumber(),
                              urllib.quote(name),

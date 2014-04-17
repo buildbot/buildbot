@@ -255,7 +255,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
-            patch_comment=comment or '',
+            patch_comment=comment or '', codebase='',
             sourcestampsetid=sourcestampsetid,
             changeids=[change.number])
                     # note: no way to specify patch subdir - #1769
