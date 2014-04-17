@@ -426,7 +426,7 @@ class ConsoleStatusResource(HtmlResource):
                 inBuilder = len(allBuilds[bldr]) == 0
 
                 # Find the first build that does not include the change.
-                for build in allBuilds[builder]:
+                for build in allBuilds[bldr]:
                     if self.comparator.isChangeEarlier(build, change):
                         firstNotIn = build
                         break
@@ -466,7 +466,7 @@ class ConsoleStatusResource(HtmlResource):
                 if isRunning:
                     pageTitle += ' ETA: %ds' % (introducedIn.eta or 0)
 
-                resultsClass = getResultsClass(results, previousResults, isRunning)
+                resultsClass = getResultsClass(results, previousResults, isRunning, True)
 
                 b = {}
                 b["url"] = url
@@ -561,7 +561,7 @@ class ConsoleStatusResource(HtmlResource):
             r['details'] = details
 
             # Calculate the td span for the comment and the details.
-            r["span"] = len(builderList) + 4
+            r["span"] = len(builderList) + 3
 
             subs['changes'].append(r)
 
@@ -629,7 +629,7 @@ class ConsoleStatusResource(HtmlResource):
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
-        d = self.getAllChanges(request, status, numRevs, debugInfo)
+        d = self.getAllChanges(request, status, numChanges, debugInfo)
 
         def got_changes(allChanges):
             debugInfo["source_all"] = len(allChanges)

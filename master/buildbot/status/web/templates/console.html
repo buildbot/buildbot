@@ -152,7 +152,6 @@ function checkMouseLeave(element, event) {
     <td width="1%" />
     <td width="1%" />
     <td width="1%" />
-    <td width="1%" />
     </td>
   {% for c in categories %}
       <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
@@ -168,7 +167,6 @@ function checkMouseLeave(element, event) {
 
 {% if slaves %}
   <tr>
-    <td width="1%" />
     <td width="1%" />
     <td width="1%" />
     <td width="1%" />
@@ -199,11 +197,10 @@ function checkMouseLeave(element, event) {
     </td>
     <td class='DevName {{ alt }}' width="1%">
     {% if r.link %}
-        <a href="{{ r.link }}">View diff</a>
-    {% endif %}
-    </td>
-    <td class='DevName {{ alt }}' width="1%">
+        <a href="{{ r.link }}">{{ r.id|shortrev(r.repository) }}</a>
+    {% else %}
       {{ r.id|shortrev(r.repository) }}
+    {% endif %}
     </td>
     <td class='DevName {{ alt }}' width="1%">
       {{ r.who|user }}
