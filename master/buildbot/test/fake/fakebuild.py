@@ -20,6 +20,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process import properties
+from buildbot.test.fake import fakemaster
 from twisted.python import components
 
 
@@ -40,9 +41,9 @@ components.registerAdapter(
 
 class FakeBuild(properties.PropertiesMixin):
 
-    def __init__(self, props=None):
+    def __init__(self, props=None, master=None):
         self.build_status = FakeBuildStatus()
-        self.builder = mock.Mock(name='build.builder')
+        self.builder = fakemaster.FakeBuilderStatus(master)
         self.builder.config = config.BuilderConfig(
             name='bldr',
             slavenames=['a'],
@@ -65,6 +66,9 @@ class FakeBuild(properties.PropertiesMixin):
 
     def allFiles(self):
         return []
+
+    def getBuilder(self):
+        return self.builder
 
 
 components.registerAdapter(
