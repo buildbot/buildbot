@@ -94,7 +94,7 @@ class Repo(Source):
     name = 'repo'
     renderables = ["manifestURL", "manifestBranch", "manifestFile", "tarball", "jobs",
                    "syncAllBranches", "updateTarballAge", "manifestOverrideUrl",
-                   "repoDownloads", "repoDepth"]
+                   "repoDownloads", "depth"]
 
     ref_not_found_re = re.compile(r"fatal: Couldn't find remote ref")
     cherry_pick_error_re = re.compile(r"|".join([r"Automatic cherry-pick failed",
@@ -116,7 +116,7 @@ class Repo(Source):
                  updateTarballAge=7 * 24.0 * 3600.0,
                  manifestOverrideUrl=None,
                  repoDownloads=None,
-                 repoDepth=0,
+                 depth=0,
                  **kwargs):
         """
         @type  manifestURL: string
@@ -144,8 +144,8 @@ class Repo(Source):
         @type repoDownloads: list of strings
         @param repoDownloads: optional repo download to perform after the repo sync
 
-        @type repoDepth: integer
-        @param repoDepth: optional depth parameter to repo init.
+        @type depth: integer
+        @param depth: optional depth parameter to repo init.
                           If specified, create a shallow clone with given depth.
         """
         self.manifestURL = manifestURL
@@ -159,7 +159,7 @@ class Repo(Source):
         if repoDownloads is None:
             repoDownloads = []
         self.repoDownloads = repoDownloads
-        self.repoDepth = repoDepth
+        self.depth = depth
         Source.__init__(self, **kwargs)
 
         assert self.manifestURL is not None
@@ -279,7 +279,7 @@ class Repo(Source):
                              '-u', self.manifestURL,
                              '-b', self.manifestBranch,
                              '-m', self.manifestFile,
-                             '--depth', str(self.repoDepth)])
+                             '--depth', str(self.depth)])
 
         if self.manifestOverrideUrl:
             self.stdio_log.addHeader("overriding manifest with %s\n" % (self.manifestOverrideUrl))
