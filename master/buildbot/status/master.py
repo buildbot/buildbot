@@ -221,15 +221,19 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getSchedulers(self):
         return self.master.allSchedulers()
 
-    def getBuilderNames(self, categories=None):
-        if categories is None:
+    def getBuilderNames(self, tags=None, categories=None):
+        if categories is not None:
+            # Categories is deprecated; pretend they said "tags".
+            tags = categories
+
+        if tags is None:
             return util.naturalSort(self.botmaster.builderNames)  # don't let them break it
 
         l = []
         # respect addition order
         for name in self.botmaster.builderNames:
-            bldr = self.botmaster.builders[name]
-            if bldr.config.category in categories:
+            bldr = self.getBuilder(name)
+            if bldr.matchesAnyTag(tags):
                 l.append(name)
         return util.naturalSort(l)
 
@@ -328,7 +332,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         if t:
             builder_status.subscribe(t)
 
-    def builderAdded(self, name, basedir, category=None, description=None):
+    def builderAdded(self, name, basedir, tags=None, description=None):
         """
         @rtype: L{BuilderStatus}
         """
@@ -358,13 +362,13 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = builder.BuilderStatus(name, category, self.master,
+            builder_status = builder.BuilderStatus(name, tags, self.master,
                                                    description)
             builder_status.addPointEvent(["builder", "created"])
-        log.msg("added builder %s in category %s" % (name, category))
-        # an unpickled object might not have category set from before,
+        log.msg("added builder %s with tags %r" % (name, tags))
+        # an unpickled object might not have tags set from before,
         # so set it here to make sure
-        builder_status.category = category
+        builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
