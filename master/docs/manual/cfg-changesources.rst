@@ -1267,8 +1267,8 @@ A configuration for this source might look like::
         "gerrit_user",
         handled_events=["patchset-created", "change-merged"])
 
-see :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
-for a full example setup of :bb:chsrc:`GerritChangeSource`.
+see :file:`master/docs/examples/git_gerrit.cfg` or :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
+for a full example setup of Git+Gerrit or Repo+Gerrit of :bb:chsrc:`GerritChangeSource`.
 
 .. bb:chsrc:: Change Hooks
 
