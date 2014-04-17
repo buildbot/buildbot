@@ -33,7 +33,7 @@ class SessionConfigResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, '/')
-        _auth.maybeAutoLogin.assert_called()
+        _auth.maybeAutoLogin.assert_called_with(mock.ANY)
         exp = 'this.config = {"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertEqual(res, exp)
 
