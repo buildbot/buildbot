@@ -127,7 +127,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                     'bash', '-c', self.step._getCleanupCommand()]),
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                         '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf', '--depth', '0'])
         ] + override_commands + [
             self.ExpectShell(command=['repo', 'sync'] + syncoptions),
             self.ExpectShell(
@@ -395,7 +395,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                         '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf', '--depth', '0'])
             + 0,
             self.ExpectShell(
                 workdir='wkdir/.repo/manifests',

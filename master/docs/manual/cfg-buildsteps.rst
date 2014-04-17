@@ -906,6 +906,11 @@ The Repo step takes the following arguments:
     (optional, defaults to ``False``): renderable boolean to control whether ``repo``
     syncs all branches. i.e. ``repo sync -c``
 
+``depth``
+    (optional, defaults to 0): Depth argument passed to repo init.
+    Specifies the amount of git history to store. A depth of 1 is useful for shallow clones.
+    This can save considerable disk space on very large projects.
+
 ``updateTarballAge``
     (optional, defaults to "one week"):
     renderable to control the policy of updating of the tarball
