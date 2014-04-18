@@ -498,8 +498,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'],
-                             'refs/heads/master')
+            self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
@@ -631,8 +630,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'],
-                             'refs/heads/master')
+            self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
@@ -729,8 +727,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.changes_added[0]['when_timestamp'],
                              epoch2datetime(1273258009))
             self.assertEqual(self.changes_added[0]['comments'], 'hello!')
-            self.assertEqual(self.changes_added[0]['branch'],
-                             'refs/heads/master')
+            self.assertEqual(self.changes_added[0]['branch'], 'master')
             self.assertEqual(self.changes_added[0]['files'], ['/etc/442'])
             self.assertEqual(self.changes_added[0]['src'], 'git')
 
