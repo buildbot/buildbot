@@ -32,7 +32,7 @@ Features
 
 * The GitHub webhook can now optionally ignore non-distinct commits (:bb:bug:`1861`).
 
-* The HGPoller and GitPoller now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
+* The :bb:chsrc:`HgPoller` and :bb:chsrc:`GitPoller` now split filenames on newlines, rather than whitespace, so files containing whitespace are handled correctly.
 
 * Add 'pollAtLaunch' flag for polling change sources. This allows a poller to poll immediately on launch and get changes that occurred while it was down.
 
@@ -44,38 +44,38 @@ Features
 
 * Each Scheduler type can now take a 'reason' argument to customize the reason it uses for triggered builds.
 
-* A new argument ``createAbsoluteSourceStamps`` has been added to ``SingleBranchScheduler`` for use with multiple codebases.
+* A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`SingleBranchScheduler` for use with multiple codebases.
 
 * A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`Nightly` for use with multiple codebases.
 
-* The ``Periodic`` scheduler now supports codebases.
+* The :bb:sched:``Periodic`` scheduler now supports codebases.
 
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
-* Master side source checkout steps now support patches (:bb:bug:`2098`). The Git and Mercurial steps use their inbuilt commands to apply patches (:bb:bug:`2563`).
+* Master side source checkout steps now support patches (:bb:bug:`2098`). The :bb:step:`Git` and Mercurial steps use their inbuilt commands to apply patches (:bb:bug:`2563`).
 
 * Master side source checkout steps now support retry option (:bb:bug:`2465`).
 
 * Master-side source checkout steps now respond to the "stop build" button (:bb:bug:`2356`).
 
-* Git source checkout step now supports reference repositories.
+* :bb:step:`Git` source checkout step now supports reference repositories.
 
-* The Git step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
+* The :bb:step:`Git` step now uses the `git clean` option `-f` twice, to also remove untracked directories managed by another git repository.
   See :bb:bug:`2560`.
 
 * The ``branch`` and ``codebase`` arguments to the :bb:step:`Git` step are now renderable.
 
-* Gerrit integration with Git Source step on master side (:bb:bug:`2485`).
+* Gerrit integration with :bb:step:`Git` Source step on master side (:bb:bug:`2485`).
 
 * P4 source step now supports more advanced options.
 
-* The master-side SVN step now supports authentication for mode=export, fixing :bb:bug:`2463`.
+* The master-side :bb:step:`SVN` step now supports authentication for mode=export, fixing :bb:bug:`2463`.
 
-* The SVN step will now canonicalize URL's before matching them for better accuracy.
+* The :bb:step:`SVN` step will now canonicalize URL's before matching them for better accuracy.
 
-* The SVN step now obfuscates the password in status logs, fixing :bb:bug:`2468`.
+* The :bb:step:`SVN` step now obfuscates the password in status logs, fixing :bb:bug:`2468`.
 
-* SVN source step and ShellCommand now support password obfuscation. (:bb:bug:`2468` and :bb:bug:`1478`).
+* :bb:step:`SVN` source step and ShellCommand now support password obfuscation. (:bb:bug:`2468` and :bb:bug:`1478`).
 
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 
@@ -104,14 +104,14 @@ Features
 * The :bb:step:`HTTPStep` step can make arbitrary HTTP requests from the master, allowing communication with external APIs.
   This new feature requires the optional ``txrequests`` and ``requests`` Python packages.
 
-* reconf option for GNUAutotools to run autoreconf before ./configure
-
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
 * Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
   the slave is not connected.
 
 * Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+
+* The `GNUAutotools` factory now has a reconf option to run autoreconf before ``./configure``.
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
@@ -198,11 +198,11 @@ Refer to the documentation for previous versions for infrormation on old-style s
 Fixes
 ~~~~~
 
-* Fixed an issue where the Git and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
+* Fixed an issue where the :bb:step:`Git` and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
 * The CVS source step now respects the timeout parameter.
 
-* The Git step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
+* The :bb:step:`Git` step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
   so that it will receive any newly added submodules.
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bb:bug:`2586`).
