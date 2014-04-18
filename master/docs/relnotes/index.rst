@@ -48,7 +48,7 @@ Features
 
 * A new argument ``createAbsoluteSourceStamps`` has been added to :bb:sched:`Nightly` for use with multiple codebases.
 
-* The :bb:sched:``Periodic`` scheduler now supports codebases.
+* The :bb:sched:`Periodic` scheduler now supports codebases.
 
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
@@ -67,7 +67,7 @@ Features
 
 * Gerrit integration with :bb:step:`Git` Source step on master side (:bb:bug:`2485`).
 
-* P4 source step now supports more advanced options.
+* :bb:step:`P4` source step now supports more advanced options.
 
 * The master-side :bb:step:`SVN` step now supports authentication for mode=export, fixing :bb:bug:`2463`.
 
@@ -97,7 +97,7 @@ Features
 
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
 
-* Added new build steps for ``VC12``, ``VS2014`` and ``MsBuild12``.
+* Added new build steps for :bb:step:`VC12`, :bb:step:`VS2014` and :bb:step:`MsBuild12`.
 
 * The ``mode`` parameter of the VS steps is now renderable (:bb:bug:`2592`).
 
@@ -111,7 +111,7 @@ Features
 
 * Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
 
-* The `GNUAutotools` factory now has a reconf option to run autoreconf before ``./configure``.
+* The ``GNUAutotools`` factory now has a reconf option to run autoreconf before ``./configure``.
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
@@ -198,9 +198,9 @@ Refer to the documentation for previous versions for infrormation on old-style s
 Fixes
 ~~~~~
 
-* Fixed an issue where the :bb:step:`Git` and CVS source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
+* Fixed an issue where the :bb:step:`Git` and :bb:step:`CVS` source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
-* The CVS source step now respects the timeout parameter.
+* The :bb:step:`CVS` source step now respects the timeout parameter.
 
 * The :bb:step:`Git` step now uses the `git submodule update` option `--init` when updating the submodules of an existing repository,
   so that it will receive any newly added submodules.
@@ -239,9 +239,9 @@ Fixes
 
 * Fixes parsing git commit messages that are blank.
 
-* :bb:step: `Git` no longer fails when work dir exists but isn't a checkout (:bb:bug:`2531`).
+* :bb:step:`Git` no longer fails when work dir exists but isn't a checkout (:bb:bug:`2531`).
 
-* The `haltOnFailure` and `flunkOnFailure` attricutes of :bb:step: `ShellCommand` are now renderable. (:bb:bug `2486`).
+* The `haltOnFailure` and `flunkOnFailure` attricutes of :bb:step:`ShellCommand` are now renderable. (:bb:bug `2486`).
 
 * The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in buildbot.tac. This fixes log rotation.
 
