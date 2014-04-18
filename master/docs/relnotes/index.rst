@@ -65,7 +65,7 @@ Features
 
 * The ``branch`` and ``codebase`` arguments to the :bb:step:`Git` step are now renderable.
 
-* Gerrit integration with Git Source step on master side (:bb:`2485`).
+* Gerrit integration with Git Source step on master side (:bb:bug:`2485`).
 
 * P4 source step now supports more advanced options.
 
