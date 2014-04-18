@@ -58,6 +58,11 @@ def error(error):
         raise ConfigErrors([error])
 
 
+def warnDeprecated(version, msg):
+    # for now just log the deprecation
+    log.msg("NOTE: [%s and later] %s" % (version, msg))
+
+
 class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
@@ -382,7 +387,7 @@ class MasterConfig(util.ComparableMixin):
 
         # db_poll_interval is deprecated
         if 'db_poll_interval' in self.db:
-            log.msg("NOTE: db_poll_interval is deprecated and will be ignored")
+            warnDeprecated("0.8.7", "db_poll_interval is deprecated and will be ignored")
             del self.db['db_poll_interval']
 
     def load_mq(self, filename, config_dict):
@@ -688,7 +693,8 @@ class MasterConfig(util.ComparableMixin):
 class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, slavename=None, slavenames=None,
-                 builddir=None, slavebuilddir=None, factory=None, category=None,
+                 builddir=None, slavebuilddir=None, factory=None,
+                 tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, mergeRequests=None, description=None,
                  canStartBuild=None):
@@ -743,10 +749,22 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.slavebuilddir = slavebuilddir
 
         # remainder are optional
-        if category is not None and not isinstance(category, str):
-            error("builder '%s': category must be a string" % (name,))
 
-        self.category = category or ''
+        if category and tags:
+            error("builder '%s': category is deprecated and replaced by tags; you should only specify tags" % (name,))
+        if category:
+            warnDeprecated("0.9", "category is deprecated and should be replaced with 'tags=[cat]'")
+            if not isinstance(category, str):
+                error("builder '%s': category must be a string" % (name,))
+            tags = [category]
+        if tags:
+            if not isinstance(tags, list):
+                error("builder '%s': tags must be a list" % (name,))
+            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
+            if bad_tags:
+                error("builder '%s': tags list contains something that is not a string" % (name,))
+        self.tags = tags
+
         self.nextSlave = nextSlave
         if nextSlave and not callable(nextSlave):
             error('nextSlave must be a callable')
@@ -776,8 +794,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
             'builddir': self.builddir,
             'slavebuilddir': self.slavebuilddir,
         }
-        if self.category:
-            rv['category'] = self.category
+        if self.tags:
+            rv['tags'] = self.tags
         if self.nextSlave:
             rv['nextSlave'] = self.nextSlave
         if self.nextBuild:

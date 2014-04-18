@@ -196,7 +196,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
         res = yield self.render_resource(self.rsrc, '/auth/login')
         self.assertEqual(res, "")
         self.failIf(self.auth.maybeAutoLogin.called)
-        self.auth.updateUserInfo.assert_called()
+        self.auth.updateUserInfo.assert_called_with(mock.ANY)
         self.assertEqual(self.master.session.user_info,
                          {'email': 'him@org', 'username': 'him'})
 
@@ -212,4 +212,4 @@ class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
         self.master.session.expire = mock.Mock()
         res = yield self.render_resource(self.rsrc, '/auth/logout')
         self.assertEqual(res, "")
-        self.master.session.expire.assert_called()
+        self.master.session.expire.assert_called_with()

@@ -250,10 +250,9 @@ buildbot.util.lru
         :param key: key at which to place the value
         :param value: value to place there
 
-        Update the cache with the given key and value, but only if the key is
-        already in the cache.  The purpose of this method is to insert a new
-        value into the cache *without* invoking the miss_fn (e.g., to avoid
-        unnecessary overhead).
+        Add the given key and value into the cache.  The purpose of this
+        method is to insert a new value into the cache *without* invoking
+        the miss_fn (e.g., to avoid unnecessary overhead).
 
     .. py:method set_max_size(max_size)
 

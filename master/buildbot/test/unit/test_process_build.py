@@ -111,10 +111,6 @@ class FakeBuilder:
         pass
 
 
-class FakeBuilderStatus:
-    implements(interfaces.IBuilderStatus)
-
-
 class FakeStepFactory(object):
 
     """Fake step factory that just returns a fixed step object."""

@@ -912,6 +912,11 @@ The Repo step takes the following arguments:
     (optional, defaults to ``False``): renderable boolean to control whether ``repo``
     syncs all branches. i.e. ``repo sync -c``
 
+``depth``
+    (optional, defaults to 0): Depth argument passed to repo init.
+    Specifies the amount of git history to store. A depth of 1 is useful for shallow clones.
+    This can save considerable disk space on very large projects.
+
 ``updateTarballAge``
     (optional, defaults to "one week"):
     renderable to control the policy of updating of the tarball
@@ -2305,8 +2310,14 @@ Available constructor arguments are:
 ``move``
     Delete the source directory after the copy is complete (``/MOVE`` parameter).
 
-``exclude``
+``exclude_files``
     An array of file names or patterns to exclude from the copy (``/XF`` parameter).
+
+``exclude_dirs``
+    An array of directory names or patterns to exclude from the copy (``/XD`` parameter).
+
+``custom_opts``
+    An array of custom parameters to pass directly to the ``robocopy`` command.
 
 ``verbose``
     Whether to output verbose information (``/V /TS /TP`` parameters).

@@ -530,7 +530,7 @@ MailNotifier arguments
 
     ``all``
         Always send mail about builds. Equivalent to (``change``, ``failing``,
-        ``passing``, ``passing``, ``problem``, ``warnings``, ``exception``).
+        ``passing``, ``problem``, ``warnings``, ``exception``).
 
     ``warnings``
         Equivalent to (``warnings``, ``failing``).

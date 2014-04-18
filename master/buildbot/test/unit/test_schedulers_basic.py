@@ -162,7 +162,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         @d.addCallback
         def check(_):
-            sched.preStartConsumingChanges.assert_called()
+            sched.preStartConsumingChanges.assert_called_with()
         return d
 
     def test_gotChange_no_treeStableTimer_unimportant(self):

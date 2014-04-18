@@ -112,14 +112,15 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-    def expectRepoSync(self, which_fail=-1, breakatfail=False, syncoptions=["-c"], override_commands=[]):
+    def expectRepoSync(self, which_fail=-1, breakatfail=False, depth=0,
+                       syncoptions=["-c"], override_commands=[]):
         commands = [
             self.ExpectShell(
                 command=[
                     'bash', '-c', self.step._getCleanupCommand()]),
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                         '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf', '--depth', str(depth)])
         ] + override_commands + [
             self.ExpectShell(command=['repo', 'sync'] + syncoptions),
             self.ExpectShell(
@@ -135,6 +136,13 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.mySetupStep(repoDownloads=None)
         self.expectClobber()
         self.expectRepoSync()
+        return self.myRunStep(status_text=["update"])
+
+    def test_basic_depth(self):
+        """basic first time repo sync"""
+        self.mySetupStep(repoDownloads=None, depth=2)
+        self.expectClobber()
+        self.expectRepoSync(depth=2)
         return self.myRunStep(status_text=["update"])
 
     def test_update(self):
@@ -387,7 +395,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             self.ExpectShell(
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
-                         '-b', 'mb', '-m', 'mf'])
+                         '-b', 'mb', '-m', 'mf', '--depth', '0'])
             + 0,
             self.ExpectShell(
                 workdir='wkdir/.repo/manifests',
