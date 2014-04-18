@@ -194,6 +194,8 @@ Refer to the documentation for previous versions for infrormation on old-style s
 Fixes
 ~~~~~
 
+* Fixes an issue where :bb:chsrc:`GitPoller` sets the change branch to ``refs/heads/master`` - which isn't compatible with :bb:step:`Git` (:bb:pull:`1069`).
+
 * Fixed an issue where the :bb:step:`Git` and :bb:step:`CVS` source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
 * The :bb:step:`CVS` source step now respects the timeout parameter.
