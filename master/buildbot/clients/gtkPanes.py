@@ -28,7 +28,6 @@ assert(gtk.Window)  # in gtk1 it's gtk.GtkWindow
 
 from twisted.spread import pb
 
-#from buildbot.clients.base import Builder, Client
 from buildbot.clients.base import StatusClient
 from buildbot.clients.text import TextClient
 from buildbot.util import now

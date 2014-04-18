@@ -99,10 +99,10 @@ class BonsaiParser:
 
     def __init__(self, data):
         try:
-        # this is a fix for non-ascii characters
-        # because bonsai does not give us an encoding to work with
-        # it impossible to be 100% sure what to decode it as but latin1 covers
-        # the broadest base
+            # this is a fix for non-ascii characters
+            # because bonsai does not give us an encoding to work with
+            # it impossible to be 100% sure what to decode it as but latin1
+            # covers the broadest base
             data = data.decode("latin1")
             data = data.encode("ascii", "replace")
             self.dom = minidom.parseString(data)

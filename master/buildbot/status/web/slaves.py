@@ -165,7 +165,7 @@ class BuildSlavesResource(HtmlResource):
     def content(self, request, ctx):
         s = self.getStatus(request)
 
-        #?no_builders=1 disables build column
+        # ?no_builders=1 disables build column
         show_builder_column = not (request.args.get('no_builders', '0')[0]) == '1'
         ctx['show_builder_column'] = show_builder_column
 
