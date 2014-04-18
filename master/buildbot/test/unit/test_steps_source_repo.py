@@ -170,8 +170,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         """repo sync with manifest_override_url property set
         download via wget
         """
-        self.mySetupStep(manifestOverrideUrl=
-                         "http://u.rl/test.manifest",
+        self.mySetupStep(manifestOverrideUrl="http://u.rl/test.manifest",
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [
@@ -194,8 +193,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         """repo sync with manifest_override_url property set
         copied from local FS
         """
-        self.mySetupStep(manifestOverrideUrl=
-                         "test.manifest",
+        self.mySetupStep(manifestOverrideUrl="test.manifest",
                          syncAllBranches=True)
         self.expectClobber()
         override_commands = [

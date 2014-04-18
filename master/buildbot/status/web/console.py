@@ -23,7 +23,6 @@ from buildbot import util
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
-from twisted.internet import defer
 
 
 class DoesNotPassFilter(Exception):
@@ -99,7 +98,7 @@ class DevBuild:
                 break
         else:
             self.revision = None
-        self.results =  build.getResults()
+        self.results = build.getResults()
         self.number = build.getNumber()
         self.isFinished = build.isFinished()
         self.text = build.getText()
@@ -258,7 +257,7 @@ class ConsoleStatusResource(HtmlResource):
         return builds
 
     def getChangeForBuild(self, build, changeid):
-        if not build or not build.getChanges(): # Forced build
+        if not build or not build.getChanges():  # Forced build
             return DevBuild(changeid, build, None)
 
         for change in build.getChanges():
@@ -467,7 +466,7 @@ class ConsoleStatusResource(HtmlResource):
                 if isRunning:
                     pageTitle += ' ETA: %ds' % (introducedIn.eta or 0)
 
-                resultsClass = getResultsClass(results, previousResults, isRunning, True)
+                resultsClass = getResultsClass(results, previousResults, isRunning, inBuilder)
 
                 b = {}
                 b["url"] = url
@@ -675,7 +674,7 @@ class ConsoleStatusResource(HtmlResource):
                                         categories, repository, project,
                                         branch, debugInfo))
             cxt['debuginfo'] = pprint.pformat(debugInfo,
-                indent=4).replace('\n','<br />').replace('    ', '&nbsp;' * 4)
+                indent=4).replace('\n', '<br />').replace('    ', '&nbsp;' * 4)
 
             templates = request.site.buildbot_service.templates
             template = templates.get_template("console.html")
@@ -683,6 +682,7 @@ class ConsoleStatusResource(HtmlResource):
             return data
         d.addCallback(got_changes)
         return d
+
 
 class ChangeIdComparator(object):
     def isChangeEarlier(self, first, second):

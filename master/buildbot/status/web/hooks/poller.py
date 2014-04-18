@@ -21,7 +21,7 @@ from buildbot.changes.base import PollingChangeSource
 
 def getChanges(req, options=None):
     change_svc = req.site.buildbot_service.master.change_svc
-    poll_all = not "poller" in req.args
+    poll_all = "poller" not in req.args
 
     allow_all = True
     allowed = []
@@ -36,9 +36,9 @@ def getChanges(req, options=None):
             continue
         if not hasattr(source, "name"):
             continue
-        if not poll_all and not source.name in req.args['poller']:
+        if not poll_all and source.name not in req.args['poller']:
             continue
-        if not allow_all and not source.name in allowed:
+        if not allow_all and source.name not in allowed:
             continue
         pollers.append(source)
 
