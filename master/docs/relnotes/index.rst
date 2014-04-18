@@ -23,7 +23,7 @@ Features
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
    * Dict parameter ``tags`` specifies AWS tags as key/value pairs to be applied to new instances.
   
-  With spot_instance=True, an EC2LatentBuildSlave will attempt to create a spot instance with the provided spot
+  With ``spot_instance=True``, an ``EC2LatentBuildSlave`` will attempt to create a spot instance with the provided spot
   price, placement, and so on.
 
 * The web hooks now include support for Bitbucket, GitLab and Gitorious.
@@ -38,7 +38,7 @@ Features
 
 * Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
 
-* The GitPoller can now be configured to poll all available branches (:bb:pull:`1010`).
+* The :bb:chsrc:`GitPoller` can now be configured to poll all available branches (:bb:pull:`1010`).
 
 * The :bb:chsrc:`P4Source` changesource now supports Perforce servers in a different timezone than the buildbot master (:bb:pull:`728`).
 
@@ -52,7 +52,7 @@ Features
 
 * The :bb:sched:`ForceScheduler` now takes a ``buttonName`` argument to specify the name of the button on the force-build form.
 
-* Master side source checkout steps now support patches (:bb:bug:`2098`). The :bb:step:`Git` and Mercurial steps use their inbuilt commands to apply patches (:bb:bug:`2563`).
+* Master side source checkout steps now support patches (:bb:bug:`2098`). The :bb:step:`Git` and :bb:step:`Mercurial` steps use their inbuilt commands to apply patches (:bb:bug:`2563`).
 
 * Master side source checkout steps now support retry option (:bb:bug:`2465`).
 
@@ -86,10 +86,6 @@ Features
 * New source step :bb:step:`Monotone` added on master side.
 
 * New source step :bb:step:`Darcs` added on master side.
-
-* The slave-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
-  Please convert any use of slave-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
-  TODO: update version in deprecation warning.
 
 * A new :bb:step:`Robocopy` step is available for Windows builders (:bb:pull:`728`).
 
@@ -259,7 +255,7 @@ Fixes
 
 * Fixes some edge cases in timezone handling for python < ``2.7.4`` (:bb:bug:`2522`).
 
-* The EC2LatentBuildSlave will now only consider ``available`` AMI's.
+* The ``EC2LatentBuildSlave`` will now only consider available AMI's.
 
 * Fixes a case where the first build runs on an old slave instead of a new one after reconfig (:bb:bug:`2507`).
 
@@ -284,6 +280,9 @@ Fixes
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The slave-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
+  Please convert any use of slave-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
 
 * Both old-style and new-style steps are supported in this version of Buildbot.
   Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
@@ -328,7 +327,6 @@ Features
 * Added zsh and bash tab-completions support for 'buildslave' command.
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bb:bug:`751`)
-* Added spot instance support to EC2LatentBuildSlave.
 * Commands will now throw a ``ValueError`` if mandatory args are not present.
 * Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the slave.
 
