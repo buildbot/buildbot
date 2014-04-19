@@ -281,7 +281,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=epoch2datetime(timestamp),
-                branch=branch,
+                branch=self._removeHeads(branch),
                 category=self.category,
                 project=self.project,
                 repository=self.repourl,
