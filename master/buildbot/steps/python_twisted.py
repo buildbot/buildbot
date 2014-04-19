@@ -574,9 +574,9 @@ class Trial(ShellCommand):
                         break
                     if testname is None:
                         # the first line after the === is like:
-# EXPECTED FAILURE: testLackOfTB (twisted.test.test_failure.FailureTestCase)
-# SKIPPED: testRETR (twisted.test.test_ftp.TestFTPServer)
-# FAILURE: testBatchFile (twisted.conch.test.test_sftp.TestOurServerBatchFile)
+                        # EXPECTED FAILURE: testLackOfTB (twisted.test.test_failure.FailureTestCase)
+                        # SKIPPED: testRETR (twisted.test.test_ftp.TestFTPServer)
+                        # FAILURE: testBatchFile (twisted.conch.test.test_sftp.TestOurServerBatchFile)
                         r = re.search(r'^([^:]+): (\w+) \(([\w\.]+)\)', line)
                         if not r:
                             # TODO: cleanup, if there are no problems,

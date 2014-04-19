@@ -683,7 +683,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                  filename=filename)
                     m.attach(a)
 
-        #@todo: is there a better way to do this?
+        # @todo: is there a better way to do this?
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if only one build was given
         if self.extraHeaders:

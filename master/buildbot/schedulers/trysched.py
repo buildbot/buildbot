@@ -27,6 +27,8 @@ from buildbot.util import json
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
 
+import datetime
+
 
 class TryBase(base.BaseScheduler):
 
@@ -45,7 +47,7 @@ class TryBase(base.BaseScheduler):
         # on all of the configured builders.
         if builderNames:
             for b in builderNames:
-                if not b in self.builderNames:
+                if b not in self.builderNames:
                     log.msg("%s got with builder %s" % (self, b))
                     log.msg(" but that wasn't in our list: %s"
                             % (self.builderNames,))
@@ -240,15 +242,23 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if comment:
             reason += " (%s)" % comment
 
+        # Add a Change so that the job shows up in the console view.
+        # files=[] because there is no deterministic way of getting it, unless
+        # tryclient.py is modified to send the list of files as a property.
+        change = yield self.scheduler.master.addChange(branch=branch, revision=revision,
+            project=project, files=[], author=who or '', comments=comment or '',
+            when_timestamp=datetime.datetime.utcnow(), repository=repository)
+
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
+        # note: no way to specify patch subdir - #1769
         yield db.sourcestamps.addSourceStamp(
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '', codebase='',
-            sourcestampsetid=sourcestampsetid)
-                    # note: no way to specify patch subdir - #1769
+            sourcestampsetid=sourcestampsetid,
+            changeids=[change.number])
 
         requested_props = Properties()
         requested_props.update(properties, "try build")

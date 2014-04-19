@@ -17,6 +17,7 @@ import mock
 import os
 
 from buildbot.test.fake import fakedb
+from buildbot.changes import changes
 
 
 class FakeMaster(object):
@@ -32,6 +33,12 @@ class FakeMaster(object):
 
     def addBuildset(self, **kwargs):
         return self.db.buildsets.addBuildset(**kwargs)
+
+    def addChange(self, **kwargs):
+        d = self.db.changes.addChange(**kwargs)
+        d.addCallback(lambda changeid: self.db.changes.getChange(changeid))
+        d.addCallback(lambda chdict: changes.Change.fromChdict(self, chdict))
+        return d
 
     # subscriptions
     # note that only one subscription of each type is supported

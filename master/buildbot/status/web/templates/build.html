@@ -227,7 +227,9 @@ SourceStamps:
       <h2>All Changes:</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
-            <h3 id="changes-{{ ss.codebase }}"> {{ ss.codebase }}:</h3>
+            {% if ss.codebase %}
+              <h3 id="changes-{{ ss.codebase }}"> {{ ss.codebase }}:</h3>
+            {% endif %}
             <ol>
                   {% for c in ss.changes %}
                     <li><h3>Change #{{ c.number }}</h3>

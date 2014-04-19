@@ -161,7 +161,7 @@ class CVSMaildirSource(MaildirSource):
             m = modRE.match(line)
             if m:
                 # We don't actually use this
-                #module = m.group(1)
+                # module = m.group(1)
                 continue
             m = pathRE.match(line)
             if m:
@@ -178,7 +178,7 @@ class CVSMaildirSource(MaildirSource):
             m = updateRE.match(line)
             if m:
                 # We don't actually use this
-                #updateof = m.group(1)
+                # updateof = m.group(1)
                 continue
             if line == "Log Message:\n":
                 break

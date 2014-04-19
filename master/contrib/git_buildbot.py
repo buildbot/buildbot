@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # This script expects one line for each new revision on the form
 #   <oldrev> <newrev> <refname>
@@ -15,7 +15,7 @@
 # repository. It can also be run at client side with hooks/post-merge
 # after using this wrapper:
 
-#!/bin/sh
+# #!/bin/sh
 # PRE=$(git rev-parse 'HEAD@{1}')
 # POST=$(git rev-parse HEAD)
 # SYMNAME=$(git rev-parse --symbolic-full-name HEAD)

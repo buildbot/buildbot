@@ -420,22 +420,25 @@ class TestChangesConnectorComponent(
         return d
 
     def test_pruneChanges(self):
-        d = self.insertTestData([
-            fakedb.Object(id=29),
-            fakedb.SourceStamp(id=234),
+        d = self.insertTestData(
+            [
+                fakedb.Object(id=29),
+                fakedb.SourceStamp(id=234),
 
-            fakedb.Change(changeid=11),
+                fakedb.Change(changeid=11),
 
-            fakedb.Change(changeid=12),
-            fakedb.SchedulerChange(objectid=29, changeid=12),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=12),
-        ] +
+                fakedb.Change(changeid=12),
+                fakedb.SchedulerChange(objectid=29, changeid=12),
+                fakedb.SourceStampChange(sourcestampid=234, changeid=12),
+            ] +
 
-            self.change13_rows + [
+            self.change13_rows +
+            [
                 fakedb.SchedulerChange(objectid=29, changeid=13),
             ] +
 
-            self.change14_rows + [
+            self.change14_rows +
+            [
                 fakedb.SchedulerChange(objectid=29, changeid=14),
 
                 fakedb.Change(changeid=15),

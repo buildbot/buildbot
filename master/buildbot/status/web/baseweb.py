@@ -236,10 +236,7 @@ class WebStatus(service.MultiService):
                      is not C{True}. If C{auth} is C{None}, people can force or
                      stop builds without auth.
 
-        @type order_console_by_time: bool
-        @param order_console_by_time: Whether to order changes (commits) in the console
-                     view according to the time they were created (for VCS like Git) or
-                     according to their integer revision numbers (for VCS like SVN).
+        @param order_console_by_time: deprecated, no longer needed
 
         @type changecommentlink: callable, dict, tuple (2 or 3 strings) or C{None}
         @param changecommentlink: adds links to ticket/bug ids in change comments,
@@ -355,8 +352,6 @@ class WebStatus(service.MultiService):
         else:
             self.change_hook_auth = None
 
-        self.orderConsoleByTime = order_console_by_time
-
         # If we were given a site object, go ahead and use it. (if not, we add one later)
         self.site = site
 
@@ -420,12 +415,11 @@ class WebStatus(service.MultiService):
         return wrapper
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
-        #self.putChild("", IndexOrWaterfallRedirection())
+        # self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
                                                            num_events_max=num_events_max))
         self.putChild("grid", GridStatusResource())
-        self.putChild("console", ConsoleStatusResource(
-            orderByTime=self.orderConsoleByTime))
+        self.putChild("console", ConsoleStatusResource())
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource(numbuilds=numbuilds))  # has builds/steps/logs
         self.putChild("one_box_per_builder", Redirect("builders"))

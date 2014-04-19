@@ -17,16 +17,16 @@ import operator
 import re
 import time
 import urllib
-
+import pprint
+from twisted.internet import defer
 from buildbot import util
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
-from twisted.internet import defer
 
 
 class DoesNotPassFilter(Exception):
-    pass  # Used for filtering revs
+    pass  # Used for filtering changes
 
 
 def getResultsClass(results, prevResults, inProgress, inBuilder):
@@ -69,12 +69,13 @@ class ANYBRANCH:
     pass  # a flag value, used below
 
 
-class DevRevision:
-
-    """Helper class that contains all the information we need for a revision."""
+class DevChange:
+    """Helper class that contains all the information we need for a change."""
 
     def __init__(self, change):
-        self.codebase = change.codebase
+        # unfortunately changes.Change.fromChdict renames changeid into number,
+        # so we have to live with the confusion
+        self.changeid = change.number
         self.revision = change.revision
         self.comments = change.comments
         self.who = change.who
@@ -89,7 +90,14 @@ class DevBuild:
 
     """Helper class that contains all the information we need for a build."""
 
-    def __init__(self, build, details):
+    def __init__(self, changeid, build, details):
+        self.changeid = changeid
+        for c in build.getChanges():
+            if c.number == changeid:
+                self.revision = c.revision
+                break
+        else:
+            self.revision = None
         self.results = build.getResults()
         self.number = build.getNumber()
         self.isFinished = build.isFinished()
@@ -106,15 +114,10 @@ class ConsoleStatusResource(HtmlResource):
     Every change is a line in the page, and it shows the result of the first
     build with this change for each slave."""
 
-    def __init__(self, orderByTime=False):
+    def __init__(self):
         HtmlResource.__init__(self)
-
         self.status = None
-
-        if orderByTime:
-            self.comparator = TimeRevisionComparator()
-        else:
-            self.comparator = IntegerRevisionComparator()
+        self.comparator = ChangeIdComparator()
 
     def getPageTitle(self, request):
         status = self.getStatus(request)
@@ -186,19 +189,10 @@ class ConsoleStatusResource(HtmlResource):
             changes.Change.fromChdict(master, chdict)
             for chdict in chdicts])
 
-        allChanges.sort(key=self.comparator.getSortingKey())
+        allDevChanges = [DevChange(x) for x in allChanges]
+        allDevChanges.sort(key=self.comparator.getSortingKey())
 
-        # Remove the dups
-        prevChange = None
-        newChanges = []
-        for change in allChanges:
-            rev = change.revision
-            if not prevChange or rev != prevChange.revision:
-                newChanges.append(change)
-            prevChange = change
-        allChanges = newChanges
-
-        defer.returnValue(allChanges)
+        defer.returnValue(allDevChanges)
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
@@ -232,8 +226,8 @@ class ConsoleStatusResource(HtmlResource):
                         logs.append(dict(url=logurl, name=logname))
         return details
 
-    def getBuildsForRevision(self, request, builder, builderName, codebase,
-                             lastRevision, numBuilds, debugInfo):
+    def getBuildsForChange(self, request, builder, builderName, codebase,
+                           lastChangeId, numBuilds, debugInfo):
         """Return the list of all the builds for a given builder that we will
         need to be able to display the console page. We start by the most recent
         build, and we go down until we find a build that was built prior to the
@@ -245,19 +239,37 @@ class ConsoleStatusResource(HtmlResource):
         while build and number < numBuilds:
             debugInfo["builds_scanned"] += 1
 
-            # With multiple codebases cannot determine the last required build,
-            # so take them all except forced builds.
-            if len(build.getChanges()):
-                details = self.getBuildDetails(request, builderName, build)
-                devBuild = DevBuild(build, details)
-                builds.append(devBuild)
+            got_changeid = max([-1] + [c.number for c in build.changes])
+
+            if got_changeid != -1:
                 number += 1
+                details = self.getBuildDetails(request, builderName, build)
+                devBuild = DevBuild(got_changeid, build, details)
+                builds.append(devBuild)
+
+                # Now break if we have enough builds.
+                current_change = self.getChangeForBuild(build, lastChangeId)
+                if self.comparator.isChangeEarlier(devBuild, current_change):
+                    break
 
             build = build.getPreviousBuild()
 
         return builds
 
-    def getAllBuildsForRevision(self, status, request, codebase, lastRevision,
+    def getChangeForBuild(self, build, changeid):
+        if not build or not build.getChanges():  # Forced build
+            return DevBuild(changeid, build, None)
+
+        for change in build.getChanges():
+            if change.number == changeid:
+                return DevChange(change)
+
+        # No matching change, return the last change in build.
+        changes = [DevChange(x) for x in build.getChanges()]
+        changes.sort(key=self.comparator.getSortingKey())
+        return changes[-1]
+
+    def getAllBuildsForChangeId(self, status, request, codebase, lastChangeId,
                                 numBuilds, categories, builders, debugInfo):
         """Returns a dictionary of builds we need to inspect to be able to
         display the console page. The key is the builder name, and the value is
@@ -303,13 +315,13 @@ class ConsoleStatusResource(HtmlResource):
             # Append this builder to the dictionary of builders.
             builderList[category].append(builderName)
             # Set the list of builds for this builder.
-            allBuilds[builderName] = self.getBuildsForRevision(request,
-                                                               builder,
-                                                               builderName,
-                                                               codebase,
-                                                               lastRevision,
-                                                               numBuilds,
-                                                               debugInfo)
+            allBuilds[builderName] = self.getBuildsForChange(request,
+                                                             builder,
+                                                             builderName,
+                                                             codebase,
+                                                             lastChangeId,
+                                                             numBuilds,
+                                                             debugInfo)
 
         return (builderList, allBuilds)
 
@@ -323,7 +335,8 @@ class ConsoleStatusResource(HtmlResource):
         for category in builderList:
             count += len(builderList[category])
 
-        categories = sorted(builderList.keys())
+        categories = builderList.keys()
+        categories.sort()
 
         cs = []
 
@@ -384,22 +397,9 @@ class ConsoleStatusResource(HtmlResource):
 
         return slaves
 
-    def isCodebaseInBuild(self, build, codebase):
-        """Check if codebase is used in build"""
-        return any(ss.codebase == codebase for ss in build.sourceStamps)
-
-    def isRevisionInBuild(self, build, revision):
-        """ Check if revision is in changes in build """
-        for ss in build.sourceStamps:
-            if ss.codebase == revision.codebase:
-                for change in ss.changes:
-                    if change.revision == revision.revision:
-                        return True
-        return False
-
-    def displayStatusLine(self, builderList, allBuilds, revision, debugInfo):
+    def displayStatusLine(self, builderList, allBuilds, change, debugInfo):
         """Display the boxes that represent the status of each builder in the
-        first build "revision" was in. Returns an HTML list of errors that
+        first build "change" was in. Returns an HTML list of errors that
         happened during these builds."""
 
         details = []
@@ -408,7 +408,8 @@ class ConsoleStatusResource(HtmlResource):
             nbSlaves += len(builderList[category])
 
         # Sort the categories.
-        categories = sorted(builderList.keys())
+        categories = builderList.keys()
+        categories.sort()
 
         builds = {}
 
@@ -424,18 +425,16 @@ class ConsoleStatusResource(HtmlResource):
                 # If there is no builds default to True
                 inBuilder = len(allBuilds[bldr]) == 0
 
-                # Find the first build that include the revision.
+                # Find the first build that does not include the change.
                 for build in allBuilds[bldr]:
-                    if introducedIn:
+                    if self.comparator.isChangeEarlier(build, change):
                         firstNotIn = build
                         break
-                    elif self.isCodebaseInBuild(build, revision.codebase):
-                        inBuilder = True
-                        if self.isRevisionInBuild(build, revision):
-                            introducedIn = build
+                    else:
+                        introducedIn = build
 
-                # Get the results of the first build with the revision, and the
-                # first build that does not include the revision.
+                # Get the results of the first build with the change, and the
+                # first build that does not include the change.
                 results = None
                 previousResults = None
                 if introducedIn:
@@ -484,39 +483,39 @@ class ConsoleStatusResource(HtmlResource):
 
         return (builds, details)
 
-    def filterRevisions(self, revisions, filter=None, max_revs=None):
-        """Filter a set of revisions based on any number of filter criteria.
+    def filterChanges(self, changes, filter=None, max_changes=None):
+        """Filter a set of changes based on any number of filter criteria.
         If specified, filter should be a dict with keys corresponding to
-        revision attributes, and values of 1+ strings"""
+        change attributes, and values of 1+ strings"""
         if not filter:
-            if max_revs is None:
-                for rev in reversed(revisions):
-                    yield DevRevision(rev)
+            if max_changes is None:
+                for change in reversed(changes):
+                    yield change
             else:
-                for index, rev in enumerate(reversed(revisions)):
-                    if index >= max_revs:
+                for index, change in enumerate(reversed(changes)):
+                    if index >= max_changes:
                         break
-                    yield DevRevision(rev)
+                    yield change
         else:
-            for index, rev in enumerate(reversed(revisions)):
-                if max_revs and index >= max_revs:
+            for index, change in enumerate(reversed(changes)):
+                if max_changes and index >= max_changes:
                     break
                 try:
                     for field, acceptable in filter.iteritems():
-                        if not hasattr(rev, field):
+                        if not hasattr(change, field):
                             raise DoesNotPassFilter
                         if type(acceptable) in (str, unicode):
-                            if getattr(rev, field) != acceptable:
+                            if getattr(change, field) != acceptable:
                                 raise DoesNotPassFilter
                         elif type(acceptable) in (list, tuple, set):
-                            if getattr(rev, field) not in acceptable:
+                            if getattr(change, field) not in acceptable:
                                 raise DoesNotPassFilter
-                    yield DevRevision(rev)
+                    yield change
                 except DoesNotPassFilter:
                     pass
 
     def displayPage(self, request, status, builderList, allBuilds, codebase,
-                    revisions, categories, repository, project, branch,
+                    changes, categories, repository, project, branch,
                     debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
@@ -538,33 +537,33 @@ class ConsoleStatusResource(HtmlResource):
         else:
             subs["categories"] = []
 
-        subs['revisions'] = []
+        subs['changes'] = []
 
-        # For each revision we show one line
-        for revision in revisions:
+        # For each change we show one line
+        for change in changes:
             r = {}
 
             # Fill the dictionary with this new information
-            r['id'] = revision.revision
-            r['link'] = revision.revlink
-            r['who'] = revision.who
-            r['date'] = revision.date
-            r['comments'] = revision.comments
-            r['repository'] = revision.repository
-            r['project'] = revision.project
+            r['id'] = change.revision
+            r['link'] = change.revlink
+            r['who'] = change.who
+            r['date'] = change.date
+            r['comments'] = change.comments
+            r['repository'] = change.repository
+            r['project'] = change.project
 
             # Display the status for all builders.
             (builds, details) = self.displayStatusLine(builderList,
-                                                       allBuilds,
-                                                       revision,
-                                                       debugInfo)
+                                            allBuilds,
+                                            change,
+                                            debugInfo)
             r['builds'] = builds
             r['details'] = details
 
             # Calculate the td span for the comment and the details.
-            r["span"] = len(builderList) + 2
+            r["span"] = len(builderList) + 3
 
-            subs['revisions'].append(r)
+            subs['changes'].append(r)
 
         #
         # Display the footer of the page.
@@ -619,55 +618,63 @@ class ConsoleStatusResource(HtmlResource):
         # and the data we want to render
         status = self.getStatus(request)
 
-        # Keep only the revisions we care about.
-        # By default we process the last 40 revisions.
-        numRevs = int(request.args.get("revs", [40])[0])
+        # Keep only the changes we care about.
+        # By default we process the last 40 changes.
+        # If a dev name is passed, we look for the last 80 changes by this
+        # person.
+        numChanges = int(request.args.get("changes", [40])[0])
+        if devName:
+            numChanges *= 2
+        numBuilds = numChanges
 
         # Get all changes we can find.  This is a DB operation, so it must use
         # a deferred.
-        d = self.getAllChanges(request, status, numRevs, debugInfo)
+        d = self.getAllChanges(request, status, numChanges, debugInfo)
 
         def got_changes(allChanges):
             debugInfo["source_all"] = len(allChanges)
 
-            revFilter = {}
+            changeFilter = {}
             if branch != ANYBRANCH:
-                revFilter['branch'] = branch
+                changeFilter['branch'] = branch
             if devName:
-                revFilter['who'] = devName
+                changeFilter['who'] = devName
             if repository:
-                revFilter['repository'] = repository
+                changeFilter['repository'] = repository
             if project:
-                revFilter['project'] = project
+                changeFilter['project'] = project
             if codebase is not None:
-                revFilter['codebase'] = codebase
-            revisions = list(self.filterRevisions(allChanges, max_revs=numRevs,
-                                                  filter=revFilter))
-            debugInfo["revision_final"] = len(revisions)
+                changeFilter['codebase'] = codebase
+            changes = list(self.filterChanges(allChanges,
+                                              max_changes=numChanges,
+                                              filter=changeFilter))
+            debugInfo["change_final"] = len(changes)
 
             # Fetch all the builds for all builders until we get the next build
-            # after lastRevision.
+            # after lastChangeId.
             builderList = None
             allBuilds = None
-            if revisions:
-                lastRevision = revisions[len(revisions) - 1].revision
-                debugInfo["last_revision"] = lastRevision
+            if changes:
+                lastChangeId = changes[len(changes) - 1].changeid
+                debugInfo["last_changeid"] = lastChangeId
 
-                (builderList, allBuilds) = self.getAllBuildsForRevision(status,
-                                                                        request,
-                                                                        codebase,
-                                                                        lastRevision,
-                                                                        numRevs,
-                                                                        categories,
-                                                                        builders,
-                                                                        debugInfo)
+                (builderList, allBuilds) = self.getAllBuildsForChangeId(status,
+                                                    request,
+                                                    codebase,
+                                                    lastChangeId,
+                                                    numBuilds,
+                                                    categories,
+                                                    builders,
+                                                    debugInfo)
 
             debugInfo["added_blocks"] = 0
 
             cxt.update(self.displayPage(request, status, builderList,
-                                        allBuilds, codebase, revisions,
+                                        allBuilds, codebase, changes,
                                         categories, repository, project,
                                         branch, debugInfo))
+            cxt['debuginfo'] = pprint.pformat(debugInfo,
+                indent=4).replace('\n', '<br />').replace('    ', '&nbsp;' * 4)
 
             templates = request.site.buildbot_service.templates
             template = templates.get_template("console.html")
@@ -677,53 +684,9 @@ class ConsoleStatusResource(HtmlResource):
         return d
 
 
-class RevisionComparator(object):
-
-    """Used for comparing between revisions, as some
-    VCS use a plain counter for revisions (like SVN)
-    while others use different concepts (see Git).
-    """
-
-    # TODO (avivby): Should this be a zope interface?
-
-    def isRevisionEarlier(self, first_change, second_change):
-        """Used for comparing 2 changes"""
-        raise NotImplementedError
-
-    def isValidRevision(self, revision):
-        """Checks whether the revision seems like a VCS revision"""
-        raise NotImplementedError
+class ChangeIdComparator(object):
+    def isChangeEarlier(self, first, second):
+        return first.changeid < second.changeid
 
     def getSortingKey(self):
-        raise NotImplementedError
-
-
-class TimeRevisionComparator(RevisionComparator):
-
-    def isRevisionEarlier(self, first, second):
-        return first.when < second.when
-
-    def isValidRevision(self, revision):
-        return True  # No general way of determining
-
-    def getSortingKey(self):
-        return operator.attrgetter('when')
-
-
-class IntegerRevisionComparator(RevisionComparator):
-
-    def isRevisionEarlier(self, first, second):
-        try:
-            return int(first.revision) < int(second.revision)
-        except (TypeError, ValueError):
-            return False
-
-    def isValidRevision(self, revision):
-        try:
-            int(revision)
-            return True
-        except:
-            return False
-
-    def getSortingKey(self):
-        return operator.attrgetter('revision')
+        return operator.attrgetter('changeid')
