@@ -285,9 +285,12 @@ class RunProcess:
 
         self.builder = builder
         if isinstance(command, list):
-            command = [util.Obfuscated(w[1], w[2])
-                       if (isinstance(w, tuple) and len(w) == 3 and w[0] == 'obfuscated')
-                       else w for w in command]
+            def obfus(w):
+                if (isinstance(w, tuple) and len(w) == 3
+                        and w[0] == 'obfuscated'):
+                    return util.Obfuscated(w[1], w[2])
+                return w
+            command = [obfus(w) for w in command]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the slave.  This is mostly platform
         # specific, but can be overridden in the slave's buildbot.tac file.

@@ -24,6 +24,7 @@ from buildbot.scripts import start
 from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util.flaky import flaky
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
 from twisted.trial import unittest
@@ -98,6 +99,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             print res
         return d
 
+    @flaky(bugNumber=2760)
     @compat.skipUnlessPlatformIs('posix')
     def test_start(self):
         d = self.runStart()
