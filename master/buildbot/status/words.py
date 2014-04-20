@@ -596,7 +596,7 @@ class IRCContact(base.StatusReceiver):
         def subscribe(xxx_todo_changeme):
             (bsid, brids) = xxx_todo_changeme
             assert 0, "rewrite to not use the status hierarchy"  # TODO
-            #ireq = IrcBuildRequest(self, self.useRevisions)
+            # ireq = IrcBuildRequest(self, self.useRevisions)
             # buildreq.subscribe(ireq.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")

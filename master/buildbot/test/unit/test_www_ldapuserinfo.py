@@ -76,7 +76,7 @@ class LdapUserInfo(unittest.TestCase):
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertEqual(self.ldap.search_s.call_args_list, [
             (('accbase', 2, 'accpattern',
-             ['accountEmail', 'accountFullName', 'dn', 'myfield']), {}),
+              ['accountEmail', 'accountFullName', 'dn', 'myfield']), {}),
             (('groupbase', 2, 'groupMemberPattern', ['groupName']), {}),
         ])
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
@@ -84,12 +84,12 @@ class LdapUserInfo(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateUserInfoGroups(self):
-        self.ldap.search_s = mock.Mock(side_effect=
-                                       [[("cn", {"accountFullName": ["me too"],
-                                                 "accountEmail": ["mee@too"]})],
-                                        [("cn", {"groupName": ["group"]}),
-                                         ("cn", {"groupName": ["group2"]})
-                                         ], []])
+        self.ldap.search_s = mock.Mock(
+            side_effect=[[("cn", {"accountFullName": ["me too"],
+                                  "accountEmail": ["mee@too"]})],
+                         [("cn", {"groupName": ["group"]}),
+                          ("cn", {"groupName": ["group2"]})
+                          ], []])
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})

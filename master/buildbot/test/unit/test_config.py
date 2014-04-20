@@ -155,12 +155,11 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             if callable(v):
                 if typ == 'loader':
                     self.patch(config.MasterConfig, n,
-                               mock.Mock(side_effect=
-                                         lambda filename, config_dict: None))
+                               mock.Mock(side_effect=lambda filename,
+                                         config_dict: None))
                 else:
                     self.patch(config.MasterConfig, n,
-                               mock.Mock(side_effect=
-                                         lambda: None))
+                               mock.Mock(side_effect=lambda: None))
 
     def install_config_file(self, config_file, other_files={}):
         config_file = textwrap.dedent(config_file)

@@ -133,7 +133,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.reconfigurableResources = []
         root = self.apps['base'].resource
         for key, plugin in new_config.www.get('plugins', {}).items():
-            if not key in self.apps:
+            if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
             root.putChild(key, self.apps[key].resource)
 

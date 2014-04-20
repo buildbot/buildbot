@@ -153,11 +153,11 @@ class Buildset(base.ResourceType):
                 buildername=bn,
                 builderid=builderid)
             self.master.mq.produce(('buildsets', str(bsid),
-                                   'builders', str(builderid),
+                                    'builders', str(builderid),
                                     'buildrequests', str(brid),
                                     'new'), msg)
             # TODO
-            #~ self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
+            # self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
 
         # and the buildset itself
         msg = dict(
@@ -170,7 +170,7 @@ class Buildset(base.ResourceType):
             results=None,
             scheduler=scheduler,
             sourcestamps=sourcestamps)
-            # TODO: properties=properties)
+        # TODO: properties=properties)
         self.master.mq.produce(("buildsets", str(bsid), "new"), msg)
 
         log.msg("added buildset %d to database" % bsid)
@@ -236,5 +236,5 @@ class Buildset(base.ResourceType):
             complete=True,
             complete_at=complete_at,
             results=cumulative_results)
-            # TODO: properties=properties)
+        # TODO: properties=properties)
         self.master.mq.produce(('buildsets', str(bsid), 'complete'), msg)

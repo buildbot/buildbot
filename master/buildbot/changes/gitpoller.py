@@ -121,7 +121,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         def parseRemote(rows):
             branches = []
             for row in rows.splitlines():
-                if not '\t' in row:
+                if '\t' not in row:
                     # Not a useful line
                     continue
                 sha, ref = row.split("\t")
@@ -194,8 +194,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 try:
                     stamp = int(git_output)
                 except Exception, e:
-                        log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
-                        raise e
+                    log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
+                    raise e
                 return stamp
             else:
                 return None
@@ -282,7 +282,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=timestamp,
-                branch=ascii2unicode(branch),
+                branch=ascii2unicode(self._removeHeads(branch)),
                 category=self.category,
                 project=self.project,
                 repository=ascii2unicode(self.repourl),

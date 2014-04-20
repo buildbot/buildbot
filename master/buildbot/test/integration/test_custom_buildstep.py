@@ -231,10 +231,10 @@ class RunSteps(unittest.TestCase):
             # this is one of the things that differs independently of
             # new/old style: encoding of logs and newlines
             u'foo':
-            #'stdout\n\xe2\x98\x83\nstderr\n',
+            # 'stdout\n\xe2\x98\x83\nstderr\n',
             u'ostdout\no\N{SNOWMAN}\nestderr\n',
             u'obs':
-            #'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
+            # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
             u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
         })
 
@@ -256,7 +256,7 @@ class RunSteps(unittest.TestCase):
         self.factory.addStep(FailingCustomStep(exception=ValueError))
         bs = yield self.do_test_step()
         self.assertEqual(bs.getResults(), results.EXCEPTION)
-        #self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
+        # self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
 
     @defer.inlineCallbacks

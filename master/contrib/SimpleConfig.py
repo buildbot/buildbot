@@ -322,10 +322,10 @@ class SimpleConfig(dict):
 
         # FACTORIES
         # FIXME: get list of steps from buildshim here
-        #factory = BuildFactory()
+        # factory = BuildFactory()
         # check out the source
         # This fails with git-1.8 and up unless you specify the branch, so do this down lower where we now the branch
-        #factory.addStep(Git(repourl=repourl, mode='full', method='copy'))
+        # factory.addStep(Git(repourl=repourl, mode='full', method='copy'))
         # for step in ["patch", "install_deps", "configure", "compile", "check", "package", "upload", "uninstall_deps"]:
         #    factory.addStep(ShellCommand(command=["../../srclink/" + name + "/buildshim", step], description=step))
 

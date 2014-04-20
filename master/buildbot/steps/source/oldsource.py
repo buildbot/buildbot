@@ -141,7 +141,7 @@ class SlaveSource(Source):
         Source.start(self)
 
     def commandComplete(self, cmd):
-        if not "got_revision" in cmd.updates:
+        if "got_revision" not in cmd.updates:
             return
         got_revision = cmd.updates["got_revision"][-1]
         if got_revision is None:
@@ -229,7 +229,7 @@ class CVS(SlaveSource):
 
     renderables = ["cvsroot"]
 
-    #progressMetrics = ('output',)
+    # progressMetrics = ('output',)
     #
     # additional things to track: update gives one stderr line per directory
     # (starting with 'cvs server: Updating ') (and is fairly stable if files
@@ -436,7 +436,7 @@ class SVN(SlaveSource):
         @param password: password to pass to svn's --password
         """
 
-        if not 'workdir' in kwargs and directory is not None:
+        if 'workdir' not in kwargs and directory is not None:
             # deal with old configs
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory

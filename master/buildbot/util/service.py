@@ -45,12 +45,12 @@ class ClusteredService(service.Service, util.ComparableMixin):
         return self.active
 
     def activate(self):
-    # will run when this instance becomes THE CHOSEN ONE for the cluster
+        # will run when this instance becomes THE CHOSEN ONE for the cluster
         return defer.succeed(None)
 
     def deactivate(self):
-    # to be overriden by subclasses
-    # will run when this instance loses its chosen status
+        # to be overriden by subclasses
+        # will run when this instance loses its chosen status
         return defer.succeed(None)
 
     # service arbitration hooks

@@ -180,7 +180,7 @@ class V2RootResource(resource.Resource):
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', JSON_ENCODED)
-            if not "error" in jsonRpcReply:  # already filled in by caller
+            if "error" not in jsonRpcReply:  # already filled in by caller
                 jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
             request.write(json.dumps(jsonRpcReply))
 

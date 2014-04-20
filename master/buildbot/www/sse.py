@@ -89,7 +89,7 @@ class EventResource(resource.Resource):
             if path:
                 cid = path[0]
                 path = path[1:]
-                if not cid in self.consumers:
+                if cid not in self.consumers:
                     return self.finish(request, 400, "unknown uuid")
                 consumer = self.consumers[cid]
             else:

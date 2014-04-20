@@ -293,7 +293,7 @@ class WebSocketsProtocol(ProtocolWrapper):
                 # 5.5.3 PONGs must contain the data that was sent with the
                 # provoking PING.
                 raise AssertionError("this doesn't work")  # due to unknown symbol below
-                #self.transport.write(make_hybi07_packet(data, opcode=PONG))
+                # self.transport.write(make_hybi07_packet(data, opcode=PONG))
 
     def sendFrames(self):
         """

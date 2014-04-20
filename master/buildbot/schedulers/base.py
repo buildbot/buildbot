@@ -59,7 +59,8 @@ class BaseScheduler(ClusteredService, StateMixin):
         self.master = None
 
         # Set the codebases that are necessary to process the changes
-        # These codebases will always result in a sourcestamp with or without changes
+        # These codebases will always result in a sourcestamp with or without
+        # changes
         if codebases is not None:
             if not isinstance(codebases, dict):
                 config.error("Codebases must be a dict of dicts")
@@ -67,8 +68,9 @@ class BaseScheduler(ClusteredService, StateMixin):
                 if not isinstance(codebase_attrs, dict):
                     config.error("Codebases must be a dict of dicts")
                 if (codebases != BaseScheduler.DEFAULT_CODEBASES and
-                   'repository' not in codebase_attrs):
-                    config.error("The key 'repository' is mandatory in codebases")
+                        'repository' not in codebase_attrs):
+                    config.error(
+                        "The key 'repository' is mandatory in codebases")
         else:
             config.error("Codebases cannot be None")
 
@@ -158,7 +160,8 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         # use change_consumption_lock to ensure the service does not stop
         # while this change is being processed
-        d = self._change_consumption_lock.run(self.gotChange, change, important)
+        d = self._change_consumption_lock.run(
+            self.gotChange, change, important)
         d.addErrback(log.err, 'while processing change')
 
     def _stopConsumingChanges(self):
@@ -197,8 +200,8 @@ class BaseScheduler(ClusteredService, StateMixin):
         stampsWithDefaults = []
         for codebase in stampsByCodebase:
             ss = self.codebases.get(codebase, {}).copy()
-             # apply info from passed sourcestamps onto the configured default
-             # sourcestamp attributes for this codebase.
+            # apply info from passed sourcestamps onto the configured default
+            # sourcestamp attributes for this codebase.
             ss.update(stampsByCodebase[codebase])
             stampsWithDefaults.append(ss)
 

@@ -46,7 +46,7 @@ class TryBase(base.BaseScheduler):
         # on all of the configured builders.
         if builderNames:
             for b in builderNames:
-                if not b in self.builderNames:
+                if b not in self.builderNames:
                     log.msg("%s got with builder %s" % (self, b))
                     log.msg(" but that wasn't in our list: %s"
                             % (self.builderNames,))

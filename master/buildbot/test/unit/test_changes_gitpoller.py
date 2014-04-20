@@ -420,21 +420,22 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
             })
 
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'by:4423cdbc',
-                'branch': u'master',
-                'category': None,
-                'codebase': None,
-                'comments': u'hello!',
-                'files': [u'/etc/442'],
-                'project': '',
-                'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
-                'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'revlink': '',
-                'src': 'git',
-                'when_timestamp': 1273258009,
-            },
+            self.assertEqual(self.master.data.updates.changesAdded, [
+                {
+                    'author': u'by:4423cdbc',
+                    'branch': u'master',
+                    'category': None,
+                    'codebase': None,
+                    'comments': u'hello!',
+                    'files': [u'/etc/442'],
+                    'project': '',
+                    'properties': {},
+                    'repository': 'git@example.com:foo/baz.git',
+                    'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                    'revlink': '',
+                    'src': 'git',
+                    'when_timestamp': 1273258009,
+                },
                 {
                     'author': u'by:64a5dc2a',
                     'branch': u'master',
@@ -532,7 +533,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(added[0]['author'], 'by:4423cdbc')
             self.assertEqual(added[0]['when_timestamp'], 1273258009)
             self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'refs/heads/master')
+            self.assertEqual(added[0]['branch'], 'master')
             self.assertEqual(added[0]['files'], [u'/etc/442'])
             self.assertEqual(added[0]['src'], 'git')
 
@@ -663,7 +664,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(added[0]['author'], 'by:4423cdbc')
             self.assertEqual(added[0]['when_timestamp'], 1273258009)
             self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'refs/heads/master')
+            self.assertEqual(added[0]['branch'], 'master')
             self.assertEqual(added[0]['files'], ['/etc/442'])
             self.assertEqual(added[0]['src'], 'git')
 
@@ -758,7 +759,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(added[0]['author'], 'by:4423cdbc')
             self.assertEqual(added[0]['when_timestamp'], 1273258009)
             self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'refs/heads/master')
+            self.assertEqual(added[0]['branch'], 'master')
             self.assertEqual(added[0]['files'], ['/etc/442'])
             self.assertEqual(added[0]['src'], 'git')
 

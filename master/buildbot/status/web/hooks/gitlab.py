@@ -39,7 +39,7 @@ def getChanges(request, options=None):
     if codebase:
         codebase = codebase[0]
     # This field is unused:
-    #private = payload['repository']['private']
+    # private = payload['repository']['private']
     changes = process_change(payload, user, repo, repo_url, project, codebase=codebase)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')

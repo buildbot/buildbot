@@ -3,6 +3,10 @@
 Change Sources
 --------------
 
+.. contents::
+    :depth: 2
+    :local:
+
 A Version Control System maintains a source tree, and tells the
 buildmaster when it changes. The first step of each :class:`Build` is typically
 to acquire a copy of some version of this tree.

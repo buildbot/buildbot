@@ -272,7 +272,7 @@ class ChoiceStringParameter(BaseParameter):
     strict = True
 
     def parse_from_arg(self, s):
-        if self.strict and not s in self.choices:
+        if self.strict and s not in self.choices:
             raise ValidationError("'%s' does not belong to list of available choices '%s'" % (s, self.choices))
         return s
 
