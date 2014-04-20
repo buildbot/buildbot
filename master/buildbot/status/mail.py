@@ -216,7 +216,7 @@ def defaultMessage(mode, name, build, results, master_status):
 
 
 def defaultGetPreviousBuild(current_build):
-        return current_build.getPreviousBuild()
+    return current_build.getPreviousBuild()
 
 
 class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNotifierMixin):
@@ -606,7 +606,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         # far the most common encoding.
         if not isinstance(patch[1], types.UnicodeType):
             try:
-                    unicode = patch[1].decode('utf8')
+                unicode = patch[1].decode('utf8')
             except UnicodeDecodeError:
                 unicode = None
         else:
@@ -683,7 +683,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                  filename=filename)
                     m.attach(a)
 
-        #@todo: is there a better way to do this?
+        # @todo: is there a better way to do this?
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if only one build was given
         if self.extraHeaders:

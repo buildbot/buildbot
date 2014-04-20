@@ -28,7 +28,7 @@ from twisted.web import server
 
 
 class ChangeHookResource(resource.Resource):
-     # this is a cheap sort of template thingy
+    # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
     children = {}
 

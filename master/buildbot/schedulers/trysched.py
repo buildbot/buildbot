@@ -45,7 +45,7 @@ class TryBase(base.BaseScheduler):
         # on all of the configured builders.
         if builderNames:
             for b in builderNames:
-                if not b in self.builderNames:
+                if b not in self.builderNames:
                     log.msg("%s got with builder %s" % (self, b))
                     log.msg(" but that wasn't in our list: %s"
                             % (self.builderNames,))
@@ -242,13 +242,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
+        # note: no way to specify patch subdir - #1769
         yield db.sourcestamps.addSourceStamp(
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '', codebase='',
             sourcestampsetid=sourcestampsetid)
-                    # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
         requested_props.update(properties, "try build")

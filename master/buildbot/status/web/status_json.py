@@ -114,11 +114,11 @@ def FilterOut(data):
     if isinstance(data, (list, tuple)):
         # Recurse in every items and filter them out.
         items = map(FilterOut, data)
-        if not filter(lambda x: not x in ('', False, None, [], {}, ()), items):
+        if not filter(lambda x: x not in ('', False, None, [], {}, ()), items):
             return None
         return items
     elif isinstance(data, dict):
-        return dict(filter(lambda x: not x[1] in ('', False, None, [], {}, ()),
+        return dict(filter(lambda x: x[1] not in ('', False, None, [], {}, ()),
                            [(k, FilterOut(v)) for (k, v) in data.iteritems()]))
     else:
         return data
@@ -322,7 +322,7 @@ def ToHtml(text):
                     indent -= 2
 
         if line.startswith('/'):
-            if not '?' in line:
+            if '?' not in line:
                 line_full = line + '?as_text=1'
             else:
                 line_full = line + '&as_text=1'

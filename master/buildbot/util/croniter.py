@@ -1,9 +1,9 @@
+#!/usr/bin/python
 # Copied from croniter
 # https://github.com/taichino/croniter
 # Licensed under MIT license
 # Pyflakes warnings corrected
 
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import re

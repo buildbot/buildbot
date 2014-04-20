@@ -215,7 +215,7 @@ class BuildProgress(pb.Referenceable):
         # remote.dontNotifyOnDisconnect(self.removeWatcher)
 
     def removeWatcher(self, remote):
-        #log.msg("removeWatcher(%s)" % remote)
+        # log.msg("removeWatcher(%s)" % remote)
         try:
             timer = self.watchers[remote].timer
             if timer:

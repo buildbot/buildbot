@@ -239,7 +239,7 @@ class SpacerBox(components.Adapter):
     implements(IBox)
 
     def getBox(self, req):
-        #b = Box(["spacer"], "white")
+        # b = Box(["spacer"], "white")
         b = Box([])
         b.spacer = True
         return b
