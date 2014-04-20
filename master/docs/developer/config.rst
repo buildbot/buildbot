@@ -263,7 +263,7 @@ Builder Configuration
         The builder's description, displayed in the web status.
 
 Error Handling
-==============
+--------------
 
 If any errors are encountered while loading the configuration :py:func:`buildbot.config.error`
 should be called. This can occur both in the configuration-loading code,
@@ -302,7 +302,7 @@ configuration - change sources, slaves, schedulers, build steps, and so on.
 .. _developer-Reconfiguration:
 
 Reconfiguration
-===============
+---------------
 
 When the buildmaster receives a signal to begin a reconfig, it re-reads the
 configuration file, generating a new :py:class:`MasterConfig` instance, and
@@ -330,7 +330,7 @@ components in Buildbot.
     software, where there are fewer surprises.
 
 Reconfigurable Services
------------------------
+.......................
 
 Instances which need to be notified of a change in configuration should be
 implemented as Twisted services, and mix in the
@@ -372,7 +372,7 @@ implemented as Twisted services, and mix in the
 
 
 Change Sources
---------------
+..............
 
 When reconfiguring, there is no method by which Buildbot can determine that a
 new :py:class:`~buildbot.changes.base.ChangeSource` represents the same source
@@ -398,7 +398,7 @@ values change.
 
 
 Schedulers
-----------
+..........
 
 Schedulers have names, so Buildbot can determine whether a scheduler has been
 added, removed, or changed during a reconfig.  Old schedulers will be stopped,
@@ -443,7 +443,7 @@ reconfig - this will cause the old scheduler to be stopped, and the new
 scheduler (with the new name and class) to be started.
 
 Slaves
-------
+......
 
 Similar to schedulers, slaves are specified by name, so new and old
 configurations are first compared by name, and any slaves to be added or
@@ -462,14 +462,14 @@ a new instance.  The
 can be used to find the new instance.
 
 User Managers
--------------
+.............
 
 Since user managers are rarely used, and their purpose is unclear, they are
 always stopped and re-started on every reconfig.  This may change in figure
 versions.
 
 Status Receivers
-----------------
+................
 
 At every reconfig, all status listeners are stopped and new versions started.
 
