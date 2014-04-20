@@ -33,6 +33,10 @@ The rest of this section describes all the standard :class:`BuildStep` objects
 available for use in a :class:`Build`, and the parameters which can be used to
 control each.  A full list of build steps is available in the :bb:index:`step`.
 
+.. contents::
+    :depth: 2
+    :local:
+
 .. index:: Buildstep Parameter
 
 .. _Buildstep-Common-Parameters:
