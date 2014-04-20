@@ -164,7 +164,7 @@ class RemoteCommand(pb.Referenceable):
         self.buildslave.messageReceivedFromSlave()
         max_updatenum = 0
         for (update, num) in updates:
-            #log.msg("update[%d]:" % num)
+            # log.msg("update[%d]:" % num)
             try:
                 if self.active and not self.ignore_updates:
                     self.remoteUpdate(update)

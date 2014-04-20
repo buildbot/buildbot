@@ -97,7 +97,7 @@ class SlaveStatus:
     def addPauseWatcher(self, watcher):
         """Add watcher to the list of watchers to be notified when the
         pause flag is changed."""
-        if not watcher in self.pause_callbacks:
+        if watcher not in self.pause_callbacks:
             self.pause_callbacks.append(watcher)
 
     def removePauseWatcher(self, watcher):
@@ -130,7 +130,7 @@ class SlaveStatus:
     def addGracefulWatcher(self, watcher):
         """Add watcher to the list of watchers to be notified when the
         graceful shutdown flag is changed."""
-        if not watcher in self.graceful_callbacks:
+        if watcher not in self.graceful_callbacks:
             self.graceful_callbacks.append(watcher)
 
     def removeGracefulWatcher(self, watcher):

@@ -348,7 +348,7 @@ class _Lookup(util.ComparableMixin, object):
         value = build.render(self.value)
         index = build.render(self.index)
         value, index = yield defer.gatherResults([value, index])
-        if not index in value:
+        if index not in value:
             rv = yield build.render(self.default)
         else:
             if self.defaultWhenFalse:
@@ -555,7 +555,7 @@ class Interpolate(util.ComparableMixin, object):
     def _parse(self, fmtstring):
         keys = _getInterpolationList(fmtstring)
         for key in keys:
-            if not key in self.interpolations:
+            if key not in self.interpolations:
                 d, kw, repl = self._parseSubstitution(key)
                 if repl is None:
                     repl = '-'
@@ -570,7 +570,7 @@ class Interpolate(util.ComparableMixin, object):
                     if not junk and matches:
                         self.interpolations[key] = fn(d, kw, tail)
                         break
-                if not key in self.interpolations:
+                if key not in self.interpolations:
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 
     def getRenderingFor(self, props):

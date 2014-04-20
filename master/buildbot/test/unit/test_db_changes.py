@@ -553,22 +553,15 @@ class RealTests(Tests):
             fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234, branch='aa'),
             fakedb.SourceStamp(id=235, branch='bb'),
-
             fakedb.Change(changeid=11),
-
             fakedb.Change(changeid=12, sourcestampid=234),
             fakedb.SchedulerChange(schedulerid=29, changeid=12),
-        ] +
-
-            self.change13_rows + [
-                fakedb.SchedulerChange(schedulerid=29, changeid=13),
-            ] +
-
-            self.change14_rows + [
-                fakedb.SchedulerChange(schedulerid=29, changeid=14),
-
-                fakedb.Change(changeid=15, sourcestampid=235),
-            ]
+        ] + self.change13_rows + [
+            fakedb.SchedulerChange(schedulerid=29, changeid=13),
+        ] + self.change14_rows + [
+            fakedb.SchedulerChange(schedulerid=29, changeid=14),
+            fakedb.Change(changeid=15, sourcestampid=235),
+        ]
         )
 
         # pruning with a horizon of 2 should delete changes 11, 12 and 13

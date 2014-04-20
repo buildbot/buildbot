@@ -104,7 +104,8 @@ class VerifyDict(unittest.TestCase):
             good=[
                 {'a': True},
                 {'a': True, 'b': u'xyz'},
-            ], bad=[
+            ],
+            bad=[
                 None, 1, "hi",
                 {},
                 {'a': 1},
