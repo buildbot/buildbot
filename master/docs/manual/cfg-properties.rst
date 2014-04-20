@@ -9,6 +9,10 @@ Build properties are a generalized way to provide configuration information to
 build steps; see :ref:`Build-Properties` for the conceptual overview of
 properties.
 
+.. contents::
+    :depth: 1
+    :local:
+
 Some build properties come from external sources and are set before the build
 begins; others are set during the build, and available for later steps.  The
 sources for properties are:

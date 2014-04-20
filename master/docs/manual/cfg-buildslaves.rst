@@ -13,6 +13,13 @@ that will try to connect to the buildbot master as a slave.  Buildbot also
 supports "on-demand", or latent, buildslaves, which allow buildbot to
 dynamically start and stop buildslave instances.
 
+.. contents::
+    :depth: 1
+    :local:
+
+Defining Buildslaves
+~~~~~~~~~~~~~~~~~~~~
+
 A :class:`BuildSlave` instance is created with a ``slavename`` and a
 ``slavepassword``. These are the same two values that need to be provided to
 the buildslave administrator when they create the buildslave.

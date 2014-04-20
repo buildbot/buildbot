@@ -282,7 +282,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 files=files,
                 comments=comments,
                 when_timestamp=timestamp,
-                branch=ascii2unicode(branch),
+                branch=ascii2unicode(self._removeHeads(branch)),
                 category=self.category,
                 project=self.project,
                 repository=ascii2unicode(self.repourl),

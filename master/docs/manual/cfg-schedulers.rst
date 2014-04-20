@@ -4,6 +4,10 @@
 Schedulers
 ----------
 
+.. contents::
+    :depth: 1
+    :local:
+
 Schedulers are responsible for initiating builds on builders.
 
 Some schedulers listen for changes from ChangeSources and generate build sets

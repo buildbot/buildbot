@@ -3,6 +3,10 @@ Global Configuration
 
 The keys in this section affect the operations of the buildmaster globally.
 
+.. contents::
+    :depth: 1
+    :local:
+
 .. bb:cfg:: db
 .. bb:cfg:: db_url
 

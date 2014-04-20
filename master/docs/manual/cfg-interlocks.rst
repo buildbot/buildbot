@@ -4,6 +4,10 @@
 Interlocks
 ----------
 
+.. contents::
+    :depth: 1
+    :local:
+
 Until now, we assumed that a master can run builds at any slave whenever
 needed or desired.  Some times, you want to enforce additional constraints on
 builds. For reasons like limited network bandwidth, old slave machines, or a
