@@ -115,7 +115,7 @@ else
     for filename in ${py_files[@]}; do
         LINEWIDTH=$(grep -E "max-line-length" common/pep8rc | sed 's/ //g' | cut -d'=' -f 2)
         # even if we dont enforce errors, if they can be fixed automatically, thats better..
-        IGNORES=E501,W6
+        IGNORES=E123,E501,W6
         # ignore is not None for SQLAlchemy code..
         if [[ "$filename" =~ "/db/" ]]; then
             IGNORES=$IGNORES,E711,E712
