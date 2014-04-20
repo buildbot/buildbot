@@ -135,8 +135,8 @@ class Command:
     requiredArgs = []
     debug = False
     interrupted = False
-    running = False  # set by Builder, cleared on shutdown or when the
-                    # Deferred fires
+    # set by Builder, cleared on shutdown or when the Deferred fires
+    running = False
 
     _reactor = reactor
 
@@ -146,7 +146,7 @@ class Command:
         self.args = args
         self.startTime = None
 
-        missingArgs = filter(lambda arg: not arg in args, self.requiredArgs)
+        missingArgs = filter(lambda arg: arg not in args, self.requiredArgs)
         if missingArgs:
             raise ValueError("%s is missing args: %s" %
                              (self.__class__.__name__, ", ".join(missingArgs)))

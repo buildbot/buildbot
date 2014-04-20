@@ -382,26 +382,32 @@ class Tests(interfaces.InterfaceTests):
             claimed_at=epoch2datetime(14000000))
 
     def test_claimBuildRequests_multiple(self):
-        return self.do_test_claimBuildRequests([
-            fakedb.BuildRequest(id=44, buildsetid=self.BSID),
-            fakedb.BuildRequest(id=45, buildsetid=self.BSID),
-            fakedb.BuildRequest(id=46, buildsetid=self.BSID),
-        ], 1300305712, [44, 46],
+        return self.do_test_claimBuildRequests(
+            [
+                fakedb.BuildRequest(id=44, buildsetid=self.BSID),
+                fakedb.BuildRequest(id=45, buildsetid=self.BSID),
+                fakedb.BuildRequest(id=46, buildsetid=self.BSID),
+            ],
+            1300305712, [44, 46],
             [
                 (44, epoch2datetime(1300305712), True),
                 (45, None, False),
                 (46, epoch2datetime(1300305712), True),
-            ])
+            ]
+        )
 
     def test_claimBuildRequests_stress(self):
-        return self.do_test_claimBuildRequests([
-            fakedb.BuildRequest(id=id, buildsetid=self.BSID)
-            for id in xrange(1, 1000)
-        ], 1300305713, range(1, 1000),
+        return self.do_test_claimBuildRequests(
+            [
+                fakedb.BuildRequest(id=id, buildsetid=self.BSID)
+                for id in xrange(1, 1000)
+            ],
+            1300305713, range(1, 1000),
             [
                 (id, epoch2datetime(1300305713), True)
                 for id in xrange(1, 1000)
-            ])
+            ]
+        )
 
     def test_claimBuildRequests_other_master_claim(self):
         return self.do_test_claimBuildRequests([

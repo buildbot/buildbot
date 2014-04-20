@@ -120,7 +120,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         def parseRemote(rows):
             branches = []
             for row in rows.splitlines():
-                if not '\t' in row:
+                if '\t' not in row:
                     # Not a useful line
                     continue
                 sha, ref = row.split("\t")

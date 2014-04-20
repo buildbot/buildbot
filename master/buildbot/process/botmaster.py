@@ -288,7 +288,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @return: a locks.RealMasterLock or locks.RealSlaveLock instance
         """
         assert isinstance(lockid, (locks.MasterLock, locks.SlaveLock))
-        if not lockid in self.locks:
+        if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note

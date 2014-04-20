@@ -93,7 +93,7 @@ class FakeMaster:
         self.config = config.MasterConfig()
 
     def getLockByID(self, lockid):
-        if not lockid in self.locks:
+        if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         return self.locks[lockid]
 

@@ -64,6 +64,6 @@ class TestBK(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-                # TODO: why the extra quotes?
+        # TODO: why the extra quotes?
         d.addCallback(self.check_sourcedata, '"http://bkdemo.bkbits.net/bk_demo1\n"')
         return d

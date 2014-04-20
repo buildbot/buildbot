@@ -32,7 +32,7 @@ from mercurial.node import hex
 from mercurial.node import nullid  # @UnresolvedImport
 
 # mercurial's on-demand-importing hacks interfere with the:
-#from zope.interface import Interface
+# from zope.interface import Interface
 # that Twisted needs to do, so disable it.
 try:
     from mercurial import demandimport

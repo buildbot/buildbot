@@ -79,7 +79,7 @@ except ConfigParser.NoSectionError:
 
 if lastrevision != revision:
 
-    #comments = codecs.encodings.unicode_escape.encode(comments)
+    # comments = codecs.encodings.unicode_escape.encode(comments)
     cmd = "buildbot sendchange --master=" + buildmaster + " --branch=trunk \
 --revision=\"" + revision + "\" --username=\"" + author + "\" --vc=\"svn\" \
 --comments=\"" + comments + "\" " + " ".join(paths)
