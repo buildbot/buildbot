@@ -318,6 +318,11 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
 
         d = self.run_command()
 
+        def any(items):  # not a builtin on python-2.4
+            for i in items:
+                if i:
+                    return True
+
         def check(_):
             self.assertIn({'rc': 0},
                           self.get_updates(),
