@@ -14,6 +14,10 @@ The steps used by these builds are defined in the next section, :ref:`Build-Step
     Build factories are used with builders, and are not added directly to the
     buildmaster configuration dictionary.
 
+.. contents::
+    :depth: 1
+    :local:
+
 .. _BuildFactory:
 
 .. index:: Build Factory

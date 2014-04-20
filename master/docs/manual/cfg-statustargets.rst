@@ -5,6 +5,10 @@
 Status Targets
 --------------
 
+.. contents::
+    :depth: 2
+    :local:
+
 The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a `Status Target` object
 in the configuration's :bb:cfg:`status` list. To add status targets, you
