@@ -229,6 +229,9 @@ class IRCContact(base.StatusReceiver):
         all_buildslaves = yield self.master.data.get(('buildslaves',))
         online_builderids = set()
         for buildslave in all_buildslaves:
+            connected = buildslave['connected_to']
+            if not connected:
+                continue
             builders = buildslave['configured_on']
             builderids = [ builder['builderid'] for builder in builders ]
             online_builderids.update(builderids)
@@ -412,7 +415,7 @@ class IRCContact(base.StatusReceiver):
         d = self.master.data.get(('builds',),
                         filters=[resultspec.Filter('builderid', 'eq', [builderid]),
                                  resultspec.Filter('complete', 'eq', [True])],
-                        order=['number'],
+                        order=['-number'],
                         limit=1)
         @d.addCallback
         def listAsOneOrNone(res):
@@ -443,7 +446,7 @@ class IRCContact(base.StatusReceiver):
 
         for build in builds:
             handle = self.master.data.startConsuming(watchForCompleteEvent, {}, 
-                                                     (build['link'].path))
+                                                     ('builds', str(build['buildid'])))
             self.build_subscriptions.append((build['buildid'], handle))
 
             if self.useRevisions:
@@ -474,6 +477,7 @@ class IRCContact(base.StatusReceiver):
         log.msg('[Contact] Builder %s removed' % (builderName))
 
     ## OLD_STYLE
+    @defer.inlineCallbacks
     def buildStarted(self, builderName, build):
         # FIXME: NEED TO THINK ABOUT!
         builder = build.getBuilder()

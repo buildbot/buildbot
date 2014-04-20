@@ -282,8 +282,8 @@ class TestIrcContactChannel(unittest.TestCase):
         for builder in self.BUILDER_NAMES:
             self.assertIn('%s [offline]'%builder, self.sent[0])
 
-    @defer.inlineCallbacks
-    def test_command_list_builders_connected(self):
+
+    def setup_multi_builders(self):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
         self.master.db.insertTestData([
@@ -295,7 +295,24 @@ class TestIrcContactChannel(unittest.TestCase):
                                 buildslaveid=2, buildermasterid=4012),
             fakedb.ConfiguredBuildslave(id=14013,
                                 buildslaveid=1, buildermasterid=4013),
-            fakedb.ConnectedBuildslave(id=113, masterid=13, buildslaveid=1),
+        ])
+
+    @defer.inlineCallbacks
+    def test_command_list_builders_not_connected(self):
+        self.setup_multi_builders()
+
+        yield self.do_test_command('list', args='builders')
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn('%s [offline]'%self.BUILDER_NAMES[0], self.sent[0])
+        self.assertIn('%s [offline]'%self.BUILDER_NAMES[1], self.sent[0])
+
+    @defer.inlineCallbacks
+    def test_command_list_builders_connected(self):
+        self.setup_multi_builders()
+
+        # Also set the connectedness:
+        self.master.db.insertTestData([
+            fakedb.ConnectedBuildslave(id=113, masterid=13, buildslaveid=1)
         ])
 
         yield self.do_test_command('list', args='builders')
