@@ -94,7 +94,7 @@ Features
 
 * A new :py:class:`FlattenList` Renderable has been added which can flatten nested lists.
 
-* Added new build steps for :bb:step:`VC12`, :bb:step:`VS2014` and :bb:step:`MsBuild12`.
+* Added new build steps for :bb:step:`VC12`, :bb:step:`VS2013` and :bb:step:`MsBuild12`.
 
 * The ``mode`` parameter of the VS steps is now renderable (:bb:bug:`2592`).
 
