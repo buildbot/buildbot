@@ -134,74 +134,86 @@ class TestIrcContactChannel(unittest.TestCase):
     # TODO: remaining commands
     # (all depend on status, which interface will change soon)
 
+    @defer.inlineCallbacks
     def test_command_mute(self):
-        self.do_test_command('mute')
+        yield self.do_test_command('mute')
         self.assertTrue(self.contact.muted)
 
+    @defer.inlineCallbacks
     def test_command_unmute(self):
         self.contact.muted = True
-        self.do_test_command('unmute')
+        yield self.do_test_command('unmute')
         self.assertFalse(self.contact.muted)
 
+    @defer.inlineCallbacks
     def test_command_unmute_not_muted(self):
-        self.do_test_command('unmute')
+        yield self.do_test_command('unmute')
         self.assertFalse(self.contact.muted)
         self.assertIn("hadn't told me to be quiet", self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_noargs(self):
-        self.do_test_command('help')
+        yield self.do_test_command('help')
         self.assertIn('help on what', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_arg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = 'foo - bar'
-        self.do_test_command('help', args='foo')
+        yield self.do_test_command('help', args='foo')
         self.assertIn('Usage: foo - bar', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_no_usage(self):
         self.contact.command_FOO = lambda: None
-        self.do_test_command('help', args='foo')
+        yield self.do_test_command('help', args='foo')
         self.assertIn('No usage info for', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             None: 'foo - bar'
         }
-        self.do_test_command('help', args='foo')
+        yield self.do_test_command('help', args='foo')
         self.assertIn('Usage: foo - bar', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {}
-        self.do_test_command('help', args='foo')
+        yield self.do_test_command('help', args='foo')
         self.assertIn("No usage info for 'foo'", self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command_arg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             'this': 'foo this - bar'
         }
-        self.do_test_command('help', args='foo this')
+        yield self.do_test_command('help', args='foo this')
         self.assertIn('Usage: foo this - bar', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command_arg_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             # nothing for arg 'this'
             ('this', 'first'): 'foo this first - bar'
         }
-        self.do_test_command('help', args='foo this')
+        yield self.do_test_command('help', args='foo this')
         self.assertIn("No usage info for 'foo' 'this'", self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command_arg_subarg(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
             ('this', 'first'): 'foo this first - bar'
         }
-        self.do_test_command('help', args='foo this first')
+        yield self.do_test_command('help', args='foo this first')
         self.assertIn('Usage: foo this first - bar', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_dict_command_arg_subarg_no_usage(self):
         self.contact.command_FOO = lambda: None
         self.contact.command_FOO.usage = {
@@ -210,66 +222,78 @@ class TestIrcContactChannel(unittest.TestCase):
             ('this', 'first'): 'foo this first - bar'
             # nothing for subarg 'missing'
         }
-        self.do_test_command('help', args='foo this missing')
+        yield self.do_test_command('help', args='foo this missing')
         self.assertIn("No usage info for 'foo' 'this' 'missing'", self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_help_nosuch(self):
-        self.do_test_command('help', args='foo', exp_UsageError=True)
+        yield self.do_test_command('help', args='foo', exp_UsageError=True)
 
+    @defer.inlineCallbacks
     def test_command_shutdown(self):
-        self.do_test_command('shutdown', exp_UsageError=True)
+        yield self.do_test_command('shutdown', exp_UsageError=True)
         self.assertEqual(self.bot.factory.allowShutdown, False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
+    @defer.inlineCallbacks
     def test_command_shutdown_dissalowed(self):
-        self.do_test_command('shutdown', args='check', exp_UsageError=True)
+        yield self.do_test_command('shutdown', args='check', exp_UsageError=True)
         self.assertEqual(self.bot.factory.allowShutdown, False)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
+    @defer.inlineCallbacks
     def test_command_shutdown_check_running(self):
-        self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=False)
+        yield self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=False)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         self.assertIn('buildbot is running', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_shutdown_check_shutting_down(self):
-        self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=True)
+        yield self.do_test_command('shutdown', args='check', allowShutdown=True, shuttingDown=True)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
         self.assertIn('buildbot is shutting down', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_shutdown_start(self):
-        self.do_test_command('shutdown', args='start', allowShutdown=True, shuttingDown=False)
+        yield self.do_test_command('shutdown', args='start', allowShutdown=True, shuttingDown=False)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, True)
 
+    @defer.inlineCallbacks
     def test_command_shutdown_stop(self):
-        self.do_test_command('shutdown', args='stop', allowShutdown=True, shuttingDown=True)
+        yield self.do_test_command('shutdown', args='stop', allowShutdown=True, shuttingDown=True)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
+    @defer.inlineCallbacks
     def test_command_shutdown_now(self):
         stop = mock.Mock()
         self.patch(reactor, 'stop', stop)
-        self.do_test_command('shutdown', args='now', allowShutdown=True)
+        yield self.do_test_command('shutdown', args='now', allowShutdown=True)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
         stop.assert_called_with()
 
+    @defer.inlineCallbacks
     def test_command_source(self):
-        self.do_test_command('source')
+        yield self.do_test_command('source')
         self.assertIn('My source', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_commands(self):
-        self.do_test_command('commands')
+        yield self.do_test_command('commands')
         self.assertIn('buildbot commands', self.sent[0])
 
+    @defer.inlineCallbacks
     def test_command_destroy(self):
-        self.do_test_command('destroy', exp_usage=False)
+        yield self.do_test_command('destroy', exp_usage=False)
         self.assertEqual(self.actions, ['readies phasers'])
 
+    @defer.inlineCallbacks
     def test_command_dance(self):
-        self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
+        yield self.do_test_command('dance', clock_ticks=[1.0] * 10, exp_usage=False)
         self.assertTrue(self.sent)  # doesn't matter what it sent
 
     @defer.inlineCallbacks
@@ -597,15 +621,16 @@ class TestIrcContactChannel(unittest.TestCase):
         self.contact.handleAction('stupids nick', 'me')
         self.assertEqual(self.actions, ['stupids me too'])
 
+    @defer.inlineCallbacks
     def test_unclosed_quote(self):
-        self.do_test_command('list', args='args\'', exp_UsageError=True)
-        self.do_test_command('status', args='args\'', exp_UsageError=True)
-        self.do_test_command('notify', args='args\'', exp_UsageError=True)
-        self.do_test_command('watch', args='args\'', exp_UsageError=True)
-        self.do_test_command('force', args='args\'', exp_UsageError=True)
-        self.do_test_command('stop', args='args\'', exp_UsageError=True)
-        self.do_test_command('last', args='args\'', exp_UsageError=True)
-        self.do_test_command('help', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('list', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('status', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('notify', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('watch', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('force', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('stop', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('last', args='args\'', exp_UsageError=True)
+        yield self.do_test_command('help', args='args\'', exp_UsageError=True)
 
     def test_buildStarted(self):
         class MockChange(object):
