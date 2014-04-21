@@ -4,7 +4,7 @@ Steps
 .. bb:rtype:: step
 
     :attr integer stepid: the unique ID of this step
-    :attr integer number: the number of this build (sequential within the build)
+    :attr integer number: the number of this step (sequential within the build)
     :attr name: the step name, unique within the build
     :type name: 50-character :ref:`identifier <type-identifier>`
     :attr integer buildid: id of the build containing this step

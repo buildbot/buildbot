@@ -635,7 +635,9 @@ def verifyMessage(testcase, routingKey, message_):
     # pass (arg, (routingKey, message)), where the routing key is the arg
     # the "type" of the message is identified by last path name
     # -1 being the event, and -2 the id.
-    _verify(testcase, message[routingKey[-3]], '',
+
+    validator = message[routingKey[-3]]
+    _verify(testcase, validator, '',
             (routingKey, (routingKey, message_)))
 
 
