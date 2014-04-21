@@ -17,8 +17,8 @@ import mock
 
 from buildbot.status import words
 from buildbot.status.results import SUCCESS
-from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import compat
 from buildbot.test.util import config
 from buildbot.util import datetime2epoch
@@ -28,10 +28,11 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
 
+
 class TestIrcContactChannel(unittest.TestCase):
 
     BUILDER_NAMES = [u'builder1', u'builder2']
-    BUILDER_IDS   = [23, 45]
+    BUILDER_IDS = [23, 45]
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self, wantMq=True,
@@ -41,7 +42,7 @@ class TestIrcContactChannel(unittest.TestCase):
             self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         # I think the 'bot' part of this is actually going away ...
-        ## TO REMOVE:
+        # TO REMOVE:
 
         self.bot = mock.Mock(name='IRCStatusBot-instance')
         self.bot.nickname = 'nick'
@@ -280,8 +281,7 @@ class TestIrcContactChannel(unittest.TestCase):
         yield self.do_test_command('list', args='builders')
         self.assertEqual(len(self.sent), 1)
         for builder in self.BUILDER_NAMES:
-            self.assertIn('%s [offline]'%builder, self.sent[0])
-
+            self.assertIn('%s [offline]' % builder, self.sent[0])
 
     def setup_multi_builders(self):
         # Make first builder configured, but not connected
@@ -292,9 +292,9 @@ class TestIrcContactChannel(unittest.TestCase):
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
             fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
             fakedb.ConfiguredBuildslave(id=14013,
-                                buildslaveid=2, buildermasterid=4012),
+                                        buildslaveid=2, buildermasterid=4012),
             fakedb.ConfiguredBuildslave(id=14013,
-                                buildslaveid=1, buildermasterid=4013),
+                                        buildslaveid=1, buildermasterid=4013),
         ])
 
     @defer.inlineCallbacks
@@ -303,8 +303,8 @@ class TestIrcContactChannel(unittest.TestCase):
 
         yield self.do_test_command('list', args='builders')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('%s [offline]'%self.BUILDER_NAMES[0], self.sent[0])
-        self.assertIn('%s [offline]'%self.BUILDER_NAMES[1], self.sent[0])
+        self.assertIn('%s [offline]' % self.BUILDER_NAMES[0], self.sent[0])
+        self.assertIn('%s [offline]' % self.BUILDER_NAMES[1], self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_list_builders_connected(self):
@@ -317,8 +317,8 @@ class TestIrcContactChannel(unittest.TestCase):
 
         yield self.do_test_command('list', args='builders')
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('%s [offline]'%self.BUILDER_NAMES[0], self.sent[0])
-        self.assertNotIn('%s [offline]'%self.BUILDER_NAMES[1], self.sent[0])
+        self.assertIn('%s [offline]' % self.BUILDER_NAMES[0], self.sent[0])
+        self.assertNotIn('%s [offline]' % self.BUILDER_NAMES[1], self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_status(self):
@@ -345,7 +345,6 @@ class TestIrcContactChannel(unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_status_bogus(self):
         yield self.do_test_command('status', args='bogus_builder', exp_UsageError=True)
-
 
     @defer.inlineCallbacks
     def test_command_last(self):
@@ -387,19 +386,19 @@ class TestIrcContactChannel(unittest.TestCase):
         self.master.db.insertTestData([
             # Three builds on builder#0, One build on builder#1
             fakedb.Build(id=13, masterid=88, buildslaveid=13,
-                         builderid=self.BUILDER_IDS[0], 
+                         builderid=self.BUILDER_IDS[0],
                          buildrequestid=82, number=3),
             fakedb.Build(id=14, masterid=88, buildslaveid=13,
-                         builderid=self.BUILDER_IDS[0], 
+                         builderid=self.BUILDER_IDS[0],
                          buildrequestid=83, number=4),
             fakedb.Build(id=15, masterid=88, buildslaveid=13,
-                         builderid=self.BUILDER_IDS[1], 
+                         builderid=self.BUILDER_IDS[1],
                          buildrequestid=84, number=5),
             fakedb.Build(id=16, masterid=88, buildslaveid=13,
-                         builderid=self.BUILDER_IDS[0], 
+                         builderid=self.BUILDER_IDS[0],
                          buildrequestid=85, number=6),
         ])
-        self.master.db.builds.finishBuild(buildid=14, results='results')        
+        self.master.db.builds.finishBuild(buildid=14, results='results')
 
     @defer.inlineCallbacks
     def test_command_watch_builder0(self):
@@ -422,7 +421,7 @@ class TestIrcContactChannel(unittest.TestCase):
     @defer.inlineCallbacks
     def sendBuildFinishedMessage(self, buildid, results=0):
         self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
-        build = yield self.master.db.builds.getBuild(buildid)    
+        build = yield self.master.db.builds.getBuild(buildid)
         self.master.mq.callConsumer(('builds', str(buildid), 'complete'),
                                     dict(
                                         buildid=buildid,
@@ -436,7 +435,7 @@ class TestIrcContactChannel(unittest.TestCase):
                                         complete_at=datetime2epoch(build['complete_at']),
                                         state_strings=[],
                                         results=results,
-                                    ))
+            ))
 
     @defer.inlineCallbacks
     def test_command_stop(self):
@@ -448,18 +447,17 @@ class TestIrcContactChannel(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_command_stop_builder0_no_builds(self):
-        yield self.do_test_command('stop', args="build %s 'i have a reason'"%self.BUILDER_NAMES[0])
+        yield self.do_test_command('stop', args="build %s 'i have a reason'" % self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         self.assertIn('no build is', self.sent[0])
 
     @defer.inlineCallbacks
     def test_command_stop_builder0_1_builds(self):
         self.setupSomeBuilds()
-        yield self.do_test_command('stop', args="build %s 'i have a reason'"%self.BUILDER_NAMES[0])
+        yield self.do_test_command('stop', args="build %s 'i have a reason'" % self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
         self.assertIn('build 3 interrupted', self.sent)
         self.assertIn('build 6 interrupted', self.sent)
-
 
     @defer.inlineCallbacks
     def test_command_force_no_args(self):
@@ -480,10 +478,9 @@ class TestIrcContactChannel(unittest.TestCase):
     # TODO: the below fails due to the assertion (see "rewrite to not use the status hierarchy")
     # @defer.inlineCallbacks
     # def test_command_force(self):
-    #     yield self.do_test_command('force', 
-    #             args='build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 %s REASON' 
+    #     yield self.do_test_command('force',
+    #             args='build --branch BRANCH1 --revision REV1 --props=PROP1=VALUE1 %s REASON'
     #               % self.BUILDER_NAMES[0])
-
 
     def test_send(self):
         events = []
