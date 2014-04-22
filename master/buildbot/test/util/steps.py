@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.python import log
 import mock
 
 from buildbot import interfaces
@@ -272,7 +273,15 @@ class BuildStepMixin(object):
             del got[1][arg]
 
         # first check any ExpectedRemoteReference instances
-        self.assertEqual((exp.remote_command, exp.args), got)
+        try:
+            self.assertEqual((exp.remote_command, exp.args), got)
+        except AssertionError:
+            # log this error, as the step may swallow the AssertionError or
+            # otherwise obscure the failure.  Trial will see the exception in
+            # the log and print an [ERROR].  This may result in
+            # double-reporting, but that's better than non-reporting!
+            log.err()
+            raise
 
         # let the Expect object show any behaviors that are required
         d = exp.runBehaviors(command)
