@@ -114,7 +114,16 @@ define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function 
             var $filterInput = $tableElem.parents('.dataTables_wrapper')
                 .find('.dataTables_filter input')
                 .attr('placeholder', 'Filter results')
-                .focus();                                  
+                .focus();     
+                             
+				// Set the marquee in the input field on load and listen for key event	
+				var filterTableInput = $('.dataTables_filter input').attr('placeholder','Filter results');
+                $('body').keyup(function(event) {                                       
+                    if (event.which === 70) {
+                        filterTableInput.focus();
+                    } 
+                });
+                 
 
             return oTable;
         },

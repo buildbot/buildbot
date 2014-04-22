@@ -38,7 +38,7 @@ class StatusResourceBuildStep(HtmlResource):
         b = s.getBuild()
         builderstatus = b.getBuilder()
         project = builderstatus.getProject()
-        cxt['name'] = builderstatus.getName()
+        cxt['name'] = builderstatus.getFriendlyName()
         cxt['path_to_builder'] = path_to_builder(req, builderstatus)
         cxt['path_to_builders'] = path_to_builders(req, project)
         cxt['path_to_codebases'] = path_to_codebases(req, project)

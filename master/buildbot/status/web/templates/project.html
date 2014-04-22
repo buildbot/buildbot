@@ -36,10 +36,10 @@
           {% for cbkey, codebase in cb.iteritems() %}
         <tr>
           <td>
-              {{cbkey}}
+              {{codebase['display_name']}}
           </td>
           <td>
-            {{codebase['repository']}}
+            <a href="{{codebase['display_repository']}}">{{codebase['display_repository']}}</a>
           </td>
           <td class="txt-align-right">
 
