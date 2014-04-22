@@ -91,9 +91,9 @@ class ForceBuildActionResource(ActionResource):
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
                 msg = "could not rebuild: "
-                if b.isFinished():
+                if not b.isFinished():
                     msg += "build still not finished "
-                if bc:
+                if not bc:
                     msg += "could not get builder control"
             else:
                 tup = yield bc.rebuildBuild(b,
