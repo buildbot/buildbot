@@ -1764,7 +1764,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectNoProperty('commit-description')
         return self.runStep()
 
-    def setup_getDescription_test(self, setup_args, output_args, codebase=None):
+    def setup_getDescription_test(self, setup_args, output_args,
+                                  expect_head=True, codebase=None):
         # clone of: test_mode_full_clobber
         # only difference is to set the getDescription property
 
@@ -1807,7 +1808,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'describe'] +
                                 output_args +
-                                ['HEAD'])
+                                (['HEAD'] if expect_head else []))
             + ExpectShell.log('stdio',
                               stdout='Tag-1234')
             + 0,
@@ -1903,28 +1904,40 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
     def test_getDescription_dirty(self):
         self.setup_getDescription_test(
             setup_args={'dirty': True},
-            output_args=['--dirty']
+            output_args=['--dirty'],
+            expect_head=False
         )
         return self.runStep()
 
     def test_getDescription_dirty_empty_str(self):
         self.setup_getDescription_test(
             setup_args={'dirty': ''},
-            output_args=['--dirty']
+            output_args=['--dirty'],
+            expect_head=False
         )
         return self.runStep()
 
     def test_getDescription_dirty_str(self):
         self.setup_getDescription_test(
             setup_args={'dirty': 'foo'},
-            output_args=['--dirty=foo']
+            output_args=['--dirty=foo'],
+            expect_head=False
         )
         return self.runStep()
 
     def test_getDescription_dirty_false(self):
         self.setup_getDescription_test(
             setup_args={'dirty': False},
-            output_args=[]
+            output_args=[],
+            expect_head=True
+        )
+        return self.runStep()
+
+    def test_getDescription_dirty_none(self):
+        self.setup_getDescription_test(
+            setup_args={'dirty': None},
+            output_args=[],
+            expect_head=True
         )
         return self.runStep()
 

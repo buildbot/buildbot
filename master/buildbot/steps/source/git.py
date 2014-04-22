@@ -315,13 +315,18 @@ class Git(Source):
             return
 
         cmd = ['describe']
+        descriptionOpts = {}
         if isinstance(self.getDescription, dict):
+            descriptionOpts = self.getDescription
             for opt, arg in git_describe_flags:
-                opt = self.getDescription.get(opt, None)
+                opt = descriptionOpts.get(opt, None)
                 arg = arg(opt)
                 if arg:
                     cmd.extend(arg)
-        cmd.append('HEAD')
+        # 'git describe' takes a commitish as an argument for all options
+        # *except* --dirty
+        if not any(arg.startswith('--dirty') for arg in cmd):
+            cmd.append('HEAD')
 
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
