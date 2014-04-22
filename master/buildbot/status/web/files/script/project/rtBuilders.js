@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache'], function ($, realtimePages, helpers, dt, mustache, form, builders) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements) {
     "use strict";
     var rtBuilders;
     var tbsorter = undefined;
@@ -17,11 +17,13 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
             }            
         },
         realtimeFunctionsProcessBuilders: function (data) {
+            timeElements.clearTimeObjects(tbsorter);
             tbsorter.fnClearTable();
-            try {
+            try{
                 tbsorter.fnAddData(data.builders);
+                timeElements.updateTimeObjects();
             }
-            catch (err) {
+            catch(err) {
             }
         },
         dataTableInit: function ($tableElem) {
@@ -75,7 +77,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild != undefined) {
-                            helpers.startCounterTimeago($(nTd).find('.last-run'), oData.latestBuild.times[1]);
+                            timeElements.addTimeAgoElem($(nTd).find('.last-run'), oData.latestBuild.times[1]);
                             var time = helpers.getTime(oData.latestBuild.times[0], oData.latestBuild.times[1]).trim();
                             $(nTd).find('.small-txt').html('(' + time + ')');
                             $(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);
@@ -94,7 +96,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 {
                     "aTargets": [ 4 ],
                     "mRender": function (data, full, type) {
-                        var builderUrl = location.protocol + "//" + location.host;
                         return mustache.render(builders, {customBuild: true, url:type.url, builderName: type.name});
                     }
                 }

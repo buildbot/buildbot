@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildslaves.mustache'], function ($, realtimePages, helpers, dt, mustache, buildslaves) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements) {
     "use strict";
     var rtBuildSlaves;
     var tbsorter = undefined;
@@ -11,6 +11,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
             realtimePages.initRealtime(realtimeFunctions);
         },
         processBuildSlaves: function (data) {
+            timeElements.clearTimeObjects(tbsorter);
             tbsorter.fnClearTable();
             try {
                 //Buildbot doesn't easily give you an array so we are running through a dictionary here
@@ -18,6 +19,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                     var arObjData = [value];
                     tbsorter.fnAddData(arObjData);
                 });
+
+                timeElements.updateTimeObjects();
             }
             catch (err) {
             }
@@ -113,7 +116,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         return mustache.render(buildslaves, {showTimeago: showTimeago, showLastMessageDate: lastMessageDate});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        helpers.startCounterTimeago($(nTd).find('.last-message-timemago'), oData.lastMessage);
+                        timeElements.addTimeAgoElem($(nTd).find('.last-message-timemago'), oData.lastMessage);
                     }
 
                 }

@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache'], function ($, realtimePages, helpers, dt, Mustache, buildqueue) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements) {
     "use strict";
     var tbsorter = undefined;
     var rtBuildQueue;
@@ -11,9 +11,11 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
             realtimePages.initRealtime(realtimeFunctions);
         },
         processBuildQueue: function (data) {
+            timeElements.clearTimeObjects(tbsorter);
             tbsorter.fnClearTable();
             try {
                 tbsorter.fnAddData(data);
+                timeElements.updateTimeObjects();
             }
             catch (err) {
             }
@@ -56,7 +58,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         return Mustache.render(buildqueue, {reason: type.reason, requested: requested, submittedAt: type.submittedAt});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        helpers.startCounter($(nTd).find('.waiting-time'), oData.submittedAt);
+                        timeElements.addElapsedElem($(nTd).find('.waiting-time'), oData.submittedAt);
                     }
                 },
                 {

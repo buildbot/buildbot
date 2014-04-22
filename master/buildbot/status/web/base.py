@@ -265,6 +265,10 @@ class AccessorMixin(object):
     def getRealTimeServer(self, request):
         return  request.site.buildbot_service.master.config.realTimeServer
 
+    def getAnalyticsCode(self, request):
+        return request.site.buildbot_service.master.config.analytics_code
+
+
 class ContextMixin(AccessorMixin):
     def getContext(self, request):
         status = self.getStatus(request)
@@ -289,6 +293,7 @@ class ContextMixin(AccessorMixin):
                     authz = self.getAuthz(request),
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
+                    analytics_code = self.getAnalyticsCode(request)
                     )
 
 

@@ -1,4 +1,4 @@
-define(['jquery', 'rtglobal', 'helpers'], function ($, rtGlobal) {
+define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal, helpers, timeElements) {
     "use strict";
     var sock = null;
     var realTimeFunctions = {};

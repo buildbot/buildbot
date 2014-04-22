@@ -36,10 +36,18 @@
           {% for cbkey, codebase in cb.iteritems() %}
         <tr>
           <td>
-              {{cbkey}}
+              {% if codebase['display_name'] %}
+                {{codebase['display_name']}}
+              {% else %}
+                {{cbkey}}
+              {% endif %}
           </td>
           <td>
-            {{codebase['repository']}}
+              {% if codebase['display_repository'] %}
+                <a href="{{codebase['display_repository']}}">{{codebase['display_repository']}}</a>
+              {% else %}
+                <a href="{{codebase['repository']}}">{{codebase['repository']}}</a>
+              {% endif %}
           </td>
           <td class="txt-align-right">
 
