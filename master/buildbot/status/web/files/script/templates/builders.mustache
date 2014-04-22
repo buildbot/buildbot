@@ -5,7 +5,8 @@
 {{#progressBar}}
 	<div data-starttime="{{etaStart}}" data-etatime="{{etaCurrent}}" class="percent-outer-js percent-outer">
 		<span class="time-txt-js time-txt"></span>
-		<div class="percent-inner-js percent-inner">								
+		<div class="percent-inner-js percent-inner">
+			<div class="progressbar-overlay"></div>								
 		</div>
 	</div>
 {{/progressBar}}
@@ -25,7 +26,8 @@
 				{{#eta}}
 					<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
 						<span class="time-txt-js time-txt"></span>
-						<div class="percent-inner-js percent-inner">								
+						<div class="percent-inner-js percent-inner">							
+						<div class="progressbar-overlay"></div>	
 						</div>
 					</div>					
 				{{/eta}}
@@ -33,7 +35,7 @@
 					<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
 						<span class="time-txt-js time-txt">{{times.0}}</span>
 						<div class="percent-inner-js percent-inner">
-
+							<div class="progressbar-overlay"></div>	
 						</div>
 					</div>
                 {{/eta}}
