@@ -2,18 +2,21 @@ define(["moment", "extend-moment"], function (moment, extendMoment) {
     "use strict";
 
     var HEARTBEAT = 5000,
+        ANIMINTERVAL = 80,
         lastBeat,
         timeObjects = {"timeAgo": [], "elapsed": [], "progressBars": []},
         interval,
         oldLang = moment.lang(),
-        lastCount = 0;
+        lastCount = 0,
+        animPos = 0;
 
     var timeElements = {
         init: function () {
             if (interval === undefined) {
                 timeElements._heartbeatInterval();
             }
-        },
+            setInterval(timeElements._spinIconAnimation, ANIMINTERVAL);
+        }, 
         _heartbeatInterval: function () {
             clearTimeout(interval);
             interval = setTimeout(timeElements._heartbeat, HEARTBEAT);
@@ -55,6 +58,20 @@ define(["moment", "extend-moment"], function (moment, extendMoment) {
                     array.push(obj);
                 }
             }
+        },
+        _spinIconAnimation: function() {        
+            
+            var frames=10; var frameWidth = 13;
+            $.each($('.animate-spin'), function(i, obj) {
+                var $obj = $(obj);
+                if (animPos >=frames) 
+                    animPos = 0;
+                
+                var offset=animPos * -frameWidth;
+                $obj.css("background-position", offset + "px 0px");
+            });
+            animPos++;
+            
         },
         addTimeAgoElem: function (el, startTimestamp) {
             var $el = $(el);

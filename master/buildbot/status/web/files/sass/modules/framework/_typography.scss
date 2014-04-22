@@ -134,28 +134,20 @@ div.welcome-txt {
 	margin-top:0px;		
 }
 
-.spin-icon {			
-	&:after {
-		color:rgba(0, 0, 0, 0.5);		
-		font-family: "katana_icons";
-	    content: "";
-	    display: inline-block;
-	    padding: 0;
-	    font-weight:bold;
-	    position: relative;	    
-
-	 	.firefox & {
-	 		opacity:0.7;
-	 		margin-top: -3px;
-	 		margin-bottom: -3px;
-	 		content: "";
-	 		background:url('/images/spiffygif_18x18.gif');
-		    width: 18px;
-		    height:18px;
-		    display: block;	    	
-	  	}
+.spin-icon {
+	opacity:0.7;	
+	content: "";	 		
+	background-image: url("/images/sprites.png");
+    background-position: 0 0;
+    height: 13px;
+    width: 13px;		    
+    display: inline-block;	    		
+    &.pull-bottom {
+    	margin-bottom: -2px;	
 	}
 }
+
+
  
 .building .spin-icon {
 	margin-left:5px;

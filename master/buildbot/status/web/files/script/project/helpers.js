@@ -43,6 +43,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			    });
 			*/
 
+			
+
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 

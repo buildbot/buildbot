@@ -65,7 +65,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.currentBuilds != undefined) {
-                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
+                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));                            
                         }
                     }
                 },

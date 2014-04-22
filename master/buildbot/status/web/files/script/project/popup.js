@@ -31,7 +31,7 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
                 var paramsString = helpers.urlParamsToString(urlParams);
 
 				popup.pendingJobs(url + paramsString);
-			});
+			});			
 
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
