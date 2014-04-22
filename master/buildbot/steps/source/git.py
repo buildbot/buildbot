@@ -315,11 +315,9 @@ class Git(Source):
             return
 
         cmd = ['describe']
-        descriptionOpts = {}
         if isinstance(self.getDescription, dict):
-            descriptionOpts = self.getDescription
             for opt, arg in git_describe_flags:
-                opt = descriptionOpts.get(opt, None)
+                opt = self.getDescription.get(opt, None)
                 arg = arg(opt)
                 if arg:
                     cmd.extend(arg)

@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
 import mock
+
+from twisted.python import log
 
 from buildbot import interfaces
 from buildbot.process import buildstep
