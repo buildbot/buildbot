@@ -201,6 +201,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
+                        command=['git', 'update-index', '--refresh'])
+            + 0,
+            ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index', '-p', '1'],
                         initialStdin='patch')
             + 0,
@@ -255,6 +258,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                         reader=ExpectRemoteRef(_FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'update-index', '--refresh'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'apply', '--index', '-p', '1'],
