@@ -2182,6 +2182,13 @@ class FakeBuildersComponent(FakeDBComponent):
                   if masterid in bd['masterids']]
         return defer.succeed(rv)
 
+    def addTestBuilder(self, builderid, name=None):
+        if name is None:
+            name = "SomeBuilder-%d" % builderid
+        self.db.insertTestData([
+            Builder(id=builderid, name=name),
+        ])
+
 
 class FakeDBConnector(object):
 
