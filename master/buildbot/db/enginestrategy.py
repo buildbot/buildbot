@@ -23,6 +23,7 @@ special cases that Buildbot needs.  Those include:
 
 """
 
+import migrate
 import os
 import re
 import sqlalchemy as sa
@@ -40,6 +41,22 @@ class ReconnectingListener(object):
 
     def __init__(self):
         self.retried = False
+
+
+def get_sqlalchemy_migrate_version():
+    # sqlalchemy-migrate started including a version number in 0.7
+    # Borrowed from model.py
+    version = getattr(migrate, '__version__', 'old')
+    if version == 'old':
+        try:
+            from migrate.versioning import schemadiff
+            if hasattr(schemadiff, 'ColDiff'):
+                version = "0.6.1"
+            else:
+                version = "0.6"
+        except:
+            version = "0.0"
+    return tuple(map(int, version.split('.')))
 
 
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
@@ -175,8 +192,10 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         if version_tup < (0, 6):
             raise RuntimeError("SQLAlchemy version %s is too old" % (version,))
         if version_tup > (0, 7, 10):
-            raise RuntimeError("SQLAlchemy version %s is not supported by "
-                               "SQLAlchemy-Migrate" % (version,))
+            mvt = get_sqlalchemy_migrate_version()
+            if mvt < (0, 8, 0):
+                raise RuntimeError("SQLAlchemy version %s is not supported by "
+                                   "SQLAlchemy-Migrate version %d.%d.%d" % (version, mvt[0], mvt[1], mvt[2]))
 
     def create(self, name_or_url, **kwargs):
         if 'basedir' not in kwargs:
