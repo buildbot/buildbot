@@ -127,16 +127,20 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 				
 				success: function(data) {					
 					preloader.remove();																
-					var mustacheTmpl = Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL});					
-					var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));						
+					var mustacheTmplPopup = Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL});					
+					var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmplPopup}));						
 					var waitingtime = mustacheTmplShell.find('.waiting-time-js');
 					waitingtime.each(function(i){						
 						timeElements.addElapsedElem($(this),data[i].submittedAt);
                         timeElements.updateTimeObjects();
 					});					
 					mustacheTmplShell.appendTo('body');					
+
 					helpers.jCenter(mustacheTmplShell).fadeIn('fast', function(){
 						helpers.closePopup(mustacheTmplShell);	
+					});
+					$(window).resize(function() {
+						helpers.jCenter(mustacheTmplShell);
 					});
 					
 				}

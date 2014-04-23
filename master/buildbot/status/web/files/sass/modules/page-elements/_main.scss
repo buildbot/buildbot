@@ -5,7 +5,7 @@
 * @section page-elements
 * @author Simon Holm
 */
-     
+
 .tooltip-cont {
 	position:absolute;
 	display:block;	
@@ -361,6 +361,13 @@ body.log.interface {
 }
  
 @include breakpoint($bkpt-small) {
+	#image {
+		width:270px;
+		img {
+			width: 100%;
+		}
+	}
+
 	.auth-user {display:none;}
 	
 	.ellipsis {
@@ -376,13 +383,15 @@ body.log.interface {
 }
 @include breakpoint($bkpt-large) {
 	.hide-mobile {display:inline;}		
-	.auth-user {display:block;}
+	.auth-user {display:none;}
 }
 @include breakpoint($bkpt-xlarge) {
 	.hide-mobile {display:inline;}		
+	.auth-user {display:block;}
 }
 @include breakpoint($bkpt-xxlarge) {
 	.hide-mobile {display:inline;}		
+	.auth-user {display:block;}
 }
 
 .builders-status-truncate {

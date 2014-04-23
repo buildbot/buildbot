@@ -29,7 +29,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
     helpers = {
         init: function () {
 
-        	/*
+        	
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
 
@@ -41,7 +41,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			    	ws = $(window).width() + ' ' +  $(window).height();
 			    	$('.windowsize').html(ws);
 			    });
-			*/
+			
 
 			
 
@@ -190,6 +190,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				});
 		
 		}, jCenter: function(el) {
+
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
@@ -583,7 +584,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			
 			var closeBtn = $('.close-btn').add(document);
 			
-			closeBtn.bind('click touchstart', function(e){
+			closeBtn.bind('click touchstart', function(e){					
 				
 				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
 				
@@ -591,12 +592,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 							boxElement.remove();
 						} else {
-							boxElement.slideUp('fast', function(){
-								$(this).remove();	
+							boxElement.slideUp('fast', function(){								
+								closeBtn.unbind(e);
 							});
 						}
 
-					$(this).unbind(e);
+						closeBtn.unbind(e);
 				
 				}
 

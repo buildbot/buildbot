@@ -5,54 +5,52 @@ define(['screensize', 'helpers'], function (screenSize, helpers) {
 
     	projectDropDown = {
 	        init: function () {
-			
-		    
-			$(window).resize(function() {
+					    
+				$(window).resize(function() {				
+
+					if (!screenSize.isLargeScreen()) {	
+
+		    			$('.project-dropdown-js').remove();
+		    		} 
+		    		if (screenSize.isLargeScreen()) {
+
+		    			$('.submenu').remove();	
+		    		}		    		
+				});
 				
-				if (screenSize.isSmallScreen()){	
-	    			$('.project-dropdown-js').remove();
-	    		} else {
-	    			$('.top-menu').show();
-	    			$('.submenu').remove();	
-	    		}			  
-			});
-			
-	        // mobile top menu
-	    	$('.smartphone-nav').click(function(){
-	    		if ($('.top-menu').is(':hidden')) {
-	    			$('.top-menu').fadeIn('fast')
-	    			
-	    		} else {
-	    			
-	    			$('.top-menu').fadeOut('fast', function() {
-	    				$('.submenu').remove();							
-	    			});
-	    		}
-	        	
-	        });
+		        // mobile top menu
+		    	$('.smartphone-nav').click(function() {
+		    		if ($('.top-menu').is(':hidden')) {
+		    			$('.top-menu').addClass('show');	    			
+		    		} else {	    			
+		    			$('.top-menu').removeClass('show');
+		    		}	        	
+		        });
 
 		    	// Call projects items
 				$('#projectDropdown').click(function(e){
-			
+					var $submenu = $('.submenu');
 					var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
 					$('body').append(preloader).show();
-
+					
 					var path = "/projects";
-					if (!screenSize.isSmallScreen()){
+					if (screenSize.isLargeScreen()){
+
 						var mib = $('<div class="more-info-box project-dropdown-js"><span class="close-btn"></span><h3>Builders shorcut</h3><div id="content1"></div></div>');
 						$(mib).insertAfter($(this));
-					} else if ($('.submenu').length) {
-						$('.submenu').slideUp('fast', function(){
-							$('.submenu').remove();							
-						});
+					} else if ($submenu.length) {						
+
+						$submenu.add('#bowlG').remove();						
+						return	
 					}
 					$.get(path)
 					.done(function(data) {
+
 						var $response=$(data);
 						$('#bowlG').remove();
 
 						// not smartphone or tablet
-						if (!screenSize.isSmallScreen()){
+						if (screenSize.isLargeScreen()){
 
 							var fw = $($response).find('.tablesorter-js');
 							$(fw).appendTo($('#content1'));
@@ -75,11 +73,11 @@ define(['screensize', 'helpers'], function (screenSize, helpers) {
 								var $li = $('<li>').append($(this));
 								$('.submenu').append($li);
 							});
-							$('.submenu').slideDown('fast');
+							$('.submenu').show().attr('style','');
 						}
 						
 						// remove the submenu for smartphone or tablets
-						if (!screenSize.isSmallScreen()){
+						if (screenSize.isLargeScreen()){
 							
 							$('.submenu').remove();	
 						

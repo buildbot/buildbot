@@ -46,3 +46,8 @@
 
 }
 
+@include breakpoint($bkpt-small) {
+    .more-info-box {
+        min-width:auto;
+    }
+}

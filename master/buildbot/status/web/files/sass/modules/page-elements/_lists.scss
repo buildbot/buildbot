@@ -381,6 +381,10 @@ div.force-text {
 }
 
 @include breakpoint($bkpt-small) {
+	.more-info-box .pending-job-list { 
+		width: auto;
+		
+	}
 	.graceful_shutdown {
 		float: none;
 		margin-bottom: 10px; 
