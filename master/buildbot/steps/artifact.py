@@ -265,7 +265,7 @@ class UploadArtifact(ShellCommand):
             artifactPath += "/%s" % self.artifactDirectory
 
 
-        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
+        remotelocation = self.artifactServer + ":" + self.artifactServerDir + "/" + artifactPath + "/" + self.artifact.replace(" ", r"\ ")
         command = ["rsync", "-var", self.artifact, remotelocation]
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
