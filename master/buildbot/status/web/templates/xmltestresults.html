@@ -8,7 +8,7 @@
 {% macro test_case_result(tc) %}
     {% if tc.executed|lower == "true" and tc.success|lower == "true" %}
         Pass
-    {% elif tc.executed|lower == "true" and (result and result == "Inconclusive") %}
+    {% elif tc.executed|lower == "true" and (result and result|lower == "inconclusive") %}
         Inconclusive
     {% elif tc.ignored and tc.ignored|lower == "true" %}
         Ignored
@@ -117,12 +117,13 @@
                             <td>N/A</td>
                             {% endif %}
                         </tr>
-                        {% if test.success and test.success == "False" %}
+                        {% if test.success and test.success|lower == "false" %}
                         <tr>
                             <td class="txt-align-left failure-detail-cont colspan-js">
                                  <div class="pos-relative">
                                      <div class="failure-detail-txt">
                                          {% for tf in test['test-case'] %}
+                                             {{ tf }}
                                             {% if tf.reason %}
                                                 {% for line in tf.reason %}
                                                     {{ line.text|e|trim }}
