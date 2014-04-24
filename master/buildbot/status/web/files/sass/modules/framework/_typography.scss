@@ -13,6 +13,8 @@
  
 // Typography
 
+.started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
+
 .small-head {
 	display:inline-block;
 	margin-top:0;
@@ -47,34 +49,30 @@
 	padding:0;
 	font-size:18px;
 }
+
+.overall-result {
+	text-transform: capitalize;
+	
+}
  
 h1.logo a {
-	line-height:0;
-	color: #17477A;
+    color: #FFFFFF;
     float: left;
-    margin-right: 35px;
+    font-family: 'Pacifico';
     font-size: 29px;
-    padding: 22px 0 0;
-    opacity: 0.76;
-	font-family: 'Pacifico';
     font-weight: normal;
     letter-spacing: 0.8px;
-	text-decoration: none;
-	@include text-shadow(0 1px 0 #FFF);
-	@include transition(opacity .2s ease-in-out);
+    line-height: 0;
+    margin-right: 35px;
+    opacity: 0.76;
+    padding: 22px 0 0;
+    text-decoration: none;
+
+    transition: opacity 0.2s ease-in-out 0s;
+
 	span {
 		font-family:'leckerlione', cursive;
 		font-size: 27px;
-	}
-}
-
-@include breakpoint($bkpt-small) {
-	h1.logo a {
-		padding-top: 17px;
-		font-size: 19px;
-		span {
-			font-size: 17px;
-		}
 	}
 }
 
@@ -131,8 +129,46 @@ div.welcome-txt {
 	margin: 0 0 2px;
 }
 
+.spin-cont {
+	display:block;
+	margin-top:0px;		
+}
+
+.spin-icon {
+	opacity:0.7;	
+	content: "";	 		
+	background-image: url("/images/sprites.png");
+    background-position: 0 0;
+    height: 13px;
+    width: 13px;		    
+    display: inline-block;	    		
+    &.pull-bottom {
+    	margin-bottom: -2px;	
+	}
+}
+
+
+ 
+.building .spin-icon {
+	margin-left:5px;
+}
+ 
+.bubble {
+	background-color: #80000D;
+	@include border-radius(9px);
+	@include box-shadow (1px 1px 1px #FFFFFF);
+	color: #FFFFFF;
+	padding: 2px 6px;
+	margin-left:5px;
+	font-size: 11px;
+}
+
 .more-info {
 	font-weight:bold;
+}
+
+.buildslaves-tables .more-info {
+	//margin-right:125px;
 }
 
 .mod-1.more-info:after {
@@ -159,7 +195,7 @@ div.welcome-txt {
 }
 
 .more-info.before:before {
-	content:"▼";	
+	content:"▼";
 }
 
 .more-info.before:after {
@@ -168,4 +204,14 @@ div.welcome-txt {
 
 .dropdown-info:after {
 	content: "▼";
+}
+
+@include breakpoint($bkpt-small) {
+	h1.logo a {
+		padding-top: 17px;
+		font-size: 19px;
+		span {
+			font-size: 17px;
+		}
+	}
 }

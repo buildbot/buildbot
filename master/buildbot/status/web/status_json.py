@@ -17,7 +17,6 @@
 """Simple JSON exporter."""
 
 import datetime
-import os
 import re
 from twisted.python import log
 from buildbot.status.buildrequest import BuildRequestStatus
@@ -26,9 +25,9 @@ from buildbot import master
 from twisted.internet import defer
 from twisted.web import html, resource, server
 
+from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset
-from buildbot.status.web.builder import foundCodebasesInPendingBuild
-from buildbot.util import json
+import json
 
 
 _IS_INT = re.compile(r'^[-+]?\d+$')
@@ -100,6 +99,8 @@ EXAMPLES = """\
     - The current build queue
   - /json/pending/<A_BUILDER>/
     - The current pending builds for a builder (Can be filtered by codebases)
+  - /json/globalstatus/
+    - Global information about the current builds and slaves in use
 """
 
 
@@ -464,7 +465,7 @@ class BuildJsonResource(JsonResource):
         self.putChild('steps', BuildStepsJsonResource(status, build_status))
 
     def asDict(self, request):
-        return self.build_status.asDict()
+        return self.build_status.asDict(request)
 
 
 class AllBuildsJsonResource(JsonResource):
@@ -576,7 +577,7 @@ class BuildStepsJsonResource(JsonResource):
         results = {}
         index = 0
         for step in self.build_status.getSteps():
-            results[index] = step.asDict()
+            results[index] = step.asDict(request)
             index += 1
         return results
 
@@ -677,20 +678,19 @@ class SingleProjectJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        status = None
         result = self.project_status.asDict()
+
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+
+        #Get branches
+        encoding = getRequestCharset(request)
+        branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
         result['builders'] = []
         for b in self.getBuilders():
-            builder = yield b.asDict_async()
-
-            #Get branches
-            encoding = getRequestCharset(request)
-            branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
-
-            #Get codebases
-            codebases = {}
-            getCodebasesArg(request=request, codebases=codebases)
+            builder = yield b.asDict_async(codebases)
 
             #Get latest build
             builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
@@ -698,7 +698,7 @@ class SingleProjectJsonResource(JsonResource):
                                                    num_builds=1))
 
             if len(builds) > 0:
-                builder['latestBuild'] = builds[0].asDict()
+                builder['latestBuild'] = builds[0].asBaseDict()
 
             result['builders'].append(builder)
 
@@ -762,7 +762,9 @@ class SinglePendingBuildsJsonResource(JsonResource):
         for br in builds:
             result = True
             if len(codebases) > 0:
+                from buildbot.status.web.builder import foundCodebasesInPendingBuild
                 result = yield foundCodebasesInPendingBuild(br, codebases)
+
 
             if result:
                 br.sort_value = yield br.getSubmitTime()
@@ -870,6 +872,41 @@ class MetricsJsonResource(JsonResource):
             return None
 
 
+class GlobalJsonResource(JsonResource):
+    help = """Gives information that can be used on all realtime pages"""
+    pageTitle = 'Global Info'
+
+    def __init__(self, status):
+        JsonResource.__init__(self, status)
+        self.slaves = status.getSlaveNames()
+
+    @defer.inlineCallbacks
+    def asDict(self, request):
+        import time
+        connected_slaves = []
+        slave_busy = []
+        for s in self.slaves:
+            ss = self.status.getSlave(s)
+            if ss.isConnected:
+                connected_slaves.append(s)
+            if len(ss.getRunningBuilds()) > 0:
+                slave_busy.append(s)
+
+        current_builds = set()
+        for b_name in self.status.getBuilderNames():
+            b = self.status.getBuilder(b_name)
+            current_builds |= set(b.getCurrentBuilds())
+
+        queue = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=False)
+        result = {"slaves_count": len(connected_slaves),
+                  "slaves_busy": len(slave_busy),
+                  "running_builds": len(current_builds),
+                  "build_load": len(queue) + len(current_builds),
+                  "utc": time.time() * 1000}
+
+        defer.returnValue(result)
+
+
 class JsonStatusResource(JsonResource):
     """Retrieves all json data."""
     help = """JSON status
@@ -892,6 +929,7 @@ For help on any sub directory, use url /child/help
         self.putChild('metrics', MetricsJsonResource(status))
         self.putChild('buildqueue', QueueJsonResource(status))
         self.putChild('pending', PendingBuildsJsonResource(status))
+        self.putChild('globalstatus', GlobalJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
         self.hackExamples()
 

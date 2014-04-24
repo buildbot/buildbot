@@ -1,4 +1,4 @@
-define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,helpers, naturalSort) {
+define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function (dataTable, helpers, naturalSort) {
 
     "use strict";
     var dataTables;
@@ -8,105 +8,116 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
             //Setup sort neutral function
             dataTables.initSortNatural();
 
-			// Colums with sorting
-							
-			var tablesorterEl = $('.tablesorter-js');				
+            //Datatable Defaults
+            $.extend($.fn.dataTable.defaults, {
+                "bPaginate": false,
+                "bLengthChange": false,
+                "bFilter": false,
+                "bSort": true,
+                "bInfo": false,
+                "bAutoWidth": false,
+                "sDom": '<"table-wrapper"t>',
+                "bRetrieve": true,
+                "asSorting": true,
+                "bServerSide": false,
+                "bSearchable": true,
+                "aaSorting": [],
+                "iDisplayLength": 50,
+                "bStateSave": true
+            });
+        },
+        initTable: function ($tableElem, options) {
 
-			// Select which columns not to sort
-			tablesorterEl.each(function(i, tableElem){
-                var $tableElem = $(tableElem);
+            // add only filter input nor pagination
+            if ($tableElem.hasClass('input-js')) {
+                options.bFilter = true;
+                options.oLanguage = {
+                    "sSearch": ""
+                };
+                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+            }
 
-				var optionTable = {
-					"bPaginate": false,
-					//"sPaginationType": "full_numbers",
-					"bLengthChange": false,
-					"bFilter": false,
-					"bSort": true,
-					"bInfo": false,
-					"bAutoWidth": false,
-					"sDom": '<"table-wrapper"t>',
-					"bRetrieve": true,
-					"asSorting": true,
-					"bServerSide": false,
-					"bSearchable": true,
-					"aaSorting": [],
-					"iDisplayLength": 50,
-					"bStateSave": false
+            // add searchfilterinput, length change and pagination
+            if ($tableElem.hasClass('tools-js')) {
+                options.bPaginate = true;
+                options.bLengthChange = true;
+                options.bInfo = true;
+                options.bFilter = true;
+                options.oLanguage = {
+                    "sSearch": "",
+                    "sLengthMenu": 'Entries per page<select>' +
+                        '<option value="10">10</option>' +
+                        '<option value="25">25</option>' +
+                        '<option value="50">50</option>' +
+                        '<option value="100">100</option>' +
+                        '<option value="-1">All</option>' +
+                        '</select>'
+                };
+                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+            }
 
-					//"fnDrawCallback": function( oSettings ) {
-				     // alert( 'DataTables has redrawn the table' );
+            //Setup default sorting columns and order
+            var defaultSortCol = undefined;
+            var sort = $tableElem.attr("data-default-sort-dir") || "asc";
 
-				    //},
-				   // "fnInitComplete": function(oSettings, json) {
-				    	//$('#formWrapper').show();	
-							 //alert( 'DataTables has finished its initialisation.' );
-					//}
-				};
+            if ($tableElem.attr("data-default-sort-col") !== undefined) {
+                defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
+                options.aaSorting = [
+                    [defaultSortCol, sort]
+                ];
+            }
 
-				// add searchfilterinput, length change and pagination
-				if ($(this).hasClass('tools-js')) {						
-					optionTable.bPaginate = true;
-					optionTable.bLengthChange = true;
-					optionTable.bInfo = true;
-					optionTable.bFilter = true;
-					optionTable.oLanguage = {
-					 	"sSearch": "",
-					 	 "sLengthMenu": 'Entries per page<select>'+
-				            '<option value="10">10</option>'+
-				            '<option value="25">25</option>'+
-				            '<option value="50">50</option>'+
-				            '<option value="100">100</option>'+
-				            '<option value="-1">All</option>'+
-				            '</select>'
-					};
-					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
-				}
-
-				if ($(this).hasClass('input-js')) {										
-					optionTable.bFilter = true;
-					optionTable.oLanguage = {
-					 	"sSearch": ""
-					};
-					optionTable.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
-				}
-
-                var defaultSortCol= undefined;
+            //Default sorting if not set
+            if (options.aoColumns === undefined) {
                 var aoColumns = [];
-                var sort = $tableElem.attr("data-default-sort-dir") || "asc";
 
-                if (tableElem.hasAttribute("data-default-sort-col")) {
-                    defaultSortCol = parseInt($tableElem.attr("data-default-sort-col"));
-                    optionTable.aaSorting = [[defaultSortCol, sort]];
-                }
-
-                $('> thead th', this).each(function(i, obj){
+                $('> thead th', $tableElem).each(function (i, obj) {
                     if ($(obj).hasClass('no-tablesorter-js')) {
                         aoColumns.push({'bSortable': false });
                     }
-                    else if (defaultSortCol !== undefined  && defaultSortCol === i) {
+                    else if (defaultSortCol !== undefined && defaultSortCol === i) {
                         aoColumns.push({ "sType": "natural" });
                     }
                     else {
                         aoColumns.push(null);
                     }
                 });
-                optionTable.aoColumns = aoColumns;
 
-			   	//initialize datatable with options
-			  	var oTable = $(this).dataTable(optionTable);			  	
-			  	var dtWTop = $('.dataTables_wrapper .top');
-			  	// special for the codebasespage
-			  	
-			  	var filterTableInput = $('.dataTables_filter input').attr('placeholder','Filter results');
+                options.aoColumns = aoColumns;
+            }
+            else {
+                aoColumns = options.aoColumns;
 
-			  	// insert codebase and branch on the builders page
-	        	if ($('#builders_page').length && window.location.search != '') {
-	        		// Parse the url and insert current codebases and branches
-	        		helpers.codeBaseBranchOverview(dtWTop);	
-				}
+                $('> thead th', $tableElem).each(function (i, obj) {
+                    if ($(obj).hasClass('no-tablesorter-js') && aoColumns[i]['bSortable'] === undefined) {
+                        aoColumns[i]['bSortable'] = false;
+                    }
+                    else if (aoColumns[i]['bSortable'] === undefined) {
+                        aoColumns[i]['bSortable'] = true;
+                    }
 
+                    if (defaultSortCol !== undefined && defaultSortCol === i) {
+                        aoColumns[i]['sType'] = "natural";
+                    }
+                });
+
+                options.aoColumns = aoColumns;
+            }
+            if ($tableElem.hasClass('branches-selectors-js') && options.sDom === undefined) {
+                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+            }
+
+            //initialize datatable with options
+            var oTable = $tableElem.dataTable(options);
+
+            // Set the marquee in the input field on load and listen for key event
+            var $filterInput = $tableElem.parents('.dataTables_wrapper')
+                .find('.dataTables_filter input')
+                .attr('placeholder', 'Filter results')
+                .focus();     
+                             
 				// Set the marquee in the input field on load and listen for key event	
-				
+				var filterTableInput = $('.dataTables_filter input').attr('placeholder','Filter results');
                 $('body').keyup(function(event) {                                       
                     if (event.which === 70) {
                         filterTableInput.focus();
@@ -114,23 +125,30 @@ define(['datatables-plugin','helpers','libs/natural-sort'], function (dataTable,
                 });
                  
 
-			});
-		}, initSortNatural: function() {
+            return oTable;
+        },
+        initSortNatural: function () {
             //Add the ability to sort naturally
-            jQuery.extend( jQuery.fn.dataTableExt.oSort, {
-                "natural-pre": function(a) {
-                    return $(a).text().trim();
+            jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+                "natural-pre": function (a) {
+                    try {
+                        a = $(a).text().trim();
+                        return a;
+                    }
+                    catch(err) {
+                        return a;
+                    }
                 },
-                "natural-asc": function ( a, b ) {
-                    return naturalSort.sort(a,b);
+                "natural-asc": function (a, b) {
+                    return naturalSort.sort(a, b);
                 },
 
-                "natural-desc": function ( a, b ) {
-                    return naturalSort.sort(a,b) * -1;
+                "natural-desc": function (a, b) {
+                    return naturalSort.sort(a, b) * -1;
                 }
-            } );
+            });
         }
-	};
+    };
 
     return dataTables;
 });

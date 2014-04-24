@@ -1,10 +1,9 @@
 define('jquery', [], function() {
     return jQuery;
 });
-
+ 
 require.config({
-	paths: {
-		//'jquery':'libs/jQuery-2-0-3',
+	paths: {		
 		'selectors':'project/selectors',
 		'select2': 'plugins/select2',
 		'datatables-plugin': 'plugins/jquery-datatables',
@@ -14,12 +13,27 @@ require.config({
 		'helpers': 'project/helpers',
 		'projectdropdown': 'project/project-drop-down',
 		'popup': 'project/popup',
-		'overscroll': 'plugins/jquery-overscroll'
+		'realtimePages':'project/realtimePages',
+		'realtimerouting': 'project/realtimeRouting',
+		'rtbuilddetail': 'project/rtBuildDetail',
+		'rtbuilders': 'project/rtBuilders',
+		'rtbuildslaves': 'project/rtBuildSlaves',
+		'rtbuildqueue': 'project/rtBuildqueue',
+		'rtglobal': 'project/rtGlobal',
+		'jqache': 'plugins/jqache-0-1-1-min',
+		'overscroll': 'plugins/jquery-overscroll',		
+		'moment': 'plugins/moment-with-langs',
+        'extend-moment': 'project/extendMoment',
+		'mustache': "libs/mustache-wrap",
+        'handlebars': "libs/handlebars",
+		'livestamp': "plugins/livestamp",
+		'noise': "plugins/jquery.noisy",
+        'timeElements': "project/timeElements"
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown'], 
-	function(helpers, dataTables,popup, screenSize, projectDropDown) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','noise', 'timeElements'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,noisy, timeElements) {
 		
 	'use strict';
 
@@ -27,6 +41,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 	  
 	  $(document).ready(function() {
         $('body').show();
+
 	  	// swipe or scroll in the codebases overview
 	  	if ($('#builders_page').length || $('#builder_page').length) {
 	  	require(['overscroll'],
@@ -53,14 +68,39 @@ define(['helpers','dataTables','popup','screensize','projectdropdown'],
 			        selectors.init();
 		    });
 		}
+
+		if (helpers.hasfinished() === false) {	
+		
+			require(['realtimerouting'],
+	        function(realtimeRouting) {	        		        	
+	        	realtimeRouting.init();
+	        });
+		}	
+
+		if ($('#builddetail_page').length > 0) {
+			helpers.summaryArtifactTests();
+		}
+
+		if (helpers.isRealTimePage() === true) {
+			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
+	    	$('div.content').append(preloader);        	
+        }
+
+        if ($('#home_page').length > 0) {
+        	helpers.randomImage($('#image img'));	
+        }
+
+        
 				
 		// get scripts for general popups
 		popup.init();
 		// get scripts for the projects dropdown
 		projectDropDown.init();
-		// get all common scripts
-		helpers.init();	
-		dataTables.init();	
-	});	
 
+		// get all common scripts
+		helpers.init();
+        dataTables.init();
+        extendMoment.init();
+        timeElements.init();
+	});	
 });

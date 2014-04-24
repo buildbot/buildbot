@@ -1,0 +1,29 @@
+{{#showFriendlyName}}
+{{#friendly_name}}
+	<a href="buildslaves/{{host_name}}">{{friendly_name}}</a>			
+{{/friendly_name}}
+{{^friendly_name}}
+  Not Available 
+{{/friendly_name}}
+{{/showFriendlyName}}
+{{#buildersPopup}}
+	<a title="Builder information" class="more-info popup-btn-json-js" href="#"> </a>
+{{/buildersPopup}}
+
+{{#showTimeago}}
+	<span class="hide">{{showLastMessageDate}}</span>
+	<span class="last-message-timemago"></span>
+	<small>{{showLastMessageDate}}</small>
+{{/showTimeago}}
+
+{{#showStatusTxt}}	
+	{{#showSpinIcon}}
+		<a class="more-info popup-btn-json-js" href="#">
+			{{showStatusTxt}}
+		</a>
+		<span title="Running" class="spin-icon animate-spin pull-bottom"></span>		
+	{{/showSpinIcon}}
+	{{^showSpinIcon}}
+		{{showStatusTxt}}
+	{{/showSpinIcon}}
+{{/showStatusTxt}}

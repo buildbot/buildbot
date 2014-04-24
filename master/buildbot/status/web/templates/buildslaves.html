@@ -1,95 +1,26 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="buildslaves_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu_slaves(active_page="buildslaves", pathNum=1, buildSlaveName='')}}
 {% endblock %}
 
 {% block content %}
 
-
-<table data-default-sort-col="0" class="table-1 tablesorter tablesorter-js input-js">
+<table id="tablesorterRt" data-default-sort-col="0" class="table-1 tablesorter first-child input-js buildslaves-table">
 <thead>
 <tr>
-  <th>Name</th>
-  <th>Hostname</th>
-  <th>Status</th>
-  <th>Last heard from      
-  </th>
+  <th class="th1 txt-align-left" colspan="1">Name</th>
+  <th class="th2 txt-align-left"></th>
+  <th class="th3">Hostname</th>
+  <th class="th4">Status</th>
+  <th class="th5">Last heard from</th>
 </tr>
 </thead>
 <tbody>
-{% for s in slaves %}
-
-<tr>
-  <td>
-      <a href="{{ s.link }}">
-        {{ s.friendly_name }}
-      </a>
-      <a class="more-info fl-right popup-btn-js-2" href="#">
-      </a>
-
-        <div class="more-info-box more-info-box-js">
-          <span class="close-btn"></span>
-          <h3>Additional information</h3>
-          <br/>
-          <h4>Buildbot</h4>
-          <span>
-            {{ (s.version or '-')|e }}
-          </span>
-          <br/>
-            {%- if s.admin -%}
-              <h4>Admin</h4>
-              <span>{{ s.admin|email }}</span>
-            {%- else -%}
-              <span>-</span>
-            {%- endif -%}
-            <br/>
-            {%- if show_builder_column %}
-           
-            {%- if s.builders %}
-            <h4 class="last">Builders</h4>
-              <ul class="builders-list">
-                {%- for b in s.builders %}
-                  <li>
-                    <a href="{{ b.link }}">
-                      {{ b.name }}
-                    </a>
-                  </li>
-                {%- endfor %}
-              </ul>
-            {%- else %}
-              <span class="Warning">no builders</span>
-            {%- endif -%}
-            
-          {%- endif %}
-      </div>
-      
-  </td>
-  <td>
-      {{ s.name }}
-  </td>
-
-{% if s.connected %}
-    {% if s.running_builds %}
-      
-      <td class="building">Running {{ s.running_builds }} build(s)</td>
-    {% else %}
-      <td class="idle">Idle</td>
-    {% endif %}
-        
-  {% else %}
-    <td class="offline">Not connected</td>
-  {% endif %}
-
-  <td>
-    {% if s.last_heard_from_age %}
-      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
-    {% endif %}
-  </td>
-
-  </tr>
-{% endfor %}
+	
 </tbody>
 </table>
 

@@ -1,7 +1,30 @@
-define(['screensize'], function (screenSize) {
+define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function (screenSize,popups,Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
+
+    var css_classes = {SUCCESS: "success",
+        WARNINGS: "warnings",
+        FAILURE: "failure",
+        SKIPPED: "skipped",
+        EXCEPTION: "exception",
+        RETRY: "retry",
+        CANCELED: "exception",
+        RUNNING: "running",
+        NOT_STARTED: "not_started",
+        None: ""
+    };
+
+    String.prototype.format = function () {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined' ? args[number] : match;
+        });
+    };
+
+    Number.prototype.clamp = function(min, max) {
+      return Math.min(Math.max(this, min), max);
+    };
     
     helpers = {
         init: function () {
@@ -20,17 +43,18 @@ define(['screensize'], function (screenSize) {
 			    });
 			*/
 
+			
+
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
 			// Authorize on every page
 			helpers.authorizeUser();
 
-
 			if ($('#buildslave_page').length) {
 				// display the number of current jobs
-				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave li'));
-			}
+				helpers.displaySum($('#currentJobs'),$('#runningBuilds_onBuildslave').find('li'));
+			}			
 
 			if ($('#builddetail_page').length > 0) {
 				helpers.summaryArtifactTests();
@@ -41,13 +65,12 @@ define(['screensize'], function (screenSize) {
 				//helpers.updateBuilders();
 			}
 
-			if ($('#builder_page').length != 0) {
-				
+			if ($('#builder_page').length != 0) {				
 				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
 			}
 
 			// keyboard shortcuts
-			$('body').keyup(function(event) {
+			/*$('body').keyup(function(event) {
                 
                 if (event.which === 81) {
                     location.href = '/projects'
@@ -59,7 +82,7 @@ define(['screensize'], function (screenSize) {
                     location.href = '/buildslaves'
                 }
                 
-            });
+            });*/
 
        		// submenu overflow on small screens
 
@@ -72,14 +95,19 @@ define(['screensize'], function (screenSize) {
 			helpers.selectBuildsAction();
 			
 			// chrome font problem fix
-			$(function chromeWin() {
+			$(function userAgent() {
 				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());
+				var isFirefox = /firefox/.test( navigator.userAgent.toLowerCase());
 				var isWindows = navigator.platform.toUpperCase().indexOf('WIN')!==-1;
 				if (is_chrome) {
 					$('body').addClass('chrome');
 				}
 				if (isWindows) {
 					$('body').addClass('win');
+				}
+
+				if (isFirefox) {
+					$('body').addClass('firefox');
 				}
 								
 			});		
@@ -92,16 +120,19 @@ define(['screensize'], function (screenSize) {
 
 
 			// trigger individual builds on the builders page
-			helpers.runIndividualBuild();
-			
+			helpers.runIndividualBuild();			
 			
 			// Set the full name from a cookie. Used on buildersform and username in the header
 			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
 		
-			$('#authUserBtn').click(function(e){
+			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
 			});
 			helpers.tooltip($('.tooltip'));
+
+		}, randomImage: function (el) {
+			var images = ['48273828.jpg'];						
+			el.attr('src', 'images/' + images[Math.floor(Math.random() * images.length)]);
 
 		}, tooltip: function (el) {
 			
@@ -109,7 +140,7 @@ define(['screensize'], function (screenSize) {
 				var toolTipCont = $('<div class="tooltip-cont" />');
 				this.t = this.title;
 				this.title = "";
-				var cursorPosTop = e.pageY + 5;
+				var cursorPosTop = e.pageY + 20;
 				var cursorPosLeft = e.pageX + 5;
 				$(e.target).click(function(){
 					toolTipCont.remove();					
@@ -145,6 +176,7 @@ define(['screensize'], function (screenSize) {
 				// Extend the expiration date
 				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
 			}
+
 
 		}, setCurrentItem: function () {
 			
@@ -186,42 +218,50 @@ define(['screensize'], function (screenSize) {
 				valOrTxt = $(this).is('input')? 'val' : 'text';				
 				$(this)[valOrTxt](cookieVal);
 			});
-			
+
 		}, runIndividualBuild: function() { // trigger individual builds
-			$('.run-build-js').click(function(e){
+			$('#tablesorterRt').delegate('.run-build-js', 'click', function(e){			
 				$('.remove-js').remove();
 				e.preventDefault();
                 var prevElem = $(this).prev();
 				var datab = prevElem.attr('data-b');
 				var dataindexb = prevElem.attr('data-indexb');
-                var dataReturnPage = prevElem.attr('data-returnpage');
-				var preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
-                var builder_name = $(this).prev().attr('data-b_name');
-				$('body').append(preloader).show();
+                var dataReturnPage = prevElem.attr('data-returnpage');            
+
+				var mustacheTmpl = '<h2 class="small-head">Your build will show up soon</h2>';		
+				var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));
+				mustacheTmplShell.appendTo($('body'));
+				
+                var builder_name = $(this).prev().attr('data-b_name');				
+				
+				helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+					helpers.closePopup($(this));
+					$(this).delay(1500).fadeOut('fast', function() {
+						$(this).remove();	
+					});	
+				});
+				
 				// get the current url with parameters append the form to the DOM and submit it
                 var url = location.protocol + "//" + location.host + "/forms/forceBuild";
 
                 //get all branches
                 var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-                var sPageURL = window.location.search.substring(1);
-                var sURLVariables = sPageURL.split('&');
-                $.each(sURLVariables, function(index, val) {
-                    var sParameterName = val.split('=');
-                    if (sParameterName[0].indexOf("_branch") >= 0) {
-                        urlParams[sParameterName[0]] = sParameterName[1];
-                        console.log(val)
-                    }
-                });
+                urlParams = helpers.codebasesFromURL(urlParams);
 
-				$.get(url, urlParams).done(function(data) {
-					$('#bowlG').remove();
+				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
-					
-					// Add the value from the cookie to the disabled and hidden field
+                    // Add the value from the cookie to the disabled and hidden field
+                    helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
 
-					helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
+                    var form = formContainer.find('form').ajaxForm();
 
-					$('.command_forcebuild', formContainer).submit();
+                    $(form).ajaxSubmit(function(data) {
+                        requirejs(['realtimePages'], function (realtimePages) {
+                        	mustacheTmplShell.remove();
+                            var name = dataReturnPage.replace("_json", "");
+                            realtimePages.updateSingleRealTimeData(name, data, true);                            
+                        });
+                    });
 				});
 			});			
 			
@@ -233,26 +273,67 @@ define(['screensize'], function (screenSize) {
 					}
 				});
 			
-		}, selectBuildsAction: function() { // check all in tables and perform remove action
-			    $('#selectall').click(function () {			    	
-			        $('.fi-js').prop('checked', this.checked);
-			    });
-
-			    // Submit the all the checkfields
-				$('#submitBtn').click(function(){
-					$('#formWrapper form').submit();
-				});
-
-			    // remove individual build
-				$('.force-individual-js').click(function(e){
-					e.preventDefault();					
-					var iVal = $(this).prev().prev().val();
+		}, selectBuildsAction: function() { // check all in tables and perform remove action		    
 					
-					var hi = $('<input checked="checked" name="cancelselected" type="hidden" value="'+  iVal  +'"  />');
-					$(hi).insertAfter($(this));
-					$('#formWrapper form').submit();
-				});
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);	
 
+			var selectAll = $('#selectall');
+			
+			selectAll.click(function () {
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
+				var tableNodes = tableSorter.fnGetNodes();	
+		        $('.fi-js',tableNodes).prop('checked', this.checked);
+		    });
+
+			function ajaxPost(str) {					
+				$('body').append(preloader).show();					
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
+				str = str+'&ajax=true';
+				
+				$.ajax({
+					type: "POST",
+					url: 'buildqueue/_selected/cancelselected',
+					data: str,
+					success: function (data) {
+						preloader.remove();
+						tableSorter.fnClearTable();
+						$.each(data, function (key, value) {
+		          			var arObjData = [value];
+							tableSorter.fnAddData(arObjData);							
+						});
+						selectAll.prop('checked',false);
+					}
+				});
+				return false;									
+			}				
+
+			$('#submitBtn').click(function(e){					
+				e.preventDefault();
+				
+				var tableSorter = $('#tablesorterRt').dataTable();							   				
+				var tableNodes = tableSorter.fnGetNodes();	
+		        var checkedNodes = $('.fi-js',tableNodes);
+		        
+		        var formStr = "";
+		        checkedNodes.each(function(){
+		        	if ($(this).is(':checked')) {
+		        		formStr += 'cancelselected='+$(this).val()+'&';
+		        	}		        	
+		        });
+		        var formStringSliced = formStr.slice(0,-1);		        
+		        
+				if (formStringSliced != '') {
+					ajaxPost(formStringSliced);				
+				}				
+			});
+			$('#tablesorterRt').delegate('.force-individual-js', 'click', function(e){					
+				e.preventDefault();
+				var iVal = $(this).prev().prev().val();
+				var str = 'cancelselected='+iVal;								
+				ajaxPost(str);						
+			});
+			
 		}, updateBuilders: function () {
 			$.ajax({
 				url: "/json/builders/?filter=0",
@@ -281,7 +362,7 @@ define(['screensize'], function (screenSize) {
                 }
             });
 
-                $.ajax({
+            $.ajax({
 				url: "/json/slaves/?filter=0",
 				dataType: "json",
 				type: "GET",
@@ -298,7 +379,7 @@ define(['screensize'], function (screenSize) {
 		}, codeBaseBranchOverview: function(El) {
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
-			var parsedUrl = decodedUri.split('&')
+			var parsedUrl = decodedUri.split('&');
 			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
@@ -364,32 +445,32 @@ define(['screensize'], function (screenSize) {
 			displayEl.text(countEl.length);
 
 		}, summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
-			
-			// Artifacts produced in the buildsteplist
-			var artifactJS = $('li.artifact-js').clone();
-			
+
 			// Link to hold the number of artifacts
 			var showArtifactsJS = $('#showArtifactsJS');
+            showArtifactsJS.next().find('.builders-list').empty();
 			var noArtifactsJS = $('#noArtifactsJS');
+
+            // Artifacts produced in the buildsteplist
+			var artifactJS = $('li.artifact-js');
 
 			// update the popup container if there are artifacts
 			if (artifactJS.length > 0) {
+                noArtifactsJS.hide();
+                
 				showArtifactsJS
 				.show()				
 				.text('(' + artifactJS.length + ') Artifacts ')
 				.next()
 				.find('.builders-list')
-				.append(artifactJS);				
+				.html(artifactJS.clone());
 			} else {
 				noArtifactsJS.show();								
 			}
 
 			// Testreport and testresult
-			var sLogs = $('.s-logs-js').clone();
-
-			// Container to display the testresults
-			var testlistResultJS = $('#testsListJS');
-
+            var testlistResultJS = $('#testsListJS').empty();
+			var sLogs = $('.s-logs-js');
 			var alist = [];
 			
 			$(sLogs).each(function() {	
@@ -397,28 +478,98 @@ define(['screensize'], function (screenSize) {
 				var str = $(this).text().split('.').pop();
 				
 				if (str === 'xml' || str === 'html') {
-					alist.push($(this));
+					alist.push($(this).clone());
 				}
 			});
 						
 			// Show the testresultlinks in the top if there are any
-			if (alist.length > 0) { 
-				testlistResultJS.append($('<li>Test Results</li>'));
+			if (alist.length > 0) {
+				testlistResultJS.html($('<li>Test Results</li>'));
 				testlistResultJS.append(alist);
 			}
 
-		}, setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
+		},
+        setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
 
-			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days 
+			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
+			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
-			if (eraseCookie === undefined) {
-				var expiredate = expiry.toGMTString();
-			} else {
-				var expiredate = 'Thu, 01 Jan 1970 00:00:00 GMT;';
+			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
+			
+		},
+        inDOM: function(element) {
+            return $.contains(document.documentElement, element[0]);
+		},
+        delegateToProgressBar: function (bars) {
+            $.each(bars, function (key, elem) {
+                var obj = $(elem);
+                timeElements.addProgressBarElem(obj, obj.attr('data-starttime'), obj.attr('data-etatime'));
+            });
+		},
+        verticalProgressBar: function(el,per) {
+			// must be replaced with json values
+			el.height("{0}%".format(per));
+		},
+        getTime: function  (start, end) {
+	
+			if (end === null) {
+				end = Math.round(+new Date()/1000);	
 			}
-			//var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
+
+			var time = end - start;	
+
+			var getTime = Math.round(time);
+			var days = Math.floor(time / 86400) == 0? '' : Math.floor(time / 86400) + ' days ' ;
+			var hours = Math.floor(time / 3600) == 0? '' : Math.floor(time / 3600) % 24 + ' hours ';
 			
-			document.cookie=name + "=" + encodeURI(value) + "; path=/; expires=" + expiredate; 
+			var minutes = Math.floor(getTime / 60) == 0? '' : Math.floor(getTime / 60) % 60+ ' mins, ';
+			var seconds = getTime - Math.floor(getTime / 60) * 60 + ' secs ';
+			return days + hours + minutes + seconds;
+
+		}, getResult: function (resultIndex) {
+        		
+    		var results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled"];
+    		return results[resultIndex]
+        
+        }, getSlavesResult: function (connected, runningBuilds) {
+
+            return connected === false ? 'Not connected' : runningBuilds.length > 0 ? 'Running' : 'idle';
+
+        }, getClassName: function(connected, runningBuilds) {
+        	
+			var slavesResult = helpers.getSlavesResult(connected, runningBuilds);
+
+            return slavesResult === 'Not connected' ? 'status-td offline' : slavesResult === 'Running' ? 'status-td building' : 'status-td idle';
+
+        },
+        getCurrentPage: function () {
+            // return the id of the page
+			return document.getElementsByTagName('body')[0].id;
+		},
+        hasfinished: function () {
+			var hasfinished = false;
+			var isFinishedAttr = $('#isFinished').attr('data-isfinished');
+			
+			if (isFinishedAttr === undefined) {
+				hasfinished = false;
+        	}
+
+        	if (isFinishedAttr === true) {
+				hasfinished = true;
+        	}
+
+        	return hasfinished
+
+		}, isRealTimePage: function() {
+			var isRealtimePage = false;
+			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page'];
+			var current = helpers.getCurrentPage();
+			$.each(currentRtPages, function(key,value) {
+				if (value === current) {
+					isRealtimePage = true;
+				}
+			});
+			return isRealtimePage;
 			
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
@@ -450,7 +601,32 @@ define(['screensize'], function (screenSize) {
 				}
 
 			});	
-		}
+		}, codebasesFromURL: function (urlParams) {
+            var sPageURL = window.location.search.substring(1);
+            var sURLVariables = sPageURL.split('&');
+            $.each(sURLVariables, function(index, val) {
+                var sParameterName = val.split('=');
+                if (sParameterName[0].indexOf("_branch") >= 0) {
+                    urlParams[sParameterName[0]] = sParameterName[1];
+                }
+            });
+
+            return urlParams;
+        },
+        urlParamsToString: function (urlParams) {
+            var ret = [];
+            $.each(urlParams, function (name, value) {
+                ret.push(name + "=" + value);
+            });
+
+            return ret.join("&");
+        },
+        getCssClassFromStatus: function(status) {
+            var values = Object.keys(css_classes).map(function (key) {
+                return css_classes[key];
+            });
+            return values[status];
+        }
 	};
 
     return helpers;

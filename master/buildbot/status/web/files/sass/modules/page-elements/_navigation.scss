@@ -5,10 +5,75 @@
 * @section page-elements
 * @author Simon Holm
 */
+  
+.info-box {
+	background-color: #B6BFC9;
+	@include transition (background-color 1.3s ease,border-color 1.3s ease);
+	border: 1px solid #6A7A8B;
+	@include border-radius(4px);
+	float: left;	
+	padding: 7px;
+	color:#fff;
+	font-size: 11px;
+	
+	float: left;
+	display:none;
+	margin-top: 8px;	
+	margin-left:15px;
+	h4 {
+		float: left;		
+		margin: 0;
+		padding: 0;
+	}
+	span {
+		display: block;
+		float: left;
+		margin-left: 5px;
+	}
+}
+ 
+.green {
+background-color: #237B74;
+border: 1px solid #3F8E87;
+@include box-shadow(0 0 4px #3F8E87 inset);
+}
+.red {
+background-color: #A76255;
+border: 1px solid #BC8579;
+@include box-shadow(0 0 4px #BC8579 inset);
+} 
+
+.yellow {
+background-color: #7A760D;
+border: 1px solid #9F9B41;
+@include box-shadow(0 0 4px #9F9B41 inset);
+}
 
 .top-menu-container {
-	@include bgimage (linear-gradient(top, #EBEBEB 0%, #D9D9D9 100%));
+	//-moz-linear-gradient(center top , #275F8C 0%, #22435E 100%) lighter!
+	@include bgimage (linear-gradient(top, #215076 0%, #22435E 100%));
 	@include pie-clearfix;
+}
+
+.outer-bar {
+	float:right;
+	height:16px;
+	@include border-radius (3px);
+	border:1px solid #477cb4;
+	display:none;
+	margin: -3px 0 -2px 5px;
+    position: relative;
+    width: 10px;
+    //@include box-shadow (0 1px 0 #FFF);
+}
+
+.inner-bar {
+ 	background-color: rgba(244, 249, 255, 0.84);
+    bottom: 0;
+    display: block;
+    left: 0;
+    position: absolute;
+    width: 100%;
 }
 
 .top-menu {
@@ -17,6 +82,19 @@
 	margin:0;
 	float:left;
 	@include pie-clearfix;
+	.menu-bubble {
+		background-color: #D6E4EE;
+	    @include border-radius ( 9px);	    
+	    color: #000000;
+	    display: block;
+	    float: right;
+	    font-size: 10px;
+	    font-weight: normal;
+	    letter-spacing: 1px;
+	    margin: -2px 0 0 13px;
+	    padding: 2px 7px 3px 8px;
+	    @include text-shadow ( 0 1px 0 #FFFFFF);
+	}
 	&> li {
 		float:left;
 		padding: 0;
@@ -31,7 +109,7 @@
 			}
 
 			&>	a {
-			    border-top: 4px solid rgba(31, 81, 133, 0.84);
+			    border-top: 4px solid rgba(244, 249, 255, 0.84);
 	      	 	margin: 0 25px;
     			padding: 13px 0 0;
 			    &:hover {
@@ -41,16 +119,16 @@
 		}
 
 		&> a {
-		    color: rgba(31, 81, 133, 0.84);
-		    display: block;
-		    font-size: 11px;
-		    font-weight: bold;
-		    letter-spacing: 0.9px;
-		    padding: 17px 25px 16px;
-		    text-decoration: none;
-		    @include text-shadow(0 1px 0 #fff);
-		    text-transform: uppercase;
-			@include transition(opacity .2s ease-in-out);
+			    color: rgba(244, 249, 255, 0.84);
+			    display: block;
+			    font-size: 11px;
+			    font-weight: bold;
+			    letter-spacing: 0.9px;
+			    padding: 17px 25px 16px;
+			    text-decoration: none;
+				float:left;
+			    text-transform: uppercase;
+			    @include transition( opacity 0.2s ease-in-out 0s);
 			&:hover {
 				opacity: 0.5;
 			}
@@ -62,23 +140,23 @@
 		.arrow-down-btn {
 			cursor: pointer;
 			&:after {
-				position: absolute;
-				top:13px;
-				right: 0;
-				@include bgimage(linear-gradient(top, #DFE2EA 0%, #EEF0F5 100%));
-				border: 1px solid #C4C4C4;
-				@include border-radius(4px);
-				color: #292929;
-				content: "";
-				display: inline-block;
-				font-family: katana_icons;
-				font-size: 15px;
-				padding: 1px 6px 1px 7px;
-				@include text-shadow(1px 1px 0 white);		
-				@include box-shadow(1px 1px 0 rgba(255, 255, 255, 0.64));
+			    @include bgimage (linear-gradient(top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
+    border: 1px solid #C4C4C4;
+    border-radius: 4px;
+    
+    color: #292929;
+    content: "";
+    display: inline-block;
+    font-family: katana_icons;
+    font-size: 15px;
+    padding: 1px 6px 1px 7px;
+    position: absolute;
+    right: 0;
+    @include text-shadow( 1px 1px 0 #FFFFFF);
+    top: 13px;
 			}
 			&:hover:after {
-				@include bgimage(linear-gradient(top, #F2F6FE 0%, #F8FAFF 100%));
+				@include bgimage(linear-gradient(center top , rgba(223, 226, 234, 0.76) 0%, rgba(238, 240, 245, 0.88) 100%));
 			}
 		}
 		.more-info-box { 
@@ -108,7 +186,7 @@
 	
 	ul.top-menu {
 		display: none;
-		z-index:1;
+		z-index:2;
 		float:none;
 		position:absolute;
 		background-color: #eee;
@@ -138,8 +216,9 @@
 				border-bottom: 1px solid #CCCCCC;
 			}
 			&.selected > a {
-				color: #666;
-				border-top: none;
+				   border-top: 4px solid #2B6194;
+				    margin: 0 25px;
+				    padding: 13px 0 0;
 			}
 			&.selected > a, 
 			& > a {
@@ -147,6 +226,7 @@
 				text-transform: none;
 				font-size: 11px;
 				margin: 0;
+				color:#2B6194;
 			}
 		}
 	}
@@ -171,22 +251,27 @@
 // sub-menu
 
 .sub-menu-container {
-	@include bgimage(linear-gradient(top, #0A3569 0%, #417FB1 100%)); 
+    //background-color: #90B6D5;
+    @include bgimage (linear-gradient(top , #3F81B5 0%, #37709D 100%));
     border-bottom: 1px solid #FFFFFF;
-    border-top: 1px solid #FFFFFF;
-    @include pie-clearfix;
-	margin-bottom:22px;
+    border-top:1px solid #4798D9;
+    margin-bottom: 22px;
 	&.frontpage,
 	&.jsonhelp {
 		height: 39px;
 	}
+	
+}
+
+.header + .container-inner {
+		margin-top: 30px;
 }
 
 .breadcrumbs-nav {
 		display:inline-block;
-		padding:13px 0 11px 0;
+		padding:11px 0 10px;
 		& > li {
-		color: rgba(255, 255, 255, 0.59);
+		color: rgba(255, 255, 255, 0.52);
 		font-size: 11px;
 		float: left;
 		list-style: none outside none;
@@ -195,12 +280,14 @@
 		font-weight: bold;
 		letter-spacing:1.1px;
 		line-height:12px;
+		@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.3));
 		&:first-child {
-			padding-left:123px;
+			padding-left:124px;
 		}
 		a {
-			color: #fff;	
-			@include text-shadow (0 1px 0 #194767);
+			@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.44));
+			 color: #fff;
+    
 			&:hover{
 				color: rgba(255, 255, 255, 0.75);
 			}
@@ -220,12 +307,12 @@
 			}
 		}
 		&:before {
-			@include text-shadow (0 1px 0 #194767);
+			
 			font-family: katana_icons;
 			content: "";
 			padding-right: 12px;
 			font-size: 9px;
-			color: rgba(255, 255, 255, 0.59);
+			color: #fff;
 			font-weight: normal;
 		}
 	}
@@ -265,5 +352,18 @@
 		content: "▾";
 		font-size: 16px;
 		padding-left: 3px;
+	}
+}
+
+@include breakpoint($bkpt-xlarge) {
+	.show {
+		display: block;
+	}
+
+}
+
+@include breakpoint($bkpt-xxlarge) {
+	.show-desktop {
+		display: block;
 	}
 }

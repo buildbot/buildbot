@@ -324,7 +324,7 @@ class Build(properties.PropertiesMixin):
 
             # tell the BuildStatus about the step. This will create a
             # BuildStepStatus and bind it to the Step.
-            step_status = self.build_status.addStepWithName(name)
+            step_status = self.build_status.addStepWithName(name, type(step))
             step.setStepStatus(step_status)
 
             sp = None

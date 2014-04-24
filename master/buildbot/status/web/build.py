@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+import json
 
 from twisted.web import html
 from twisted.internet import defer, reactor
@@ -24,8 +24,9 @@ from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
     path_to_codebases, path_to_builders, path_to_step, getCodebasesArg, \
      getAndCheckProperties, ActionResource, path_to_authzfail, \
-     getRequestCharset
+     getRequestCharset, path_to_json_build
 from buildbot.schedulers.forcesched import ForceScheduler, TextParameter
+from buildbot.status.web.status_json import BuildJsonResource
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
@@ -134,6 +135,7 @@ class StatusResourceBuild(HtmlResource):
                 (self.build_status.getBuilder().getFriendlyName(),
                  self.build_status.getNumber()))
 
+    @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.build_status
         status = self.getStatus(req)
@@ -280,8 +282,13 @@ class StatusResourceBuild(HtmlResource):
         cxt['has_changes'] = has_changes
         cxt['authz'] = self.getAuthz(req)
 
+        build_json = BuildJsonResource(status, b)
+        build_dict = yield build_json.asDict(req)
+        cxt['instant_json']['build'] = {"url": path_to_json_build(status, req, builder.name, b.getNumber()),
+                                        "data": json.dumps(build_dict)}
+
         template = req.site.buildbot_service.templates.get_template("build.html")
-        return template.render(**cxt)
+        defer.returnValue(template.render(**cxt))
 
     def stop(self, req, auth_ok=False):
         # check if this is allowed

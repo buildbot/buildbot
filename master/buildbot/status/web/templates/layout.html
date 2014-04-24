@@ -13,8 +13,8 @@
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
     <title>{{ pageTitle|e }}</title>
-    
-    <script src="/script/libs/jQuery-2-0-3.js"></script>
+  
+    <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
     
     <script type="text/javascript">
       var require = {
@@ -22,8 +22,13 @@
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
-    </script>      
-    <script src="/prod/script/require.js?cachebust={{version}}"></script>
+    </script>
+        
+    {% if instant_json %}
+    <script id="instant-json" type="application/javascript">
+    var instantJSON = {{ instant_json }};
+    </script>
+    {% endif %}
 
     {% if analytics_code %}
     <script>
@@ -37,6 +42,7 @@
 
     </script>
     {% endif %}
+    <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
     <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
@@ -45,7 +51,13 @@
     {% endblock %} 
 
   </head>
-  <body class="interface katana-main" style="display:none;">
+  {% if bodyId %}
+    {% set bodyId = bodyId %}
+  {% else %}
+    {% set bodyId = '' %}
+  {% endif %}
+
+   <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
    
     {% block header -%}
  
@@ -97,14 +109,13 @@
           </li>
           -->
           <li class="project-dropdown">
-            <a id="projects" href="{{ path_to_root }}projects">Projects</a>
-            
-            <span id="projectDropdown" class="arrow-down-btn"></span>
-            
+            <a id="projects" href="{{ path_to_root }}projects">Projects</a>            
+            <span id="projectDropdown" class="arrow-down-btn"></span>            
           </li>
           
           <li>
-            <a id="buildqueue" href="{{ path_to_root }}buildqueue">Build queue</a>
+            <a id="buildqueue" href="{{ path_to_root }}buildqueue">              
+               Build queue</a>            
           </li>
           <!--
           <li>
@@ -112,7 +123,16 @@
           </li>
           -->
           <li>
-            <a id="buildslaves" href="{{ path_to_root }}buildslaves">Build slaves</a>
+            <a id="buildslaves"  href="{{ path_to_root }}buildslaves">
+              <span id="verticalProgressBar" class="outer-bar tooltip">
+                <span class="inner-bar">                  
+                </span>
+              </span>
+              <span id="buildSlavesTotal" class="menu-bubble">
+                0
+              </span> 
+              Build slaves
+            </a>
           </li>
           <li>
             <a id="json" href="{{ path_to_root }}json/help">JSON API</a>
@@ -141,11 +161,21 @@
           </li>
           -->
         </ul>
+        
+          <div id="buildLoad" class="info-box green">
+            <h4>Build Load</h4>
+            <span>0</span>
+          </div>
+        
+        <div id="attentionBox" class="info-box red">
+          <h4>Attention</h4>
+          <span>Not every element on this page is realtime yet!</span>
+        </div>
       </div>
          </nav>
       
        </header>
-<div class="clear"></div>
+
     {% endblock %}
 
     {%- block barecontent -%}

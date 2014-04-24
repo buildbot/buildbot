@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+import json
 
 import time, urllib
 from twisted.web import html
@@ -21,8 +21,10 @@ from twisted.web.resource import NoResource
 from twisted.internet import defer
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder, path_to_json_slaves
 from buildbot import util
+from buildbot.status.web.status_json import SlavesJsonResource, FilterOut
+
 
 class ShutdownActionResource(ActionResource):
 
@@ -119,53 +121,19 @@ class BuildSlavesResource(HtmlResource):
     pageTitle = "Katana Build slaves"
     addSlash = True
 
-    def content(self, request, ctx):
+    @defer.inlineCallbacks
+    def content(self, request, cxt):
         s = self.getStatus(request)
 
-        #?no_builders=1 disables build column
-        show_builder_column = not (request.args.get('no_builders', '0')[0])=='1'
-        ctx['show_builder_column'] = show_builder_column
+        slaves = SlavesJsonResource(s)
+        slaves_dict = yield slaves.asDict(request)
+        slaves_dict = FilterOut(slaves_dict)
 
-        used_by_builder = {}
-        for bname in s.getBuilderNames():
-            b = s.getBuilder(bname)
-            for bs in b.getSlaves():
-                slavename = bs.getName()
-                if slavename not in used_by_builder:
-                    used_by_builder[slavename] = []
-                used_by_builder[slavename].append(b)
-
-        slaves = ctx['slaves'] = []
-        for name in util.naturalSort(s.getSlaveNames()):
-            info = {}
-            slaves.append(info)
-            slave = s.getSlave(name)
-            slave_status = s.botmaster.slaves[name].slave_status
-            info['running_builds'] = len(slave_status.getRunningBuilds())
-            info['running_builds_new'] = slave_status.getRunningBuilds()
-            info['link'] = request.childLink(urllib.quote(name,''))
-            info['name'] = name
-            info['friendly_name'] = s.botmaster.slaves[name].friendly_name
-
-            if show_builder_column:
-                info['builders'] = []
-                for b in used_by_builder.get(name, []):
-                    info['builders'].append(dict(link=path_to_builder(request, b), name=b.getFriendlyName()))
-                                        
-            info['version'] = slave.getVersion()
-            info['connected'] = slave.isConnected()
-            info['connectCount'] = slave.getConnectCount()
-            
-            info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
-            last = slave.lastMessageReceived()
-            if last:
-                info['last_heard_from_age'] = abbreviate_age(time.time() - last)
-                info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
-                                                            time.localtime(last))
+        cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
+                                         "data": json.dumps(slaves_dict)}
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
-        data = template.render(**ctx)
-        return data
+        defer.returnValue(template.render(**cxt))
 
     def getChild(self, path, req):
         try:

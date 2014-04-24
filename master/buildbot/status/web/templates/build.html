@@ -5,56 +5,38 @@
 {% from "change_macros.html" import change with context %}
 {% from "change_macros2.html" import changeth with context %}
 
+{% set bodyId = 'id="builddetail_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu(active_page=build_number, pathNum=5, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, stepName='', selectedProject=selectedproject)}}
 {% endblock %}
 
 {% block content %}
 
-<div class="clear realtime"></div>
+{# The realtime class is invoking the websocket scripts #}
+<div class="clear"></div>
 
 <div class="column-1">
 <div class="column-2">
+<div id="buildResult">
 
-{% if not b.isFinished() %}
-  <h2 class="head-2">
-    Build In Progress
-  </h2>
+</div>
 
-  {% if when_time %}
-    <p>ETA: {{ when_time }} [{{ when }}]</p>
-  {% endif %}
-
-  <span class="current-step result">
-    {{ current_step }}
-  </span>
-  
+  {% if not b.isFinished() %}
   <div class="divider"></div>
-  {% if authz.advertiseAction('stopBuild', request) %}
-    <h2 class="head-2">
-      Stop Build
-    </h2>
-    {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
+      {% if authz.advertiseAction('stopBuild', request) %}
+        <h2 class="head-2">
+          Stop Build
+        </h2>
+        {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
+          <div class="divider"></div>
+      {% endif %}
+  {% else %}
       <div class="divider"></div>
+      {% if b.getTestResults() %}
+            <h3><a href="{{ tests_link }}"/></h3>
+      {% endif %}
   {% endif %}
-
-
-{% else %}
-
-  <h2 class="head-2">
-    Results
-  </h2>
-
-  <span class="{{ result_css }} result">   
-    {{ b.getText()|join(' ')|capitalize }}
-  </span>
-   
-  <div class="divider"></div>
-
-  {% if b.getTestResults() %}
-    <h3><a href="{{ tests_link }}"/></h3>
-  {% endif %}
-{% endif %}
 
 {% if authz.advertiseAction('forceBuild', request) and b.isFinished() %}
   <h2 class="head-2">
@@ -111,7 +93,7 @@
       <td>
         Elapsed
       </td>
-      <td class="elapsed-time-js">
+      <td id="elapsedTimeJs" class="elapsed-time-js">
         {{ elapsed }}
       </td>
     </tr>
@@ -305,61 +287,8 @@ SourceStamps
  #                       (target, ex_url_class, html.escape(name)))
  #}
 
-<ol class="step-list">
-{% for s in steps %}
+<ol id="stepList" class="step-list">
 
-
-  <li class="status-{{ s.css_class }}">
-    
-    <div class="index-count">
-         {{  loop.index }}
-    </div>
-      
-    <span class="{{ s.css_class }} result">
-    </span>
-    
-    <a class="step-head" href="{{ s.link }}">
-      {{ s.name }}
-    </a>
-    {% if s.css_class != 'not_started' %}
-        <p>
-          <span class="s-text-js">{{ s.text }}</span><span class="update-time-js">{{ '' + s.time_to_run + '' if s.time_to_run else '' }}</span>
-        </p>
-      
-
-      {% if s.logs %} 
-        <div class="logs-txt">
-              Logs
-        </div>
-      {% endif %}
-      <ul class="log-list">
-        
-        {% for l in s.logs %}
-          <li class="s-logs-js"><a target="_blank" href="{{ l.link }}">{{ l.name }}</a></li>
-        {% else %}
-       
-            <li>
-              <span>
-                no logs
-              </span>
-            </li>
-  
-        {% endfor %}
-
-        {% for u in s.urls %}
-         {% if 'results' in u.keys() %}
-          <li class="log-list-{{ u.results }} urls-mod"><a title="{{ u.results }}" target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
-          {% else %}
-          <li class="artifact-js"><a target="_blank" href="{{ u.url }}">{{ u.logname }}</a></li>
-          {% endif %}
-        {% endfor %}
-        
-      </ul>  
-    {% endif %}
-  
-  </li>
-  
-{% endfor %}
 </ol>
 
 <h2 class="head-2">Responsible Users</h2>

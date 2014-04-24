@@ -1,0 +1,81 @@
+{{#name}}
+	<a href="{{url}}?{{builderParam}}">{{friendly_name}}{{^friendly_name}}{{name}}{{/friendly_name}}</a>
+{{/name}}
+
+{{#progressBar}}
+	<div data-starttime="{{etaStart}}" data-etatime="{{etaCurrent}}" class="percent-outer-js percent-outer">
+		<span class="time-txt-js time-txt"></span>
+		<div class="percent-inner-js percent-inner">
+			<div class="progressbar-overlay"></div>								
+		</div>
+	</div>
+{{/progressBar}}
+
+{{#currentBuilds}}
+    <ul class="list current-job-js building">	    	    		
+			<li>
+				<div class="builders-status-truncate"><a href="{{builder_url}}/builds/{{number}}">{{number}}</a>
+					{{#currentStep}}
+						{{name}}
+					{{/currentStep}}
+				</div>
+				
+                	<span class="spin-icon animate-spin"></span>
+            	
+				<div class="clear"></div>
+				{{#eta}}
+					<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+						<span class="time-txt-js time-txt"></span>
+						<div class="percent-inner-js percent-inner">							
+						<div class="progressbar-overlay"></div>	
+						</div>
+					</div>					
+				{{/eta}}
+                {{^eta}}
+					<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
+						<span class="time-txt-js time-txt">{{times.0}}</span>
+						<div class="percent-inner-js percent-inner">
+							<div class="progressbar-overlay"></div>	
+						</div>
+					</div>
+                {{/eta}}
+				
+			</li>						
+	</ul>	
+{{/currentBuilds}}
+
+{{#showNoJobs}}
+	<span class="small-txt">
+		No jobs
+    </span>
+{{/showNoJobs}}
+
+{{#pendingBuilds}}	
+	<a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
+{{/pendingBuilds}}
+
+{{#showLatestBuild}}
+	{{#latestBuild}}
+		<span class="hide hidden-date-js"></span>
+		<span class="last-run"></span>
+		<span class="small-txt"></span>
+	{{/latestBuild}}
+{{/showLatestBuild}}
+{{#customBuild}}
+	<a class="ajaxbtn more-info" title="Run custom build" href="#" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" data-b_name="{{builderName}}" data-b="{{url}}" data-returnpage="builders_json">
+	</a>
+	<a class="run-build-js run-build" title="Run build with default values" href="#">
+	</a>
+{{/customBuild}}
+
+{{#showStatus}}
+	{{#latestBuild}}	
+	<span class="hide">{{text.0}}</span>
+	<a href="{{#url}}{{path}}{{/url}}">#{{number}}</a>
+	<span class="status-text">
+	 {{#text}}
+	 	{{.}}
+	 {{/text}}
+	</span>
+	{{/latestBuild}}
+{{/showStatus}}

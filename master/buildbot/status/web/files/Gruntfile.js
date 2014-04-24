@@ -44,11 +44,15 @@ module.exports = function(grunt) {
           baseUrl: 'script/',
           dir: "prod/script",
           optimize: 'uglify',
+          
             //paths: {
              // requirejs: "require"
            // },
 
           mainConfigFile:'script/main.js',
+          paths: {
+                  'dataTables':'empty:'
+                  }
           //out: 'prod/script/main.js',
           /*
           modules: [
@@ -70,9 +74,9 @@ module.exports = function(grunt) {
           debugInfo: true,
           paths: {
           jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
-          //jquery: 'empty:' //Use this to continue using CDN loading
-          
-          datatables: '../plugins/jquery-datatables'
+          datatables: '../plugins/jquery-datatables',
+          noise: '../plugins/jquery.noisy'
+
         },
           name: 'testresults-main',
           out: 'prod/script/testresults/testresults-main.js',

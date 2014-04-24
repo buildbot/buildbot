@@ -24,6 +24,9 @@ from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
+from buildbot.steps.artifact import AcquireBuildLocks
+from buildbot.steps.trigger import Trigger
+
 
 class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
@@ -255,12 +258,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     # methods for the base.Build to invoke
 
-    def addStepWithName(self, name):
+    def addStepWithName(self, name, step_type):
         """The Build is setting up, and has added a new BuildStep to its
         list. Create a BuildStepStatus object to which it can send status
         updates."""
 
-        s = BuildStepStatus(self, self.master, len(self.steps))
+        s = BuildStepStatus(self, self.master, len(self.steps), step_type)
         s.setName(name)
         self.steps.append(s)
         return s
@@ -456,39 +459,57 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                                                      self.number))
             log.err()
 
-    def asDict(self):
+    def asBaseDict(self):
         result = {}
+
         # Constant
         result['builderName'] = self.builder.name
         result['builderFriendlyName'] = self.builder.getFriendlyName()
         result['number'] = self.getNumber()
-        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
         result['url'] = self.builder.status.getURLForThing(self)
         result['builder_url'] = self.builder.status.getURLForThing(self.builder)
 
         # Transient
-        result['properties'] = self.getProperties().asList()
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
+        result['slave'] = self.getSlavename()
+        result['eta'] = self.getETA()
 
         #Lazy importing here to avoid python import errors
         from buildbot.status.web.base import css_classes
         result['results_text'] = css_classes.get(result['results'], "")
 
-        result['slave'] = self.getSlavename()
+        return result
+
+    def asDict(self, request=None):
+        result = self.asBaseDict()
+
+        # Constant
+        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
+
+        # Transient
+        result['properties'] = self.getProperties().asList()
+
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),
             self.builder.status.getURLForThing(l)] for l in self.getLogs()]
-        result['eta'] = self.getETA()
-        result['steps'] = [bss.asDict() for bss in self.steps]
+
+        result['isWaiting'] = False
+
+        result['steps'] = [bss.asDict(request) for bss in self.steps]
         if self.getCurrentStep():
             result['currentStep'] = self.getCurrentStep().asDict()
+
+            step_type = self.getCurrentStep().getStepType()
+            if step_type is AcquireBuildLocks or step_type is Trigger:
+                result['isWaiting'] = True
         else:
             result['currentStep'] = None
+
         return result
 
 components.registerAdapter(lambda build_status : build_status.properties,

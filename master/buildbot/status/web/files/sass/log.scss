@@ -1,6 +1,7 @@
 @charset "UTF-8";
 @import "compass";
 @import "breakpoint";
+@import "modules/global";
 
 $bkpt-small: 0 570px;
 $bkpt-small-portrait: (0 570px )(orientation portrait);
@@ -94,11 +95,9 @@ $bkpt-xlarge: min-width 1600px;
 	margin-bottom: 44px;
 }
 
-.log-main .sub-menu-container {
-	 border-top: none;
-	 @include background-image (linear-gradient(top , #0A3569 0%, #417FB1 100%));
+.log-main .top-menu-container {	 
 	 @include pie-clearfix;
-	 padding:10px 0 ;
+	 padding:7px 0 ;
 }
 
 .log-main h1.logo a {

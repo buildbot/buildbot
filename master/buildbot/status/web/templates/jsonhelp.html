@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
+
+{% set bodyId = 'id="jsonhelp_page"' %}
+
 {% block submenu %}
     {{submenu.buildsubmenu(active_page="jsonhelp",builderName='', buildNumber='', stepName='', pathNum='', codebasesPath='', buildersPath='', builderPath='', buildPath='')}}
 {% endblock %}

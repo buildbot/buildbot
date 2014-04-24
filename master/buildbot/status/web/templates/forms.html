@@ -107,7 +107,7 @@
      
     {% elif 'bool' in f.type%}      
        <span class="label">{{f.label}}</span>
-        <span title="Checking this box will force the built to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
+        <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
       </span>
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'textarea' in f.type %}
@@ -334,7 +334,7 @@
           and click the 'Force Build' button</p>
   {% else %}
      <p>To force a rebuild with the same source revisions and parameters used in this build,
-        click the 'Force Build' button.</p>
+        click the 'Rebuild' button.</p>
   {% endif %}
    <div class="row">
      

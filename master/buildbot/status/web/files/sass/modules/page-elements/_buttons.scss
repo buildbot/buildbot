@@ -99,7 +99,7 @@ a.grey-btn,
 
 
 .codebases .blue-btn {
-    float: right;    
+    float: right;   
     &:focus {
         outline: none;   
         @include box-shadow($focusShadow);
@@ -135,6 +135,7 @@ a.grey-btn,
 
 .delete-icon {
     display:inline-block;
+    margin-right: -2px;
     &:before {
         font-family: "katana_icons";
         content: "";
@@ -144,6 +145,9 @@ a.grey-btn,
     &:hover:before{
         color:#ccc;
     }   
+    .chrome & {
+        margin-right: 0;
+    }
 }
 
 #submitBtn {
@@ -192,10 +196,11 @@ a.grey-btn,
 }
 
 @include breakpoint($bkpt-small) {
-    .codebases .grey-btn {
-        //float:left;   
-    }
     .grey-btn + .dataTables_wrapper {
         margin-right: 0;
+    }
+
+    .codebases .blue-btn {
+        margin:0 -10px 10px 0; 
     }
 }

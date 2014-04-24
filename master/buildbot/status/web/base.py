@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+import json
 
 import urlparse, urllib, time, re
 import os, cgi, sys, locale
@@ -26,6 +26,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELE
 from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
+
 
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
@@ -133,6 +134,9 @@ def path_to_projects(request):
 def path_to_buildqueue(request):
     return path_to_root(request) + "buildqueue"
 
+def path_to_buildqueue_json(request):
+    return path_to_root(request) + "json/buildqueue"
+
 def getCodebasesArg(request=None, codebases={}):
     codebases_arg=''
     for key, val in request.args.iteritems():
@@ -156,6 +160,13 @@ def path_to_builders(request, projectName, codebases=True):
     if codebases:
         codebases_arg = getCodebasesArg(request=request)
     return (path_to_codebases(request, projectName, codebases=False) + "/builders" + codebases_arg)
+
+
+def path_to_json_builders(request, projectName, codebases=True):
+    codebases_arg = ''
+    if codebases:
+        codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/{0}/{1}".format(urllib.quote(projectName, safe=''), codebases_arg)
 
 def path_to_authfail(request):
     return path_to_root(request) + "authfail"
@@ -196,6 +207,18 @@ def path_to_slave(request, slave):
 def path_to_change(request, change):
     return (path_to_root(request) +
             "changes/%s" % change.number)
+
+def path_to_json_global_status(status, request):
+    return status.getBuildbotURL() + "json/globalstatus"
+
+def path_to_json_slaves(request):
+    return path_to_root(request) + "json/slaves/"
+
+def path_to_json_build(status, request, builderName, buildID):
+    return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
+
+def path_to_json_build_queue(request):
+    return path_to_root(request) + "json/buildqueue/"
 
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
@@ -239,6 +262,9 @@ class AccessorMixin(object):
     def getBuildmaster(self, request):
         return request.site.buildbot_service.master
 
+    def getRealTimeServer(self, request):
+        return  request.site.buildbot_service.master.config.realTimeServer
+
     def getAnalyticsCode(self, request):
         return request.site.buildbot_service.master.config.analytics_code
 
@@ -257,6 +283,7 @@ class ContextMixin(AccessorMixin):
                     stylesheet = rootpath + 'default.css',
                     path_to_root = rootpath,
                     version = version,
+                    realTimeServer = self.getRealTimeServer(request),
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
                     tz = locale_tz,
@@ -339,7 +366,6 @@ class HtmlResource(resource.Resource, ContextMixin):
             "empty.html")
         return template.render(**context)
 
-
     def render(self, request):
         # tell the WebStatus about the HTTPChannel that got opened, so they
         # can close it if we get reconfigured and the WebStatus goes away.
@@ -376,11 +402,19 @@ class HtmlResource(resource.Resource, ContextMixin):
 
         ctx = self.getContext(request)
 
-        d = defer.maybeDeferred(lambda : self.content(request, ctx))
+        @defer.inlineCallbacks
+        def renderPage():
+            ctx['instant_json'] = yield self.getInstantJSON(request)
+            result = yield self.content(request, ctx)
+            defer.returnValue(result)
+
+        d = defer.maybeDeferred(lambda : renderPage())
+
         def handle(data):
             if isinstance(data, unicode):
                 data = data.encode("utf-8")
             request.setHeader("content-type", self.contentType)
+            request.setHeader("Cache-Control", "no-cache, max-age=0, must-revalidate, no-store")
             if request.method == "HEAD":
                 request.setHeader("content-length", len(data))
                 return ''
@@ -399,6 +433,19 @@ class HtmlResource(resource.Resource, ContextMixin):
             return None # processingFailed will log this for us
         d.addCallbacks(ok, fail)
         return server.NOT_DONE_YET
+
+    @defer.inlineCallbacks
+    def getInstantJSON(self, request):
+        from buildbot.status.web.status_json import GlobalJsonResource
+        status = self.getStatus(request)
+        globalInfo = GlobalJsonResource(status)
+        global_json = yield globalInfo.asDict(request)
+        defer.returnValue({
+            "global": {
+                "url": path_to_json_global_status(status, request),
+                "data": json.dumps(global_json)
+            }
+        })
 
 class StaticHTML(HtmlResource):
     def __init__(self, body, pageTitle):

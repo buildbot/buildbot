@@ -1,4 +1,4 @@
-define(['helpers'], function (helpers) {
+define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache', 'timeElements'], function (helpers,form,popups,Mustache, timeElements) {
 
     "use strict";
     var popup;
@@ -7,19 +7,31 @@ define(['helpers'], function (helpers) {
 		init: function () {
 
 			//For non ajax boxes
-			$('.popup-btn-js-2').click(function(e){
+			var tableSorterRt = $('#tablesorterRt');
+
+			tableSorterRt.delegate('a.popup-btn-json-js', 'click', function(e){
+				e.preventDefault();												
+				popup.showjsonPopup($(this).data());
+                timeElements.updateTimeObjects();
+			});
+
+			$('.popup-btn-js-2').click(function(e){			
 				e.preventDefault();
 				popup.nonAjaxPopup($(this));
 			});
 
+			tableSorterRt.delegate('.popup-btn-js', 'click', function(e){
+				e.preventDefault();				
+				var currentUrl = document.URL;			              	
+			    var parser = document.createElement('a');
+			    parser.href = currentUrl;
+                var builder_name = encodeURIComponent($(this).attr('data-builderName'));
+                var url = "{0}//{1}/json/pending/{2}/?".format(parser.protocol, parser.host, builder_name);
+                var urlParams = helpers.codebasesFromURL({});
+                var paramsString = helpers.urlParamsToString(urlParams);
 
-			//For builders pending box
-			$('.popup-btn-js').each(function(i){
-				$(this).attr('data-in', i).on('click', function(e){
-					e.preventDefault();
-					popup.pendingJobs($(this));				
-				});;				
-			});
+				popup.pendingJobs(url + paramsString);
+			});			
 
 			// Display the codebases form in a popup
 			$('#getBtn').click(function(e) {
@@ -28,10 +40,29 @@ define(['helpers'], function (helpers) {
 			});
 			
 			// popbox for ajaxcontent
+			tableSorterRt.delegate('.ajaxbtn', 'click', function(e){
+				e.preventDefault();
+				popup.externalContentPopup($(this));
+			});
+
 			$('.ajaxbtn').click(function(e){
 				e.preventDefault();
 				popup.externalContentPopup($(this));				
 			});
+
+		}, showjsonPopup: function(jsonObj) {			
+			var mustacheTmpl = Mustache.render(popups, jsonObj);		
+			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));								
+			
+			$('body').append(mustacheTmplShell);	
+
+			if (jsonObj.showRunningBuilds != undefined) {
+				helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));                
+	        }
+            		
+			helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+				helpers.closePopup(mustacheTmplShell);
+			});			
 
 		}, validateForm: function(formContainer) { // validate the forcebuildform
 				var formEl = $('.command_forcebuild', formContainer);
@@ -61,7 +92,9 @@ define(['helpers'], function (helpers) {
 	    			$('.form-message', formEl).hide();
 
 	    			if (!$('.error-input', formEl).length) {
-	    				$(formEl).prepend('<div class="error-input">Fill out the empty revision fields or clear all before submitting</div>');
+	    				var mustacheTmplErrorinput = Mustache.render(popups, {'errorinput':'true', 'text':'Fill out the empty revision fields or clear all before submitting'});
+						var errorinput = $(mustacheTmplErrorinput);
+	    				$(formEl).prepend(errorinput);
 	    			} 
 					e.preventDefault();
 				}
@@ -70,74 +103,72 @@ define(['helpers'], function (helpers) {
 			var clonedInfoBox = thisEl.next($('.more-info-box-js')).clone();				
 			clonedInfoBox.appendTo($('body'));
 			helpers.jCenter(clonedInfoBox).fadeIn('fast', function() {
-				helpers.closePopup(clonedInfoBox);
+			helpers.closePopup(clonedInfoBox);
 			});
 			$(window).resize(function() {
 				helpers.jCenter(clonedInfoBox);				
 			});
 
-		}, pendingJobs: function(thisEl) {
-
-			var thisi = thisEl.attr('data-in');
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
-			var rtUpdate = thisEl.attr('data-rt_update');
-
+		}, pendingJobs: function(url) {
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
+			
 			$('body').append(preloader).show();
-			// get currentpage with url parameters
-			$.ajax({
-				url:'',
-				cache: false,
-				dataType: "html",
-				data: {
-					rt_update:'pending'
-				},
-				success: function(data) {
-					preloader.remove();
-					var doc = document.createElement('html');
- 					doc.innerHTML = data;
-					
-					var pendListRes = $('.more-info-box-js', doc);
-					
-					var mib;
-					$(pendListRes).each(function(i){
-						if (i == thisi) {
-							mib = $(this);
-						}
-					});
-					mib.appendTo('body');
-					helpers.jCenter(mib).fadeIn('fast');
-					$(window).resize(function() {						
-						helpers.jCenter(mib);
-					});
+			
+				var currentUrl = document.URL;			              	
+			    var parser = document.createElement('a');
+			    parser.href = currentUrl;
+				var actionUrl = parser.protocol + '//' + parser.host + parser.pathname;							
 
-					helpers.closePopup(mib);
+			$.ajax({
+				url:url,
+				cache: false,
+				dataType: "json",
+				
+				success: function(data) {					
+					preloader.remove();																
+					var mustacheTmpl = Mustache.render(popups, {pendingJobs:data,showPendingJobs:true,cancelAllbuilderURL:data[0].builderURL});					
+					var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));						
+					var waitingtime = mustacheTmplShell.find('.waiting-time-js');
+					waitingtime.each(function(i){						
+						timeElements.addElapsedElem($(this),data[i].submittedAt);
+                        timeElements.updateTimeObjects();
+					});					
+					mustacheTmplShell.appendTo('body');					
+					helpers.jCenter(mustacheTmplShell).fadeIn('fast', function(){
+						helpers.closePopup(mustacheTmplShell);	
+					});
+					
 				}
 			});
 
 		}, codebasesBranches: function() {
 			
 			var path = $('#pathToCodeBases').attr('href');
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
+
 			$('body').append(preloader).show();
 			var mib = popup.htmlModule ('Select branches');
 			
-			mib.appendTo('body');
+			$(mib).appendTo('body');
 
 
 			$.get(path)
 			.done(function(data) {
 				require(['selectors'],function(selectors) {		        	
 		        	
-				var formContainer = $('#content1');	
-				preloader.remove();
-				
-				var fw = $(data).find('#formWrapper');
-				
-				fw.children('#getForm').attr('action', window.location.href);
-				var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
-				
-				fw.appendTo(formContainer);												
+					var formContainer = $('#content1');	
+					preloader.remove();
 					
+					var fw = $(data).find('#formWrapper');
+				    fw.children('#getForm').attr('action', window.location.href);
+				    var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
+					
+					
+					fw.appendTo(formContainer);												
+
 					helpers.jCenter(mib).fadeIn('fast',function(){					
 						selectors.init();
 						blueBtn.focus();						
@@ -148,10 +179,11 @@ define(['helpers'], function (helpers) {
 					$(window).resize(function() {					
 						helpers.jCenter(mib);
 					});
-				
-				});			
-			});
-		}, customTabs: function (){ // tab list for custom build
+					
+				});
+			});		
+		},
+		customTabs: function (){ // tab list for custom build
 			$('.tabs-list li').click(function(i){
 				var indexLi = $(this).index();
 				$(this).parent().find('li').removeClass('selected');
@@ -173,9 +205,17 @@ define(['helpers'], function (helpers) {
 			var rtUpdate = thisEl.attr('data-rt_update');
 			var contentType = thisEl.attr('data-contenttype');
             var builder_name = thisEl.attr('data-b_name');
-			var preloader = $('<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>');
+			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
+			var preloader = $(mustacheTmpl);
+
+			var mustacheTmplTxt = '<h2 class="small-head">Your build will show up soon</h2>';		
+			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmplTxt}));
+			
+
             var body = $('body');
 			body.append(preloader);
+			//mustacheTmplShell.appendTo(body);
+			
 			var mib = popup.htmlModule (popupTitle);
 			mib.appendTo(body);
 
@@ -187,7 +227,6 @@ define(['helpers'], function (helpers) {
                 var sParameterName = val.split('=');
                 if (sParameterName[0].indexOf("_branch") >= 0) {
                     urlParams[sParameterName[0]] = sParameterName[1];
-                    console.log(val)
                 }
             });
 			
@@ -198,7 +237,7 @@ define(['helpers'], function (helpers) {
 				preloader.remove();
 				$(data).appendTo(exContent);
 
-				helpers.tooltip($('.tooltip'));
+				helpers.tooltip(exContent.find($('.tooltip')));
 				// Insert full name from cookie
 				if (contentType === 'form') {
 					helpers.setFullName($("#usernameDisabled, #usernameHidden", exContent));	
@@ -207,13 +246,36 @@ define(['helpers'], function (helpers) {
 				
 				helpers.jCenter(mib).fadeIn('fast');
 				$(window).resize(function() {
-					helpers.jCenter(mib)
+					helpers.jCenter(mib);
 				});
 				// popup.customTabs();
-				helpers.closePopup(mib);
-				
+                helpers.closePopup(mib);
 
+                if (dataReturnPage !== undefined) {
+                    exContent.find('form').ajaxForm({
+                        beforeSubmit: function () {                        	
+                            body.append(mustacheTmplShell);
+
+                            helpers.jCenter(mustacheTmplShell).fadeIn('fast', function() {
+								helpers.closePopup($(this));
+								$(this).delay(1500).fadeOut('fast', function() {
+									$(this).remove();	
+								});	
+							});
+
+                            exContent.closest('.more-info-box').find('.close-btn').click();
+                        },
+                        success: function (data) {
+                            requirejs(['realtimePages'], function (realtimePages) {
+                                mustacheTmplShell.remove();
+                                var name = dataReturnPage.replace("_json", "");
+                                realtimePages.updateSingleRealTimeData(name, data);
+                            });
+                        }
+                    });
+                }
 			});
+
 		}, htmlModule: function (headLine) { // html chunks
 				var mib = 
 				$('<div class="more-info-box remove-js">' +

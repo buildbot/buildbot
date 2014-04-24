@@ -51,8 +51,16 @@ div.force-text .label.question-icon {
 	display:inline-block;
 }
 
- 
+.status-text {
+	display: inline-block;
+	&:first-letter {
+		text-transform: capitalize;
+	}
+}
+
 // used for hidden html in the forcebuild dialogue. See forms.html
+ 
+ 
 .content-blocks {
 	margin-bottom:15px;	
 }
@@ -100,6 +108,10 @@ left: 0;
 position: fixed;
 top: 0;
 width: 100%;
+	.content & {
+		position: absolute;
+		margin-top: -10px;
+	}
 }
 
 #bowl_ringG{
@@ -331,13 +343,20 @@ body.log.interface {
 }
 
 .auth-user {
-	float: right;
+   color: rgba(244, 249, 255, 0.84);
+    float: right;
     font-size: 10px;
     margin-top: 16px;
-    text-shadow: 0 1px 0 #FFFFFF;
     span,
     a {
-    	font-weight: bold;
+    	font-weight: bold;    	
+	}
+	a {
+		color: #3f81b5;
+		@include transition (color 0.5s ease);
+		&:hover {
+			color:#fff;
+		}
 	}
 }
  
@@ -364,4 +383,14 @@ body.log.interface {
 }
 @include breakpoint($bkpt-xxlarge) {
 	.hide-mobile {display:inline;}		
+}
+
+.builders-status-truncate {
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    display: -moz-inline-stack;
+    display: inline-block;
 }

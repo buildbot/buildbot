@@ -52,7 +52,7 @@
 
 	{% set navigation_bar = [
 	    ('/', 'home', 'Home'),
-	    ('/projects', 'project', 'Projects'),
+	    ('/projects', 'projects', 'Projects'),
 	    (codebasesPath, 'codebases', selectedProject),
 	    (buildersPath, 'builders', 'Builders'),
 	    (builderPath, builderName, builderName),
@@ -60,8 +60,9 @@
 	    ('', stepName, stepName)
 	] -%}
 
-	<nav id="{{classPath}}_page" class="sub-menu-container {{classPath}}">
-		{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}		
+{% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
+	<nav class="sub-menu-container {{classPath}}">
+		
 			<div class="container-inner">
 				<div class="wrap">
 				  <ul class="breadcrumbs-nav">
@@ -78,8 +79,8 @@
 					</ul>
 				</div>
 			</div>
-		{% endif %}
 	</nav>
+{% endif %}
 {% endmacro %}
 
 {% macro buildsubmenu_slaves(active_page, pathNum, buildSlaveName) %}
@@ -100,7 +101,7 @@
 	    ('', buildSlaveName, buildSlaveName)
 	] -%}
 
-	<nav id="{{classPath}}_page" class="sub-menu-container">
+	<nav class="sub-menu-container">
 		<div class="container-inner">
 			<div class="wrap">
 				<ul class="breadcrumbs-nav ">
@@ -125,7 +126,7 @@
 	    ('/buildqueue', 'buildqueue', 'Build Queue')
 	] -%}	
 	
-	<nav id="buildqueue_page" class="sub-menu-container">
+	<nav class="sub-menu-container">
 	<div class="container-inner">
 		<div class="wrap">
 			<ul class="breadcrumbs-nav ">

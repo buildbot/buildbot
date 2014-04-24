@@ -4,6 +4,8 @@
 
 {% extends "layout.html" %}
 
+{% set bodyId = 'id="codebases_page"' %}
+
 {% block submenu %}
   {{submenu.buildsubmenu(active_page="codebases", pathNum=2, builderName='', buildNumber='', stepName='', selectedProject=selectedproject)}}
 {% endblock %}
@@ -34,10 +36,18 @@
           {% for cbkey, codebase in cb.iteritems() %}
         <tr>
           <td>
-              {{codebase['display_name']}}
+              {% if codebase['display_name'] %}
+                {{codebase['display_name']}}
+              {% else %}
+                {{cbkey}}
+              {% endif %}
           </td>
           <td>
-            <a href="{{codebase['display_repository']}}">{{codebase['display_repository']}}</a>
+              {% if codebase['display_repository'] %}
+                <a href="{{codebase['display_repository']}}">{{codebase['display_repository']}}</a>
+              {% else %}
+                <a href="{{codebase['repository']}}">{{codebase['repository']}}</a>
+              {% endif %}
           </td>
           <td class="txt-align-right">
 

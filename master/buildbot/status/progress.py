@@ -106,21 +106,6 @@ class StepProgress:
         # steps, this would probably be better than the text-percentage
         # scheme currently implemented.
 
-        percentages = []
-        for metric, value in self.progress.items():
-            expectation = self.expectations[metric]
-            if value != None and expectation != None:
-                p = 1.0 * value / expectation
-                percentages.append(p)
-        if percentages:
-            avg = reduce(lambda x,y: x+y, percentages) / len(percentages)
-            if avg > 1.0:
-                # overdue
-                avg = 1.0
-            if avg < 0.0:
-                avg = 0.0
-        if percentages and self.expectedTime != None:
-            return self.expectedTime - (avg * self.expectedTime)
         if self.expectedTime is not None:
             # fall back to pure time
             return self.expectedTime - (util.now() - self.startTime)
