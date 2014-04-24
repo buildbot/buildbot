@@ -503,7 +503,11 @@ class Build(properties.PropertiesMixin):
         elif self.result == RETRY:
             text = ["Build Caught Exception, Will Retry"]
         else:
-            text = ["Build Finished Successfully"]
+            reusedOldBuild = self.getProperty("reusedOldBuild", False)
+            if reusedOldBuild:
+                text = ["Successful Build Found (did not rebuild)"]
+            else:
+                text = ["Build Finished Successfully"]
         return self.buildFinished(text, self.result)
 
     def buildException(self, why):

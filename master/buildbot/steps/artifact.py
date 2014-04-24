@@ -81,8 +81,10 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
                 self.addURL(url['text'], url['path'])
             # we are not building but reusing a previous build
             reuse = yield self.master.db.buildrequests.reusePreviousBuild(self.build.requests, prevBuildRequest['brid'])
+            self.step_status.setText(["Found previous successful build."])
             self.step_status.stepFinished(SUCCESS)
             self.build.result = SUCCESS
+            self.build.setProperty("reusedOldBuild", True)
             self.build.allStepsDone()
             return
 
@@ -91,6 +93,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
         self.step_status.setText(["Running build (previous sucessful build not found)."])
         self.finished(SUCCESS)
         return
+
 
 class CheckArtifactExists(ShellCommand):
     name = "Check if Artifact Exists"
@@ -142,6 +145,7 @@ class CheckArtifactExists(ShellCommand):
                 return
             else:
                 self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
+                self.build.setProperty("reusedOldBuild", True)
 
             if self.stopBuild:
                 # update buildrequest (artifactbrid) with self.artifactBuildrequest
