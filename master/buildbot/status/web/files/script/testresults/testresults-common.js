@@ -1,188 +1,171 @@
-define(['jquery'], function ($) {
+define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
 
     "use strict";
- 
-	$(document).ready(function(){			
 
-    		$("#filterinput").val("");
-			
-			var checkboxesList = $('#CheckBoxesList input');
-			checkboxesList.prop('checked', true);
+    var oTable = undefined;
+    var th = undefined;
 
-			//console.log($('.check-boxes-list input'))
-			var th = $('.table-holder');
+    var testResults = {
+        init: function () {
 
-			//  sort failues and ignored first
-			
-			// insert one input field for all tables
-			$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
-			    var settings = $.fn.dataTableSettings;
-			     
-			    for ( var i=0 ; i<settings.length ; i++ ) {
-			      settings[i].oInstance.fnFilter( sInput, iColumn, bRegex, bSmart);
-			    }
+            th = $('.table-holder');
+            testResults._dataTablesInit();
+            testResults._parseTimes();
+            testResults._setupFilterButtons();
 
-			    var dv = $('.dataTables_empty').closest(th)
-				$(dv).hide();    
-				
-			};
+            var checkboxesList = $('#CheckBoxesList').find('input');
+            checkboxesList.click(function () {
+                testResults._filterCheckboxes();
+            });
+            testResults._filterCheckboxes();
 
-			jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function (oSettings) {
-			    var _that = this;
-			  
-			    this.each(function (i) {
-			        $.fn.dataTableExt.iApiIndex = i;
-			        var $this = this;
-			        var anControl = $('input', _that.fnSettings().aanFeatures.f);
-			        anControl.unbind('keyup').bind('keypress', function (e) {
-			            if (e.which == 13) {
-			                $.fn.dataTableExt.iApiIndex = i;
-			                _that.fnFilter(anControl.val());
-			            }
-			        });
-			        return this;
-			    });
-			    return this;
-			};
+            setTimeout(testResults._addFailureButtons, 100);
+        },
+        _dataTablesInit: function () {
+            //Filter tables based on checkboxes??!?!?! TODO
+            $.fn.dataTableExt.oApi.fnFilterAll = function (oSettings, sInput, iColumn, bRegex, bSmart) {
+                var settings = $.fn.dataTableSettings;
 
-			//console.log(colList)
-			var oTable = $('.tablesorter-log-js').dataTable({
-				"asSorting": false,
-				"bPaginate": false,
-				"bFilter": true,
-				"bSort": false,
-				"bInfo": false,
-				"bAutoWidth": false
-			});
+                for (var i = 0; i < settings.length; i++) {
+                    settings[i].oInstance.fnFilter(sInput, iColumn, bRegex, bSmart);
+                }
 
-			/* Add event listeners to the two range filtering inputs */
-			
-			function checkFilterInput() {
-				var iFields = $('#CheckBoxesList input:checked');
-				
-				th.show();
-				var checkString = []
-				
-				iFields.each(function(i){
-					checkString.push('(' + $(this).val() + ')');
-				});
-				var changesstr = checkString.join("|");
-				
-				oTable.fnFilterAll(changesstr, 1, true);	
-					
-			}
-			checkFilterInput();	
+                var dv = $('.dataTables_empty').closest(th);
+                $(dv).hide();
+            };
 
-			checkboxesList.click(function(){
-				checkFilterInput();
-			});
-			
-			function inputVal(inputVal, num, bool) {
-				th.show(inputVal);
-				oTable.fnFilterAll(inputVal, num, bool);	
-			}
+            //Filter when return is hit
+            jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function() {
+                var _that = this;
 
-			// submit on return
-			$("#filterinput").keydown(function(event) {
-			// Filter on the column (the index) of this element
-			var e = (window.event) ? window.event : event;
-			if(e.keyCode == 13){
-			    inputVal(this.value);
-			}
-			
-			});
-			
-			$('#submitFilter').click(function(){
-				inputVal($("#filterinput").val());	
-			});
+                this.each(function (i) {
+                    $.fn.dataTableExt.iApiIndex = i;
+                    var anControl = $('input', _that.fnSettings().aanFeatures.f);
+                    anControl.unbind('keyup').bind('keypress', function (e) {
+                        if (e.which == 13) {
+                            $.fn.dataTableExt.iApiIndex = i;
+                            _that.fnFilter(anControl.val());
+                        }
+                    });
+                    return this;
+                });
+                return this;
+            };
 
-			// clear the input field
-			$('#clearFilter').click(function(){
-				location.reload();
-			});
+            //Setup all datatables
+            oTable = $('.tablesorter-log-js').dataTable({
+                "asSorting": false,
+                "bPaginate": false,
+                "bFilter": true,
+                "bSort": false,
+                "bInfo": false,
+                "bAutoWidth": false
+            });
+        },
+        _addFailureButtons: function () {
+            $('.failure-detail-cont', th).each(function () {
+                var $fdTxt = $('.failure-detail-txt', this);
+                $fdTxt.text($fdTxt.text().trim());
+                $(this).height($fdTxt.height() + 40);
 
-			// remove empty tds for rows with colspan
-			//$('.colspan-js').nextAll('td').remove();
+                if (!$fdTxt.is(':empty')) {
+                    $('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($fdTxt);
+                    if ($fdTxt.height() >= 130) {
+                        $('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($fdTxt);
+                    }
+                }
 
-			$('.failure-detail-cont', th).each(function(){	
+            });
 
-				var fdTxt = $('.failure-detail-txt', this);
-				$(this).height(fdTxt.height() + 40);
-				
-				if (!fdTxt.is(':empty')) {
-					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore(fdTxt);
-					if (fdTxt.height() >= 130) {
-						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore(fdTxt);	
-					}
-				}
-				
-			});		
+            // show content of exceptions in new window
+            $('.new-window').click(function (e) {
+                e.preventDefault();
+                var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
+                testResults._openNewWindow(newWinHtml);
+            });
 
-			function nWin(newWinHtml) {
+            // show more / hide
+            $('.height-toggle').click(function (e) {
+                e.preventDefault();
+                var $failDetail = $(this).parent().find($('.failure-detail-txt'));
+                var parentTd = $(this).parent().parent();
 
-			  	var w = window.open();
-			  	
-				var html = "<style>body {padding:0 0 0 15px;margin:0;"+
-				"font-family:'Courier New';font-size:12px;white-space:"+
-				" pre;overflow:auto;}</style>"+newWinHtml;
-				
-				$(w.document.body).html(html);
+                $failDetail.css({'max-height': 'none', 'height': ''});
 
-			}
+                if (!$(this).hasClass('expanded-js')) {
+                    $(this).addClass('expanded-js');
+                    $(this).text('Show less');
+                    $failDetail.css('height', '');
+                    parentTd.css('height', $failDetail.height() + 40);
+                } else {
+                    $(this).removeClass('expanded-js');
+                    $(this).text('Show more');
+                    $failDetail.css('max-height', 130);
+                    parentTd.css('height', 170);
+                }
+            });
+        },
+        _parseTimes: function () {
+            $.each($("[data-time]"), function (i, elem) {
+                var ms = parseFloat($(elem).attr("data-time")) * 1000.0;
+                var parsedTime = moment.utc(ms).format(" (HH:mm:ss)");
+                $(elem).append(parsedTime);
+            });
+        },
+        _filterCheckboxes: function () {
+            var iFields = $('#CheckBoxesList').find('input:checked'),
+                checkString = [];
+            th.show();
 
-			// show content of exceptions in new window
-			$('.new-window').click(function(e){
-				e.preventDefault();
-				var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
-				nWin(newWinHtml);
-			});
+            iFields.each(function () {
+                checkString.push('(' + $(this).val() + ')');
+            });
+            oTable.fnFilterAll(checkString.join("|"), 1, true);
+        },
+        _setupFilterButtons: function () {
+            // submit on return
+            var $filterInput = $("#filterinput");
+            var $submitButton = $('#submitFilter');
+            $filterInput.keydown(function (event) {
+                // Filter on the column (the index) of this element
+                var e = (window.event) ? window.event : event;
+                if (e.keyCode == 13) {
+                    testResults._filterTables(this.value);
+                }
+            });
 
-			// show more / hide
-			$('.height-toggle').click(function(e){
-				
-				e.preventDefault();
-				var fdtf = $(this).parent().find($('.failure-detail-txt'));
-				var parentTd = $(this).parent().parent();
+            $submitButton.click(function () {
+                testResults._filterTables($filterInput.val());
+            });
 
-				fdtf.css({'max-height':'none', 'height': ''});
-				
-				if (!$(this).hasClass('expanded-js')) {
-					$(this).addClass('expanded-js');
-					$(this).text('Show less');
-					fdtf.css('height','');
-					parentTd.css('height',fdtf.height() + 40);
-				} else {
-					$(this).removeClass('expanded-js');
-					$(this).text('Show more');
-					fdtf.css('max-height',130);
-					parentTd.css('height',170);
-				}
-			});
+            // clear the input field
+            $('#clearFilter').click(function () {
+                $filterInput.val("");
+                $submitButton.click();
+            });
+        },
+        _filterTables: function (inputVal, num, bool) {
+            th.show(inputVal);
+            oTable.fnFilterAll(inputVal, num, bool);
+        },
+        _openNewWindow: function (html) {
+            var w = window.open();
 
-			// url for back to builddetailpage
-			if (window.location.pathname.indexOf('steps') > 0) {
-				(function( $ ) {
-					var sourceUrl = window.location.pathname.split('/');
-					var decodedUriSearch = window.location.search;
+            html = "<style>body {padding:0 0 0 15px;margin:0;" +
+                "font-family:'Courier New';font-size:12px;white-space:" +
+                " pre;overflow:auto;}</style>" + html;
 
-					var decodedBuildDetailName = decodeURIComponent(sourceUrl.slice(4)[0]);
-					var decodedBuildDetailNumber = decodeURIComponent(sourceUrl.slice(6)[0])
+            $(w.document.body).html(html);
+        }
+    };
 
-					var url = [];
-					
-					$.each(sourceUrl, function(i,value){
-						if (i < 7) {
-							url.push(value)
-						}
-					});
-					
-					var urlJoined = url.join('/');
-					var urljoinedSearch = urlJoined + decodedUriSearch
-					
-					$('#btd').text(decodedBuildDetailName + ' #' + decodedBuildDetailNumber);
-					$('#btd').attr('href', urljoinedSearch);
+    $(document).ready(function () {
+        testResults.init();
 
-				})( jQuery );
-			}
-	});
+
+        // remove empty tds for rows with colspan
+        //$('.colspan-js').nextAll('td').remove();
+
+
+    });
 });
