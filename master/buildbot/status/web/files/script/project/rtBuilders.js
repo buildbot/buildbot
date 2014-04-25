@@ -42,9 +42,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "aTargets": [ 0 ],
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
-                        var urlParams = helpers.codebasesFromURL({});
-                        var paramsString = helpers.urlParamsToString(urlParams);
-                        return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url, builderParam: paramsString});
+                        return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url});
                     }
                 },
                 {
@@ -52,8 +50,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         var noJobs = false;
-                        if ((type.pendingBuilds === undefined || type.pendingBuilds == 0) &&
-                            (type.currentBuilds === undefined || type.currentBuilds == 0)) {
+                        if ((type.pendingBuilds === undefined || type.pendingBuilds === 0) &&
+                                (type.currentBuilds === undefined || type.currentBuilds === 0)) {
                             noJobs = true;
                         }
                         return mustache.render(builders, {
@@ -61,11 +59,12 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                             pendingBuilds: type.pendingBuilds,
                             currentBuilds: type.currentBuilds,
                             builderName: type.name,
-                            builder_url: type.url});
+                            builder_url: type.url
+                        });
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.currentBuilds != undefined) {
-                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));                            
+                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
                         }
                     }
                 },
@@ -88,10 +87,11 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "aTargets": [ 3 ],
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {showStatus: true, latestBuild: type.latestBuild});
-                    }, "fnCreatedCell": function (nTd, sData, oData) {
-                    var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
-                    $(nTd).removeClass().addClass(lb.results_text);
-                }
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
+                        var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
+                        $(nTd).removeClass().addClass(lb.results_text);
+                    }
                 },
                 {
                     "aTargets": [ 4 ],
