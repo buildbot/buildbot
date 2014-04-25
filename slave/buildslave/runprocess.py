@@ -355,7 +355,7 @@ class RunProcess:
             self.environ = newenv
         else:  # not environ
             self.environ = os.environ.copy()
-        self.initialStdin = initialStdin
+        self.initialStdin = to_str(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
