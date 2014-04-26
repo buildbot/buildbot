@@ -154,28 +154,31 @@ BuildStep
         The deferred will errback if the step encounters an exception, including an exception on the slave side (or if the slave goes away altogether).
         Normal build/test failures will *not* cause an errback.
 
+    .. py:method:: run()
+
+        :returns: result via Deferred
+
+        Execute the step.
+        When this method returns (or when the Deferred it returns fires), the step is complete.
+        The method's return value must be an integer, giving the result of the step -- a constant from :mod:`buildbot.status.results`.
+        If the method raises an exception or its Deferred fires with failure, then the step will be completed with an EXCEPTION result.
+        Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
+
+        Subclasses should override this method.
+        Do *not* call :py:meth:`finished` or :py:meth:`failed` from this method.
+
     .. py:method:: start()
 
         :returns: ``None`` or :data:`~buildbot.status.results.SKIPPED`,
             optionally via a Deferred.
 
         Begin the step.
-        Subclasses should override this method to do local processing, fire off remote commands, etc.
-        The parent method raises :exc:`NotImplementedError`.
+        BuildSteps written before Buildbot-0.9.0 often override this method instead of :py:meth:`run`, but this approach is deprecated.
 
-        When the step is done, it should call :meth:`finished`, with a result -- a constant from :mod:`buildbot.status.results`.
-        The result will be handed off to the :class:`~buildbot.process.build.Build`.
+        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.status.results`.
+        The result will be handed off to the :py:class:`~buildbot.process.build.Build`.
 
         If the step encounters an exception, it should call :meth:`failed` with a Failure object.
-        This method automatically fails the whole build with an exception.
-        A common idiom is to add :meth:`failed` as an errback on a Deferred::
-
-            cmd = RemoteCommand(args)
-            d = self.runCommand(cmd)
-            def suceed(_):
-                self.finished(results.SUCCESS)
-            d.addCallback(succeed)
-            d.addErrback(self.failed)
 
         If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.status.results.SKIPPED`.
         In this case, it is not necessary to call :meth:`finished` directly.
@@ -186,6 +189,7 @@ BuildStep
 
         A call to this method indicates that the step is finished and the build should analyze the results and perhaps proceed to the next step.
         The step should not perform any additional processing after calling this method.
+        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: failed(failure)
 
@@ -195,6 +199,7 @@ BuildStep
 
         This method handles :exc:`BuildStepFailed` specially, by calling ``finished(FAILURE)``.
         This provides subclasses with a shortcut to stop execution of a step by raising this failure in a context where :meth:`failed` will catch it.
+        This method must only be called from the (deprecated) :py:meth:`start` method.
 
     .. py:method:: interrupt(reason)
 
@@ -228,6 +233,30 @@ BuildStep
             Be careful not to assume that the step has been started in this method.
             In relatively rare circumstances, steps are described before they have started.
             Ideally, unit tests should be used to ensure that this method is resilient.
+
+    Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
+    Note that statistics are not preserved after a build is complete.
+
+    .. py:method:: hasStatistic(stat)
+
+        :param string stat: name of the statistic
+        :returns: True if the statistic exists on this step
+
+    .. py:method:: getStatistic(stat, default=None)
+
+        :param string stat: name of the statistic
+        :param default: default value if the statistic does not exist
+        :returns: value of the statistic, or the default value
+
+    .. py:method:: getStatistics()
+
+        :returns: a dictionary of all statistics for this step
+
+    .. py:method:: setStatistic(stat, value)
+
+        :param string stat: name of the statistic
+        :param value: value to assign to the statistic
+        :returns: value of the statistic
 
     Build steps support progress metrics - values that increase roughly linearly during the execution of the step, and can thus be used to calculate an expected completion time for a running step.
     A metric may be a count of lines logged, tests executed, or files compiled.
@@ -279,8 +308,12 @@ BuildStep
 
         Get the name of the buildslave assigned to this step.
 
+    Most steps exist to run commands.
+    While the details of exactly how those commands are constructed are left to subclasses, the execution of those commands comes down to this method:
+
     .. py:method:: runCommand(command)
 
+        :param command: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :returns: Deferred
 
         This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.buildstep.RemoteCommand.run`.
