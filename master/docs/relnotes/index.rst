@@ -155,6 +155,8 @@ Features
 
 * A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
 
+* Buildbot is now compatible with SQLAlchemy 0.8 and higher, using the newly-released SQLAlchemy-Migrate.
+
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~
 
