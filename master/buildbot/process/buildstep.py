@@ -217,11 +217,6 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
-    def setStateStrings(self, strings):
-        self._step_status.old_setText(strings)
-        self._step_status.old_setText2(strings)
-        return defer.succeed(None)
-
     def getCurrentSummary(self):
         return u'running'
 
