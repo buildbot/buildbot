@@ -412,6 +412,7 @@ BuildStep
 
         Update the state strings associated with this step.
         This completely replaces any previously-set state strings.
+        This method replaces ``self.step_status.setText`` and ``self.step_status.setText2`` in new-style steps.
 
 LoggingBuildStep
 ----------------
@@ -493,6 +494,8 @@ CommandMixin
 The :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand` method can run a :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance, but it's no help in building that object or interpreting the results afterward.
 This mixin class adds some useful methods for running commands.
 
+This class can only be used in new-style steps.
+
 .. py:class:: buildbot.process.buildstep.CommandMixin
 
     Some remote commands are simple enough that they can boil down to a method call.
@@ -543,6 +546,8 @@ ShellMixin
 
 Most Buildbot steps run shell commands on the slave, and Buildbot has an impressive array of configuration parameters to control that execution.
 The ``ShellMixin`` mixin provides the tools to make running shell commands easy and flexible.
+
+This class can only be used in new-style steps.
 
 .. py:class:: buildbot.process.buildstep.ShellMixin
 
