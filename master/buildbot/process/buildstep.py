@@ -39,6 +39,7 @@ from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
+from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.util.eventual import eventually
 
@@ -220,6 +221,32 @@ class BuildStep(object, properties.PropertiesMixin):
         self._step_status.old_setText(strings)
         self._step_status.old_setText2(strings)
         return defer.succeed(None)
+
+    def getCurrentSummary(self):
+        return u'running'
+
+    def getResultSummary(self):
+        return {}
+
+    @debounce.method(wait=1)
+    @defer.inlineCallbacks
+    def updateSummary(self):
+        assert self.isNewStyle(), "updateSummary is a new-style step method"
+        if self._step_status.isFinished():
+            resultSummary = yield self.getResultSummary()
+            stepResult = resultSummary.get('step', u'finished')
+            assert isinstance(stepResult, unicode), \
+                "step result must be unicode"
+            self._step_status.setText([stepResult])
+            buildResult = resultSummary.get('build', None)
+            assert buildResult is None or isinstance(buildResult, unicode), \
+                "build result must be unicode"
+            self._step_status.setText2([buildResult] if buildResult else [])
+        else:
+            stepSummary = yield self.getCurrentSummary()
+            assert isinstance(stepSummary, unicode), \
+                "step summary must be unicode"
+            self._step_status.setText([stepSummary])
 
     @defer.inlineCallbacks
     def startStep(self, remote):
