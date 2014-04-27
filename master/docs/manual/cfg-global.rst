@@ -75,13 +75,6 @@ MySQL defaults to the MyISAM storage engine, but this can be overridden with the
 Note that, because of InnoDB's extremely short key length limitations, it cannot be used to run Buildbot.
 See http://bugs.mysql.com/bug.php?id=4541 for more information.
 
-Buildbot uses temporary tables internally to manage large transactions.
-
-MySQL has trouble doing replication with temporary tables, so if you are using a replicated MySQL installation, you may need to handle this situation carefully.
-The MySQL documentation (http://dev.mysql.com/doc/refman/5.5/en/replication-features-temptables.html) recommends using ``--replicate-wild-ignore-table`` to ignore temporary
-tables that should not be replicated.
-All Buildbot temporary tables begin with ``bbtmp_``, so an option such as ``--replicate-wild-ignore-table=bbtmp_.*`` may help.
-
 .. index:: Postgres
 
 Postgres

@@ -562,8 +562,11 @@ class Git(Source):
         return d
 
     def applyPatch(self, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                          initialStdin=patch[1])
+        d = self._dovccmd(['update-index', '--refresh'])
+
+        def applyAlready(res):
+            return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
+        d.addCallback(applyAlready)
         return d
 
     def _sourcedirIsUpdatable(self):

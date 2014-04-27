@@ -98,13 +98,13 @@ Jinja2: http://jinja.pocoo.org/
 
 SQLAlchemy: http://www.sqlalchemy.org/
 
-  Buildbot requires SQLAlchemy 0.6.0 or higher. SQLAlchemy allows Buildbot to
-  build database schemas and queries for a wide variety of database systems.
+  Buildbot requires SQLAlchemy 0.6.0 or higher.
+  SQLAlchemy allows Buildbot to build database schemas and queries for a wide variety of database systems.
 
 SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
 
-  Buildbot requires one of the following SQLAlchemy-Migrate versions: 0.7.1 or 0.7.2.
-  Sadly, Migrate's inter-version compatibility is not good, so other versions - newer or older - are unlikely to work correctly.
+  Buildbot requires one of the following SQLAlchemy-Migrate versions: 0.7.1, 0.7.2 and 0.9.
+  SQLAlchemy-Migrate-0.9 is required for compatibility with SQLAlchemy versions 0.8 and above.
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to version.
 
 Python-Dateutil: http://labix.org/python-dateutil
