@@ -129,10 +129,10 @@ class Git(Source):
         
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
-        if isinstance(self.mode, str):
+        if isinstance(self.mode, basestring):
             if self.mode not in ['incremental', 'full']:
                 bbconfig.error("Git: mode must be 'incremental' or 'full'.")
-            if isinstance(self.method, str):
+            if isinstance(self.method, basestring):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
