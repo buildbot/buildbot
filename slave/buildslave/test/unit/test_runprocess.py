@@ -38,6 +38,10 @@ from buildslave.test.util.misc import BasedirMixin
 from buildslave.test.util.misc import nl
 
 
+def catCommand():
+    return [sys.executable, '-c', 'import sys; sys.stdout.write(sys.stdin.read())']
+
+
 def stdoutCommand(output):
     return [sys.executable, '-c', 'import sys; sys.stdout.write("%s\\n")' % output]
 
@@ -199,6 +203,18 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failUnless({'stdout': exp} in b.updates, b.show())
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
+    def testInitialStdinUnicode(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, catCommand(), self.basedir, initialStdin=u'hello')
+
+        d = s.start()
+
+        def check(ign):
+            self.failUnless({'stdout': nl('hello')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
