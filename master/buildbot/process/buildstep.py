@@ -51,6 +51,7 @@ from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
+from buildbot.util import debounce
 from buildbot.util import flatten
 
 
@@ -295,6 +296,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.master = None
         self.statistics = {}
         self.logs = {}
+        self._running = False
 
         self._start_unhandled_deferreds = None
 
@@ -351,13 +353,34 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.progress:
             self.progress.setProgress(metric, value)
 
+    def getCurrentSummary(self):
+        return u'running'
+
+    def getResultSummary(self):
+        return {}
+
+    @debounce.method(wait=1)
     @defer.inlineCallbacks
-    def setStateStrings(self, strings):
-        yield self.master.data.updates.setStepStateStrings(self.stepid, map(unicode, strings))
-        # call to the status API for now
-        self.step_status.old_setText(strings)
-        self.step_status.old_setText2(strings)
-        defer.returnValue(None)
+    def updateSummary(self):
+        if not self._running:
+            resultSummary = yield self.getResultSummary()
+            stepResult = resultSummary.get('step', u'finished')
+            assert isinstance(stepResult, unicode), \
+                "step result must be unicode"
+            yield self.master.data.updates.setStepStateStrings(self.stepid,
+                                                               [stepResult])
+            buildResult = resultSummary.get('build', None)
+            assert buildResult is None or isinstance(buildResult, unicode), \
+                "build result must be unicode"
+            self.step_status.setText([stepResult])
+            self.step_status.setText2([buildResult] if buildResult else [])
+        else:
+            stepSummary = yield self.getCurrentSummary()
+            assert isinstance(stepSummary, unicode), \
+                "step summary must be unicode"
+            yield self.master.data.updates.setStepStateStrings(self.stepid,
+                                                               [stepSummary])
+            self.step_status.setText([stepSummary])
 
     @defer.inlineCallbacks
     def startStep(self, remote):
@@ -419,13 +442,16 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield defer.gatherResults(dl)
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
-            yield self.setStateStrings(self.describe(False))
+            self.updateSummary()
 
             # run -- or skip -- the step
             if doStep:
-                results = yield self.run()
+                try:
+                    self._running = True
+                    results = yield self.run()
+                finally:
+                    self._running = False
             else:
-                yield self.setStateStrings(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
                 results = SKIPPED
 
@@ -437,8 +463,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             # fall through to the end
 
         except error.ConnectionLost:
-            self.setStateStrings(
-                self.describe(True) + ["exception", "slave", "lost"])
             results = RETRY
 
         except Exception:
@@ -446,7 +470,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             log.err(why, "BuildStep.failed; traceback follows")
             yield self.addLogWithFailure(why)
 
-            yield self.setStateStrings([self.name, "exception"])
             results = EXCEPTION
 
         if self.stopped and results != RETRY:
@@ -456,15 +479,13 @@ class BuildStep(results.ResultComputingConfigMixin,
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            if self.rendered:
-                descr = self.describe(True)
-            else:  # we haven't rendered yet. Don't bother
-                descr = []
-            if results == CANCELLED:
-                yield self.setStateStrings(descr + ["cancelled"])
-            else:
+            if results != CANCELLED:
                 results = EXCEPTION
-                yield self.setStateStrings(descr + ["interrupted"])
+
+        # update the summary one last time, make sure that completes,
+        # and then don't update it any more.
+        self.updateSummary()
+        yield self.updateSummary.stop()
 
         if self.progress:
             self.progress.finish()
@@ -538,7 +559,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
             results = yield self.start()
             if results == SKIPPED:
-                yield self.setStateStrings(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
             else:
                 results = yield self._start_deferred
@@ -546,6 +566,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             self._start_deferred = None
             unhandled = self._start_unhandled_deferreds
             self._start_unhandled_deferreds = None
+            self.updateSummary()
 
         # Wait for any possibly-unhandled deferreds.  If any fail, change the
         # result to EXCEPTION and log.
@@ -664,7 +685,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
             yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))
         except Exception:
-            print "oups"
             log.err(Failure(), "error while formatting exceptions")
 
     def addLogWithException(self, why, logprefix=""):

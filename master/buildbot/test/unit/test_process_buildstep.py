@@ -23,6 +23,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakebuild
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import slave
 from buildbot.test.fake.remotecommand import Expect
@@ -33,6 +34,7 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -339,6 +341,58 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
 
 class TestLoggingBuildStep(config.ConfigErrorsMixin, unittest.TestCase):
+
+    def setup_summary_test(self):
+        self.clock = task.Clock()
+        self.patch(NewStyleStep, 'getCurrentSummary',
+                   lambda self: defer.succeed(u'C'))
+        self.patch(NewStyleStep, 'getResultSummary',
+                   lambda self: defer.succeed({'step': u'CS', 'build': u'CB'}))
+        step = NewStyleStep()
+        step.updateSummary._reactor = self.clock
+        step.master = fakemaster.make_master(testcase=self,
+                                             wantData=True, wantDb=True)
+        step.stepid = 13
+        step.step_status = mock.Mock()
+        return step
+
+    def test_updateSummary_running(self):
+        step = self.setup_summary_test()
+        step._running = True
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(step.master.data.updates.stepStateStrings[13],
+                         [u'C'])
+        step.step_status.setText.assert_called_with([u'C'])
+
+    def test_updateSummary_running_not_unicode(self):
+        step = self.setup_summary_test()
+        step.getCurrentSummary = lambda: 'bytestring'
+        step._running = True
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
+    def test_updateSummary_finished(self):
+        step = self.setup_summary_test()
+        step._running = False
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(step.master.data.updates.stepStateStrings[13],
+                         [u'CS'])
+        step.step_status.setText.assert_called_with([u'CS'])
+        step.step_status.setText2.assert_called_with([u'CB'])
+
+    def test_updateSummary_finished_empty_dict(self):
+        step = self.setup_summary_test()
+        step.getResultSummary = lambda: {}
+        step._running = False
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(step.master.data.updates.stepStateStrings[13],
+                         [u'finished'])
+        step.step_status.setText.assert_called_with([u'finished'])
+        step.step_status.setText2.assert_called_with([])
 
     def makeRemoteCommand(self, rc, stdout, stderr=''):
         cmd = fakeremotecommand.FakeRemoteCommand('cmd', {})

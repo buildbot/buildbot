@@ -72,6 +72,7 @@ class Trigger(BuildStep):
         self.running = False
         self.ended = False
         self.brids = []
+        self.triggeredNames = None
         BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
@@ -81,7 +82,6 @@ class Trigger(BuildStep):
         # if they were already claimed, stop the associated builds via data api
         # then the big deferredlist will automatically be called
         if self.running and not self.ended:
-            self.setStateStrings(["interrupted"])
             self.ended = True
 
     # Create the properties that are used for the trigger
@@ -174,7 +174,6 @@ class Trigger(BuildStep):
         # Get all triggerable schedulers and check if there are invalid schedules
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
         if invalid_schedulers:
-            yield self.setStateStrings(['not valid scheduler:'] + invalid_schedulers)
             defer.returnValue(EXCEPTION)
 
         self.running = True
@@ -184,7 +183,7 @@ class Trigger(BuildStep):
         ss_for_trigger = self.prepareSourcestampListForTrigger()
 
         dl = []
-        triggered_names = []
+        triggeredNames = []
         results = SUCCESS
         for sch in triggered_schedulers:
             idsDeferred, resultsDeferred = sch.trigger(
@@ -207,10 +206,10 @@ class Trigger(BuildStep):
                 url = self.master.status.getURLForBuildrequest(brid)
                 yield self.addURL("%s #%d" % (sch.name, brid), url)
             dl.append(resultsDeferred)
-            triggered_names.append(sch.name)
+            triggeredNames.append(sch.name)
             if self.ended:
                 defer.returnValue(CANCELLED)
-        yield self.setStateStrings(['triggered'] + triggered_names)
+        self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
@@ -226,3 +225,11 @@ class Trigger(BuildStep):
                              '(ignored) while invoking Triggerable schedulers:')
 
         defer.returnValue(results)
+
+    def getResultSummary(self):
+        return {'step': self.getCurrentSummary()} if self.triggeredNames else {}
+
+    def getCurrentSummary(self):
+        if not self.triggeredNames:
+            return u'running'
+        return u'triggered %s' % (u', '.join(self.triggeredNames))

@@ -48,6 +48,7 @@ class FakeUpdates(object):
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
         self.claimedBuildRequests = set([])
+        self.stepStateStrings = {}  # { stepid : [strings] }
 
     # extra assertions
 
@@ -301,6 +302,7 @@ class FakeUpdates(object):
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'state_strings', state_strings,
                               validation.ListValidator(validation.StringValidator()))
+        self.stepStateStrings[stepid] = state_strings
         return defer.succeed(None)
 
     def finishStep(self, stepid, results):

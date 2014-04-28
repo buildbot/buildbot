@@ -78,17 +78,14 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def runShellSequence(self, commands):
         terminate = False
         if commands is None:
-            yield self.setStateStrings(["commands == None"])
             defer.returnValue(results.EXCEPTION)
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
-                yield self.setStateStrings([str(arg), "not", "ShellArg"])
                 defer.returnValue(results.EXCEPTION)
             try:
                 arg.validateAttributes()
             except config.ConfigErrors:
-                yield self.setStateStrings([arg.command, "invalid", "params"])
                 defer.returnValue(results.EXCEPTION)
 
             # handle the command from the arg
@@ -106,7 +103,6 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
                 arg, cmd.results(), overall_result)
             if terminate:
                 break
-        yield self.setStateStrings(self.getFinalState())
         defer.returnValue(overall_result)
 
     def run(self):
