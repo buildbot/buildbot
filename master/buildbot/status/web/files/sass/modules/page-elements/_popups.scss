@@ -43,6 +43,32 @@
             margin:13px 0 8px;
         }
     }
+    &.green {
+        @include text-shadow(0 -1px 0 #173E3B);
+        color:#fff;        
+        @include bgimage(linear-gradient(top, rgba(35, 123, 116, 0.91) 0%,rgba(27, 96, 91, 0.91) 100%));
+        background-color: transparent;
+        .close-btn:after {
+            color:#FFF;
+            @include text-shadow(0 -1px 0 #173E3B);
+        }
+        h2 {
+            margin-bottom: 0;
+            &:before {
+                @include bgimage(linear-gradient(top, rgba(204, 238, 235, 0.91) 0%, rgba(118, 152, 149, 0.91) 100%));
+                @include text-shadow(none);
+                color:rgba(44, 77, 74, 0.91);                
+                @include box-shadow(0 -1px 0 #173E3B);
+                content:"i";                
+                @include border-radius( 15px);
+                padding: 2px 11px;
+                font-weight: bold;
+                font-size: 19px;                
+                font-family: Arial;
+                margin-right: 12px;
+            }
+        }
+    }
 
 }
 

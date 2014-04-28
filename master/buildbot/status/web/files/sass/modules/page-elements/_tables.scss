@@ -12,6 +12,7 @@
 	border-radius: 4px;
 	@include box-shadow(1px 0px 4px rgba(0, 0, 0, 0.6) inset);	
 	margin-top:2px;
+	margin-bottom:10px;
 	&.build-detail-progress {
 		width: 40%;
 		margin-top: 10px;
