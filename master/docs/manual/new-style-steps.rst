@@ -137,7 +137,10 @@ Removed Methods
 +++++++++++++++
 
 The ``self.step_status.setText`` and ``setText2`` methods have been removed.
-Replace them with asynchronous calls to :py:class:`buildbot.process.buildstep.BuildStep.setStateStrings`.
+Similarly, the ``_describe`` and ``describe`` methods are not used in new-style steps.
+Steps no longer set their status directly.
+Instead, call :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary` whenever the status may have changed.
+This method will call :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` or :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` as appropriate and update displays of the step's status.
 
 Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects.
 Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.

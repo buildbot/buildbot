@@ -218,7 +218,37 @@ BuildStep
 
         If false, then the step is running.  If true, the step is not running, or has been interrupted.
 
-    This method provides a convenient way to summarize the status of the step for status displays:
+    A step can indicate its up-to-the-moment status using a short summary string.
+    These methods allow step subclasses to produce such summaries.
+
+    .. py:method:: updateSummary()
+
+        Update the summary, calling :py:meth:`getCurrentSummary` or :py:meth:`getResultSummary` as appropriate.
+        New-style build steps should call this method any time the summary may have changed.
+        This method is debounced, so even calling it for every log line is acceptable.
+
+    .. py:method:: getCurrentSummary()
+
+        :returns: unicode, optionally via Deferred
+
+        Returns a short string summarizing the step's current status.
+        This method is only called while the step is running.
+
+        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
+
+    .. py:method:: getResultSummary()
+
+        :returns: dictionary, optionally via Deferred
+
+        Returns a dictionary containing status information.
+        The dictionary can have keys ``step`` and ``build``, each with unicode values.
+        The ``step`` key gives a summary for display with the step, while the ``build`` key gives a summary for display with the entire build.
+        The latter should be used sparingly, and include only information that the user would find relevant for the entire build, such as a number of test failures.
+        Either or both keys can be omitted.
+
+        This method is only called while the step is finished.
+
+        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
 
     .. py:method:: describe(done=False)
 
@@ -233,6 +263,11 @@ BuildStep
             Be careful not to assume that the step has been started in this method.
             In relatively rare circumstances, steps are described before they have started.
             Ideally, unit tests should be used to ensure that this method is resilient.
+
+        .. note::
+
+            This method is not called for new-style steps.
+            Instead, override :py:meth:`getCurrentSummary` and :py:meth:`getResultSummary`.
 
     Build steps have statistics, a simple key/value store of data which can later be aggregated over all steps in a build.
     Note that statistics are not preserved after a build is complete.
@@ -370,15 +405,6 @@ BuildStep
         The named log need not have been added already: the observer will be connected when the log is added.
 
         See :ref:`Adding-LogObservers` for more information on log observers.
-
-    .. py:method:: setStateStrings(strings)
-
-        :param strings: a list of short strings
-        :returns: Deferred
-
-        Update the state strings associated with this step.
-        This completely replaces any previously-set state strings.
-        This method replaces ``self.step_status.setText`` and ``self.step_status.setText2`` in new-style steps.
 
 LoggingBuildStep
 ----------------
