@@ -49,7 +49,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "aTargets": [ 1 ],
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
-                        var noJobs = false;
+                        var noJobs = false;                        
+                        var showRunningBuilds = type.currentBuilds != ''? true:false;
+                        
                         if ((type.pendingBuilds === undefined || type.pendingBuilds === 0) &&
                                 (type.currentBuilds === undefined || type.currentBuilds === 0)) {
                             noJobs = true;
@@ -57,7 +59,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                         return mustache.render(builders, {
                             showNoJobs: noJobs,
                             pendingBuilds: type.pendingBuilds,
-                            currentBuilds: type.currentBuilds,
+                            currentBuilds:type.currentBuilds,
+                            'showRunningBuilds':showRunningBuilds,
                             builderName: type.name,
                             builder_url: type.url
                         });

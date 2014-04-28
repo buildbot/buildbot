@@ -11,8 +11,10 @@
 	</div>
 {{/progressBar}}
 
-{{#currentBuilds}}
+
+{{#showRunningBuilds}}
     <ul class="list current-job-js building">	    	    		
+    	{{#currentBuilds}}
 			<li>
 				<div class="builders-status-truncate"><a href="{{url.path}}">{{number}}</a>
 					{{#currentStep}}
@@ -41,9 +43,10 @@
                 {{/eta}}
 				
 			</li>						
+		{{/currentBuilds}}
 	</ul>	
-{{/currentBuilds}}
-
+{{/showRunningBuilds}}
+	
 {{#showNoJobs}}
 	<span class="small-txt">
 		No jobs

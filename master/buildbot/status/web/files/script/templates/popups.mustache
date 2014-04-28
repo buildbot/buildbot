@@ -150,14 +150,12 @@
 {{#showRunningBuilds}}
 		<h3>Running builds</h3>
 		<br>
+		<ul class="list current-job-js building">	    	    		    			
 		{{#runningBuilds}}
-    		<ul class="list current-job-js building">	    	    		    			
 				<li>
-					<a href="{{#url}}{{path}}{{/url}}">#{{number}}{{^number}}0{{/number}}</a>
-					
-						<a href="{{builder_url}}">{{builderFriendlyName}} </a> 
-						<span class="spin-icon animate-spin pull-bottom"></span>
-					
+					<a href="{{#url}}{{path}}{{/url}}">#{{number}}{{^number}}0{{/number}}</a>					
+						<a href="{{builder_url}}">{{builderFriendlyName}}</a> 
+						<span class="spin-icon animate-spin pull-bottom"></span>					
 					{{#eta}}
 						<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
 							<span class="time-txt-js time-txt"></span>
@@ -175,7 +173,6 @@
 						</div>
 	                {{/eta}}					
 				</li>									
-			</ul>	
 		{{/runningBuilds}}
-
+		</ul>	
 {{/showRunningBuilds}}
