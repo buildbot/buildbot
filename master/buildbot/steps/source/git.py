@@ -63,7 +63,7 @@ class Git(Source):
 
     """ Class for Git with all the smarts """
     name = 'git'
-    renderables = ["repourl", "reference", "branch", "codebase"]
+    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
@@ -128,15 +128,16 @@ class Git(Source):
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
 
-        if self.mode not in ['incremental', 'full']:
-            bbconfig.error("Git: mode must be 'incremental' or 'full'.")
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
-        if (self.mode == 'full' and
-                self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
-            bbconfig.error("Git: invalid method for mode 'full'.")
-        if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
-            bbconfig.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
+        if isinstance(self.mode, basestring):
+            if self.mode not in ['incremental', 'full']:
+                bbconfig.error("Git: mode must be 'incremental' or 'full'.")
+            if isinstance(self.method, basestring):
+                if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
+                    bbconfig.error("Git: invalid method for mode 'full'.")
+                if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
+                    bbconfig.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
