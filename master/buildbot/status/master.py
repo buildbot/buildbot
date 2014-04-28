@@ -280,7 +280,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         return self.botmaster.slaves.keys()
 
     def getSlave(self, slavename):
-        return self.botmaster.slaves[slavename].slave_status
+        if slavename in self.botmaster.slaves:
+            return self.botmaster.slaves[slavename].slave_status
+        else:
+            return None
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)

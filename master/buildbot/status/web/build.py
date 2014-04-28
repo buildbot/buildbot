@@ -179,10 +179,16 @@ class StatusResourceBuild(HtmlResource):
         all_got_revisions = b.getAllGotRevisions()
         cxt['got_revisions'] = all_got_revisions
 
-        slave_obj = status.getSlave(b.getSlavename())
-        cxt['slave_friendly_name'] = slave_obj.getFriendlyName()
         try:
-            cxt['slave_url'] = path_to_slave(req, slave_obj)
+            slave_obj = status.getSlave(b.getSlavename())
+
+            if slave_obj is not None:
+                cxt['slave_friendly_name'] = slave_obj.getFriendlyName()
+                cxt['slave_url'] = path_to_slave(req, slave_obj)
+            else:
+                cxt['slave_friendly_name'] = b.getSlavename()
+                cxt['slave_url'] = ""
+
         except KeyError:
             pass
 
