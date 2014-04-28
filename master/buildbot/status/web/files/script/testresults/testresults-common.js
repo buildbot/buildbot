@@ -2,32 +2,16 @@
 define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
 
     "use strict";
-
     var oTable,
         th,
-        testResults = {
-            init: function () {
-
-                th = $('.table-holder');
-                testResults._dataTablesInit();
-                testResults._parseTimes();
-                testResults._setupFilterButtons();
-
-                var checkboxesList = $('#CheckBoxesList').find('input');
-                checkboxesList.click(function () {
-                    testResults._filterCheckboxes();
-                });
-                testResults._filterCheckboxes();
-
-                setTimeout(testResults._addFailureButtons, 100);
-            },
-            _dataTablesInit: function () {
+        privateFunc = {
+            dataTablesInit: function () {
                 //Filter tables based on checkboxes
                 $.fn.dataTableExt.oApi.fnFilterAll = function (oSettings, sInput, iColumn, bRegex, bSmart) {
                     var settings = $.fn.dataTableSettings,
                         i;
 
-                    for (i = 0; i < settings.length; i++) {
+                    for (i = 0; i < settings.length; i += 1) {
                         settings[i].oInstance.fnFilter(sInput, iColumn, bRegex, bSmart);
                     }
 
@@ -36,15 +20,15 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
 
                 //Filter when return is hit
                 jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function () {
-                    var _that = this;
+                    var that = this;
 
                     this.each(function (i) {
                         $.fn.dataTableExt.iApiIndex = i;
-                        var anControl = $('input', _that.fnSettings().aanFeatures.f);
+                        var anControl = $('input', that.fnSettings().aanFeatures.f);
                         anControl.unbind('keyup').bind('keypress', function (e) {
                             if (e.which === 13) {
                                 $.fn.dataTableExt.iApiIndex = i;
-                                _that.fnFilter(anControl.val());
+                                that.fnFilter(anControl.val());
                             }
                         });
                         return this;
@@ -62,7 +46,7 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     "bAutoWidth": false
                 });
             },
-            _addFailureButtons: function () {
+            addFailureButtons: function () {
                 $('.failure-detail-cont', th).each(function () {
                     var $fdTxt = $('.failure-detail-txt', this);
                     $fdTxt.text($fdTxt.text().trim());
@@ -81,7 +65,7 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                 $('.new-window').click(function (e) {
                     e.preventDefault();
                     var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
-                    testResults._openNewWindow(newWinHtml);
+                    privateFunc.openNewWindow(newWinHtml);
                 });
 
                 // show more / hide
@@ -105,14 +89,14 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     }
                 });
             },
-            _parseTimes: function () {
+            parseTimes: function () {
                 $.each($("[data-time]"), function (i, elem) {
                     var ms = parseFloat($(elem).attr("data-time")) * 1000.0,
                         parsedTime = moment.utc(ms).format(" (HH:mm:ss)");
                     $(elem).append(parsedTime);
                 });
             },
-            _filterCheckboxes: function () {
+            filterCheckboxes: function () {
                 var iFields = $('#CheckBoxesList').find('input:checked'),
                     checkString = [];
                 th.show();
@@ -122,7 +106,7 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                 });
                 oTable.fnFilterAll(checkString.join("|"), 1, true);
             },
-            _setupFilterButtons: function () {
+            setupFilterButtons: function () {
                 // submit on return
                 var $filterInput = $("#filterinput"),
                     $submitButton = $('#submitFilter');
@@ -131,12 +115,12 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     // Filter on the column (the index) of this element
                     var e = window.event || event;
                     if (e.keyCode === 13) {
-                        testResults._filterTables(this.value);
+                        privateFunc.filterTables(this.value);
                     }
                 });
 
                 $submitButton.click(function () {
-                    testResults._filterTables($filterInput.val());
+                    privateFunc.filterTables($filterInput.val());
                 });
 
                 // clear the input field
@@ -145,11 +129,11 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     $submitButton.click();
                 });
             },
-            _filterTables: function (inputVal, num, bool) {
+            filterTables: function (inputVal, num, bool) {
                 th.show(inputVal);
                 oTable.fnFilterAll(inputVal, num, bool);
             },
-            _openNewWindow: function (html) {
+            openNewWindow: function (html) {
                 var w = window.open();
 
                 html = "<style>body {padding:0 0 0 15px;margin:0;" +
@@ -158,15 +142,28 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
 
                 $(w.document.body).html(html);
             }
+        },
+        publicFunc = {
+            init: function () {
+
+                th = $('.table-holder');
+                privateFunc.dataTablesInit();
+                privateFunc.parseTimes();
+                privateFunc.setupFilterButtons();
+
+                var checkboxesList = $('#CheckBoxesList').find('input');
+                checkboxesList.click(function () {
+                    privateFunc.filterCheckboxes();
+                });
+                privateFunc.filterCheckboxes();
+
+                setTimeout(privateFunc.addFailureButtons, 100);
+            }
         };
 
     $(document).ready(function () {
-        testResults.init();
-
-
-        // remove empty tds for rows with colspan
-        //$('.colspan-js').nextAll('td').remove();
-
-
+        publicFunc.init();
     });
+
+    return publicFunc;
 });
