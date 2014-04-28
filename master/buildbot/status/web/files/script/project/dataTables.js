@@ -131,10 +131,13 @@ define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function 
             //Add the ability to sort naturally
             jQuery.extend(jQuery.fn.dataTableExt.oSort, {
                 "natural-pre": function (a) {
-                    if (typeof a != 'string') {
-                        return $(a).text().trim();
+                    try {
+                        a = $(a).text().trim();
+                        return a;
                     }
-                    return a;
+                    catch(err) {
+                        return a;
+                    }
                 },
                 "natural-asc": function (a, b) {
                     return naturalSort.sort(a, b);

@@ -230,7 +230,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 var dataReturnPage = prevElem.attr('data-returnpage');            
 
 				var mustacheTmpl = '<h2 class="small-head">Your build will show up soon</h2>';		
-				var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmpl}));
+				var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true,popUpClass:'green'},{partial:mustacheTmpl}));
 				mustacheTmplShell.appendTo($('body'));
 				
                 var builder_name = $(this).prev().attr('data-b_name');				

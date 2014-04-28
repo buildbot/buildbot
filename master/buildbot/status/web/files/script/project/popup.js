@@ -202,7 +202,8 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 
 			});
 		}, externalContentPopup: function(thisEl) { // custom buildpopup on builder and builders
-			var popupTitle = thisEl.attr('data-popuptitle');
+			var popupTitle = '<h2 class="small-head">'+thisEl.attr('data-popuptitle')+'</h2>';
+			console.log(popupTitle)
 			var datab = thisEl.attr('data-b');
 			var dataindexb = thisEl.attr('data-indexb');
             var dataReturnPage = thisEl.attr('data-returnpage');
@@ -213,15 +214,14 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 			var preloader = $(mustacheTmpl);
 
 			var mustacheTmplTxt = '<h2 class="small-head">Your build will show up soon</h2>';		
-			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial:mustacheTmplTxt}));
+			var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter:true,popUpClass:'green'},{partial:mustacheTmplTxt}));
 			
-
             var body = $('body');
-			body.append(preloader);
-			//mustacheTmplShell.appendTo(body);
+			body.append(preloader);			
 			
-			var mib = popup.htmlModule (popupTitle);
-			mib.appendTo(body);
+			var mustacheTmplMib = $(Mustache.render(popups, {MoreInfoBoxOuter:true},{partial: popupTitle}));
+			
+			mustacheTmplMib.append($('<div id="content1"></div>')).appendTo(body);
 
             //get all branches
             var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
@@ -248,12 +248,12 @@ define(['helpers','libs/jquery.form','text!templates/popups.mustache', 'mustache
 					popup.validateForm(exContent);
 				}
 				
-				helpers.jCenter(mib).fadeIn('fast');
+				helpers.jCenter(mustacheTmplMib).fadeIn('fast');
 				$(window).resize(function() {
-					helpers.jCenter(mib);
+					helpers.jCenter(mustacheTmplMib);
 				});
 				// popup.customTabs();
-                helpers.closePopup(mib);
+                helpers.closePopup(mustacheTmplMib);
 
                 if (dataReturnPage !== undefined) {
                     exContent.find('form').ajaxForm({
