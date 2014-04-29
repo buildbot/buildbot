@@ -75,30 +75,34 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         url = self.getURL()
         self.setupStep(http.GET(url))
         self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nOK" % (url, ))
-        self.expectOutcome(result=SUCCESS, status_text=["Requested"])
+        self.expectLogfile('content', "OK")
+        self.expectOutcome(result=SUCCESS, status_text=["Status", "code:", '200'])
         return self.runStep()
 
     def test_404(self):
         url = self.getURL("404")
         self.setupStep(http.GET(url))
         self.expectLogfile('log', "URL: %s\n ------ Content ------\n404" % (url, ))
-        self.expectOutcome(result=FAILURE, status_text=["Requested"])
+        self.expectLogfile('content', "404")
+        self.expectOutcome(result=FAILURE, status_text=["Status", "code:", '404'])
         return self.runStep()
 
     def test_POST(self):
         url = self.getURL("POST")
+        content = "\n<html>\n" \
+                  "  <head><title>405 - Method Not Allowed</title></head>\n" \
+                  "  <body>\n    <h1>Method Not Allowed</h1>\n    <p>Your browser " \
+                  "approached me (at /POST) with the method \"POST\".  I only allow the " \
+                  "methods HEAD, GET here.</p>\n  </body>\n</html>\n"
         self.setupStep(http.POST(url))
-        self.expectLogfile('log', "URL: %s\n ------ Content ------\n\n<html>\n"
-                           "  <head><title>405 - Method Not Allowed</title></head>\n"
-                           "  <body>\n    <h1>Method Not Allowed</h1>\n    <p>Your browser "
-                           "approached me (at /POST) with the method \"POST\".  I only allow the "
-                           "methods HEAD, GET here.</p>\n  </body>\n</html>\n" % (url, ))
-        self.expectOutcome(result=FAILURE, status_text=["Requested"])
+        self.expectLogfile('log', "URL: %s\n ------ Content ------\n%s" % (url, content))
+        self.expectLogfile('content', content)
+        self.expectOutcome(result=FAILURE, status_text=["Status", "code:", '405'])
         return self.runStep()
 
     def test_header(self):
         url = self.getURL("header")
         self.setupStep(http.GET(url, headers={"X-Test": "True"}))
         self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nTrue" % (url, ))
-        self.expectOutcome(result=SUCCESS, status_text=["Requested"])
+        self.expectOutcome(result=SUCCESS, status_text=["Status", "code:", '200'])
         return self.runStep()
