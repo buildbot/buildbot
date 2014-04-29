@@ -176,7 +176,7 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(self.FakeBuildStep(hideStepIf=shouldHide,
                                           doStepIf=createException))
         self.expectOutcome(result=EXCEPTION,
-                status_text=['generic', 'exception'])
+                status_text=["'generic'", 'exception'])
         self.expectHidden(True)
 
         d = self.runStep()
@@ -245,7 +245,7 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
 
     def test_step_raising_exception_in_start(self):
         self.setupStep(FailingCustomStep(exception=ValueError))
-        self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
+        self.expectOutcome(result=EXCEPTION, status_text=["'generic'", "exception"])
         d = self.runStep()
         @d.addCallback
         def cb(_):

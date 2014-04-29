@@ -459,7 +459,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                                                      self.number))
             log.err()
 
-    def asBaseDict(self):
+    def asBaseDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
+
         result = {}
 
         # Constant
@@ -470,6 +472,10 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['blame'] = self.getResponsibleUsers()
         result['url'] = self.builder.status.getURLForThing(self)
         result['builder_url'] = self.builder.status.getURLForThing(self.builder)
+
+        if request is not None:
+            result['url']['path'] += getCodebasesArg(request)
+            result['builder_url'] += getCodebasesArg(request)
 
         # Transient
         result['times'] = self.getTimes()
@@ -485,7 +491,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return result
 
     def asDict(self, request=None):
-        result = self.asBaseDict()
+        result = self.asBaseDict(request)
 
         # Constant
         result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]

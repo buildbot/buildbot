@@ -495,16 +495,19 @@ class Build(properties.PropertiesMixin):
 
     def allStepsDone(self):
         if self.result == FAILURE:
-            text = ["failed"]
+            text = ["Build Failed"]
         elif self.result == WARNINGS:
-            text = ["warnings"]
+            text = ["Build Finished with Warnings"]
         elif self.result == EXCEPTION:
-            text = ["exception"]
+            text = ["Build Caught Exception"]
         elif self.result == RETRY:
-            text = ["retry"]
+            text = ["Build Caught Exception, Will Retry"]
         else:
-            text = ["build", "successful"]
-        text.extend(self.text)
+            reusedOldBuild = self.getProperty("reusedOldBuild", False)
+            if reusedOldBuild:
+                text = ["Successful Build Found (did not rebuild)"]
+            else:
+                text = ["Build Finished Successfully"]
         return self.buildFinished(text, self.result)
 
     def buildException(self, why):
@@ -513,7 +516,7 @@ class Build(properties.PropertiesMixin):
         # try to finish the build, but since we've already faced an exception,
         # this may not work well.
         try:
-            self.buildFinished(["build", "exception"], EXCEPTION)
+            self.buildFinished(["Build Caught Exception"], EXCEPTION)
         except:
             log.err(Failure(), 'while finishing a build with an exception')
 

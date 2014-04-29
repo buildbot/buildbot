@@ -149,6 +149,18 @@ def getCodebasesArg(request=None, codebases={}):
             codebases_arg += "%s=%s" % (key, ''.join(val))
     return codebases_arg
 
+
+def codebases_to_args(codebases):
+    codebases_arg = ''
+    for key, val in codebases.iteritems():
+        if len(codebases_arg) > 0:
+            codebases_arg += "&"
+        else:
+            codebases_arg += "?"
+        codebases_arg += "%s_branch=%s" % (key, ''.join(val))
+
+    return codebases_arg
+
 def path_to_codebases(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:

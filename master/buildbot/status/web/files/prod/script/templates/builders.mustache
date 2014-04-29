@@ -1,5 +1,5 @@
 {{#name}}
-	<a href="{{url}}?{{builderParam}}">{{friendly_name}}{{^friendly_name}}{{name}}{{/friendly_name}}</a>
+	<a href="{{url}}">{{friendly_name}}{{^friendly_name}}{{name}}{{/friendly_name}}</a>
 {{/name}}
 
 {{#progressBar}}
@@ -16,7 +16,7 @@
     <ul class="list current-job-js building">	    	    		
     	{{#currentBuilds}}
 			<li>
-				<div class="builders-status-truncate"><a href="{{builder_url}}/builds/{{number}}">{{number}}</a>
+				<div class="builders-status-truncate"><a href="{{url.path}}">{{number}}</a>
 					{{#currentStep}}
 						{{name}}
 					{{/currentStep}}

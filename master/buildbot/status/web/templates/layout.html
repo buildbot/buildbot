@@ -57,7 +57,7 @@
     {% set bodyId = '' %}
   {% endif %}
 
-   <body {{ bodyId }} class="interface katana-main" data-realTimeServer="" style="display:none;">
+   <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
    
     {% block header -%}
  
@@ -162,10 +162,14 @@
           -->
         </ul>
         
-          <div id="buildLoad" class="info-box green">
+        <div  title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
+        time to schedule new builds.  If the background color is green, Katana is under light load -- yellow means
+        moderate load and red is heavily loaded.  It is suggested to avoid scheduling new builds when the system is
+        under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip">
             <h4>Build Load</h4>
             <span>0</span>
-          </div>
+            </span>
+        </div>
         
         <div id="attentionBox" class="info-box red">
           <h4>Attention</h4>

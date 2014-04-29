@@ -690,7 +690,7 @@ class SingleProjectJsonResource(JsonResource):
 
         result['builders'] = []
         for b in self.getBuilders():
-            builder = yield b.asDict_async(codebases)
+            builder = yield b.asDict_async(codebases, request)
 
             #Get latest build
             builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
@@ -698,7 +698,7 @@ class SingleProjectJsonResource(JsonResource):
                                                    num_builds=1))
 
             if len(builds) > 0:
-                builder['latestBuild'] = builds[0].asBaseDict()
+                builder['latestBuild'] = builds[0].asBaseDict(request)
 
             result['builders'].append(builder)
 

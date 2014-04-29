@@ -465,7 +465,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
-                status_text=["setproperty", "exception"])
+                status_text=["'setproperty'", "exception"])
         d = self.runStep()
         d.addCallback(lambda _ :
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
