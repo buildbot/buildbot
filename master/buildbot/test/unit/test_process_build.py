@@ -367,7 +367,7 @@ class TestBuild(unittest.TestCase):
         self.assert_(b.currentStep is None)
         self.assertEqual(b.result, RETRY)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
-        self.build.build_status.setText.assert_called_with(["retry", "lost", "remote"])
+        self.build.build_status.setText.assert_called_with(['Build Caught Exception, Will Retry'])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
     def testStopBuildWaitingForStepLocks(self):
