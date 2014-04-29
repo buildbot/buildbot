@@ -53,7 +53,7 @@ ul.building {
 }
 
 .progressbar-overlay {
-	background: url("/images/animated-overlay.gif") repeat scroll 0 0 rgba(0, 0, 0, 0);
+	background: image_url("/images/animated-overlay.gif") repeat scroll 0 0 rgba(0, 0, 0, 0);
     height: 100%;
     opacity: 0.11;
 }

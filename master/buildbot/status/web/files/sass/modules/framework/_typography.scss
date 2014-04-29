@@ -9,7 +9,7 @@
 @include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot?cachebusting=1", "/../fonts/katana_icons/katana_icons.ttf?cachebusting=1"));
 @include font-face("pacifico", font-files("/../fonts/pacifico/pacifico-webfont.eot?cachebusting=2", "/../fonts/pacifico/pacifico-webfont.ttf?cachebusting=2"));
 @include font-face("leckerlione", font-files("/../fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6", "/../fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6"));
-
+   
  
 // Typography
 
@@ -137,7 +137,7 @@ div.welcome-txt {
 .spin-icon {
 	opacity:0.7;	
 	content: "";	 		
-	background-image: url("/images/sprites.png");
+	background-image: image_url("/images/sprites.png");
     background-position: 0 0;
     height: 13px;
     width: 13px;		    
@@ -146,7 +146,6 @@ div.welcome-txt {
     	margin-bottom: -2px;	
 	}
 }
-
 
  
 .building .spin-icon {
