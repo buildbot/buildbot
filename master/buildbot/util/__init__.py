@@ -251,7 +251,7 @@ def check_functional_environment(config):
         config.error("\n".join([
             "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
             "Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE' are either unset or set to a valid locale.",
-            ]))
+        ]))
 
 
 __all__ = [
