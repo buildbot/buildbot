@@ -1,188 +1,169 @@
-define(['jquery'], function ($) {
+/*global define, jQuery */
+define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
 
     "use strict";
- 
-	$(document).ready(function(){			
+    var oTable,
+        th,
+        privateFunc = {
+            dataTablesInit: function () {
+                //Filter tables based on checkboxes
+                $.fn.dataTableExt.oApi.fnFilterAll = function (oSettings, sInput, iColumn, bRegex, bSmart) {
+                    var settings = $.fn.dataTableSettings,
+                        i;
 
-    		$("#filterinput").val("");
-			
-			var checkboxesList = $('#CheckBoxesList input');
-			checkboxesList.prop('checked', true);
+                    for (i = 0; i < settings.length; i += 1) {
+                        settings[i].oInstance.fnFilter(sInput, iColumn, bRegex, bSmart);
+                    }
 
-			//console.log($('.check-boxes-list input'))
-			var th = $('.table-holder');
+                    $('.dataTables_empty').closest(th).hide();
+                };
 
-			//  sort failues and ignored first
-			
-			// insert one input field for all tables
-			$.fn.dataTableExt.oApi.fnFilterAll = function(oSettings, sInput, iColumn, bRegex, bSmart) {
-			    var settings = $.fn.dataTableSettings;
-			     
-			    for ( var i=0 ; i<settings.length ; i++ ) {
-			      settings[i].oInstance.fnFilter( sInput, iColumn, bRegex, bSmart);
-			    }
+                //Filter when return is hit
+                jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function () {
+                    var that = this;
 
-			    var dv = $('.dataTables_empty').closest(th)
-				$(dv).hide();    
-				
-			};
+                    this.each(function (i) {
+                        $.fn.dataTableExt.iApiIndex = i;
+                        var anControl = $('input', that.fnSettings().aanFeatures.f);
+                        anControl.unbind('keyup').bind('keypress', function (e) {
+                            if (e.which === 13) {
+                                $.fn.dataTableExt.iApiIndex = i;
+                                that.fnFilter(anControl.val());
+                            }
+                        });
+                        return this;
+                    });
+                    return this;
+                };
 
-			jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function (oSettings) {
-			    var _that = this;
-			  
-			    this.each(function (i) {
-			        $.fn.dataTableExt.iApiIndex = i;
-			        var $this = this;
-			        var anControl = $('input', _that.fnSettings().aanFeatures.f);
-			        anControl.unbind('keyup').bind('keypress', function (e) {
-			            if (e.which == 13) {
-			                $.fn.dataTableExt.iApiIndex = i;
-			                _that.fnFilter(anControl.val());
-			            }
-			        });
-			        return this;
-			    });
-			    return this;
-			};
+                //Setup all datatables
+                oTable = $('.tablesorter-log-js').dataTable({
+                    "asSorting": false,
+                    "bPaginate": false,
+                    "bFilter": true,
+                    "bSort": false,
+                    "bInfo": false,
+                    "bAutoWidth": false
+                });
+            },
+            addFailureButtons: function () {
+                $('.failure-detail-cont', th).each(function () {
+                    var $fdTxt = $('.failure-detail-txt', this);
+                    $fdTxt.text($fdTxt.text().trim());
+                    $(this).height($fdTxt.height() + 40);
 
-			//console.log(colList)
-			var oTable = $('.tablesorter-log-js').dataTable({
-				"asSorting": false,
-				"bPaginate": false,
-				"bFilter": true,
-				"bSort": false,
-				"bInfo": false,
-				"bAutoWidth": false
-			});
+                    if (!$fdTxt.is(':empty')) {
+                        $('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore($fdTxt);
+                        if ($fdTxt.height() >= 130) {
+                            $('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore($fdTxt);
+                        }
+                    }
 
-			/* Add event listeners to the two range filtering inputs */
-			
-			function checkFilterInput() {
-				var iFields = $('#CheckBoxesList input:checked');
-				
-				th.show();
-				var checkString = []
-				
-				iFields.each(function(i){
-					checkString.push('(' + $(this).val() + ')');
-				});
-				var changesstr = checkString.join("|");
-				
-				oTable.fnFilterAll(changesstr, 1, true);	
-					
-			}
-			checkFilterInput();	
+                });
 
-			checkboxesList.click(function(){
-				checkFilterInput();
-			});
-			
-			function inputVal(inputVal, num, bool) {
-				th.show(inputVal);
-				oTable.fnFilterAll(inputVal, num, bool);	
-			}
+                // show content of exceptions in new window
+                $('.new-window').click(function (e) {
+                    e.preventDefault();
+                    var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
+                    privateFunc.openNewWindow(newWinHtml);
+                });
 
-			// submit on return
-			$("#filterinput").keydown(function(event) {
-			// Filter on the column (the index) of this element
-			var e = (window.event) ? window.event : event;
-			if(e.keyCode == 13){
-			    inputVal(this.value);
-			}
-			
-			});
-			
-			$('#submitFilter').click(function(){
-				inputVal($("#filterinput").val());	
-			});
+                // show more / hide
+                $('.height-toggle').click(function (e) {
+                    e.preventDefault();
+                    var $failDetail = $(this).parent().find($('.failure-detail-txt')),
+                        parentTd = $(this).parent().parent();
 
-			// clear the input field
-			$('#clearFilter').click(function(){
-				location.reload();
-			});
+                    $failDetail.css({'max-height': 'none', 'height': ''});
 
-			// remove empty tds for rows with colspan
-			//$('.colspan-js').nextAll('td').remove();
+                    if (!$(this).hasClass('expanded-js')) {
+                        $(this).addClass('expanded-js');
+                        $(this).text('Show less');
+                        $failDetail.css('height', '');
+                        parentTd.css('height', $failDetail.height() + 40);
+                    } else {
+                        $(this).removeClass('expanded-js');
+                        $(this).text('Show more');
+                        $failDetail.css('max-height', 130);
+                        parentTd.css('height', 170);
+                    }
+                });
+            },
+            parseTimes: function () {
+                $.each($("[data-time]"), function (i, elem) {
+                    var ms = parseFloat($(elem).attr("data-time")) * 1000.0,
+                        parsedTime = moment.utc(ms).format(" (HH:mm:ss)");
+                    $(elem).append(parsedTime);
+                });
+            },
+            filterCheckboxes: function () {
+                var iFields = $('#CheckBoxesList').find('input:checked'),
+                    checkString = [];
+                th.show();
 
-			$('.failure-detail-cont', th).each(function(){	
+                iFields.each(function () {
+                    checkString.push('(' + $(this).val() + ')');
+                });
+                oTable.fnFilterAll(checkString.join("|"), 1, true);
+            },
+            setupFilterButtons: function () {
+                // submit on return
+                var $filterInput = $("#filterinput"),
+                    $submitButton = $('#submitFilter');
 
-				var fdTxt = $('.failure-detail-txt', this);
-				$(this).height(fdTxt.height() + 40);
-				
-				if (!fdTxt.is(':empty')) {
-					$('<a href="#" class="new-window var-3 grey-btn">Open new window</a>').insertBefore(fdTxt);
-					if (fdTxt.height() >= 130) {
-						$('<a class="height-toggle var-3 grey-btn" href="#">Show more</a>').insertBefore(fdTxt);	
-					}
-				}
-				
-			});		
+                $filterInput.keydown(function (event) {
+                    // Filter on the column (the index) of this element
+                    var e = window.event || event;
+                    if (e.keyCode === 13) {
+                        privateFunc.filterTables(this.value);
+                    }
+                });
 
-			function nWin(newWinHtml) {
+                $submitButton.click(function () {
+                    privateFunc.filterTables($filterInput.val());
+                });
 
-			  	var w = window.open();
-			  	
-				var html = "<style>body {padding:0 0 0 15px;margin:0;"+
-				"font-family:'Courier New';font-size:12px;white-space:"+
-				" pre;overflow:auto;}</style>"+newWinHtml;
-				
-				$(w.document.body).html(html);
+                // clear the input field
+                $('#clearFilter').click(function () {
+                    $filterInput.val("");
+                    $submitButton.click();
+                });
+            },
+            filterTables: function (inputVal, num, bool) {
+                th.show(inputVal);
+                oTable.fnFilterAll(inputVal, num, bool);
+            },
+            openNewWindow: function (html) {
+                var w = window.open();
 
-			}
+                html = "<style>body {padding:0 0 0 15px;margin:0;" +
+                    "font-family:'Courier New';font-size:12px;white-space:" +
+                    " pre;overflow:auto;}</style>" + html;
 
-			// show content of exceptions in new window
-			$('.new-window').click(function(e){
-				e.preventDefault();
-				var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
-				nWin(newWinHtml);
-			});
+                $(w.document.body).html(html);
+            }
+        },
+        publicFunc = {
+            init: function () {
 
-			// show more / hide
-			$('.height-toggle').click(function(e){
-				
-				e.preventDefault();
-				var fdtf = $(this).parent().find($('.failure-detail-txt'));
-				var parentTd = $(this).parent().parent();
+                th = $('.table-holder');
+                privateFunc.dataTablesInit();
+                privateFunc.parseTimes();
+                privateFunc.setupFilterButtons();
 
-				fdtf.css({'max-height':'none', 'height': ''});
-				
-				if (!$(this).hasClass('expanded-js')) {
-					$(this).addClass('expanded-js');
-					$(this).text('Show less');
-					fdtf.css('height','');
-					parentTd.css('height',fdtf.height() + 40);
-				} else {
-					$(this).removeClass('expanded-js');
-					$(this).text('Show more');
-					fdtf.css('max-height',130);
-					parentTd.css('height',170);
-				}
-			});
+                var checkboxesList = $('#CheckBoxesList').find('input');
+                checkboxesList.click(function () {
+                    privateFunc.filterCheckboxes();
+                });
+                privateFunc.filterCheckboxes();
 
-			// url for back to builddetailpage
-			if (window.location.pathname.indexOf('steps') > 0) {
-				(function( $ ) {
-					var sourceUrl = window.location.pathname.split('/');
-					var decodedUriSearch = window.location.search;
+                setTimeout(privateFunc.addFailureButtons, 100);
+            }
+        };
 
-					var decodedBuildDetailName = decodeURIComponent(sourceUrl.slice(4)[0]);
-					var decodedBuildDetailNumber = decodeURIComponent(sourceUrl.slice(6)[0])
+    $(document).ready(function () {
+        publicFunc.init();
+    });
 
-					var url = [];
-					
-					$.each(sourceUrl, function(i,value){
-						if (i < 7) {
-							url.push(value)
-						}
-					});
-					
-					var urlJoined = url.join('/');
-					var urljoinedSearch = urlJoined + decodedUriSearch
-					
-					$('#btd').text(decodedBuildDetailName + ' #' + decodedBuildDetailNumber);
-					$('#btd').attr('href', urljoinedSearch);
-
-				})( jQuery );
-			}
-	});
+    return publicFunc;
 });

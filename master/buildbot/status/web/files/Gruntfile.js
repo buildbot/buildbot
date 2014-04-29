@@ -67,21 +67,6 @@ module.exports = function(grunt) {
           ]
           */
         }
-      },
-      compileLog: {
-        options: {
-          baseUrl: 'script/testresults',
-          debugInfo: true,
-          paths: {
-          jquery: '../libs/jQuery-2-0-3', //Use this to minifiy jquery into your main
-          datatables: '../plugins/jquery-datatables',
-          noise: '../plugins/jquery.noisy'
-
-        },
-          name: 'testresults-main',
-          out: 'prod/script/testresults/testresults-main.js',
-          removeCombined: false
-        }
       }
     },
     // watch
@@ -109,6 +94,6 @@ module.exports = function(grunt) {
   grunt.registerTask('default', ['compass']); 
   grunt.registerTask('default', ['uglify']); 
   grunt.registerTask('default', ['requirejs']); 
-  grunt.registerTask('prod', ['compass:prod', 'requirejs:compile', 'requirejs:compileLog']); // grunt prod for production 
+  grunt.registerTask('prod', ['compass:prod', 'requirejs:compile']); // grunt prod for production
 
 };
