@@ -86,7 +86,7 @@ border: 1px solid #9F9B41;
 	@include pie-clearfix;
 	.menu-bubble {
 		background-color: #D6E4EE;
-	    @include border-radius ( 9px);	    
+	    @include border-radius (9px);	    
 	    color: #000000;
 	    display: block;
 	    float: right;
@@ -95,7 +95,7 @@ border: 1px solid #9F9B41;
 	    letter-spacing: 1px;
 	    margin: -2px 0 0 13px;
 	    padding: 2px 7px 3px 8px;
-	    @include text-shadow ( 0 1px 0 #FFFFFF);
+	    @include text-shadow (0 1px 0 #FFFFFF);
 	}
 	&> li {
 		float:left;
@@ -296,11 +296,11 @@ border: 1px solid #9F9B41;
 				border-bottom: 1px solid #CCCCCC;
 			}
 			&.selected > a {
-				   border-top: 4px solid #2B6194;
-				    margin: 0 25px;
-				    padding: 13px 0 0;
-			}
-			&.selected > a, 
+				border-top: none;				    				    
+			    color: #666;				    
+			    margin: 0;
+			    padding: 10px 0;
+			}			
 			& > a {
 				padding: 10px 0;
 				text-transform: none;

@@ -29,7 +29,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
     helpers = {
         init: function () {
 
-        	
+        	/*
 				// only for testing		
 				$('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
 
@@ -41,10 +41,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			    	ws = $(window).width() + ' ' +  $(window).height();
 			    	$('.windowsize').html(ws);
 			    });
-			
-
-			
-
+			*/
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
@@ -588,16 +585,16 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				
 				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
 				
-						if (clearEl === undefined ) {
+					if (clearEl === undefined ) {
+						boxElement.remove();
+					} else {
+						
+						boxElement.slideUp('fast', function(){								
+							closeBtn.unbind(e);
+						});
+					}
 
-							boxElement.remove();
-						} else {
-							boxElement.slideUp('fast', function(){								
-								closeBtn.unbind(e);
-							});
-						}
-
-						closeBtn.unbind(e);
+					closeBtn.unbind(e);
 				
 				}
 

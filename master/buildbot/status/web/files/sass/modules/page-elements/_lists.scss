@@ -379,8 +379,16 @@ div.force-text {
 		margin-bottom:3px;
 	}
 }
-
+@include breakpoint($bkpt-small-portrait) {
+	div.force-text {
+		input[type="text"] {
+			width: 266px;	
+		}
+		
+	}
+}
 @include breakpoint($bkpt-small) {
+
 	.more-info-box .pending-job-list { 
 		width: auto;
 		
