@@ -48,6 +48,7 @@ from buildbot.status.master import Status
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import check_functional_environment
 from buildbot.util import epoch2datetime
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
@@ -118,6 +119,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # local cache for this master's object ID
         self._object_id = None
+
+        # Check environment is sensible
+        check_functional_environment(self.config)
 
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
