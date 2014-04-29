@@ -72,6 +72,11 @@ auth = "changepw"
 
 encoding = 'utf8'
 
+# If true, takes only the first parent commits. This controls if we want to
+# trigger builds for merged in commits (when False).
+
+first_parent = False
+
 # The GIT_DIR environment variable must have been set up so that any
 # git commands that are executed will operate on the repository we're
 # installed in.
@@ -262,8 +267,12 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
     if newrev != baserev:
         # Not a pure rewind
-        f = os.popen("git rev-list --reverse --pretty=oneline %s..%s"
-                     % (baserev, newrev), 'r')
+        options = "--reverse --pretty=oneline"
+        if first_parent:
+            # Add the --first-parent to avoid adding the merge commits which
+            # have already been tested.
+            options += ' --first-parent'
+        f = os.popen("git rev-list %s %s..%s" % (options, baserev, newrev), 'r')
         gen_changes(f, branch)
 
         status = f.close()
@@ -353,6 +362,9 @@ def parse_options():
     # 'a' instead of 'p' due to collisions with the project short option
     parser.add_option("-a", "--auth", action="store", type="string",
                       help=auth_help)
+    first_parent_help = ("If set, don't trigger builds for merged in commits")
+    parser.add_option("--first-parent", action="store_true",
+                      help=first_parent_help)
     options, args = parser.parse_args()
     return options
 
@@ -404,6 +416,9 @@ try:
 
     if options.encoding:
         encoding = options.encoding
+
+    if options.first_parent:
+        first_parent = options.first_parent
 
     process_changes()
 except SystemExit:
