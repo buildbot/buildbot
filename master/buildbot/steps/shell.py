@@ -330,14 +330,14 @@ class SetPropertyFromCommand(ShellCommand):
             if self.strip:
                 result = result.strip()
             propname = self.property
-            self.setProperty(propname, result, "SetProperty Step")
+            self.setProperty(propname, result, "SetPropertyFromCommand Step")
             self.property_changes[propname] = result
         else:
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
             for k, v in new_props.items():
-                self.setProperty(k, v, "SetProperty Step")
+                self.setProperty(k, v, "SetPropertyFromCommand Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
