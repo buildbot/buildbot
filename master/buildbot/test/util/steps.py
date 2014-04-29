@@ -247,9 +247,9 @@ class BuildStepMixin(object):
             for pn in self.exp_missing_properties:
                 self.assertFalse(self.properties.hasProperty(pn),
                                  "unexpected property '%s'" % pn)
-            for log, contents in self.exp_logfiles.iteritems():
+            for l, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(
-                    self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
+                    self.step_status.logs[l].stdout, contents, "log '%s' contents" % l)
             self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         d.addCallback(check)
         return d
