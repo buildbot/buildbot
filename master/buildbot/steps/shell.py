@@ -581,8 +581,8 @@ class WarningCountingShellCommand(ShellCommand):
             if (directoryLeaveRe and
                 self.directoryStack and
                     directoryLeaveRe.search(line)):
-                    self.directoryStack.pop()
-                    continue
+                self.directoryStack.pop()
+                continue
 
             match = wre.match(line)
             if match:
@@ -602,7 +602,7 @@ class WarningCountingShellCommand(ShellCommand):
 
     def evaluateCommand(self, cmd):
         if (cmd.didFail() or
-           (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount)):
+                (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount)):
             return FAILURE
         if self.warnCount:
             return WARNINGS
