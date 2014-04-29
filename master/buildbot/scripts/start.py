@@ -68,6 +68,11 @@ def launchNoDaemon(config):
             '--nodaemon',
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
+
+    if config['profile']:
+        argv.extend(["--profile=stats_obj", "--profiler=cProfile", "--savestats"])
+        print "Starting profiler...."
+
     sys.argv = argv
 
     # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
