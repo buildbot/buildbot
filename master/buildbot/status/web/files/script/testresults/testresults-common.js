@@ -109,7 +109,8 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
             setupFilterButtons: function () {
                 // submit on return
                 var $filterInput = $("#filterinput"),
-                    $submitButton = $('#submitFilter');
+                    $submitButton = $('#submitFilter'),
+                    failedTests = $(".log-main").attr("data-failed-tests");
 
                 $filterInput.keydown(function (event) {
                     // Filter on the column (the index) of this element
@@ -128,6 +129,11 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     $filterInput.val("");
                     $submitButton.click();
                 });
+
+                if (failedTests === 0) {
+                    $("#failedinput").attr("checked", false);
+                    $("#passinput").attr("checked", true);
+                }
             },
             filterTables: function (inputVal, num, bool) {
                 th.show(inputVal);
