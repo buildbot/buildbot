@@ -98,6 +98,10 @@ def launch(config):
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
 
+    if config['profile']:
+        argv.extend(["--profile=stats_obj", "--profiler=cProfile", "--savestats"])
+        print "Starting profiler...."
+
     # ProcessProtocol just ignores all output
     reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
 
