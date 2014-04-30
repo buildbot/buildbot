@@ -119,7 +119,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.FileExists(file="x"),
                 slave_version=dict())
         self.expectOutcome(result=EXCEPTION,
-                status_text=["FileExists", "exception"])
+                status_text=["'FileExists'", "exception"])
         d = self.runStep()
         def check(_):
             self.assertEqual(

@@ -649,8 +649,8 @@ class BuildStep(object, properties.PropertiesMixin):
             # due to slave lost
             results = EXCEPTION
             self.step_status.setText(self.describe(True) +
-                                 ["interrupted"])
-            self.step_status.setText2(["interrupted"])
+                                 ["(build was interrupted)"])
+            self.step_status.setText2(["(build was interrupted)"])
         self._finishFinished(results)
 
     def addErrorResult(self, why):
@@ -693,8 +693,8 @@ class BuildStep(object, properties.PropertiesMixin):
             self.addHTMLLog("err.html", formatFailure(why))
             self.addCompleteLog("err.text", why.getTraceback())
             # could use why.getDetailedTraceback() for more information
-            self.step_status.setText([self.name, "exception"])
-            self.step_status.setText2([self.name])
+            self.step_status.setText(["'%s'" % self.name, "exception"])
+            self.step_status.setText2(["'%s'" % self.name])
             self.step_status.stepFinished(EXCEPTION)
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
@@ -911,8 +911,8 @@ class LoggingBuildStep(BuildStep):
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
         self.step_status.setText(self.describe(True) +
-                                 ["exception", "slave", "lost"])
-        self.step_status.setText2(["exception", "slave", "lost"])
+                                 ["(lost connection with slave)"])
+        self.step_status.setText2(["(lost connection with slave)"])
         return self.finished(RETRY)
 
     def commandComplete(self, cmd):
@@ -937,7 +937,7 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["failed"]
 
     def getText2(self, cmd, results):
-        return [self.name]
+        return ["Step \"%s\"" % self.name]
 
     def maybeGetText2(self, cmd, results):
         if results == SUCCESS:

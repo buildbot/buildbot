@@ -593,12 +593,14 @@ class BuilderStatus(styles.Versioned):
         self.prune() # conserve disk
 
 
-    def asDict(self, codebases={}):
+    def asDict(self, codebases={}, request=None):
+        from buildbot.status.web.base import codebases_to_args
+
         result = {}
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['name'] = self.name
-        result['url'] = self.status.getURLForThing(self)
+        result['url'] = self.status.getURLForThing(self) + codebases_to_args(codebases)
         result['friendly_name'] = self.getFriendlyName()
         result['basedir'] = os.path.basename(self.basedir)
         result['category'] = self.category
@@ -616,7 +618,7 @@ class BuilderStatus(styles.Versioned):
         current_builds = [b.getNumber() for b in self.getCurrentBuilds(codebases)]
         cached_builds = list(set(self.buildCache.keys() + current_builds))
         cached_builds.sort()
-        current_builds_dict = [b.asDict() for b in self.getCurrentBuilds(codebases)]
+        current_builds_dict = [b.asDict(request) for b in self.getCurrentBuilds(codebases)]
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds_dict
         result['state'] = self.getState()[0]
@@ -626,9 +628,9 @@ class BuilderStatus(styles.Versioned):
         return result
 
     @defer.inlineCallbacks
-    def asDict_async(self, codebases={}):
+    def asDict_async(self, codebases={}, request=None):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict(codebases)
+        result = self.asDict(codebases, request)
         builds =  yield self.getPendingBuildRequestStatuses()
 
         #Remove builds not within this codebase

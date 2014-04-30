@@ -465,7 +465,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         )
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
-                status_text=["setproperty", "exception"])
+                status_text=["'setproperty'", "exception"])
         d = self.runStep()
         d.addCallback(lambda _ :
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
@@ -582,7 +582,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
-                                status_text=["shell", "exception"])
+                                status_text=["'shell'", "exception"])
         else:
             if exp_warning_count != 0:
                 self.expectOutcome(result=WARNINGS,

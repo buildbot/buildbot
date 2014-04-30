@@ -274,13 +274,19 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         """
         @rtype: L{BuilderStatus}
         """
-        return self.botmaster.builders[name].builder_status
+        if name in self.botmaster.builders:
+            return self.botmaster.builders[name].builder_status
+
+        return None
 
     def getSlaveNames(self):
         return self.botmaster.slaves.keys()
 
     def getSlave(self, slavename):
-        return self.botmaster.slaves[slavename].slave_status
+        if slavename in self.botmaster.slaves:
+            return self.botmaster.slaves[slavename].slave_status
+        else:
+            return None
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)

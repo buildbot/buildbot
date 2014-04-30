@@ -437,7 +437,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
         self.scheduler_a.result = FAILURE
-        self.expectOutcome(result=FAILURE, status_text=['Triggered:', "'a'"])
+        self.expectOutcome(result=FAILURE, status_text=['Dependency failed to build.'])
         self.expectTriggeredWith(a=({}, {}))
         self.expectTriggeredLinks('a')
         return self.runStep(expect_waitForFinish=True)
@@ -448,7 +448,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             waitForFinish=True))
         self.scheduler_b.exception = True
         self.expectOutcome(result=EXCEPTION,
-                        status_text=['Triggered:', "'a'", "'b'"])
+                        status_text=['Dependency failed to build.'])
         self.expectTriggeredWith(
             a=({}, {}),
             b=({}, {}))
@@ -491,7 +491,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_interrupt(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
-        self.expectOutcome(result=EXCEPTION, status_text=['Trigger', 'interrupted'])
+        self.expectOutcome(result=EXCEPTION, status_text=['Trigger', '(build was interrupted)'])
         self.expectTriggeredWith(a=({}, {}))
         d = self.runStep(expect_waitForFinish=True)
 

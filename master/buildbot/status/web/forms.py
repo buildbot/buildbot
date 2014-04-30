@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import urllib
+from urlparse import urlunparse, urlparse
 from twisted.web._responses import INTERNAL_SERVER_ERROR
 from twisted.web.resource import ErrorPage
 
@@ -84,7 +85,17 @@ class ForceBuildDialogPage(HtmlResource):
             #Add scheduler info
             buildForceContext(cxt, request, self.getBuildmaster(request), builder_status.getName())
 
-            cxt['force_url'] = args['datab'][0] + "/force" + codebases_arg + return_page
+            #URL to force page with return param
+            url = args['datab'][0]
+            url_parts = list(urlparse(url))
+            url_parts[2] += "/force"
+            url_parts[4] += return_page
+            force_url = urlunparse(url_parts)
+
+            if len(url_parts[4]) == 0:
+                force_url = force_url + codebases_arg
+
+            cxt['force_url'] = force_url
             cxt['rt_update'] = args
             request.args = args
 
