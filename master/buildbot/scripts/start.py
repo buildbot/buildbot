@@ -69,7 +69,7 @@ def launchNoDaemon(config):
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
 
-    if config['profile']:
+    if 'profile' in config and config['profile']:
         argv.extend(["--profile=stats_obj", "--profiler=cProfile", "--savestats"])
         print "Starting profiler...."
 
@@ -98,7 +98,7 @@ def launch(config):
             "--logfile=twistd.log", # windows doesn't use the same default
             "--python=buildbot.tac"]
 
-    if config['profile']:
+    if 'profile' in config and config['profile']:
         argv.extend(["--profile=stats_obj", "--profiler=cProfile", "--savestats"])
         print "Starting profiler...."
 
