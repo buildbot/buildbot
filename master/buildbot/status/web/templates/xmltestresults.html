@@ -123,7 +123,6 @@
                                  <div class="pos-relative">
                                      <div class="failure-detail-txt">
                                          {% for tf in test['test-case'] %}
-                                             {{ tf }}
                                             {% if tf.reason %}
                                                 {% for line in tf.reason %}
                                                     {{ line.text|e|trim }}
