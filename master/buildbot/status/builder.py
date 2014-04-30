@@ -602,14 +602,9 @@ class BuilderStatus(styles.Versioned):
         result['name'] = self.name
         result['url'] = self.status.getURLForThing(self) + codebases_to_args(codebases)
         result['friendly_name'] = self.getFriendlyName()
-        result['basedir'] = os.path.basename(self.basedir)
-        result['category'] = self.category
         result['project'] = self.project
         result['slaves'] = self.slavenames
-        result['schedulers'] = [ s.name
-                for s in self.status.master.allSchedulers()
-                if self.name in s.builderNames ]
-        #result['url'] = self.parent.getURLForThing(self)
+
         # TODO(maruel): Add cache settings? Do we care?
 
         # Transient
