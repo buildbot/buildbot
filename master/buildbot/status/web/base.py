@@ -139,14 +139,15 @@ def path_to_buildqueue_json(request):
 
 def getCodebasesArg(request=None, codebases={}):
     codebases_arg=''
-    for key, val in request.args.iteritems():
-        if '_branch' in key:
-            codebases[key[0:key.find('_')]] = ''.join(val)
-            if len(codebases_arg) > 0:
-                codebases_arg += "&"
-            else:
-                codebases_arg += "?"
-            codebases_arg += "%s=%s" % (key, ''.join(val))
+    if request is not None:
+        for key, val in request.args.iteritems():
+            if '_branch' in key:
+                codebases[key[0:key.find('_')]] = ''.join(val)
+                if len(codebases_arg) > 0:
+                    codebases_arg += "&"
+                else:
+                    codebases_arg += "?"
+                codebases_arg += "%s=%s" % (key, ''.join(val))
     return codebases_arg
 
 
