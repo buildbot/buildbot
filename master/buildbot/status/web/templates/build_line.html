@@ -15,11 +15,24 @@
     <tr>  
       <td class="txt-align-left">{{ b.time }} </td>
       <td class="txt-align-left">
+        <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                unity 
+              </a> 
+              /
+              <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                build/4.5-trunk  
+              </a> 
+              /
+              <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                6671431218024...
+              </a>
+        <!--
           {% if b.rev != None %}
             {{ b.rev|shortrev(b.rev_repo) }}
           {% else %}
             None
           {% endif %}
+        -->
       </td>
       <td class="txt-align-left">
           {{ b.branch }}
@@ -28,6 +41,11 @@
     {%- if include_builder %}    
       <td class="txt-align-left"><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
     {% endif %}
+      <td class="txt-align-left">
+        <a href="{{ b.builderurl }}">
+          win-slave-02 
+        </a>
+      </td>
       <td><a href="{{ b.buildurl }}">#{{ b.buildnum }}</a></td> 
       
       <!--
@@ -37,7 +55,6 @@
 {% endmacro %}
 
 {% macro build_table(builds, include_builder=False) %}
-
 
 <table class="table-1 tablesorter-js tablesorter first-child"> 
   <thead>
@@ -49,6 +66,9 @@
        {%- if include_builder %}   
       <th class="txt-align-left">Builder</th>
        {% endif %}
+       <th class="txt-align-left">
+          Slave name
+       </th>
       <th>Build #</th>      
     </tr>
   </thead>

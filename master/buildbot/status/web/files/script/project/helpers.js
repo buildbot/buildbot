@@ -63,11 +63,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			if ($('#tb-root').length != 0) {
                 //Disabled until we decided that we need an updating front page
 				//helpers.updateBuilders();
-			}
-
-			if ($('#builder_page').length != 0) {				
-				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
-			}
+			}			
 
 			// keyboard shortcuts
 			/*$('body').keyup(function(event) {
@@ -562,7 +558,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page'];
+			var currentRtPages = ['buildslaves_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {

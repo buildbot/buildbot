@@ -17,6 +17,7 @@ require.config({
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
+		'rtbuilderdetail': 'project/rtBuilderDetail',
 		'rtbuildslaves': 'project/rtBuildSlaves',
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'rtglobal': 'project/rtGlobal',
