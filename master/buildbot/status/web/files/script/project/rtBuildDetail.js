@@ -19,19 +19,25 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             realtimeFunctions.build = rtBuildDetail.processBuildDetailPage;
             realtimePages.initRealtime(realtimeFunctions);
             timeElements.setHeartbeat(1000);
+
+            // insert codebase and branch on the builders page
+            if (window.location.search !== '') {
+                // Parse the url and insert current codebases and branches
+                var $dtWTop = $('.top');
+                helpers.codeBaseBranchOverview($dtWTop);
+            }
         },
         processBuildDetailPage: function (data) {
             //We get slighlty different data objects from autobahn
-            var keys = Object.keys(data),
-                buildStartTime = data.times[0],
-                buildEndTime = data.times[1],
-                buildFinished = (buildEndTime !== null),
-                eta = data.eta,
-                $dtWTop = $('.top');
-
+            var keys = Object.keys(data);
             if (keys.length === 1) {
                 data = data[keys[0]];
             }
+
+            var buildStartTime = data.times[0],
+                buildEndTime = data.times[1],
+                buildFinished = (buildEndTime !== null),
+                eta = data.eta;
 
             rtBuildDetail.refreshIfRequired(buildFinished);
 
@@ -47,12 +53,6 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             }
 
             timeElements.updateTimeObjects();
-
-            // insert codebase and branch on the builders page
-            if (window.location.search !== '') {
-                // Parse the url and insert current codebases and branches
-                helpers.codeBaseBranchOverview($dtWTop);
-            }
         },
         processBuildResult: function(data, startTime, eta, buildFinished) {
             var $buildResult = $('#buildResult');
