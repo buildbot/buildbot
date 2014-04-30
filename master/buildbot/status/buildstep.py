@@ -369,6 +369,7 @@ class BuildStepStatus(styles.Versioned):
         self.wasUpgraded = True
 
     def asDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
         result = {}
         # Constant
         result['name'] = self.getName()
@@ -385,8 +386,10 @@ class BuildStepStatus(styles.Versioned):
         result['urls'] = self.getURLs()
         result['step_number'] = self.step_number
         result['hidden'] = self.hidden
+
+        args = getCodebasesArg(request)
         result['logs'] = [[l.getName(),
-            self.build.builder.status.getURLForThing(l)]
+            self.build.builder.status.getURLForThing(l) + args]
                 for l in self.getLogs()]
 
         if request is not None:

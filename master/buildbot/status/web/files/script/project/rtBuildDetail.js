@@ -1,37 +1,37 @@
+/*global Handlebars */
 define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders, timeElements) {
     "use strict";
-    var rtBuildDetail;
-    var stepList = $('#stepList').find('> li');
-    var buildHandle = Handlebars.compile(build);
-    var isLoaded = false;
-    var timerCreated = false;
-    var noMoreReloads = false;
+    var rtBuildDetail,
+        stepList = $('#stepList').find('> li'),
+        buildHandle = Handlebars.compile(build),
+        isLoaded = false,
+        noMoreReloads = false;
 
     //Global helper for Handlebar
     //TODO: Move this when it's used by more pages
-    Handlebars.registerHelper('buildCSSClass', function(value) {
+    Handlebars.registerHelper('buildCSSClass', function (value) {
         return helpers.getCssClassFromStatus(value);
     });
 
     rtBuildDetail = {
         init: function () {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
-            realtimeFunctions["build"] = rtBuildDetail.processBuildDetailPage;
+            realtimeFunctions.build = rtBuildDetail.processBuildDetailPage;
             realtimePages.initRealtime(realtimeFunctions);
             timeElements.setHeartbeat(1000);
-        }, processBuildDetailPage: function (data) {
-
+        },
+        processBuildDetailPage: function (data) {
             //We get slighlty different data objects from autobahn
-            var keys = Object.keys(data);
-            if (keys.length == 1) {
+            var keys = Object.keys(data),
+                buildStartTime = data.times[0],
+                buildEndTime = data.times[1],
+                buildFinished = (buildEndTime !== null),
+                eta = data.eta,
+                $dtWTop = $('.top');
+
+            if (keys.length === 1) {
                 data = data[keys[0]];
             }
-
-            var buildStartTime = data["times"][0];
-            var buildEndTime = data["times"][1];
-            var buildFinished = (buildEndTime !== null);
-
-            var eta = data["eta"];
 
             rtBuildDetail.refreshIfRequired(buildFinished);
 
@@ -47,6 +47,12 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             }
 
             timeElements.updateTimeObjects();
+
+            // insert codebase and branch on the builders page
+            if (window.location.search !== '') {
+                // Parse the url and insert current codebases and branches
+                helpers.codeBaseBranchOverview($dtWTop);
+            }
         },
         processBuildResult: function(data, startTime, eta, buildFinished) {
             var $buildResult = $('#buildResult');

@@ -485,6 +485,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return result
 
     def asDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
         result = self.asBaseDict()
 
         # Constant
@@ -495,8 +496,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
+        args = getCodebasesArg(request)
         result['logs'] = [[l.getName(),
-            self.builder.status.getURLForThing(l)] for l in self.getLogs()]
+                           self.builder.status.getURLForThing(l) + args] for l in self.getLogs()]
 
         result['isWaiting'] = False
 

@@ -1,5 +1,5 @@
 /*global define, jQuery */
-define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
+define(['jquery', 'moment', 'helpers', 'datatables-plugin'], function ($, moment, helpers) {
 
     "use strict";
     var oTable,
@@ -147,6 +147,14 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                     " pre;overflow:auto;}</style>" + html;
 
                 $(w.document.body).html(html);
+            },
+            addCodebasesBar: function () {
+                // insert codebase and branch on the builders page
+                var $dtWTop = $('.top');
+                if (window.location.search !== '') {
+                    // Parse the url and insert current codebases and branches
+                    helpers.codeBaseBranchOverview($dtWTop);
+                }
             }
         },
         publicFunc = {
@@ -156,6 +164,7 @@ define(['jquery', 'moment', 'datatables-plugin'], function ($, moment) {
                 privateFunc.dataTablesInit();
                 privateFunc.parseTimes();
                 privateFunc.setupFilterButtons();
+                privateFunc.addCodebasesBar();
 
                 var checkboxesList = $('#CheckBoxesList').find('input');
                 checkboxesList.click(function () {
