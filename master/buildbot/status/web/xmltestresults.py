@@ -53,11 +53,11 @@ class XMLTestResource(HtmlResource):
 
 
             def testResult(test):
-                if test['executed'].lower() == "true" and test['success'].lower() == "true":
+                if test['executed'].lower() == "true" and ('success' in test and test['success'].lower() == "true"):
                     return "passed"
-                if test['executed'].lower() == "true" and ('result' in test and test['result'] is "Inconclusive"):
+                if test['executed'].lower() == "true" and ('result' in test and test['result'].lower() == "inconclusive"):
                     return "inconclusive"
-                elif 'ignored' in test and  test['ignored'].lower() == "true":
+                elif 'ignored' in test and test['ignored'].lower() == "true":
                     return "ignored"
                 elif test['executed'].lower() == "false":
                     return "skipped"
@@ -86,13 +86,13 @@ class XMLTestResource(HtmlResource):
                                 tso['time'] += t
                                 tso[testResult(r)] += 1
                             else:
-                                tso['ignored'] += 1
+                                tso[testResult(r)] += 1
 
             failed = int(root_dict['failures'])
-            ignored = 0 if ('not_run' not in root_dict) else root_dict['not-run']
-            skipped = 0 if ('skipped' not in root_dict) else root_dict['skipped']
-            inconclusive = 0 if ('inconclusive' not in root_dict) else root_dict['inconclusive']
-            success = (total - failed)
+            ignored = int(0 if ('not_run' not in root_dict) else root_dict['not-run'])
+            skipped = int(0 if ('skipped' not in root_dict) else root_dict['skipped'])
+            inconclusive = int(0 if ('inconclusive' not in root_dict) else root_dict['inconclusive'])
+            success = (total - failed - inconclusive - skipped - ignored)
             success_per = (float(success) / float(total)) * 100.0
             cxt['summary'] = {
                 'total': total,
