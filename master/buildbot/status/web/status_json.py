@@ -95,6 +95,8 @@ EXAMPLES = """\
     - All projects
   - /json/projects/<A_PROJECT>
     - A specific project.
+  - /json/projects/<A_PROJECT>/<A_BUILDER>
+    - A specific builder on a project.
   - /json/buildqueue/
     - The current build queue
   - /json/pending/<A_BUILDER>/
