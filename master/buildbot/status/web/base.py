@@ -232,6 +232,16 @@ def path_to_json_build(status, request, builderName, buildID):
 def path_to_json_build_queue(request):
     return path_to_root(request) + "json/buildqueue/"
 
+def path_to_json_project(request, project):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + project + codebases_arg
+
+def path_to_json_pending(request, builderName):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/pending/" + urllib.quote(builderName, safe='') + codebases_arg
+
+
+
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
     # lack, and it has a base URL to which each File's name is relative.

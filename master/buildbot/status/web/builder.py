@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import json
-from buildbot.status.web.status_json import ProjectJsonResource, SingleProjectJsonResource, FilterOut
+from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, SinglePendingBuildsJsonResource
 
 from twisted.web import html
 import urllib, time
@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset, path_to_json_builders
+    getRequestCharset, path_to_json_builders, path_to_json_project, path_to_json_pending
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
@@ -243,8 +243,9 @@ def builder_info(build, req, codebases_arg={}):
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
 
-    def __init__(self, builder_status):
+    def __init__(self, status, builder_status):
         HtmlResource.__init__(self)
+        self.status = status
         self.builder_status = builder_status
 
     def getPageTitle(self, request):
@@ -253,7 +254,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
-        project = cxt['selectedproject'] =  b.getProject()
+        project = cxt['selectedproject'] = b.getProject()
         cxt['name'] = b.getName()
         cxt['friendly_name'] = b.getFriendlyName()
 
@@ -263,44 +264,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         codebases = {}
         codebases_arg = getCodebasesArg(request=req, codebases=codebases)
-        codebases_in_args = len(codebases_arg) > 0
-        cxt['current'] = [builder_info(x, req, codebases_arg) for x in b.getCurrentBuilds(codebases=codebases)]
-
-        cxt['pending'] = []
-        statuses = yield b.getPendingBuildRequestStatuses()
-        for pb in statuses:
-            changes = []
-
-            source = yield pb.getSourceStamp()
-
-            if len(codebases) > 0:
-                found = yield foundCodebasesInPendingBuild(pb, codebases)
-                if not found:
-                    continue
-
-            submitTime = yield pb.getSubmitTime()
-            bsid = yield pb.getBsid()
-
-            properties = yield \
-                    pb.master.db.buildsets.getBuildsetProperties(bsid)
-
-            ## this should use sources instead
-            if source.changes:
-                for c in source.changes:
-                    changes.append({ 'url' : path_to_change(req, c),
-                                     'who' : c.who,
-                                     'revision' : c.revision,
-                                     'repo' : c.repository })
-
-            cxt['pending'].append({
-                'when': time.strftime("%b %d %H:%M:%S",
-                                      time.localtime(submitTime)),
-                'delay': util.formatInterval(util.now() - submitTime),
-                'id': pb.brid,
-                'changes' : changes,
-                'num_changes' : len(changes),
-                'properties' : properties,
-                })
 
         numbuilds = int(req.args.get('numbuilds', ['15'])[0])
         recent = cxt['recent'] = []
@@ -330,6 +293,19 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['builder_name'] = b.getName()
 
         cxt['rt_update'] = req.args
+
+
+        project_json = SingleProjectBuilderJsonResource(self.status, self.builder_status)
+        project_dict = yield project_json.asDict(req)
+        url = self.status.getBuildbotURL() + path_to_json_project(req, project)
+        cxt['instant_json']['project'] = {"url": url,
+                                          "data": json.dumps(project_dict)}
+
+        pending_json = SinglePendingBuildsJsonResource(self.status, self.builder_status)
+        pending_dict = yield pending_json.asDict(req)
+        pending_url = self.status.getBuildbotURL() + path_to_json_pending(req, self.builder_status.name)
+        cxt['instant_json']['pending_builds'] = {"url": pending_url,
+                                                 "data": json.dumps(pending_dict)}
 
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
@@ -569,7 +545,7 @@ class BuildersResource(HtmlResource):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
             builder_status = s.getBuilder(path)
-            return StatusResourceBuilder(builder_status)
+            return StatusResourceBuilder(s, builder_status)
         if path == "_all":
             return StatusResourceAllBuilders(self.getStatus(req))
         if path == "_selected":

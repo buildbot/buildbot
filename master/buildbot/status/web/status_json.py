@@ -764,7 +764,7 @@ class PendingBuildsJsonResource(JsonResource):
 
 
 class SinglePendingBuildsJsonResource(JsonResource):
-    help = """List the pending builds for a specific ."""
+    help = """List the pending builds for a specific builder."""
     pageTitle = 'Queue'
 
     def __init__(self, status, builder):

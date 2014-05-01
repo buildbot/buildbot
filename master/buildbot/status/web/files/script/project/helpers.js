@@ -269,36 +269,41 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					}
 				});
 			
-		}, selectBuildsAction: function() { // check all in tables and perform remove action		    
-					
-			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
-			var preloader = $(mustacheTmpl);	
+		}, selectBuildsAction: function($table, dontUpdate) { // check all in tables and perform remove action
+            if ($table === undefined) {
+                $table = $('#tablesorterRt');
+                if ($table.length === 0) {
+                    return;
+                }
+            }
+            var mustacheTmpl = Mustache.render(popups, {'preloader':'true'}),
+			    preloader = $(mustacheTmpl),
+                selectAll = $('#selectall');
 
-			var selectAll = $('#selectall');
-			
 			selectAll.click(function () {
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
-				var tableNodes = tableSorter.fnGetNodes();	
+				var tableNodes = $table.dataTable().fnGetNodes();
 		        $('.fi-js',tableNodes).prop('checked', this.checked);
 		    });
 
-			function ajaxPost(str) {					
-				$('body').append(preloader).show();					
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
+			function ajaxPost(str) {
+                var $dataTable =  $table.dataTable();
+				$('body').append(preloader).show();
 				str = str+'&ajax=true';
 				
 				$.ajax({
 					type: "POST",
-					url: 'buildqueue/_selected/cancelselected',
+					url: '/buildqueue/_selected/cancelselected',
 					data: str,
 					success: function (data) {
-						preloader.remove();
-						tableSorter.fnClearTable();
-						$.each(data, function (key, value) {
-		          			var arObjData = [value];
-							tableSorter.fnAddData(arObjData);							
-						});
+                        //TODO: Remove this so that we can update with a URL that only returns
+                        //the new ones
+                        if (dontUpdate === false) {
+						    $dataTable.fnClearTable();
+                            $dataTable.fnAddData(data);
+                        }
+
 						selectAll.prop('checked',false);
+                        preloader.remove();
 					}
 				});
 				return false;									
@@ -307,8 +312,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			$('#submitBtn').click(function(e){					
 				e.preventDefault();
 				
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
-				var tableNodes = tableSorter.fnGetNodes();	
+				var $dataTable =  $table.dataTable();
+				var tableNodes = $dataTable.fnGetNodes();
 		        var checkedNodes = $('.fi-js',tableNodes);
 		        
 		        var formStr = "";
@@ -323,7 +328,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					ajaxPost(formStringSliced);				
 				}				
 			});
-			$('#tablesorterRt').delegate('.force-individual-js', 'click', function(e){					
+			$table.delegate('.force-individual-js', 'click', function(e){
 				e.preventDefault();
 				var iVal = $(this).prev().prev().val();
 				var str = 'cancelselected='+iVal;								

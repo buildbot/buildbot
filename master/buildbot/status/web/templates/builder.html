@@ -32,7 +32,7 @@
           <th class="txt-align-left">Author</th>          
         </tr>
       </thead>
-      <tbody>
+      <!--<tbody>
         <tr>
           <td class="txt-align-left">
             <a href="http://katana.hq.unity3d.com/projects/Unity - Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset/builds/2610">
@@ -190,14 +190,15 @@
             Simon Holm Nielsen
           </td>
         </tr>
-      </tbody>
+      </tbody>-->
     </table>
 
-    <h2 class="head-2" style="margin-top:20px;">
+    <h2 class="head-2" style="margin-top:20px; float:left">
       Pending builds requests
     </h2>
-    
-    <table class="table-1 tablesorter-js tablesorter first-child"> 
+
+    <button id="submitBtn" class="grey-btn m-bottom15 removeBuildBtn">Remove selected</button>
+    <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
       <thead>
         <tr>
           <th class="txt-align-left">Requested at</th>
@@ -210,7 +211,7 @@
           </th>          
         </tr>
       </thead>
-      <tbody>
+      <!--<tbody>
         <tr>
           <td class="txt-align-left">
             Apr 29 15:34:22
@@ -224,7 +225,7 @@
             <a href="#" class="force-individual-js delete-icon" title="Cancel this build"></a>
           </td>
         </tr>        
-      </tbody>
+      </tbody>-->
     </table>
 
     <h2 class="head-2" style="margin-top:20px;">
