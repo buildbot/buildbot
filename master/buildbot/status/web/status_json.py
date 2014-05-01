@@ -76,7 +76,7 @@ EXAMPLES = """\
     - All builds. Warning, reads all previous build data. (Can be filtered by codebases)
   - /json/builders/<A_BUILDER>/builds/<A_BUILD>
     - Where <A_BUILD> is either positive, a build number, or negative, a past
-      build.
+      build. Using <4 will give the last 4 builds.
   - /json/builders/<A_BUILDER>/builds/-1/source_stamp/changes
     - Build changes
   - /json/builders/<A_BUILDER>/builds?select=-1&select=-2
@@ -485,6 +485,15 @@ class AllBuildsJsonResource(JsonResource):
             build_status = self.builder_status.getBuild(int(path))
             if build_status:
                 return BuildJsonResource(self.status, build_status)
+        elif "<" in path:
+            try:
+                num = int(path.replace("<", ""))
+            except ValueError:
+                #Defaults to last 15
+                num = 15
+
+            return PastBuildsJsonResource(self.status, self.builder_status, num)
+
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
@@ -506,6 +515,27 @@ class AllBuildsJsonResource(JsonResource):
 
         return results
 
+
+class PastBuildsJsonResource(JsonResource):
+    help = """Previous x number of builds that were run on a builder."""
+    pageTitle = 'Builds'
+
+    def __init__(self, status, builder, number):
+        JsonResource.__init__(self, status)
+        self.builder = builder
+        self.number = number
+
+    def asDict(self, request):
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+        encoding = getRequestCharset(request)
+        branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
+
+        builds = list(self.builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                          codebases=codebases,
+                                                          num_builds=self.number))
+        return [b.asDict() for b in builds]
 
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.
