@@ -665,44 +665,67 @@ class SingleProjectJsonResource(JsonResource):
         self.status = status
         self.project_status = project_status
         self.name = self.project_status.name
-        self.builders = None
+        self.setup_children(status, project_status)
 
-    def getBuilders(self):
-        if self.builders is None:
-            self.builders = []
-            builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
-            for b in builder_names:
-                self.builders.append(self.status.getBuilder(b))
-
-        return self.builders
+    def setup_children(self, status, project):
+        builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
+        for b in builder_names:
+            builder = self.status.getBuilder(b)
+            self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        result = self.project_status.asDict()
+        result = {'builders': []}
 
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
-
-        #Get branches
         encoding = getRequestCharset(request)
         branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
-        result['builders'] = []
-        for b in self.getBuilders():
-            builder = yield b.asDict_async(codebases, request)
-
-            #Get latest build
-            builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
-                                                   codebases=codebases,
-                                                   num_builds=1))
-
-            if len(builds) > 0:
-                builder['latestBuild'] = builds[0].asBaseDict(request)
-
-            result['builders'].append(builder)
+        for name in self.children:
+            child = self.getChildWithDefault(name, request)
+            d = yield child.asDict(request, codebases, branches)
+            result['builders'].append(d)
 
         defer.returnValue(result)
+
+
+class SingleProjectBuilderJsonResource(JsonResource):
+    """
+    Returns  a single builder for a project JSON with
+    latestBuild info
+    """
+
+    def __init__(self, status, builder):
+        JsonResource.__init__(self, status)
+        self.builder = builder
+
+    @defer.inlineCallbacks
+    def builder_dict(self, builder, codebases, request, branches):
+        d = yield builder.asDict_async(codebases, request)
+
+        #Get latest build
+        builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                     codebases=codebases,
+                                                     num_builds=1))
+
+        if len(builds) > 0:
+            d['latestBuild'] = builds[0].asBaseDict(request)
+
+        defer.returnValue(d)
+
+    @defer.inlineCallbacks
+    def asDict(self, request, codebases=None, branches=None):
+        if codebases is None or branches is None:
+            #Get codebases
+            codebases = {}
+            getCodebasesArg(request=request, codebases=codebases)
+            encoding = getRequestCharset(request)
+            branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
+
+        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches)
+        defer.returnValue(builder_dict)
 
 
 class QueueJsonResource(JsonResource):
