@@ -39,6 +39,19 @@
 	</ul>
 {{/showRunningBuilds}}
 
+{{#currentBuildRevision}}
+    {{#each data.sourceStamps}}
+        <a href="{{repository}}">{{codebase}}</a> /
+        {{branch}} /
+        {{#if revision_short}}
+            <a href="{{repository}}/changeset/{{revision}}">{{revision_short}}</a>
+        {{else}}
+            Calculating....
+        {{/if}}
+        <br/>
+    {{/each}}
+{{/currentBuildRevision}}
+
 {{#pendingBuildWait}}
     <span class="waiting-time-js"></span>
 {{/pendingBuildWait}}

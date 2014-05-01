@@ -234,7 +234,11 @@ def path_to_json_build_queue(request):
 
 def path_to_json_project(request, project):
     codebases_arg = getCodebasesArg(request=request)
-    return "json/projects/" + project + codebases_arg
+    return "json/projects/" + urllib.quote(project, safe='') + codebases_arg
+
+def path_to_json_project_builder(request, project, builder):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + urllib.quote(project, safe='') + "/" + builder + codebases_arg
 
 def path_to_json_pending(request, builderName):
     codebases_arg = getCodebasesArg(request=request)

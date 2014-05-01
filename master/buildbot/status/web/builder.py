@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset, path_to_json_builders, path_to_json_project, path_to_json_pending
+    getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
@@ -297,7 +297,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         project_json = SingleProjectBuilderJsonResource(self.status, self.builder_status)
         project_dict = yield project_json.asDict(req)
-        url = self.status.getBuildbotURL() + path_to_json_project(req, project)
+        url = self.status.getBuildbotURL() + path_to_json_project_builder(req, project, self.builder_status.name)
         cxt['instant_json']['project'] = {"url": url,
                                           "data": json.dumps(project_dict)}
 

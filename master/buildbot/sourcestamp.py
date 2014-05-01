@@ -253,6 +253,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result = {}
         # Constant
         result['revision'] = self.revision
+        result['revision_short'] = self.revision[:12]
 
         # TODO(maruel): Make the patch content a suburl.
         result['hasPatch'] = self.patch is not None

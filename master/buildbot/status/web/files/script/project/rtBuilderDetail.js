@@ -74,27 +74,36 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 {
                     "aTargets": [ 1 ],
                     "sClass": "txt-align-left",
-                    /*"mRender": function (data, full, type) {
-                     var runningBuilds = {
-                     showRunningBuilds: true,
-                     }
-                     var extended = $.extend(runningBuilds, type);
-                     console.log(JSON.stringify(extended));
-                     return builderdetailHandle(extended);
-                     },
-                     "fnCreatedCell": function (nTd, sData, oData) {
-                     if (oData.currentBuilds != undefined) {
-                     helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
-                     }
-                     }*/
+                    "mRender": function (data, full, type) {
+                        var runningBuilds = {
+                            showRunningBuilds: true
+                        };
+                        var extended = $.extend(runningBuilds, type);
+                        return builderdetailHandle(extended);
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
+                        helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
+                    }
                 },
                 {
                     "aTargets": [ 2 ],
-                    "sClass": "txt-align-left"
+                    "sClass": "txt-align-left",
+                    "mRender": function (data, type, full) {
+                        return builderdetailHandle({currentBuildRevision: true, 'data': full});
+                    }
                 },
                 {
                     "aTargets": [ 3 ],
-                    "sClass": "txt-align-left"
+                    "sClass": "txt-align-left",
+                    "mRender": function (data, type, full) {
+                        var author = 'N/A';
+                        $.each(full.properties, function (i, prop) {
+                            if (prop[0] === "owner") {
+                                author = prop[1];
+                            }
+                        });
+                        return author;
+                    }
                 }
             ];
 
@@ -124,7 +133,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                         return builderdetailHandle({pendingBuildWait: true});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        console.log($(nTd).find('.waiting-time'));
                         timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                     }
                 },
