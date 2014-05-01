@@ -23,6 +23,8 @@ from twisted.web.resource import Resource, NoResource
 from buildbot import interfaces
 from buildbot.status import logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
+from buildbot.status.web.xmltestresults import XMLTestResource
+
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -181,6 +183,9 @@ class LogsResource(HtmlResource):
         for log in self.step_status.getLogs():
             if path == log.getName():
                 if log.hasContents():
-                    return IHTMLLog(interfaces.IStatusLog(log))
+                    if hasattr(log, 'html') and 'xml-stylesheet' in log.html:
+                        return XMLTestResource(log, self.step_status)
+                    else:
+                        return IHTMLLog(interfaces.IStatusLog(log))
                 return NoResource("Empty Log '%s'" % path)
         return HtmlResource.getChild(self, path, req)

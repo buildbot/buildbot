@@ -459,7 +459,19 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                                                      self.number))
             log.err()
 
-    def asBaseDict(self, request=None):
+    def currentStepDict(self, dict):
+        if self.getCurrentStep():
+            dict['currentStep'] = self.getCurrentStep().asDict()
+
+            step_type = self.getCurrentStep().getStepType()
+            if step_type is AcquireBuildLocks or step_type is Trigger:
+                dict['isWaiting'] = True
+        else:
+            dict['currentStep'] = None
+
+        return dict
+
+    def asBaseDict(self, request=None, include_current_step=False):
         from buildbot.status.web.base import getCodebasesArg
 
         result = {}
@@ -488,9 +500,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         from buildbot.status.web.base import css_classes
         result['results_text'] = css_classes.get(result['results'], "")
 
+        if include_current_step:
+            result = self.currentStepDict(result)
+
         return result
 
     def asDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
         result = self.asBaseDict(request)
 
         # Constant
@@ -501,20 +517,14 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
+        args = getCodebasesArg(request)
         result['logs'] = [[l.getName(),
-            self.builder.status.getURLForThing(l)] for l in self.getLogs()]
+                           self.builder.status.getURLForThing(l) + args] for l in self.getLogs()]
 
         result['isWaiting'] = False
 
         result['steps'] = [bss.asDict(request) for bss in self.steps]
-        if self.getCurrentStep():
-            result['currentStep'] = self.getCurrentStep().asDict()
-
-            step_type = self.getCurrentStep().getStepType()
-            if step_type is AcquireBuildLocks or step_type is Trigger:
-                result['isWaiting'] = True
-        else:
-            result['currentStep'] = None
+        result = self.currentStepDict(result)
 
         return result
 

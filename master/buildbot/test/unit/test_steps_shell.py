@@ -582,7 +582,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
-                                status_text=["shell", "exception"])
+                                status_text=["'shell'", "exception"])
         else:
             if exp_warning_count != 0:
                 self.expectOutcome(result=WARNINGS,
