@@ -6,9 +6,9 @@
 {% endblock %}
 
 {% macro test_case_result(tc) %}
-    {% if tc.executed|lower == "true" and tc.success|lower == "true" %}
+    {% if tc.executed|lower == "true" and (tc.success and tc.success|lower == "true") %}
         Pass
-    {% elif tc.executed|lower == "true" and (result and result|lower == "inconclusive") %}
+    {% elif tc.executed|lower == "true" and (tc.result and tc.result|lower == "inconclusive") %}
         Inconclusive
     {% elif tc.ignored and tc.ignored|lower == "true" %}
         Ignored
