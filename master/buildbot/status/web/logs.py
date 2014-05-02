@@ -22,7 +22,7 @@ from twisted.web.resource import Resource, NoResource
 
 from buildbot import interfaces
 from buildbot.status import logfile
-from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
+from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root, getCodebasesArg
 from buildbot.status.web.xmltestresults import XMLTestResource
 
 
@@ -119,7 +119,7 @@ class TextLog(Resource):
                     pageTitle = "Log File contents",
                     texturl = req.childLink("text"),
                     builder_name = builder.getFriendlyName(),
-                    builder_url = url_dict['path'],
+                    builder_url = url_dict['path'] + getCodebasesArg(request=req),
                     path_to_root = path_to_root(req))
             data = data.encode('utf-8')                   
             req.write(data)
