@@ -535,7 +535,7 @@ class PastBuildsJsonResource(JsonResource):
         builds = list(self.builder.generateFinishedBuilds(branches=map_branches(branches),
                                                           codebases=codebases,
                                                           num_builds=self.number))
-        return [b.asDict() for b in builds]
+        return [b.asDict(request) for b in builds]
 
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.

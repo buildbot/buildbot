@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import json
-from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, SinglePendingBuildsJsonResource
+from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, SinglePendingBuildsJsonResource, PastBuildsJsonResource
 
 from twisted.web import html
 import urllib, time
@@ -24,7 +24,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
     path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
     map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder
+    getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder, path_to_json_past_builds
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
@@ -306,6 +306,13 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         pending_url = self.status.getBuildbotURL() + path_to_json_pending(req, self.builder_status.name)
         cxt['instant_json']['pending_builds'] = {"url": pending_url,
                                                  "data": json.dumps(pending_dict)}
+
+        number_of_builds = 15
+        builds_json = PastBuildsJsonResource(self.status, self.builder_status, number_of_builds)
+        builds_dict = yield builds_json.asDict(req)
+        builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, number_of_builds)
+        cxt['instant_json']['builds'] = {"url": pending_url,
+                                                 "data": json.dumps(builds_dict)}
 
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")

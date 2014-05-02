@@ -95,7 +95,7 @@ define(['moment', 'helpers'], function (moment) {
             return serverOffset;
         },
         getDateFormatted: function (unixTimeStamp) {
-            return moment.unix(unixTimeStamp).format('MMMM Do, H:mm:ss');
+            return moment.unix(unixTimeStamp).format('MMMM DD, H:mm:ss');
         }
     };
 

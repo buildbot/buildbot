@@ -1,10 +1,3 @@
-{{#showNumber}}
-    {{data.name}}
-	<a href="{{data.url.path}}">
-		{{data.number}}
-	</a>
-{{/showNumber}}
-
 {{#showRunningBuilds}}
     <ul class="list current-job-js building">
     	
@@ -38,19 +31,6 @@
 		
 	</ul>
 {{/showRunningBuilds}}
-
-{{#currentBuildRevision}}
-    {{#each data.sourceStamps}}
-        <a href="{{repository}}">{{codebase}}</a> /
-        {{branch}} /
-        {{#if revision_short}}
-            <a href="{{repository}}/changeset/{{revision}}">{{revision_short}}</a>
-        {{else}}
-            Calculating....
-        {{/if}}
-        <br/>
-    {{/each}}
-{{/currentBuildRevision}}
 
 {{#pendingBuildWait}}
     <span class="waiting-time-js"></span>

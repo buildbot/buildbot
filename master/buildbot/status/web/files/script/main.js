@@ -29,7 +29,9 @@ require.config({
         'handlebars': "libs/handlebars",
 		'livestamp': "plugins/livestamp",
 		'noise': "plugins/jquery.noisy",
-        'timeElements': "project/timeElements"
+        'timeElements': "project/timeElements",
+        'rtGenericTable' : "project/rtGenericTable",
+        'hbCells' : 'templates/rtCells.handlebars'
 	}
 });
 

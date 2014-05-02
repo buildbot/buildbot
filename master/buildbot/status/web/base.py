@@ -238,12 +238,16 @@ def path_to_json_project(request, project):
 
 def path_to_json_project_builder(request, project, builder):
     codebases_arg = getCodebasesArg(request=request)
-    return "json/projects/" + urllib.quote(project, safe='') + "/" + builder + codebases_arg
+    return "json/projects/" + urllib.quote(project, safe='') + "/" + urllib.quote(builder, safe='') + codebases_arg
 
 def path_to_json_pending(request, builderName):
     codebases_arg = getCodebasesArg(request=request)
     return "json/pending/" + urllib.quote(builderName, safe='') + codebases_arg
 
+
+def path_to_json_past_builds(request, builderName, number):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/builders/{0}/builds/<{1}{2}".format(urllib.quote(builderName, safe=''), number, codebases_arg)
 
 
 class Box:

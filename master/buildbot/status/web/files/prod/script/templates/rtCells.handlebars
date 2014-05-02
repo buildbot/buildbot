@@ -1,0 +1,33 @@
+{{#revisionCell}}
+    <ul class="revision">
+    {{#each data.sourceStamps}}
+        <li>
+        <a href="{{repository}}">{{codebase}}</a> /
+        {{branch}} /
+        {{#if revision_short}}
+            <a href="{{repository}}/changeset/{{revision}}">{{revision_short}}</a>
+        {{else}}
+            N/A
+        {{/if}}
+        </li>
+    {{/each}}
+    </ul>
+{{/revisionCell}}
+
+
+{{#buildID}}
+    {{data.name}}
+	<a href="{{data.url.path}}">
+		{{data.number}}
+	</a>
+{{/buildID}}
+
+{{#buildStatus}}
+    <span class="hide">{{build.text.[0]}}</span>
+    <span class="status-text">
+     {{#build.text}}
+        {{.}}
+     {{/build.text}}
+    </span>
+{{/buildStatus}}
+

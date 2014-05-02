@@ -118,6 +118,9 @@ div.column-1 {
 .span-3 {width:1010px;}
 .span-4 {width:350px;}
 .span-5 {width:720px;}
+.span-6 {width:630px;}
+.span-7 {width:800px;}
+
 
 @include breakpoint($bkpt-small) {
 	.container-inner {

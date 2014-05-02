@@ -482,6 +482,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['text'] = self.getText()
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()
+        result['slave_friendly_name'] = self.master.status.getSlave(self.getSlavename()).getFriendlyName()
         result['eta'] = self.getETA()
 
         #Lazy importing here to avoid python import errors
