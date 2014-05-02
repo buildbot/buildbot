@@ -627,6 +627,18 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 return css_classes[key];
             });
             return values[status];
+        },
+        objectPropertiesToArray: function(arr) {
+            var result = [],
+                key;
+
+            for (key in arr) {
+                if (arr.hasOwnProperty(key)) {
+                    result.push(arr[key]);
+                }
+            }
+
+            return result;
         }
 	};
 

@@ -50,7 +50,7 @@
       Build slaves
     </h2>
     
-    <table class="table-1 tablesorter-js tablesorter first-child"> 
+    <table id="rtSlavesTable" class="table-1 tablesorter-js tablesorter first-child">
       <thead>
       {% if slaves %}
         <tr>
@@ -59,27 +59,6 @@
         </tr>
       {% endif %}
       </thead>
-      <tbody>
-      {% for s in slaves %}
-      <tr>
-        <td class="txt-align-left">
-          <b>
-            <a href="{{ s.link|e }}">
-              {{ s.friendly_name|e }}
-            </a>
-          </b>
-        </td>
-        {% if s.connected %}
-          <td class="idle">connected</td>
-        {% else %}
-          <td class="offline">offline</td>        
-        {% endif %}
-        
-      {% else %}
-        <td>
-          no slaves attached</td>
-        </tr>
-      {% endfor %}
       </tbody>
     </table>
 
@@ -114,14 +93,7 @@
     -->
 
   </div>
-
-   
-
   </div>
-
-
-  
- 
 
 {% endblock %}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}

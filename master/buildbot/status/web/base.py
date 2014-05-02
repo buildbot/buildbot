@@ -224,7 +224,7 @@ def path_to_json_global_status(status, request):
     return status.getBuildbotURL() + "json/globalstatus"
 
 def path_to_json_slaves(request):
-    return path_to_root(request) + "json/slaves/"
+    return "json/slaves/"
 
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)

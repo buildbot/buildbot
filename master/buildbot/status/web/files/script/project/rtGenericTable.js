@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars'], function ($, dt, timeElements, hbCellsText, extendMoment) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers'], function ($, dt, timeElements, hbCellsText, extendMoment, helpers) {
 
     "use strict";
 
@@ -7,7 +7,11 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
 
     var privFunc = {
         getPropertyOnData: function (data, property) {
-            if (property instanceof String) {
+            if (property === undefined) {
+                return undefined;
+            }
+
+            if (typeof property === 'string' || property instanceof String) {
                 return data[property];
             }
 
@@ -55,6 +59,63 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     return extendMoment.getDateFormatted(time);
                 }
             };
+        },
+        slaveName: function (index, slaveNameProperty, slaveURLProperty) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, type, full) {
+                    var name = privFunc.getPropertyOnData(full, slaveNameProperty);
+                    var url = privFunc.getPropertyOnData(full, slaveURLProperty);
+                    return hbCells({slaveName: true, 'name': name, 'url': url});
+                }
+            };
+        },
+        slaveStatus: function (index) {
+            return {
+                "aTargets": [index],
+                "mRender": function (data, full, type) {
+                    var statusTxt,
+                        isRunning = false;
+                    if (type.connected === undefined || type.connected === false) {
+                        statusTxt = 'Offline';
+                    } else if (type.connected === true && type.runningBuilds === undefined) {
+                        statusTxt = 'Idle';
+                    } else if (type.connected === true && type.runningBuilds.length > 0) {
+                        statusTxt = type.runningBuilds.length + ' build(s) ';
+                        isRunning = true;
+                    }
+                    return hbCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    if (oData.connected === undefined) {
+                        $(nTd).addClass('offline');
+                    } else if (oData.connected === true && oData.runningBuilds === undefined) {
+                        $(nTd).addClass('idle');
+                    } else if (oData.connected === true && oData.runningBuilds.length > 0) {
+                        var overtime = 0;
+                        if (oData.runningBuilds !== undefined) {
+
+                            $.each(oData.runningBuilds, function (key, value) {
+                                if (value.eta !== undefined && value.eta < 0) {
+                                    overtime += 1;
+                                }
+                            });
+                            overtime = overtime > 0 ? overtime : false;
+                        }
+
+                        $(nTd).addClass('building').find('a.popup-btn-json-js').data({showRunningBuilds: oData});
+
+                        if (overtime) {
+                            $(nTd).removeClass('building')
+                                .addClass('overtime tooltip')
+                                .attr('title', "One or more builds on overtime");
+
+                            helpers.tooltip($(nTd));
+                        }
+                    }
+                }
+            };
         }
     };
 
@@ -77,26 +138,20 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2),
                 cellFunc.buildStatus(3),
-                {
-                    "aTargets": [4],
-                    "sClass": "txt-align-left",
-                    "mRender": function (data, type, full) {
-                        return full.slave_friendly_name;
-                    }
-                }
+                cellFunc.slaveName(4, "slave_friendly_name")
             ];
 
             return dt.initTable($tableElem, options);
         },
-        rtfProcessBuilds: function ($table, data) {
+        rtfGenericTableProcess: function ($table, data) {
             timeElements.clearTimeObjects($table);
             $table.fnClearTable();
 
             try {
                 $table.fnAddData(data);
                 timeElements.updateTimeObjects();
-
-            } catch (err) { }
+            } catch (err) {
+            }
         }
 
     };

@@ -1,12 +1,13 @@
 /*global define, Handlebars*/
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'extend-moment',
-    'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable'],
-    function ($, realtimePages, helpers, dt, hb, extendMoment, form, builderdetail, timeElements, rtTable) {
+    'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable', 'popup'],
+    function ($, realtimePages, helpers, dt, hb, extendMoment, form, builderdetail, timeElements, rtTable, popup) {
         "use strict";
         var rtBuilderDetail,
             $tbCurrentBuildsTable,
             $tbPendingBuildsTable,
             $tbBuildsTable,
+            $tbSlavesTable,
             builderdetailHandle = Handlebars.compile(builderdetail);
 
         rtBuilderDetail = {
@@ -14,11 +15,15 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 $tbCurrentBuildsTable = rtBuilderDetail.currentBuildsTableInit($('#rtCurrentBuildsTable'));
                 $tbPendingBuildsTable = rtBuilderDetail.pendingBuildsTableInit($('#rtPendingBuildsTable'));
                 $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'));
+                $tbSlavesTable = rtBuilderDetail.slavesTableInit($('#rtSlavesTable'));
 
                 var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
                 realtimeFunctions.project = rtBuilderDetail.rtfProcessCurrentBuilds;
                 realtimeFunctions.pending_builds = rtBuilderDetail.rtfProcessPendingBuilds;
                 realtimeFunctions.builds = rtBuilderDetail.rtfProcessBuilds;
+                realtimeFunctions.slaves = rtBuilderDetail.rtfProcessSlaves;
+
+                popup.registerJSONPopup($tbSlavesTable);
 
                 realtimePages.initRealtime(realtimeFunctions);
 
@@ -42,20 +47,21 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 } catch (err) { }
             },
             rtfProcessPendingBuilds: function (data) {
-                timeElements.clearTimeObjects($tbPendingBuildsTable);
-                $tbPendingBuildsTable.fnClearTable();
-                helpers.selectBuildsAction($tbPendingBuildsTable);
-
-                try {
-                    $tbPendingBuildsTable.fnAddData(data);
-                    timeElements.updateTimeObjects();
-                } catch (err) { }
+                rtTable.table.rtfGenericTableProcess($tbPendingBuildsTable, data);
+            },
+            rtfProcessSlaves: function (data) {
+                data = helpers.objectPropertiesToArray(data);
+                rtTable.table.rtfGenericTableProcess($tbSlavesTable, data);
             },
             rtfProcessBuilds: function (data) {
-                rtTable.table.rtfProcessBuilds($tbBuildsTable, data);
+                rtTable.table.rtfGenericTableProcess($tbBuildsTable, data);
             },
             currentBuildsTableInit: function ($tableElem) {
                 var options = {};
+
+                options.oLanguage = {
+                    "sEmptyTable": "No current builds"
+                };
 
                 options.aoColumns = [
                     { "mData": null, "sTitle": "#" },
@@ -101,6 +107,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
             pendingBuildsTableInit: function ($tableElem) {
                 var options = {};
 
+                options.oLanguage = {
+                    "sEmptyTable": "No pending builds"
+                };
+
                 options.aoColumns = [
                     { "mData": null },
                     { "mData": null },
@@ -132,6 +142,25 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                             return builderdetailHandle({removeBuildSelector: true, data: full});
                         }
                     }
+                ];
+
+                return dt.initTable($tableElem, options);
+            },
+            slavesTableInit: function ($tableElem) {
+                var options = {};
+
+                options.oLanguage = {
+                    "sEmptyTable": "No slaves attached"
+                };
+
+                options.aoColumns = [
+                    { "mData": null },
+                    { "mData": null }
+                ];
+
+                options.aoColumnDefs = [
+                    rtTable.cell.slaveName(0, "friendly_name"),
+                    rtTable.cell.slaveStatus(1)
                 ];
 
                 return dt.initTable($tableElem, options);
