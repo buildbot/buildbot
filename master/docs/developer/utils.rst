@@ -379,8 +379,9 @@ buildbot.util.debounce
 
 .. py:module:: buildbot.util.debounce
 
-Often, a method must be called exactly once at a time, but many events may trigger a call to the method.
-A simple example is the step method :py:meth:`~buildbot.process.buildstep.BuildStep.updateSummary`.
+It's often necessary to perform some action in response to a particular type of event.
+For example, steps need to update their status after updates arrive from the slave.
+However, when many events arrive in quick succession, it's more efficient to only perform the action once, after the last event has occurred.
 
 The ``debounce.method(wait)`` decorator is the tool for the job.
 
@@ -392,7 +393,11 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
     The underlying method must take no arguments (except ``self``).
 
     For each call to the decorated method, the underlying method will be invocation at least once within *wait* seconds (plus the time the method takes to execute).
-    Calls are "debounced" during that time, meaning that multiple calls to the decorated method may result in a single invocation.
+    Calls are "debounced" during that time, meaning that multiple calls to the decorated method will result in a single invocation.
+
+    .. note::
+
+        This functionality is similar to Underscore's ``debounce``, except that the Underscore method resets its timer on every call.
 
     The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
     This is useful when the method is a part of a Buidbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
