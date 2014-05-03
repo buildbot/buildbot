@@ -95,8 +95,9 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_startConsuming(self):
-        self.callStartConsuming({}, {},
-                                expected_filter=('changes', None, 'new'))
+        return self.callStartConsuming({}, {},
+                                       expected_filter=('changes',
+                                                        None, 'new'))
 
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):

@@ -71,7 +71,7 @@ class FakeMQConnector(object):
         qref.filter = filter
         qref.persistent_name = persistent_name
         self.qrefs.append(qref)
-        return qref
+        return defer.succeed(qref)
 
     def clearProductions(self):
         "Clear out the cached productions"

@@ -91,10 +91,11 @@ class EndpointMixin(interfaces.InterfaceTests):
             return rv
         return d
 
+    @defer.inlineCallbacks
     def callStartConsuming(self, options, kwargs, expected_filter=None):
         self.assertIn(set(kwargs), self.pathArgs)
         cb = mock.Mock()
-        qref = self.ep.startConsuming(cb, options, kwargs)
+        qref = yield self.ep.startConsuming(cb, options, kwargs)
         self.assertTrue(hasattr(qref, 'stopConsuming'))
         self.assertIdentical(self.mq.qrefs[0], qref)
         self.assertIdentical(qref.callback, cb)

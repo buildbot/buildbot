@@ -85,15 +85,18 @@ class InterfaceTests(object):
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
-                        msg = "Expected: %r; to implement: %s as specified in %r" % (
-                            cls, attr,
-                            interface)
-                        self.fail(msg)
+                    msg = "Expected: %r; to implement: %s as specified in %r" % (
+                        cls, attr,
+                        interface)
+                    self.fail(msg)
                 actual_argspec = getattr(cls, attr)
+                while hasattr(actual_argspec, 'func_original'):
+                    actual_argspec = actual_argspec.func_original
                 actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
 
                 if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
-                    msg = "Expected: %s; got: %s" % (
+                    msg = "%s: expected: %s; got: %s" % (
+                        attr,
                         template_argspec.getSignatureString(),
                         actual_argspec.getSignatureString())
                     self.fail(msg)

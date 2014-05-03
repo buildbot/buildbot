@@ -42,8 +42,14 @@ class WsProtocol(protocol.Protocol):
             def callback(key, message):
                 content = json.dumps(dict(path=path, key=key, message=message))
                 self.transport.write(content)
-            qref = self.master.data.startConsuming(callback, options, path)
-            self.qrefs[path] = qref
+            d = self.master.data.startConsuming(callback, options, path)
+
+            @d.addCallback
+            def register(qref):
+                if path in self.qrefs:
+                    qref.stopConsuming()
+                self.qrefs[path] = qref
+            d.addErrback("while starting consumption")
 
     def connectionLost(self, reason):
         log.msg("connection lost", system=self)

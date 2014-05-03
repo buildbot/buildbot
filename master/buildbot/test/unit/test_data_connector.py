@@ -210,13 +210,14 @@ class DataConnector(unittest.TestCase):
             ep.get.assert_called_once_with(mock.ANY, {})
         return d
 
+    @defer.inlineCallbacks
     def test_startConsuming(self):
         ep = self.patchFooPattern()
         ep.startConsuming = mock.Mock(name='MyEndpoint.startConsuming')
-        ep.startConsuming.return_value = 'qref'
+        ep.startConsuming.return_value = defer.succeed('qref')
 
         # since startConsuming is a mock, there's no need for real mq stuff
-        qref = self.data.startConsuming('cb', {}, ('foo', '10', 'bar'))
+        qref = yield self.data.startConsuming('cb', {}, ('foo', '10', 'bar'))
         self.assertEqual(qref, 'qref')
         ep.startConsuming.assert_called_with('cb', {}, dict(fooid=10))
 

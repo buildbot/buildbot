@@ -19,6 +19,7 @@ import uuid
 from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import datetime2epoch
 from buildbot.util import json
+from twisted.python import log
 from twisted.web import resource
 from twisted.web import server
 
@@ -105,10 +106,14 @@ class EventResource(resource.Resource):
                     options[k] = options[k][1]
 
             try:
-                qref = self.master.mq.startConsuming(
+                d = self.master.mq.startConsuming(
                     consumer.onMessage,
                     tuple(path))
-                consumer.registerQref(pathref, qref)
+
+                @d.addCallback
+                def register(qref):
+                    consumer.registerQref(pathref, qref)
+                d.addErrback(log.err, "while calling startConsuming")
             except NotImplementedError:
                 return self.finish(request, 404, "not implemented")
             except InvalidPathError:

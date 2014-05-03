@@ -74,7 +74,7 @@ For a filter to match a routing key, it must have the same length, and each elem
         :param callback: callable to invoke for matching messages
         :param tuple filter: filter for routing keys of interest
         :param persistent_name: persistent name for this consumer
-        :returns: a :py:class:`QueueRef` instance
+        :returns: a :py:class:`QueueRef` instance via Deferred
 
         This method will begin consuming messages matching the filter, invoking ``callback`` for each message.  See above for the format of the filter.
 
@@ -93,7 +93,7 @@ For a filter to match a routing key, it must have the same length, and each elem
 
 .. py:class:: QueueRef
 
-    The :py:class:`QueueRef` returned from
+    The :py:class:`QueueRef` returned (via Deferred) from
     :py:meth:`~MQConnector.startConsuming` can be used to stop consuming
     messages when they are no longer needed.  Users should be *very* careful to
     ensure that consumption is terminated in all cases.

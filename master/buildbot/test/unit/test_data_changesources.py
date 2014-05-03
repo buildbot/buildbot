@@ -158,8 +158,9 @@ class ChangeSourcesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_startConsuming(self):
-        self.callStartConsuming({}, {},
-                                expected_filter=('changesources', None, None))
+        return self.callStartConsuming({}, {},
+                                       expected_filter=('changesources',
+                                                        None, None))
 
 
 class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):

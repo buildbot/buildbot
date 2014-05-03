@@ -120,9 +120,11 @@ class DataConnector(service.AsyncService):
             rv = resultSpec.apply(rv)
         defer.returnValue(rv)
 
+    @defer.inlineCallbacks
     def startConsuming(self, callback, options, path):
         endpoint, kwargs = self.getEndpoint(path)
-        return endpoint.startConsuming(callback, options, kwargs)
+        ref = yield endpoint.startConsuming(callback, options, kwargs)
+        defer.returnValue(ref)
 
     def control(self, action, args, path):
         endpoint, kwargs = self.getEndpoint(path)
