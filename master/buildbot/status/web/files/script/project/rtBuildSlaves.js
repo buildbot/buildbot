@@ -27,13 +27,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
             ];
 
             options.aoColumnDefs = [
-                {
-                    "aTargets": [ 0 ],
-                    "sClass": "txt-align-left",
-                    "mRender": function (data, full, type) {
-                        return mustache.render(buildslaves, {showFriendlyName: true, friendly_name: type.friendly_name, host_name: type.name});
-                    }
-                },
+                rtTable.cell.slaveName(0, "friendly_name", "url"),
                 {
                     "aTargets": [ 1 ],
                     "sClass": "txt-align-left",

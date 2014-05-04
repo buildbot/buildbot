@@ -159,7 +159,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 ];
 
                 options.aoColumnDefs = [
-                    rtTable.cell.slaveName(0, "friendly_name"),
+                    rtTable.cell.slaveName(0, "friendly_name", "url"),
                     rtTable.cell.slaveStatus(1)
                 ];
 
