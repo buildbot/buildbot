@@ -175,6 +175,9 @@ class ForceBuildActionResource(ActionResource):
         elif "builders_json" in returnpage:
             s = self.getStatus(req)
             defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject()), msg))
+        elif "pending_json" in returnpage:
+            s = self.getStatus(req)
+            defer.returnValue((s.getBuildbotURL() + path_to_json_pending(req, builder_name)))
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)
