@@ -48,6 +48,6 @@ def getChanges(req, options=None):
             raise ValueError("Could not find pollers: %s" % ",".join(missing))
 
     for p in pollers:
-        p.doPoll()
+        p.force()
 
     return [], None

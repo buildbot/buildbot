@@ -66,8 +66,11 @@ class PollingChangeSource(ChangeSource):
     def poll(self):
         pass
 
+    def force(self):
+        self.doPoll()
+
     def activate(self):
         self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch)
 
     def deactivate(self):
-        self.doPoll.stop()
+        return self.doPoll.stop()
