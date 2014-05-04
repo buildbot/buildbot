@@ -52,22 +52,6 @@ class ChangeSource(service.ClusteredService):
 
 class PollingChangeSource(ChangeSource):
 
-    """
-    Utility subclass for ChangeSources that use some kind of periodic polling
-    operation.  Subclasses should define C{poll} and set C{self.pollInterval}.
-    The rest is taken care of.
-
-    Any subclass will be available via the "poller" webhook.
-    """
-
-    pollInterval = 60
-    "time (in seconds) between calls to C{poll}"
-
-    pollAtLaunch = False
-    "determines when the first poll occurs. True = immediately on launch, False = wait for one pollInterval."
-
-    _loop = None
-
     def __init__(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
         ChangeSource.__init__(self, name)
         self.pollInterval = pollInterval
@@ -75,22 +59,12 @@ class PollingChangeSource(ChangeSource):
 
     @poll.method
     def doPoll(self):
-        """
-        This is the method that is called by LoopingCall to actually poll.
-        It may also be called by change hooks to request a poll.
-        It is serialiazed - if you call it while a poll is in progress
-        then the 2nd invocation won't start until the 1st has finished.
-        """
         d = defer.maybeDeferred(self.poll)
         d.addErrback(log.err, 'while polling for changes')
         return d
 
     def poll(self):
-        """
-        Perform the polling operation, and return a deferred that will fire
-        when the operation is complete.  Failures will be logged, but the
-        method will be called again after C{pollInterval} seconds.
-        """
+        pass
 
     def activate(self):
         self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch)
