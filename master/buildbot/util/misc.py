@@ -34,44 +34,6 @@ def deferredLocked(lock_or_attr):
     return decorator
 
 
-class SerializedInvocation(object):
-
-    def __init__(self, method):
-        self.method = method
-        self.running = False
-        self.pending_deferreds = []
-
-    def __call__(self):
-        d = defer.Deferred()
-        self.pending_deferreds.append(d)
-        if not self.running:
-            self.start()
-        return d
-
-    def start(self):
-        self.running = True
-        invocation_deferreds = self.pending_deferreds
-        self.pending_deferreds = []
-        d = self.method()
-        d.addErrback(log.err, 'in invocation of %r' % (self.method,))
-
-        def notify_callers(_):
-            for d in invocation_deferreds:
-                d.callback(None)
-        d.addCallback(notify_callers)
-
-        def next(_):
-            self.running = False
-            if self.pending_deferreds:
-                self.start()
-            else:
-                self._quiet()
-        d.addBoth(next)
-
-    def _quiet(self):  # hook for tests
-        pass
-
-
 def cancelAfter(seconds, deferred, _reactor=reactor):
     delayedCall = _reactor.callLater(seconds, deferred.cancel)
 

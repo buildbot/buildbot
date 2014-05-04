@@ -91,62 +91,6 @@ class deferredLocked(unittest.TestCase):
         return d
 
 
-class SerializedInvocation(unittest.TestCase):
-
-    def waitForQuiet(self, si):
-        d = defer.Deferred()
-        si._quiet = lambda: d.callback(None)
-        return d
-
-    # tests
-
-    def test_name(self):
-        self.assertEqual(util.SerializedInvocation, misc.SerializedInvocation)
-
-    def testCallFolding(self):
-        events = []
-
-        def testfn():
-            d = defer.Deferred()
-
-            def done():
-                events.append('TM')
-                d.callback(None)
-            eventually(done)
-            return d
-        si = misc.SerializedInvocation(testfn)
-
-        # run three times - the first starts testfn, the second
-        # requires a second run, and the third is folded.
-        d1 = si()
-        d2 = si()
-        d3 = si()
-
-        dq = self.waitForQuiet(si)
-        d = defer.gatherResults([d1, d2, d3, dq])
-
-        def check(_):
-            self.assertEqual(events, ['TM', 'TM'])
-        d.addCallback(check)
-        return d
-
-    @compat.usesFlushLoggedErrors
-    def testException(self):
-        def testfn():
-            d = defer.Deferred()
-            reactor.callLater(0, d.errback,
-                              failure.Failure(RuntimeError("oh noes")))
-            return d
-        si = misc.SerializedInvocation(testfn)
-
-        d = si()
-
-        def check(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(check)
-        return d
-
-
 class TestCancelAfter(unittest.TestCase):
 
     def setUp(self):

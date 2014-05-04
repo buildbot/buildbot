@@ -570,25 +570,6 @@ buildbot.util.misc
             # ..
             return d
 
-.. py:class:: SerializedInvocation(method)
-
-    This is a method wrapper that will serialize calls to an asynchronous
-    method.  If a second call occurs while the first call is still executing,
-    it will not begin until the first call has finished.  If multiple calls
-    queue up, they will be collapsed into a single call.  The effect is that
-    the underlying method is guaranteed to be called at least once after every
-    call to the wrapper.
-
-    Note that if this class is used as a decorator on a method, it will
-    serialize invocations across all class instances.  For synchronization
-    specific to each instance, wrap the method in the constructor::
-
-        def __init__(self):
-            self.someMethod = SerializedInovcation(self.someMethod)
-
-    Tests can monkey-patch the ``_quiet`` method of the class to be notified
-    when all planned invocations are complete.
-
 .. py:function:: cancelAfter(seconds, deferred)
 
     :param seconds: timeout in seconds

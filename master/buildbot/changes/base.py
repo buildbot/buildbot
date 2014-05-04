@@ -14,14 +14,12 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
 from twisted.python import log
 from zope.interface import implements
 
 from buildbot.interfaces import IChangeSource
-from buildbot.util import misc
 from buildbot.util import service
+from buildbot.util import poll
 
 
 class ChangeSource(service.ClusteredService):
@@ -75,8 +73,7 @@ class PollingChangeSource(ChangeSource):
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 
-        self.doPoll = misc.SerializedInvocation(self.doPoll)
-
+    @poll.method
     def doPoll(self):
         """
         This is the method that is called by LoopingCall to actually poll.
@@ -95,23 +92,8 @@ class PollingChangeSource(ChangeSource):
         method will be called again after C{pollInterval} seconds.
         """
 
-    def startLoop(self):
-        self._loop = task.LoopingCall(self.doPoll)
-        self._loop.start(self.pollInterval, now=self.pollAtLaunch)
-
-    def stopLoop(self):
-        if self._loop and self._loop.running:
-            self._loop.stop()
-            self._loop = None
-
     def activate(self):
-        # delay starting doing anything until the reactor is running - if
-        # services are still starting up, they may miss an initial flood of
-        # changes
-        if self.pollInterval:
-            reactor.callWhenRunning(self.startLoop)
-        else:
-            reactor.callWhenRunning(self.doPoll)
+        self.doPoll.start(interval=self.pollInterval, now=self.pollAtLaunch)
 
     def deactivate(self):
-        self.stopLoop()
+        self.doPoll.stop()

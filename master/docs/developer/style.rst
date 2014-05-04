@@ -185,7 +185,6 @@ situations that require synchronization, the following might be useful:
 
 * :py:class:`twisted.internet.defer.DeferredLock`
 * :py:func:`buildbot.util.misc.deferredLocked`
-* :py:func:`buildbot.util.misc.SerializedInvocation`
 
 Joining Sequences
 ~~~~~~~~~~~~~~~~~

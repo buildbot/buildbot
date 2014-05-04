@@ -93,6 +93,8 @@ The ``debugPassword`` configuration option is no longer needed and is thus depre
 
 * Buildslave is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
+* The ``buildbot.misc.SerializedInvocation`` class has been removed; use :py:func:`buildbot.util.debounce.method` instead.
+
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
