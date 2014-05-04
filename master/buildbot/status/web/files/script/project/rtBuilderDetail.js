@@ -72,20 +72,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 options.aoColumnDefs = [
                     rtTable.cell.buildID(0),
-                    {
-                        "aTargets": [ 1 ],
-                        "sClass": "txt-align-left",
-                        "mRender": function (data, full, type) {
-                            var runningBuilds = {
-                                showRunningBuilds: true
-                            };
-                            var extended = $.extend(runningBuilds, type);
-                            return builderdetailHandle(extended);
-                        },
-                        "fnCreatedCell": function (nTd) {
-                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
-                        }
-                    },
+                    rtTable.cell.buildProgress(1, true),
                     rtTable.cell.revision(2),
                     {
                         "aTargets": [ 3 ],

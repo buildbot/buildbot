@@ -116,6 +116,28 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     }
                 }
             };
+        },
+        buildProgress: function (index, singleBuild) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, full, type) {
+                    return hbCells({
+                        buildProgress: true,
+                        showPending: !singleBuild,
+                        pendingBuilds: singleBuild ? undefined : type.pendingBuilds,
+                        currentBuilds: singleBuild ? [type] : type.currentBuilds,
+                        builderName: type.name
+                    });
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    var bars = $(nTd).find('.percent-outer-js');
+                    $.each(bars, function (key, elem) {
+                        var obj = $(elem);
+                        timeElements.addProgressBarElem(obj, obj.attr('data-starttime'), obj.attr('data-etatime'));
+                    });
+                }
+            };
         }
     };
 

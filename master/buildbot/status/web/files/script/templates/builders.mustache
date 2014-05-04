@@ -10,50 +10,12 @@
 		</div>
 	</div>
 {{/progressBar}}
-
-{{#showRunningBuilds}}
-    <ul class="list current-job-js building">	    	    		
-    	{{#currentBuilds}}
-			<li>
-				<div class="builders-status-truncate"><a href="{{url.path}}">{{number}}</a>
-					{{#currentStep}}
-						{{name}}
-					{{/currentStep}}
-				</div>
-				
-                <span class="spin-icon animate-spin"></span>
-            	
-				<div class="clear"></div>
-				{{#eta}}
-					<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
-						<span class="time-txt-js time-txt"></span>
-						<div class="percent-inner-js percent-inner">							
-						<div class="progressbar-overlay"></div>	
-						</div>
-					</div>					
-				{{/eta}}
-                {{^eta}}
-					<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
-						<span class="time-txt-js time-txt">{{times.0}}</span>
-						<div class="percent-inner-js percent-inner">
-							<div class="progressbar-overlay"></div>	
-						</div>
-					</div>
-                {{/eta}}
-			</li>						
-		{{/currentBuilds}}
-	</ul>	
-{{/showRunningBuilds}}
 	
 {{#showNoJobs}}
 	<span class="small-txt">
 		No jobs
     </span>
 {{/showNoJobs}}
-
-{{#pendingBuilds}}	
-	<a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
-{{/pendingBuilds}}
 
 {{#showLatestBuild}}
 	{{#latestBuild}}
