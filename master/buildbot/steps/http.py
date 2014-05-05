@@ -74,12 +74,9 @@ class HTTPStep(BuildStep):
             config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
         self.method = method
         self.url = url
-        self.requestkwargs = {'method': method, 'url': url}
         for p in HTTPStep.requestsParams:
             v = kwargs.pop(p, None)
             self.__dict__[p] = v
-            if v is not None:
-                self.requestkwargs[p] = v
         if method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
             config.error("Wrong method given: '%s' is not known" % method)
         if description is not None:
@@ -93,6 +90,13 @@ class HTTPStep(BuildStep):
 
     @defer.inlineCallbacks
     def doRequest(self):
+        # create requests
+        self.requestkwargs = {}
+        for p in self.__dict__ and self.requestsParams:
+            v = self.__dict__[p]
+            if v is not None:
+                self.requestkwargs[p] = v
+
         # create a new session if it doesn't exist
         self.session = getSession()
 
