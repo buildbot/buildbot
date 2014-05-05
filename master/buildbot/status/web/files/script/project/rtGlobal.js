@@ -30,7 +30,7 @@ define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helper
                 
             var statusColorClass = buildLoad <= 100? 'green': buildLoad >= 101 && buildLoad <= 200? 'yellow' : 'red';
             
-            $buildLoadBox.attr({'class':'info-box show '+statusColorClass});            
+            $buildLoadBox.attr({'class':'info-box '+statusColorClass}).show();            
 
             var slaveCount = data['slaves_count'];
             var slavesInUsePer = (data['slaves_busy'] / slaveCount) * 100.0;

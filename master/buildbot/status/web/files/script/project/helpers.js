@@ -42,9 +42,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			    	$('.windowsize').html(ws);
 			    });
 			*/
-
-			
-
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
@@ -190,6 +187,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				});
 		
 		}, jCenter: function(el) {
+
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
@@ -562,7 +560,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page'];
+			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page','home_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {
@@ -583,20 +581,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			
 			var closeBtn = $('.close-btn').add(document);
 			
-			closeBtn.bind('click touchstart', function(e){
+			closeBtn.bind('click touchstart', function(e){					
 				
 				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
 				
-						if (clearEl === undefined ) {
+					if (clearEl === undefined ) {
+						boxElement.remove();
+					} else {
+						
+						boxElement.slideUp('fast', function(){								
+							closeBtn.unbind(e);
+						});
+					}
 
-							boxElement.remove();
-						} else {
-							boxElement.slideUp('fast', function(){
-								$(this).remove();	
-							});
-						}
-
-					$(this).unbind(e);
+					closeBtn.unbind(e);
 				
 				}
 
