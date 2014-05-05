@@ -16,8 +16,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
             interval = setTimeout(privateFunc.heartbeat, HEARTBEAT);
         },
         heartbeat: function (force) {
-            var now = new Date(),
-                count = 0;
+            var now = new Date();
 
             // Process all of the time elements
             if (force === true || ((now - lastBeat) > HEARTBEAT)) {
