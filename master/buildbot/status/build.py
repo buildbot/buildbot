@@ -479,7 +479,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()
         # TODO(maruel): Add.
-        #result['test_results'] = self.getTestResults()
+        # result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),
                            self.builder.status.getURLForThing(l)] for l in self.getLogs()]
         result['eta'] = self.getETA()

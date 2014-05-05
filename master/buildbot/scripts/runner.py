@@ -453,7 +453,7 @@ class TryOptions(base.SubcommandOptions):
     # Mapping of .buildbot/options names to command-line options
     buildbotOptions = [
         ['try_connect', 'connect'],
-        #[ 'try_builders', 'builders' ], <-- handled in postOptions
+        # [ 'try_builders', 'builders' ], <-- handled in postOptions
         ['try_vc', 'vc'],
         ['try_branch', 'branch'],
         ['try_repository', 'repository'],
@@ -467,8 +467,8 @@ class TryOptions(base.SubcommandOptions):
         ['try_master', 'master'],
         ['try_who', 'who'],
         ['try_comment', 'comment'],
-        #[ 'try_wait', 'wait' ], <-- handled in postOptions
-        #[ 'try_quiet', 'quiet' ], <-- handled in postOptions
+        # [ 'try_wait', 'wait' ], <-- handled in postOptions
+        # [ 'try_quiet', 'quiet' ], <-- handled in postOptions
 
         # Deprecated command mappings from the quirky old days:
         ['try_masterstatus', 'master'],

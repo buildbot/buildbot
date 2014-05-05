@@ -62,7 +62,7 @@ class Git(Source):
 
     """ Class for Git with all the smarts """
     name = 'git'
-    renderables = ["repourl", "reference", "branch", "codebase"]
+    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
@@ -127,15 +127,16 @@ class Git(Source):
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
 
-        if self.mode not in ['incremental', 'full']:
-            bbconfig.error("Git: mode must be 'incremental' or 'full'.")
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
-        if (self.mode == 'full' and
-                self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
-            bbconfig.error("Git: invalid method for mode 'full'.")
-        if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
-            bbconfig.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
+        if isinstance(self.mode, basestring):
+            if self.mode not in ['incremental', 'full']:
+                bbconfig.error("Git: mode must be 'incremental' or 'full'.")
+            if isinstance(self.method, basestring):
+                if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
+                    bbconfig.error("Git: invalid method for mode 'full'.")
+                if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
+                    bbconfig.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
@@ -321,7 +322,10 @@ class Git(Source):
                 arg = arg(opt)
                 if arg:
                     cmd.extend(arg)
-        cmd.append('HEAD')
+        # 'git describe' takes a commitish as an argument for all options
+        # *except* --dirty
+        if not any(arg.startswith('--dirty') for arg in cmd):
+            cmd.append('HEAD')
 
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
@@ -414,8 +418,15 @@ class Git(Source):
         """Retry if clone failed"""
 
         args = []
+        switchToBranch = False
         if self.supportsBranch and self.branch != 'HEAD':
-            args += ['--branch', self.branch]
+            if self.branch.startswith('refs/'):
+                # we can't choose this branch from 'git clone' directly; we
+                # must do so after the clone
+                switchToBranch = True
+                args += ['--no-checkout']
+            else:
+                args += ['--branch', self.branch]
         if shallowClone:
             args += ['--depth', '1']
         if self.reference:
@@ -430,6 +441,9 @@ class Git(Source):
             abandonOnFailure = True
         # If it's a shallow clone abort build step
         d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+
+        if switchToBranch:
+            d.addCallback(lambda _: self._fetch(None))
 
         def _retry(res):
             if self.stopped or res == 0:  # or shallow clone??
@@ -551,8 +565,11 @@ class Git(Source):
         return d
 
     def applyPatch(self, patch):
-        d = self._dovccmd(['apply', '--index', '-p', str(patch[0])],
-                          initialStdin=patch[1])
+        d = self._dovccmd(['update-index', '--refresh'])
+
+        def applyAlready(res):
+            return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
+        d.addCallback(applyAlready)
         return d
 
     def _sourcedirIsUpdatable(self):

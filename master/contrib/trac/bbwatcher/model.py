@@ -20,7 +20,7 @@ class Build(object):
         try:
             self.start = datetime.fromtimestamp(self.start, utc)
             self.end = datetime.fromtimestamp(self.end, utc)
-        except Exception, e:
+        except Exception:
             pass
 
     def __str__(self):

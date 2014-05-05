@@ -87,8 +87,8 @@ class BuilderStatus(styles.Versioned):
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
         self.lastBuildStatus = None
-        #self.currentBig = None
-        #self.currentSmall = None
+        # self.currentBig = None
+        # self.currentSmall = None
         self.currentBuilds = []
         self.nextBuild = None
         self.watchers = []
@@ -308,7 +308,7 @@ class BuilderStatus(styles.Versioned):
 
         def make_statuses(brdicts):
             return [BuildRequestStatus(self.name, brdict['brid'],
-                                       self.status)
+                                       self.status, brdict=brdict)
                     for brdict in brdicts]
         d.addCallback(make_statuses)
         return d
@@ -588,7 +588,7 @@ class BuilderStatus(styles.Versioned):
         result['schedulers'] = [s.name
                                 for s in self.status.master.allSchedulers()
                                 if self.name in s.builderNames]
-        #result['url'] = self.parent.getURLForThing(self)
+        # result['url'] = self.parent.getURLForThing(self)
         # TODO(maruel): Add cache settings? Do we care?
 
         # Transient

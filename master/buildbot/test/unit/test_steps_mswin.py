@@ -98,6 +98,20 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             expected_args=['blah*', '/XF', '*.foo', '*.bar']
         )
 
+    def test_exclude_files(self):
+        return self._run_simple_test(
+            r'D:\source', r'E:\dest', files=['blah*'],
+            exclude_files=['*.foo', '*.bar'],
+            expected_args=['blah*', '/XF', '*.foo', '*.bar']
+        )
+
+    def test_exclude_dirs(self):
+        return self._run_simple_test(
+            r'D:\source', r'E:\dest', files=['blah*'],
+            exclude_dirs=['foo', 'bar'],
+            expected_args=['blah*', '/XD', 'foo', 'bar']
+        )
+
     @defer.inlineCallbacks
     def test_codes(self):
         # Codes that mean uneventful copies (including no copy at all).

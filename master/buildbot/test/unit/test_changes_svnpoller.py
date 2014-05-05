@@ -381,14 +381,20 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.failUnlessEqual(changes[0]['revision'], '6')
         self.failUnlessEqual(changes[0]['files'], ["version.c"])
 
-    def makeInfoExpect(self):
-        return gpo.Expect('svn', 'info', '--xml', '--non-interactive', sample_base,
-                          '--username=dustin', '--password=bbrocks')
+    def makeInfoExpect(self, password='bbrocks'):
+        args = ['svn', 'info', '--xml', '--non-interactive', sample_base,
+                '--username=dustin']
+        if password is not None:
+            args.append('--password=' + password)
+        return gpo.Expect(*args)
 
-    def makeLogExpect(self):
-        return gpo.Expect('svn', 'log', '--xml', '--verbose', '--non-interactive',
-                          '--username=dustin', '--password=bbrocks',
-                          '--limit=100', sample_base)
+    def makeLogExpect(self, password='bbrocks'):
+        args = ['svn', 'log', '--xml', '--verbose', '--non-interactive',
+                '--username=dustin']
+        if password is not None:
+            args.append('--password=' + password)
+        args.extend(['--limit=100', sample_base])
+        return gpo.Expect(*args)
 
     def test_create_changes_overriden_project(self):
         def custom_split_file(path):
@@ -491,6 +497,32 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         d.addCallback(check_fourth)
 
         return d
+
+    def test_poll_empty_password(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                                 svnuser='dustin', svnpasswd='')
+
+        self.expectCommands(
+            self.makeInfoExpect(password="").stdout(sample_info_output),
+            self.makeLogExpect(password="").stdout(make_changes_output(1)),
+            self.makeLogExpect(password="").stdout(make_changes_output(1)),
+            self.makeLogExpect(password="").stdout(make_changes_output(2)),
+            self.makeLogExpect(password="").stdout(make_changes_output(4)),
+        )
+        s.poll()
+
+    def test_poll_no_password(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                                 svnuser='dustin')
+
+        self.expectCommands(
+            self.makeInfoExpect(password=None).stdout(sample_info_output),
+            self.makeLogExpect(password=None).stdout(make_changes_output(1)),
+            self.makeLogExpect(password=None).stdout(make_changes_output(1)),
+            self.makeLogExpect(password=None).stdout(make_changes_output(2)),
+            self.makeLogExpect(password=None).stdout(make_changes_output(4)),
+        )
+        s.poll()
 
     @compat.usesFlushLoggedErrors
     def test_poll_get_prefix_exception(self):

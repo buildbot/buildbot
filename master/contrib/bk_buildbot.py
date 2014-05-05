@@ -14,11 +14,7 @@
 '''
 
 import commands
-import os
-import re
 import sys
-if sys.version_info < (2, 6):
-    import sets
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
@@ -40,7 +36,6 @@ if DEBUG:
 
 
 from twisted.cred import credentials
-from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb

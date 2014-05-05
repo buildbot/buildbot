@@ -29,7 +29,7 @@ class Robocopy(ShellCommand):
     This is just a wrapper around the standard shell command that
     will handle arguments and return codes accordingly for Robocopy.
     """
-    renderables = ['source', 'destination', 'files', 'exclude']
+    renderables = ['source', 'destination', 'files', 'exclude_files', 'exclude_dirs', 'custom_opts']
 
     # Robocopy exit flags (they are combined to make up the exit code)
     # See: http://ss64.com/nt/robocopy-exit.html
@@ -45,6 +45,9 @@ class Robocopy(ShellCommand):
                  mirror=False,
                  move=False,
                  exclude=None,
+                 exclude_files=None,
+                 exclude_dirs=None,
+                 custom_opts=None,
                  verbose=False,
                  **kwargs):
         self.source = source
@@ -53,7 +56,11 @@ class Robocopy(ShellCommand):
         self.recursive = recursive
         self.mirror = mirror
         self.move = move
-        self.exclude = exclude
+        self.exclude_files = exclude_files
+        if exclude and not exclude_files:
+            self.exclude_files = exclude
+        self.exclude_dirs = exclude_dirs
+        self.custom_opts = custom_opts
         self.verbose = verbose
         ShellCommand.__init__(self, **kwargs)
 
@@ -67,11 +74,16 @@ class Robocopy(ShellCommand):
             command.append('/MIR')
         if self.move:
             command.append('/MOVE')
-        if self.exclude:
+        if self.exclude_files:
             command.append('/XF')
-            command += self.exclude
+            command += self.exclude_files
+        if self.exclude_dirs:
+            command.append('/XD')
+            command += self.exclude_dirs
         if self.verbose:
             command.append('/V /TS /FP')
+        if self.custom_opts:
+            command += self.custom_opts
         command += ['/TEE', '/NP']
         self.setCommand(command)
         ShellCommand.start(self)

@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.buildslave.base import (
-    AbstractBuildSlave, BuildSlave, AbstractLatentBuildSlave)
+from buildbot.buildslave.base import AbstractBuildSlave
+from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.buildslave.base import BuildSlave
 
 _hush_pyflakes = [
-    AbstractBuildSlave, BuildSlave, AbstractLatentBuildSlave]
+    AbstractBuildSlave,
+    BuildSlave,
+    AbstractLatentBuildSlave,
+]

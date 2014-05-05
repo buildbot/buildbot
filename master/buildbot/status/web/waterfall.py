@@ -239,7 +239,7 @@ class SpacerBox(components.Adapter):
     implements(IBox)
 
     def getBox(self, req):
-        #b = Box(["spacer"], "white")
+        # b = Box(["spacer"], "white")
         b = Box([])
         b.spacer = True
         return b
@@ -417,8 +417,8 @@ class WaterfallStatusResource(HtmlResource):
         # failing.
         currentBuilds = builderStatus.getCurrentBuilds()
         if currentBuilds:
-            for build in currentBuilds:
-                for step in build.getSteps():
+            for bld in currentBuilds:
+                for step in bld.getSteps():
                     if step.getResults()[0] == builder.FAILURE:
                         return False
 

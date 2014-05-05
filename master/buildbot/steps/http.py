@@ -131,6 +131,7 @@ class HTTPStep(BuildStep):
 
         log.finish()
 
+        self.descriptionDone = "Status code: %d" % r.status_code
         self.step_status.setText(self.describe(done=True))
         if (r.status_code < 400):
             self.finished(SUCCESS)
@@ -156,6 +157,7 @@ class HTTPStep(BuildStep):
             log.addHeader('\t%s: %s\n' % (k, v))
 
         log.addStdout(' ------ Content ------\n%s' % response.text)
+        self.addLog('content').addStdout(response.text)
 
     def describe(self, done=False):
         if done:

@@ -150,7 +150,7 @@ class TestBotMaster(unittest.TestCase):
         self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
                    mock.Mock())
 
-        old_config, new_config = mock.Mock(), mock.Mock()
+        new_config = mock.Mock()
         d = self.botmaster.reconfigService(new_config)
 
         @d.addCallback

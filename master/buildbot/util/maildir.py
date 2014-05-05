@@ -112,7 +112,7 @@ class MaildirService(service.MultiService):
                     self.files.remove(f)
             newfiles = []
             for f in os.listdir(self.newdir):
-                if not f in self.files:
+                if f not in self.files:
                     newfiles.append(f)
             self.files.extend(newfiles)
             for n in newfiles:
