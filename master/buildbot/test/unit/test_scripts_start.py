@@ -28,6 +28,7 @@ def mkconfig(**kwargs):
             'quiet': False,
             'basedir': os.path.abspath('basedir'),
             'nodaemon': False,
+            'profile': False,
             }
     config.update(kwargs)
     return config

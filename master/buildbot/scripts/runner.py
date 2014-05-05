@@ -154,6 +154,7 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
+        ['profile', None, "Output profiler information into stats_obj"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot start [<basedir>]"

@@ -90,8 +90,12 @@ class ForceBuildDialogPage(HtmlResource):
             url_parts = list(urlparse(url))
             url_parts[2] += "/force"
             url_parts[4] += return_page
+            force_url = urlunparse(url_parts)
 
-            cxt['force_url'] = urlunparse(url_parts)
+            if len(url_parts[4]) == 0:
+                force_url = force_url + codebases_arg
+
+            cxt['force_url'] = force_url
             cxt['rt_update'] = args
             request.args = args
 

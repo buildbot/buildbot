@@ -30,7 +30,7 @@
 
             <ul class="log-list log-list-js">
                 {{#each s.logs}}
-                        <li class="s-logs-js"><a target="_blank" href="{{this.[1]}}">{{this.[0]}}</a></li>
+                        <li class="s-logs-js"><a href="{{this.[1]}}">{{this.[0]}}</a></li>
                 {{/each}}
 
               {{^s.logs}}
@@ -40,7 +40,7 @@
 
                 {{#each s.urls }}
                     {{#if results includeZero=true}}
-                        <li class="log-list-{{buildCSSClass this.results }} urls-mod"><a title="{{ this.results }}" target="_blank"
+                        <li class="log-list-{{buildCSSClass this.results }} urls-mod"><a title="{{ this.results }}"
                                                                      href="{{ this.url }}">{{ @key }}</a></li>
                     {{else}}
                         {{results}}
