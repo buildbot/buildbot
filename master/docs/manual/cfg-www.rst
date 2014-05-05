@@ -372,3 +372,32 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
                   proxy_read_timeout 6000s;
             }
     }
+
+.. _Web-Authorization:
+
+Authorization rules
+~~~~~~~~~~~~~~~~~~~
+
+Endpoint matchers
++++++++++++++++++
+Endpoint matchers are responsible for creating rules to match REST endpoints, and requiring roles for them.
+The following sequence is implemented by each EndpointMatcher class
+
+- Check whether the requested endpoint is supported by this matcher
+- Get necessary info from data api, and decides whether it matches.
+- Looks if the users has the required role.
+
+Several endpoints  matchers are currently implemented
+
+.. py:class:: buildbot.www.authz.endpointmatchers.AnyEndpointMatcher(role)
+
+    :param role: The role which grants access to any endpoint.
+
+    AnyEndpointMatcher grants all rights to a people with given role (usually "admins")
+
+.. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(role)
+
+    :param builder: name of the builder.
+    :param role: The role needed to get access to such endpoints.
+
+    ForceBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
