@@ -12,8 +12,8 @@
 <p>Child Nodes</p>
 <ul>
 {% for child in children %}
-    <li><a href="{{ child|e }}">{{ child|e }}</a>
-        (<a href="{{ child|e }}/help">{{ child|e }}/help</a>)
+    <li><a href="{{path_to_root}}json/{{ child|e }}">{{ child|e }}</a>
+        (<a href="{{path_to_root}}json/{{ child|e }}/help">{{ child|e }}/help</a>)
     </li>
 {% endfor %}
 </ul>

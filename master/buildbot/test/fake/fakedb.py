@@ -25,6 +25,7 @@ import copy
 from buildbot.db import buildrequests
 from buildbot.util import datetime2epoch
 from buildbot.util import json
+from copy import deepcopy
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -64,7 +65,7 @@ class Row(object):
             if self.values[self.id_column] is None:
                 self.values[self.id_column] = self.nextId()
         for col in self.required_columns:
-            assert col in kwargs, "%s not specified" % col
+            assert col in kwargs, "%s not specified: %s" % (col, kwargs)
         for col in self.lists:
             setattr(self, col, [])
         for col in self.dicts:
@@ -864,10 +865,17 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 })
 
     def getBuildslaves(self):
-        return defer.succeed([])
+        return defer.succeed([{
+            'name': s['name'],
+            'slaveid': s['slaveid'],
+        } for s in self.buildslaves])
 
     def getBuildslaveByName(self, name):
-        return defer.succeed(self._getBuildslaveByName(name))
+        buildslave = self._getBuildslaveByName(name)
+        if buildslave is not None:
+            # XX: make a deep-copy to avoid side effects
+            buildslave = deepcopy(buildslave)
+        return defer.succeed(buildslave)
 
     def _getBuildslaveByName(self, name):
         for slave in self.buildslaves:
@@ -876,6 +884,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         return None
 
     def updateBuildslave(self, name, slaveinfo):
+        slaveinfo = deepcopy(slaveinfo)
         slave = self._getBuildslaveByName(name)
         if slave is None:
             self.insertTestData([

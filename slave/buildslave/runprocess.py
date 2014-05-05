@@ -45,20 +45,37 @@ if runtime.platformType == 'posix':
     from twisted.internet.process import Process
 
 
+def win32_batch_quote(cmd_list):
+    # Quote cmd_list to a string that is suitable for inclusion in a
+    # Windows batch file. This is not quite the same as quoting it for the
+    # shell, as cmd.exe doesn't support the %% escape in interactive mode.
+    # As an exception, a lone pipe as an argument is not escaped, and
+    # becomes a shell pipe.
+    def escape_arg(arg):
+        if arg == '|':
+            return arg
+
+        arg = quoteArguments([arg])
+        # escape shell special characters
+        arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
+        # prevent variable expansion
+        return arg.replace('%', '%%')
+
+    return ' '.join(map(escape_arg, cmd_list))
+
+
 def shell_quote(cmd_list):
     # attempt to quote cmd_list such that a shell will properly re-interpret
-    # it.  The pipes module is only available on UNIX, and Windows "shell"
-    # quoting is indescribably convoluted - so much so that it's not clear it's
-    # reversible.  Also, the quote function is undocumented (although it looks
-    # like it will be documented soon: http://bugs.python.org/issue9723).
-    # Finally, it has a nasty bug in some versions where an empty string is not
-    # quoted.
+    # it.  The pipes module is only available on UNIX; also, the quote
+    # function is undocumented (although it looks like it will be documented
+    # soon: http://bugs.python.org/issue9723). Finally, it has a nasty bug
+    # in some versions where an empty string is not quoted.
     #
     # So:
     #  - use pipes.quote on UNIX, handling '' as a special case
-    #  - use Python's repr() on Windows, as a best effort
+    #  - use our own custom function on Windows
     if runtime.platformType == 'win32':
-        return " ".join([repr(e) for e in cmd_list])
+        return win32_batch_quote(cmd_list)
     else:
         import pipes
 
@@ -268,9 +285,12 @@ class RunProcess:
 
         self.builder = builder
         if isinstance(command, list):
-            command = [util.Obfuscated(w[1], w[2])
-                       if (isinstance(w, tuple) and len(w) == 3 and w[0] == 'obfuscated')
-                       else w for w in command]
+            def obfus(w):
+                if (isinstance(w, tuple) and len(w) == 3
+                        and w[0] == 'obfuscated'):
+                    return util.Obfuscated(w[1], w[2])
+                return w
+            command = [obfus(w) for w in command]
         # We need to take unicode commands and arguments and encode them using
         # the appropriate encoding for the slave.  This is mostly platform
         # specific, but can be overridden in the slave's buildbot.tac file.
@@ -335,7 +355,7 @@ class RunProcess:
             self.environ = newenv
         else:  # not environ
             self.environ = os.environ.copy()
-        self.initialStdin = initialStdin
+        self.initialStdin = to_str(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
@@ -570,13 +590,7 @@ class RunProcess:
         if type(self.command) in types.StringTypes:
             tf.write(self.command)
         else:
-            def maybe_escape_pipes(arg):
-                if arg != '|':
-                    return arg.replace('|', '^|')
-                else:
-                    return '|'
-            cmd = [maybe_escape_pipes(arg) for arg in self.command]
-            tf.write(quoteArguments(cmd))
+            tf.write(win32_batch_quote(self.command))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
@@ -607,12 +621,12 @@ class RunProcess:
         concatenate all the chunks into a single string
         """
         retval = {}
-        for log in msg:
-            data = "".join(msg[log])
-            if isinstance(log, tuple) and log[0] == 'log':
-                retval['log'] = (log[1], data)
+        for logname in msg:
+            data = "".join(msg[logname])
+            if isinstance(logname, tuple) and logname[0] == 'log':
+                retval['log'] = (logname[1], data)
             else:
-                retval[log] = data
+                retval[logname] = data
         return retval
 
     def _sendMessage(self, msg):
@@ -757,12 +771,12 @@ class RunProcess:
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = "command timed out: %d seconds without output" % self.timeout
+        msg = "command timed out: %d seconds without output running %s" % (self.timeout, self.fake_command)
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
-        msg = "command timed out: %d seconds elapsed" % self.maxTime
+        msg = "command timed out: %d seconds elapsed running %s" % (self.maxTime, self.fake_command)
         self.kill(msg)
 
     def isDead(self):
@@ -882,11 +896,12 @@ class RunProcess:
         log.msg("we tried to kill the process, and it wouldn't die.."
                 " finish anyway")
         self.killTimer = None
-        self.sendStatus({'header': "SIGKILL failed to kill process\n"})
+        signalName = "SIG" + self.interruptSignal
+        self.sendStatus({'header': signalName + " failed to kill process\n"})
         if self.sendRC:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
-        self.failed(RuntimeError("SIGKILL failed to kill process"))
+        self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):
         for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer', 'sigtermTimer'):

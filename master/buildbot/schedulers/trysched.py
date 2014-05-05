@@ -45,7 +45,7 @@ class TryBase(base.BaseScheduler):
         # on all of the configured builders.
         if builderNames:
             for b in builderNames:
-                if not b in self.builderNames:
+                if b not in self.builderNames:
                     log.msg("%s got with builder %s" % (self, b))
                     log.msg(" but that wasn't in our list: %s"
                             % (self.builderNames,))
@@ -159,6 +159,7 @@ class Try_Jobdir(TryBase):
             raise BadJobfile("unknown version '%s'" % ver)
         return parsed_job
 
+    @defer.inlineCallbacks
     def handleJobFile(self, filename, f):
         try:
             parsed_job = self.parseJob(f)
@@ -166,14 +167,16 @@ class Try_Jobdir(TryBase):
         except BadJobfile:
             log.msg("%s reports a bad jobfile in %s" % (self, filename))
             log.err()
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return
 
         # Validate/fixup the builder names.
         builderNames = self.filterBuilderList(builderNames)
         if not builderNames:
             log.msg(
                 "incoming Try job did not specify any allowed builder names")
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return
 
         who = ""
         if parsed_job['who']:
@@ -183,37 +186,32 @@ class Try_Jobdir(TryBase):
         if parsed_job['comment']:
             comment = parsed_job['comment']
 
-        d = self.master.db.sourcestampsets.addSourceStampSet()
+        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
+        yield self.master.db.sourcestamps.addSourceStamp(
+            sourcestampsetid=setid,
+            branch=parsed_job['branch'],
+            revision=parsed_job['baserev'],
+            patch_body=parsed_job['patch_body'],
+            patch_level=parsed_job['patch_level'],
+            patch_author=who,
+            patch_comment=comment,
+            patch_subdir='',  # TODO: can't set this remotely - #1769
+            project=parsed_job['project'],
+            repository=parsed_job['repository'])
 
-        def addsourcestamp(setid):
-            self.master.db.sourcestamps.addSourceStamp(
-                sourcestampsetid=setid,
-                branch=parsed_job['branch'],
-                revision=parsed_job['baserev'],
-                patch_body=parsed_job['patch_body'],
-                patch_level=parsed_job['patch_level'],
-                patch_author=who,
-                patch_comment=comment,
-                patch_subdir='',  # TODO: can't set this remotely - #1769
-                project=parsed_job['project'],
-                repository=parsed_job['repository'])
-            return setid
-
-        d.addCallback(addsourcestamp)
-
-        def create_buildset(setid):
-            reason = "'try' job"
-            if parsed_job['who']:
-                reason += " by user %s" % parsed_job['who']
-            properties = parsed_job['properties']
-            requested_props = Properties()
-            requested_props.update(properties, "try build")
-            return self.addBuildsetForSourceStamp(
-                ssid=None, setid=setid,
-                reason=reason, external_idstring=parsed_job['jobid'],
-                builderNames=builderNames, properties=requested_props)
-        d.addCallback(create_buildset)
-        return d
+        reason = "'try' job"
+        if parsed_job['who']:
+            reason += " by user %s" % parsed_job['who']
+        properties = parsed_job['properties']
+        requested_props = Properties()
+        requested_props.update(properties, "try build")
+        bsid, brids = yield self.addBuildsetForSourceStamp(
+            ssid=None, setid=setid,
+            reason=reason,
+            external_idstring=parsed_job['jobid'],
+            builderNames=builderNames,
+            properties=requested_props)
+        defer.returnValue((bsid, brids))
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
@@ -244,13 +242,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         sourcestampsetid = yield db.sourcestampsets.addSourceStampSet()
 
+        # note: no way to specify patch subdir - #1769
         yield db.sourcestamps.addSourceStamp(
             branch=branch, revision=revision, repository=repository,
             project=project, patch_level=patch[0], patch_body=patch[1],
             patch_subdir='', patch_author=who or '',
             patch_comment=comment or '', codebase='',
             sourcestampsetid=sourcestampsetid)
-                    # note: no way to specify patch subdir - #1769
 
         requested_props = Properties()
         requested_props.update(properties, "try build")

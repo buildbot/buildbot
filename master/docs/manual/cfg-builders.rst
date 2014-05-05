@@ -7,6 +7,10 @@
 Builder Configuration
 ---------------------
 
+.. contents::
+    :depth: 1
+    :local:
+
 The :bb:cfg:`builders` configuration key is a list of objects giving
 configuration for the Builders.  For more information on the function of
 Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.  The class

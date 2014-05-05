@@ -19,11 +19,11 @@
 #
 # See the Buildbot manual for configuration instructions.
 
-## WARNING
+# WARNING
 # This code does not work with recent versions of Twisted and Mercurial.  It
 # was never a good idea to try to run Twisted code within Mercurial, and now it
 # doesn't work.  Use this code with caution.
-##
+#
 
 import os
 
@@ -32,7 +32,7 @@ from mercurial.node import hex
 from mercurial.node import nullid  # @UnresolvedImport
 
 # mercurial's on-demand-importing hacks interfere with the:
-#from zope.interface import Interface
+# from zope.interface import Interface
 # that Twisted needs to do, so disable it.
 try:
     from mercurial import demandimport

@@ -396,7 +396,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # handles both stdout and stderr on a single handle. The read data is
         # never referenced until the thread dies - so no need for locks
         # around self.captured_blocks.
-        #self.info("Redirect thread starting")
+        # self.info("Redirect thread starting")
         while True:
             try:
                 ec, data = win32file.ReadFile(handle, CHILDCAPTURE_BLOCK_SIZE)
@@ -409,7 +409,7 @@ class BBService(win32serviceutil.ServiceFramework):
             captured_blocks.append(data)
             del captured_blocks[CHILDCAPTURE_MAX_BLOCKS:]
         handle.Close()
-        #self.info("Redirect capture thread terminating")
+        # self.info("Redirect capture thread terminating")
 
     def newPipe(self):
         sa = win32security.SECURITY_ATTRIBUTES()
@@ -433,11 +433,8 @@ class BBService(win32serviceutil.ServiceFramework):
 def RegisterWithFirewall(exe_name, description):
     # Register our executable as an exception with Windows Firewall.
     # taken from  http://msdn.microsoft.com/library/default.asp?url=\
-    #/library/en-us/ics/ics/wf_adding_an_application.asp
+    # /library/en-us/ics/ics/wf_adding_an_application.asp
     from win32com.client import Dispatch
-    #  Set constants
-    NET_FW_PROFILE_DOMAIN = 0
-    NET_FW_PROFILE_STANDARD = 1
 
     # Scope
     NET_FW_SCOPE_ALL = 0
@@ -456,12 +453,12 @@ def RegisterWithFirewall(exe_name, description):
     app.Name = description
     app.Scope = NET_FW_SCOPE_ALL
     # Use either Scope or RemoteAddresses, but not both
-    #app.RemoteAddresses = "*"
+    # app.RemoteAddresses = "*"
     app.IpVersion = NET_FW_IP_VERSION_ANY
     app.Enabled = True
 
     # Use this line if you want to add the app, but disabled.
-    #app.Enabled = False
+    # app.Enabled = False
 
     profile.AuthorizedApplications.Add(app)
 

@@ -770,6 +770,38 @@ class TestInterpolateKwargs(unittest.TestCase):
         return d
 
 
+class TestInterpolateSlaveInfo(unittest.TestCase):
+
+    def setUp(self):
+        self.props = Properties()
+        self.build = FakeBuild(self.props)
+
+        # this is a bit ugly... but we dont really have fakes for all this yet:
+        self.build.slavebuilder = mock.Mock()
+        self.build.slavebuilder.slave.slave_status.getInfoAsDict.return_value = {
+            'admin': "TheAdmin"
+        }
+
+    # Spot-check a couple of the use cases. If the various substitutions work for the other
+    # interpolate source kinds, there's no reason it wont all just work for this one, provided
+    # that the plumbing is hooked up right. These use cases verify that this is true and will
+    # rely on the unit tests for Properties/Source/Kwargs to cover the rest of the possibilities.
+
+    def test_slaveinfo(self):
+        command = Interpolate("echo %(slave:admin)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                      "echo TheAdmin")
+        return d
+
+    def test_slaveinfo_colon_minus(self):
+        command = Interpolate("echo buildby-%(slave:missing_key:-blddef)s")
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual,
+                      "echo buildby-blddef")
+        return d
+
+
 class TestWithProperties(unittest.TestCase):
 
     def setUp(self):
@@ -1084,9 +1116,10 @@ class TestPropertiesMixin(unittest.TestCase):
         self.assertTrue(self.mp.hasProperty('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
-    def test_has_propkey(self):
+    def test_has_key(self):
         self.mp.properties.hasProperty.return_value = True
-        self.assertTrue(self.mp.has_propkey('abc'))
+        # getattr because pep8 doesn't like calls to has_key
+        self.assertTrue(getattr(self.mp, 'has_key')('abc'))
         self.mp.properties.hasProperty.assert_called_with('abc')
 
     def test_setProperty(self):

@@ -19,6 +19,7 @@
 import datetime
 import os
 import re
+import urllib
 
 from twisted.internet import defer
 from twisted.web import html
@@ -113,11 +114,11 @@ def FilterOut(data):
     if isinstance(data, (list, tuple)):
         # Recurse in every items and filter them out.
         items = map(FilterOut, data)
-        if not filter(lambda x: not x in ('', False, None, [], {}, ()), items):
+        if not filter(lambda x: x not in ('', False, None, [], {}, ()), items):
             return None
         return items
     elif isinstance(data, dict):
-        return dict(filter(lambda x: not x[1] in ('', False, None, [], {}, ()),
+        return dict(filter(lambda x: x[1] not in ('', False, None, [], {}, ()),
                            [(k, FilterOut(v)) for (k, v) in data.iteritems()]))
     else:
         return data
@@ -229,7 +230,11 @@ class JsonResource(resource.Resource):
                 postpath = request.postpath[:]
                 request.postpath = filter(None, item.split('/'))
                 while request.postpath and not child.isLeaf:
-                    pathElement = request.postpath.pop(0)
+                    # Twisted unquotes the querystring once. We unquote once more
+                    # to allow for "doubly escaped" elements, which makes it possible
+                    # to select on resource names with slashes in them without them being
+                    # split into separate (invalid) elements.
+                    pathElement = urllib.unquote(request.postpath.pop(0))
                     node[pathElement] = {}
                     node = node[pathElement]
                     request.prepath.append(pathElement)
@@ -317,7 +322,7 @@ def ToHtml(text):
                     indent -= 2
 
         if line.startswith('/'):
-            if not '?' in line:
+            if '?' not in line:
                 line_full = line + '?as_text=1'
             else:
                 line_full = line + '&as_text=1'

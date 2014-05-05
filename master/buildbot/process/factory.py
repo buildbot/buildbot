@@ -106,7 +106,7 @@ class GNUAutoconf(BuildFactory):
             # list of strings is the preferred form.
             if isinstance(configure, str):
                 if configureFlags:
-                    assert not " " in configure  # please use list instead
+                    assert " " not in configure  # please use list instead
                     command = [configure] + configureFlags
                 else:
                     command = configure

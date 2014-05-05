@@ -23,6 +23,12 @@ from buildslave.commands import utils
 from buildslave.test.util.command import CommandTestMixin
 from twisted.python import runtime
 
+# python-2.4 doesn't have os.errno
+if hasattr(os, 'errno'):
+    errno = os.errno
+else:
+    import errno
+
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
@@ -167,7 +173,7 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertIn({'rc': os.errno.EEXIST},
+            self.assertIn({'rc': errno.EEXIST},
                           self.get_updates(),
                           self.builder.show())
         d.addCallback(check)
@@ -189,7 +195,7 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertIn({'rc': os.errno.ENOENT},
+            self.assertIn({'rc': errno.ENOENT},
                           self.get_updates(),
                           self.builder.show())
         d.addCallback(check)
@@ -296,7 +302,7 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertIn({'rc': os.errno.ENOENT},
+            self.assertIn({'rc': errno.ENOENT},
                           self.get_updates(),
                           self.builder.show())
         d.addCallback(check)
@@ -311,6 +317,11 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         open(os.path.join(workdir, 'file2'), "w")
 
         d = self.run_command()
+
+        def any(items):  # not a builtin on python-2.4
+            for i in items:
+                if i:
+                    return True
 
         def check(_):
             self.assertIn({'rc': 0},

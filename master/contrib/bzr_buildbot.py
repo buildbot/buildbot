@@ -103,18 +103,20 @@ except ImportError:
     DEFINE_POLLER = False
 else:
     DEFINE_POLLER = True
+
 import bzrlib.branch
 import bzrlib.errors
 import bzrlib.trace
 import twisted.cred.credentials
 import twisted.internet.base
-import twisted.internet.defer
 import twisted.internet.reactor
 import twisted.internet.selectreactor
 import twisted.internet.task
 import twisted.internet.threads
 import twisted.python.log
 import twisted.spread.pb
+
+from twisted.internet import defer
 
 
 #
@@ -242,7 +244,7 @@ if DEFINE_POLLER:
         def describe(self):
             return "BzrPoller watching %s" % self.url
 
-        @twisted.internet.defer.inlineCallbacks
+        @defer.inlineCallbacks
         def poll(self):
             # On a big tree, even individual elements of the bzr commands
             # can take awhile. So we just push the bzr work off to a
@@ -288,7 +290,7 @@ if DEFINE_POLLER:
             return changes
 
         def addChange(self, change):
-            d = twisted.internet.defer.Deferred()
+            d = defer.Deferred()
 
             def _add_change():
                 d.callback(
@@ -334,7 +336,6 @@ def _installed_hook(branch):
 import operator
 import socket
 
-from twisted.internet import defer
 from twisted.python import failure
 
 # replaces twisted.internet.thread equivalent
