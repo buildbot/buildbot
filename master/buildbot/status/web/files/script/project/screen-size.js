@@ -9,7 +9,7 @@ define(function () {
 			return smallScreen;
 		},
 		isMediumScreen: function() {
-			var mediumScreen = $(window).width() <= 768;
+			var mediumScreen = $(window).width() <= 1024;
 			return mediumScreen;
 		},
 		isLargeScreen: function() {

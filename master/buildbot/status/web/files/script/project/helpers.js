@@ -134,6 +134,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 		}, tooltip: function (el) {
 			
 			el.hover(function(e) {
+				var thisEl = $(this);
+				
 				var toolTipCont = $('<div class="tooltip-cont" />');
 				this.t = this.title;
 				this.title = "";
@@ -142,10 +144,18 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				$(e.target).click(function(){
 					toolTipCont.remove();					
 				});	
-				toolTipCont.html(this.t)
-				.appendTo('body')
-				.css({'top':cursorPosTop,'left':cursorPosLeft})				
-				.fadeIn('fast');
+
+				if (screenSize.isMediumScreen() && thisEl.hasClass('responsive-tooltip')) {
+					toolTipCont.html(this.t)
+					.appendTo('body')
+					.css({'top':cursorPosTop,'right':28 })				
+					.fadeIn('fast');
+				} else {
+					toolTipCont.html(this.t)
+					.appendTo('body')
+					.css({'top':cursorPosTop,'left':cursorPosLeft})				
+					.fadeIn('fast');
+				}
 				
 			}, function() {
 				this.title = this.t;
@@ -154,6 +164,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					$(this).remove();
 				});
 			});
+
 			
 		}, authorizeUser: function() {
 
