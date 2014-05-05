@@ -321,8 +321,6 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
         # Define setid for this set of changed repositories
         setid = yield self.master.db.sourcestampsets.addSourceStampSet()
 
-        change_sources = dict((c.name, c) for c in self.master.getStatus().getChangeSources())
-
         # add a sourcestamp for each codebase
         for codebase, cb_info in self.codebases.iteritems():
             ss_repository = cb_info.get('repository', repository)
@@ -330,11 +328,10 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
             ss_revision = cb_info.get('revision', None)
 
             #Confirm that we have the specified branch
-            if change_sources.has_key(ss_repository):
-                cs = change_sources.get(ss_repository)
-                lastRev = yield cs.getState('lastRev', {})
-                if lastRev.has_key(branch):
-                    ss_branch = branch
+            oid = yield self.master.db.state.getObjectId(ss_repository, cb_info.get('poller', "HgPoller"))
+            lastRev = yield self.master.db.state.getState(oid, 'lastRev', None)
+            if lastRev is not None and lastRev.has_key(branch):
+                ss_branch = branch
 
 
             yield self.master.db.sourcestamps.addSourceStamp(
