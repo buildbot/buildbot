@@ -141,11 +141,12 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				$(e.target).click(function(){
 					toolTipCont.remove();					
 				});	
+
 				toolTipCont.html(this.t)
 				.appendTo('body')
 				.css({'top':cursorPosTop,'left':cursorPosLeft})				
 				.fadeIn('fast');
-				
+
 			}, function() {
 				this.title = this.t;
 				var toolTipCont = $('.tooltip-cont');	
@@ -270,15 +271,17 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				});
 			
 		}, selectBuildsAction: function($table, dontUpdate) { // check all in tables and perform remove action
+			
             if ($table === undefined) {
                 $table = $('#tablesorterRt');
-                if ($table.length === 0) {
+                if ($table.length === 0) {                	
                     return;
                 }
             }
             var mustacheTmpl = Mustache.render(popups, {'preloader':'true'}),
 			    preloader = $(mustacheTmpl),
                 selectAll = $('#selectall');
+
 
 			selectAll.click(function () {
 				var tableNodes = $table.dataTable().fnGetNodes();
@@ -311,6 +314,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 			$('#submitBtn').click(function(e){					
 				e.preventDefault();
+				
 				
 				var $dataTable =  $table.dataTable();
 				var tableNodes = $dataTable.fnGetNodes();
@@ -563,7 +567,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page'];
+			var currentRtPages = ['buildslaves_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page','builders_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {

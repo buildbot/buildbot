@@ -38,10 +38,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        buildStatus: function (index) {
+        buildStatus: function (index, className) {
             return {
                 "aTargets": [index],
-                "sClass": "txt-align-left",
+                "sClass": className === undefined? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     return hbCells({buildStatus: true, 'build': full});
                 },
@@ -60,10 +60,11 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        slaveName: function (index, slaveNameProperty, slaveURLProperty) {
+        slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {
+            console.log()
             return {
                 "aTargets": [index],
-                "sClass": "txt-align-left",
+                "sClass": className === undefined? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     var name = privFunc.getPropertyOnData(full, slaveNameProperty);
                     var url = privFunc.getPropertyOnData(full, slaveURLProperty);
@@ -146,11 +147,11 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#" },
-                { "mData": null, "sTitle": "Date", "sWidth": "50px" },
-                { "mData": null, "sTitle": "Revision" },
-                { "mData": null, "sTitle": "Result" },
-                { "mData": null, "sTitle": "Slave", "sWidth": "110px" }
+                { "mData": null, "sTitle": "#","sWidth": "5%" },
+                { "mData": null, "sTitle": "Date", "sWidth": "20%" },
+                { "mData": null, "sTitle": "Revision","sWidth": "30%" },
+                { "mData": null, "sTitle": "Result","sWidth": "35%", "sClass": ""},
+                { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
             ];
 
             options.aoColumnDefs = [
@@ -160,7 +161,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name")
+                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
             ];
 
             return dt.initTable($tableElem, options);

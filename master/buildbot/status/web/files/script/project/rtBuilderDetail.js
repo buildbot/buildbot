@@ -26,11 +26,13 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 popup.registerJSONPopup($tbSlavesTable);
 
                 realtimePages.initRealtime(realtimeFunctions);
-
+                
+                helpers.selectBuildsAction($tbPendingBuildsTable);
+                
                 // insert codebase and branch
                 if (window.location.search !== '') {
                     // Parse the url and insert current codebases and branches
-                    helpers.codeBaseBranchOverview($('#brancOverViewCont'));
+                    helpers.codeBaseBranchOverview($('#brancOverViewCont'));                    
                 }
             },
             rtfProcessCurrentBuilds: function (data) {
@@ -64,10 +66,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null, "sTitle": "#" },
-                    { "mData": null, "sTitle": "Current build", "sWidth": "200px" },
-                    { "mData": null, "sTitle": "Revision" },
-                    { "mData": null, "sTitle": "Author" }
+                    { "mData": null, "sTitle": "#","sWidth": "10%"  },
+                    { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
+                    { "mData": null, "sTitle": "Revision", "sWidth": "40%" },
+                    { "mData": null, "sTitle": "Author", "sWidth": "20%", "sClass": "txt-align-right"}
                 ];
 
                 options.aoColumnDefs = [
@@ -99,9 +101,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null },
-                    { "mData": null },
-                    { "mData": null, "sWidth": "80px" }
+                    { "mData": null, "sWidth": "30%" },
+                    { "mData": null, "sWidth": "50%" },
+                    { "mData": null, "sWidth": "20%" }
                 ];
 
                 options.aoColumnDefs = [
@@ -141,8 +143,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null },
-                    { "mData": null }
+                    { "mData": null, "sWidth": "50%" },
+                    { "mData": null, "sWidth": "50%" }
                 ];
 
                 options.aoColumnDefs = [

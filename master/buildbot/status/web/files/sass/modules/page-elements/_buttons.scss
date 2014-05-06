@@ -171,24 +171,16 @@ a.grey-btn,
 
 
 .removeBuildBtn {
-    padding: 9px 9px 8px 10px;
-    @include box-shadow(1px 1px 0 #FFFFFF);
-    border-bottom:1px solid #ccc;
-    margin-top: 20px;
+    font-weight: bold;
+    background: none;
+    color: #2B6194;
     float:right;
-    &:before {
-        color: #2B6194;
-        font-family: katana_icons;
-        content: "";
-        font-size: 17px;
-        right: 5px;
-        top: 1px;
-        line-height: 19px;
-        position: relative;
-    }
-    &:hover:after {
+    border:none;
+    margin-top: 26px;
+    padding: 0;    
+    &:hover{
         color: #A4A4A4;
-    }
+    }    
 }
  
 .run-build {
