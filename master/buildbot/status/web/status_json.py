@@ -735,7 +735,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def builder_dict(self, builder, codebases, request, branches):
-        d = yield builder.asDict_async(codebases, request)
+        d = yield builder.asDict_async(codebases, request, base_build_dict=True)
 
         #Get latest build
         builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),

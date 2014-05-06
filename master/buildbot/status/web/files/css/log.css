@@ -102,7 +102,7 @@ li {
 }
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\0000344}}
 .log-main .dataTables_filter label {
-  color: #fff;
+  color: #666666;
   margin-right: 3px;
   position: relative;
   top: 0;
@@ -283,6 +283,7 @@ span.ignored {
 
 @media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003176}}
 .table-1 tr td:first-child .failure-detail-txt {
+  padding-top: 10px;
   padding-left: 15px;
   font-family: "Courier New";
   overflow: auto;
@@ -292,28 +293,40 @@ span.ignored {
   width: 1445px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003186}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003187}}
 .failure-detail-cont {
   vertical-align: top;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003188}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003189}}
 .failure-detail-cont a {
   margin-right: 5px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003193}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003194}}
 .Pass {
   border-top: 1px solid #FFFFFF;
   background-color: #DDE6D6;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003198}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003199}}
 .Ignored {
   border-top: 1px solid #FFFFFF;
-  background: #CBDCE6;
+  background-color: #CBDCE6;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003203}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003204}}
+.Skipped {
+  border-top: 1px solid #FFFFFF;
+  background-color: #E6E1D6;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003209}}
+.Inconclusive {
+  border-top: 1px solid #FFFFFF;
+  background-color: #cfd4ef;
+}
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003213}}
 .TableHeader {
   background: #efefef;
   color: #000;
@@ -321,25 +334,25 @@ span.ignored {
   horizontal-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003210}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003220}}
 a.summarie {
   color: #000;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003214}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003224}}
 a.summarie:active {
   color: #000;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003218}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003228}}
 a.summarie:visited {
   color: #000;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003222}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003232}}
 .description {
   margin-top: 1px;
   padding: 3px;
@@ -348,12 +361,12 @@ a.summarie:visited {
   font-weight: normal;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003229}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003239}}
 .method {
   color: #000;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003232}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003242}}
 a.method {
   text-decoration: none;
   color: #000;
@@ -361,40 +374,40 @@ a.method {
   padding-left: 5px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003238}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003248}}
 a.Failure {
   font-weight: bold;
   color: red;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003243}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003253}}
 a.Failure:visited {
   font-weight: bold;
   color: red;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003248}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003258}}
 a.Failure:active {
   font-weight: bold;
   color: red;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003253}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003263}}
 a.error {
   font-weight: bold;
   color: red;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003257}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003267}}
 a.error:visited {
   font-weight: bold;
   color: red;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003261}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003271}}
 a.error:active {
   font-weight: bold;
   color: red;
@@ -402,48 +415,48 @@ a.error:active {
   padding-left:5px;*/
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003267}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003277}}
 a.ignored {
   font-weight: bold;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003272}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003282}}
 a.ignored:visited {
   font-weight: bold;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003277}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003287}}
 a.ignored:active {
   font-weight: bold;
   text-decoration: none;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003281}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003291}}
 .hidden-result {
   color: #fff;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003285}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003295}}
 .pos-relative {
   position: relative;
 }
 
 @media (min-width: 1024px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003290}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003300}}
   .table-1 tr td:first-child .failure-detail-txt {
     width: 900px;
   }
 }
 @media (min-width: 1400px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003297}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003307}}
   .table-1 tr td:first-child .failure-detail-txt {
     width: 1300px;
   }
 }
 @media (min-width: 1600px) {
-@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003304}}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/Users\/simon\/buildbot\/unitybuildbot\/buildbot\/master\/buildbot\/status\/web\/files\/sass\/log\.scss}line{font-family:\00003314}}
   .table-1 tr td:first-child .failure-detail-txt {
     width: 1445px;
   }

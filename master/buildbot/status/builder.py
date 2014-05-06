@@ -593,7 +593,7 @@ class BuilderStatus(styles.Versioned):
         self.prune() # conserve disk
 
 
-    def asDict(self, codebases={}, request=None):
+    def asDict(self, codebases={}, request=None, base_build_dict=False):
         from buildbot.status.web.base import codebases_to_args
 
         result = {}
@@ -602,24 +602,19 @@ class BuilderStatus(styles.Versioned):
         result['name'] = self.name
         result['url'] = self.status.getURLForThing(self) + codebases_to_args(codebases)
         result['friendly_name'] = self.getFriendlyName()
-        result['basedir'] = os.path.basename(self.basedir)
-        result['category'] = self.category
         result['project'] = self.project
         result['slaves'] = self.slavenames
-        result['schedulers'] = [ s.name
-                for s in self.status.master.allSchedulers()
-                if self.name in s.builderNames ]
-        #result['url'] = self.parent.getURLForThing(self)
+
         # TODO(maruel): Add cache settings? Do we care?
 
         # Transient
-        # Collect build numbers.
-        # Important: Only grab the *cached* builds numbers to reduce I/O.
-        current_builds = [b.getNumber() for b in self.getCurrentBuilds(codebases)]
-        cached_builds = list(set(self.buildCache.keys() + current_builds))
-        cached_builds.sort()
-        current_builds_dict = [b.asDict(request) for b in self.getCurrentBuilds(codebases)]
-        result['cachedBuilds'] = cached_builds
+        def build_dict(b):
+            if base_build_dict is True:
+                return b.asBaseDict(request, include_current_step=True)
+            else:
+                return b.asDict(request)
+
+        current_builds_dict = [build_dict(b) for b in self.getCurrentBuilds(codebases)]
         result['currentBuilds'] = current_builds_dict
         result['state'] = self.getState()[0]
         # lies, but we don't have synchronous access to this info; use
@@ -628,14 +623,14 @@ class BuilderStatus(styles.Versioned):
         return result
 
     @defer.inlineCallbacks
-    def asDict_async(self, codebases={}, request=None):
+    def asDict_async(self, codebases={}, request=None, base_build_dict=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict(codebases, request)
+        result = self.asDict(codebases, request, base_build_dict)
         builds =  yield self.getPendingBuildRequestStatuses()
 
         #Remove builds not within this codebase
         count = 0
-        if len(codebases) > 1:
+        if len(codebases) > 0:
             for b in builds:
                 in_codebase = yield self.foundCodebasesInBuildRequest(b, codebases)
                 if in_codebase:

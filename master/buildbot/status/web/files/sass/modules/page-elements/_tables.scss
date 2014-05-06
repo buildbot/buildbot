@@ -281,7 +281,9 @@ ul.building {
     }
 }
 
-
+.left .border-table-holder {
+  float: left;
+}
   
 .inner-table-holder {
 	height: 30px;
@@ -609,7 +611,7 @@ table.codebase-branch-table {
 }
 @include breakpoint($bkpt-medium) {
 	.border-table-holder {
-		width: 80%;
+		width: 67%;
 	}
 }
 

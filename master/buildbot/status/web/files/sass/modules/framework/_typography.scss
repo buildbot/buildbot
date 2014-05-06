@@ -205,7 +205,7 @@ div.welcome-txt {
 	content: "▼";
 }
 
-@include breakpoint($bkpt-small) {
+@include breakpoint($bkpt-medium-1) {
 	h1.logo a {
 		padding-top: 17px;
 		font-size: 19px;

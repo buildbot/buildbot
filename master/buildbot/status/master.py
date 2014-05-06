@@ -277,7 +277,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         """
         @rtype: L{BuilderStatus}
         """
-        return self.botmaster.builders[name].builder_status
+        if name in self.botmaster.builders:
+            return self.botmaster.builders[name].builder_status
+
+        return None
 
     def getSlaveNames(self):
         return self.botmaster.slaves.keys()

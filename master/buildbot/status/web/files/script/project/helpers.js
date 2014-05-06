@@ -42,9 +42,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			    	$('.windowsize').html(ws);
 			    });
 			*/
-
-			
-
 			// Set the currentmenu item
 			helpers.setCurrentItem();
 
@@ -133,6 +130,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 		}, tooltip: function (el) {
 			
 			el.hover(function(e) {
+				var thisEl = $(this);
+				
 				var toolTipCont = $('<div class="tooltip-cont" />');
 				this.t = this.title;
 				this.title = "";
@@ -142,10 +141,17 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					toolTipCont.remove();					
 				});	
 
-				toolTipCont.html(this.t)
-				.appendTo('body')
-				.css({'top':cursorPosTop,'left':cursorPosLeft})				
-				.fadeIn('fast');
+				if (screenSize.isMediumScreen() && thisEl.hasClass('responsive-tooltip')) {
+					toolTipCont.html(this.t)
+					.appendTo('body')
+					.css({'top':cursorPosTop,'right':28 })				
+					.fadeIn('fast');
+				} else {
+					toolTipCont.html(this.t)
+					.appendTo('body')
+					.css({'top':cursorPosTop,'left':cursorPosLeft})				
+					.fadeIn('fast');
+				}
 
 			}, function() {
 				this.title = this.t;
@@ -154,6 +160,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					$(this).remove();
 				});
 			});
+
 			
 		}, authorizeUser: function() {
 
@@ -161,8 +168,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			var url = window.location;
 				
 			// Does the url have 'user' and 'authorized' ? get the fullname
-			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {				
-				var fullNameLdap = decodeURIComponent(url.search.split('&').slice(0)[1].split('=')[1]);	
+			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {
+				var fullNameLdap = url.search.split('&').slice(0)[1].split('=')[1];
 				// set the cookie with the full name on first visit
 				helpers.setCookie("fullName1", fullNameLdap);
 				window.location = "/";
@@ -187,6 +194,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				});
 		
 		}, jCenter: function(el) {
+
 				var h = $(window).height();
 			    var w = $(window).width();
 			    var tu = el.outerHeight(); 
@@ -499,7 +507,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			var today = new Date(); var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
 			var expiredate = eraseCookie === undefined? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
 			
-			document.cookie=name + "=" + escape(value) + "; path=/; expires=" + expiredate; 
+			document.cookie=name + "=" + value + "; path=/; expires=" + expiredate;
 			
 		},
         inDOM: function(element) {
@@ -578,8 +586,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			
 		}, getCookie: function (name) { // get cookie values
 		  	var re = new RegExp(name + "=([^;]+)"); 
-		  	var value = re.exec(document.cookie); 
-		  	return (value != null) ?  decodeURI(value[1]) : ''; 
+		  	var value = re.exec(document.cookie);
+		  	return (value != null) ?  decodeURI(value[1]) : '';
 
 		}, eraseCookie: function (name, value, eraseCookie) {
     		helpers.setCookie(name, value, eraseCookie);
@@ -588,20 +596,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			
 			var closeBtn = $('.close-btn').add(document);
 			
-			closeBtn.bind('click touchstart', function(e){
+			closeBtn.bind('click touchstart', function(e){					
 				
 				if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {					
 				
-						if (clearEl === undefined ) {
+					if (clearEl === undefined ) {
+						boxElement.remove();
+					} else {
+						
+						boxElement.slideUp('fast', function(){								
+							closeBtn.unbind(e);
+						});
+					}
 
-							boxElement.remove();
-						} else {
-							boxElement.slideUp('fast', function(){
-								$(this).remove();	
-							});
-						}
-
-					$(this).unbind(e);
+					closeBtn.unbind(e);
 				
 				}
 

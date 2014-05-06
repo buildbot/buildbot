@@ -28,15 +28,15 @@ require.config({
 		'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
 		'livestamp': "plugins/livestamp",
-		'noise': "plugins/jquery.noisy",
+		//'noise': "plugins/jquery.noisy",
         'timeElements': "project/timeElements",
         'rtGenericTable' : "project/rtGenericTable",
         'hbCells' : 'templates/rtCells.handlebars'
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','noise', 'timeElements'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,noisy, timeElements) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','timeElements'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,timeElements) {
 		
 	'use strict';
 

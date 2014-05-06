@@ -1,1 +1,1 @@
-define([],function(){var e;return e={isSmallScreen:function(){var e=$(".container-inner").width()<=570;return e},isMediumScreen:function(){var e=$(".container-inner").width()<=768;return e}},e});
+define([],function(){var e;return e={isSmallScreen:function(){var e=$(window).width()<=570;return e},isMediumScreen:function(){var e=$(window).width()<=1024;return e},isLargeScreen:function(){var e=$(window).width()>=1025;return e}},e});
