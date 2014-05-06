@@ -20,6 +20,7 @@ from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from twisted.internet import defer
 from twisted.python import failure
+from twisted.python import log
 
 
 class Triggerable(base.BaseScheduler):
@@ -62,13 +63,18 @@ class Triggerable(base.BaseScheduler):
         def setup_waiter(ids):
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
-            self._updateWaiters()
-            return ids
+            d = self._updateWaiters()
+            d.addCallback(lambda _: ids)
+            return d
 
         idsDeferred.addCallback(setup_waiter)
         return idsDeferred, resultsDeferred
 
+    @defer.inlineCallbacks
     def stopService(self):
+        # finish any _updateWaiters calls
+        yield self._updateWaiters.stop()
+
         # cancel any outstanding subscription
         if self._buildset_complete_consumer:
             self._buildset_complete_consumer.stopConsuming()
@@ -81,11 +87,13 @@ class Triggerable(base.BaseScheduler):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
-        return base.BaseScheduler.stopService(self)
+        yield base.BaseScheduler.stopService(self)
 
+    @defer.inlineCallbacks
     def _updateWaiters(self):
         if self._waiters and not self._buildset_complete_consumer:
-            self._buildset_complete_consumer = self.master.mq.startConsuming(
+            startConsuming = self.master.mq.startConsuming
+            self._buildset_complete_consumer = yield startConsuming(
                 self._buildset_complete_cb,
                 ('buildsets', None, 'complete'))
         elif not self._waiters and self._buildset_complete_consumer:
@@ -96,10 +104,10 @@ class Triggerable(base.BaseScheduler):
         if msg['bsid'] not in self._waiters:
             return
 
-        # pop this bsid from the waiters list, and potentially stop consuming
-        # buildset completion notifications
+        # pop this bsid from the waiters list,
         d, brids = self._waiters.pop(msg['bsid'])
-        self._updateWaiters()
+        # ..and potentially stop consuming buildset completion notifications
+        self._updateWaiters().addErrback(log.err, "in _updateWaiters")
 
         # fire the callback to indicate that the triggered build is complete
         d.callback((msg['results'], brids))

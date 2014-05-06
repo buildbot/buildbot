@@ -81,8 +81,9 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_startConsuming(self):
-        self.callStartConsuming({}, {'bsid': 13},
-                                expected_filter=('buildsets', '13', 'complete'))
+        return self.callStartConsuming({}, {'bsid': 13},
+                                       expected_filter=('buildsets', '13',
+                                                        'complete'))
 
 
 class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):

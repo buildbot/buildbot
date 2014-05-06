@@ -34,7 +34,7 @@ class FakeMQ(config.ReconfigurableServiceMixin, base.MQBase):
         pass
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        pass
+        return defer.succeed(None)
 
 
 class MQConnector(unittest.TestCase):

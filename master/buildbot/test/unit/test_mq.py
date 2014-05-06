@@ -19,6 +19,7 @@ from buildbot.mq import simple
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.test.util import tuplematching
+from twisted.internet import defer
 from twisted.trial import unittest
 
 
@@ -41,8 +42,9 @@ class Tests(interfaces.InterfaceTests):
         def startConsuming(self, callback, filter, persistent_name=None):
             pass
 
+    @defer.inlineCallbacks
     def test_signature_stopConsuming(self):
-        cons = self.mq.startConsuming(lambda: None, ('a',))
+        cons = yield self.mq.startConsuming(lambda: None, ('a',))
 
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
@@ -54,55 +56,61 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
     # tests that only "real" implementations will pass
 
     # called by the TupleMatchingMixin methods
+
+    @defer.inlineCallbacks
     def do_test_match(self, routingKey, shouldMatch, filter):
         cb = mock.Mock()
-        self.mq.startConsuming(cb, filter)
+        yield self.mq.startConsuming(cb, filter)
         self.mq.produce(routingKey, 'x')
         self.assertEqual(shouldMatch, cb.call_count == 1)
         if shouldMatch:
             cb.assert_called_once_with(routingKey, 'x')
 
+    @defer.inlineCallbacks
     def test_stopConsuming(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, ('abc',))
         self.mq.produce(('abc',), dict(x=1))
         qref.stopConsuming()
         self.mq.produce(('abc',), dict(x=1))
         cb.assert_called_once_with(('abc',), dict(x=1))
 
+    @defer.inlineCallbacks
     def test_stopConsuming_twice(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref.stopConsuming()
         # ..nothing bad happens
 
+    @defer.inlineCallbacks
     def test_non_persistent(self):
         cb = mock.Mock()
-        qref = self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, ('abc',))
 
         cb2 = mock.Mock()
-        qref2 = self.mq.startConsuming(cb2, ('abc',))
+        qref2 = yield self.mq.startConsuming(cb2, ('abc',))
 
         qref.stopConsuming()
         self.mq.produce(('abc',), '{}')
 
-        qref = self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, ('abc',))
         qref.stopConsuming()
         qref2.stopConsuming()
 
         self.assertTrue(cb2.called)
         self.assertFalse(cb.called)
 
+    @defer.inlineCallbacks
     def test_persistent(self):
         cb = mock.Mock()
 
-        qref = self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.mq.produce(('abc',), '{}')
 
-        qref = self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.assertTrue(cb.called)

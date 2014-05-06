@@ -142,8 +142,9 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_startConsuming(self):
-        self.callStartConsuming({}, {},
-                                expected_filter=('masters', None, None))
+        return self.callStartConsuming({}, {},
+                                       expected_filter=('masters',
+                                                        None, None))
 
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):

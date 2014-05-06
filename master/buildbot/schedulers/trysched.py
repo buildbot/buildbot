@@ -277,7 +277,7 @@ class RemoteBuildRequest(pb.Referenceable):
             return subscriber.callRemote('newbuild',
                                          RemoteBuild(self.master, msg, self.builderName),
                                          self.builderName)
-        self.consumer = self.master.data.startConsuming(
+        self.consumer = yield self.master.data.startConsuming(
             gotBuild, {}, ('builders', builderId, 'builds'))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
@@ -306,6 +306,7 @@ class RemoteBuild(pb.Referenceable):
         self.builderName = builderName
         self.consumer = None
 
+    @defer.inlineCallbacks
     def remote_subscribe(self, subscriber, interval):
         # subscribe to any new steps..
         def stepChanged(key, msg):
@@ -315,7 +316,7 @@ class RemoteBuild(pb.Referenceable):
             elif key[-1] == 'finished':
                 return subscriber.callRemote('stepFinished',
                                              self.builderName, self, msg['name'], None, msg['results'])
-        self.consumer = self.master.data.startConsuming(
+        self.consumer = yield self.master.data.startConsuming(
             stepChanged, {},
             ('builds', self.builddict['buildid'], 'steps'))
         subscriber.notifyOnDisconnect(lambda _:
@@ -326,19 +327,20 @@ class RemoteBuild(pb.Referenceable):
             self.consumer.stopConsuming()
             self.consumer = None
 
+    @defer.inlineCallbacks
     def remote_waitUntilFinished(self):
         d = defer.Deferred()
-        cons = []
 
         def buildEvent(key, msg):
-            if key[-1] != 'finished':
-                return
-            cons[0].stopConsuming()
-            d.callback(self)  # callers expect result=self
-        cons.append(self.master.data.startConsuming(
+            if key[-1] == 'finished':
+                d.callback(None)
+        consumer = yield self.master.data.startConsuming(
             buildEvent, {},
-            ('builds', self.builddict['buildid'])))
-        return d
+            ('builds', self.builddict['buildid']))
+
+        yield d  # wait for event
+        consumer.stopConsuming()
+        defer.returnValue(self)  # callers expect result=self
 
     @defer.inlineCallbacks
     def remote_getResults(self):
