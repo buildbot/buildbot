@@ -630,7 +630,7 @@ class BuilderStatus(styles.Versioned):
 
         #Remove builds not within this codebase
         count = 0
-        if len(codebases) > 1:
+        if len(codebases) > 0:
             for b in builds:
                 in_codebase = yield self.foundCodebasesInBuildRequest(b, codebases)
                 if in_codebase:
