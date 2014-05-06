@@ -81,11 +81,13 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                         "sClass": "txt-align-left",
                         "mRender": function (data, type, full) {
                             var author = 'N/A';
-                            $.each(full.properties, function (i, prop) {
-                                if (prop[0] === "owner") {
-                                    author = prop[1];
-                                }
-                            });
+                            if (full.properties !== undefined) {
+                                $.each(full.properties, function (i, prop) {
+                                    if (prop[0] === "owner") {
+                                        author = prop[1];
+                                    }
+                                });
+                            }
                             return author;
                         }
                     }

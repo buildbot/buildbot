@@ -717,7 +717,7 @@ class SingleProjectJsonResource(JsonResource):
 
         for name in self.children:
             child = self.getChildWithDefault(name, request)
-            d = yield child.asDict(request, codebases, branches)
+            d = yield child.asDict(request, codebases, branches, True)
             result['builders'].append(d)
 
         defer.returnValue(result)
@@ -734,8 +734,8 @@ class SingleProjectBuilderJsonResource(JsonResource):
         self.builder = builder
 
     @defer.inlineCallbacks
-    def builder_dict(self, builder, codebases, request, branches):
-        d = yield builder.asDict_async(codebases, request, base_build_dict=True)
+    def builder_dict(self, builder, codebases, request, branches, base_build_dict):
+        d = yield builder.asDict_async(codebases, request, base_build_dict)
 
         #Get latest build
         builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
@@ -748,7 +748,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
         defer.returnValue(d)
 
     @defer.inlineCallbacks
-    def asDict(self, request, codebases=None, branches=None):
+    def asDict(self, request, codebases=None, branches=None, base_build_dict=False):
         if codebases is None or branches is None:
             #Get codebases
             codebases = {}
@@ -756,7 +756,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
             encoding = getRequestCharset(request)
             branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
-        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches)
+        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict)
         defer.returnValue(builder_dict)
 
 
