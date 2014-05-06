@@ -96,7 +96,7 @@ The available classes are described here:
         from buildbot.www.auth import UserPasswordAuth
         c['www'] = {
             # ...
-            auth=UserPasswordAuth({"homer": "doh!"}),
+            'auth': UserPasswordAuth({"homer": "doh!"}),
         }
 
 .. py:class:: buildbot.www.auth.HTPasswdAuth(passwdFile)
@@ -108,7 +108,7 @@ The available classes are described here:
         from buildbot.www.auth import HTPasswdAuth
         c['www'] = {
             # ...
-            auth=HTPasswdAuth("my_htpasswd"),
+            'auth': HTPasswdAuth("my_htpasswd"),
         }
 
 .. py:class:: buildbot.www.oauth2.GoogleAuth(clientId, clientSecret)
@@ -127,7 +127,7 @@ The available classes are described here:
         from buildbot.www.oauth2 import GoogleAuth
         c['www'] = {
             # ...
-            auth=GoogleAuth("clientid", "clientsecret"),
+            'auth': GoogleAuth("clientid", "clientsecret"),
         }
 
     in order to use this module, you need to install the python ``sanction`` module
@@ -153,7 +153,7 @@ The available classes are described here:
         from buildbot.www.oauth2 import GitHubAuth
         c['www'] = {
             # ...
-            auth=GitHubAuth("clientid", "clientsecret"),
+            'auth': GitHubAuth("clientid", "clientsecret"),
         }
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
@@ -175,7 +175,7 @@ The available classes are described here:
         from buildbot.www.auth import RemoteUserAuth
         c['www'] = {
             # ...
-            auth=RemoteUserAuth(),
+            'auth': RemoteUserAuth(),
         }
 
     A corresponding Apache configuration example
