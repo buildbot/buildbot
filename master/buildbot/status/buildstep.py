@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import copy
 
 import os
 from zope.interface import implements
@@ -383,7 +384,6 @@ class BuildStepStatus(styles.Versioned):
         result['times'] = self.getTimes()
         result['expectations'] = self.getExpectations()
         result['eta'] = self.getETA()
-        result['urls'] = self.getURLs()
         result['step_number'] = self.step_number
         result['hidden'] = self.hidden
 
@@ -391,6 +391,15 @@ class BuildStepStatus(styles.Versioned):
         result['logs'] = [[l.getName(),
             self.build.builder.status.getURLForThing(l) + args]
                 for l in self.getLogs()]
+
+        #Collect URLs and attach branch params onto the end
+        urls = copy.deepcopy(self.getURLs())
+        for name in urls.keys():
+            if isinstance(urls[name], dict) and urls[name].has_key("url"):
+                urls[name]["url"] += args
+
+        result["urls"] = urls
+
 
         if request is not None:
             from buildbot.status.web.base import path_to_step
