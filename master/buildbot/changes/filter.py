@@ -41,6 +41,17 @@ class ChangeFilter(ComparableMixin):
                  branch=NotABranch, branch_re=None, branch_fn=None,
                  category=None, category_re=None, category_fn=None,
                  codebase=None, codebase_re=None, codebase_fn=None):
+
+        self.filter_fn = filter_fn
+        self.checks = self.createChecks(
+            (project, project_re, project_fn, "project"),
+            (repository, repository_re, repository_fn, "repository"),
+            (branch, branch_re, branch_fn, "branch"),
+            (category, category_re, category_fn, "category"),
+            (codebase, codebase_re, codebase_fn, "codebase"),
+        )
+
+    def createChecks(self, *checks):
         def mklist(x):
             if x is not None and not isinstance(x, types.ListType):
                 return [x]
@@ -58,20 +69,22 @@ class ChangeFilter(ComparableMixin):
                 r = re.compile(r)
             return r
 
-        self.filter_fn = filter_fn
-        self.checks = [
-            (mklist(project), mkre(project_re), project_fn, "project"),
-            (mklist(repository), mkre(repository_re), repository_fn, "repository"),
-            (mklist_br(branch), mkre(branch_re), branch_fn, "branch"),
-            (mklist(category), mkre(category_re), category_fn, "category"),
-            (mklist(codebase), mkre(codebase_re), codebase_fn, "codebase"),
-        ]
+        ret = {}
+        for filt_list, filt_re, filt_fn, chg_attr in checks:
+            if "branch" in chg_attr:
+                ret[chg_attr] = (mklist_br(filt_list), mkre(filt_re), filt_fn)
+            else:
+                ret[chg_attr] = (mklist(filt_list), mkre(filt_re), filt_fn)
+        return ret
 
     def filter_change(self, change):
         if self.filter_fn is not None and not self.filter_fn(change):
             return False
-        for (filt_list, filt_re, filt_fn, chg_attr) in self.checks:
-            chg_val = getattr(change, chg_attr, '')
+        for chg_attr, (filt_list, filt_re, filt_fn) in self.checks.items():
+            if chg_attr.startswith("prop:"):
+                chg_val = change.properties.get(chg_attr.split(":",1)[1], '')
+            else:
+                chg_val = getattr(change, chg_attr, '')
             if filt_list is not None and chg_val not in filt_list:
                 return False
             if filt_re is not None and (chg_val is None or not filt_re.match(chg_val)):
@@ -82,7 +95,7 @@ class ChangeFilter(ComparableMixin):
 
     def __repr__(self):
         checks = []
-        for (filt_list, filt_re, filt_fn, chg_attr) in self.checks:
+        for chg_attr, (filt_list, filt_re, filt_fn) in sorted(self.checks.items()):
             if filt_list is not None and len(filt_list) == 1:
                 checks.append('%s == %s' % (chg_attr, filt_list[0]))
             elif filt_list is not None:

@@ -16,6 +16,8 @@
 import mock
 import warnings
 
+from twisted.python import log
+
 from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
@@ -266,9 +268,9 @@ class BuildStepMixin(object):
             for pn in self.exp_missing_properties:
                 self.assertFalse(self.properties.hasProperty(pn),
                                  "unexpected property '%s'" % pn)
-            for log, contents in self.exp_logfiles.iteritems():
+            for l, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(
-                    self.step_status.logs[log].stdout, contents, "log '%s' contents" % log)
+                    self.step_status.logs[l].stdout, contents, "log '%s' contents" % l)
             self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
 
@@ -292,7 +294,15 @@ class BuildStepMixin(object):
             del got[1][arg]
 
         # first check any ExpectedRemoteReference instances
-        self.assertEqual((exp.remote_command, exp.args), got)
+        try:
+            self.assertEqual((exp.remote_command, exp.args), got)
+        except AssertionError:
+            # log this error, as the step may swallow the AssertionError or
+            # otherwise obscure the failure.  Trial will see the exception in
+            # the log and print an [ERROR].  This may result in
+            # double-reporting, but that's better than non-reporting!
+            log.err()
+            raise
 
         # let the Expect object show any behaviors that are required
         d = exp.runBehaviors(command)

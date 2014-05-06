@@ -323,7 +323,10 @@ class Git(Source):
                 arg = arg(opt)
                 if arg:
                     cmd.extend(arg)
-        cmd.append('HEAD')
+        # 'git describe' takes a commitish as an argument for all options
+        # *except* --dirty
+        if not any(arg.startswith('--dirty') for arg in cmd):
+            cmd.append('HEAD')
 
         try:
             stdout = yield self._dovccmd(cmd, collectStdout=True)
