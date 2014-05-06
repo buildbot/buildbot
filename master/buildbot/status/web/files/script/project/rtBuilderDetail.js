@@ -35,7 +35,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                     helpers.codeBaseBranchOverview($('#brancOverViewCont'));                    
                 }
             },
-            rtfProcessCurrentBuilds: function (data) {
+            rtfProcessCurrentBuilds: function (data) {                
                 timeElements.clearTimeObjects($tbCurrentBuildsTable);
                 $tbCurrentBuildsTable.fnClearTable();
 
