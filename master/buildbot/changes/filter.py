@@ -35,7 +35,8 @@ class ChangeFilter(ComparableMixin):
                  # PROJECT_FN returns True when called with the project; repository,
                  # branch, and so on are similar.  Note that the regular expressions
                  # are anchored to the first character of the string.  For convenience,
-                 # a list can also be specified to the singular option (e.g,. PROJETS
+                 # a list can also be specified to the singular option (e.g,.
+                 # PROJETS
                  project=None, project_re=None, project_fn=None,
                  repository=None, repository_re=None, repository_fn=None,
                  branch=NotABranch, branch_re=None, branch_fn=None,
@@ -82,7 +83,7 @@ class ChangeFilter(ComparableMixin):
             return False
         for chg_attr, (filt_list, filt_re, filt_fn) in self.checks.items():
             if chg_attr.startswith("prop:"):
-                chg_val = change.properties.get(chg_attr.split(":",1)[1], '')
+                chg_val = change.properties.get(chg_attr.split(":", 1)[1], '')
             else:
                 chg_val = getattr(change, chg_attr, '')
             if filt_list is not None and chg_val not in filt_list:
@@ -127,7 +128,8 @@ class ChangeFilter(ComparableMixin):
                                    "branch or categories")
             return change_filter
         elif branch is not NotABranch or categories:
-            # build a change filter from the deprecated category and branch args
+            # build a change filter from the deprecated category and branch
+            # args
             cfargs = {}
             if branch is not NotABranch:
                 cfargs['branch'] = branch
