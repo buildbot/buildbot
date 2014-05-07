@@ -10,74 +10,75 @@
 {% endblock %}
 
 {% block content %}
-<div class="column-1">
-  <div class="column span-7">
-    {% if authz.advertiseAction('gracefulShutdown', request) %}
-              
-      {% if slave.getGraceful() %}
-      <div class="graceful_shutdown">
-          Slave will shut down gracefully when it is idle.
-      </div>
-      {% else %}
+<div class="initjson">
+  <div class="column-1">
+    <div class="column span-7">
+      {% if authz.advertiseAction('gracefulShutdown', request) %}
+                
+        {% if slave.getGraceful() %}
+        <div class="graceful_shutdown">
+            Slave will shut down gracefully when it is idle.
+        </div>
+        {% else %}
 
-          {{ forms.graceful_shutdown(shutdown_url, authz) }}
-     
-      {% endif %}
-            
-    {% endif %}
-     <h2 class="head-2">
-      Recent builds
-    </h2>
-
-    <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-    </table>
-  </div>
-  <div class="column span-6">
-        <h2 class="head-2 fl-left"> Current builds </h2>
-        <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
-        <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-        </table>
-
-
-        {% if current %}
-        <!--
-        <a class="more-info sum-display popup-btn-js-2" href="#">
-          Current jobs 
-          (<span id="currentJobs"></span>)
-        </a>
-        -->
-        
-          <ul id="runningBuilds_onBuildslave" class="pending-job-list">
-          {% for b in current %}
-           <li>
-            <!--
-            <h2 class="small-head">
-              Current job
-            </h2>
-            Running
-          -->
-             
-             {{ build_line(b, True) }}
-             {{ b.buildurl }}
-             <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
-               <input class="link-button" type="submit" value="Stop Build" />
-               <input type="hidden" name="url" value="{{ this_url }}" />
-             </form>
-           </li>
-          {% endfor %}
-          </ul>
-     
-        {% else %}          
-            <ul id="runningBuilds_onBuildslave" class="pending-job-list">
-              <li>
-                No current builds          
-              </li>
-            </ul>
+            {{ forms.graceful_shutdown(shutdown_url, authz) }}
+       
         {% endif %}
+              
+      {% endif %}
+       <h2 class="head-2">
+        Recent builds
+      </h2>
 
+      <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+      </table>
+    </div>
+    <div class="column span-6">
+          <h2 class="head-2 fl-left"> Current builds </h2>
+          <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
+          <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+          </table>
+
+
+          {% if current %}
+          <!--
+          <a class="more-info sum-display popup-btn-js-2" href="#">
+            Current jobs 
+            (<span id="currentJobs"></span>)
+          </a>
+          -->
+          
+            <ul id="runningBuilds_onBuildslave" class="pending-job-list">
+            {% for b in current %}
+             <li>
+              <!--
+              <h2 class="small-head">
+                Current job
+              </h2>
+              Running
+            -->
+               
+               {{ build_line(b, True) }}
+               {{ b.buildurl }}
+               <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
+                 <input class="link-button" type="submit" value="Stop Build" />
+                 <input type="hidden" name="url" value="{{ this_url }}" />
+               </form>
+             </li>
+            {% endfor %}
+            </ul>
+       
+          {% else %}          
+              <ul id="runningBuilds_onBuildslave" class="pending-job-list">
+                <li>
+                  No current builds          
+                </li>
+              </ul>
+          {% endif %}
+
+    </div>
   </div>
 </div>
-
 {% endblock %}
 
 

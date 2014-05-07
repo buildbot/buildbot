@@ -487,9 +487,8 @@ table.codebase-branch-table {
     width: 145px;
     float:left;
     margin-right:20px;
-    height:30px;
     > label {
-        position: absolute;
+        position: relative;
         font-weight: bold;
         top: 7px;
         @include text-shadow (0 1px 0 white);
@@ -515,7 +514,7 @@ table.codebase-branch-table {
             content: "";
             left: 12px;
             position: absolute;
-            top: 10px;
+            top: 0;
             line-height: 12px;
         }
     }

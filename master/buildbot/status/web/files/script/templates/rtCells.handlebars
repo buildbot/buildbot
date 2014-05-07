@@ -39,9 +39,9 @@
     {{/if}}
 {{/slaveName}}
 
-{{#builderName}}
+{{#showBuilderName}}
 	<a href="{{data.builder_url}}">{{data.builderFriendlyName}}</a>
-{{/builderName}}
+{{/showBuilderName}}
 
 {{#slaveStatus}}
 	{{#showSpinIcon}}
@@ -56,36 +56,38 @@
 {{/slaveStatus}}
 
 {{#buildProgress}}
-    <ul class="list current-job-js building">
-    	{{#each currentBuilds}}
-			<li>
-				<div class="builders-status-truncate"><a href="{{url.path}}">{{number}}</a>
-					{{#currentStep}}
-						{{name}}
-					{{/currentStep}}
-				</div>
-
-                <span class="spin-icon animate-spin"></span>
-
-				<div class="clear"></div>
-				{{#if eta}}
-					<div data-starttime="{{times.[0]}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
-						<span class="time-txt-js time-txt"></span>
-						<div class="percent-inner-js percent-inner">
-						<div class="progressbar-overlay"></div>
-						</div>
+	{{#if currentBuilds}}
+	    <ul class="list current-job-js building">
+	    	{{#each currentBuilds}}
+				<li>
+					<div class="builders-status-truncate"><a href="{{url.path}}">#{{number}}</a>
+						{{#currentStep}}
+							{{name}}
+						{{/currentStep}}
 					</div>
-                {{else}}
-					<div data-starttime="{{times.[0]}}" data-etatime="0" class="percent-outer-js percent-outer">
-						<span class="time-txt-js time-txt">{{times.[0]}}</span>
-						<div class="percent-inner-js percent-inner">
+
+	                <span class="spin-icon animate-spin"></span>
+
+					<div class="clear"></div>
+					{{#if eta}}
+						<div data-starttime="{{times.[0]}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt"></span>
+							<div class="percent-inner-js percent-inner">
 							<div class="progressbar-overlay"></div>
+							</div>
 						</div>
-					</div>
-                {{/if}}
-			</li>
-		{{/each}}
-	</ul>
+	                {{else}}
+						<div data-starttime="{{times.[0]}}" data-etatime="0" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt">{{times.[0]}}</span>
+							<div class="percent-inner-js percent-inner">
+								<div class="progressbar-overlay"></div>
+							</div>
+						</div>
+	                {{/if}}
+				</li>
+			{{/each}}
+		</ul>
+	{{/if}}
 
     {{#if showPending}}
         {{#if pendingBuilds}}
@@ -95,7 +97,7 @@
 {{/buildProgress}}
 
 {{#stopBuild}}
-	<input class="fi-js fi" type="checkbox" name="cancelselected" value="{{data.currentBuilds.[0].slave}}"/>
+	<input class="fi-js fi" type="checkbox" name="cancelselected" value="{{data.slave}}"/>
 	<br/>
 	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
 {{/stopBuild}}

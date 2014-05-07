@@ -63,19 +63,28 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			}			
 
 			// keyboard shortcuts
-			/*$('body').keyup(function(event) {
-                
-                if (event.which === 81) {
+			/*
+			$('body').keyup(function(event) {               
+			
+               	// p
+                if (event.which === 80) {
                     location.href = '/projects'
                 }
-                if (event.which === 87) {
+                // q
+                if (event.which === 81) {
                     location.href = '/buildqueue'
                 }
-                if (event.which === 69) {
+                // s
+                if (event.which === 83) {
                     location.href = '/buildslaves'
                 }
+                // h
+                if (event.which === 72) {
+                    location.href = '/'
+                }
                 
-            });*/
+            });
+			*/
 
        		// submenu overflow on small screens
 
@@ -278,7 +287,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					}
 				});
 			
-		}, selectBuildsAction: function($table, dontUpdate) { // check all in tables and perform remove action
+		}, selectBuildsAction: function($table, dontUpdate, updateUrl, parameters) { // check all in tables and perform remove action
 			
             if ($table === undefined) {
                 $table = $('#tablesorterRt');
@@ -303,7 +312,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				
 				$.ajax({
 					type: "POST",
-					url: '/buildqueue/_selected/cancelselected',
+					url: updateUrl,
 					data: str,
 					success: function (data) {
                         //TODO: Remove this so that we can update with a URL that only returns
@@ -331,19 +340,20 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 		        var formStr = "";
 		        checkedNodes.each(function(){
 		        	if ($(this).is(':checked')) {
-		        		formStr += 'cancelselected='+$(this).val()+'&';
+		        		formStr += parameters+$(this).val()+'&';
 		        	}		        	
 		        });
 		        var formStringSliced = formStr.slice(0,-1);		        
 		        
 				if (formStringSliced != '') {
+					console.log(formStr)
 					ajaxPost(formStringSliced);				
 				}				
 			});
 			$table.delegate('.force-individual-js', 'click', function(e){
 				e.preventDefault();
 				var iVal = $(this).prev().prev().val();
-				var str = 'cancelselected='+iVal;								
+				var str = parameters+iVal;								
 				ajaxPost(str);						
 			});
 			

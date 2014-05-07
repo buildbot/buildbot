@@ -40,7 +40,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                     type: "GET",
                     cache: false,
                     success: function (data) {                                                
-                        console.log(data)           
+
                         rtBuildSlaveDetail.rtfProcessCurrentBuilds(data);
                     }
                 });                   
@@ -71,15 +71,15 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null, "sTitle": "#","sWidth": "10%"  },
+                    { "mData": null, "sTitle": "Builder","sWidth": "30%" },
                     { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
-                    { "mData": null, "sTitle": "Revision", "sWidth": "35%" },
-                    { "mData": null, "sTitle": "Author", "sWidth": "25%"},
-                    { "mData": null, "sTitle":  hbCells({showInputField:true,text:'Select',inputId:'selectAll'}), "sWidth": "25%", "sClass": "select-input",'bSortable': false}
+                    { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
+                    { "mData": null, "sTitle": "Author", "sWidth": "5%"},
+                    { "mData": null, "sTitle":  hbCells({showInputField:true,text:'',inputId:'selectAll'}), "sWidth": "5%", "sClass": "select-input",'bSortable': false}
                 ];
 
                 options.aoColumnDefs = [
-                    rtTable.cell.buildID(0),
+                    rtTable.cell.builderName(0,'txt-align-left'),
                     rtTable.cell.buildProgress(1, true),
                     rtTable.cell.revision(2),
                     {

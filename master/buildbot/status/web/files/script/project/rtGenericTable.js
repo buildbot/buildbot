@@ -55,7 +55,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "aTargets": [index],
                 "sClass": className === undefined? "txt-align-right" : className,
                 "mRender": function (data, type, full) {                    
-                    return hbCells({builderName: true, 'data': full});
+                    return hbCells({showBuilderName: true, 'data': full});
                 }            
             };
         },
@@ -153,9 +153,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
+                    console.log(type.slave)
                     return hbCells({
                         stopBuild: true,                        
-                        'data': full
+                        'data': type
                     });
                 }
             }
@@ -184,17 +185,14 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")                
             ];
 
-            if (showBuilderName === true) {           
+            if (showBuilderName === true) {                           
+                options.aoColumns[1].sWidth = '10%';
+                options.aoColumns[2].sWidth = '25%';
+                options.aoColumns[3].sWidth = '30%';
+                options.aoColumns[4].sWidth = '30%';
                 options.aoColumns[4].sTitle = 'Builder';
-                options.aoColumnDefs = [
-                    cellFunc.buildID(0),
-                    cellFunc.shortTime(1, function (data) {
-                        return data.times[0];
-                    }),                
-                    cellFunc.revision(2),
-                    cellFunc.buildStatus(3),
-                    cellFunc.builderName(4)
-                ]                
+                options.aoColumnDefs.splice(4,1);
+                options.aoColumnDefs.push(cellFunc.builderName(4));                                
             }            
 
             return dt.initTable($tableElem, options);

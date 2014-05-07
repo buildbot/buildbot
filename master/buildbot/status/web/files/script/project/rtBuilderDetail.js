@@ -27,7 +27,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 realtimePages.initRealtime(realtimeFunctions);
                 
-                helpers.selectBuildsAction($tbPendingBuildsTable);
+                helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
                 
                 // insert codebase and branch
                 if (window.location.search !== '') {
