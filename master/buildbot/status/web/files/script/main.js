@@ -19,6 +19,7 @@ require.config({
 		'rtbuilders': 'project/rtBuilders',
 		'rtbuilderdetail': 'project/rtBuilderDetail',
 		'rtbuildslaves': 'project/rtBuildSlaves',
+		'rtbuildslavedetail': 'project/rtBuildSlaveDetail',
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'rtglobal': 'project/rtGlobal',
 		'jqache': 'plugins/jqache-0-1-1-min',

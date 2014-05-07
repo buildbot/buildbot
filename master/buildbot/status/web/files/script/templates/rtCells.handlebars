@@ -39,6 +39,10 @@
     {{/if}}
 {{/slaveName}}
 
+{{#builderName}}
+	<a href="{{data.builder_url}}">{{data.builderFriendlyName}}</a>
+{{/builderName}}
+
 {{#slaveStatus}}
 	{{#showSpinIcon}}
 		<a class="more-info popup-btn-json-js" href="#">
@@ -89,3 +93,16 @@
         {{/if}}
     {{/if}}
 {{/buildProgress}}
+
+{{#stopBuild}}
+	<input class="fi-js fi" type="checkbox" name="cancelselected" value="{{data.currentBuilds.[0].slave}}"/>
+	<br/>
+	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
+{{/stopBuild}}
+
+{{#showInputField}}
+	<label for="{{text}}">
+		{{text}}
+	</label>
+	<input id="{{inputId}}" type="checkbox" name="checkuncheck" />
+{{/showInputField}}

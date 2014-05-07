@@ -50,6 +50,15 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
+        builderName: function (index, className) {
+            return {
+                "aTargets": [index],
+                "sClass": className === undefined? "txt-align-right" : className,
+                "mRender": function (data, type, full) {                    
+                    return hbCells({builderName: true, 'data': full});
+                }            
+            };
+        },
         shortTime: function (index, property) {
             return {
                 "aTargets": [index],
@@ -60,8 +69,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {
-            console.log()
+        slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {         
             return {
                 "aTargets": [index],
                 "sClass": className === undefined? "txt-align-left" : className,
@@ -139,11 +147,23 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     });
                 }
             };
+        },
+        stopBuild: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, full, type) {
+                    return hbCells({
+                        stopBuild: true,                        
+                        'data': full
+                    });
+                }
+            }
         }
     };
 
     var tableFunc = {
-        buildTableInit: function ($tableElem) {
+        buildTableInit: function ($tableElem, showBuilderName) {
             var options = {};
 
             options.aoColumns = [
@@ -158,11 +178,24 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.buildID(0),
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
-                }),
+                }),                
                 cellFunc.revision(2),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
+                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")                
             ];
+
+            if (showBuilderName === true) {           
+                options.aoColumns[4].sTitle = 'Builder';
+                options.aoColumnDefs = [
+                    cellFunc.buildID(0),
+                    cellFunc.shortTime(1, function (data) {
+                        return data.times[0];
+                    }),                
+                    cellFunc.revision(2),
+                    cellFunc.buildStatus(3),
+                    cellFunc.builderName(4)
+                ]                
+            }            
 
             return dt.initTable($tableElem, options);
         },

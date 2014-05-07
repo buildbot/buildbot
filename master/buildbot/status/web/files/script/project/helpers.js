@@ -575,7 +575,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page','builders_page'];
+			var currentRtPages = ['buildslaves_page','buildslavedetail_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page','builders_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {
