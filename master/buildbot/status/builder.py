@@ -131,10 +131,14 @@ class BuilderStatus(styles.Versioned):
         highest-numbered build we discover. This is called by the top-level
         Status object shortly after we are created or loaded from disk.
         """
-        existing_builds = [int(f)
-                           for f in os.listdir(self.basedir)
-                           if re.match("^\d+$", f)]
-        if existing_builds:
+        existing_builds = []
+        for f in os.listdir(self.basedir):
+            r = re.search("^(\d+).*$", f)
+
+            if r is not None and len(r.groups()) > 0:
+                existing_builds.append(int(r.groups()[0]))
+
+        if len(existing_builds):
             self.nextBuildNumber = max(existing_builds) + 1
         else:
             self.nextBuildNumber = 0
