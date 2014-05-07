@@ -472,7 +472,8 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
 
     def startService(self):
         if self.buildSetSummary:
-            self.summarySubscribe()
+            # TODO: handle deferred
+            self.summarySubscribe().addErrback(twlog.err, 'while subscribing')
 
         base.StatusReceiverMultiService.startService(self)
 

@@ -143,6 +143,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getBuilders(self):
         return self.builders.values()
 
+    @defer.inlineCallbacks
     def startService(self):
         def buildRequestAdded(key, msg):
             self.maybeStartBuildsForBuilder(msg['buildername'])
@@ -154,13 +155,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # self.buildrequest_consumer_new = self.master.mq.startConsuming(
         #     buildRequestAdded,
         #     ('buildrequests', None, None, None, 'new'))
-        self.buildrequest_consumer_new = self.master.mq.startConsuming(
+        startConsuming = self.master.mq.startConsuming
+        self.buildrequest_consumer_new = yield startConsuming(
             buildRequestAdded,
             ('buildsets', None, 'builders', None, 'buildrequests', None, 'new'))
-        self.buildrequest_consumer_unclaimed = self.master.mq.startConsuming(
+        self.buildrequest_consumer_unclaimed = yield startConsuming(
             buildRequestAdded,
             ('buildrequests', None, None, None, 'unclaimed'))
-        return service.AsyncMultiService.startService(self)
+        yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):

@@ -62,7 +62,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_codebases_valid(self):
         codebases = {"codebase1":
-                    {"repository": u"", "branch": u"", "revision": u""}}
+                     {"repository": u"", "branch": u"", "revision": u""}}
         self.makeScheduler(codebases=codebases)
 
     def test_constructor_codebases_invalid(self):
@@ -88,10 +88,15 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         self.assertEqual(sched.getPendingBuildTimes(), [])
 
+    @defer.inlineCallbacks
     def test_startConsumingChanges_fileIsImportant_check(self):
         sched = self.makeScheduler()
-        self.assertRaises(AssertionError,
-                          lambda: sched.startConsumingChanges(fileIsImportant="maybe"))
+        try:
+            yield sched.startConsumingChanges(fileIsImportant="maybe")
+        except AssertionError:
+            pass
+        else:
+            self.fail("didn't assert")
 
     def do_test_change_consumption(self, kwargs, expected_result):
         # (expected_result should be True (important), False (unimportant), or

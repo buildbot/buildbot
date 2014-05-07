@@ -113,18 +113,18 @@ class BaseScheduler(ClusteredService, StateMixin):
 
     # change handling
 
+    @defer.inlineCallbacks
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
                               onlyImportant=False):
         assert fileIsImportant is None or callable(fileIsImportant)
 
         # register for changes with the data API
         assert not self._change_consumer
-        self._change_consumer = self.master.data.startConsuming(
+        self._change_consumer = yield self.master.data.startConsuming(
             lambda k, m: self._changeCallback(k, m, fileIsImportant,
                                               change_filter, onlyImportant),
             {},
             ('changes',))
-        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,

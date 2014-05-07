@@ -445,8 +445,9 @@ class IRCContact(base.StatusReceiver):
                 return self.watchedBuildFinished(msg)
 
         for build in builds:
-            handle = self.master.data.startConsuming(watchForCompleteEvent, {},
-                                                     ('builds', str(build['buildid'])))
+            startConsuming = self.master.data.startConsuming
+            handle = yield startConsuming(watchForCompleteEvent, {},
+                                          ('builds', str(build['buildid'])))
             self.build_subscriptions.append((build['buildid'], handle))
 
             if self.useRevisions:

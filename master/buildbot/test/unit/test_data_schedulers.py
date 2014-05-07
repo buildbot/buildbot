@@ -150,8 +150,9 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_startConsuming(self):
-        self.callStartConsuming({}, {},
-                                expected_filter=('schedulers', None, None))
+        return self.callStartConsuming({}, {},
+                                       expected_filter=('schedulers',
+                                                        None, None))
 
 
 class Scheduler(interfaces.InterfaceTests, unittest.TestCase):

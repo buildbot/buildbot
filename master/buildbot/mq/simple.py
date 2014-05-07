@@ -18,6 +18,7 @@ import pprint
 from buildbot import config
 from buildbot.mq import base
 from buildbot.util import tuplematch
+from twisted.internet import defer
 from twisted.python import log
 
 
@@ -53,7 +54,7 @@ class SimpleMQ(config.ReconfigurableServiceMixin, base.MQBase):
         else:
             qref = QueueRef(self, callback, filter)
             self.qrefs.append(qref)
-        return qref
+        return defer.succeed(qref)
 
 
 class QueueRef(base.QueueRef):

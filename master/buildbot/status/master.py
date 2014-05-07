@@ -57,18 +57,19 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     # service management
 
+    @defer.inlineCallbacks
     def startService(self):
         # subscribe to the things we need to know about
-        self._buildset_new_consumer = self.master.mq.startConsuming(
+        self._buildset_new_consumer = yield self.master.mq.startConsuming(
             self.bs_new_consumer_cb, ('buildsets', None, 'new'))
-        self._buildset_complete_consumer = self.master.mq.startConsuming(
+        self._buildset_complete_consumer = yield self.master.mq.startConsuming(
             self.bs_complete_consumer_cb, ('buildsets', None, 'complete'))
-        self._br_consumer = self.master.mq.startConsuming(
+        self._br_consumer = yield self.master.mq.startConsuming(
             self.br_consumer_cb, ('buildrequests', None, None, None, 'new'))
-        self._change_consumer = self.master.mq.startConsuming(
+        self._change_consumer = yield self.master.mq.startConsuming(
             self.change_consumer_cb, ('changes', None, 'new'))
 
-        return service.AsyncMultiService.startService(self)
+        yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, new_config):

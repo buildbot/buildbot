@@ -80,7 +80,8 @@ class BuildSetSummaryNotifierMixin:
     _buildsetCompleteConsumer = None
 
     def summarySubscribe(self):
-        self._buildsetCompleteConsumer = self.master.mq.startConsuming(
+        startConsuming = self.master.mq.startConsuming
+        self._buildsetCompleteConsumer = yield startConsuming(
             self._buildsetComplete,
             ('buildsets', None, 'complete'))
 

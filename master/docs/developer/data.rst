@@ -105,10 +105,11 @@ Within the buildmaster process, the root of the data API is available at `self.m
         :param options: dictionary containing model-specific options
         :param tuple path: A tuple of path elements representing the API path.
             Numbers can be passed as strings or integers.
+        :returns: consumer via Deferred
         :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
 
         This method implements the subscriptions section.
-        The callback interface is the same as that of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
+        The callback interface and consumer the same as those of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
         The ``path`` argument is automatically translated into an appropriate topic.
 
     .. py:method:: produceEvent(rtype, msg, event)
@@ -343,6 +344,7 @@ See that module's description for details.
         :param callback: a function to call for each message
         :param options: dictionary containing model-specific options
         :param kwargs: fields extracted from the path
+        :returns: consumer via Deferred
 
     .. py:method:: control(action, args, kwargs)
 
