@@ -331,6 +331,7 @@ class BuildStepStatus(styles.Versioned):
         del d['finishedWatchers']
         del d['updates']
         del d['master']
+        del d['step_type']
         return d
 
     def __setstate__(self, d):
