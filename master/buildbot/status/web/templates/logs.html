@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block content %}
-    <div id="CheckBoxesList" class="check-boxes-list">
+    <div id="CheckBoxesList" class="sticky-bar sticky-bar-bottom">
         <label for="scrollOpt">Automatic Scroll</label>
-        <input type="checkbox" id="scrollOpt">
+        <input type="checkbox" id="scrollOpt" style="margin-right:10px;">
     </div>
     <iframe id="logIFrame" seamless src="{{ iframe_url }}" scrolling="no" width="100%" style="background-color: transparent; border: 0 none transparent; padding: 0; overflow: hidden;"></iframe>
 {% endblock content %}

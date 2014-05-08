@@ -403,3 +403,25 @@ body.log.interface {
     display: -moz-inline-stack;
     display: inline-block;
 }
+
+.sticky-bar {
+  background-image: -webkit-linear-gradient(top, #3f81b5 0%, #37709d 100%);
+  background-image: -o-linear-gradient(top, #3f81b5 0%, #37709d 100%);
+  background-image: -ms-linear-gradient(top, #3f81b5 0%, #37709d 100%);
+  background-image: linear-gradient(top, #3f81b5 0%, #37709d 100%);
+  position: fixed;
+  width: 99.9%;
+  padding: 10px 0 5px 0;
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.44);
+  height: 20px;
+  overflow:hidden;
+  z-index: 1000;
+}
+
+.sticky-bar-bottom {
+  left: 0;
+  bottom: 0;
+  text-align: right;
+  padding-right: 0;
+}

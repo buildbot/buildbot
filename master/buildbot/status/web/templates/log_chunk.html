@@ -1,20 +1,25 @@
 {% macro page_header() %}
-    <html>
-    <head>
-    <script src="/prod/script/libs/iframeResizer.contentWindow.min.js"></script>
-    </head>
-    <div style="background-color: #ebeef1;">
-    <pre>
+<html>
+<head>
+<link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
+<script src="/prod/script/libs/iframeResizer.contentWindow.min.js"></script>
+</head>
+<pre style="background-color: #ebeef1;">
 {% endmacro %}
 
-{%- macro chunks(entries) -%}
-    {%- for entry in entries -%}
-        <span>{{ entry.text|e }}</span>
-    {%- endfor -%}
-{%- endmacro -%}
+{% macro chunks(entries) %}
+{% for entry in entries %}
+{% if "warning:" in entry.text|lower %}
+<span class="log-warning">{{ entry.text|e }}</span>
+{% elif "error:" in entry.text|lower %}
+<span class="log-error">{{ entry.text|e }}</span>
+{% else %}
+<span>{{ entry.text|e }}</span>
+{% endif %}
+{% endfor %}
+{% endmacro %}
 
 {% macro page_footer() %}
-    </pre>
-    </div>
-    </html>
+</pre>
+</html>
 {% endmacro %}
