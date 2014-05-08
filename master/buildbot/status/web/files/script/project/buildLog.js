@@ -1,12 +1,31 @@
 /*global define*/
-define(["jquery", "helpers"], function ($, helpers) {
+define(["jquery", "helpers", "iFrameResize"], function ($) {
 
     "use strict";
 
-    $(document).ready(function ($iFrame) {
-        var iFrame = document.getElementById("logIFrame"),
+    function maybeScroll(checked) {
+        if (checked) {
+            setTimeout(function () {
+                window.scrollTo(0, document.body.scrollHeight);
+            }, 300);
+        }
+    }
+
+    $(document).ready(function () {
+        $("html").css("background-color", "#ebeef1");
+
+        var $iFrame = $("#logIFrame"),
             $scrollOpt = $("#scrollOpt"),
             hasPressed = false;
+
+        //Start auto resizer
+        $iFrame.iFrameResize({
+            "autoResize": true,
+            "sizeWidth": true,
+            "resizedCallback": function () {
+                maybeScroll($scrollOpt.prop("checked"));
+            }
+        });
 
         $(document).keyup(function (event) {
             if (event.which === 83) {
@@ -14,23 +33,11 @@ define(["jquery", "helpers"], function ($, helpers) {
                     var checked = !$scrollOpt.prop("checked");
                     hasPressed = true;
                     $scrollOpt.prop("checked", checked);
-                    if (checked) {
-                        window.scrollTo(0, document.body.scrollHeight);
-                    }
+                    maybeScroll(checked);
                     setTimeout(function () { hasPressed = false; }, 300);
                 }
             }
         });
-
-        setInterval(function () {
-            helpers.setIFrameSize(iFrame);
-
-            if ($scrollOpt.prop("checked")) {
-                window.scrollTo(0, document.body.scrollHeight);
-            }
-        }, 1000);
-
-        helpers.setIFrameSize(iFrame);
     });
 
 });

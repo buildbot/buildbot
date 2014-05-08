@@ -1,15 +1,20 @@
 {% macro page_header() %}
+    <html>
+    <head>
+    <script src="/prod/script/libs/iframeResizer.contentWindow.min.js"></script>
+    </head>
     <div style="background-color: #ebeef1;">
     <pre>
 {% endmacro %}
 
 {%- macro chunks(entries) -%}
     {%- for entry in entries -%}
-        {{ entry.text|e }}
+        <span>{{ entry.text|e }}</span>
     {%- endfor -%}
 {%- endmacro -%}
 
 {% macro page_footer() %}
     </pre>
     </div>
+    </html>
 {% endmacro %}
