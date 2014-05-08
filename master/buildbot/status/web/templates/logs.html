@@ -1,45 +1,22 @@
+{% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
-{%- macro page_header(pageTitle, path_to_root, texturl, builder_name, builder_url) -%}
-<!DOCTYPE html>
-  <html class="no-background logs-page">
-  <head><title>{{ pageTitle }}</title>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
-    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
 
+{% block extra_header %}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            setTimeout(function() {requirejs(['project/buildLog'])}, 200);
+        });
+    </script>
+{% endblock %}
 
-	<link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
-  </head>
-  <body class='log interface'>
+{% block submenu %}
+  {{submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Log", selectedProject=selectedproject)}}
+{% endblock %}
 
-<div class="clear"></div>
-	<h4 class="small-head">
-		Showing buildlog of {{ builder_name }}
-	</h4>
-	<br/>
-		<a id="btd" href="{{ builder_url }}" class="back-to-detail">
-	        Back to builddetail
-		</a>
-		<br/>
-		
-		<br/>
-		<a href="{{ texturl }}">(view as text)</a><br/><br/>
-		
-	    <pre class="content-holder">  
-			{%- endmacro -%}
-
-			{%- macro chunks(entries) -%}
-			
-			{%- for entry in entries -%}
-				{{ entry.text|e }}
-			{%- endfor -%}
-
-			{%- endmacro -%}
-
-			{%- macro page_footer() -%}
-      </pre>
-    
-</body>
-
-</html>
-{%- endmacro -%}
+{% block content %}
+    <div id="CheckBoxesList" class="check-boxes-list">
+        <label for="failedinput">Automatic Scroll</label>
+        <input type="checkbox" id="scrollOpt">
+    </div>
+    <iframe id="logIFrame" seamless src="{{ iframe_url }}" style="min-height: 300px; background-color: transparent; border: 0px none transparent; padding: 0px; overflow: hidden;"></iframe>
+{% endblock content %}

@@ -1,0 +1,15 @@
+{% macro page_header() %}
+    <div style="background-color: #ebeef1;">
+    <pre>
+{% endmacro %}
+
+{%- macro chunks(entries) -%}
+    {%- for entry in entries -%}
+        {{ entry.text|e }}
+    {%- endfor -%}
+{%- endmacro -%}
+
+{% macro page_footer() %}
+    </pre>
+    </div>
+{% endmacro %}

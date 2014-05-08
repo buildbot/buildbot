@@ -635,6 +635,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 return css_classes[key];
             });
             return values[status];
+        },
+        setIFrameSize: function(iFrame) {
+            if (iFrame) {
+                var iFrameWin = iFrame.contentWindow || iFrame.contentDocument.parentWindow;
+                if (iFrameWin.document.body) {
+                    iFrame.height = iFrameWin.document.documentElement.scrollHeight || iFrameWin.document.body.scrollHeight;
+                    iFrame.width = iFrameWin.document.documentElement.scrollWidth || iFrameWin.document.body.scrollWidth;
+                }
+            }
         }
 	};
 
