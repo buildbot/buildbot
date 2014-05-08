@@ -88,7 +88,8 @@ install:
     fi;
 
   # Run additional tests only in latest configuration
-  - "[ $IS_LATEST = false ] || pip install pylint"
+  # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
+  - "[ $IS_LATEST = false ] || pip install pylint==1.1.0"
   - "[ $IS_LATEST = false ] || pip install pyflakes"
   - "[ $IS_LATEST = false ] || pip install sphinx"
   - "[ $IS_LATEST = false ] || pip install pep8"
@@ -99,7 +100,7 @@ script:
   - trial --reporter=text --rterrors buildslave.test
 
   # Run additional tests only in latest configuration
-  - "[ $IS_LATEST = false ] || make pylint"
+  - "[ $IS_LATEST = false ] || make pylint==1.1.0"
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
