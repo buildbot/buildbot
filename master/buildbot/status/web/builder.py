@@ -311,7 +311,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                                  "data": json.dumps(pending_dict)}
 
         number_of_builds = 15
-        builds_json = PastBuildsJsonResource(self.status, self.builder_status, number_of_builds)
+        builds_json = PastBuildsJsonResource(self.status, number_of_builds,  builder_status=self.builder_status)
         builds_dict = yield builds_json.asDict(req)
         builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, number_of_builds)
         cxt['instant_json']['builds'] = {"url": builds_url,

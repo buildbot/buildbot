@@ -14,20 +14,19 @@
 # Copyright Buildbot Team Members
 import json
 
-import time, urllib
+from twisted.internet import defer
+
 from twisted.web import html
 from twisted.web.util import Redirect
 from twisted.web.resource import NoResource
-from twisted.internet import defer
-
-from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_builder, path_to_json_slaves
-from buildbot import util
-from buildbot.status.web.status_json import SlavesJsonResource, FilterOut
+from buildbot.status.web.base import HtmlResource, \
+    BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_json_slaves, \
+    path_to_json_past_slave_builds, path_to_json_slave_builds
+from buildbot.status.web.status_json import SlavesJsonResource, FilterOut, PastBuildsJsonResource, \
+    SlaveBuildsJsonResource
 
 
 class ShutdownActionResource(ActionResource):
-
     def __init__(self, slave):
         self.slave = slave
         self.action = "gracefulShutdown"
@@ -35,8 +34,8 @@ class ShutdownActionResource(ActionResource):
     @defer.inlineCallbacks
     def performAction(self, request):
         res = yield self.getAuthz(request).actionAllowed(self.action,
-                                                        request,
-                                                        self.slave)
+                                                         request,
+                                                         self.slave)
 
         url = None
         if res:
@@ -46,9 +45,11 @@ class ShutdownActionResource(ActionResource):
             url = path_to_authzfail(request)
         defer.returnValue(url)
 
+
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
     addSlash = False
+
     def __init__(self, slavename):
         HtmlResource.__init__(self)
         self.slavename = slavename
@@ -63,58 +64,49 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             return ShutdownActionResource(slave)
         return Redirect(path_to_slave(req, slave))
 
-    def content(self, request, ctx):        
+    def content(self, request, ctx):
         s = self.getStatus(request)
-        slave = s.getSlave(self.slavename)
-        
-        my_builders = []
-        for bname in s.getBuilderNames():
-            b = s.getBuilder(bname)
-            for bs in b.getSlaves():
-                if bs.getName() == self.slavename:
-                    my_builders.append(b)
-
-        # Current builds
-        current_builds = []
-        for b in my_builders:
-            for cb in b.getCurrentBuilds():
-                if cb.getSlavename() == self.slavename:                    
-                    current_builds.append(self.get_line_values(request, cb))
+        slave_status = s.getSlave(self.slavename)
 
         try:
             max_builds = int(request.args.get('numbuilds')[0])
         except:
             max_builds = 15
-           
-        recent_builds = []    
-        n = 0
-        for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-            if rb.getSlavename() == self.slavename:
-                n += 1
-                recent_builds.append(self.get_line_values(request, rb))
-                if n > max_builds:
-                    break
+
+        bbURL = s.getBuildbotURL()
+        recent_builds_json = PastBuildsJsonResource(s, max_builds, slave_status=slave_status)
+        recent_builds_dict = recent_builds_json.asDict(request)
+        recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
+        ctx['instant_json']['recent_builds'] = {"url": recent_builds_url,
+                                                "data": json.dumps(recent_builds_dict)}
+
+        curr_builds_json = SlaveBuildsJsonResource(s, slave_status)
+        curr_builds_dict = curr_builds_json.asDict(request)
+        curr_builds_url = bbURL + path_to_json_slave_builds(request, self.slavename)
+        ctx['instant_json']['current_builds'] = {"url": curr_builds_url,
+                                                 "data": json.dumps(curr_builds_dict)}
+
+
 
         # connects over the last hour
         slave = s.getSlave(self.slavename)
         connect_count = slave.getConnectCount()
 
         ctx.update(dict(slave=slave,
-                        slavename = slave.getFriendlyName(),
-                        current = current_builds, 
-                        recent = recent_builds, 
-                        shutdown_url = request.childLink("shutdown"),
-                        authz = self.getAuthz(request),
-                        this_url = "../../../" + path_to_slave(request, slave),
-                        access_uri = slave.getAccessURI()),
-                        admin = unicode(slave.getAdmin() or '', 'utf-8'),
-                        host = unicode(slave.getHost() or '', 'utf-8'),
-                        slave_version = slave.getVersion(),
-                        show_builder_column = True,
-                        connect_count = connect_count)
+                        slavename=slave.getFriendlyName(),
+                        shutdown_url=request.childLink("shutdown"),
+                        authz=self.getAuthz(request),
+                        this_url="../../../" + path_to_slave(request, slave),
+                        access_uri=slave.getAccessURI()),
+                   admin=unicode(slave.getAdmin() or '', 'utf-8'),
+                   host=unicode(slave.getHost() or '', 'utf-8'),
+                   slave_version=slave.getVersion(),
+                   show_builder_column=True,
+                   connect_count=connect_count)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
+
 
 # /buildslaves
 class BuildSlavesResource(HtmlResource):

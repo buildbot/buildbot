@@ -227,6 +227,14 @@ def path_to_json_global_status(status, request):
 def path_to_json_slaves(request):
     return "json/slaves/"
 
+def path_to_json_past_slave_builds(request, slaveName, number):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/slaves/{0}/builds/<{1}{2}".format(urllib.quote(slaveName, safe=''), number, codebases_arg)
+
+def path_to_json_slave_builds(request, slaveName):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/slaves/{0}/builds{1}".format(urllib.quote(slaveName, safe=''), codebases_arg)
+
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
 

@@ -41,7 +41,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         buildStatus: function (index, className) {
             return {
                 "aTargets": [index],
-                "sClass": className === undefined? "txt-align-left" : className,
+                "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     return hbCells({buildStatus: true, 'build': full});
                 },
@@ -53,10 +53,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         builderName: function (index, className) {
             return {
                 "aTargets": [index],
-                "sClass": className === undefined? "txt-align-right" : className,
-                "mRender": function (data, type, full) {                    
+                "sClass": className === undefined ? "txt-align-right" : className,
+                "mRender": function (data, type, full) {
                     return hbCells({showBuilderName: true, 'data': full});
-                }            
+                }
             };
         },
         shortTime: function (index, property) {
@@ -69,10 +69,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {         
+        slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {
             return {
                 "aTargets": [index],
-                "sClass": className === undefined? "txt-align-left" : className,
+                "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     var name = privFunc.getPropertyOnData(full, slaveNameProperty);
                     var url = privFunc.getPropertyOnData(full, slaveURLProperty);
@@ -139,7 +139,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                         builderName: type.name
                     });
                 },
-                "fnCreatedCell": function (nTd, sData, oData) {
+                "fnCreatedCell": function (nTd) {
                     var bars = $(nTd).find('.percent-outer-js');
                     $.each(bars, function (key, elem) {
                         var obj = $(elem);
@@ -153,13 +153,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
-                    console.log(type.slave)
                     return hbCells({
-                        stopBuild: true,                        
+                        stopBuild: true,
                         'data': type
                     });
                 }
-            }
+            };
         }
     };
 
@@ -168,10 +167,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#","sWidth": "5%" },
+                { "mData": null, "sTitle": "#", "sWidth": "5%" },
                 { "mData": null, "sTitle": "Date", "sWidth": "20%" },
-                { "mData": null, "sTitle": "Revision","sWidth": "30%" },
-                { "mData": null, "sTitle": "Result","sWidth": "35%", "sClass": ""},
+                { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
+                { "mData": null, "sTitle": "Result", "sWidth": "35%", "sClass": ""},
                 { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
             ];
 
@@ -179,21 +178,21 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.buildID(0),
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
-                }),                
+                }),
                 cellFunc.revision(2),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")                
+                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
             ];
 
-            if (showBuilderName === true) {                           
+            if (showBuilderName === true) {
                 options.aoColumns[1].sWidth = '10%';
                 options.aoColumns[2].sWidth = '25%';
                 options.aoColumns[3].sWidth = '30%';
                 options.aoColumns[4].sWidth = '30%';
                 options.aoColumns[4].sTitle = 'Builder';
-                options.aoColumnDefs.splice(4,1);
-                options.aoColumnDefs.push(cellFunc.builderName(4));                                
-            }            
+                options.aoColumnDefs.splice(4, 1);
+                options.aoColumnDefs.push(cellFunc.builderName(4));
+            }
 
             return dt.initTable($tableElem, options);
         },
