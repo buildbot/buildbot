@@ -403,20 +403,31 @@ body.log.interface {
     display: -moz-inline-stack;
     display: inline-block;
 }
-
+ 
 .sticky-bar {
-  background-image: -webkit-linear-gradient(top, #3f81b5 0%, #37709d 100%);
-  background-image: -o-linear-gradient(top, #3f81b5 0%, #37709d 100%);
-  background-image: -ms-linear-gradient(top, #3f81b5 0%, #37709d 100%);
-  background-image: linear-gradient(top, #3f81b5 0%, #37709d 100%);
+  @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
   position: fixed;
-  width: 99.9%;
-  padding: 10px 0 5px 0;
-  color: #fff;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.44);
+  width: 100%;
+  padding: 10px 0 5px 0;  
   height: 20px;
   overflow:hidden;
   z-index: 1000;
+  a,label {
+	color: #fff;
+  	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.44);
+  }
+  a:hover {  	
+  	color: rgba(255,255,255,0.75)
+  }
+  ul li {
+  	color: #fff;
+  	margin-right: 5px;
+  	padding-left: 5px;
+	float: left;
+	&:first-child {
+		padding-left: 0;
+	}
+  }
 }
 
 .sticky-bar-bottom {
@@ -424,4 +435,21 @@ body.log.interface {
   bottom: 0;
   text-align: right;
   padding-right: 0;
+}
+ 
+#log_page .footer {
+	padding-bottom:52px;
+}
+
+pre.code {
+	white-space: pre-line;
+	@include text-shadow(0 1px 0 #fff);
+}
+
+.log-iframe {
+	background-color: transparent; 
+	border: none ; 
+	padding: 0; 
+	overflow: hidden;	
+	width:100%;
 }

@@ -18,7 +18,7 @@
     
     <script type="text/javascript">
       var require = {
-          baseUrl: "/prod/script/",
+          baseUrl: "/script/",
           urlArgs : "cachebust={{version}}",
           deps : ['main']
       };
@@ -44,7 +44,7 @@
     {% endif %}
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
-    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/css/default.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% block extra_header %}{% endblock %}
@@ -162,10 +162,10 @@
           -->
         </ul>
         
-        <div  title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
+        <div title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
         time to schedule new builds.  If the background color is green, Katana is under light load -- yellow means
         moderate load and red is heavily loaded.  It is suggested to avoid scheduling new builds when the system is
-        under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip ">
+        under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip responsive-tooltip">
             <h4>Build Load</h4>
             <span>0</span>
         </div>

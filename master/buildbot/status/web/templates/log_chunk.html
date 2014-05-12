@@ -3,23 +3,31 @@
 <head>
 <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
 <script src="/prod/script/libs/iframeResizer.contentWindow.min.js"></script>
+
+<script type="text/javascript">
+	
+</script>
+
 </head>
-<pre style="background-color: #ebeef1;">
-{% endmacro %}
+	<body class="interface">
+		<pre class="code">			
 
-{% macro chunks(entries) %}
-{% for entry in entries %}
-{% if "warning:" in entry.text|lower %}
-<span class="log-warning">{{ entry.text|e }}</span>
-{% elif "error:" in entry.text|lower %}
-<span class="log-error">{{ entry.text|e }}</span>
-{% else %}
-<span>{{ entry.text|e }}</span>
-{% endif %}
-{% endfor %}
-{% endmacro %}
+		{% endmacro %}
 
-{% macro page_footer() %}
-</pre>
+		{% macro chunks(entries) %}
+		{% for entry in entries %}
+		{% if "error:" in entry.text|lower %}
+		<span class="log-error">{{ entry.text|e }}</span>
+		{% elif "warning:" in entry.text|lower %}
+		<span class="log-warning">{{ entry.text|e }}</span>
+		{% else %}
+		<span>{{ entry.text|e }}</span>
+		{% endif %}
+		{% endfor %}
+		{% endmacro %}
+
+		{% macro page_footer() %}
+		</pre>
+	</body>
 </html>
 {% endmacro %}

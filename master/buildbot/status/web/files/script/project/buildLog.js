@@ -12,20 +12,19 @@ define(["jquery", "helpers", "iFrameResize"], function ($) {
     }
 
     $(document).ready(function () {
-        $("html").css("background-color", "#ebeef1");
-
+        
         var $iFrame = $("#logIFrame"),
             $scrollOpt = $("#scrollOpt"),
             hasPressed = false;
-
+            
         //Start auto resizer
         $iFrame.iFrameResize({
             "autoResize": true,
-            "sizeWidth": true,
+            "sizeWidth": false,
             "resizedCallback": function () {
                 maybeScroll($scrollOpt.prop("checked"));
             }
-        });
+        });        
 
         $(document).keyup(function (event) {
             if (event.which === 83) {

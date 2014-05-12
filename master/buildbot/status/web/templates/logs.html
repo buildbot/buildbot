@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
 
+{% set bodyId = 'id="log_page"' %}
+    
 {% block extra_header %}
     <script type="text/javascript">
         $(document).ready(function(){
@@ -14,9 +16,23 @@
 {% endblock %}
 
 {% block content %}
+
     <div id="CheckBoxesList" class="sticky-bar sticky-bar-bottom">
-        <label for="scrollOpt">Automatic Scroll</label>
-        <input type="checkbox" id="scrollOpt" style="margin-right:10px;">
+        <div class="container-inner">
+            <ul>
+                <li>
+                    <a href="{{ iframe_url }}" target="_blank">Open in new window</a>
+                </li>
+                <li>
+                    /
+                </li>
+                <li>
+                    <a href="#log_page">Go to the top</a>
+                </li>
+            </ul>
+            <label for="scrollOpt">Automatic Scroll</label>
+            <input type="checkbox" id="scrollOpt">
+        </div>
     </div>
-    <iframe id="logIFrame" seamless src="{{ iframe_url }}" scrolling="no" width="100%" style="background-color: transparent; border: 0 none transparent; padding: 0; overflow: hidden;"></iframe>
+    <iframe id="logIFrame" class="log-iframe" seamless src="{{ iframe_url }}" scrolling="no" allowtransparency="true"></iframe>
 {% endblock content %}
