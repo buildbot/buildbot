@@ -26,16 +26,16 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 popup.registerJSONPopup($tbSlavesTable);
 
                 realtimePages.initRealtime(realtimeFunctions);
-                
+
                 helpers.selectBuildsAction($tbPendingBuildsTable);
-                
+
                 // insert codebase and branch
                 if (window.location.search !== '') {
                     // Parse the url and insert current codebases and branches
-                    helpers.codeBaseBranchOverview($('#brancOverViewCont'));                    
+                    helpers.codeBaseBranchOverview($('#brancOverViewCont'));
                 }
             },
-            rtfProcessCurrentBuilds: function (data) {                
+            rtfProcessCurrentBuilds: function (data) {
                 timeElements.clearTimeObjects($tbCurrentBuildsTable);
                 $tbCurrentBuildsTable.fnClearTable();
 
@@ -46,7 +46,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                     }
 
                     timeElements.updateTimeObjects();
-                } catch (err) { }
+                } catch (err) {
+                }
             },
             rtfProcessPendingBuilds: function (data) {
                 rtTable.table.rtfGenericTableProcess($tbPendingBuildsTable, data);
@@ -66,7 +67,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null, "sTitle": "#","sWidth": "10%"  },
+                    { "mData": null, "sTitle": "#", "sWidth": "10%"  },
                     { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
                     { "mData": null, "sTitle": "Revision", "sWidth": "40%" },
                     { "mData": null, "sTitle": "Author", "sWidth": "20%", "sClass": "txt-align-right"}
@@ -75,7 +76,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 options.aoColumnDefs = [
                     rtTable.cell.buildID(0),
                     rtTable.cell.buildProgress(1, true),
-                    rtTable.cell.revision(2),
+                    rtTable.cell.revision(2, "sourceStamps"),
                     {
                         "aTargets": [ 3 ],
                         "sClass": "txt-align-left",
@@ -104,8 +105,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 options.aoColumns = [
                     { "mData": null, "sWidth": "30%" },
-                    { "mData": null, "sWidth": "50%" },
-                    { "mData": null, "sWidth": "20%" }
+                    { "mData": null, "sWidth": "30%" },
+                    { "mData": null, "sWidth": "30%" },
+                    { "mData": null, "sWidth": "10%" }
                 ];
 
                 options.aoColumnDefs = [
@@ -126,8 +128,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                             timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                         }
                     },
+                    rtTable.cell.revision(2, "sources"),
                     {
-                        "aTargets": [ 2 ],
+                        "aTargets": [ 3 ],
                         "sClass": "txt-align-right",
                         "mRender": function (data, type, full) {
                             return builderdetailHandle({removeBuildSelector: true, data: full});

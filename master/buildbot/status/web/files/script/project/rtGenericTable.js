@@ -20,12 +20,14 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var cellFunc = {
-        revision: function (index) {
+        revision: function (index, property) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
-                    return hbCells({revisionCell: true, 'data': full});
+                    var sourceStamps = privFunc.getPropertyOnData(full, property);
+
+                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps});
                 }
             };
         },
@@ -159,7 +161,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
                 }),
-                cellFunc.revision(2),
+                cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
                 cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
             ];
