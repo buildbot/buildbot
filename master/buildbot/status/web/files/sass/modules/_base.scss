@@ -82,6 +82,7 @@ $color-font-grey: #666; // grey
 }
  
 .table-1 .offline,
-.table-1 .idle  {
+.table-1 .idle, 
+.table-1 .not_rebuilt {
 	border-top: 1px solid #FFFFFF;
-}
+} 
