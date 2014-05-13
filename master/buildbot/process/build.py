@@ -23,7 +23,7 @@ from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status
+  RETRY, SKIPPED, worst_status, NOT_REBUILT
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -506,6 +506,7 @@ class Build(properties.PropertiesMixin):
             reusedOldBuild = self.getProperty("reusedOldBuild", False)
             if reusedOldBuild:
                 text = ["Successful Build Found (did not rebuild)"]
+                self.result = NOT_REBUILT
             else:
                 text = ["Build Finished Successfully"]
         return self.buildFinished(text, self.result)
