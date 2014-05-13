@@ -12,11 +12,11 @@ define(["jquery", "helpers", "iFrameResize"], function ($) {
     }
 
     $(document).ready(function () {
-        
+
         var $iFrame = $("#logIFrame"),
             $scrollOpt = $("#scrollOpt"),
             hasPressed = false;
-            
+
         //Start auto resizer
         $iFrame.iFrameResize({
             "autoResize": true,
@@ -24,7 +24,11 @@ define(["jquery", "helpers", "iFrameResize"], function ($) {
             "resizedCallback": function () {
                 maybeScroll($scrollOpt.prop("checked"));
             }
-        });        
+        });
+
+        $scrollOpt.click(function () {
+            window.scrollTo(0, document.body.scrollHeight);
+        });
 
         $(document).keyup(function (event) {
             if (event.which === 83) {
@@ -33,7 +37,9 @@ define(["jquery", "helpers", "iFrameResize"], function ($) {
                     hasPressed = true;
                     $scrollOpt.prop("checked", checked);
                     maybeScroll(checked);
-                    setTimeout(function () { hasPressed = false; }, 300);
+                    setTimeout(function () {
+                        hasPressed = false;
+                    }, 300);
                 }
             }
         });
