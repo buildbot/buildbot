@@ -44,7 +44,9 @@
     {% endif %}
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
-    <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/css/default.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/css/bootstrap.css?cachebust={{version}}" type="text/css" />
+    <link rel="stylesheet" href="/css/bootstrap-theme.css?cachebust={{version}}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% block extra_header %}{% endblock %}
@@ -194,7 +196,7 @@
     {% block submenu -%}
     {%- endblock -%}
 
-    <div class="content container-inner">
+    <div class="content container">
       {%- block content -%}     
       {%- endblock -%}
     </div>
