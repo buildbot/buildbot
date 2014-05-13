@@ -176,7 +176,11 @@
             <option value="default">Any Compatible</option>
             <option value="allCompatible">All Compatible</option>
             {% for slave in slaves %}
-            <option value="{{ slave.name }}">{{ slave.name }}</option>
+                {%  if slave.friendly_name %}
+                    <option value="{{ slave.name }}">{{ slave.friendly_name }}</option>
+                {% else %}
+                    <option value="{{ slave.name }}">{{ slave.name }}</option>
+                {% endif %}
             {% endfor %}
         </select>
         </div>
