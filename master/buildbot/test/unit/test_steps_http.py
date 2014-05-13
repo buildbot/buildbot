@@ -114,7 +114,7 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         url = self.getURL()
         self.setupStep(http.GET(url, params=properties.Property("x")))
         self.properties.setProperty('x', {'param_1': 'param_1','param_2':2}, 'here')
-        self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.expectLogfile('log', "URL: %s?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK" % (url, ))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, status_text=["Status", "code:", '200'])
         return self.runStep()
