@@ -216,6 +216,8 @@ div.column-1 {
 	.span-5 {
     	width: 680px;
 	}	
+	.span-6 {width:590px;}
+	.span-7 {width:750px;}
 }
 
 @include breakpoint($bkpt-xxlarge) {
@@ -223,6 +225,8 @@ div.column-1 {
 	.span-2 {width:430px;}
 	.span-4 {width:350px;}
 	.span-5 {width:720px;}
+	.span-6 {width:630px;}
+	.span-7 {width:810px;}
 	.container-inner {
 		width: 1500px;
 	}
