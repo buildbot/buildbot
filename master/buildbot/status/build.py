@@ -497,6 +497,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         slave = self.master.status.getSlave(self.getSlavename())
         if slave is not None:
             result['slave_friendly_name'] = slave.getFriendlyName()
+            result['slave_url'] = self.builder.status.getURLForThing(slave)
         result['eta'] = self.getETA()
 
         #Lazy importing here to avoid python import errors

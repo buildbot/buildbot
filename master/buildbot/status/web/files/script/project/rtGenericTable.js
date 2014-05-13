@@ -63,7 +63,6 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             };
         },
         slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {
-            console.log()
             return {
                 "aTargets": [index],
                 "sClass": className === undefined? "txt-align-left" : className,
@@ -163,7 +162,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
+                cellFunc.slaveName(4, "slave_friendly_name", "slave_url", "txt-align-right")
             ];
 
             return dt.initTable($tableElem, options);
