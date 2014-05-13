@@ -106,8 +106,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 options.aoColumns = [
                     { "mData": null, "sWidth": "30%" },
                     { "mData": null, "sWidth": "30%" },
-                    { "mData": null, "sWidth": "30%" },
-                    { "mData": null, "sWidth": "10%" }
+                    { "mData": null, "sWidth": "35%" },
+                    { "mData": null, "sWidth": "5%" }
                 ];
 
                 options.aoColumnDefs = [
