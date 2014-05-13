@@ -225,13 +225,34 @@ def path_to_json_global_status(status, request):
     return status.getBuildbotURL() + "json/globalstatus"
 
 def path_to_json_slaves(request):
-    return path_to_root(request) + "json/slaves/"
+    return "json/slaves/"
+
+def path_to_json_builder_slaves(builderName):
+    return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
 
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
 
 def path_to_json_build_queue(request):
     return path_to_root(request) + "json/buildqueue/"
+
+def path_to_json_project(request, project):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + urllib.quote(project, safe='') + codebases_arg
+
+def path_to_json_project_builder(request, project, builder):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + urllib.quote(project, safe='') + "/" + urllib.quote(builder, safe='') + codebases_arg
+
+def path_to_json_pending(request, builderName):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/pending/" + urllib.quote(builderName, safe='') + codebases_arg
+
+
+def path_to_json_past_builds(request, builderName, number):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/builders/{0}/builds/<{1}{2}".format(urllib.quote(builderName, safe=''), number, codebases_arg)
+
 
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events

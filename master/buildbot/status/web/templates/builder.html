@@ -4,7 +4,7 @@
 {% import 'submenu.html' as submenu %}
 {% extends "layout.html" %}
 
-{% set bodyId = 'id="builder_page"' %}
+{% set bodyId = 'id="builderdetail_page"' %}
 
 {% block submenu %}
   {{submenu.buildsubmenu(active_page=friendly_name, pathNum=4, builderName=friendly_name, buildersPath=path_to_builders, codebasesPath=path_to_codebases, buildNumber='', stepName='',selectedProject=selectedproject)}}
@@ -12,182 +12,82 @@
 
 {% block content %}
 
-<div id="brancOverViewCont" class="branch-overview top">
-    
-</div>
-<div class="column-1">
-
-  <div class="span-4 column">
-
-    <h2 class="head-2">
-      Build status
-    </h2>
-
-    <ul class="list">
-      <li>
-        
-      {% if current %}
-        <h2 class="small-head">
-          Current job
-        </h2>
-        <ul class="pending-job-list">
-        {% for b in current %}
-          <li>
-            <a href="{{ b.link }}">{{ b.num }}</a>
-          {% if b.when %}
-            ETA: {{ b.when_time }} [{{ b.when }}]
-          {% endif %}
-
-          {{ b.current_step }}
-
-          {% if authz.advertiseAction('stopBuild', request) %}
-            {{ forms.stop_build(b.stop_url, authz, on_all=False, short=True, label='Build') }}
-          {% endif %}    
-          </li>
-        {% endfor %}
-        </ul>
-      {% else %}
-      <h2 class="small-head">
-         Current Builds
-      </h2> 
-      <ul class="pending-job-list">
-        <li>
-          None
-        </li>
-      </ul>
+<div class="initjson">
+  <div id="brancOverViewCont" class="branch-overview top">
       
-      {% endif %}    
-     </li>
-    <li>
-    {% if pending %}
+  </div>
 
-      <h2 class="small-head">
-        Pending Build Requests
+  <div class="column-1">
+
+    <div class="span-6 column">
+    
+      {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
+        <a href="#" title="Run Custom Build" data-contenttype="form" data-popuptitle="Run Custom Build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" data-returnpage="pending_json" class="ajaxbtn more-info fl-right m-top4">Run build
+        </a>
+      {% endif %}          
+     
+      <h2 class="head-2">
+        Current builds
       </h2>
-      <ul class="pending-job-list">
-          {% if authz.advertiseAction('cancelPendingBuild', request) and '_branch' not in ' '.join(request.args.keys()) %}
-        <li>
-          <p class="txt-cont">
-            Cancel all builds
-          </p>
-            {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=False, id='all') }}
-        </li>
-          {% endif %}
 
-          {% for b in pending %}
-        <li>
-        <p class="txt-cont">
-          {{ b.when }}, waiting {{ b.delay }}
-         
-          {% if b.num_changes < 4 %}
-              {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
-              <a href="{{ c.url }}">{{ c.who|email }}</a>{% if not loop.last %},{% endif %}
-              {% endfor %}
-          {% else %}
-              {{ b.num_changes }} changes
-          {% endif %}    
-          <br/>
-          {% if 'owner' in b.properties %}
-            <b>Forced build</b>
-            by {{b.properties['owner'][0]}}
-           {{b.properties['reason'][0]}}
-          {% endif %}
-        </p>
-        {% if authz.advertiseAction('cancelPendingBuild', request) %}
-          {{ forms.cancel_pending_build(builder_url+"/cancelbuild"+codebases_arg, authz, short=True, id=b.id) }}
-        {% endif %}    
-        </li>
-      {% endfor %}
-      </li>
-      </ul>  
-         
-    {% else %}
-      <h2 class="small-head">
-        Pending Build Requests
-      </h2> 
-      <ul class="pending-job-list">
-        <li>
-          None
-        </li>
-      </ul>
-    {% endif %}
-    </li>
+      <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+      </table>
+
+      <h2 class="head-2 fl-left" style="margin-top:20px;">
+        Pending builds requests
+      </h2>
+
+      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
+      <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
+        <thead>
+          <tr>
+            <th class="txt-align-left">Requested at</th>
+            <th class="txt-align-left">Waiting</th>
+            <th class="txt-align-left">Branch</th>
+            <th class="select-input no-tablesorter-js">
+                <label for="selectall">
+                  Select all
+                </label>
+                <input id="selectall" type="checkbox" name="checkuncheck">
+            </th>
+          </tr>
+        </thead>
+      </table>
+
+      <h2 class="head-2" style="margin-top:20px;">
+        Build slaves
+      </h2>
       
-    </ul>
-  </div>
-  <div class="column span-5">
-
-    <ul class="btn-list fl-right">
-      <!--
-        <li>
-           <a href="#" title="Build slaves" data-popuptitle="Build slaves" data-rt_update="buildslaves" class="ajaxbtn more-info">
-              Build slaves
-           </a>
-        </li>
-      -->
-      <li>
-        {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-          <a href="#" title="Run Custom Build" data-contenttype="form" data-popuptitle="Run Custom Build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" class="ajaxbtn more-info">Run build
-          </a>
-        {% endif %}          
-      </li>
-    </ul>
-
-    <h2 class="head-2">
-      Recent Builds
-    </h2>
-
-    {{ build_table(recent) }}
-
-    <!--
-    {% if authz.advertiseAction('pingBuilder', request) %}
-      <h2>Ping slaves</h2>
-      {{ forms.ping_builder(builder_url+"/ping", authz) }}
-    {% endif %}
-    -->
-
-
-  </div>
-  <div class="column span-4 last">
-    <h2 class="head-2">
-      Build slaves
-    </h2>
-    
-    <table class="table-1 tablesorter-js tablesorter first-child span-1"> 
-      <thead>
-      {% if slaves %}
-        <tr>
-          <th class="txt-align-left">Name</th>
-          <th>Status</th>          
-        </tr>
-      {% endif %}
-      </thead>
-      <tbody>
-      {% for s in slaves %}
-      <tr>
-        <td class="txt-align-left">
-          <b>
-            <a href="{{ s.link|e }}">
-              {{ s.friendly_name|e }}
-            </a>
-          </b>
-        </td>
-        {% if s.connected %}
-          <td class="idle">connected</td>
-        {% else %}
-          <td class="offline">offline</td>        
+      <table id="rtSlavesTable" class="table-1 tablesorter-js tablesorter first-child">
+        <thead>
+        {% if slaves %}
+          <tr>
+            <th class="txt-align-left">Name</th>
+            <th>Status</th>          
+          </tr>
         {% endif %}
-        
-      {% else %}
-        <td>
-          no slaves attached</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+
+    </div>
+    <div class="column span-7">    
+      <h2 class="head-2">
+        Recent Builds
+      </h2>
+
+      <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+      </table>
+
+      <!--
+      {% if authz.advertiseAction('pingBuilder', request) %}
+        <h2>Ping slaves</h2>
+        {{ forms.ping_builder(builder_url+"/ping", authz) }}
+      {% endif %}
+      -->
+
+    </div>
   </div>
 </div>
-
 {% endblock %}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}
     <table class="table-1 tablesorter-js tablesorter first-child">

@@ -15,19 +15,34 @@
     <tr>  
       <td class="txt-align-left">{{ b.time }} </td>
       <td class="txt-align-left">
+        <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                unity 
+              </a> 
+              /
+              <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                build/4.5-trunk  
+              </a> 
+              /
+              <a href="http://katana.hq.unity3d.com/projects/Unity%20-%20Trunk/builders/proj0-Build%20LinuxStandaloneSupport%20-%20ABV%20Subset">
+                6671431218024...
+              </a>
+        <!--
           {% if b.rev != None %}
             {{ b.rev|shortrev(b.rev_repo) }}
           {% else %}
             None
           {% endif %}
-      </td>
-      <td class="txt-align-left">
-          {{ b.branch }}
+        -->
       </td>
       <td class="{{ b.class }}">{{ b.text }}</td>
     {%- if include_builder %}    
       <td class="txt-align-left"><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
     {% endif %}
+      <td class="txt-align-left">
+        <a href="{{ b.builderurl }}">
+          win-slave-02 
+        </a>
+      </td>
       <td><a href="{{ b.buildurl }}">#{{ b.buildnum }}</a></td> 
       
       <!--
@@ -36,27 +51,30 @@
   </tr>
 {% endmacro %}
 
-{% macro build_table(builds, include_builder=False) %}
+{% macro build_table(builds, include_builder=False, header_only=False) %}
 
-
-<table class="table-1 tablesorter-js tablesorter first-child"> 
+<table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
   <thead>
     <tr>
       <th class="txt-align-left">Time</th>
       <th class="txt-align-left">Revision</th>
-      <th class="txt-align-left">Branch</th>
       <th>Result</th>
        {%- if include_builder %}   
       <th class="txt-align-left">Builder</th>
        {% endif %}
+       <th class="txt-align-left">
+          Slave name
+       </th>
       <th>Build #</th>      
     </tr>
   </thead>
+  {% if header_only == False %}
   <tbody>
     {% for b in builds %}
       {{ build_tr(b, include_builder, loop) }}
     {% endfor %}
   </tbody>
+  {% endif %}
 </table>
 
 {% endmacro %}

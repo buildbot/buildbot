@@ -22,6 +22,14 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
 			        });
 			       break;
 
+                case 'builderdetail_page':            
+                    // For the builddetailpage
+                    require(['rtbuilderdetail'],
+                    function(rtBuilderDetail) {
+                        rtBuilderDetail.init();
+                    });
+                    break;
+
                 case 'buildslaves_page':
                     // For the frontpage
                     require(['rtbuildslaves'],

@@ -150,8 +150,8 @@ a.grey-btn,
     }
 }
 
-#submitBtn {
-    padding: 9px 9px 8px 34px;
+.submitBtn {
+    padding: 9px 9px 8px 34px !important;
     @include box-shadow(1px 1px 0 #FFFFFF);
     border-bottom:1px solid #ccc;
     &:after {
@@ -167,6 +167,20 @@ a.grey-btn,
     &:hover:after {
         color: #A4A4A4;     
     }
+}
+
+
+.removeBuildBtn {
+    font-weight: bold;
+    background: none;
+    color: #2B6194;
+    float:right;
+    border:none;
+    margin-top: 26px;
+    padding: 0;    
+    &:hover{
+        color: #A4A4A4;
+    }    
 }
  
 .run-build {

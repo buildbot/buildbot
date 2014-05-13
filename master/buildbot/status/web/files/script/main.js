@@ -17,6 +17,7 @@ require.config({
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
+		'rtbuilderdetail': 'project/rtBuilderDetail',
 		'rtbuildslaves': 'project/rtBuildSlaves',
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'rtglobal': 'project/rtGlobal',
@@ -29,7 +30,9 @@ require.config({
 		'livestamp': "plugins/livestamp",
 		//'noise': "plugins/jquery.noisy",
         'timeElements': "project/timeElements",
-        'iFrameResize' : "libs/iframeResizer.min"
+        'iFrameResize' : "libs/iframeResizer.min",
+        'rtGenericTable' : "project/rtGenericTable",
+        'hbCells' : 'templates/rtCells.handlebars'
 	}
 });
 

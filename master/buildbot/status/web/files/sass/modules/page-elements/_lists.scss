@@ -406,3 +406,7 @@ div.force-text {
 		}
 	}
 }
+
+ul.revision li:not(:last-child) {
+  margin-bottom:3px;
+}
