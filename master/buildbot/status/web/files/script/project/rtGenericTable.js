@@ -162,7 +162,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name", "slave_url", "txt-align-right")
+                cellFunc.slaveName(4, function (data) {
+                    if (data.slave_friendly_name !== undefined) {
+                        return data.slave_friendly_name;
+                    }
+                    return data.slave;
+                }, "slave_url", "txt-align-right")
             ];
 
             return dt.initTable($tableElem, options);
