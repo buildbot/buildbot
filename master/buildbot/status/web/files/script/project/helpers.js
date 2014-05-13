@@ -92,10 +92,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			$(window).resize(function() {
 				helpers.menuItemWidth(screenSize.isMediumScreen());			  
 			});
-			
-			// check all in tables and remove builds
-			helpers.selectBuildsAction();
-			
+						
 			// chrome font problem fix
 			$(function userAgent() {
 				var is_chrome = /chrome/.test( navigator.userAgent.toLowerCase());

@@ -22,6 +22,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 realtimeFunctions.recent_builds = rtBuildSlaveDetail.rtfProcessBuilds;
 
                 realtimePages.initRealtime(realtimeFunctions);
+
+                helpers.selectBuildsAction($tbCurrentBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
             },
             rtfProcessCurrentBuilds: function (data) {
                 rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data);
