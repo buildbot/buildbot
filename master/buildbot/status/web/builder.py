@@ -171,12 +171,12 @@ class ForceBuildActionResource(ActionResource):
         # send the user back to the builder page
         returnpage = args.get("returnpage", None)
         if returnpage is None:
-            defer.returnValue((path_to_builder(req, self.builder_status), msg))
+            defer.returnValue((path_to_builder(req, self.builder_status)))
         elif "builders" in returnpage:
-            defer.returnValue((path_to_builders(req, self.builder_status.getProject()), msg))
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
         elif "builders_json" in returnpage:
             s = self.getStatus(req)
-            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject()), msg))
+            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject())))
         elif "pending_json" in returnpage:
             s = self.getStatus(req)
             defer.returnValue((s.getBuildbotURL() + path_to_json_pending(req, builder_name)))
