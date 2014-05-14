@@ -16,6 +16,7 @@
 
 import calendar
 import datetime
+import locale
 import re
 import string
 import time
@@ -243,8 +244,18 @@ def asyncSleep(delay):
     return d
 
 
+def check_functional_environment(config):
+    try:
+        locale.getdefaultlocale()
+    except KeyError:
+        config.error("\n".join([
+            "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
+            "Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE' are either unset or set to a valid locale.",
+        ]))
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffSets', 'makeList', 'in_reactor']
+    'diffSets', 'makeList', 'in_reactor', 'check_functional_environment']
