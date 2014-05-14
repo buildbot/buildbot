@@ -195,7 +195,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             });
         }, externalContentPopup: function (thisEl) { // custom buildpopup on builder and builders
             var popupTitle = '<h2 class="small-head">' + thisEl.attr('data-popuptitle') + '</h2>';
-            console.log(popupTitle)
             var datab = thisEl.attr('data-b');
             var dataindexb = thisEl.attr('data-indexb');
             var dataReturnPage = thisEl.attr('data-returnpage');
