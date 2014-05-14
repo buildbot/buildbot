@@ -147,8 +147,11 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
                     var times = type.times;
-                    if (times !== undefined && times.length === 2) {
+                    if (times !== undefined) {
                         var d = moment.duration((times[1] - times[0]) * 1000);
+                        if (times.length === 3) {
+                            d = moment.duration((times[2] - times[0]) * 1000);
+                        }
                         return "{0}m {1}s ".format(d.minutes(), d.seconds());
                     }
                     return "N/A";

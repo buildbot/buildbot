@@ -154,8 +154,18 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         be complete (asking again later may give you more of them)."""
         return self.steps
 
-    def getTimes(self):
-        return (self.started, self.finished)
+    def getTimes(self, include_raw_build_time=False):
+        if not include_raw_build_time:
+            return (self.started, self.finished)
+        else:
+            rawBuildTime = self.finished
+            for s in self.steps:
+                step_type = s.getStepType()
+                if step_type is AcquireBuildLocks or step_type is Trigger:
+                    times = s.getTimes()
+                    if times[0] is not None and times[1] is not None:
+                        rawBuildTime -= (times[1] - times[0])
+            return self.started, self.finished, rawBuildTime
 
     _sentinel = [] # used as a sentinel to indicate unspecified initial_value
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
@@ -490,7 +500,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             result['builder_url'] += getCodebasesArg(request)
 
         # Transient
-        result['times'] = self.getTimes()
+        result['times'] = self.getTimes(include_raw_build_time=True)
         result['text'] = self.getText()
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()

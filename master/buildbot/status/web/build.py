@@ -270,11 +270,12 @@ class StatusResourceBuild(HtmlResource):
         
         cxt['responsible_users'] = list(b.getResponsibleUsers())
 
-        (start, end) = b.getTimes()
+        (start, end, raw_end_time) = b.getTimes(include_raw_build_time=True)
         cxt['start'] = time.ctime(start)
         if end:
             cxt['end'] = time.ctime(end)
             cxt['elapsed'] = util.formatInterval(end - start)
+            cxt['raw_elapsed'] = util.formatInterval(raw_end_time - start)
         else:
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
