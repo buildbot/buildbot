@@ -26,8 +26,15 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
                     var sourceStamps = privFunc.getPropertyOnData(full, property);
-
-                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps});
+                    var history_build = false;
+                    if (full.properties !== undefined) {
+                        $.each(full.properties, function (i, obj) {
+                            if (obj.length > 0 && obj[0] === "revision" && obj[1].length !== 0) {
+                                history_build = true;
+                            }
+                        });
+                    }
+                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
                 }
             };
         },
