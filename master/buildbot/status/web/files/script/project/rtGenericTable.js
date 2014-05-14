@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers'], function ($, dt, timeElements, hbCellsText, extendMoment, helpers) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment) {
 
     "use strict";
 
@@ -43,7 +43,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         buildStatus: function (index, className) {
             return {
                 "aTargets": [index],
-                "sClass": className === undefined? "txt-align-left" : className,
+                "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     return hbCells({buildStatus: true, 'build': full});
                 },
@@ -65,7 +65,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         slaveName: function (index, slaveNameProperty, slaveURLProperty, className) {
             return {
                 "aTargets": [index],
-                "sClass": className === undefined? "txt-align-left" : className,
+                "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     var name = privFunc.getPropertyOnData(full, slaveNameProperty);
                     var url = privFunc.getPropertyOnData(full, slaveURLProperty);
@@ -140,6 +140,20 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     });
                 }
             };
+        },
+        buildLength: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, full, type) {
+                    var times = type.times;
+                    if (times !== undefined && times.length === 2) {
+                        var d = moment.duration((times[1] - times[0]) * 1000);
+                        return "{0}m {1}s ".format(d.minutes(), d.seconds());
+                    }
+                    return "N/A";
+                }
+            };
         }
     };
 
@@ -148,11 +162,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#","sWidth": "5%" },
-                { "mData": null, "sTitle": "Date", "sWidth": "20%" },
-                { "mData": null, "sTitle": "Revision","sWidth": "30%" },
-                { "mData": null, "sTitle": "Result","sWidth": "35%", "sClass": ""},
-                { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
+                { "mData": null, "sTitle": "#", "sWidth": "5%" },
+                { "mData": null, "sTitle": "Date", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
+                { "mData": null, "sTitle": "Result", "sWidth": "32%", "sClass": ""},
+                { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Slave", "sWidth": "13%" }
             ];
 
             options.aoColumnDefs = [
@@ -162,7 +177,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, function (data) {
+                cellFunc.buildLength(4),
+                cellFunc.slaveName(5, function (data) {
                     if (data.slave_friendly_name !== undefined) {
                         return data.slave_friendly_name;
                     }
