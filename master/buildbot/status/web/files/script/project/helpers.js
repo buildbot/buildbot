@@ -162,27 +162,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			});
 
 			
-		}, authorizeUser: function() {
-
-			// the current url
-			var url = window.location;
-				
-			// Does the url have 'user' and 'authorized' ? get the fullname
-			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {
-				var fullNameLdap = url.search.split('&').slice(0)[1].split('=')[1];
-				// set the cookie with the full name on first visit
-				helpers.setCookie("fullName1", fullNameLdap);
-				window.location = "/";
-			} else if (helpers.getCookie("fullName1") === '') {
-				// Redirect to loginpage if missing namecookie
-				window.location = "/login";
-			} else {
-				// Extend the expiration date
-				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
-			}
-
-
-		}, setCurrentItem: function () {
+		},
+        authorizeUser: function() {
+            // Force a user to login
+            var url = window.location;
+            if (helpers.getCookie("BuildBotSession") === '') {
+                // Redirect to loginpage if missing namecookie
+                window.location = "/login";
+            }
+        }, setCurrentItem: function () {
 			
 				var path = window.location.pathname.split("\/");
 				

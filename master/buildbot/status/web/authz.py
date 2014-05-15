@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.internet.defer import Deferred
 from buildbot.status.web.auth import IAuth
 from buildbot.status.web.session import SessionManager
 
@@ -165,14 +166,23 @@ class Authz(object):
         if not self.auth:
             return defer.succeed(False)
         d = defer.maybeDeferred(self.auth.authenticate, user, passwd)
+
+        def create_cookie(infos):
+            cookie, s = self.sessions.new(user, infos)
+            request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
+            request.received_cookies = {COOKIE_KEY:cookie}
+            return cookie
+
         def check_authenticate(res):
             if res:
-                cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
-                request.received_cookies = {COOKIE_KEY:cookie}
-                return cookie
+                infos = self.auth.getUserInfo(user)
+                if isinstance(infos, Deferred):
+                    return infos.addBoth(create_cookie)
+                else:
+                    return create_cookie(infos)
             else:
                 return False
+
         d.addBoth(check_authenticate)
         return d
 

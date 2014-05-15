@@ -126,8 +126,9 @@ def path_to_root(request):
 def path_to_login(request):
     return  path_to_root(request) + "login"
 
-def path_to_authenticate(request):
-    return path_to_login(request) + "/" + "authenticate"
+def path_to_authenticate(request, default_url):
+    url = request.requestHeaders.getRawHeaders('referer',[default_url])[0]
+    return "{0}/authenticate?referer={1}".format(path_to_login(request), urllib.quote(url, safe=''))
 
 def path_to_projects(request):
     return path_to_root(request) + "projects"
@@ -309,6 +310,7 @@ class ContextMixin(AccessorMixin):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
         locale_enc = locale.getdefaultlocale()[1]
+        authenticated = self.getAuthz(request).authenticated(request)
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
@@ -328,7 +330,8 @@ class ContextMixin(AccessorMixin):
                     authz = self.getAuthz(request),
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
-                    analytics_code = self.getAnalyticsCode(request)
+                    analytics_code = self.getAnalyticsCode(request),
+                    authenticated=authenticated
                     )
 
 
