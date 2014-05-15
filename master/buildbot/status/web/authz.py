@@ -112,6 +112,18 @@ class Authz(object):
             return request.getPassword()
         return request.args.get("passwd", ["<no-password>"])[0]
 
+    def getUserAttr(self, request, attr):
+        s = self.getUserInfo(self.getUsername(request))
+        if s:
+            userdb = request.site.buildbot_service.master.db.users
+            return userdb.get_user_prop(s['uid'], attr)
+
+    def setUserAttr(self, request, attr_type, attr_data):
+        s = self.getUserInfo(self.getUsername(request))
+        if s:
+            userdb = request.site.buildbot_service.master.db.users
+            userdb.set_user_prop(s['uid'], attr_type, attr_data)
+
     def advertiseAction(self, action, request):
         """Should the web interface even show the form for ACTION?"""
         if action not in self.knownActions:
