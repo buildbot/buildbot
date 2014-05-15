@@ -16,7 +16,7 @@
 from twisted.internet import defer
 from twisted.internet.defer import Deferred
 from buildbot.status.web.auth import IAuth
-from buildbot.status.web.session import SessionManager
+from buildbot.status.web.session import SessionManager, get_session_manager
 
 COOKIE_KEY="BuildBotSession"
 class Authz(object):
@@ -56,7 +56,7 @@ class Authz(object):
                 self.config[act] = kwargs[act]
                 del kwargs[act]
 
-        self.sessions = SessionManager()
+        self.sessions = get_session_manager()
         if kwargs:
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 

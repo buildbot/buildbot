@@ -198,7 +198,7 @@ class LDAPAuth(AuthBase):
 
             if email is not None:
                 ident = "{0} <{1}>".format(fullname, email)
-                d = defer.maybeDeferred(self.master.db.users.findUserByAttr, ident, "hg", ident)
+                d = defer.maybeDeferred(self.master.db.users.findUserByAttr, ident, "ldap", ident)
 
                 def result(uid):
                     return dict(uid=uid, userName=user, fullName=fullname, email=email, groups=[ user ])
