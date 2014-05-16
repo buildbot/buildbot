@@ -556,3 +556,23 @@ class TestChangesConnectorComponent(
                              {'notest': ('no', 'Change')})
         d.addCallback(check)
         return d
+
+    @defer.inlineCallbacks
+    def test_addChange_cache(self):
+        """
+        Test that `addChange` properly seeds the `getChange` cache.
+        """
+
+        mockedCachePut = mock.Mock()
+        self.patch(self.db.changes.getChange.cache, "put", mockedCachePut)
+
+        # Convert this chdict into a kwargs dict which can be passed to
+        # `addChange`, by removing the hard-coded `changeid`.
+        kwargs = dict(self.change14_dict)
+        del kwargs['changeid']
+
+        # Now, call `addChange`, and verify that an appropriate chdict was
+        # was put into the `getChange` cache.
+        changeid = yield self.db.changes.addChange(**kwargs)
+        kwargs['changeid'] = changeid
+        mockedCachePut.assert_called_once_with(changeid, kwargs)

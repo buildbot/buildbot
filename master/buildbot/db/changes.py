@@ -34,6 +34,7 @@ class ChDict(dict):
 class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
+    @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=0,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties={}, repository='', codebase='',
@@ -111,8 +112,28 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return changeid
-        d = self.db.pool.do(thd)
-        return d
+
+        changeid = yield self.db.pool.do(thd)
+
+        # Seed the `getChange` cache.
+        chdict = ChDict(
+            changeid=changeid,
+            author=author,
+            files=files,
+            comments=comments,
+            is_dir=is_dir,
+            revision=revision,
+            when_timestamp=when_timestamp,
+            branch=branch,
+            category=category,
+            revlink=revlink,
+            properties=properties,
+            repository=repository,
+            codebase=codebase,
+            project=project)
+        self.getChange.cache.put(changeid, chdict)
+
+        defer.returnValue(changeid)
 
     @base.cached("chdicts")
     def getChange(self, changeid):
