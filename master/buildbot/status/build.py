@@ -159,6 +159,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             return (self.started, self.finished)
         else:
             rawBuildTime = self.finished
+            if rawBuildTime is None:
+                rawBuildTime = 0
+                
             for s in self.steps:
                 step_type = s.getStepType()
                 if step_type is AcquireBuildLocks or step_type is Trigger:
