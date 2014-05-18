@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from buildbot.test.util import www
 from buildbot.www import authz
 from twisted.trial import unittest
@@ -13,8 +28,8 @@ from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 class Authz(www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         authzcfg = authz.Authz(
-            stringsMatcher=authz.Authz.fnmatchMatcher,  # simple matcher with '*' glob character
-            # stringsMatcher = authz.Authz.reMatcher,  # if you prefer regular expressions
+            stringsMatcher=authz.Authz.fnmatchStrMatcher,  # simple matcher with '*' glob character
+            # stringsMatcher = authz.Authz.reStrMatcher,  # if you prefer regular expressions
             allowRules=[
                 # admins can do anything,
                 # defaultDeny=False: if user does not have the admin role, we continue parsing rules
