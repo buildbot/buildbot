@@ -61,8 +61,8 @@ class Session(object):
         self.expiration = datetime.now()+ timedelta(-1)
 
     def renew(self):
-        # one day expiration. hardcoded for now...
-        self.expiration = datetime.now()+ timedelta(1)
+        # 30 day expiration. hardcoded for now...
+        self.expiration = datetime.now()+ timedelta(30)
         return self.expiration
 
     def expired(self):
