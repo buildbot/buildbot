@@ -46,12 +46,13 @@ $focusShadow:0 0 0 2px rgba(59, 76, 95, 0.74);
 .m-top20 {
 	margin-top:20px;
 }
+
+.m-top4 {
+	margin-top:4px;
+}
  
 .fi {
-	margin-bottom:3px;	
-	.chrome & {
-		margin-right:-3px;
-	}
+	margin-bottom:5px;	
 }
 
 .pos-relative {

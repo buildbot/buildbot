@@ -18,7 +18,7 @@ html.no-background {
 body.interface {
   margin: 0;
   padding: 0;
-  background: #ebeef1 url(/images/bg_noise.png);
+  background: url('/images/bg_noise.png?1398760067') #ebeef1;
   font-family: arial, sans-serif;
   font-size: 12px;
   color: #444;

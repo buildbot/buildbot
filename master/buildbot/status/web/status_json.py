@@ -76,7 +76,7 @@ EXAMPLES = """\
     - All builds. Warning, reads all previous build data. (Can be filtered by codebases)
   - /json/builders/<A_BUILDER>/builds/<A_BUILD>
     - Where <A_BUILD> is either positive, a build number, or negative, a past
-      build.
+      build. Using <4 will give the last 4 builds.
   - /json/builders/<A_BUILDER>/builds/-1/source_stamp/changes
     - Build changes
   - /json/builders/<A_BUILDER>/builds?select=-1&select=-2
@@ -95,6 +95,8 @@ EXAMPLES = """\
     - All projects
   - /json/projects/<A_PROJECT>
     - A specific project.
+  - /json/projects/<A_PROJECT>/<A_BUILDER>
+    - A specific builder on a project.
   - /json/buildqueue/
     - The current build queue
   - /json/pending/<A_BUILDER>/
@@ -483,6 +485,15 @@ class AllBuildsJsonResource(JsonResource):
             build_status = self.builder_status.getBuild(int(path))
             if build_status:
                 return BuildJsonResource(self.status, build_status)
+        elif "<" in path:
+            try:
+                num = int(path.replace("<", ""))
+            except ValueError:
+                #Defaults to last 15
+                num = 15
+
+            return PastBuildsJsonResource(self.status, self.builder_status, num)
+
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
@@ -504,6 +515,27 @@ class AllBuildsJsonResource(JsonResource):
 
         return results
 
+
+class PastBuildsJsonResource(JsonResource):
+    help = """Previous x number of builds that were run on a builder."""
+    pageTitle = 'Builds'
+
+    def __init__(self, status, builder, number):
+        JsonResource.__init__(self, status)
+        self.builder = builder
+        self.number = number
+
+    def asDict(self, request):
+        #Get codebases
+        codebases = {}
+        getCodebasesArg(request=request, codebases=codebases)
+        encoding = getRequestCharset(request)
+        branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
+
+        builds = list(self.builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                          codebases=codebases,
+                                                          num_builds=self.number))
+        return [b.asDict(request) for b in builds]
 
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.
@@ -665,44 +697,67 @@ class SingleProjectJsonResource(JsonResource):
         self.status = status
         self.project_status = project_status
         self.name = self.project_status.name
-        self.builders = None
+        self.setup_children(status, project_status)
 
-    def getBuilders(self):
-        if self.builders is None:
-            self.builders = []
-            builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
-            for b in builder_names:
-                self.builders.append(self.status.getBuilder(b))
-
-        return self.builders
+    def setup_children(self, status, project):
+        builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
+        for b in builder_names:
+            builder = self.status.getBuilder(b)
+            self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        result = self.project_status.asDict()
+        result = {'builders': []}
 
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
-
-        #Get branches
         encoding = getRequestCharset(request)
         branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
-        result['builders'] = []
-        for b in self.getBuilders():
-            builder = yield b.asDict_async(codebases, request, base_build_dict=True)
-
-            #Get latest build
-            builds = list(b.generateFinishedBuilds(branches=map_branches(branches),
-                                                   codebases=codebases,
-                                                   num_builds=1))
-
-            if len(builds) > 0:
-                builder['latestBuild'] = builds[0].asBaseDict(request)
-
-            result['builders'].append(builder)
+        for name in self.children:
+            child = self.getChildWithDefault(name, request)
+            d = yield child.asDict(request, codebases, branches, True)
+            result['builders'].append(d)
 
         defer.returnValue(result)
+
+
+class SingleProjectBuilderJsonResource(JsonResource):
+    """
+    Returns  a single builder for a project JSON with
+    latestBuild info
+    """
+
+    def __init__(self, status, builder):
+        JsonResource.__init__(self, status)
+        self.builder = builder
+
+    @defer.inlineCallbacks
+    def builder_dict(self, builder, codebases, request, branches, base_build_dict):
+        d = yield builder.asDict_async(codebases, request, base_build_dict)
+
+        #Get latest build
+        builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+                                                     codebases=codebases,
+                                                     num_builds=1))
+
+        if len(builds) > 0:
+            d['latestBuild'] = builds[0].asBaseDict(request)
+
+        defer.returnValue(d)
+
+    @defer.inlineCallbacks
+    def asDict(self, request, codebases=None, branches=None, base_build_dict=False):
+        if codebases is None or branches is None:
+            #Get codebases
+            codebases = {}
+            getCodebasesArg(request=request, codebases=codebases)
+            encoding = getRequestCharset(request)
+            branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
+
+        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict)
+        defer.returnValue(builder_dict)
 
 
 class QueueJsonResource(JsonResource):
@@ -741,7 +796,7 @@ class PendingBuildsJsonResource(JsonResource):
 
 
 class SinglePendingBuildsJsonResource(JsonResource):
-    help = """List the pending builds for a specific ."""
+    help = """List the pending builds for a specific builder."""
     pageTitle = 'Queue'
 
     def __init__(self, status, builder):

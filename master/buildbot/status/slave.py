@@ -35,6 +35,7 @@ class SlaveStatus:
         self.runningBuilds = []
         self.graceful_callbacks = []
         self.connect_times = []
+        self.master = None
 
     def getName(self):
         return self.name
@@ -73,6 +74,9 @@ class SlaveStatus:
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
 
+    def setMaster(self, master):
+        self.master = master
+
     def recordConnectTime(self):
         # record this connnect, and keep data for the last hour
         now = time.time()
@@ -108,6 +112,7 @@ class SlaveStatus:
         result['name'] = self.getName()
         result['friendly_name'] = self.getFriendlyName()
         result['access_uri'] = self.getAccessURI()
+        result["url"] = self.master.status.getURLForThing(self)
 
         # Transient (since it changes when the slave reconnects)
         result['host'] = self.getHost()

@@ -78,15 +78,20 @@
             <li>
             </li>
           </ul>
-
           <div class="auth-user">
-            <span class="hide-mobile">
-              Logged in as 
-            </span>
-              <span class="hide-mobile" id="authUserName"></span>
-              <a id="authUserBtn" href="/login">
-                Log out
-              </a>
+              {% if authenticated %}
+                    <span class="hide-mobile">
+                        Logged in as {{ authz.getUsernameFull(request) }}
+                    </span>
+                    <span class="hide-mobile" id="authUserName"></span>
+                    <a id="authUserBtn" href="/logout">
+                        Log out
+                    </a>
+              {% else %}
+                <a id="authUserBtn" href="/login">
+                    Login
+                </a>
+              {% endif %}
             </div>
 
         <ul class="top-menu">
@@ -162,10 +167,10 @@
           -->
         </ul>
         
-        <div  title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
+        <div title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
         time to schedule new builds.  If the background color is green, Katana is under light load -- yellow means
         moderate load and red is heavily loaded.  It is suggested to avoid scheduling new builds when the system is
-        under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip ">
+        under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip responsive-tooltip">
             <h4>Build Load</h4>
             <span>0</span>
         </div>
