@@ -16,6 +16,18 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             }
 
             return property(data);
+        },
+        buildPropertiesContainsRevision: function (properties) {
+            var hasProperty = true;
+            $.each(properties, function (i, obj) {
+                if (obj.length > 0 && obj[0] === "revision" && obj[1].length !== 0) {
+                    hasProperty = false;
+                    return false;
+                }
+                return true;
+            });
+
+            return hasProperty;
         }
     };
 
@@ -28,11 +40,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     var sourceStamps = privFunc.getPropertyOnData(full, property);
                     var history_build = false;
                     if (full.properties !== undefined) {
-                        $.each(full.properties, function (i, obj) {
-                            if (obj.length > 0 && obj[0] === "revision" && obj[1].length !== 0) {
-                                history_build = true;
-                            }
-                        });
+                        history_build = !privFunc.buildPropertiesContainsRevision(full.properties);
                     }
                     return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
                 }
@@ -179,6 +187,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
                 { "mData": null, "sTitle": "Slave", "sWidth": "13%" }
             ];
+
+            options.fnRowCallback = function (nRow, aData) {
+                if (aData.properties !== undefined && !privFunc.buildPropertiesContainsRevision(aData.properties)) {
+                    $(nRow).addClass("italic");
+                }
+            };
 
             options.aoColumnDefs = [
                 cellFunc.buildID(0),
