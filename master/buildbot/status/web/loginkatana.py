@@ -1,5 +1,8 @@
+from twisted.internet import defer
+from buildbot.status.web.auth import LogoutResource
+from buildbot.status.web.authz import COOKIE_KEY
 from buildbot.status.web.base import HtmlResource, ActionResource, \
-    path_to_login, path_to_authenticate, path_to_root
+    path_to_login, path_to_authenticate, path_to_root, path_to_authfail
 import ldap
 import urllib
 from twisted.python import log
@@ -15,7 +18,8 @@ class LoginKatanaResource(HtmlResource):
 
         template = req.site.buildbot_service.templates.get_template("login.html")
         template.autoescape = True
-        cxt['authenticate_url'] = path_to_authenticate(req)
+        root = status.getBuildbotURL()
+        cxt['authenticate_url'] = path_to_authenticate(req, root)
         return template.render(**cxt)
 
     def getChild(self, path, req):
@@ -32,27 +36,33 @@ class AuthenticateActionResource(ActionResource):
     def authorized(self, username):
         return "?autorized=True&user=%s" % username
 
-    def performAction(self, req):
-        username = req.args.get("username", [None])[0]
-        password = req.args.get("password", [None])[0]
+    def performAction(self, request):
+       authz = self.getAuthz(request)
+       d = authz.login(request)
 
-        master = req.site.buildbot_service.master
-        ldap_config = master.config.ldap
-        l = ldap.initialize(ldap_config['ldap_server'])
-        try:
-            token = l.simple_bind_s("uid=%s,cn=users,%s" % (username, ldap_config['ldap_base_dn']), password)
-            dn = l.whoami_s()
-            attrs = ["cn"]
-            filter_str = "uid=%s" % username
-            ldap_result = l.search_s(ldap_config['ldap_base_dn'], ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attrs)
-            fullname = username
-            if ldap_result > 0 and ldap_result[0] > 1 and 'cn' in ldap_result[0][1].keys():
-                fullname = ldap_result[0][1]['cn'][0]
-            l.unbind()
-            if dn:
-                log.msg('ok', dn)
-        except Exception, e:
-            log.msg('Error while authenticating: %r' % e)
-            return path_to_login(req) + NOT_AUTORIZED
+       def on_login(res):
+           if res:
+               status = request.site.buildbot_service.master.status
+               root = status.getBuildbotURL()
+               url = request.args.get('referer', None)
 
-        return path_to_root(req) + self.authorized(urllib.quote(fullname))
+               if url is None:
+                   url = root
+               else:
+                   url = urllib.unquote(url[0])
+
+               return url
+           else:
+               return path_to_authfail(request)
+
+       d.addBoth(on_login)
+       return d
+
+class LogoutKatanaResource(LogoutResource):
+
+    def performAction(self, request):
+        authz = self.getAuthz(request)
+        s = authz.session(request)
+        s.expire()
+        request.addCookie(COOKIE_KEY, None, expires=s.getExpiration(), path="/")
+        return LogoutResource.performAction(self, request)

@@ -16,6 +16,8 @@
 # Insipration, and some code, from:
 #    :copyright: (c) 2011 by the Werkzeug Team, see Werkzeug's AUTHORS for more
 #    details.
+from cPickle import dump, load
+from twisted.python import log, runtime
 
 try:
     from hashlib import sha1
@@ -34,6 +36,14 @@ def _urandom():
 def generate_cookie():
     return sha1('%s%s' % (time(), _urandom())).hexdigest()
 
+def get_session_manager():
+    filename = "sessions"
+
+    if os.path.exists(filename):
+        with open(filename, "rb") as f:
+            return load(f)
+
+    return SessionManager()
 
 class Session(object):
     """I'm a user's session. Contains information about a user's session
@@ -46,6 +56,9 @@ class Session(object):
         self.user = user
         self.infos = infos
         self.renew()
+
+    def expire(self):
+        self.expiration = datetime.now()+ timedelta(-1)
 
     def renew(self):
         # one day expiration. hardcoded for now...
@@ -94,6 +107,7 @@ class SessionManager(object):
         cookie = generate_cookie()
         user = infos["userName"]
         self.users[user] = self.sessions[cookie] = s = Session(user, infos)
+        self.saveYourself()
         return cookie, s
 
     def gc(self):
@@ -115,7 +129,23 @@ class SessionManager(object):
     def remove(self, cookie):
         if cookie in self.sessions:
             del self.sessions[cookie]
+        self.saveYourself()
 
     def getUser(self, user):
         return self.users.get(user)
+
+    def saveYourself(self):
+        filename = "sessions"
+        tmpfilename = filename + ".tmp"
+        try:
+            with open(tmpfilename, "wb") as f:
+                dump(self, f, -1)
+            if runtime.platformType  == 'win32':
+                # windows cannot rename a file on top of an existing one
+                if os.path.exists(filename):
+                    os.unlink(filename)
+            os.rename(tmpfilename, filename)
+        except:
+            log.msg("unable to save builder %s" % self.name)
+            log.err()
 

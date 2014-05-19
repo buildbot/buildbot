@@ -165,6 +165,54 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    def get_user_prop(self, uid, attr):
+        def thd(conn):
+            tbl = self.db.model.user_props
+            q = tbl.select(whereclause=(tbl.c.uid == uid) & (tbl.c.prop_type == attr))
+            row = conn.execute(q).fetchone()
+
+            if row is not None:
+                return row.prop_data
+            else:
+                return None
+
+        d = self.db.pool.do(thd)
+        return d
+
+    def set_user_prop(self, uid, prop_type, prop_data, _race_hook=None):
+        def thd(conn):
+            tbl_props = self.db.model.user_props
+            transaction = conn.begin()
+            assert prop_data is not None
+
+            self.check_length(tbl_props.c.prop_type, prop_type)
+            self.check_length(tbl_props.c.prop_data, prop_data)
+
+            # first update, then insert
+            q = tbl_props.update(whereclause=(tbl_props.c.uid == uid) & (tbl_props.c.prop_type == prop_type))
+            res = conn.execute(q, prop_data=prop_data)
+            if res.rowcount == 0:
+                _race_hook and _race_hook(conn)
+
+                # the update hit 0 rows, so try inserting a new one
+                try:
+                    q = tbl_props.insert()
+                    res = conn.execute(q,
+                            uid=uid,
+                            prop_type=prop_type,
+                            prop_data=prop_data)
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                    # someone else beat us to the punch inserting this row;
+                    # let them win.
+                    print e
+                    transaction.rollback()
+                    return
+
+                transaction.commit()
+
+        d = self.db.pool.do(thd)
+        return d
+
     def updateUser(self, uid=None, identifier=None, bb_username=None,
                    bb_password=None, attr_type=None, attr_data=None,
                    _race_hook=None):

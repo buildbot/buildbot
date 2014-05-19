@@ -78,15 +78,20 @@
             <li>
             </li>
           </ul>
-
           <div class="auth-user">
-            <span class="hide-mobile">
-              Logged in as 
-            </span>
-              <span class="hide-mobile" id="authUserName"></span>
-              <a id="authUserBtn" href="/login">
-                Log out
-              </a>
+              {% if authenticated %}
+                    <span class="hide-mobile">
+                        Logged in as {{ authz.getUsernameFull(request) }}
+                    </span>
+                    <span class="hide-mobile" id="authUserName"></span>
+                    <a id="authUserBtn" href="/logout">
+                        Log out
+                    </a>
+              {% else %}
+                <a id="authUserBtn" href="/login">
+                    Login
+                </a>
+              {% endif %}
             </div>
 
         <ul class="top-menu">

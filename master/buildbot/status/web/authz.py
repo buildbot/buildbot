@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.internet.defer import Deferred
 from buildbot.status.web.auth import IAuth
-from buildbot.status.web.session import SessionManager
+from buildbot.status.web.session import SessionManager, get_session_manager
 
 COOKIE_KEY="BuildBotSession"
 class Authz(object):
@@ -55,7 +56,7 @@ class Authz(object):
                 self.config[act] = kwargs[act]
                 del kwargs[act]
 
-        self.sessions = SessionManager()
+        self.sessions = get_session_manager()
         if kwargs:
             raise ValueError("unknown authorization action(s) " + ", ".join(kwargs.keys()))
 
@@ -111,6 +112,18 @@ class Authz(object):
             return request.getPassword()
         return request.args.get("passwd", ["<no-password>"])[0]
 
+    def getUserAttr(self, request, attr):
+        s = self.getUserInfo(self.getUsername(request))
+        if s:
+            userdb = request.site.buildbot_service.master.db.users
+            return userdb.get_user_prop(s['uid'], attr)
+
+    def setUserAttr(self, request, attr_type, attr_data):
+        s = self.getUserInfo(self.getUsername(request))
+        if s:
+            userdb = request.site.buildbot_service.master.db.users
+            userdb.set_user_prop(s['uid'], attr_type, attr_data)
+
     def advertiseAction(self, action, request):
         """Should the web interface even show the form for ACTION?"""
         if action not in self.knownActions:
@@ -165,14 +178,23 @@ class Authz(object):
         if not self.auth:
             return defer.succeed(False)
         d = defer.maybeDeferred(self.auth.authenticate, user, passwd)
+
+        def create_cookie(infos):
+            cookie, s = self.sessions.new(user, infos)
+            request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
+            request.received_cookies = {COOKIE_KEY:cookie}
+            return cookie
+
         def check_authenticate(res):
             if res:
-                cookie, s = self.sessions.new(user, self.auth.getUserInfo(user))
-                request.addCookie(COOKIE_KEY, cookie, expires=s.getExpiration(),path="/")
-                request.received_cookies = {COOKIE_KEY:cookie}
-                return cookie
+                infos = self.auth.getUserInfo(user)
+                if isinstance(infos, Deferred):
+                    return infos.addBoth(create_cookie)
+                else:
+                    return create_cookie(infos)
             else:
                 return False
+
         d.addBoth(check_authenticate)
         return d
 
