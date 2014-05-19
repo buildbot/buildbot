@@ -46,7 +46,7 @@ class AuthenticateActionResource(ActionResource):
                root = status.getBuildbotURL()
                url = request.args.get('referer', None)
 
-               if url is None:
+               if "authfail" in url[0] or url is None:
                    url = root
                else:
                    url = urllib.unquote(url[0])
