@@ -30,8 +30,8 @@ developers are inconvenienced by the failure.  Features
 
 Buildslave:
 
-This package contains only the buildslave implementation.  The buildbot package
-contains the buildmaster as well as a complete set of documentation.
+This package contains only the buildslave implementation.  The `buildbot`
+package contains the buildmaster as well as a complete set of documentation.
 
 See http://buildbot.net for more information and for an online version of the
 Buildbot documentation.
