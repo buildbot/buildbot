@@ -527,7 +527,29 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result = self.asBaseDict(request)
 
         # Constant
-        result['sourceStamps'] = [ss.asDict() for ss in self.getSourceStamps()]
+        project = None
+        for p, obj in self.builder.status.getProjects().iteritems():
+            if p == self.builder.project:
+                project = obj
+                break
+
+        def getCodebaseObj(repo):
+            for c in project.codebases:
+                if c.values()[0]['repository'] == repo:
+                    return c.values()[0]
+
+        sourcestamps = []
+        for ss in self.getSourceStamps():
+            d = ss.asDict()
+            c = getCodebaseObj(d['repository'])
+            if c.has_key("display_repository"):
+                d['display_repository'] = c['display_repository']
+            else:
+                d['display_repository'] = d['repository']
+
+            sourcestamps.append(d)
+
+        result['sourceStamps'] = sourcestamps
 
         # Transient
         result['properties'] = self.getProperties().asList()

@@ -6,10 +6,10 @@
         {{else}}
             <li>
         {{/if}}
-        <a href="{{repository}}">{{codebase}}</a> /
+        <a href="{{display_repository}}">{{codebase}}</a> /
         {{branch}} /
         {{#if revision_short}}
-            <a href="{{repository}}/changeset/{{revision}}">{{revision_short}}</a>
+            <a href="{{display_repository}}/changeset/{{revision}}">{{revision_short}}</a>
         {{else}}
             N/A
         {{/if}}
