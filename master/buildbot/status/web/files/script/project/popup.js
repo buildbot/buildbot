@@ -235,7 +235,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 helpers.tooltip(exContent.find($('.tooltip')));
                 // Insert full name from cookie
                 if (contentType === 'form') {
-                    helpers.setFullName($("#usernameDisabled, #usernameHidden", exContent));
                     popup.validateForm(exContent);
                 }
 

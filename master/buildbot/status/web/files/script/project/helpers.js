@@ -113,10 +113,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 
 			// trigger individual builds on the builders page
-			helpers.runIndividualBuild();			
-			
-			// Set the full name from a cookie. Used on buildersform and username in the header
-			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
+			helpers.runIndividualBuild();
 		
 			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
@@ -201,18 +198,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
 				return el;
 			
-		}, setFullName: function(el) {			
-			var valOrTxt;
-			var cookieVal = helpers.getCookie("fullName1");
-
-			// Loop through all elements that needs fullname 
-			el.each(function(){
-				// check if it is an input field or not
-				valOrTxt = $(this).is('input')? 'val' : 'text';				
-				$(this)[valOrTxt](cookieVal);
-			});
-
-		}, runIndividualBuild: function() { // trigger individual builds
+		},
+        runIndividualBuild: function() { // trigger individual builds
 			$('#tablesorterRt').delegate('.run-build-js', 'click', function(e){			
 				$('.remove-js').remove();
 				e.preventDefault();
@@ -244,8 +231,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
                     // Add the value from the cookie to the disabled and hidden field
-                    helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
-
                     var form = formContainer.find('form').ajaxForm();
 
                     $(form).ajaxSubmit(function(data) {
