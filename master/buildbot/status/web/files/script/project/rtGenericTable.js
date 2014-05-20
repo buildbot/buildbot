@@ -17,17 +17,20 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
 
             return property(data);
         },
-        buildPropertiesContainsRevision: function (properties) {
-            var hasProperty = true;
+        buildIsHistoric: function (properties) {
+            var hasRevision = false;
+            var isDependency = false;
             $.each(properties, function (i, obj) {
-                if (obj.length > 0 && obj[0] === "revision" && obj[1].length !== 0) {
-                    hasProperty = false;
-                    return false;
+                if (obj.length > 0) {
+                    if (obj[0] === "revision" && obj[1].length !== 0) {
+                        hasRevision = true;
+                    } else if (obj.length === 3 && obj[0] === "buildLatestRev" && obj[2] === "Trigger") {
+                        isDependency = true;
+                    }
                 }
-                return true;
             });
 
-            return hasProperty;
+            return hasRevision === true && isDependency === false;
         }
     };
 
@@ -40,7 +43,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     var sourceStamps = privFunc.getPropertyOnData(full, property);
                     var history_build = false;
                     if (full.properties !== undefined) {
-                        history_build = !privFunc.buildPropertiesContainsRevision(full.properties);
+                        history_build = privFunc.buildIsHistoric(full.properties);
                     }
                     return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
                 }
@@ -189,7 +192,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             ];
 
             options.fnRowCallback = function (nRow, aData) {
-                if (aData.properties !== undefined && !privFunc.buildPropertiesContainsRevision(aData.properties)) {
+                if (aData.properties !== undefined && privFunc.buildIsHistoric(aData.properties)) {
                     $(nRow).addClass("italic");
                 }
             };
