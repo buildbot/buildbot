@@ -542,7 +542,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         for ss in self.getSourceStamps():
             d = ss.asDict()
             c = getCodebaseObj(d['repository'])
-            if c.has_key("display_repository"):
+            if c is not None and c.has_key("display_repository"):
                 d['display_repository'] = c['display_repository']
             else:
                 d['display_repository'] = d['repository']
