@@ -164,7 +164,7 @@ class Trigger(LoggingBuildStep):
         self.step_status.setText(['Triggered:'] + triggered_names)
 
         if self.waitForFinish:
-            rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            rclist = yield defer.DeferredList(dl, consumeErrors=True)
         else:
             # do something to handle errors
             for d in dl:
@@ -186,7 +186,7 @@ class Trigger(LoggingBuildStep):
                 log.err(results)
                 continue
 
-            if results==FAILURE:
+            if results == FAILURE:
                 was_failure = True
 
         if was_exception:
