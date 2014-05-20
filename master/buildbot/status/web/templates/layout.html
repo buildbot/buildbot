@@ -57,7 +57,15 @@
     {% set bodyId = '' %}
   {% endif %}
 
-   <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
+  {% if authz.getUserAttr(request, "colorBlind") %}
+    {% set colorBlindClass = 'color-blind-mode' %}
+    {% set colorBlindInputVal = 'on' %}
+  {% else %}
+    {% set colorBlindClass = '' %}
+    {% set colorBlindInputVal = 'off' %}
+  {% endif %}
+
+   <body {{ bodyId }} class="interface katana-main {{colorBlindClass}}" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
    
     {% block header -%}
  
@@ -78,7 +86,14 @@
             <li>
             </li>
           </ul>
-          <div class="auth-user">
+          <div class="right-block">
+            <form id="colorBlindForm" action="url">
+              <a href="#" class="color-change tooltip" title="Color blind mode">
+              </a>
+              <input type="hidden" value="{{colorBlindInputVal}}"/>
+              <input type="submit" value="Submit" class="hide">
+            </form>
+            <div class="auth-user">
               {% if authenticated %}
                     <span class="hide-mobile">
                         Logged in as {{ authz.getUsernameFull(request) }}
@@ -92,7 +107,8 @@
                     Login
                 </a>
               {% endif %}
-            </div>
+            </div>            
+          </div>
 
         <ul class="top-menu">
           
