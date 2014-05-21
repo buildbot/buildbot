@@ -45,42 +45,53 @@ base_json = {
     }
 }
 package_json = {
-    "dependencies": {
-        "grunt": "~0.4.1",
-        "grunt-cli": "~0.1.1",
-        "grunt-contrib-clean": "~0.4.0",
-        "grunt-contrib-coffee": "~0.7.0",
-        "grunt-contrib-copy": "~0.4.1",
-        "grunt-contrib-imagemin": "~0.1.3",
-        "grunt-contrib-jade": "~0.5.0",
-        "grunt-contrib-less": "~0.5.0",
-        "grunt-contrib-concat": "~0.3.0",
-        "grunt-contrib-livereload": "~0.1.2",
-        "grunt-contrib-requirejs": "~0.4.0",
-        "grunt-contrib-watch": "~0.5.1",
-        "grunt-mkdir": "~0.1.1",
-        "grunt-html2js": "~0.1.6",
-        "grunt-requiregen": "~0.1.0",
-        "grunt-karma": "~0.6.0",
-        "bower": "~0.9.2"
+    "dependencies": {},
+    "devDependencies": {
+ "bower": "latest",
+        "grunt": "latest",
+        "grunt-angular-templates": "~0.5.5",
+        "grunt-cli": "latest",
+        "grunt-coffeelint": "~0.0.10",
+        "grunt-concurrent": "~0.5.0",
+        "grunt-contrib-clean": "latest",
+        "grunt-contrib-coffee": "latest",
+        "grunt-contrib-concat": "latest",
+        "grunt-contrib-copy": "latest",
+        "grunt-contrib-imagemin": "latest",
+        "grunt-contrib-jade": "latest",
+        "grunt-contrib-less": "latest",
+        "grunt-contrib-requirejs": "latest",
+        "grunt-contrib-uglify": "latest",
+        "grunt-contrib-watch": "latest",
+        "grunt-karma": "~0.8.3",
+        "grunt-newer": "~0.7.0",
+        "grunt-ngmin": "~0.0.3",
+        "grunt-requiregen": "^0.1.0",
+        "karma": "~0.12.16",
+        "karma-chrome-launcher": "~0.1.4",
+        "karma-coffee-preprocessor": "~0.2.1",
+        "karma-jasmine": "~0.2.2",
+        "karma-phantomjs-launcher": "~0.1.4",
+        "karma-requirejs": "~0.2.2",
+        "load-grunt-config": "~0.9.2"
     },
     "engines": {
-        "node": "0.8.x",
-        "npm": "1.1.x"
+        "node": ">=0.10.0",
+        "npm": ">=1.4.0"
     }
 }
 package_json.update(base_json)
 
 # we take latest angular version until we are stable
 # in a crazy CI fashion
+ANGULAR_TAG = "~1.2.17"
 bower_json = {
     "dependencies": {
-        "requirejs": "~2.1.5",
-        "d3": "latest",
-        # test deps
-        "angular": "latest",
-        "jasmine": "~1.3.1",
-        "angular-mocks": "latest"
+        "d3": "~3.1.1",
+        "angular": ANGULAR_TAG
+    },
+    "devDependencies": {
+        "angular-mocks": ANGULAR_TAG
     }
 }
 

@@ -1,22 +1,26 @@
-@import "bootstrap/bootstrap.less";
-@import "font-awesome/font-awesome.less";
+// Import bootstrap and font awesome stylesheets
+@import "../libs/bootstrap/less/bootstrap";
+@import "../libs/font-awesome/less/font-awesome";
+
+// Import colors and animation stylesheet
 @import "animations.less";
 @import "colors.less";
 
-
 /* base css for angular, dont display anything until angular is running */
-.ng-cloak {
-    display: none;
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
 }
 
 /* modal dialog customizations */
 @media screen and (min-width: @screen-sm-min) {
   .modal-dialog {
     width: 90%;
-}}
+  }
+}
+
 /* hack to make modal work with ng-animate */
 .modal {
-   display: block !important;
+  display: block !important;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */
@@ -25,39 +29,43 @@
   margin-top: -5px;
   padding-top: 4px;
 }
+
 .breadcrumb > li + li.pull-right:before {
-content: "";
-padding: 0 2px;
+  content: "";
+  padding: 0 2px;
 }
+
 /* status badge */
-.badge-status{
-    display: inline-block;
-    min-width: 10px;
-    padding: 3px 7px;
-    font-size: @font-size-small;
-    font-weight: @badge-font-weight;
-    line-height: @badge-line-height;
-    vertical-align: baseline;
-    white-space: nowrap;
-    text-align: center;
-    border-radius: @badge-border-radius;
-    transition: all 100ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
-    &:hover,
-    &:focus {
-      -webkit-transform: scale(1.3);
-      transform: scale(1.3);
-    }
+.badge-status {
+  display: inline-block;
+  min-width: 10px;
+  padding: 3px 7px;
+  font-size: @font-size-small;
+  font-weight: @badge-font-weight;
+  line-height: @badge-line-height;
+  vertical-align: baseline;
+  white-space: nowrap;
+  text-align: center;
+  border-radius: @badge-border-radius;
+  transition: all 100ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
+  &:hover,
+  &:focus {
+    -webkit-transform: scale(1.3);
+    transform: scale(1.3);
+  }
 }
+
 /* log styling */
-pre.log{
-    overflow: auto;
+pre.log {
+  overflow: auto;
 }
+
 .logoptions {
   width: 200px;
   margin-bottom: -17px
 }
 
-.no-select{
+.no-select {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -65,6 +73,7 @@ pre.log{
   -ms-user-select: none;
   user-select: none;
 }
+
 .avatar {
   background-size: 32px 32px;
   border-radius: 50%;
