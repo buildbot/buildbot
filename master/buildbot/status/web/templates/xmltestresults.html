@@ -32,7 +32,7 @@
     <div class="top left"></div>
     <div class="log-main" data-failed-tests="{{ summary.failed }}">
 
-        <div id="dataTablesFilter" class="dataTables_filter">
+        <div id="dataTablesFilter" class="fl-right">
             <div id="CheckBoxesList" class="check-boxes-list">
                 <label for="failedinput">Failed</label>
                 <input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
@@ -45,9 +45,11 @@
                 <label for="skippedinput">Skipped</label>
                 <input type="checkbox" value="Skipped" id="skippedinput"/>
             </div>
-            <label class="input-label">
-                <input type="text" placeholder="Free text filter" id="filterinput" />
-            </label>
+            <div class="dataTables_filter">
+                <label class="input-label">
+                    <input type="text" placeholder="Free text filter" id="filterinput" />
+                </label>
+            </div>
                 <button class="grey-btn" id="submitFilter">Filter</button>
                 <button class="grey-btn" id="clearFilter">Clear</button>
         </div>

@@ -44,6 +44,9 @@
 	form {
 		display: inline;
 	}
+	@include breakpoint($bkpt-medium) {
+		display: none;
+	}
 }
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
