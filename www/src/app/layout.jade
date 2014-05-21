@@ -1,0 +1,21 @@
+doctype html
+html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
+    head
+        meta(charset='utf-8')
+        meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    title Buildbot
+    meta(name='description', content='Buildbot web UI')
+    meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
+    link(rel='stylesheet', href='styles/main.css')
+
+    body(ng-cloak)
+        block content
+        block footer
+
+    script(src="config.js")
+    case environment || 'prod'
+        when 'prod'
+            script(src="scripts/require.js")
+            script(src="scripts/main.js")
+        default
+            script(src="scripts/libs/require.js", data-main='scripts/main.js')

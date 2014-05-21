@@ -71,58 +71,66 @@ base_json = {
     }
 }
 package_json = {
-    "dependencies": {
-        "grunt": "~0.4.1",
-        "grunt-cli": "~0.1.1",
-        "grunt-contrib-clean": "~0.4.0",
-        "grunt-contrib-coffee": "~0.7.0",
-        "grunt-contrib-copy": "~0.4.1",
-        "grunt-contrib-imagemin": "~0.1.3",
-        "grunt-contrib-jade": "~0.5.0",
-        "grunt-contrib-less": "~0.5.0",
-        "grunt-contrib-concat": "~0.3.0",
-        "grunt-contrib-livereload": "~0.1.2",
-        "grunt-contrib-requirejs": "~0.4.0",
-        "grunt-contrib-watch": "~0.5.3",
-        "grunt-mkdir": "~0.1.1",
-        "grunt-html2js": "~0.1.6",
-        "grunt-coffeelint": "~0.0.8",
-        "grunt-requiregen": "~0.1.0",
-        "grunt-karma": "~0.8.0",
-        "karma": "~0.12.0",
+    "dependencies": {},
+    "devDependencies": {
+        "bower": "latest",
+        "grunt": "latest",
+        "grunt-angular-templates": "~0.5.5",
+        "grunt-cli": "latest",
+        "grunt-coffeelint": "~0.0.10",
+        "grunt-concurrent": "~0.5.0",
+        "grunt-contrib-clean": "latest",
+        "grunt-contrib-coffee": "latest",
+        "grunt-contrib-concat": "latest",
+        "grunt-contrib-copy": "latest",
+        "grunt-contrib-imagemin": "latest",
+        "grunt-contrib-jade": "latest",
+        "grunt-contrib-less": "latest",
+        "grunt-contrib-requirejs": "latest",
+        "grunt-contrib-uglify": "latest",
+        "grunt-contrib-watch": "latest",
+        "grunt-karma": "~0.8.3",
+        "grunt-newer": "~0.7.0",
+        "grunt-ngmin": "~0.0.3",
+        "grunt-requiregen": "^0.1.0",
+        "karma": "~0.12.16",
+        "karma-chrome-launcher": "~0.1.4",
+        "karma-coffee-preprocessor": "~0.2.1",
         "karma-jasmine": "~0.2.2",
-        "karma-requirejs": "~0.2.1",
-        "karma-coffee-preprocessor": "*",
-        "karma-chrome-launcher": "*",
-        "karma-firefox-launcher": "*",
-        "karma-phantomjs-launcher": "*",
-        "bower": "~1.2.7"
+        "karma-phantomjs-launcher": "~0.1.4",
+        "karma-requirejs": "~0.2.2",
+        "load-grunt-config": "~0.9.2",
+        "lodash": "~2.4.1"
     },
     "engines": {
-        "node": "0.8.x",
-        "npm": "1.2.x"
+        "node": ">=0.10.0",
+        "npm": ">=1.4.0"
     }
 }
 package_json.update(base_json)
 
-ANGULAR_TAG = "1.2.14"
+bower_rc = {
+    "directory": "src/libs"
+}
+
+ANGULAR_TAG = "~1.2.17"
 bower_json = {
     "dependencies": {
-        "bootstrap": "~3.0.0",
-        "font-awesome": "4.0.3",
         "angular": ANGULAR_TAG,
         "angular-animate": ANGULAR_TAG,
-        "angular-bootstrap": "~0.10.0",
-        "angular-ui-router": "0.2.9",
-        "angular-recursion": "1.0.0",
-        "restangular": "~1.3.1",
+        "angular-bootstrap": "~0.11.0",
+        "angular-recursion": "~1.0.1",
+        "angular-ui-router": "~0.2.10",
+        "bootstrap": "~3.1.1",
+        "font-awesome": "~4.1.0",
+        "jquery": "~2.1.1",
         "lodash": "~2.4.1",
-        "underscore.string": "~2.3.3",
-        "html5shiv": "~3.6.2",
-        "jquery": "~2.1.0",
-        "requirejs": "~2.1.5",
-        "moment": "~2.1.0",
-        # test deps
+        "moment": "~2.6.0",
+        "requirejs": "~2.1.11",
+        "restangular": "~1.4.0",
+        "underscore.string": "~2.3.3"
+    },
+    "devDependencies": {
         "angular-mocks": ANGULAR_TAG
     }
 }
@@ -167,8 +175,9 @@ class bower_install(npm_install):
         for command in self.get_sub_commands():
             self.run_command(command)
         assert json, "Install 'json' or 'simplejson' first"
+        json.dump(bower_rc, open(".bowerrc", "w"))
         json.dump(bower_json, open("bower.json", "w"))
-        self.spawn(['rm', '-rf', 'bower_components'])
+        self.spawn(['rm', '-rf', 'src/libs'])
         self.spawn(['./node_modules/.bin/bower', 'install'])
 
 cmdclass['bower_install'] = bower_install
