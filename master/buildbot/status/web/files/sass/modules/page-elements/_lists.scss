@@ -204,6 +204,13 @@ a.no-artifacts {
         margin-right:4px;
     	padding: 0 7px;
 	}
+	.log-list-not_rebuilt a:before {
+	    background-color: #F8FCF2;
+	    color: #444;
+	    content: "";
+        margin-right:4px;
+    	padding: 0 7px;
+	}
 	.log-list-failure a:before {
 		color: #444;
 	    content: "";

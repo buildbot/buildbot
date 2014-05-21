@@ -1,15 +1,18 @@
+/*global define*/
 define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function (screenSize,popups,Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
 
-    var css_classes = {SUCCESS: "success",
+    var css_classes = {
+        SUCCESS: "success",
         WARNINGS: "warnings",
         FAILURE: "failure",
         SKIPPED: "skipped",
         EXCEPTION: "exception",
         RETRY: "retry",
         CANCELED: "exception",
+        NOT_REBUILT: "not_rebuilt",
         RUNNING: "running",
         NOT_STARTED: "not_started",
         None: ""

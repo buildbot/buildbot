@@ -39,7 +39,7 @@ from buildbot.process import metrics
 from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, NOT_REBUILT
 from buildbot import monkeypatches
 from buildbot import config
 
@@ -576,7 +576,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # figure out the overall results of the buildset
         cumulative_results = SUCCESS
         for brdict in brdicts:
-            if brdict['results'] not in (SUCCESS, WARNINGS):
+            if brdict['results'] not in (SUCCESS, WARNINGS, NOT_REBUILT):
                 cumulative_results = FAILURE
 
         # mark it as completed in the database
