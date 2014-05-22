@@ -23,6 +23,7 @@ from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
+from twisted.internet import defer
 from twisted.internet import reactor
 
 
@@ -30,11 +31,17 @@ class BsDict(dict):
     pass
 
 
+class BsProps(dict):
+    pass
+
+
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
+    @defer.inlineCallbacks
     def addBuildset(self, sourcestampsetid, reason, properties, builderNames,
                     external_idstring=None, _reactor=reactor):
+
         def thd(conn):
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
@@ -86,7 +93,13 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return (bsid, brids)
-        return self.db.pool.do(thd)
+
+        bsid, brids = yield self.db.pool.do(thd)
+
+        # Seed the buildset property cache.
+        self.getBuildsetProperties.cache.put(bsid, BsProps(properties))
+
+        defer.returnValue((bsid, brids))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -163,6 +176,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                                   for row in res.fetchall()]))
         return self.db.pool.do(thd)
 
+    @base.cached("BuildsetProperties")
     def getBuildsetProperties(self, buildsetid):
         """
         Return the properties for a buildset, in the same format they were
@@ -189,7 +203,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                               tuple(properties)))
                 except ValueError:
                     pass
-            return dict(l)
+            return BsProps(l)
         return self.db.pool.do(thd)
 
     def _row2dict(self, row):
