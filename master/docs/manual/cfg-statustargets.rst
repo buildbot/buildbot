@@ -1659,8 +1659,8 @@ GerritStatusPush
             message += "\nFor more details visit:\n"
             message += status.getURLForThing(build) + "\n"
 
-        # message, verified, reviewed
-        return message, (result == SUCCESS or -1), 0
+        # message, verified, reviewed, label
+        return message, (result == SUCCESS or -1), 0, ""
 
     def gerritStartCB(builderName, build, arg):
         message = "Buildbot started compiling your patchset\n"
@@ -1696,7 +1696,8 @@ GerritStatusPush
             verified = -1
 
         reviewed = 0
-        return (msg, verified, reviewed)
+        label = ""
+        return (msg, verified, reviewed, label)
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
@@ -1716,14 +1717,14 @@ startCB.
 
 ``reviewCB``, if specified, determines the message and score to give when
 sending a review for each separate build. It should return a tuple of
-(message, verified, reviewed).
+(message, verified, reviewed, label).
 
 If ``startCB`` is specified, it should return a message. This message will be
 sent to the Gerrit server when each build is started.
 
 ``summaryCB``, if specified, determines the message and score to give when
 sending a single review summarizing all of the builds. It should return a
-tuple of (message, verified, reviewed).
+tuple of (message, verified, reviewed, label).
 
 .. bb:status:: GitHubStatus
 
