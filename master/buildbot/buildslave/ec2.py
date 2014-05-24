@@ -56,6 +56,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
+                 subnet_id=None,
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
@@ -92,6 +93,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         self.instance_type = instance_type
         self.keypair_name = keypair_name
         self.security_name = security_name
+        self.subnet_id = subnet_id
         self.user_data = user_data
         self.spot_instance = spot_instance
         self.max_spot_price = max_spot_price
@@ -266,10 +268,17 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     def _start_instance(self):
         image = self.get_image()
-        reservation = image.run(
-            key_name=self.keypair_name, security_groups=[self.security_name],
-            instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement)
+        if self.subnet_id:
+            reservation = image.run(
+                key_name=self.keypair_name,
+                instance_type=self.instance_type, user_data=self.user_data,
+                placement=self.placement, subnet_id=self.subnet_id)
+        else:
+            reservation = image.run(
+                key_name=self.keypair_name, security_groups=[self.security_name],
+                instance_type=self.instance_type, user_data=self.user_data,
+                placement=self.placement)
+
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
