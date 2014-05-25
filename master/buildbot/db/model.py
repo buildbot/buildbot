@@ -448,6 +448,8 @@ class Model(base.DBConnectorComponent):
                         sa.Column('name', sa.Text, nullable=False),
                         # sha1 of name; used for a unique index
                         sa.Column('name_hash', sa.String(40), nullable=False),
+                        # builder's category
+                        sa.Column('category', sa.Text, nullable=True),
                         )
 
     # This links builders to the master where they are running.  A builder
