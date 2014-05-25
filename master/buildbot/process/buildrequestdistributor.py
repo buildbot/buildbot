@@ -511,6 +511,23 @@ class BuildRequestDistributor(service.Service):
         self._quiet()
 
     @defer.inlineCallbacks
+    def _chooseNextBuilds(self, chooser):
+        """
+        Peel off all available next slave/breq pairs.
+        """
+
+        chosen = []
+
+        while True:
+            slave, breqs = yield chooser.chooseNextBuild()
+            if not slave or not breqs:
+                break
+
+            chosen.append((slave, breqs))
+
+        defer.returnValue(chosen)
+
+    @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
@@ -518,12 +535,12 @@ class BuildRequestDistributor(service.Service):
         bc = self.createBuildChooser(bldr, self.master)
 
         while True:
-            slave, breqs = yield bc.chooseNextBuild()
-            if not slave or not breqs:
+            chosen = yield self._chooseNextBuilds(bc)
+            if not chosen:
                 break
 
             # claim brid's
-            brids = [br.id for br in breqs]
+            brids = [br.id for _, breqs in chosen for br in breqs]
             try:
                 yield self.master.db.buildrequests.claimBuildRequests(brids)
             except AlreadyClaimedError:
@@ -531,10 +548,22 @@ class BuildRequestDistributor(service.Service):
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            buildStarted = yield bldr.maybeStartBuild(slave, breqs)
+            # Start all the chosen builds in parallel.
+            dlist = []
+            for slave, breqs in chosen:
+                dlist.append(bldr.maybeStartBuild(slave, breqs))
+            results = yield defer.gatherResults(dlist)
 
-            if not buildStarted:
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+            # Handle all the results when starting the builds and collect up a
+            # list of the breqs from the failed starts that we have to unclaim.
+            unclaim = []
+            for idx, result in enumerate(results):
+                if not result:
+                    _, breqs = chosen[idx]
+                    unclaim.extend(br.id for br in breqs)
+
+            if unclaim:
+                yield self.master.db.buildrequests.unclaimBuildRequests(unclaim)
 
                 # and try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests
