@@ -31,6 +31,7 @@ require.config({
 		'livestamp': "plugins/livestamp",
 		//'noise': "plugins/jquery.noisy",
         'timeElements': "project/timeElements",
+        'iFrameResize' : "libs/iframeResizer.min",
         'rtGenericTable' : "project/rtGenericTable",
         'hbCells' : 'templates/rtCells.handlebars'
 	}

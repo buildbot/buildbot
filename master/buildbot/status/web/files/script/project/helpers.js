@@ -1,15 +1,18 @@
+/*global define*/
 define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function (screenSize,popups,Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
 
-    var css_classes = {SUCCESS: "success",
+    var css_classes = {
+        SUCCESS: "success",
         WARNINGS: "warnings",
         FAILURE: "failure",
         SKIPPED: "skipped",
         EXCEPTION: "exception",
         RETRY: "retry",
         CANCELED: "exception",
+        NOT_REBUILT: "not_rebuilt",
         RUNNING: "running",
         NOT_STARTED: "not_started",
         None: ""
@@ -119,10 +122,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 
 			// trigger individual builds on the builders page
-			helpers.runIndividualBuild();			
-			
-			// Set the full name from a cookie. Used on buildersform and username in the header
-			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
+			helpers.runIndividualBuild();
 		
 			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
@@ -168,27 +168,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			});
 
 			
-		}, authorizeUser: function() {
-
-			// the current url
-			var url = window.location;
-				
-			// Does the url have 'user' and 'authorized' ? get the fullname
-			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {
-				var fullNameLdap = url.search.split('&').slice(0)[1].split('=')[1];
-				// set the cookie with the full name on first visit
-				helpers.setCookie("fullName1", fullNameLdap);
-				window.location = "/";
-			} else if (helpers.getCookie("fullName1") === '') {
-				// Redirect to loginpage if missing namecookie
-				window.location = "/login";
-			} else {
-				// Extend the expiration date
-				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
-			}
-
-
-		}, setCurrentItem: function () {
+		},
+        authorizeUser: function() {
+            // Force a user to login
+            var url = window.location;
+            if (helpers.getCookie("BuildBotSession") === '') {
+                // Redirect to loginpage if missing namecookie
+                window.location = "/login";
+            }
+        }, setCurrentItem: function () {
 			
 				var path = window.location.pathname.split("\/");
 				
@@ -219,18 +207,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
 				return el;
 			
-		}, setFullName: function(el) {			
-			var valOrTxt;
-			var cookieVal = helpers.getCookie("fullName1");
-
-			// Loop through all elements that needs fullname 
-			el.each(function(){
-				// check if it is an input field or not
-				valOrTxt = $(this).is('input')? 'val' : 'text';				
-				$(this)[valOrTxt](cookieVal);
-			});
-
-		}, runIndividualBuild: function() { // trigger individual builds
+		},
+        runIndividualBuild: function() { // trigger individual builds
 			$('#tablesorterRt').delegate('.run-build-js', 'click', function(e){			
 				$('.remove-js').remove();
 				e.preventDefault();
@@ -262,8 +240,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
                     // Add the value from the cookie to the disabled and hidden field
-                    helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
-
                     var form = formContainer.find('form').ajaxForm();
 
                     $(form).ajaxSubmit(function(data) {
@@ -582,7 +558,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','buildslavedetail_page','builderdetail_page','builddetail_page','buildqueue_page','projects_page','home_page','builders_page'];
+			var currentRtPages = ['buildslaves_page', 'buildslavedetail_page', 'builderdetail_page','builddetail_page','buildqueue_page',
+                'projects_page','home_page','builders_page', 'jsonhelp_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {
@@ -646,6 +623,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 return css_classes[key];
             });
             return values[status];
+        },
+        setIFrameSize: function(iFrame) {
+            if (iFrame) {
+                var iFrameWin = iFrame.contentWindow || iFrame.contentDocument.parentWindow;
+                if (iFrameWin.document.body) {
+                    iFrame.height = iFrameWin.document.documentElement.scrollHeight || iFrameWin.document.body.scrollHeight;
+                    iFrame.width = iFrameWin.document.documentElement.scrollWidth || iFrameWin.document.body.scrollWidth;
+                }
+            }
         },
         objectPropertiesToArray: function(arr) {
             var result = [],

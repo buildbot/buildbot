@@ -766,6 +766,8 @@ class Builder(config.ReconfigurableServiceMixin,
             return False
         if self.getBoolProperty(req1, "force_rebuild") != self.getBoolProperty(req2, "force_rebuild"):
             return False
+        if self.getBoolProperty(req1, "force_chain_rebuild") != self.getBoolProperty(req2, "force_chain_rebuild"):
+            return False
         return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
 
     def _defaultMergeRequestFn(self, req1, req2):

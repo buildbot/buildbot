@@ -1,4 +1,4 @@
-/*global define*/
+/*global define, requirejs*/
 define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements'], function ($, helpers, form, popups, Mustache, timeElements) {
 
     "use strict";
@@ -105,16 +105,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 helpers.jCenter(clonedInfoBox);
             });
 
-        }, pendingJobs: function (url) {
+        },
+        pendingJobs: function (url) {
             var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
             var preloader = $(mustacheTmpl);
 
             $('body').append(preloader).show();
-
-            var currentUrl = document.URL;
-            var parser = document.createElement('a');
-            parser.href = currentUrl;
-            var actionUrl = parser.protocol + '//' + parser.host + parser.pathname;
 
             $.ajax({
                 url: url,
@@ -130,14 +126,34 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         timeElements.addElapsedElem($(this), data[i].submittedAt);
                         timeElements.updateTimeObjects();
                     });
+
+                    mustacheTmplShell.find('form').ajaxForm({
+                        success: function (data, text, xhr, $form) {
+                            requirejs(['realtimePages'], function (realtimePages) {
+                                setTimeout(function () {
+                                    var name = "builders";
+                                    realtimePages.updateSingleRealTimeData(name, data);
+                                }, 300);
+                            });
+
+                            var cancelAll = $form.attr("id") === "cancelall";
+                            if (cancelAll) {
+                                $form.parent().remove();
+
+                            }
+
+                            if (cancelAll || mustacheTmplShell.find('li').length === 1) {
+                                mustacheTmplShell.remove();
+                            }
+                        }
+                    });
+
                     mustacheTmplShell.appendTo('body');
                     helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
                         helpers.closePopup(mustacheTmplShell);
                     });
-
                 }
             });
-
         }, codebasesBranches: function () {
 
             var path = $('#pathToCodeBases').attr('href');
@@ -195,7 +211,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             });
         }, externalContentPopup: function (thisEl) { // custom buildpopup on builder and builders
             var popupTitle = '<h2 class="small-head">' + thisEl.attr('data-popuptitle') + '</h2>';
-            console.log(popupTitle)
             var datab = thisEl.attr('data-b');
             var dataindexb = thisEl.attr('data-indexb');
             var dataReturnPage = thisEl.attr('data-returnpage');
@@ -236,7 +251,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 helpers.tooltip(exContent.find($('.tooltip')));
                 // Insert full name from cookie
                 if (contentType === 'form') {
-                    helpers.setFullName($("#usernameDisabled, #usernameHidden", exContent));
                     popup.validateForm(exContent);
                 }
 

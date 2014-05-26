@@ -111,7 +111,10 @@ class BuildStepStatus(styles.Versioned):
         return self.urls.copy()
 
     def getStepType(self):
-        return self.step_type
+        if hasattr(self, "step_type"):
+            return self.step_type
+        else:
+            return None
 
     def isStarted(self):
         return (self.started is not None)
@@ -331,6 +334,7 @@ class BuildStepStatus(styles.Versioned):
         del d['finishedWatchers']
         del d['updates']
         del d['master']
+        del d['step_type']
         return d
 
     def __setstate__(self, d):

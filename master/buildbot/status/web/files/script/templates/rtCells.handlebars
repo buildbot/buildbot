@@ -1,13 +1,21 @@
 {{#revisionCell}}
     <ul class="revision">
-    {{#each data.sourceStamps}}
-        <li>
-        <a href="{{repository}}">{{codebase}}</a> /
+    {{#each sourceStamps}}
+        {{#if ../history_build}}
+            <li class="recent-build-icon-spacer">
+        {{else}}
+            <li>
+        {{/if}}
+        <a href="{{display_repository}}">{{codebase}}</a> /
         {{branch}} /
         {{#if revision_short}}
-            <a href="{{repository}}/changeset/{{revision}}">{{revision_short}}</a>
+            <a href="{{display_repository}}/changeset/{{revision}}">{{revision_short}}</a>
         {{else}}
             N/A
+        {{/if}}
+        {{#if ../history_build}}
+            <span class="recent-build-icon tooltip" title="Built from specific revision -- may not be the latest on the branch">
+            </span>
         {{/if}}
         </li>
     {{/each}}

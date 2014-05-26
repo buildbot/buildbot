@@ -105,7 +105,12 @@
       {% endif %}
        <input type='text' size='{{f.size}}'  name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
      
-    {% elif 'bool' in f.type%}      
+    {% elif 'Force Rebuild' in f.label%}
+       <span class="label">{{f.label}}</span>
+        <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. Dependencies will not be rebuilt if a suitable build is available.  Should be selected in most cases." class="tooltip question-icon">
+      </span>
+       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+    {% elif 'Force Chain Rebuild' in f.label%}
        <span class="label">{{f.label}}</span>
         <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
       </span>
@@ -176,7 +181,11 @@
             <option value="default">Any Compatible</option>
             <option value="allCompatible">All Compatible</option>
             {% for slave in slaves %}
-            <option value="{{ slave.name }}">{{ slave.name }}</option>
+                {%  if slave.friendly_name %}
+                    <option value="{{ slave.name }}">{{ slave.friendly_name }}</option>
+                {% else %}
+                    <option value="{{ slave.name }}">{{ slave.name }}</option>
+                {% endif %}
             {% endfor %}
         </select>
         </div>

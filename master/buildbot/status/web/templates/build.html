@@ -97,6 +97,12 @@
         {{ elapsed }}
       </td>
     </tr>
+    {% if raw_elapsed %}
+    <tr>
+        <td>Timing</td>
+        <td>{{ raw_elapsed }}</td>
+    </tr>
+    {% endif %}
   </table>
 </div>
 <h2 class="head-2">

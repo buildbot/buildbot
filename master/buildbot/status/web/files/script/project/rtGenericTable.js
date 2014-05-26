@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers'], function ($, dt, timeElements, hbCellsText, extendMoment, helpers) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment) {
 
     "use strict";
 
@@ -16,16 +16,36 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             }
 
             return property(data);
+        },
+        buildIsHistoric: function (properties) {
+            var hasRevision = false;
+            var isDependency = false;
+            $.each(properties, function (i, obj) {
+                if (obj.length > 0) {
+                    if (obj.length === 2 && obj[0] === "revision" && obj[1].length !== 0) {
+                        hasRevision = true;
+                    } else if (obj.length === 3 && obj[0] === "buildLatestRev" && obj[2] === "Trigger") {
+                        isDependency = true;
+                    }
+                }
+            });
+
+            return hasRevision === true && isDependency === false;
         }
     };
 
     var cellFunc = {
-        revision: function (index) {
+        revision: function (index, property) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
-                    return hbCells({revisionCell: true, 'data': full});
+                    var sourceStamps = privFunc.getPropertyOnData(full, property);
+                    var history_build = false;
+                    if (full.properties !== undefined) {
+                        history_build = privFunc.buildIsHistoric(full.properties);
+                    }
+                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
                 }
             };
         },
@@ -159,6 +179,23 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     });
                 }
             };
+		},
+        buildLength: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, full, type) {
+                    var times = type.times;
+                    if (times !== undefined) {
+                        var d = moment.duration((times[1] - times[0]) * 1000);
+                        if (times.length === 3) {
+                            d = moment.duration((times[2] - times[0]) * 1000);
+                        }
+                        return "{0}m {1}s ".format(d.minutes(), d.seconds());
+                    }
+                    return "N/A";
+                }
+            };
         }
     };
 
@@ -168,20 +205,33 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
 
             options.aoColumns = [
                 { "mData": null, "sTitle": "#", "sWidth": "5%" },
-                { "mData": null, "sTitle": "Date", "sWidth": "20%" },
+                { "mData": null, "sTitle": "Date", "sWidth": "10%" },
                 { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
-                { "mData": null, "sTitle": "Result", "sWidth": "35%", "sClass": ""},
-                { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
+                { "mData": null, "sTitle": "Result", "sWidth": "32%", "sClass": ""},
+                { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Slave", "sWidth": "13%" }
             ];
+
+            options.fnRowCallback = function (nRow, aData) {
+                if (aData.properties !== undefined && privFunc.buildIsHistoric(aData.properties)) {
+                    $(nRow).addClass("italic");
+                }
+            };
 
             options.aoColumnDefs = [
                 cellFunc.buildID(0),
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
                 }),
-                cellFunc.revision(2),
+                cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.slaveName(4, "slave_friendly_name", "slaveName", "txt-align-right")
+                cellFunc.buildLength(4),
+                cellFunc.slaveName(5, function (data) {
+                    if (data.slave_friendly_name !== undefined) {
+                        return data.slave_friendly_name;
+                    }
+                    return data.slave;
+                }, "slave_url", "txt-align-right")
             ];
 
             if (showBuilderName === true) {

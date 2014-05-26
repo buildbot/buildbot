@@ -19,7 +19,7 @@ from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.process.build import Build
 from buildbot.process.properties import Properties
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION, NOT_REBUILT
 from buildbot.locks import SlaveLock
 from buildbot.process.buildstep import LoggingBuildStep
 
@@ -121,7 +121,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.result, NOT_REBUILT)
         self.assert_( ('startStep', (slavebuilder.remote,), {})
                                     in step.method_calls)
 
@@ -213,7 +213,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, slavebuilder)
 
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.result, NOT_REBUILT)
         self.assert_( ('startStep', (slavebuilder.remote,), {})
                                 in step.method_calls)
         self.assertEquals(claimCount[0], 1)
@@ -263,8 +263,8 @@ class TestBuild(unittest.TestCase):
         realLock.release(fakeBuild, fakeBuildAccess)
 
         def check(ign):
-            self.assertEqual(eBuild.result, SUCCESS)
-            self.assertEqual(cBuild.result, SUCCESS)
+            self.assertEqual(eBuild.result, NOT_REBUILT)
+            self.assertEqual(cBuild.result, NOT_REBUILT)
             self.assertEquals(claimLog, [fakeBuild, eBuild, cBuild])
 
         d.addCallback(check)

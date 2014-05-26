@@ -134,20 +134,17 @@ a.grey-btn,
 */
 
 .delete-icon {
-    display:inline-block;
-    margin-right: -2px;
+    display:block;
+    margin-right: -1px;
     &:before {
         font-family: "katana_icons";
         content: "";
-        font-size: 16px;
+        font-size: 15px;
         color:#2B6194;
     }
     &:hover:before{
         color:#ccc;
-    }   
-    .chrome & {
-        margin-right: 0;
-    }
+    }       
 }
 
 .submitBtn {
