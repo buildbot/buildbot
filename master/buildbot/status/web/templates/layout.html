@@ -57,7 +57,7 @@
     {% set bodyId = '' %}
   {% endif %}
 
-  {% if authz.getUserAttr(request, "colorBlind") %}
+  {% if user_settings["colorBlind"] == "1" %}
     {% set colorBlindClass = 'color-blind-mode' %}
     {% set colorBlindInputVal = 'on' %}
   {% else %}
@@ -87,10 +87,9 @@
             </li>
           </ul>
           <div class="right-block">
-            <form id="colorBlindForm" action="url">
-              <a href="#" class="color-change tooltip" title="Color blind mode">
-              </a>
-              <input type="hidden" value="{{colorBlindInputVal}}"/>
+            <form id="colorBlindForm" action="/users/settings/submit" mthod="GET">
+              <a href="#" id="colorBlindBtn" class="color-change tooltip" title="Color blind mode"></a>
+              <input id="colorBlindOpt" name="colorBlind_setting" type="hidden" value="{{colorBlindInputVal}}"/>
               <input type="submit" value="Submit" class="hide">
             </form>
             <div class="auth-user">

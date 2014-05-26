@@ -32,12 +32,13 @@ require.config({
         'timeElements': "project/timeElements",
         'iFrameResize' : "libs/iframeResizer.min",
         'rtGenericTable' : "project/rtGenericTable",
-        'hbCells' : 'templates/rtCells.handlebars'
+        'hbCells' : 'templates/rtCells.handlebars',
+        'userSettings' : 'project/userSettings'
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','timeElements'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,timeElements) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','timeElements', 'userSettings'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,timeElements, userSettings) {
 		
 	'use strict';
 
@@ -91,7 +92,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         }
 
         if ($('#home_page').length > 0) {
-        	helpers.randomImage($('#image img'));	
+        	helpers.randomImage($('#image img'));
         }
 
         
@@ -106,5 +107,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         dataTables.init();
         extendMoment.init();
         timeElements.init();
+        userSettings.init();
 	});	
 });

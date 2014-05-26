@@ -1,0 +1,1 @@
+define(["jquery","libs/jquery.form"],function(e,t){var n="color-blind-mode",r={initColorBlindBtn:function(){var t=e("#colorBlindBtn"),r=e("body"),i=t.parent().find("#colorBlindOpt");t.click(function(){var e=r.hasClass(n);e===!0?r.removeClass(n):r.addClass(n);var s=e?"0":"1";i.val(s),t.parent().ajaxSubmit()})}};return{init:function(){r.initColorBlindBtn()}}});
