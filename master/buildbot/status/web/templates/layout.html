@@ -57,7 +57,15 @@
     {% set bodyId = '' %}
   {% endif %}
 
-   <body {{ bodyId }} class="interface katana-main" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
+  {% if user_settings["colorBlind"] == "1" %}
+    {% set colorBlindClass = 'color-blind-mode' %}
+    {% set colorBlindInputVal = 'on' %}
+  {% else %}
+    {% set colorBlindClass = '' %}
+    {% set colorBlindInputVal = 'off' %}
+  {% endif %}
+
+   <body {{ bodyId }} class="interface katana-main {{colorBlindClass}}" data-realTimeServer="{{ realTimeServer }}" style="display:none;">
    
     {% block header -%}
  
@@ -78,10 +86,16 @@
             <li>
             </li>
           </ul>
-          <div class="auth-user">
+          <div class="right-block">
+
+            {% if authenticated %}
+            <a href="/users/settings" class="user-settings tooltip" title="Change the usersettings"></a>
+            {% endif %}
+              
+            <div class="auth-user">
               {% if authenticated %}
                     <span class="hide-mobile">
-                        Logged in as {{ authz.getUsernameFull(request) }}
+                        {{ authz.getUsernameFull(request) }}
                     </span>
                     <span class="hide-mobile" id="authUserName"></span>
                     <a id="authUserBtn" href="/logout">
@@ -92,7 +106,8 @@
                     Login
                 </a>
               {% endif %}
-            </div>
+            </div>            
+          </div>
 
         <ul class="top-menu">
           

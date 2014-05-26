@@ -33,7 +33,8 @@ require.config({
         'timeElements': "project/timeElements",
         'iFrameResize' : "libs/iframeResizer.min",
         'rtGenericTable' : "project/rtGenericTable",
-        'hbCells' : 'templates/rtCells.handlebars'
+        'hbCells' : 'templates/rtCells.handlebars',
+        'userSettings' : 'project/userSettings'
 	}
 });
 
@@ -92,7 +93,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         }
 
         if ($('#home_page').length > 0) {
-        	helpers.randomImage($('#image img'));	
+        	helpers.randomImage($('#image img'));
         }
 
         
@@ -107,5 +108,11 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         dataTables.init();
         extendMoment.init();
         timeElements.init();
+
+        if ($("body").attr("id") == "usersettings_page") {
+            require(["userSettings"], function(userSettings) {
+                userSettings.init();
+            });
+        }
 	});	
 });

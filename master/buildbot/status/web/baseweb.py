@@ -380,7 +380,6 @@ class WebStatus(service.MultiService):
         self.putChild("forms", FormsKatanaResource())
 
 
-
     def __repr__(self):
         if self.http_port is None:
             return "<WebStatus on path %s at %s>" % (self.distrib_port,

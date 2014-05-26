@@ -318,7 +318,9 @@ class ContextMixin(AccessorMixin):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
         locale_enc = locale.getdefaultlocale()[1]
-        authenticated = self.getAuthz(request).authenticated(request)
+        authz = self.getAuthz(request)
+        authenticated = authz.authenticated(request)
+
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
@@ -335,11 +337,11 @@ class ContextMixin(AccessorMixin):
                     metatags = [],
                     pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
-                    authz = self.getAuthz(request),
+                    authz = authz,
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
                     analytics_code = self.getAnalyticsCode(request),
-                    authenticated=authenticated
+                    authenticated=authenticated,
                     )
 
 
@@ -451,6 +453,7 @@ class HtmlResource(resource.Resource, ContextMixin):
         @defer.inlineCallbacks
         def renderPage():
             ctx['instant_json'] = yield self.getInstantJSON(request)
+            ctx['user_settings'] = yield ctx['authz'].getAllUserAttr(request)
             result = yield self.content(request, ctx)
             defer.returnValue(result)
 

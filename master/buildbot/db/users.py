@@ -165,6 +165,21 @@ class UsersConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
         return d
 
+    def get_all_user_props(self, uid):
+        def thd(conn):
+            tbl = self.db.model.user_props
+            q = tbl.select(whereclause=(tbl.c.uid == uid))
+            rows = conn.execute(q).fetchall()
+
+            output = {}
+            if rows:
+                for row in rows:
+                    output[row.prop_type] = row.prop_data
+            return output
+
+        d = self.db.pool.do(thd)
+        return d
+
     def get_user_prop(self, uid, attr):
         def thd(conn):
             tbl = self.db.model.user_props
@@ -208,7 +223,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     transaction.rollback()
                     return
 
-                transaction.commit()
+            transaction.commit()
 
         d = self.db.pool.do(thd)
         return d

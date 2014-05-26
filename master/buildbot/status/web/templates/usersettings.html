@@ -1,0 +1,40 @@
+{% import 'forms.html' as forms %}
+{% import 'submenu.html' as submenu %}
+
+{% extends "layout.html" %}
+
+{% set bodyId = 'id="usersettings_page"' %}
+
+{% macro isUserSettingChecked(option) %}
+    {% if user_settings[option] == 1 %}
+        checked
+    {% endif %}
+{% endmacro %}
+
+{% block submenu %}
+  {{submenu.buildsubmenu_usersettings(active_page="usersettings", pathNum=2)}}
+{% endblock %}
+
+{% block content %}
+
+<div class="column-1">
+	<div class="column-2 ">
+		<h1 class="head-2">
+		  Settings for {{ authz.getUsernameFull(request) }}
+		</h1>
+
+		<form id="userSettingsForm" action="/users/settings/submit" method="POST" class="user-settings">
+			<label for="colorBlindMode">Color blind mode</label>
+			<input id="colorBlindMode" type="checkbox" {{ isUserSettingChecked("colorBlind") }}/>
+            <input id="colorBlind_setting" name="colorBlind_setting" hidden="hidden" value="0"/>
+			<span class="question-icon tooltip" title="Turns up the contrast on certain colors, to support people with colorblindness">
+          	</span>
+			<input type="submit" class="blue-btn var-2 fl-right" value="Submit">
+			
+		</form>		
+	</div>
+	<div class="column-2 welcome-txt last">
+		
+	</div>
+</div>
+{% endblock %}
