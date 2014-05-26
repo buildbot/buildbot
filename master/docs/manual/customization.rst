@@ -434,7 +434,7 @@ Writing a new latent buildslave should only require subclassing
         # include in the "substantiate success" status message, such as
         # identifying the instance that started.
         raise NotImplementedError
-    
+
     def stop_instance(self, fast=False):
         # responsible for shutting down instance. Return a deferred. If `fast`,
         # we're trying to shut the master down, so callback as soon as is safe.
@@ -451,7 +451,7 @@ The standard :class:`BuildFactory` object creates :class:`Build` objects
 by default. These Builds will each execute a collection of :class:`BuildStep`\s
 in a fixed sequence. Each step can affect the results of the build,
 but in general there is little intelligence to tie the different steps
-together. 
+together.
 
 By setting the factory's ``buildClass`` attribute to a different class, you can
 instantiate a different build class.  This might be useful, for example, to
@@ -517,6 +517,7 @@ Writing New BuildSteps
 
     Buildbot is transitioning to a new, simpler style for writing custom steps.
     See :doc:`new-style-steps` for details.
+    This section documents new-style steps exclusively, although old-style steps are still supported.
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`BuildStep`.
@@ -536,7 +537,7 @@ Writing BuildStep Constructors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Build steps act as their own factories, so their constructors are a bit more complex than necessary.
-In the configuration file, a :class:`~buildbot.process.buildstep.BuildStep` object is instantiated, but because steps store state locally while executing, this object cannot be used during builds.
+The configuration file instantiates a :class:`~buildbot.process.buildstep.BuildStep` object, but the step configuration must be re-used for multiple builds, so Buildbot needs some way to create more steps.
 
 Consider the use of a :class:`BuildStep` in :file:`master.cfg`::
 
@@ -558,22 +559,22 @@ The whole thing looks like this::
                 frob_how_many=None,
                 frob_how=None,
                 **kwargs):
-    
+
             # check
             if frob_how_many is None:
                 raise TypeError("Frobnify argument how_many is required")
 
             # override a parent option
             kwargs['parentOpt'] = 'xyz'
-    
+
             # call parent
             LoggingBuildStep.__init__(self, **kwargs)
-    
+
             # set Frobnify attributes
             self.frob_what = frob_what
             self.frob_how_many = how_many
             self.frob_how = frob_how
-    
+
     class FastFrobnify(Frobnify):
         def __init__(self,
                 speed=5,
@@ -584,7 +585,7 @@ The whole thing looks like this::
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``start`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
@@ -593,38 +594,40 @@ To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
 Make sure the log gets closed when it finishes.
 When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
 
-    log = self.addLog('output')
-    cmd.useLog(log, closeWhenFinished=True)
+    @defer.inlineCallbacks
+    def run(self):
+        cmd = RemoteCommand(args)
+        log = yield self.addLog('output')
+        cmd.useLog(log, closeWhenFinished=True)
+        yield self.runCommand(cmd)
 
-Updating Status
-~~~~~~~~~~~~~~~
+Updating Status Strings
+~~~~~~~~~~~~~~~~~~~~~~~
 
-TBD
+Each step can summarize its current status in a very short string.
+For example, a compile step might display the file being compiled.
+This information can be helpful users eager to see their build finish.
 
-.. todo::
+Similarly, a build has a set of short strings collected from its steps summarizing the overall state of the build.
+Useful information here might include the number of tests run, but probably not the results of a ``make clean`` step.
 
-    What *is* the best way to do this?  From the docstring:
+As a step runs, Buildbot calls its :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` method as necessary to get the step's current status.
+"As necessary" is determined by calls to :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary`.
+Your step should call this method every time the status summary may have changed.
+Buildbot will take care of rate-limiting summary updates.
 
-    As the step runs, it should send status information to the
-    BuildStepStatus::
+When the step is complete, Buildbot calls its :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` method to get a final summary of the step along with a summary for the build.
 
-        self.step_status.setText(['compile', 'failed'])
-        self.step_status.setText2(['4', 'warnings'])
+About Logfiles
+~~~~~~~~~~~~~~
 
-Capturing Logfiles
-~~~~~~~~~~~~~~~~~~
-
-Each BuildStep has a collection of `logfiles`. Each one has a short
-name, like `stdio` or `warnings`. Each :class:`LogFile` contains an
-arbitrary amount of text, usually the contents of some output file
-generated during a build or test step, or a record of everything that
-was printed to :file:`stdout`/:file:`stderr` during the execution of some command.
-
-These :class:`LogFile`\s are stored to disk, so they can be retrieved later.
+Each BuildStep has a collection of log files.
+Each one has a short name, like `stdio` or `warnings`.
+Each log file contains an arbitrary amount of text, usually the contents of some output file generated during a build or test step, or a record of everything that was printed to :file:`stdout`/:file:`stderr` during the execution of some command.
 
 Each can contain multiple `channels`, generally limited to three
 basic ones: stdout, stderr, and `headers`. For example, when a
-ShellCommand runs, it writes a few lines to the `headers` channel to
+shell command runs, it writes a few lines to the headers channel to
 indicate the exact argv strings being run, which directory the command
 is being executed in, and the contents of the current environment
 variables. Then, as the command runs, it adds a lot of :file:`stdout` and
@@ -632,7 +635,7 @@ variables. Then, as the command runs, it adds a lot of :file:`stdout` and
 line is added with the exit code of the process.
 
 Status display plugins can format these different channels in
-different ways. For example, the web page shows LogFiles as text/html,
+different ways. For example, the web page shows log files as text/html,
 with header lines in blue text, stdout in black, and stderr in red. A
 different URL is available which provides a text/plain format, in
 which stdout and stderr are collapsed together, and header lines are
@@ -640,113 +643,84 @@ stripped completely. This latter option makes it easy to save the
 results to a file and run :command:`grep` or whatever against the
 output.
 
-Each :class:`BuildStep` contains a mapping (implemented in a Python dictionary)
-from :class:`LogFile` name to the actual :class:`LogFile` objects. Status plugins can
-get a list of LogFiles to display, for example, a list of HREF links
-that, when clicked, provide the full contents of the :class:`LogFile`.
+Writing Log Files
+~~~~~~~~~~~~~~~~~
 
-Using LogFiles in custom BuildSteps
-###################################
+Most commonly, logfiles come from commands run on the build slave.
+Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
 
-The most common way for a custom :class:`BuildStep` to use a :class:`LogFile` is to
-summarize the results of a :bb:step:`ShellCommand` (after the command has
-finished running). For example, a compile step with thousands of lines
-of output might want to create a summary of just the warning messages.
-If you were doing this from a shell, you would use something like:
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        log = yield self.addLog('stdio')
+        cmd.useLog(log, closeWhenFinished=True, 'stdio')
+        yield self.runCommand(cmd)
 
-.. code-block:: bash
+The name passed to :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` must match that configured in the command.
+In this case, ``stdio`` is the default.
 
-    grep "warning:" output.log >warnings.log
+If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`::
 
-In a custom BuildStep, you could instead create a ``warnings`` :class:`LogFile`
-that contained the same text. To do this, you would add code to your
-:meth:`createSummary` method that pulls lines from the main output log
-and creates a new :class:`LogFile` with the results::
+    stdioLog = self.getLog('stdio')
 
-    def createSummary(self, log):
-        warnings = []
-        sio = StringIO.StringIO(log.getText())
-        for line in sio.readlines():
-            if "warning:" in line:
-                warnings.append()
-        self.addCompleteLog('warnings', "".join(warnings))
+Less frequently, some master-side processing produces a log file.
+If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`::
 
-This example uses the :meth:`addCompleteLog` method, which creates a
-new :class:`LogFile`, puts some text in it, and then `closes` it, meaning
-that no further contents will be added. This :class:`LogFile` will appear in
-the HTML display under an HREF with the name `warnings`, since that
-is the name of the :class:`LogFile`.
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        summary = u'\n'.join('%s: %s' % (k, count)
+                             for (k, count) in self.lint_results.iteritems())
+        yield self.addCompleteLog('summary', summary)
 
-You can also use :meth:`addHTMLLog` to create a complete (closed)
-:class:`LogFile` that contains HTML instead of plain text. The normal :class:`LogFile`
-will be HTML-escaped if presented through a web page, but the HTML
-:class:`LogFile` will not. At the moment this is only used to present a pretty
-HTML representation of an otherwise ugly exception traceback when
-something goes badly wrong during the :class:`BuildStep`.
+Note that the log contents must be a unicode string.
 
-In contrast, you might want to create a new :class:`LogFile` at the beginning
-of the step, and add text to it as the command runs. You can create
-the :class:`LogFile` and attach it to the build by calling :meth:`addLog`, which
-returns the :class:`LogFile` object. You then add text to this :class:`LogFile` by
-calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
-are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
-closed. It may be useful to create and populate a :class:`LogFile` like this
-from a :class:`LogObserver` method - see :ref:`Adding-LogObservers`.
+Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file::
 
-The ``logfiles=`` argument to :bb:step:`ShellCommand` (see
-:bb:step:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
-by asking the buildslave to watch a actual file on disk. The
-buildslave will look for additions in the target file and report them
-back to the :class:`BuildStep`. These additions will be added to the :class:`LogFile` by
-calling :meth:`addStdout`. These secondary LogFiles can be used as the
-source of a LogObserver just like the normal :file:`stdio` :class:`LogFile`.
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        updates = yield self.addLog('updates')
+        while True:
+            ...
+            yield updates.addStdout(some_update)
+
+Again, note that the log input must be a unicode string.
+
+Finally, :meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog` is similar to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`, but the resulting log will be tagged as containing HTML.
+The web UI will display the contents of the log using the browser.
+
+The ``logfiles=`` argument to :bb:step:`ShellCommand` and its subclasses creates new log files and fills them in realtime by asking the buildslave to watch a actual file on disk.
+The buildslave will look for additions in the target file and report them back to the :class:`BuildStep`.
+These additions will be added to the log file by calling :meth:`addStdout`.
+
+All log files can be used as the source of a :class:`~buildbot.process.logobserver.LogObserver` just like the normal :file:`stdio` :class:`LogFile`.
+In fact, it's possible for one :class:`~buildbot.process.logobserver.LogObserver` to observe a logfile created by another.
 
 Reading Logfiles
 ~~~~~~~~~~~~~~~~
 
-Once a :class:`~buildbot.status.logfile.LogFile` has been added to a
-:class:`~buildbot.process.buildstep.BuildStep` with
-:meth:`~buildbot.process.buildstep.BuildStep.addLog()`,
-:meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog()`,
-:meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog()`, or ``logfiles={}``,
-your :class:`~buildbot.process.buildstep.BuildStep.BuildStep` can retrieve it
-by using :meth:`~buildbot.process.buildstep.BuildStep.getLog()`::
+For the most part, Buildbot tries to avoid loading the contents of a log file into memory as a single string.
+For large log files on a busy master, this behavior can quickly consume a great deal of memory.
 
-    class MyBuildStep(ShellCommand):
-        logfiles = { "nodelog": "_test/node.log" }
+Instead, steps should implement a :class:`~buildbot.process.logobserver.LogObserver` to examine log files one chunk or line at a time.
 
-        def evaluateCommand(self, cmd):
-            nodelog = self.getLog("nodelog")
-            if "STARTED" in nodelog.getText():
-                return SUCCESS
-            else:
-                return FAILURE
+In fact, the only access to log contents after the log has been written is via the Data API.
 
 .. _Adding-LogObservers:
 
 Adding LogObservers
 ~~~~~~~~~~~~~~~~~~~
 
-Most shell commands emit messages to stdout or stderr as they operate,
-especially if you ask them nicely with a :option:`--verbose` flag of some
-sort. They may also write text to a log file while they run. Your
-:class:`BuildStep` can watch this output as it arrives, to keep track of how
-much progress the command has made. You can get a better measure of
-progress by counting the number of source files compiled or test cases
-run than by merely tracking the number of bytes that have been written
-to stdout. This improves the accuracy and the smoothness of the ETA
-display.
+Most shell commands emit messages to stdout or stderr as they operate, especially if you ask them nicely with a :option:`--verbose` flag of some sort.
+They may also write text to a log file while they run.
+Your :class:`BuildStep` can watch this output as it arrives, to keep track of how much progress the command has made or to process log output for later summarization.
 
-To accomplish this, you will need to attach a :class:`LogObserver` to
-one of the log channels, most commonly to the :file:`stdio` channel but
-perhaps to another one which tracks a log file. This observer is given
-all text as it is emitted from the command, and has the opportunity to
-parse that output incrementally. Once the observer has decided that
-some event has occurred (like a source file being compiled), it can
-use the :meth:`setProgress` method to tell the :class:`BuildStep` about the
-progress that this event represents.
+To accomplish this, you will need to attach a :class:`~buildbot.process.logobserver.LogObserver` to the log.
+This observer is given all text as it is emitted from the command, and has the opportunity to
+parse that output incrementally.
 
-There are a number of pre-built :class:`LogObserver` classes that you
+There are a number of pre-built :class:`~buildbot.process.logobserver.LogObserver` classes that you
 can choose from (defined in :mod:`buildbot.process.buildstep`, and of
 course you can subclass them to add further customization. The
 :class:`LogLineObserver` class handles the grunt work of buffering and
@@ -773,22 +747,25 @@ then some lines which summarize the tests that failed. We want to
 avoid parsing these trailing lines, because their format is less
 well-defined than the `[OK]` lines.
 
-The parser class looks like this::
+A simple version of the parser for this output looks like this.
+The full version is in :bb:src:`master/buildbot/steps/python_twisted.py`.
+
+.. code-block:: python
 
     from buildbot.process.buildstep import LogLineObserver
-    
+
     class TrialTestCaseCounter(LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
         numTests = 0
         finished = False
-    
+
         def outLineReceived(self, line):
             if self.finished:
                 return
             if line.startswith("=" * 40):
                 self.finished = True
                 return
-    
+
             m = self._line_re.search(line.strip())
             if m:
                 testname, result = m.groups()
@@ -801,14 +778,9 @@ ignore everything after the ``====`` marker, and a scary-looking
 regular expression to match each line while hopefully ignoring other
 messages that might get displayed as the test runs.
 
-Each time it identifies a test has been completed, it increments its
-counter and delivers the new progress value to the step with
-@code{self.step.setProgress}. This class is specifically measuring
-progress along the `tests` metric, in units of test cases (as
-opposed to other kinds of progress like the `output` metric, which
-measures in units of bytes). The Progress-tracking code uses each
-progress metric separately to come up with an overall completion
-percentage and an ETA value.
+Each time it identifies a test has been completed, it increments its counter
+and delivers the new progress value to the step with ``self.step.setProgress``.
+This helps Buildbot to determine the ETA for the step.
 
 To connect this parser into the :bb:step:`Trial` build step,
 ``Trial.__init__`` ends with the following clause::
@@ -827,9 +799,9 @@ Using Properties
 ~~~~~~~~~~~~~~~~
 
 In custom :class:`BuildSteps`, you can get and set the build properties with
-the :meth:`getProperty`/:meth:`setProperty` methods. Each takes a string
+the :meth:`getProperty` and :meth:`setProperty` methods. Each takes a string
 for the name of the property, and returns or accepts an
-arbitrary object. For example::
+arbitrary JSON-able (lists, dicts, strings, and numbers) object. For example::
 
     class MakeTarball(ShellCommand):
         def start(self):
@@ -839,79 +811,28 @@ arbitrary object. For example::
                 self.setCommand([ ... ]) # equivalent for other systems
             ShellCommand.start(self)
 
-Remember that properties set in a step may not be available until the next step
-begins.  In particular, any :class:`Property` or :class:`Interpolate`
-instances for the current step are interpolated before the ``start`` method
-begins.
+Remember that properties set in a step may not be available until the next step begins.
+In particular, any :class:`Property` or :class:`Interpolate` instances for the current step are interpolated before the step starts, so they cannot use the value of any properties determined in that step.
 
 .. index:: links, BuildStep URLs, addURL
 
 BuildStep URLs
 ~~~~~~~~~~~~~~
 
-Each BuildStep has a collection of `links`. Like its collection of
-LogFiles, each link has a name and a target URL. The web status page
-creates HREFs for each link in the same box as it does for LogFiles,
-except that the target of the link is the external URL instead of an
-internal link to a page that shows the contents of the LogFile.
+Each BuildStep has a collection of `links`.
+Each has a name and a target URL.
+The web display displays clickable links for each link, making them a useful way to point to extra information about a step.
+For example, a step that uploads a build result to an external service might include a link to the uploaded flie.
 
-These external links can be used to point at build information hosted
-on other servers. For example, the test process might produce an
-intricate description of which tests passed and failed, or some sort
-of code coverage data in HTML form, or a PNG or GIF image with a graph
-of memory usage over time. The external link can provide an easy way
-for users to navigate from the buildbot's status page to these
-external web sites or file servers. Note that the step itself is
-responsible for insuring that there will be a document available at
-the given URL (perhaps by using :command:`scp` to copy the HTML output
-to a :file:`~/public_html/` directory on a remote web server). Calling
-:meth:`addURL` does not magically populate a web server.
+To set one of these links, the :class:`BuildStep` should call the :meth:`~buildbot.process.buildstep.BuildStep.addURL` method with the name of the link and the target URL.
+Multiple URLs can be set.
+For example::
 
-To set one of these links, the :class:`BuildStep` should call the :meth:`addURL`
-method with the name of the link and the target URL. Multiple URLs can
-be set.
-
-In this example, we assume that the ``make test`` command causes
-a collection of HTML files to be created and put somewhere on the
-coverage.example.org web server, in a filename that incorporates the
-build number. ::
-
-    class TestWithCodeCoverage(BuildStep):
-        command = ["make", "test",
-                   Interpolate("buildnum=%(prop:buildnumber)s")]
-    
-        def createSummary(self, log):
-            buildnumber = self.getProperty("buildnumber")
-            url = "http://coverage.example.org/builds/%s.html" % buildnumber
-            self.addURL("coverage", url)
-
-You might also want to extract the URL from some special message
-output by the build process itself::
-
-    class TestWithCodeCoverage(BuildStep):
-        command = ["make", "test",
-                   Interpolate("buildnum=%(prop:buildnumber)s")]
-    
-        def createSummary(self, log):
-            output = StringIO(log.getText())
-            for line in output.readlines():
-                if line.startswith("coverage-url:"):
-                    url = line[len("coverage-url:"):].strip()
-                    self.addURL("coverage", url)
-                    return
-
-Note that a build process which emits both :file:`stdout` and :file:`stderr` might
-cause this line to be split or interleaved between other lines. It
-might be necessary to restrict the :meth:`getText()` call to only stdout with
-something like this::
-
-    output = StringIO("".join([c[1]
-                               for c in log.getChunks()
-                               if c[0] == LOG_CHANNEL_STDOUT]))
-
-Of course if the build is run under a PTY, then stdout and stderr will
-be merged before the buildbot ever sees them, so such interleaving
-will be unavoidable.
+    @defer.inlineCallbacks
+    def run(self):
+        ... # create and upload report to coverage server
+        url = 'http://coverage.corp.com/reports/%s' % reportname
+        yield self.addURL('coverage', url)
 
 Discovering files
 ~~~~~~~~~~~~~~~~~
@@ -1002,7 +923,6 @@ For more information on the available commands, see :doc:`../developer/master-sl
 
     Step Progress
     BuildStepFailed
-    Running Multiple Commands
 
 A Somewhat Whimsical Example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1033,17 +953,17 @@ definition itself will look something like this::
 
     from buildbot.steps.shell import ShellCommand
     from buildbot.process.buildstep import LogLineObserver
-    
+
     class FNURRRGHCounter(LogLineObserver):
         numTests = 0
         def outLineReceived(self, line):
             if "FNURRRGH!" in line:
                 self.numTests += 1
                 self.step.setProgress('tests', self.numTests)
-    
+
     class Framboozle(ShellCommand):
         command = ["framboozler"]
-    
+
         def __init__(self, **kwargs):
             ShellCommand.__init__(self, **kwargs)   # always upcall!
             counter = FNURRRGHCounter()
