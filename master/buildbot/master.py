@@ -51,6 +51,7 @@ from buildbot.schedulers.manager import SchedulerManager
 from buildbot.status.master import Status
 from buildbot.status.results import RETRY
 from buildbot.util import ascii2unicode
+from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -108,6 +109,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         # local cache for this master's object ID
         self._object_id = None
+
+        # Check environment is sensible
+        check_functional_environment(self.config)
 
         # figure out local hostname
         try:

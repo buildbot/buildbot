@@ -32,6 +32,10 @@ class BsDict(dict):
     pass
 
 
+class BsProps(dict):
+    pass
+
+
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
@@ -114,7 +118,13 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return (bsid, brids)
-        defer.returnValue((yield self.db.pool.do(thd)))
+
+        bsid, brids = yield self.db.pool.do(thd)
+
+        # Seed the buildset property cache.
+        self.getBuildsetProperties.cache.put(bsid, BsProps(properties))
+
+        defer.returnValue((bsid, brids))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -191,6 +201,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                                   for row in res.fetchall()]))
         return self.db.pool.do(thd)
 
+    @base.cached("BuildsetProperties")
     def getBuildsetProperties(self, bsid):
         def thd(conn):
             bsp_tbl = self.db.model.buildset_properties
@@ -205,7 +216,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                               tuple(properties)))
                 except ValueError:
                     pass
-            return dict(l)
+            return BsProps(l)
         return self.db.pool.do(thd)
 
     def _thd_row2dict(self, conn, row):

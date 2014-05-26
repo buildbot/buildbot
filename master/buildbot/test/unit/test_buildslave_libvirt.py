@@ -41,6 +41,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave,
                           'bot', 'pass', None, 'path', 'path')
 
+    @defer.inlineCallbacks
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
         yield bs._find_existing_deferred
@@ -49,7 +50,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.assertEqual(bs.connection, self.conn)
         self.assertEqual(bs.image, 'path')
         self.assertEqual(bs.base_image, 'otherpath')
-        self.assertEqual(bs.keepalive_interval, 3600)
+        self.assertEqual(bs.missing_timeout, 1200)
 
     @defer.inlineCallbacks
     def test_find_existing(self):

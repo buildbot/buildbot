@@ -182,6 +182,8 @@ Features
 
 * Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
 
+* We've added some extra checking to make sure that you have a valid locale before starting buildbot (#2608).
+
 
 Forward Compatibility
 ~~~~~~~~~~~~~~~~~~~~~

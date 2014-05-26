@@ -111,6 +111,8 @@ Fixes
 
 * Buildbot is now compatible with SQLAlchemy 0.8 and higher, using the newly-released SQLAlchemy-Migrate.
 
+* The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

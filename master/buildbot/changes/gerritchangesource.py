@@ -15,9 +15,8 @@
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import json
 from buildbot.changes.filter import ChangeFilter
-from buildbot.util import NotABranch
+from buildbot.util import json
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
@@ -41,6 +40,7 @@ class GerritChangeFilter(ChangeFilter):
         if "branch" in self.checks:
             self.checks["prop:event.change.branch"] = self.checks["branch"]
             del self.checks["branch"]
+
 
 class GerritChangeSource(base.ChangeSource):
 

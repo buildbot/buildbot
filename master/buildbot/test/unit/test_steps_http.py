@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.process import properties
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import http
@@ -21,6 +22,7 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
+
 try:
     import txrequests
     assert txrequests
@@ -104,5 +106,14 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         url = self.getURL("header")
         self.setupStep(http.GET(url, headers={"X-Test": "True"}))
         self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nTrue" % (url, ))
+        self.expectOutcome(result=SUCCESS, status_text=["Status", "code:", '200'])
+        return self.runStep()
+
+    def test_params_renderable(self):
+        url = self.getURL()
+        self.setupStep(http.GET(url, params=properties.Property("x")))
+        self.properties.setProperty('x', {'param_1': 'param_1', 'param_2': 2}, 'here')
+        self.expectLogfile('log', "URL: %s?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, status_text=["Status", "code:", '200'])
         return self.runStep()

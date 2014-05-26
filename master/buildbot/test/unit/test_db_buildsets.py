@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import mock
 
 from buildbot.db import buildsets
 from buildbot.test.fake import fakedb
@@ -72,7 +73,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuildsetProperties(self):
         @self.assertArgSpecMatches(self.db.buildsets.getBuildsetProperties)
-        def getBuildsetProperties(self, bsid):
+        def getBuildsetProperties(self, key, no_cache=False):
             pass
 
     @defer.inlineCallbacks
@@ -579,3 +580,27 @@ class TestRealDB(unittest.TestCase,
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
+
+    @defer.inlineCallbacks
+    def test_addBuildset_properties_cache(self):
+        """
+        Test that `addChange` properly seeds the `getChange` cache.
+        """
+
+        # Patchup the buildset properties cache so we can verify that
+        # it got called form `addBuildset`.
+        mockedCachePut = mock.Mock()
+        self.patch(
+            self.db.buildsets.getBuildsetProperties.cache,
+            "put", mockedCachePut)
+
+        # Setup a dummy set of properties to insert with the buildset.
+        props = dict(prop=(['list'], 'test'))
+
+        # Now, call `addBuildset`, and verify that the above properties
+        # were seeed in the `getBuildsetProperties` cache.
+        bsid, _ = yield self.db.buildsets.addBuildset(
+            sourcestamps=[234], reason='because',
+            properties=props, builderNames=['a', 'b'],
+            waited_for=False)
+        mockedCachePut.assert_called_once_with(bsid, props)

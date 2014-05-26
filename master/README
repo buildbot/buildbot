@@ -37,7 +37,7 @@ REQUIREMENTS:
 
   See http://buildbot.net/buildbot/docs/latest/manual/installation.html
 
-  Briefly: python, Twisted, Jinja, simplejson, and SQLite.  Simplejson and
+  Briefly: python, Twisted, Jinja2, simplejson, and SQLite.  Simplejson and
   SQLite are included with recent versions of Python.
 
 

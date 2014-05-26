@@ -1198,10 +1198,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
         del row['properties']
         return row
 
-    def getBuildsetProperties(self, bsid):
-        if bsid in self.buildsets:
+    def getBuildsetProperties(self, key, no_cache=False):
+        if key in self.buildsets:
             return defer.succeed(
-                self.buildsets[bsid]['properties'])
+                self.buildsets[key]['properties'])
         else:
             return defer.succeed({})
 

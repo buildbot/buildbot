@@ -16,6 +16,7 @@
 
 import calendar
 import datetime
+import locale
 import re
 import string
 import time
@@ -116,7 +117,7 @@ class ComparableMixin(object):
         compare_attrs = []
         reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
         return dict([(k, getattr(self, k)) for k in compare_attrs
-                    if hasattr(self, k) and k not in ("passwd", "password")])
+                     if hasattr(self, k) and k not in ("passwd", "password")])
 
 
 def diffSets(old, new):
@@ -265,8 +266,19 @@ def asyncSleep(delay):
     return d
 
 
+def check_functional_environment(config):
+    try:
+        locale.getdefaultlocale()
+    except KeyError:
+        config.error("\n".join([
+            "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
+            "Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE' are either unset or set to a valid locale.",
+        ]))
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffSets', 'makeList', 'in_reactor', 'string2boolean']
+    'diffSets', 'makeList', 'in_reactor', 'string2boolean',
+    'check_functional_environment']
