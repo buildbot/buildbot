@@ -393,6 +393,9 @@ class CancelChangeResource(ActionResource):
             defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
         elif "buildqueue" in returnpage:
             defer.returnValue(path_to_buildqueue(req))
+        elif "builders_json":
+            s = self.getStatus(req)
+            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject())))
 
 class StopChangeMixin(object):
 

@@ -22,7 +22,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             var isDependency = false;
             $.each(properties, function (i, obj) {
                 if (obj.length > 0) {
-                    if (obj[0] === "revision" && obj[1].length !== 0) {
+                    if (obj.length === 2 && obj[0] === "revision" && obj[1].length !== 0) {
                         hasRevision = true;
                     } else if (obj.length === 3 && obj[0] === "buildLatestRev" && obj[2] === "Trigger") {
                         isDependency = true;
