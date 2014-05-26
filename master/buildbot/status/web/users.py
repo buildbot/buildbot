@@ -65,7 +65,7 @@ class UserSettingsResource(HtmlResource):
         status = self.getStatus(request)
 
         ctx['content'] = ""
-        template = request.site.buildbot_service.templates.get_template("empty.html")
+        template = request.site.buildbot_service.templates.get_template("usersettings.html")
         return template.render(**ctx)
 
 # /users/$uid

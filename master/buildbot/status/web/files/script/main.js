@@ -37,8 +37,8 @@ require.config({
 	}
 });
 
-define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','timeElements', 'userSettings'],
-	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,timeElements, userSettings) {
+define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache','timeElements'],
+	function(helpers, dataTables,popup, screenSize, projectDropDown, extendMoment, popups, Mustache,timeElements) {
 		
 	'use strict';
 
@@ -107,6 +107,11 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         dataTables.init();
         extendMoment.init();
         timeElements.init();
-        userSettings.init();
+
+        if ($("body").attr("id") == "usersettings_page") {
+            require(["userSettings"], function(userSettings) {
+                userSettings.init();
+            });
+        }
 	});	
 });

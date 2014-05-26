@@ -6,7 +6,8 @@ define(['jquery', 'libs/jquery.form'], function ($, form) {
 
     var privFunc = {
         initColorBlindBtn: function () {
-            var $colorBtn = $("#colorBlindBtn"),
+            var $colorBtn = $("#colorBlindMode"),
+                $colorField = $("#colorBlind_setting"),
                 $body = $("body"),
                 $colorBlindOpt = $colorBtn.parent().find("#colorBlindOpt");
 
@@ -19,8 +20,7 @@ define(['jquery', 'libs/jquery.form'], function ($, form) {
                 }
 
                 var val = !colorBlindActivated ? "1" : "0";
-                $colorBlindOpt.val(val);
-                $colorBtn.parent().ajaxSubmit();
+                $colorField.val(val);
             });
         }
     };

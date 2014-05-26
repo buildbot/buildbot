@@ -87,8 +87,10 @@
             </li>
           </ul>
           <div class="right-block">
-            
-            <a href="/usersettings" class="user-settings tooltip" title="Change the usersettings"></a>
+
+            {% if authenticated %}
+            <a href="/users/settings" class="user-settings tooltip" title="Change the usersettings"></a>
+            {% endif %}
               
             <div class="auth-user">
               {% if authenticated %}
