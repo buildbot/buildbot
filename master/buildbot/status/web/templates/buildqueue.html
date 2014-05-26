@@ -11,8 +11,8 @@
 {% endblock %}
 
 {% block content %}
-<div id="formWrapper">
-    <button id="submitBtn" class="grey-btn var-2 m-bottom15 initjson" style="display:none;">Remove selected</button>
+<div id="formWrapper" class="pos-relative initjson hide">
+    <button id="submitBtn" class="grey-btn var-2 m-bottom15 initjson submitBtn">Remove selected</button>
     
 <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
 
@@ -29,7 +29,7 @@
         <th class="txt-align-left th2">Codebases</th>
         <th class="txt-align-left th3">Reason</th>
         <th class="txt-align-right th4">Compatible slaves</th>
-        <th class="select-input no-tablesorter-js th5">
+        <th class="select-input no-tablesorter-js th5 txt-align-right">
             <label for="selectall">
                 Select all
             </label>

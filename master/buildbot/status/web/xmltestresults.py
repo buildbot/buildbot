@@ -93,7 +93,11 @@ class XMLTestResource(HtmlResource):
             skipped = int(0 if ('skipped' not in root_dict) else root_dict['skipped'])
             inconclusive = int(0 if ('inconclusive' not in root_dict) else root_dict['inconclusive'])
             success = (total - failed - inconclusive - skipped - ignored)
-            success_per = (float(success) / float(total)) * 100.0
+
+            success_per = 0
+            if success != 0 and total != 0:
+                success_per = (float(success) / float(total)) * 100.0
+
             cxt['summary'] = {
                 'total': total,
                 'success': success,

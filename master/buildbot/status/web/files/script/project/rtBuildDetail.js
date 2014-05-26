@@ -77,24 +77,23 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             $progressBar.addClass("build-detail-progress");
             helpers.delegateToProgressBar($progressBar);
         },
-        processSteps: function(data) {
+        processSteps: function (data) {
             var html = "";
             var $stepList = $('#stepList');
             var count = 1;
-            $.each(data["steps"], function (i, stepData) {
+            $.each(data.steps, function (i, stepData) {
                 if (stepData.hidden) {
                     return true;
                 }
 
-                var started = stepData['isStarted'];
-                var finished = stepData['isFinished'];
+                var started = stepData.isStarted;
+                var finished = stepData.isFinished;
 
-                var status = stepData["results"][0];
+                var status = stepData.results[0];
                 if (!started) {
-                      status = 8;
-                }
-                else if (started && !finished) {
-                    status = 7;
+                    status = 9;
+                } else if (started && !finished) {
+                    status = 8;
                 }
 
                 var cssClass = helpers.getCssClassFromStatus(status);
@@ -108,10 +107,10 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                     run_time: runTime,
                     css_class: cssClass,
                     s: stepData,
-                    url: stepData['url']
+                    url: stepData.url
                 };
                 html += buildHandle(props);
-                count++;
+                count += 1;
 
                 return true;
             });

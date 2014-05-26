@@ -1,45 +1,38 @@
+{% extends "layout.html" %}
 {% import 'submenu.html' as submenu %}
-{%- macro page_header(pageTitle, path_to_root, texturl, builder_name, builder_url) -%}
-<!DOCTYPE html>
-  <html class="no-background logs-page">
-  <head><title>{{ pageTitle }}</title>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
-    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/prod/script/libs/jQuery-2-0-3.js"></script>
 
-
-	<link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
-  </head>
-  <body class='log interface'>
-
-<div class="clear"></div>
-	<h4 class="small-head">
-		Showing buildlog of {{ builder_name }}
-	</h4>
-	<br/>
-		<a id="btd" href="{{ builder_url }}" class="back-to-detail">
-	        Back to builddetail
-		</a>
-		<br/>
-		
-		<br/>
-		<a href="{{ texturl }}">(view as text)</a><br/><br/>
-		
-	    <pre class="content-holder">  
-			{%- endmacro -%}
-
-			{%- macro chunks(entries) -%}
-			
-			{%- for entry in entries -%}
-				{{ entry.text|e }}
-			{%- endfor -%}
-
-			{%- endmacro -%}
-
-			{%- macro page_footer() -%}
-      </pre>
+{% set bodyId = 'id="log_page"' %}
     
-</body>
+{% block extra_header %}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            setTimeout(function() {requirejs(['project/buildLog'])}, 200);
+        });
+    </script>
+{% endblock %}
 
-</html>
-{%- endmacro -%}
+{% block submenu %}
+  {{submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Log", selectedProject=selectedproject)}}
+{% endblock %}
+
+{% block content %}
+
+    <div id="CheckBoxesList" class="sticky-bar sticky-bar-bottom">
+        <div class="container-inner">
+            <ul>
+                <li>
+                    <a href="{{ iframe_url }}" target="_blank">Open in new window</a>
+                </li>
+                <li>
+                    /
+                </li>
+                <li>
+                    <a href="#log_page">Go to the top</a>
+                </li>
+            </ul>
+            <label for="scrollOpt">Automatic Scroll</label>
+            <input type="checkbox" id="scrollOpt">
+        </div>
+    </div>
+    <iframe id="logIFrame" class="log-iframe" seamless src="{{ iframe_url }}" scrolling="no" allowtransparency="true"></iframe>
+{% endblock content %}

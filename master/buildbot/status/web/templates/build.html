@@ -16,8 +16,9 @@
 <div class="top left"></div>
 <div class="clear"></div>
 
-<div class="column-1">
-<div class="column-2">
+<div class="row vertical-line">
+  <div class="rounded-container m-bottom20">
+<div class="col-md-6">
 <div id="buildResult">
 
 </div>
@@ -97,6 +98,12 @@
         {{ elapsed }}
       </td>
     </tr>
+    {% if raw_elapsed %}
+    <tr>
+        <td>Timing</td>
+        <td>{{ raw_elapsed }}</td>
+    </tr>
+    {% endif %}
   </table>
 </div>
 <h2 class="head-2">
@@ -250,7 +257,7 @@ SourceStamps
 
 
 </div>
-<div class="column-2 last">
+<div class="col-md-6">
 
 
  <div class="clear"></div>
@@ -306,9 +313,10 @@ SourceStamps
 
 </div>
 </div>
+</div>
   
 {% if has_changes %}
-  <div class="container-inner">
+  
       <h2 class="head-2">All Changes</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
@@ -335,7 +343,7 @@ SourceStamps
               {% endif %}
             
         {% endfor %}
-  </div>
+  
 {% endif %}
 
 {% endblock %}

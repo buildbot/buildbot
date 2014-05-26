@@ -1,4 +1,27 @@
 @charset "UTF-8";
+.recent-build-icon {
+	float:right;
+    font-style: normal;
+	&:after {
+		color: #666;
+		font-family: "katana_icons";
+	    content: "";
+	    display: inline-block;
+	    padding: 0;
+	    font-weight:normal;
+	    font-size: 15px;
+	    position: relative;
+	    line-height:14px;
+	}		
+}
+
+.recent-build-icon-spacer {
+	padding-right:15px;		
+	.recent-build-icon:after {
+		margin-right: -15px;
+	}
+}
+
 .step-list {
 	@include pie-clearfix;
 	//counter-reset: li; /* Initiate a counter */
@@ -181,6 +204,14 @@ a.no-artifacts {
         margin-right:4px;
     	padding: 0 7px;
 	}
+	.log-list-not_rebuilt a:before {
+	    background-color: #F8FCF2;
+	    color: #444;
+	    content: "";
+        margin-right:4px;
+    	padding: 0 7px;
+    	border: 1px solid #B4B7B0;
+	}
 	.log-list-failure a:before {
 		color: #444;
 	    content: "";
@@ -244,7 +275,7 @@ div.force-text {
 	    display: block;
 	    clear: both;	    
 	    padding: 7px;		
-	    width: 306px;
+	    width: 100%;
 	}
 	.label {
 		display:block;
@@ -314,7 +345,7 @@ div.force-text {
     .more-info-box & {
 		background-color: #FFF;
 	    padding: 21px;
-	    width: 345px;
+	    
     	li {
     		padding: 15px 0;
     		border-top:1px solid #e5e5e5;
@@ -379,30 +410,8 @@ div.force-text {
 		margin-bottom:3px;
 	}
 }
-@include breakpoint($bkpt-small-portrait) {
-	div.force-text {
-		input[type="text"] {
-			width: 266px;	
-		}
-		
-	}
-}
-@include breakpoint($bkpt-small) {
 
-	.more-info-box .pending-job-list { 
-		width: auto;
-		
-	}
-	.graceful_shutdown {
-		float: none;
-		margin-bottom: 10px; 
 
-	}
-	.step-list {
-		.result {
-			clear: both;
-		    float: none;
-		    margin-bottom: 14px;
-		}
-	}
+ul.revision li:not(:last-child) {
+  margin-bottom:3px;
 }

@@ -111,7 +111,10 @@ class BuildStepStatus(styles.Versioned):
         return self.urls.copy()
 
     def getStepType(self):
-        return self.step_type
+        if hasattr(self, "step_type"):
+            return self.step_type
+        else:
+            return None
 
     def isStarted(self):
         return (self.started is not None)

@@ -367,6 +367,18 @@ class Model(base.DBConnectorComponent):
         sa.Column("attr_data", sa.String(128), nullable=False),
     )
 
+    # This table stores information about the user and their properties
+    user_props = sa.Table("user_properties", metadata,
+        #Unique user id number
+        sa.Column("uid", sa.Integer, nullable=False),
+
+        # type of user property
+        sa.Column('prop_type', sa.String(128), nullable=False),
+
+        #type of user data
+        sa.Column('prop_data', sa.String(128), nullable=False),
+    )
+
 
     # indexes
 
@@ -410,6 +422,8 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_triggeredbybrid', buildrequests.c.triggeredbybrid, unique=False)
     sa.Index('buildrequests_mergebrid', buildrequests.c.mergebrid, unique=False)
     sa.Index('buildrequests_startbrid', buildrequests.c.startbrid, unique=False)
+    sa.Index('users_uid_prop_type', user_props.c.uid, unique=True)
+    sa.Index('user_props_attrs', user_props.c.prop_type, user_props.c.prop_data)
 
     # MySQl creates indexes for foreign keys, and these appear in the
     # reflection.  This is a list of (table, index) names that should be
@@ -425,6 +439,8 @@ class Model(base.DBConnectorComponent):
         ('buildsets',
             dict(unique=False, column_names=['sourcestampsetid'],
                                name='buildsets_sourcestampsetid_fkey')),
+        ('user_user_props',
+            dict(unique=False, column_names=['uid'], name='uid')),
     ]
 
     #

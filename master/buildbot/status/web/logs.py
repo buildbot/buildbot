@@ -22,7 +22,8 @@ from twisted.web.resource import Resource, NoResource
 
 from buildbot import interfaces
 from buildbot.status import logfile
-from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root, getCodebasesArg
+from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, ContextMixin, \
+    path_to_codebases, path_to_build, path_to_builder, path_to_builders
 from buildbot.status.web.xmltestresults import XMLTestResource
 
 
@@ -50,21 +51,26 @@ class ChunkConsumer:
 
 
 # /builders/$builder/builds/$buildnum/steps/$stepname/logs/$logname
-class TextLog(Resource):
+class TextLog(Resource, ContextMixin):
     # a new instance of this Resource is created for each client who views
     # it, so we can afford to track the request in the Resource.
     implements(IHTMLLog)
 
     asText = False
     subscribed = False
+    iFrame = False
 
     def __init__(self, original):
         Resource.__init__(self)
         self.original = original
+        self.pageTitle = "Log"
 
     def getChild(self, path, req):
         if path == "text":
             self.asText = True
+            return self
+        if path == "iframe":
+            self.iFrame = True
             return self
         return Resource.getChild(self, path, req)
 
@@ -91,7 +97,7 @@ class TextLog(Resource):
         if self.asText:
             return text_data
         else:
-            return self.template.module.chunks(html_entries)
+            return self.chunk_template.module.chunks(html_entries)
 
     def render_HEAD(self, req):
         self._setContentType(req)
@@ -110,22 +116,41 @@ class TextLog(Resource):
             req.setHeader("Cache-Control", "no-cache")
 
         if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")                
+            self.template = req.site.buildbot_service.templates.get_template("logs.html")
+            self.chunk_template = req.site.buildbot_service.templates.get_template("log_chunk.html")
             builder = self.original.step.build.builder
             build_id = self.original.step.build.number
             url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
 
-            data = self.template.module.page_header(
-                    pageTitle = "Log File contents",
-                    texturl = req.childLink("text"),
-                    builder_name = builder.getFriendlyName(),
-                    builder_url = url_dict['path'] + getCodebasesArg(request=req),
-                    path_to_root = path_to_root(req))
-            data = data.encode('utf-8')                   
+            if self.iFrame:
+                data = self.chunk_template.module.page_header()
+                data = data.encode('utf-8')
+                req.write(data)
+                self.original.subscribeConsumer(ChunkConsumer(req, self))
+                return server.NOT_DONE_YET
+
+
+            cxt = self.getContext(req)
+            build = self.original.step.build
+            builder_status = build.builder
+            project = builder_status.getProject()
+            cxt["pageTitle"] = "Log File Contents"
+            cxt["iframe_url"] = req.path + "/iframe"
+            cxt["builder_name"] = builder.getFriendlyName()
+            cxt['path_to_builder'] = path_to_builder(req, builder_status)
+            cxt['path_to_builders'] = path_to_builders(req, project)
+            cxt["builder_url"] = url_dict['path'] + getCodebasesArg(request=req)
+            cxt['path_to_codebases'] = path_to_codebases(req, project)
+            cxt['path_to_build'] = path_to_build(req, build)
+            cxt['build_number'] = build.getNumber()
+            cxt['selectedproject'] = project
+
+            data = self.template.render(**cxt)
+            data = data.encode('utf-8')
             req.write(data)
 
-        self.original.subscribeConsumer(ChunkConsumer(req, self))
-        return server.NOT_DONE_YET
+            return ""
+
 
     def _setContentType(self, req):
         if self.asText:
@@ -138,7 +163,7 @@ class TextLog(Resource):
             return
         try:
             if not self.asText:
-                data = self.template.module.page_footer()
+                data = self.chunk_template.module.page_footer()
                 data = data.encode('utf-8')
                 self.req.write(data)
             self.req.finish()

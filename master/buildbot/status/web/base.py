@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder, buildstep, build
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT
 from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
@@ -58,6 +58,7 @@ css_classes = {SUCCESS: "success",
                EXCEPTION: "exception",
                RETRY: "retry",
                CANCELED: "exception",
+               NOT_REBUILT: "not_rebuilt",
                None: "",
                }
 
@@ -125,8 +126,9 @@ def path_to_root(request):
 def path_to_login(request):
     return  path_to_root(request) + "login"
 
-def path_to_authenticate(request):
-    return path_to_login(request) + "/" + "authenticate"
+def path_to_authenticate(request, default_url):
+    url = request.requestHeaders.getRawHeaders('referer',[default_url])[0]
+    return "{0}/authenticate?referer={1}".format(path_to_login(request), urllib.quote(url, safe=''))
 
 def path_to_projects(request):
     return path_to_root(request) + "projects"
@@ -225,13 +227,34 @@ def path_to_json_global_status(status, request):
     return status.getBuildbotURL() + "json/globalstatus"
 
 def path_to_json_slaves(request):
-    return path_to_root(request) + "json/slaves/"
+    return "json/slaves/"
+
+def path_to_json_builder_slaves(builderName):
+    return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
 
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
 
 def path_to_json_build_queue(request):
     return path_to_root(request) + "json/buildqueue/"
+
+def path_to_json_project(request, project):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + urllib.quote(project, safe='') + codebases_arg
+
+def path_to_json_project_builder(request, project, builder):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/projects/" + urllib.quote(project, safe='') + "/" + urllib.quote(builder, safe='') + codebases_arg
+
+def path_to_json_pending(request, builderName):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/pending/" + urllib.quote(builderName, safe='') + codebases_arg
+
+
+def path_to_json_past_builds(request, builderName, number):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/builders/{0}/builds/<{1}{2}".format(urllib.quote(builderName, safe=''), number, codebases_arg)
+
 
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
@@ -287,6 +310,7 @@ class ContextMixin(AccessorMixin):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
         locale_enc = locale.getdefaultlocale()[1]
+        authenticated = self.getAuthz(request).authenticated(request)
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
@@ -306,7 +330,8 @@ class ContextMixin(AccessorMixin):
                     authz = self.getAuthz(request),
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
-                    analytics_code = self.getAnalyticsCode(request)
+                    analytics_code = self.getAnalyticsCode(request),
+                    authenticated=authenticated
                     )
 
 

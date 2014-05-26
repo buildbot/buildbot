@@ -1,4 +1,4 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable) {
     "use strict";
     var rtBuilders;
     var tbsorter = undefined;
@@ -45,32 +45,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                         return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url});
                     }
                 },
-                {
-                    "aTargets": [ 1 ],
-                    "sClass": "txt-align-left",
-                    "mRender": function (data, full, type) {
-                        var noJobs = false;                        
-                        var showRunningBuilds = type.currentBuilds != ''? true:false;
-                        
-                        if ((type.pendingBuilds === undefined || type.pendingBuilds === 0) &&
-                                (type.currentBuilds === undefined || type.currentBuilds === 0)) {
-                            noJobs = true;
-                        }
-                        return mustache.render(builders, {
-                            showNoJobs: noJobs,
-                            pendingBuilds: type.pendingBuilds,
-                            currentBuilds:type.currentBuilds,
-                            'showRunningBuilds':showRunningBuilds,
-                            builderName: type.name,
-                            builder_url: type.url
-                        });
-                    },
-                    "fnCreatedCell": function (nTd, sData, oData) {
-                        if (oData.currentBuilds != undefined) {
-                            helpers.delegateToProgressBar($(nTd).find('.percent-outer-js'));
-                        }
-                    }
-                },
+                rtTable.cell.buildProgress(1, false),
                 {
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left last-build-js",

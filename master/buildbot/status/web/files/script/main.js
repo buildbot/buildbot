@@ -17,6 +17,7 @@ require.config({
 		'realtimerouting': 'project/realtimeRouting',
 		'rtbuilddetail': 'project/rtBuildDetail',
 		'rtbuilders': 'project/rtBuilders',
+		'rtbuilderdetail': 'project/rtBuilderDetail',
 		'rtbuildslaves': 'project/rtBuildSlaves',
 		'rtbuildqueue': 'project/rtBuildqueue',
 		'rtglobal': 'project/rtGlobal',
@@ -28,7 +29,10 @@ require.config({
         'handlebars': "libs/handlebars",
 		'livestamp': "plugins/livestamp",
 		//'noise': "plugins/jquery.noisy",
-        'timeElements': "project/timeElements"
+        'timeElements': "project/timeElements",
+        'iFrameResize' : "libs/iframeResizer.min",
+        'rtGenericTable' : "project/rtGenericTable",
+        'hbCells' : 'templates/rtCells.handlebars'
 	}
 });
 
@@ -43,9 +47,10 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         $('body').show();
 
 	  	// swipe or scroll in the codebases overview
-	  	if ($('#builders_page').length || $('#builder_page').length) {
+	  	if ($('#builders_page').length || $('#builder_page').length) {	  		
 	  	require(['overscroll'],
-	        function(overscroll) {	        	
+	        function(overscroll) {	      
+	        
 	        	$("#overScrollJS").overscroll({
 	        		showThumbs:false,
 	        		direction:'horizontal'
@@ -84,6 +89,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		if (helpers.isRealTimePage() === true) {
 			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
 	    	$('div.content').append(preloader);        	
+	    	
         }
 
         if ($('#home_page').length > 0) {

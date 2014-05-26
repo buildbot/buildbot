@@ -1,15 +1,18 @@
+/*global define*/
 define(['screensize','text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function (screenSize,popups,Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
 
-    var css_classes = {SUCCESS: "success",
+    var css_classes = {
+        SUCCESS: "success",
         WARNINGS: "warnings",
         FAILURE: "failure",
         SKIPPED: "skipped",
         EXCEPTION: "exception",
         RETRY: "retry",
         CANCELED: "exception",
+        NOT_REBUILT: "not_rebuilt",
         RUNNING: "running",
         NOT_STARTED: "not_started",
         None: ""
@@ -60,11 +63,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			if ($('#tb-root').length != 0) {
                 //Disabled until we decided that we need an updating front page
 				//helpers.updateBuilders();
-			}
-
-			if ($('#builder_page').length != 0) {				
-				helpers.codeBaseBranchOverview($('#brancOverViewCont'));
-			}
+			}			
 
 			// keyboard shortcuts
 			/*$('body').keyup(function(event) {
@@ -117,10 +116,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 
 			// trigger individual builds on the builders page
-			helpers.runIndividualBuild();			
-			
-			// Set the full name from a cookie. Used on buildersform and username in the header
-			helpers.setFullName($("#buildForm .full-name-js, #authUserName"));			
+			helpers.runIndividualBuild();
 		
 			$('#authUserBtn').click(function(){
 				helpers.eraseCookie('fullName1','','eraseCookie');				
@@ -156,7 +152,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					.css({'top':cursorPosTop,'left':cursorPosLeft})				
 					.fadeIn('fast');
 				}
-				
+
 			}, function() {
 				this.title = this.t;
 				var toolTipCont = $('.tooltip-cont');	
@@ -166,27 +162,15 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			});
 
 			
-		}, authorizeUser: function() {
-
-			// the current url
-			var url = window.location;
-				
-			// Does the url have 'user' and 'authorized' ? get the fullname
-			if (url.search.match(/user=/) && url.search.match(/autorized=True/)) {
-				var fullNameLdap = url.search.split('&').slice(0)[1].split('=')[1];
-				// set the cookie with the full name on first visit
-				helpers.setCookie("fullName1", fullNameLdap);
-				window.location = "/";
-			} else if (helpers.getCookie("fullName1") === '') {
-				// Redirect to loginpage if missing namecookie
-				window.location = "/login";
-			} else {
-				// Extend the expiration date
-				helpers.setCookie("fullName1", helpers.getCookie("fullName1"));
-			}
-
-
-		}, setCurrentItem: function () {
+		},
+        authorizeUser: function() {
+            // Force a user to login
+            var url = window.location;
+            if (helpers.getCookie("BuildBotSession") === '') {
+                // Redirect to loginpage if missing namecookie
+                window.location = "/login";
+            }
+        }, setCurrentItem: function () {
 			
 				var path = window.location.pathname.split("\/");
 				
@@ -217,18 +201,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
 				return el;
 			
-		}, setFullName: function(el) {			
-			var valOrTxt;
-			var cookieVal = helpers.getCookie("fullName1");
-
-			// Loop through all elements that needs fullname 
-			el.each(function(){
-				// check if it is an input field or not
-				valOrTxt = $(this).is('input')? 'val' : 'text';				
-				$(this)[valOrTxt](cookieVal);
-			});
-
-		}, runIndividualBuild: function() { // trigger individual builds
+		},
+        runIndividualBuild: function() { // trigger individual builds
 			$('#tablesorterRt').delegate('.run-build-js', 'click', function(e){			
 				$('.remove-js').remove();
 				e.preventDefault();
@@ -260,8 +234,6 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 				$.get(url, urlParams, "json").done(function(data, textStatus, jqXHR) {
 					var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
                     // Add the value from the cookie to the disabled and hidden field
-                    helpers.setFullName($("#usernameDisabled, #usernameHidden", formContainer));
-
                     var form = formContainer.find('form').ajaxForm();
 
                     $(form).ajaxSubmit(function(data) {
@@ -282,36 +254,43 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					}
 				});
 			
-		}, selectBuildsAction: function() { // check all in tables and perform remove action		    
-					
-			var mustacheTmpl = Mustache.render(popups, {'preloader':'true'});
-			var preloader = $(mustacheTmpl);	
-
-			var selectAll = $('#selectall');
+		}, selectBuildsAction: function($table, dontUpdate) { // check all in tables and perform remove action
 			
+            if ($table === undefined) {
+                $table = $('#tablesorterRt');
+                if ($table.length === 0) {                	
+                    return;
+                }
+            }
+            var mustacheTmpl = Mustache.render(popups, {'preloader':'true'}),
+			    preloader = $(mustacheTmpl),
+                selectAll = $('#selectall');
+
+
 			selectAll.click(function () {
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
-				var tableNodes = tableSorter.fnGetNodes();	
+				var tableNodes = $table.dataTable().fnGetNodes();
 		        $('.fi-js',tableNodes).prop('checked', this.checked);
 		    });
 
-			function ajaxPost(str) {					
-				$('body').append(preloader).show();					
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
+			function ajaxPost(str) {
+                var $dataTable =  $table.dataTable();
+				$('body').append(preloader).show();
 				str = str+'&ajax=true';
 				
 				$.ajax({
 					type: "POST",
-					url: 'buildqueue/_selected/cancelselected',
+					url: '/buildqueue/_selected/cancelselected',
 					data: str,
 					success: function (data) {
-						preloader.remove();
-						tableSorter.fnClearTable();
-						$.each(data, function (key, value) {
-		          			var arObjData = [value];
-							tableSorter.fnAddData(arObjData);							
-						});
+                        //TODO: Remove this so that we can update with a URL that only returns
+                        //the new ones
+                        if (dontUpdate === false) {
+						    $dataTable.fnClearTable();
+                            $dataTable.fnAddData(data);
+                        }
+
 						selectAll.prop('checked',false);
+                        preloader.remove();
 					}
 				});
 				return false;									
@@ -320,8 +299,9 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 			$('#submitBtn').click(function(e){					
 				e.preventDefault();
 				
-				var tableSorter = $('#tablesorterRt').dataTable();							   				
-				var tableNodes = tableSorter.fnGetNodes();	
+				
+				var $dataTable =  $table.dataTable();
+				var tableNodes = $dataTable.fnGetNodes();
 		        var checkedNodes = $('.fi-js',tableNodes);
 		        
 		        var formStr = "";
@@ -336,7 +316,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 					ajaxPost(formStringSliced);				
 				}				
 			});
-			$('#tablesorterRt').delegate('.force-individual-js', 'click', function(e){					
+			$table.delegate('.force-individual-js', 'click', function(e){
 				e.preventDefault();
 				var iVal = $(this).prev().prev().val();
 				var str = 'cancelselected='+iVal;								
@@ -389,7 +369,7 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 	        	
     		var decodedUri = decodeURIComponent(window.location.search);
 			var parsedUrl = decodedUri.split('&');
-			var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">'+
+			var cbTable = $('<div class="border-table-holder col-xs-10"><div id="overScrollJS" class="inner-table-holder">'+
 							'<table class="codebase-branch-table"><tr class="codebase"><th>Codebase'+
 							'</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 		
@@ -571,7 +551,8 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
 
 		}, isRealTimePage: function() {
 			var isRealtimePage = false;
-			var currentRtPages = ['buildslaves_page','builders_page','builddetail_page','buildqueue_page','projects_page','home_page'];
+			var currentRtPages = ['buildslaves_page','builderdetail_page','builddetail_page','buildqueue_page',
+                'projects_page','home_page','builders_page', 'jsonhelp_page'];
 			var current = helpers.getCurrentPage();
 			$.each(currentRtPages, function(key,value) {
 				if (value === current) {
@@ -635,6 +616,27 @@ define(['screensize','text!templates/popups.mustache', 'mustache', "extend-momen
                 return css_classes[key];
             });
             return values[status];
+        },
+        setIFrameSize: function(iFrame) {
+            if (iFrame) {
+                var iFrameWin = iFrame.contentWindow || iFrame.contentDocument.parentWindow;
+                if (iFrameWin.document.body) {
+                    iFrame.height = iFrameWin.document.documentElement.scrollHeight || iFrameWin.document.body.scrollHeight;
+                    iFrame.width = iFrameWin.document.documentElement.scrollWidth || iFrameWin.document.body.scrollWidth;
+                }
+            }
+        },
+        objectPropertiesToArray: function(arr) {
+            var result = [],
+                key;
+
+            for (key in arr) {
+                if (arr.hasOwnProperty(key)) {
+                    result.push(arr[key]);
+                }
+            }
+
+            return result;
         }
 	};
 

@@ -186,6 +186,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # botmaster needs to set before setServiceParent which calls startService
         self.botmaster = parent
         self.master = parent.master
+        self.slave_status.setMaster(parent.master)
         service.MultiService.setServiceParent(self, parent)
 
     def startService(self):

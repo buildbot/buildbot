@@ -6,11 +6,11 @@
 * @author Simon Holm
 */
 
-@include font-face("katana_icons", font-files("/../fonts/katana_icons/katana_icons.eot?cachebusting=2", "/../fonts/katana_icons/katana_icons.ttf?cachebusting=2"));
-@include font-face("pacifico", font-files("/../fonts/pacifico/pacifico-webfont.eot?cachebusting=3", "/../fonts/pacifico/pacifico-webfont.ttf?cachebusting=3"));
-@include font-face("leckerlione", font-files("/../fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=7", "/../fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=7"));
-
- 
+@include font-face("katana_icons", font-files("katana_icons/katana_icons.eot?cachebusting=2", "katana_icons/katana_icons.ttf?cachebusting=2"));
+@include font-face("pacifico", font-files("pacifico/pacifico-webfont.eot?cachebusting=2", "pacifico/pacifico-webfont.ttf?cachebusting=2"));
+@include font-face("leckerlione", font-files("leckerlione/leckerlione-regular-webfont.eot?cachebusting=6", "leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6"));
+    
+  
 // Typography
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
@@ -54,25 +54,28 @@
 	text-transform: capitalize;
 	
 }
- 
+
+
+
 h1.logo a {
     color: #FFFFFF;
     float: left;
     font-family: 'Pacifico';
-    font-size: 29px;
+    
     font-weight: normal;
     letter-spacing: 0.8px;
     line-height: 0;
     margin-right: 35px;
     opacity: 0.76;
-    padding: 22px 0 0;
+    padding-top: 17px;
+	font-size: 19px;
     text-decoration: none;
-
+	
     transition: opacity 0.2s ease-in-out 0s;
 
 	span {
 		font-family:'leckerlione', cursive;
-		font-size: 27px;
+		font-size: 17px;		
 	}
 }
 
@@ -137,7 +140,7 @@ div.welcome-txt {
 .spin-icon {
 	opacity:0.7;	
 	content: "";	 		
-	background-image: url("/images/sprites.png");
+	background-image: image_url("/images/sprites.png");
     background-position: 0 0;
     height: 13px;
     width: 13px;		    
@@ -146,7 +149,6 @@ div.welcome-txt {
     	margin-bottom: -2px;	
 	}
 }
-
 
  
 .building .spin-icon {
@@ -206,12 +208,19 @@ div.welcome-txt {
 	content: "▼";
 }
 
-@include breakpoint($bkpt-medium-1) {
+@media (min-width: $screen-md-min) {
 	h1.logo a {
-		padding-top: 17px;
-		font-size: 19px;
+		font-size: 29px;
+    	padding: 22px 0 0;
 		span {
-			font-size: 17px;
+			font-size: 27px;
 		}
 	}
+}
+
+span.log-error {
+ color: #FF1212;
+}
+span.log-warning {
+  color: #AD823A;
 }

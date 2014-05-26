@@ -3,7 +3,7 @@
 * Main project stylesheet combiner
 *
 * @section Setup
-* @author rkalms
+* @author sholm
 */
 // ---------------------------------------------------------------------------
 // Fonts
@@ -13,22 +13,20 @@
 // Imports
 
 @import "compass";
-@import "breakpoint";
+@import "theme/theme";
+@import "bootstrap/bootstrap";
 
 // ---------------------------------------------------------------------------
 // Framework
 
 @import "modules/framework/framework";
-@import "modules/framework/normalize";
 @import "modules/framework/animate";
 @import "modules/base"; 
-@import "modules/framework/grid";
 
 // ---------------------------------------------------------------------------
 // Default typography
 
 @import "modules/framework/typography"; // Must be imported after base
-@import "modules/global";
 
 // ---------------------------------------------------------------------------
 // Modules
@@ -41,5 +39,6 @@
 @import "modules/page-elements/lists";
 @import "modules/page-elements/popups";
 @import "modules/page-elements/main";
+
 
 // ---------------------------------------------------------------------------

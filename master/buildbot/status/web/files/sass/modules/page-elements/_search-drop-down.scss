@@ -90,7 +90,7 @@ div.common-branch-select {
       display: block;
       overflow: hidden;
       padding: 0 0 0 8px;
-      height: 23px;
+      
       border: 1px solid #aaa;
       border-radius: 5px;
       background-color: #fff;
@@ -453,22 +453,4 @@ disabled look for disabled choices in the results dropdown
     width: 100px;
     height: 100px;
     overflow: scroll;
-}
-
-@include breakpoint($bkpt-small) {
-    .help-txt {
-        display: none;
-    }
-}
-
-@include breakpoint($bkpt-small-portrait) {
-    .select2-container {
-        max-width: 120px;
-    }
-    .common-branch-select {
-        min-width: 100%;
-    }
-    .help-txt {
-        display: none;
-    }
 }

@@ -21,9 +21,9 @@ define(['screensize', 'helpers'], function (screenSize, helpers) {
 		        // mobile top menu
 		    	$('.smartphone-nav').click(function() {
 		    		if ($('.top-menu').is(':hidden')) {
-		    			$('.top-menu').addClass('show');	    			
+		    			$('.top-menu').addClass('show-topmenu');	    			
 		    		} else {	    			
-		    			$('.top-menu').removeClass('show');
+		    			$('.top-menu').removeClass('show-topmenu');
 		    		}	        	
 		        });
 

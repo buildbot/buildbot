@@ -4,12 +4,6 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
-.rounded-container {
-  background-color: #FFFFFF;
-  border-radius: 10px;
-  border: 1px solid #CCCCCC;
-}
-
 .btn-default,
 .btn-primary,
 .btn-success,
