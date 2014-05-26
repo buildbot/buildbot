@@ -625,7 +625,7 @@ This module makes it easy to manipulate identifiers.
     :param object: object to test for identifier-ness
     :returns: boolean
 
-    Is object a :ref:`identifier <type-identifier>`?
+    Is object an identifier?
 
 .. py:function:: forceIdentifier(maxLength, str)
 
