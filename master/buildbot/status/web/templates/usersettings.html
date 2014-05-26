@@ -11,14 +11,25 @@
 
 {% block content %}
 
+{% if colorBlindInputVal == 'off'%}
+	{% set checked = '' %}
+{% else %}
+	{% set checked = 'checked' %}
+{% endif %}
 <div class="column-1">
 	<div class="column-2 ">
 		<h1 class="head-2">
-		  User settings
+		  Settings for Simon Holm Nielsen
 		</h1>
-		<form id="userSettingsForm" action="url" class="user-settings">
-			<label for="colorBlindMode">Color blind mode</label><input id="colorBlindMode" type="checkbox"/>
-		</form>
+
+		<form id="userSettingsForm" action="/users/settings/submit" method="GET" class="user-settings">                           		
+			<label for="colorBlindMode">Color blind mode</label>
+			<input name="colorBlind_setting" id="colorBlindMode" type="checkbox" {{checked}}/>
+			<span class="question-icon tooltip" title="Turns up the contrast on certain colors, to support people with colorblindness">
+          	</span>
+			<input type="submit" class="blue-btn var-2 fl-right" value="Submit">
+			
+		</form>		
 	</div>
 	<div class="column-2 welcome-txt last">
 		

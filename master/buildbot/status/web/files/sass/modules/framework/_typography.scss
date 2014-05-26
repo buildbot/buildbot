@@ -13,10 +13,10 @@
   
 // Typography
 
-.color-change {
+.user-settings {
 	&:after {
 		color: rgba(244, 249, 255, 0.84);
-		content: "";
+		content: "";
 		display: inline-block;
 		float: right;
 		font-family: "katana_icons";
@@ -31,11 +31,6 @@
 	}
 	&:hover:after {
 		opacity: 0.5;
-	}
-	.color-blind-mode & {
-		&:after {
-			color: #00FF00;
-		}
 	}
 }
 .right-block {
