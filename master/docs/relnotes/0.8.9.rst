@@ -106,7 +106,7 @@ Features
 * Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
   the slave is not connected.
 
-* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new ``SetSlaveInfo`` buildstep.
 
 * The ``GNUAutotools`` factory now has a reconf option to run autoreconf before ``./configure``.
 
