@@ -244,7 +244,7 @@ Fixes
 
 * The `haltOnFailure` and `flunkOnFailure` attricutes of :bb:step:`ShellCommand` are now renderable. (:bb:bug `2486`).
 
-* The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in buildbot.tac. This fixes log rotation.
+* The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in buildbot.tac. This fixes log rotation. The upgrade_master command will notify users if they have this problem.
 
 * Builbot no longer specifies a revision when pulling from a mercurial (:bb:bug:`438`).
 
