@@ -510,6 +510,8 @@ parts of the repo URL in the sourcestamp, or lookup in a lookup table
 based on repo URL. As long as there is a permanent 1:1 mapping between
 repos and workdir, this will work.
 
+.. _Writing-New-BuildSteps:
+
 Writing New BuildSteps
 ----------------------
 
@@ -520,11 +522,11 @@ Writing New BuildSteps
     This section documents new-style steps exclusively, although old-style steps are still supported.
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
-One way to do this is to write a custom :class:`BuildStep`.
+One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
 Once written, this Step can be used in the :file:`master.cfg` file.
 
 The best reason for writing a custom :class:`BuildStep` is to better parse the results of the command being run.
-For example, a :class:`BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
+For example, a :class:`~buildbot.process.buildstep.BuildStep` that knows about JUnit could look at the logfiles to determine which tests had been run, how many passed and how many failed, and then report more detailed information than a simple ``rc==0`` -based `good/bad` decision.
 
 Buildbot has acquired a large fleet of build steps, and sports a number of knobs and hooks to make steps easier to write.
 This section may seem a bit overwhelming, but most custom steps will only need to apply one or two of the techniques outlined here.
@@ -582,17 +584,50 @@ The whole thing looks like this::
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
 
+Step Execution Process
+~~~~~~~~~~~~~~~~~~~~~~
+
+A step's execution occurs in its :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
+When this method returns (more accurately, when the Deferred it returns fires), the step is complete.
+The method's result must be an integer, giving the result of the step.
+Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
+
+The :bb:step:`ShellCommand` class implements this ``run`` method, and in most cases steps subclassing ``ShellCommand`` simply implement some of the subsidiary methods that its ``run`` method calls.
+
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a :class:`~buildbot.process.buildstep.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.buildstep.BuildStep.runCommand`::
+To spawn a command in the buildslave, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
-To add a LogFile, use :meth:`~buildbot.process.buildstep.BuildStep.addLog`.
-Make sure the log gets closed when it finishes.
-When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellCommand`, just ask it to close the log when the command completes::
+The :py:class:`~buildbot.process.buildstep.CommandMixin` class offers a simple interface to several common slave-side commands.
+
+For the much more common task of running a shell command on the buildslave, use :py:class:`~buildbot.process.buildstep.ShellMixin`.
+This class provides a method to handle the myriad constructor arguments related to shell commands, as well as a method to create new :py:class:`~buildbot.process.remotecommand.RemoteCommand` instances.
+This mixin is the recommended method of implementing custom shell-based steps.
+The older pattern of subclassing ``ShellCommand`` is no longer recommended.
+
+A simple example of a step using the shell mixin is::
+
+    class RunCleanup(buildstep.ShellMixin, buildstep.BuildStep):
+        def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
+            self.cleanupScript = cleanupScript
+            kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
+            buildstep.BuildStep.__init__(self, **kwargs)
+
+        @defer.inlineCallbacks
+        def run(self):
+            cmd = yield self.makeRemoteShellCommand(
+                    command=[self.cleanupScript])
+            yield self.runCommand(cmd)
+            if cmd.didFail():
+                cmd = yield self.makeRemoteShellCommand(
+                        command=[self.cleanupScript, '--force'],
+                        logEnviron=False)
+                yield self.runCommand(cmd)
+            defer.returnValue(cmd.results())
 
     @defer.inlineCallbacks
     def run(self):
@@ -705,7 +740,7 @@ For large log files on a busy master, this behavior can quickly consume a great 
 
 Instead, steps should implement a :class:`~buildbot.process.logobserver.LogObserver` to examine log files one chunk or line at a time.
 
-In fact, the only access to log contents after the log has been written is via the Data API.
+For commands which only produce a small quantity of output, :class:`~buildbot.process.remotecommand.RemoteCommand` will collect the command's stdout into its :attr:`~buildbot.process.remotecommand.RemoteCommand.stdout` attribute if given the ``collectStdout=True`` constructor argument.
 
 .. _Adding-LogObservers:
 
@@ -752,7 +787,7 @@ The full version is in :bb:src:`master/buildbot/steps/python_twisted.py`.
 
 .. code-block:: python
 
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
 
     class TrialTestCaseCounter(LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
@@ -815,6 +850,18 @@ Remember that properties set in a step may not be available until the next step 
 In particular, any :class:`Property` or :class:`Interpolate` instances for the current step are interpolated before the step starts, so they cannot use the value of any properties determined in that step.
 
 .. index:: links, BuildStep URLs, addURL
+
+Using Statistics
+~~~~~~~~~~~~~~~~
+
+Statistics can be generated for each step, and then summarized across all steps in a build.
+For example, a test step might set its ``warnings`` statistic to the number of warnings observed.
+The build could then sum the ``warnings`` on all steps to get a total number of warnings.
+
+Statistics are set and retrieved with the :py:meth:`~buildbot.process.buildstep.BuildStep.setStatistic` and:py:meth:`~buildbot.process.buildstep.BuildStep.getStatistic` methods.
+The :py:meth:`~buildbot.process.buildstep.BuildStep.hasStatistic` method determines whether a statistic exists.
+
+The Build method :py:meth:`~buildbot.process.build.Build.getSummaryStatistic` can be used to aggregate over all steps in a Build.
 
 BuildStep URLs
 ~~~~~~~~~~~~~~
@@ -952,7 +999,7 @@ This will involve writing a new :class:`BuildStep` (probably named
 definition itself will look something like this::
 
     from buildbot.steps.shell import ShellCommand
-    from buildbot.process.buildstep import LogLineObserver
+    from buildbot.process.logobserver import LogLineObserver
 
     class FNURRRGHCounter(LogLineObserver):
         numTests = 0

@@ -372,8 +372,8 @@ class BuildStep(object, properties.PropertiesMixin):
         return self.run.im_func is not BuildStep.run.im_func
 
     def run(self):
-        # new-style tests override this, by definition.
-        # old-style tests don't call it.
+        # new-style steps override this, by definition.
+        # old-style steps don't call it.
         raise NotImplementedError
 
     def start(self):
