@@ -6,7 +6,7 @@
 {% set bodyId = 'id="usersettings_page"' %}
 
 {% macro isUserSettingChecked(option) %}
-    {% if user_settings[option] == 1 %}
+    {% if user_settings[option] == "1" %}
         checked
     {% endif %}
 {% endmacro %}
