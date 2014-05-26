@@ -197,6 +197,7 @@ else:
     # dependencies
     setup_args['install_requires'] = [
         'twisted >= 11.0.0',
+        'zope.interfaces >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'Jinja2 >= 2.1',
     ]
 
