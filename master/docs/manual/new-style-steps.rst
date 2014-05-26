@@ -30,7 +30,7 @@ Summary of Changes
 Backward Compatibility
 ++++++++++++++++++++++
 
-Some hacks are in place to support old-style tests.
+Some hacks are in place to support old-style steps.
 These hacks are only activated when an old-style step is detected.
 Support for old-style steps will be dropped soon after Buildbot-0.9.0 is released.
 

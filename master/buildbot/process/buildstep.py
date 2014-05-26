@@ -537,7 +537,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         unhandled = self._start_unhandled_deferreds = []
         try:
             # here's where we set things up for backward compatibility for
-            # old-style tests, using monkey patches so that new-style tests
+            # old-style steps, using monkey patches so that new-style steps
             # aren't bothered by any of this equipment
 
             # monkey-patch self.step_status.{setText,setText2} back into
