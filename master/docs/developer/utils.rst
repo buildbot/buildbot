@@ -611,3 +611,38 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
+
+buildbot.util.identifiers
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.identifiers
+
+This module makes it easy to manipulate identifiers.
+
+.. py:function:: isIdentifier(maxLength, object)
+
+    :param maxLength: maximum length of the identifier
+    :param object: object to test for identifier-ness
+    :returns: boolean
+
+    Is object an identifier?
+
+.. py:function:: forceIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: string to coerce to an identifier
+    :returns: identifer of maximum length ``maxLength``
+
+    Coerce a string (assuming ASCII for bytestrings) into an identifier.
+    This method will replace any invalid characters with ``_`` and truncate to the given length.
+
+.. py:function:: incrementIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: identifier to increment
+    :returns: identifer of maximum length ``maxLength``
+    :raises: ValueError if no suitable identifier can be constructed
+
+    "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.
+    This is useful when selecting a unique identifier for an object.
+    Maximum-length identifiers like ``_999999`` cannot be incremented and will raise :py:exc:`ValueError`.
