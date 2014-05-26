@@ -700,23 +700,12 @@ In fact, it's possible for one :class:`~buildbot.process.logobserver.LogObserver
 Reading Logfiles
 ~~~~~~~~~~~~~~~~
 
-Once a :class:`~buildbot.status.logfile.LogFile` has been added to a
-:class:`~buildbot.process.buildstep.BuildStep` with
-:meth:`~buildbot.process.buildstep.BuildStep.addLog()`,
-:meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog()`,
-:meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog()`, or ``logfiles={}``,
-your :class:`~buildbot.process.buildstep.BuildStep.BuildStep` can retrieve it
-by using :meth:`~buildbot.process.buildstep.BuildStep.getLog()`::
+For the most part, Buildbot tries to avoid loading the contents of a log file into memory as a single string.
+For large log files on a busy master, this behavior can quickly consume a great deal of memory.
 
-    class MyBuildStep(ShellCommand):
-        logfiles = { "nodelog": "_test/node.log" }
+Instead, steps should implement a :class:`~buildbot.process.logobserver.LogObserver` to examine log files one chunk or line at a time.
 
-        def evaluateCommand(self, cmd):
-            nodelog = self.getLog("nodelog")
-            if "STARTED" in nodelog.getText():
-                return SUCCESS
-            else:
-                return FAILURE
+In fact, the only access to log contents after the log has been written is via the Data API.
 
 .. _Adding-LogObservers:
 
