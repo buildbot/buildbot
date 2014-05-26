@@ -128,7 +128,7 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
         updateSingleRealTimeData: function (name, data, force) {
             var shouldUpdate = true;
             var now = new Date();
-            if ((force == undefined || !force) && realTimeLastUpdated.hasOwnProperty(name)) {
+            if ((force === undefined || !force) && realTimeLastUpdated.hasOwnProperty(name)) {
                 if ((now - realTimeLastUpdated[name]) < KRT_RELOAD_CD) {
                     shouldUpdate = false;
                 }
