@@ -162,8 +162,8 @@ Optional Arguments:
 ``reconf``
     use autoreconf to generate the ./configure file, set to True to use a
     buildbot default autoreconf command, or define the command for the
-    ShellCommand. 
- 
+    ShellCommand.
+
 ``compile``
     this is a shell command or list of argv values which is used to
     actually compile the tree. It defaults to ``make all``. If set to
@@ -171,20 +171,20 @@ Optional Arguments:
 
 ``test``
     this is a shell command or list of argv values which is used to run
-    the tree's self-tests. It defaults to @code{make check}. If set to
+    the tree's self-tests. It defaults to ``make check``. If set to
     None, the test step is skipped.
 
 ``distcheck``
     this is a shell command or list of argv values which is used to run
-    the packaging test. It defaults to @code{make distcheck}. If set to
+    the packaging test. It defaults to ``make distcheck``. If set to
     None, the test step is skipped.
 
 .. _BasicBuildFactory:
-    
+
 .. index::
    BasicBuildFactory
    Build Factory; BasicBuildFactory
-    
+
 BasicBuildFactory
 ~~~~~~~~~~~~~~~~~
 
@@ -276,7 +276,7 @@ Arguments:
 .. index::
    Distutils,
    Build Factory; Distutils
-    
+
 Distutils
 ~~~~~~~~~
 

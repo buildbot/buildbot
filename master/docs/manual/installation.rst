@@ -114,7 +114,7 @@ Python-Dateutil: http://labix.org/python-dateutil
   function properly without it if the Nightlys scheduler is not used.
 
 .. _Installing-the-code:
-  
+
 Installing the code
 -------------------
 
@@ -140,7 +140,7 @@ and for the slave:
 
     pip install buildbot-slave
 
-When using ``pip`` to install instead of distribution specific package manangers, 
+When using ``pip`` to install instead of distribution specific package manangers,
 e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants
 to use. It may however be easier to install via distribution specific package mangers
 but note that they may provide an earlier version than what is available via ``pip``.
@@ -330,7 +330,7 @@ You can also type ``buildbot create-master --help`` for an up-to-the-moment summ
 ``--log-count``
 
     This is the number of log rotations to keep around. You can either
-    specify a number or @code{None} to keep all @file{twistd.log} files
+    specify a number or ``None`` to keep all @file{twistd.log} files
     around.  The default is 10.
 
 ``--db``
@@ -577,7 +577,7 @@ Here's a good checklist for setting up a buildslave:
   with symlinks.
 
 .. _Buildslave-Options:
-  
+
 Buildslave Options
 ~~~~~~~~~~~~~~~~~~
 
@@ -627,7 +627,7 @@ command line, like this
     seconds. The default (600) causes a message to be sent to the
     buildmaster at least once every 10 minutes. To set this to a lower
     value, use e.g. ``--keepalive=120``.
-    
+
     If the buildslave is behind a NAT box or stateful firewall, these
     messages may help to keep the connection alive: some NAT boxes tend to
     forget about a connection if it has not been used in a while. When
@@ -698,7 +698,7 @@ Other Buildslave Configuration
                    unicode_encoding='utf-8', allow_shutdown='signal')
 
 .. _Upgrading-an-Existing-Buildslave:
-                       
+
 Upgrading an Existing Buildslave
 --------------------------------
 
@@ -711,7 +711,7 @@ you can run
     buildslave upgrade-slave /path/to/buildslave/dir
 
 .. _Buildslave-Version-specific-Notes:
-    
+
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -819,17 +819,17 @@ controlling multi-slave and multi-master setups (mostly because they are based
 on the init script from the Debian package).  With a little modification these
 scripts can be used both on Debian and RHEL-based distributions and may thus
 prove helpful to package maintainers who are working on buildbot (or those that
-haven't yet split buildbot into master and slave packages). 
+haven't yet split buildbot into master and slave packages).
 
 .. code-block:: bash
 
     # install as /etc/default/buildslave
     #         or /etc/sysconfig/buildslave
-    master/contrib/init-scripts/buildslave.default 
+    master/contrib/init-scripts/buildslave.default
 
     # install as /etc/default/buildmaster
     #         or /etc/sysconfig/buildmaster
-    master/contrib/init-scripts/buildmaster.default 
+    master/contrib/init-scripts/buildmaster.default
 
     # install as /etc/init.d/buildslave
     slave/contrib/init-scripts/buildslave.init.sh
@@ -837,7 +837,7 @@ haven't yet split buildbot into master and slave packages).
     # install as /etc/init.d/buildmaster
     slave/contrib/init-scripts/buildmaster.init.sh
 
-    # ... and tell sysvinit about them 
+    # ... and tell sysvinit about them
     chkconfig buildmaster reset
     # ... or
     update-rc.d buildmaster defaults

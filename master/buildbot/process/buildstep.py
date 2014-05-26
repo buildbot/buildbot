@@ -362,25 +362,28 @@ class BuildStep(results.ResultComputingConfigMixin,
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
+        assert self.isNewStyle(), "updateSummary is a new-style step method"
         if not self._running:
-            resultSummary = yield self.getResultSummary()
-            stepResult = resultSummary.get('step', u'finished')
-            assert isinstance(stepResult, unicode), \
-                "step result must be unicode"
-            yield self.master.data.updates.setStepStateStrings(self.stepid,
-                                                               [stepResult])
-            buildResult = resultSummary.get('build', None)
-            assert buildResult is None or isinstance(buildResult, unicode), \
-                "build result must be unicode"
+            summary = yield self.getResultSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getResultSummary must return a dictionary')
+        else:
+            summary = yield self.getCurrentSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getCurrentSummary must return a dictionary')
+
+        stepResult = summary.get('step', u'finished')
+        if not isinstance(stepResult, unicode):
+            raise TypeError("step result must be unicode")
+        yield self.master.data.updates.setStepStateStrings(self.stepid,
+                                                           [stepResult])
+
+        if not self._running:
+            buildResult = summary.get('build', None)
+            if buildResult and not isinstance(buildResult, unicode):
+                raise TypeError("build result must be unicode")
             self.step_status.setText([stepResult])
             self.step_status.setText2([buildResult] if buildResult else [])
-        else:
-            stepSummary = yield self.getCurrentSummary()
-            assert isinstance(stepSummary, unicode), \
-                "step summary must be unicode"
-            yield self.master.data.updates.setStepStateStrings(self.stepid,
-                                                               [stepSummary])
-            self.step_status.setText([stepSummary])
 
     @defer.inlineCallbacks
     def startStep(self, remote):

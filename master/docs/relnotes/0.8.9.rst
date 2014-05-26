@@ -293,6 +293,9 @@ Deprecations, Removals, and Non-Compatible Changes
   Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
   See :ref:`New-Style-Build-Steps` for details.
 
+  * The ``LoggingBuildStep`` class has been deprecated, and support will be removed along with support for old-style steps after the Buildbot-0.9.0 release.
+    Instead, subclass :class:`~buildbot.process.buildstep.BuildStep` and mix in :class:`~buildbot.process.buildstep.ShellMixin` to get similar behavior.
+
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
 * The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
