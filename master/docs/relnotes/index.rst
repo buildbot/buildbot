@@ -14,6 +14,9 @@ Master
 Features
 ~~~~~~~~
 
+* The :bb:step:`Trigger` takes now a set_parent_properties parameter.
+It can be used to set properties from triggered build to upstream build.
+
 Fixes
 ~~~~~
 
