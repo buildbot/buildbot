@@ -618,10 +618,10 @@ Buildbot will take care of rate-limiting summary updates.
 
 When the step is complete, Buildbot calls its :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` method to get a final summary of the step along with a summary for the build.
 
-Capturing Logfiles
-~~~~~~~~~~~~~~~~~~
+About Logfiles
+~~~~~~~~~~~~~~
 
-Each BuildStep has a collection of `logfiles`.
+Each BuildStep has a collection of log files.
 Each one has a short name, like `stdio` or `warnings`.
 Each log file contains an arbitrary amount of text, usually the contents of some output file generated during a build or test step, or a record of everything that was printed to :file:`stdout`/:file:`stderr` during the execution of some command.
 
@@ -643,57 +643,59 @@ stripped completely. This latter option makes it easy to save the
 results to a file and run :command:`grep` or whatever against the
 output.
 
-Using LogFiles in custom BuildSteps
-###################################
+Writing Log Files
+~~~~~~~~~~~~~~~~~
 
-The most common way for a custom :class:`BuildStep` to use a log file is to summarize the results of a :bb:step:`ShellCommand` (after the command has finished running).
-For example, a compile step with thousands of lines of output might want to create a summary of just the warning messages.
-If you were doing this from a shell, you would use something like:
+Most commonly, logfiles come from commands run on the build slave.
+Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
 
-.. code-block:: bash
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        log = yield self.addLog('stdio')
+        cmd.useLog(log, closeWhenFinished=True, 'stdio')
+        yield self.runCommand(cmd)
 
-    grep "^warning:" output.log >warnings.log
+The name passed to :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` must match that configured in the command.
+In this case, ``stdio`` is the default.
 
-In a custom BuildStep, you could instead create a ``warnings`` log file that contained the same text.
-To do this, you would add code to your :meth:`createSummary` method that pulls lines from the main output log and creates a new :class:`LogFile` with the results::
+If the log file was already added by another part of the step, it can be retrieved with :meth:`~buildbot.process.buildstep.BuildStep.getLog`::
 
-    def createSummary(self, log):
-        warnings = []
-        sio = StringIO.StringIO(log.getText())
-        for line in sio.readlines():
-            if "warning:" in line:
-                warnings.append()
-        self.addCompleteLog('warnings', "".join(warnings))
+    stdioLog = self.getLog('stdio')
 
-This example uses the :meth:`addCompleteLog` method, which creates a
-new :class:`LogFile`, puts some text in it, and then `closes` it, meaning
-that no further contents will be added. This :class:`LogFile` will appear in
-the HTML display under an HREF with the name `warnings`, since that
-is the name of the :class:`LogFile`.
+Less frequently, some master-side processing produces a log file.
+If this log file is short and easily stored in memory, this is as simple as a call to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`::
 
-You can also use :meth:`addHTMLLog` to create a complete (closed)
-:class:`LogFile` that contains HTML instead of plain text. The normal :class:`LogFile`
-will be HTML-escaped if presented through a web page, but the HTML
-:class:`LogFile` will not. At the moment this is only used to present a pretty
-HTML representation of an otherwise ugly exception traceback when
-something goes badly wrong during the :class:`BuildStep`.
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        summary = u'\n'.join('%s: %s' % (k, count)
+                             for (k, count) in self.lint_results.iteritems())
+        yield self.addCompleteLog('summary', summary)
 
-In contrast, you might want to create a new :class:`LogFile` at the beginning
-of the step, and add text to it as the command runs. You can create
-the :class:`LogFile` and attach it to the build by calling :meth:`addLog`, which
-returns the :class:`LogFile` object. You then add text to this :class:`LogFile` by
-calling methods like :meth:`addStdout` and :meth:`addHeader`. When you
-are done, you must call the :meth:`finish` method so the :class:`LogFile` can be
-closed. It may be useful to create and populate a :class:`LogFile` like this
-from a :class:`LogObserver` method - see :ref:`Adding-LogObservers`.
+Note that the log contents must be a unicode string.
 
-The ``logfiles=`` argument to :bb:step:`ShellCommand` (see
-:bb:step:`ShellCommand`) creates new :class:`LogFile`\s and fills them in realtime
-by asking the buildslave to watch a actual file on disk. The
-buildslave will look for additions in the target file and report them
-back to the :class:`BuildStep`. These additions will be added to the :class:`LogFile` by
-calling :meth:`addStdout`. These secondary LogFiles can be used as the
-source of a LogObserver just like the normal :file:`stdio` :class:`LogFile`.
+Longer logfiles can be constructed line-by-line using the ``add`` methods of the log file::
+
+    @defer.inlineCallbacks
+    def run(self):
+        ...
+        updates = yield self.addLog('updates')
+        while True:
+            ...
+            yield updates.addStdout(some_update)
+
+Again, note that the log input must be a unicode string.
+
+Finally, :meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog` is similar to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`, but the resulting log will be tagged as containing HTML.
+The web UI will display the contents of the log using the browser.
+
+The ``logfiles=`` argument to :bb:step:`ShellCommand` and its subclasses creates new log files and fills them in realtime by asking the buildslave to watch a actual file on disk.
+The buildslave will look for additions in the target file and report them back to the :class:`BuildStep`.
+These additions will be added to the log file by calling :meth:`addStdout`.
+
+All log files can be used as the source of a :class:`~buildbot.process.logobserver.LogObserver` just like the normal :file:`stdio` :class:`LogFile`.
+In fact, it's possible for one :class:`~buildbot.process.logobserver.LogObserver` to observe a logfile created by another.
 
 Reading Logfiles
 ~~~~~~~~~~~~~~~~
@@ -729,7 +731,7 @@ To accomplish this, you will need to attach a :class:`~buildbot.process.logobser
 This observer is given all text as it is emitted from the command, and has the opportunity to
 parse that output incrementally.
 
-There are a number of pre-built :class:`LogObserver` classes that you
+There are a number of pre-built :class:`~buildbot.process.logobserver.LogObserver` classes that you
 can choose from (defined in :mod:`buildbot.process.buildstep`, and of
 course you can subclass them to add further customization. The
 :class:`LogLineObserver` class handles the grunt work of buffering and
