@@ -189,7 +189,7 @@ Forward Compatibility
 
 In preparation for a more asynchronous implementation of build steps in Buildbot 0.9.0, this version introduces support for new-style steps.
 Existing old-style steps will continue to function correctly in Buildbot 0.8.x releases and in Buildbot 0.9.0, but support will be dropped soon afterward.
-See :ref:`New-Style-Build-Steps`, below, for guidance on rewriting existing steps in this new style.
+See :ref:`New-Style-Build-Steps`for guidance on rewriting existing steps in this new style.
 To eliminate ambiguity, the documentation for this version only reflects support for new-style steps.
 Refer to the documentation for previous versions for infrormation on old-style steps.
 
@@ -291,6 +291,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * Both old-style and new-style steps are supported in this version of Buildbot.
   Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
   See :ref:`New-Style-Build-Steps` for details.
+
+  * The ``LoggingBuildStep`` class has been deprecated, and support will be removed along with support for old-style steps after the Buildbot-0.9.0 release.
+    Instead, subclass :class:`~buildbot.process.buildstep.BuildStep` and mix in :class:`~buildbot.process.buildstep.ShellMixin` to get similar behavior.
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
