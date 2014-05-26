@@ -601,20 +601,22 @@ When giving a Logfile to a :class:`~buildbot.process.buildstep.RemoteShellComman
         cmd.useLog(log, closeWhenFinished=True)
         yield self.runCommand(cmd)
 
-Updating Status
-~~~~~~~~~~~~~~~
+Updating Status Strings
+~~~~~~~~~~~~~~~~~~~~~~~
 
-TBD
+Each step can summarize its current status in a very short string.
+For example, a compile step might display the file being compiled.
+This information can be helpful users eager to see their build finish.
 
-.. todo::
+Similarly, a build has a set of short strings collected from its steps summarizing the overall state of the build.
+Useful information here might include the number of tests run, but probably not the results of a ``make clean`` step.
 
-    What *is* the best way to do this?  From the docstring:
+As a step runs, Buildbot calls its :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` method as necessary to get the step's current status.
+"As necessary" is determined by calls to :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary`.
+Your step should call this method every time the status summary may have changed.
+Buildbot will take care of rate-limiting summary updates.
 
-    As the step runs, it should send status information to the
-    BuildStepStatus::
-
-        self.step_status.setText(['compile', 'failed'])
-        self.step_status.setText2(['4', 'warnings'])
+When the step is complete, Buildbot calls its :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` method to get a final summary of the step along with a summary for the build.
 
 Capturing Logfiles
 ~~~~~~~~~~~~~~~~~~

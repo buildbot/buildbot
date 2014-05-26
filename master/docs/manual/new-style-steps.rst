@@ -138,9 +138,11 @@ Status Strings
 
 The ``self.step_status.setText`` and ``setText2`` methods have been removed.
 Similarly, the ``_describe`` and ``describe`` methods are not used in new-style steps.
-Steps no longer set their status directly.
-Instead, call :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary` whenever the status may have changed.
-This method will call :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` or :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` as appropriate and update displays of the step's status.
+In fact, steps no longer set their status directly.
+
+Instead, steps call :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary` whenever the status may have changed.
+This method calls :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` or :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` as appropriate and update displays of the step's status.
+Steps override the latter two methods to provide appropriate summaries.
 
 Statistics
 ++++++++++
