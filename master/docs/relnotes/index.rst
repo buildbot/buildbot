@@ -189,7 +189,7 @@ Forward Compatibility
 
 In preparation for a more asynchronous implementation of build steps in Buildbot 0.9.0, this version introduces support for new-style steps.
 Existing old-style steps will continue to function correctly in Buildbot 0.8.x releases and in Buildbot 0.9.0, but support will be dropped soon afterward.
-See :ref:`New-Style-Build-Steps`for guidance on rewriting existing steps in this new style.
+See :ref:`New-Style-Build-Steps` for guidance on rewriting existing steps in this new style.
 To eliminate ambiguity, the documentation for this version only reflects support for new-style steps.
 Refer to the documentation for previous versions for infrormation on old-style steps.
 
