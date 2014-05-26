@@ -105,8 +105,10 @@
 {{/buildProgress}}
 
 {{#stopBuild}}
-	<input class="fi-js fi" type="hidden" name="cancelselected" value="{{data.url.path}}/stop"/>	
-	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
+    <form>
+	    <input type="checkbox" name="cancelselected" />
+	    <a title="Remove this build" class="delete-icon" href="#" data-cancel-url="{{data.url.path}}/stop"></a>
+    </form>
 {{/stopBuild}}
 
 {{#showInputField}}

@@ -179,7 +179,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     });
                 }
             };
-		},
+        },
         buildLength: function (index) {
             return {
                 "aTargets": [index],

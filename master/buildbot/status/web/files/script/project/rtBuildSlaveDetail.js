@@ -10,20 +10,36 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
             $tbBuildsTable,
             builderdetailHandle = Handlebars.compile(builderdetail);
 
+        var privFunc = {
+            initCancelBuild: function () {
+                $tbCurrentBuildsTable.delegate("[data-cancel-url]", "click", function (e) {
+                    $.ajax($(this).attr("data-cancel-url"));
+                });
+
+                $("#cancelAllCurrentBuilds").click(function () {
+                    var urls = [];
+                    var builds = $tbCurrentBuildsTable.find("[data-cancel-url]");
+                    $.each(builds, function (index, val) {
+                        var $input = $(val).parent().find("[name=cancelselected]");
+                        if ($input.prop("checked")) {
+                            $.ajax($(val).attr("data-cancel-url"));
+                        }
+                    });
+                });
+            }
+        };
+
         rtBuildSlaveDetail = {
             init: function () {
                 $tbCurrentBuildsTable = rtBuildSlaveDetail.currentBuildsTableInit($('#rtCurrentBuildsTable'));
-
                 $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'), true);
 
                 var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
                 realtimeFunctions.current_builds = rtBuildSlaveDetail.rtfProcessCurrentBuilds;
-
                 realtimeFunctions.recent_builds = rtBuildSlaveDetail.rtfProcessBuilds;
-
                 realtimePages.initRealtime(realtimeFunctions);
 
-                helpers.selectBuildsAction($tbCurrentBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
+                privFunc.initCancelBuild();
             },
             rtfProcessCurrentBuilds: function (data) {
                 rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data);
