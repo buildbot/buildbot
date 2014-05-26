@@ -140,6 +140,12 @@ form.command_forcebuild .force-nested > .label {
     }
 }
 
+.user-settings {
+    label {
+        margin-right: 10px;
+    }
+}
+
 @include breakpoint($bkpt-small) {
 
     form.command_forcebuild {
