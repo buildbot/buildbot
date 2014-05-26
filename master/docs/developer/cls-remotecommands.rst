@@ -13,7 +13,7 @@ detail in :ref:`master-slave-updates`.
 RemoteCommand
 ~~~~~~~~~~~~~
 
-.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0))
+.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0), stdioLogName='stdio')
 
     :param remote_command: command to run on the slave
     :type remote_command: string
@@ -21,16 +21,17 @@ RemoteCommand
     :type args: dictionary
     :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
-    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants
-    	   	     (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param stdioLogName: name of the log to which to write the command's stdio
 
     This class handles running commands, consisting of a command name and
     a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
     updates sent from the slave.
 
-    This class handles updates for ``stdout``, ``stderr``, and ``header`` by
-    appending them to a ``stdio`` logfile, if one is in use.  It handles
-    updates for ``rc`` by recording the value in its ``rc`` attribute.
+    This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to s stdio logfile named by the ``stdioLogName`` parameter.
+    Steps that run multiple commands and want to separate those commands' stdio streams can use this parameter.
+
+    It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
 
     Most slave-side commands, even those which do not spawn a new process on
     the slave, generate logs and an ``rc``, requiring this class or one of its
