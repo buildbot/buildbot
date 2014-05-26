@@ -113,18 +113,6 @@ BuildStep
         This method is called at build startup with the default workdir for the build.
         Steps which allow a workdir to be specified, but want to override it with the build's default workdir, can use this method to apply the default.
 
-    .. py:method:: setStepStatus(status)
-
-        :param status: step status
-        :type status: :class:`~buildbot.status.buildstep.BuildStepStatus`
-
-        This method is called to set the status instance to which the step should report.
-        The default implementation sets :attr:`step_status`.
-
-    .. py:attribute:: step_status
-
-        The :class:`~buildbot.status.buildstep.BuildStepStatus` object tracking the status of this step.
-
     .. py:method:: setupProgress()
 
         This method is called during build setup to give the step a chance to set up progress tracking.
@@ -144,15 +132,7 @@ BuildStep
         :returns: Deferred
 
         Begin the step. This is the build's interface to step execution.
-        Subclasses should override :meth:`start` to implement custom behaviors.
-
-        The method returns a Deferred that fires when the step finishes.
-        It fires with a tuple of ``(result, [extra text])``, where ``result`` is one of the constants from :mod:`buildbot.status.builder`.
-        The extra text is a list of short strings which should be appended to the Build's text results.
-        For example, a test step may add ``17 failures`` to the Build's status by this mechanism.
-
-        The deferred will errback if the step encounters an exception, including an exception on the slave side (or if the slave goes away altogether).
-        Normal build/test failures will *not* cause an errback.
+        Subclasses should override :meth:`run` to implement custom behaviors.
 
     .. py:method:: run()
 
@@ -369,7 +349,7 @@ BuildStep
     .. py:method:: addLog(name)
 
         :param name: log name
-        :returns: :class:`~buildbot.status.logfile.LogFile` instance
+        :returns: :class:`~buildbot.status.logfile.LogFile` instance via Deferred
 
         Add a new logfile with the given name to the step, and return the log file instance.
 
@@ -385,6 +365,7 @@ BuildStep
 
         :param name: log name
         :param text: content of the logfile
+        :returns: Deferred
 
         This method adds a new log and sets ``text`` as its content.
         This is often useful to add a short logfile describing activities performed on the master.
@@ -394,6 +375,7 @@ BuildStep
 
         :param name: log name
         :param html: content of the logfile
+        :returns: Deferred
 
         Similar to :meth:`addCompleteLog`, this adds a logfile containing pre-formatted HTML, allowing more expressiveness than the text format supported by :meth:`addCompleteLog`.
 
@@ -417,6 +399,12 @@ LoggingBuildStep
     :param log_eval_func: see :bb:step:`ShellCommand`
 
     The remaining arguments are passed to the :class:`BuildStep` constructor.
+
+    .. warning::
+
+        Subclasses of this class are always old-style steps.
+        As such, this class will be removed after Buildbot-0.9.0.
+        Instead, subclass :class:`~buildbot.process.buildstep.BuildStep` and mix in :class:`~buildbot.process.buildstep.ShellMixin` to get similar behavior.
 
     This subclass of :class:`BuildStep` is designed to help its subclasses run remote commands that produce standard I/O logfiles.
     It:
