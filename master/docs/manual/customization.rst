@@ -740,7 +740,7 @@ For large log files on a busy master, this behavior can quickly consume a great 
 
 Instead, steps should implement a :class:`~buildbot.process.logobserver.LogObserver` to examine log files one chunk or line at a time.
 
-In fact, the only access to log contents after the log has been written is via the Data API.
+For commands which only produce a small quantity of output, :class:`~buildbot.process.remotecommand.RemoteCommand` will collect the command's stdout into its :attr:`~buildbot.process.remotecommand.RemoteCommand.stdout` attribute if given the ``collectStdout=True`` constructor argument.
 
 .. _Adding-LogObservers:
 
