@@ -570,7 +570,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return self._step_status.getStatistics()
 
     def setStatistic(self, name, value):
-        return self._step_status.setStatistics(name, value)
+        return self._step_status.setStatistic(name, value)
 
 
 components.registerAdapter(
