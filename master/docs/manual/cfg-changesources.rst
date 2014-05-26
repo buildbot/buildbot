@@ -3,6 +3,10 @@
 Change Sources
 --------------
 
+.. contents::
+    :depth: 2
+    :local:
+
 A Version Control System maintains a source tree, and tells the
 buildmaster when it changes. The first step of each :class:`Build` is typically
 to acquire a copy of some version of this tree.
@@ -32,7 +36,7 @@ users in hopes they may be useful, and might require some additional work to
 make them functional.
 
 CVS
- * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script) 
+ * :bb:chsrc:`CVSMaildirSource` (watching mail sent by ``contrib/buildbot_cvs_mail.py`` script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from ``buildbot
    sendchange`` run in a loginfo script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
@@ -68,6 +72,7 @@ Mercurial
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
+ * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 
 Bzr (the newer Bazaar)
  * :bb:chsrc:`PBChangeSource` (listening for connections from
@@ -89,6 +94,7 @@ Git
  * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
+ * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 
 
 Repo/Git
@@ -322,8 +328,8 @@ CVSMaildirSource
 
 .. py:class:: buildbot.changes.mail.CVSMaildirSource
 
-This parser works with the :file:`buildbot_cvs_maildir.py` script in the 
-contrib directory. 
+This parser works with the :file:`buildbot_cvs_maildir.py` script in the
+contrib directory.
 
 The script sends an email containing all the files submitted in
 one directory. It is invoked by using the :file:`CVSROOT/loginfo` facility.
@@ -356,9 +362,9 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like:
 .. note:: For cvs version 1.12.x, the ``--path %p`` option is required.
    Version 1.11.x and 1.12.x report the directory path differently.
 
-The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT. 
+The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT.
 It can be anywhere. Run the script with --help to see all the options.
-At the very least, the 
+At the very least, the
 options ``-e`` (email) and ``-P`` (project) should be specified. The line must end with ``%{sVv}``
 This is expanded to the files that were modified.
 
@@ -388,7 +394,7 @@ it creates will be associated with the default (i.e. trunk) branch. ::
 .. bb:chsrc:: BzrLaunchpadEmailMaildirSource
 
 .. _BzrLaunchpadEmailMaildirSource:
-    
+
 BzrLaunchpadEmailMaildirSource
 +++++++++++++++++++++++++++++++
 
@@ -558,15 +564,12 @@ Here's a simple example that you might have in your
 .. bb:chsrc:: P4Source
 
 .. _P4Source:
-    
+
 P4Source
 ~~~~~~~~
 
 The :bb:chsrc:`P4Source` periodically polls a `Perforce <http://www.perforce.com/>`_
 depot for changes. It accepts the following arguments:
-
-``p4base``
-    The base depot path to watch, without the trailing '/...'.
 
 ``p4port``
     The Perforce server to connect to (as :samp:`{host}:{port}`).
@@ -576,6 +579,9 @@ depot for changes. It accepts the following arguments:
 
 ``p4passwd``
     The Perforce password.
+
+``p4base``
+    The base depot path to watch, without the trailing '/...'.
 
 ``p4bin``
     An optional string parameter. Specify the location of the perforce command
@@ -590,6 +596,10 @@ depot for changes. It accepts the following arguments:
 
 ``pollInterval``
     How often to poll, in seconds. Defaults to 600 (10 minutes).
+
+``project``
+    Set the name of the project to be used for the :bb:chsrc:`P4Source`. This will then be set in any changes generated
+    by the ``P4Source``, and can be used in a Change Filter for triggering particular builders.
 
 ``pollAtLaunch``
     Determines when the first poll occurs. True = immediately on launch,
@@ -628,7 +638,7 @@ components after. ::
 .. bb:chsrc:: BonsaiPoller
 
 .. _BonsaiPoller:
-    
+
 BonsaiPoller
 ~~~~~~~~~~~~
 
@@ -695,7 +705,7 @@ multiple branches.
     hostname for remote ones, and any additional directory names necessary
     to get to the repository), and the sub-path within the repository's
     virtual filesystem for the project and branch of interest.
-    
+
     The :bb:chsrc:`SVNPoller` will only pay attention to files inside the
     subdirectory specified by the complete svnurl.
 
@@ -778,7 +788,7 @@ multiple branches.
 
 ``extra_args``
     If specified, the extra arguments will be added to the svn command args.
-    
+
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function
 is available explicitly as ``split_file_alwaystrunk``::
@@ -822,7 +832,7 @@ See :ref:`Customizing-SVNPoller` for details and some common scenarios.
 .. bb:chsrc:: BzrPoller
 
 .. _Bzr-Poller:
-        
+
 Bzr Poller
 ~~~~~~~~~~
 
@@ -865,7 +875,7 @@ The ``BzrPoller`` parameters are:
 .. bb:chsrc:: GitPoller
 
 .. _GitPoller:
-    
+
 GitPoller
 ~~~~~~~~~
 
@@ -924,7 +934,7 @@ arguments:
 ``usetimestamps``
     parse each revision's commit timestamp (default is ``True``),
     or ignore it in favor of the current time (so recently processed
-    commits appear together in the waterfall page) 
+    commits appear together in the waterfall page)
 
 ``encoding``
     Set encoding will be used to parse author's name and commit
@@ -1029,6 +1039,103 @@ A configuration for the Mercurial poller might look like this::
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
 
+.. bb:chsrc:: BitbucketPullrequestPoller
+
+.. _BitbucketPullrequestPoller:
+
+BitbucketPullrequestPoller
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.changes.bitbucket.BitbucketPullrequestPoller
+
+This :bb:chsrc:`BitbucketPullrequestPoller` periodically polls Bitbucket for new or updated pull requests.
+It uses Bitbuckets powerful `Pull Request REST API`_ to gather the information needed.
+
+The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
+
+``owner``
+    The owner of the Bitbucket repository. All Bitbucket Urls are of the form https://bitbucket.org/owner/slug/.
+
+``slug``
+    The name of the Bitbucket repository.
+
+``branch``
+    A single branch or a list of branches which should be processed.
+    If it is ``None`` (the default) all pull requests are used.
+
+``pollInterval``
+    Interval in seconds between polls, default is 10 minutes.
+
+``pollAtLaunch``
+    Determines when the first poll occurs. ``True`` = immediately on launch,
+    ``False`` = wait for one ``pollInterval`` (default).
+
+``category``
+    Set the category to be used for the changes produced by the
+    :bb:chsrc:`BitbucketPullrequestPoller`. This will then be set in any changes generated
+    by the :bb:chsrc:`BitbucketPullrequestPoller`, and can be used in a Change Filter for
+    triggering particular builders.
+
+``project``
+    Set the name of the project to be used for the
+    :bb:chsrc:`BitbucketPullrequestPoller`. This will then be set in any changes generated
+    by the ``BitbucketPullrequestPoller``, and can be used in a Change Filter for
+    triggering particular builders.
+
+``pullrequest_filter``
+    A callable which takes one parameter, the decoded Python object of the pull request JSON.
+    If the it returns ``False`` the pull request is ignored.
+    It can be used to define custom filters based on the content of the pull request.
+    See the Bitbucket documentation for more information about the format of the response.
+    By default the filter always returns ``True``.
+
+``usetimestamps``
+    parse each revision's commit timestamp (default is ``True``),
+    or ignore it in favor of the current time (so recently processed
+    commits appear together in the waterfall page)
+
+``encoding``
+    Set encoding will be used to parse author's name and commit
+    message. Default encoding is ``'utf-8'``.
+
+A minimal configuration for the Bitbucket pull request poller might look like this::
+
+    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+    c['change_source'] = BitbucketPullrequestPoller(
+        owner='myname',
+        slug='myrepo',
+      )
+
+Here is a more complex configuration using a ``pullrequest_filter``.
+The pull request is only processed if at least 3 people have already approved it::
+
+    def approve_filter(pr, threshold):
+        approves = 0
+        for participant in pr['participants']:
+            if participant['approved']:
+                approves = approves + 1
+
+        if approves < threshold:
+            return False
+        return True
+
+    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+    c['change_source'] = BitbucketPullrequestPoller(
+        owner='myname',
+        slug='myrepo',
+        branch='mybranch',
+        project='myproject',
+        pullrequest_filter=lambda pr : approve_filter(pr,3),
+        pollInterval=600,
+      )
+
+.. warning::
+
+    Anyone who can create pull requests for the Bitbucket repository can initiate a change,
+    potentially causing the buildmaster to run arbitrary code.
+
+.. _Pull Request REST API: https://confluence.atlassian.com/display/BITBUCKET/pullrequests+Resource
+
 .. bb:chsrc:: GerritChangeSource
 
 .. _GerritChangeSource:
@@ -1054,7 +1161,7 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
    the username to use to connect to gerrit
 
 ``identity_file``
-   ssh identity file to for authentication (optional) 
+   ssh identity file to for authentication (optional)
    pay attention to the `ssh passphrase`
 
 ``handled_events``
@@ -1068,7 +1175,7 @@ By default this class adds a change to the buildbot system for each of the follo
     :file:`checkpatch.pl` can be automatically triggered. Beware of
     what kind of automatic task you trigger. At this point, no trusted
     human has reviewed the code, and a patch could be specially
-    crafted by an attacker to compromise your buildslaves. 
+    crafted by an attacker to compromise your buildslaves.
 
 ``ref-updated``
     A change has been merged into the repository. Typically, this kind
@@ -1077,10 +1184,10 @@ By default this class adds a change to the buildbot system for each of the follo
 
 But you can specify how to handle Events:
 
-* Any event with change and patchSet will 
+* Any event with change and patchSet will
   be processed by universal collector by default.
 
-* In case you've specified processing function for the given kind of events, 
+* In case you've specified processing function for the given kind of events,
   all events of this kind will be processed only by this function, bypassing universal collector.
 
 An example::
@@ -1164,8 +1271,35 @@ A configuration for this source might look like::
         "gerrit_user",
         handled_events=["patchset-created", "change-merged"])
 
-see :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
-for a full example setup of :bb:chsrc:`GerritChangeSource`.
+see :file:`master/docs/examples/git_gerrit.cfg` or :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution
+for a full example setup of Git+Gerrit or Repo+Gerrit of :bb:chsrc:`GerritChangeSource`.
+
+GerritChangeFilter
+~~~~~~~~~~~~~~~~~~
+.. py:class:: buildbot.changes.gerritchangesource.GerritChangeFilter
+
+GerritChangeFilter is a ready to use ChangeFilter you can pass to AnyBranchScheduler
+in order to filter changes, to create pre-commit builders or post-commit schedulers.
+It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additionnal `eventtype`
+set of filter (can as well be specified as value, list, regular expression or callable)
+
+An example is following::
+
+      # this scheduler will create builds when a patch is uploaded to gerrit
+      # but only if it is uploaded to the "main" branch
+      AnyBranchScheduler(name="main-precommit",
+                         change_filter=GerritChangeFilter(branch="main",
+                                                          eventtype="patchset-created"),
+                         treeStableTimer=15*60,
+                         builderNames=["main-precommit"])
+
+      # this scheduler will create builds when a patch is merged in the "main" branch
+      # for post-commit tests
+      AnyBranchScheduler(name="main-postcommit",
+                         change_filter=GerritChangeFilter("main",
+                                                          "ref-updated"),
+                         treeStableTimer=15*60,
+                         builderNames=["main-postcommit"])
 
 .. bb:chsrc:: Change Hooks
 
@@ -1192,7 +1326,7 @@ are not understood (yet). It accepts the following arguments:
 ``feedurl``
     The commit Atom feed URL of the GoogleCode repository (MANDATORY)
 
-``pollinterval`` 
+``pollinterval``
     Polling frequency for the feed (in seconds). Default is 1 hour (OPTIONAL)
 
 As an example, to poll the Ostinato project's commit feed every 3 hours, the
@@ -1201,7 +1335,7 @@ configuration would look like this::
     from googlecode_atom import GoogleCodeAtomPoller
     c['change_source'] = GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
-        pollinterval=10800) 
+        pollinterval=10800)
 
 (note that you will need to download ``googlecode_atom.py`` from the Buildbot
 source and install it somewhere on your PYTHONPATH first)

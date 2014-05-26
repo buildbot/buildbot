@@ -27,7 +27,7 @@ class FakeBotMaster(service.MultiService):
         self.buildsStartedForSlaves = []
 
     def getLockByID(self, lockid):
-        if not lockid in self.locks:
+        if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note

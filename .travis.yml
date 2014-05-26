@@ -18,7 +18,7 @@ env:
 
 matrix:
   include:
-    # Test different versions on SQLAlchemy
+    # Test different versions of SQLAlchemy
     - python: "2.7"
       env: TWISTED=12.0.0 SQLALCHEMY=0.6.0 SQLALCHEMY_MIGRATE=0.7.1
     - python: "2.7"
@@ -53,7 +53,7 @@ install:
   # txrequests support only Python 2.6 and 2.7.
   - pip install txrequests
 
-  # Determine is current configuration is latest
+  # Determine if current configuration is latest
   - |
     if [[ $TRAVIS_PYTHON_VERSION == '2.7' && $TWISTED == latest && \
           $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
@@ -63,7 +63,8 @@ install:
     fi;
 
   # Run additional tests only in latest configuration
-  - "[ $IS_LATEST = false ] || pip install pylint"
+  # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
+  - "[ $IS_LATEST = false ] || pip install pylint==1.1.0"
   - "[ $IS_LATEST = false ] || pip install pyflakes"
   - "[ $IS_LATEST = false ] || pip install sphinx"
   - "[ $IS_LATEST = false ] || pip install pep8"
@@ -74,7 +75,7 @@ script:
   - trial --reporter=text --rterrors buildslave.test
 
   # Run additional tests only in latest configuration
-  - "[ $IS_LATEST = false ] || make pylint"
+  - "[ $IS_LATEST = false ] || make pylint==1.1.0"
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"

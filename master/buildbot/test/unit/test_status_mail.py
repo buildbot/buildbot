@@ -215,11 +215,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
-    def test_buildsetFinished_sends_email(self):
+    def test_buildsetComplete_sends_email(self):
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org',
                           buildSetSummary=True,
-                          mode=("failing", "passing", "warnings", "force"),
+                          mode=("failing", "passing", "warnings"),
                           builders=["Builder1", "Builder2"])
 
         mn.buildMessage = fakeBuildMessage
@@ -233,6 +233,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build1.finished = True
         build1.reason = "testReason"
         build1.getBuilder.return_value = builder1
+        build1.getResults.return_value = build1.results
 
         builder2 = Mock()
         builder2.getBuild = lambda number: build2
@@ -243,6 +244,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build2.finished = True
         build2.reason = "testReason"
         build2.getBuilder.return_value = builder1
+        build2.getResults.return_value = build2.results
 
         def fakeGetBuilder(buildername):
             return {"Builder1": builder1, "Builder2": builder2}[buildername]
@@ -268,11 +270,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
-        mn.buildsetFinished(99, FAILURE)
+        mn._buildsetComplete(99, FAILURE)
         fakeBuildMessage.assert_called_with("(whole buildset)",
                                             [build1, build2], SUCCESS)
 
-    def test_buildsetFinished_doesnt_send_email(self):
+    def test_buildsetComplete_doesnt_send_email(self):
         fakeBuildMessage = Mock()
         mn = MailNotifier('from@example.org',
                           buildSetSummary=True,
@@ -300,6 +302,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.finished = True
         build.reason = "testReason"
         build.getBuilder.return_value = builder
+        build.getResults.return_value = build.results
 
         self.db = fakedb.FakeDBConnector(self)
         self.db.insertTestData([fakedb.SourceStampSet(id=127),
@@ -319,7 +322,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
-        mn.buildsetFinished(99, FAILURE)
+        mn._buildsetComplete(99, FAILURE)
         self.assertFalse(fakeBuildMessage.called)
 
     def test_getCustomMesgData_multiple_sourcestamps(self):
@@ -374,6 +377,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.reason = "testReason"
         build.getLogs.return_value = []
         build.getBuilder.return_value = builder
+        build.getResults.return_value = build.results
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -383,7 +387,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ss2 = FakeSource(revision='222333', codebase='testlib2')
         build.getSourceStamps.return_value = [ss1, ss2]
 
-        mn.buildsetFinished(99, FAILURE)
+        mn._buildsetComplete(99, FAILURE)
 
         self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
         self.assertTrue(isinstance(self.passedAttrs['revision'], dict))
@@ -442,6 +446,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.reason = "testReason"
         build.getLogs.return_value = []
         build.getBuilder.return_value = builder
+        build.getResults.return_value = build.results
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -450,7 +455,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ss1 = FakeSource(revision='111222', codebase='testlib1')
         build.getSourceStamps.return_value = [ss1]
 
-        mn.buildsetFinished(99, FAILURE)
+        mn._buildsetComplete(99, FAILURE)
 
         self.assertTrue('builderName' in self.passedAttrs, "No builderName entry found in attrs")
         self.assertEqual(self.passedAttrs['builderName'], 'Builder')

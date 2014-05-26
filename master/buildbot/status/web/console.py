@@ -360,19 +360,19 @@ class ConsoleStatusResource(HtmlResource):
             slaves[category] = []
             # For each builder in this category, we set the build info and we
             # display the box.
-            for builder in builderList[category]:
+            for bldr in builderList[category]:
                 s = {}
                 s["color"] = "notstarted"
-                s["pageTitle"] = builder
-                s["url"] = "./builders/%s" % urllib.quote(builder)
-                state, builds = status.getBuilder(builder).getState()
+                s["pageTitle"] = bldr
+                s["url"] = "./builders/%s" % urllib.quote(bldr)
+                state, builds = status.getBuilder(bldr).getState()
                 # Check if it's offline, if so, the box is purple.
                 if state == "offline":
                     s["color"] = "offline"
                 else:
                     # If not offline, then display the result of the last
                     # finished build.
-                    build = self.getHeadBuild(status.getBuilder(builder))
+                    build = self.getHeadBuild(status.getBuilder(bldr))
                     while build and not build.isFinished():
                         build = build.getPreviousBuild()
 
@@ -418,14 +418,14 @@ class ConsoleStatusResource(HtmlResource):
             builds[category] = []
 
             # Display the boxes for each builder in this category.
-            for builder in builderList[category]:
+            for bldr in builderList[category]:
                 introducedIn = None
                 firstNotIn = None
                 # If there is no builds default to True
-                inBuilder = len(allBuilds[builder]) == 0
+                inBuilder = len(allBuilds[bldr]) == 0
 
                 # Find the first build that include the revision.
-                for build in allBuilds[builder]:
+                for build in allBuilds[bldr]:
                     if introducedIn:
                         firstNotIn = build
                         break
@@ -448,17 +448,17 @@ class ConsoleStatusResource(HtmlResource):
                     isRunning = True
 
                 url = "./waterfall"
-                pageTitle = builder
+                pageTitle = bldr
                 tag = ""
                 current_details = {}
                 if introducedIn:
                     current_details = introducedIn.details or ""
-                    url = "./buildstatus?builder=%s&amp;number=%s" % (urllib.quote(builder),
+                    url = "./buildstatus?builder=%s&amp;number=%s" % (urllib.quote(bldr),
                                                                       introducedIn.number)
                     pageTitle += " "
                     pageTitle += urllib.quote(' '.join(introducedIn.text), ' \n\\/:')
 
-                    builderStrip = builder.replace(' ', '')
+                    builderStrip = bldr.replace(' ', '')
                     builderStrip = builderStrip.replace('(', '')
                     builderStrip = builderStrip.replace(')', '')
                     builderStrip = builderStrip.replace('.', '')

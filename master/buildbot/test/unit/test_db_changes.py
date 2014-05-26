@@ -420,22 +420,25 @@ class TestChangesConnectorComponent(
         return d
 
     def test_pruneChanges(self):
-        d = self.insertTestData([
-            fakedb.Object(id=29),
-            fakedb.SourceStamp(id=234),
+        d = self.insertTestData(
+            [
+                fakedb.Object(id=29),
+                fakedb.SourceStamp(id=234),
 
-            fakedb.Change(changeid=11),
+                fakedb.Change(changeid=11),
 
-            fakedb.Change(changeid=12),
-            fakedb.SchedulerChange(objectid=29, changeid=12),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=12),
-        ] +
+                fakedb.Change(changeid=12),
+                fakedb.SchedulerChange(objectid=29, changeid=12),
+                fakedb.SourceStampChange(sourcestampid=234, changeid=12),
+            ] +
 
-            self.change13_rows + [
+            self.change13_rows +
+            [
                 fakedb.SchedulerChange(objectid=29, changeid=13),
             ] +
 
-            self.change14_rows + [
+            self.change14_rows +
+            [
                 fakedb.SchedulerChange(objectid=29, changeid=14),
 
                 fakedb.Change(changeid=15),
@@ -453,8 +456,8 @@ class TestChangesConnectorComponent(
                                  'change_files', 'change_properties',
                                  'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
-                    r = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = sorted([r[0] for r in r.fetchall()])
+                    res = conn.execute(sa.select([tbl.c.changeid]))
+                    results[tbl_name] = sorted([row[0] for row in res.fetchall()])
                 self.assertEqual(results, {
                     'scheduler_changes': [14],
                     'sourcestamp_changes': [15],
@@ -481,8 +484,8 @@ class TestChangesConnectorComponent(
                                  'change_files', 'change_properties',
                                  'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
-                    r = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = len([r for r in r.fetchall()])
+                    res = conn.execute(sa.select([tbl.c.changeid]))
+                    results[tbl_name] = len([row for row in res.fetchall()])
                 self.assertEqual(results, {
                     'scheduler_changes': 0,
                     'sourcestamp_changes': 0,
@@ -502,8 +505,8 @@ class TestChangesConnectorComponent(
         def check(_):
             def thd(conn):
                 tbl = self.db.model.changes
-                r = conn.execute(tbl.select())
-                self.assertEqual([row.changeid for row in r.fetchall()],
+                res = conn.execute(tbl.select())
+                self.assertEqual([row.changeid for row in res.fetchall()],
                                  [13])
             return self.db.pool.do(thd)
         d.addCallback(check)

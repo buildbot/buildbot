@@ -279,10 +279,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # with None.
         sources = []
         for bn in builder_names:
-            b = self.getBuilder(bn)
-            g = b.generateFinishedBuilds(branches,
-                                         finished_before=finished_before,
-                                         max_search=max_search)
+            bldr = self.getBuilder(bn)
+            g = bldr.generateFinishedBuilds(branches,
+                                            finished_before=finished_before,
+                                            max_search=max_search)
             sources.append(g)
 
         # next_build the next build from each source

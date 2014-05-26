@@ -80,14 +80,14 @@ from buildbot.util import eventual
 modules.extend([eventual])
 
 # require gobject
-#import buildbot.clients.gtkPanes
-#import buildbot.clients.debug
+# import buildbot.clients.gtkPanes
+# import buildbot.clients.debug
 
 # requires libboto
-#import buildbot.ec2buildslave
+# import buildbot.ec2buildslave
 
 # requires libvirt
-#import buildbot.libvirtbuildslave
+# import buildbot.libvirtbuildslave
 
 # requires pycrypto
-#import buildbot.manhole
+# import buildbot.manhole

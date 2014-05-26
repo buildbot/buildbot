@@ -39,11 +39,14 @@ class BaseLock:
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
-        self.name = name          # Name of the lock
-        self.waiting = []         # Current queue, tuples (waiter, LockAccess,
-                                  #                        deferred)
-        self.owners = []          # Current owners, tuples (owner, LockAccess)
-        self.maxCount = maxCount  # maximal number of counting owners
+        # Name of the lock
+        self.name = name
+        # Current queue, tuples (waiter, LockAccess, deferred)
+        self.waiting = []
+        # Current owners, tuples (owner, LockAccess)
+        self.owners = []
+        # maximal number of counting owners
+        self.maxCount = maxCount
 
         # subscriptions to this lock being released
         self.release_subs = subscription.SubscriptionPoint("%r releases"
@@ -114,7 +117,7 @@ class BaseLock:
 
         debuglog("%s release(%s, %s)" % (self, owner, access.mode))
         entry = (owner, access)
-        if not entry in self.owners:
+        if entry not in self.owners:
             debuglog("%s already released" % self)
             return
         self.owners.remove(entry)
@@ -201,7 +204,7 @@ class RealSlaveLock:
 
     def getLock(self, slave):
         slavename = slave.slavename
-        if not slavename in self.locks:
+        if slavename not in self.locks:
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)
             lock = self.locks[slavename] = BaseLock(self.name, maxCount)

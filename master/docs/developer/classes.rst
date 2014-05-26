@@ -12,6 +12,7 @@ The sections contained here document classes that can be used or subclassed.
     :maxdepth: 1
 
     cls-buildfactory
+    cls-buildsetsummarynotifiermixin
     cls-remotecommands
     cls-buildsteps
     cls-forcesched

@@ -131,7 +131,7 @@ class Properties(util.ComparableMixin):
     def hasProperty(self, name):
         return name in self.properties
 
-    has_propkey = hasProperty
+    has_key = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
         try:
@@ -180,7 +180,7 @@ class PropertiesMixin:
         props = IProperties(self)
         return props.hasProperty(propname)
 
-    has_propkey = hasProperty
+    has_key = hasProperty
 
     def setProperty(self, propname, value, source='Unknown', runtime=None):
         # source is not optional in IProperties, but is optional here to avoid
@@ -346,7 +346,7 @@ class _Lookup(util.ComparableMixin, object):
         value = build.render(self.value)
         index = build.render(self.index)
         value, index = yield defer.gatherResults([value, index])
-        if not index in value:
+        if index not in value:
             rv = yield build.render(self.default)
         else:
             if self.defaultWhenFalse:
@@ -393,6 +393,14 @@ class _SourceStampDict(util.ComparableMixin, object):
             return ss.asDict()
         else:
             return {}
+
+
+class _SlaveInfoDict(util.ComparableMixin, object):
+    implements(IRenderable)
+
+    def getRenderingFor(self, build):
+        slave = build.getBuild().slavebuilder.slave
+        return slave.slave_status.getInfoAsDict()
 
 
 class _Lazy(util.ComparableMixin, object):
@@ -474,6 +482,17 @@ class Interpolate(util.ComparableMixin, object):
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
 
+    @staticmethod
+    def _parse_slave(arg):
+        try:
+            key, repl = arg.split(":", 1)
+        except ValueError:
+            key, repl = arg, None
+        if not Interpolate.identifier_re.match(key):
+            config.error("Keyword must be alphanumeric for slave-info Interpolation '%s'" % arg)
+            key = repl = None
+        return _SlaveInfoDict(), key, repl
+
     def _parse_kw(self, arg):
         try:
             kw, repl = arg.split(":", 1)
@@ -553,7 +572,7 @@ class Interpolate(util.ComparableMixin, object):
     def _parse(self, fmtstring):
         keys = _getInterpolationList(fmtstring)
         for key in keys:
-            if not key in self.interpolations:
+            if key not in self.interpolations:
                 d, kw, repl = self._parseSubstitution(key)
                 if repl is None:
                     repl = '-'
@@ -568,7 +587,7 @@ class Interpolate(util.ComparableMixin, object):
                     if not junk and matches:
                         self.interpolations[key] = fn(d, kw, tail)
                         break
-                if not key in self.interpolations:
+                if key not in self.interpolations:
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 
     def getRenderingFor(self, props):

@@ -100,7 +100,7 @@ class Node(object):
 
     def to_string(self, maximum=100):
         out = ['%s:' % self.__class__.__name__]
-        assert not 'printable_attributes' in self.printable_attributes
+        assert 'printable_attributes' not in self.printable_attributes
 
         def limit(txt):
             txt = str(txt)
@@ -394,10 +394,10 @@ class AddressableNodeList(NodeList):
 
     def __getitem__(self, key):
         """Enables 'obj[i]'."""
-        if self._has_keys_cached and not key in self._keys:
+        if self._has_keys_cached and key not in self._keys:
             raise KeyError(key)
 
-        if not key in self._cache:
+        if key not in self._cache:
             # Create an empty object.
             self._create_obj(key, None)
         return self._cache[key]
@@ -828,7 +828,7 @@ class Builds(AddressableNodeList):
             # highest key value and calculate from it.
             key = max(self._keys) + key + 1
 
-        if not key in self._cache:
+        if key not in self._cache:
             # Create an empty object.
             self._create_obj(key, None)
         return self._cache[key]
@@ -946,7 +946,7 @@ class Buildbot(AddressableBaseDataNode):
                 remaining = (datetime.timedelta(seconds=self.auto_throttle) -
                              delta)
                 if remaining > datetime.timedelta(seconds=0):
-                    logging.debug('Sleeping for %ss' % remaining)
+                    logging.debug('Sleeping for %ss', remaining)
                     time.sleep(remaining.seconds)
             self.last_fetch = datetime.datetime.utcnow()
         url = '%s/%s' % (self.url, suburl)
@@ -954,7 +954,7 @@ class Buildbot(AddressableBaseDataNode):
             url += '&filter=1'
         else:
             url += '?filter=1'
-        logging.info('read(%s)' % suburl)
+        logging.info('read(%s)', suburl)
         channel = urllib.urlopen(url)
         data = channel.read()
         try:

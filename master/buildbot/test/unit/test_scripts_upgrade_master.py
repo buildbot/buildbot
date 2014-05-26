@@ -265,5 +265,5 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
             mkconfig(basedir='test', quiet=True),
             config_module.MasterConfig())
         setup.asset_called_with(check_version=False, verbose=False)
-        upgrade.assert_called()
+        upgrade.assert_called_with()
         self.assertWasQuiet()
