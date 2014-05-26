@@ -229,9 +229,10 @@ BuildStep
 
     .. py:method:: getCurrentSummary()
 
-        :returns: unicode, optionally via Deferred
+        :returns: dictionary, optionally via Deferred
 
-        Returns a short string summarizing the step's current status.
+        Returns a dictionary containing status information for a running step.
+        The dictionary can a ``step`` key with a unicode value giving a summary for display with the step.
         This method is only called while the step is running.
 
         New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
@@ -240,7 +241,7 @@ BuildStep
 
         :returns: dictionary, optionally via Deferred
 
-        Returns a dictionary containing status information.
+        Returns a dictionary containing status information for a completed step.
         The dictionary can have keys ``step`` and ``build``, each with unicode values.
         The ``step`` key gives a summary for display with the step, while the ``build`` key gives a summary for display with the entire build.
         The latter should be used sparingly, and include only information that the user would find relevant for the entire build, such as a number of test failures.
@@ -248,7 +249,7 @@ BuildStep
 
         This method is only called while the step is finished.
 
-        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
+        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``, or to provide any build summary information.
 
     .. py:method:: describe(done=False)
 

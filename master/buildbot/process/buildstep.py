@@ -228,20 +228,24 @@ class BuildStep(object, properties.PropertiesMixin):
     def updateSummary(self):
         assert self.isNewStyle(), "updateSummary is a new-style step method"
         if self._step_status.isFinished():
-            resultSummary = yield self.getResultSummary()
-            stepResult = resultSummary.get('step', u'finished')
-            assert isinstance(stepResult, unicode), \
-                "step result must be unicode"
-            self._step_status.setText([stepResult])
-            buildResult = resultSummary.get('build', None)
-            assert buildResult is None or isinstance(buildResult, unicode), \
-                "build result must be unicode"
-            self._step_status.setText2([buildResult] if buildResult else [])
+            summary = yield self.getResultSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getResultSummary must return a dictionary')
         else:
-            stepSummary = yield self.getCurrentSummary()
-            assert isinstance(stepSummary, unicode), \
-                "step summary must be unicode"
-            self._step_status.setText([stepSummary])
+            summary = yield self.getCurrentSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getCurrentSummary must return a dictionary')
+
+        stepResult = summary.get('step', u'finished')
+        if not isinstance(stepResult, unicode):
+            raise TypeError("step summary must be unicode")
+        self._step_status.setText([stepResult])
+
+        if self._step_status.isFinished():
+            buildResult = summary.get('build', None)
+            if buildResult and not isinstance(buildResult, unicode):
+                raise TypeError("build result must be unicode")
+            self._step_status.setText2([buildResult] if buildResult else [])
 
     @defer.inlineCallbacks
     def startStep(self, remote):
