@@ -131,6 +131,15 @@ class Mercurial(Source):
             yield self.clobber(None)
             return
 
+        # We have to check if the working copy has signs of any previous operation being interrupted or killed.
+        # If it does, we have no choice except to clobber
+        containsJournal = yield self._sourcedirContainsJournal()
+        containsLock = yield self._sourcedirContainsLock()
+        containsWorkdirLock = yield self._sourcedirContainsWorkdirLock()
+        if containsJournal or containsLock or containsWorkdirLock:
+            yield self.clobber(None)
+            return
+
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             res = yield self._dovccmd(['clone', '--uncompressed', self.repourl, '.'])
@@ -171,7 +180,7 @@ class Mercurial(Source):
                                                 'logEnviron':self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        d.addCallback(lambda _: self._dovccmd(['clone', '--noupdate'
+        d.addCallback(lambda _: self._dovccmd(['clone', '--uncompressed', '--noupdate'
                                                , self.repourl, "."]))
         d.addCallback(self._update)
         return d
@@ -287,6 +296,42 @@ class Mercurial(Source):
 
     def _sourcedirIsUpdatable(self):
         cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg',
+                                               'logEnviron': self.logEnviron})
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def _fail(tmp):
+            if cmd.didFail():
+                return False
+            return True
+        d.addCallback(_fail)
+        return d
+
+    def _sourcedirContainsJournal(self):
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/journal',
+                                               'logEnviron': self.logEnviron})
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def _fail(tmp):
+            if cmd.didFail():
+                return False
+            return True
+        d.addCallback(_fail)
+        return d
+
+    def _sourcedirContainsLock(self):
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/lock',
+                                               'logEnviron': self.logEnviron})
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def _fail(tmp):
+            if cmd.didFail():
+                return False
+            return True
+        d.addCallback(_fail)
+        return d
+
+    def _sourcedirContainsWorkdirLock(self):
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/wlock',
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
