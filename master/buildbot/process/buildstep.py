@@ -262,7 +262,7 @@ class BuildStep(object, properties.PropertiesMixin):
             self.failed = nope
 
         # convert all locks into their real form
-        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
+        self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
