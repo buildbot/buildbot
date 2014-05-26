@@ -240,7 +240,7 @@ class ChangeSender:
     def sendAllChanges(self, remote, changes):
         dl = [remote.callRemote('addChange', change)
               for change in changes]
-        return defer.DeferredList(dl)
+        return defer.gatherResults(dl, consumeErrors=True)
 
     def run(self):
         opts = Options()
