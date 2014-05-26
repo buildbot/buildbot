@@ -3156,7 +3156,8 @@ The counterpart to the Triggerable described in section
     f.addStep(Trigger(schedulerNames=['build-prep'],
                       waitForFinish=True,
                       updateSourceStamp=True,
-                      set_properties={ 'quick' : False }))
+                      set_properties={ 'quick' : False },
+                      set_parent_properties=[]))
 
 The ``schedulerNames=`` argument lists the :bb:sched:`Triggerable` schedulers
 that should be triggered when this step is executed.  Note that
@@ -3200,6 +3201,12 @@ For the simple case of copying a property, this might look like ::
     set_properties={"my_prop1" : Property("my_prop1")}
 
 The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
+
+The  ``set_parent_properties`` parameter should be used when you want to copy properties from triggered build to upstream build.
+It will allow you to share properties between triggered builds.
+The parameter takes a list of property names ::
+
+    set_parent_properties = ['prop1', 'prop2']
 
 RPM-Related Steps
 -----------------
