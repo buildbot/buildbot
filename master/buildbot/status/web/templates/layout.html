@@ -57,7 +57,7 @@
     {% set bodyId = '' %}
   {% endif %}
 
-  {% if user_settings["colorBlind"] == "1" %}
+  {% if user_settings and user_settings["colorBlind"] == "1" %}
     {% set colorBlindClass = 'color-blind-mode' %}
     {% set colorBlindInputVal = 'on' %}
   {% else %}
