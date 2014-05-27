@@ -89,6 +89,10 @@ EXAMPLES = """\
     - Builder information plus details information about its slaves. Neat eh?
   - /json/slaves/<A_SLAVE>
     - A specific slave.
+  - /json/slaves/<A_SLAVE>/builds
+    - The current builds on a specific slave
+  - /json/slaves/<A_SLAVE>/builds/<15
+    - The last 15 builds built on a specific slave
   - /json?select=slaves/<A_SLAVE>/&select=project&select=builders/<A_BUILDER>/builds/<A_BUILD>
     - A selection of random unrelated stuff as an random example. :)
   - /json/projects/
@@ -492,7 +496,7 @@ class AllBuildsJsonResource(JsonResource):
                 #Defaults to last 15
                 num = 15
 
-            return PastBuildsJsonResource(self.status, self.builder_status, num)
+            return PastBuildsJsonResource(self.status, num, builder_status=self.builder_status)
 
         return JsonResource.getChild(self, path, request)
 
@@ -520,22 +524,45 @@ class PastBuildsJsonResource(JsonResource):
     help = """Previous x number of builds that were run on a builder."""
     pageTitle = 'Builds'
 
-    def __init__(self, status, builder, number):
+    def __init__(self, status, number, builder_status=None, slave_status=None):
         JsonResource.__init__(self, status)
-        self.builder = builder
+        self.builder_status = builder_status
         self.number = number
+        self.slave_status = slave_status
 
     def asDict(self, request):
         #Get codebases
-        codebases = {}
-        getCodebasesArg(request=request, codebases=codebases)
-        encoding = getRequestCharset(request)
-        branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
+        if self.builder_status is not None:
+            codebases = {}
+            getCodebasesArg(request=request, codebases=codebases)
+            encoding = getRequestCharset(request)
+            branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
 
-        builds = list(self.builder.generateFinishedBuilds(branches=map_branches(branches),
-                                                          codebases=codebases,
-                                                          num_builds=self.number))
-        return [b.asDict(request) for b in builds]
+            builds = list(self.builder_status.generateFinishedBuilds(branches=map_branches(branches),
+                                                              codebases=codebases,
+                                                              num_builds=self.number))
+
+            return [b.asDict(request) for b in builds]
+
+        if self.slave_status is not None:
+            n = 0
+            slavename = self.slave_status.getName()
+            recent_builds = []
+
+            my_builders = []
+            for bname in self.status.getBuilderNames():
+                b = self.status.getBuilder(bname)
+                for bs in b.getSlaves():
+                    if bs.getName() == slavename:
+                        my_builders.append(b)
+
+            for rb in self.status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
+                if rb.getSlavename() == slavename:
+                    n += 1
+                    recent_builds.append(rb.asDict(request=request))
+                    if n > self.number:
+                        return recent_builds
+
 
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.
@@ -839,6 +866,47 @@ class SinglePendingBuildsJsonResource(JsonResource):
         defer.returnValue(output)
 
 
+class SlaveBuildsJsonResource(JsonResource):
+    help = """List builds related with a slave."""
+    pageTitle = 'Slave Builds'
+
+    def __init__(self, status, slave_status):
+        JsonResource.__init__(self, status)
+        self.slave_status = slave_status
+        self.name = self.slave_status.getName()
+
+    def getChild(self, path, request):
+        # Dynamic childs.
+        if "<" in path:
+            try:
+                num = int(path.replace("<", ""))
+            except ValueError:
+                #Defaults to last 15
+                num = 15
+
+            return PastBuildsJsonResource(self.status, num, slave_status=self.slave_status)
+
+        return JsonResource.getChild(self, path, request)
+
+    def asDict(self, request):
+        slavename = self.slave_status.getName()
+        my_builders = []
+        for bname in self.status.getBuilderNames():
+            b = self.status.getBuilder(bname)
+            for bs in b.getSlaves():
+                if bs.getName() == slavename:
+                    my_builders.append(b)
+
+        current_builds = []
+        for b in my_builders:
+            for cb in b.getCurrentBuilds():
+                if cb.getSlavename() == slavename:
+                    current_builds.append(cb.asDict(request))
+
+        return current_builds
+
+
+
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
@@ -849,6 +917,7 @@ class SlaveJsonResource(JsonResource):
         self.slave_status = slave_status
         self.name = self.slave_status.getName()
         self.builders = None
+        self.putChild('builds', SlaveBuildsJsonResource(status, slave_status))
 
     def getBuilders(self):
         if self.builders is None:

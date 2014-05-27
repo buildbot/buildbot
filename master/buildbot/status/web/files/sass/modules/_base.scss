@@ -5,7 +5,7 @@
 * @section framework
 * @author Sumon Holm
 */
-
+ 
 // Colors
  
 // Generics
@@ -19,12 +19,52 @@ $color-ui-a: rgb(255,255,255);
 // Font colors
 $color-font-grey: #666; // grey
 
+$color-blind-success: #00FF00;
+$color-blind-failure: #FF0000;
+$color-blind-exception: #DD00DC; 
+$color-blind-warnings: #FFA100; 
+$color-blind-skipped: #008EE6; 
+$color-blind-inconclusive: #0025EF; 
+$color-blind-ignored: #008EE6; 
+$color-blind-not-rebuild: #99FC00;
+
+
+
 // for not implemented content
 .notimpl {color:#838383 !important;}
 
 // status colors
 .success {
 	background-color: #DDE6D6;
+}
+
+.color-blind-mode {
+	.success {
+		background-color: $color-blind-success;		
+	}
+	.failure {
+		background-color: $color-blind-failure;	
+		color: #fff;
+		a {color: #fff;} 
+	}
+	.exception {
+		background-color:$color-blind-exception;
+		color: #fff;
+		a {color: #fff;} 
+	}
+	.warnings {
+		background-color:$color-blind-warnings;
+		color: #fff;
+		a {color: #fff;} 
+	}
+	.skipped {
+		background-color:$color-blind-skipped;
+		color: #fff;
+		a {color: #fff;} 
+	}
+	.not_rebuilt {
+		background-color: $color-blind-not-rebuild;
+	}
 }
 
 .not_rebuilt {

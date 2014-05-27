@@ -37,6 +37,13 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                             rtBuildSlaves.init();
                         });
                     break;
+                 case 'buildslavedetail_page':
+                    // For the frontpage
+                    require(['rtbuildslavedetail'],
+                        function (rtBuildSlaveDetail) {
+                            rtBuildSlaveDetail.init();
+                        });
+                    break;
 
                 case 'buildqueue_page':
                     // For the frontpage

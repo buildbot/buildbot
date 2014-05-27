@@ -9,6 +9,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions["queue"] = rtBuildQueue.processBuildQueue;
             realtimePages.initRealtime(realtimeFunctions);
+            // check all in tables and remove builds
+            helpers.selectBuildsAction(tbsorter,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
+            
         },
         processBuildQueue: function (data) {
             timeElements.clearTimeObjects(tbsorter);

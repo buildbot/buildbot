@@ -139,17 +139,28 @@ def path_to_buildqueue(request):
 def path_to_buildqueue_json(request):
     return path_to_root(request) + "json/buildqueue"
 
-def getCodebasesArg(request=None, codebases={}):
+def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     codebases_arg=''
+
+    def addURLParam(url, key, val):
+        if len(url) > 0:
+            url += "&"
+        else:
+            url += "?"
+
+        url += "%s=%s" % (key, ''.join(val))
+        return url
+
     if request is not None:
         for key, val in request.args.iteritems():
             if '_branch' in key:
                 codebases[key[0:key.find('_')]] = ''.join(val)
-                if len(codebases_arg) > 0:
-                    codebases_arg += "&"
-                else:
-                    codebases_arg += "?"
-                codebases_arg += "%s=%s" % (key, ''.join(val))
+                codebases_arg = addURLParam(codebases_arg, key, val)
+
+    if sourcestamps is not None:
+        for ss in sourcestamps:
+            if not ss.codebase + "_branch" in request.args:
+                codebases_arg = addURLParam(codebases_arg, ss.codebase + "_branch", ss.branch)
     return codebases_arg
 
 
@@ -228,6 +239,14 @@ def path_to_json_global_status(status, request):
 
 def path_to_json_slaves(request):
     return "json/slaves/"
+
+def path_to_json_past_slave_builds(request, slaveName, number):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/slaves/{0}/builds/<{1}{2}".format(urllib.quote(slaveName, safe=''), number, codebases_arg)
+
+def path_to_json_slave_builds(request, slaveName):
+    codebases_arg = getCodebasesArg(request=request)
+    return "json/slaves/{0}/builds{1}".format(urllib.quote(slaveName, safe=''), codebases_arg)
 
 def path_to_json_builder_slaves(builderName):
     return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
@@ -310,7 +329,9 @@ class ContextMixin(AccessorMixin):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
         locale_enc = locale.getdefaultlocale()[1]
-        authenticated = self.getAuthz(request).authenticated(request)
+        authz = self.getAuthz(request)
+        authenticated = authz.authenticated(request)
+
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
         else:
@@ -327,7 +348,7 @@ class ContextMixin(AccessorMixin):
                     metatags = [],
                     pageTitle = self.getPageTitle(request),
                     welcomeurl = rootpath,
-                    authz = self.getAuthz(request),
+                    authz = authz,
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
                     analytics_code = self.getAnalyticsCode(request),
@@ -443,6 +464,7 @@ class HtmlResource(resource.Resource, ContextMixin):
         @defer.inlineCallbacks
         def renderPage():
             ctx['instant_json'] = yield self.getInstantJSON(request)
+            ctx['user_settings'] = yield ctx['authz'].getAllUserAttr(request)
             result = yield self.content(request, ctx)
             defer.returnValue(result)
 

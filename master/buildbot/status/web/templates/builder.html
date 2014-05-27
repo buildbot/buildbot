@@ -33,26 +33,29 @@
       <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
       </table>
   
-        <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
-      <h2 class="head-2" >
+      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
+
+      <h2 class="head-2">
         Pending builds requests
       </h2>
 
-    
       <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
         <thead>
           <tr>
             <th class="txt-align-left">Requested at</th>
             <th class="txt-align-left">Waiting</th>
             <th class="txt-align-left">Branch</th>
-            <th class="select-input no-tablesorter-js">                
+            <th class="select-input no-tablesorter-js">    
+		        <label for="selectall"> 
+        	          Select all 
+                </label>				            
                 <input id="selectall" type="checkbox" name="checkuncheck" class="tooltip" title="Select or deselect all pending builds">
             </th>
           </tr>
         </thead>
       </table>
 
-      <h2 class="head-2" style="margin-top:20px;">
+      <h2 class="head-2">
         Build slaves
       </h2>
       

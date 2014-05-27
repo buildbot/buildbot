@@ -27,7 +27,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 realtimePages.initRealtime(realtimeFunctions);
 
-                helpers.selectBuildsAction($tbPendingBuildsTable);
+                helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
 
                 // insert codebase and branch
                 if (window.location.search !== '') {
@@ -69,8 +69,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 options.aoColumns = [
                     { "mData": null, "sTitle": "#", "sWidth": "10%"  },
                     { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
-                    { "mData": null, "sTitle": "Revision", "sWidth": "40%" },
-                    { "mData": null, "sTitle": "Author", "sWidth": "20%", "sClass": "txt-align-right"}
+                    { "mData": null, "sTitle": "Revision", "sWidth": "35%" },
+                    { "mData": null, "sTitle": "Author", "sWidth": "25%", "sClass": "txt-align-right"}
                 ];
 
                 options.aoColumnDefs = [

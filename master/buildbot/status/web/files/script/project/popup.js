@@ -302,7 +302,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
         registerJSONPopup: function ($parentElem) {
             $parentElem.delegate('a.popup-btn-json-js', 'click', function (e) {
                 e.preventDefault();
-                popup.showjsonPopup($(this).data());                
+                popup.showjsonPopup($(this).data());
                 timeElements.updateTimeObjects();
             });
         }

@@ -243,6 +243,43 @@ a.no-artifacts {
 	}
 }
 
+.color-blind-mode {
+	.log-list-failure {		
+		a:before {
+			color: #fff;
+			content: "Failure";
+			background-color: $color-blind-failure;			
+		}
+	}
+	.log-list-success a:before {
+		content: "Success";
+		background-color: $color-blind-success;			
+	}
+	.log-list-exception {		
+		a:before {
+			color: #fff;
+			content: "Exception";
+			background-color: $color-blind-exception;				
+		}
+	}
+	.log-list-warnings {		
+		a:before {
+			color: #fff;
+			content: "Warnings";
+			background-color: $color-blind-warnings;				
+		}
+	}
+	.log-list-skipped {		
+		a:before {
+			color: #fff;
+			content: "Skipped";
+			background-color: $color-blind-skipped;				
+		}
+	}
+}
+
+
+
 .force-list,
 .force-bool {
 		display:block;
@@ -411,6 +448,8 @@ div.force-text {
 	}
 }
 
+
+}
 
 ul.revision li:not(:last-child) {
   margin-bottom:3px;

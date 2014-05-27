@@ -6,12 +6,43 @@
 * @author Simon Holm
 */
 
-@include font-face("katana_icons", font-files("katana_icons/katana_icons.eot?cachebusting=2", "katana_icons/katana_icons.ttf?cachebusting=2"));
+@include font-face("katana_icons", font-files("katana_icons/katana_icons.eot?cachebusting=4", "katana_icons/katana_icons.ttf?cachebusting=4"));
 @include font-face("pacifico", font-files("pacifico/pacifico-webfont.eot?cachebusting=2", "pacifico/pacifico-webfont.ttf?cachebusting=2"));
 @include font-face("leckerlione", font-files("leckerlione/leckerlione-regular-webfont.eot?cachebusting=6", "leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6"));
     
   
 // Typography
+
+.user-settings {
+	&:after {
+		color: rgba(244, 249, 255, 0.84);
+		content: "";
+		display: inline-block;
+		float: right;
+		font-family: "katana_icons";
+		font-size: 15px;
+		font-weight: normal;
+		margin-left: 15px;
+		margin-top: -1px;
+		opacity: 0.8;
+		padding: 0;
+		position: relative;  
+		@include transition( opacity 0.2s ease-in-out 0s);		
+	}
+	&:hover:after {
+		opacity: 0.5;
+	}
+}
+.right-block {
+	float:right;
+	margin-top:16px;
+	form {
+		display: inline;
+	}
+	@include breakpoint($bkpt-medium) {
+		display: none;
+	}
+}
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
 

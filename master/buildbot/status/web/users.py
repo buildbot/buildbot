@@ -33,6 +33,43 @@ class UsersActionResource(ActionResource):
         # show the table
         defer.returnValue(path_to_root(req) + "users")
 
+class UserSettingsSubmit(ActionResource):
+    def __init__(self):
+        self.action = "userSubmitSettings"
+
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        res = authz.authenticated(req)
+        if not res:
+            defer.returnValue(path_to_authzfail(req))
+            return
+        # save the settings
+        for name, val in req.args.iteritems():
+            if "_setting" in name:
+                if not isinstance(val, basestring):
+                    val = val[0]
+                authz.setUserAttr(req, name.replace("_setting", ""), val)
+
+        return path_to_root(req) + "users/settings"
+
+class UserSettingsResource(HtmlResource):
+    addSlash = False
+    pageTitle = "Settings"
+
+    def __init__(self):
+        HtmlResource.__init__(self)
+
+    def getChild(self, path, req):
+        if path == "submit":
+            return UserSettingsSubmit()
+
+    def content(self, request, ctx):
+        status = self.getStatus(request)
+
+        ctx['content'] = ""
+        template = request.site.buildbot_service.templates.get_template("usersettings.html")
+        return template.render(**ctx)
+
 # /users/$uid
 class OneUserResource(HtmlResource):
     addSlash = False
@@ -69,6 +106,9 @@ class UsersResource(HtmlResource):
         HtmlResource.__init__(self)
 
     def getChild(self, path, req):
+        if path == "settings":
+            return UserSettingsResource()
+
         return OneUserResource(path)
 
     @defer.inlineCallbacks

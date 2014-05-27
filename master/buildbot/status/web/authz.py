@@ -37,6 +37,10 @@ class Authz(object):
             'showUsersPage',
     ]
 
+    defaultUserSettings = {
+        "colorBlind": 0
+    }
+
     def __init__(self,
             default_action=False,
             auth=None,
@@ -112,6 +116,17 @@ class Authz(object):
         if self.useHttpHeader:
             return request.getPassword()
         return request.args.get("passwd", ["<no-password>"])[0]
+
+    @defer.inlineCallbacks
+    def getAllUserAttr(self, request):
+        s = self.getUserInfo(self.getUsername(request))
+        if s:
+            userdb = request.site.buildbot_service.master.db.users
+            user_settings = yield userdb.get_all_user_props(s['uid'])
+            merged = dict(self.defaultUserSettings.items() + user_settings.items())
+            defer.returnValue(merged)
+        else:
+            defer.returnValue(self.defaultUserSettings)
 
     def getUserAttr(self, request, attr):
         s = self.getUserInfo(self.getUsername(request))

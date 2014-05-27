@@ -143,3 +143,28 @@
 	</nav>
 
 {% endmacro %}
+
+{% macro buildsubmenu_usersettings(active_page, pathNum) %}
+	
+	{% set navigation_bar_buildqueue = [
+	    ('/', 'home', 'Home'),
+	    ('/usersettings', 'usersettings', 'User Settings')
+	] -%}	
+	
+	<nav class="sub-menu-container">
+	<div class="container-inner">
+		<div class="wrap">
+			<ul class="breadcrumbs-nav ">
+			{% for href, id, caption in navigation_bar_buildqueue %}
+				{% if id == active_page %}
+					<li>{{caption|e}}</li>
+				{% elif loop.index <= pathNum %}
+					<li><a href="{{ href|e }}">{{ caption|e }}</a></li>
+				{% endif %}
+			{% endfor %}
+			</ul>
+		</div>
+	</div>
+	</nav>
+
+{% endmacro %}

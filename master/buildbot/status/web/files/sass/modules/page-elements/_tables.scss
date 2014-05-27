@@ -136,6 +136,10 @@ ul.building {
 	}
 }
 
+.column .table-1 {
+	margin-bottom:20px;
+}
+
 .table-1.first-child tr td:first-child,
 .table-1.first-child tr th:first-child {
 	padding-left:15px;
@@ -425,7 +429,6 @@ table.codebase-branch-table {
 .dataTables_filter  {    	
     width: 120px;    
     margin-right:20px;
-    height:30px;
     clear:both;
 	float:none;	
 	@media (min-width: $screen-md-min) {
@@ -614,6 +617,9 @@ table.codebase-branch-table {
 	.table-wrapper {
 		overflow: visible;	 	
 	}
+}
+
+
 }
 
 

@@ -70,6 +70,15 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
+        builderName: function (index, className) {
+            return {
+                "aTargets": [index],
+                "sClass": className === undefined ? "txt-align-right" : className,
+                "mRender": function (data, type, full) {
+                    return hbCells({showBuilderName: true, 'data': full});
+                }
+            };
+        },
         shortTime: function (index, property) {
             return {
                 "aTargets": [index],
@@ -150,7 +159,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                         builderName: type.name
                     });
                 },
-                "fnCreatedCell": function (nTd, sData, oData) {
+                "fnCreatedCell": function (nTd) {
                     var bars = $(nTd).find('.percent-outer-js');
                     $.each(bars, function (key, elem) {
                         var obj = $(elem);
@@ -159,12 +168,24 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        buildLength: function (index) {
+        stopBuild: function (index) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
-                    var times = type.times;
+                    return hbCells({
+                        stopBuild: true,
+                        'data': type
+                    });
+                }
+            };
+        },
+        buildLength: function (index, timesProperty) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left",
+                "mRender": function (data, type, full) {
+                    var times = privFunc.getPropertyOnData(full, timesProperty);
                     if (times !== undefined) {
                         var d = moment.duration((times[1] - times[0]) * 1000);
                         if (times.length === 3) {
@@ -179,7 +200,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var tableFunc = {
-        buildTableInit: function ($tableElem) {
+        buildTableInit: function ($tableElem, showBuilderName) {
             var options = {};
 
             options.aoColumns = [
@@ -204,7 +225,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.buildLength(4),
+                cellFunc.buildLength(4, "times"),
                 cellFunc.slaveName(5, function (data) {
                     if (data.slave_friendly_name !== undefined) {
                         return data.slave_friendly_name;
@@ -212,6 +233,16 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     return data.slave;
                 }, "slave_url", "txt-align-right")
             ];
+
+            if (showBuilderName === true) {
+                options.aoColumns[1].sWidth = '10%';
+                options.aoColumns[2].sWidth = '25%';
+                options.aoColumns[3].sWidth = '30%';
+                options.aoColumns[5].sWidth = '30%';
+                options.aoColumns[5].sTitle = 'Builder';
+                options.aoColumnDefs.splice(5, 1);
+                options.aoColumnDefs.push(cellFunc.builderName(5));
+            }
 
             return dt.initTable($tableElem, options);
         },

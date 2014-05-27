@@ -1,1 +1,1 @@
-define([],function(){var e;return e={isSmallScreen:function(){var e=$(window).width()<=768;return e},isMediumScreen:function(){var e=$(window).width()<=992;return e},isLargeScreen:function(){var e=$(window).width()>=1200;return e}},e});
+define(["jquery"],function(e){return{isSmallScreen:function(){var t=e(window).width()<=768;return t},isMediumScreen:function(){var t=e(window).width()<=992;return t},isLargeScreen:function(){var t=e(window).width()>=1200;return t}}});

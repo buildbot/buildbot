@@ -1,6 +1,6 @@
 @charset "UTF-8";
 @import "compass";
-@import "theme/theme";
+@import "theme/variables";
 @import "bootstrap/bootstrap";
  
 .table-holder {display:none;}
@@ -26,20 +26,22 @@
 .log-main .grey-btn {
 	  padding: 6px 9px;
 	  margin-left: 5px;
+	  margin-top: -2px;
 }
 
 .log-main .dataTables_filter {
-	float: right;
+	float: left;
     margin-bottom: 0;
     margin-top: 0;
-    width: auto;
+    width: 175px;
+    margin-right: 0;
+    position: relative;
+    top: -9px;
     label {
     	color:#666666;
     	margin-right:3px;
-    	position:relative;
-    	top: 0;
     	&:after {
-    		 top: 1px;
+    		top: 7px;
     	}
     }
     input {
@@ -78,8 +80,14 @@
 	float: left;
     margin-right: 20px;
     margin-top: 7px;
+    label {
+    	margin-right:5px;
+		float: left;
+		margin-top: -1px;
+    }
     input {
-    	top:0;
+    	float: left;
+    	margin-right:10px;
     }
 }
 
@@ -207,6 +215,25 @@ span.ignored {background: #ffff00;}
 	color: #000;
 	font-weight: bold;
 	horizontal-align: center;
+}
+
+.color-blind-mode {
+	.Ignored {
+		background-color: $color-blind-ignored;
+		color:#fff;
+	}
+	.Pass {
+		background-color: $color-blind-success;
+	}
+	.Skipped {
+		background-color: $color-blind-skipped;	
+		color:#fff;
+	}
+	.Inconclusive {
+ 	 	background-color: $color-blind-inconclusive;
+ 	 	color: #fff;
+	}
+
 }
 
 a.summarie {
