@@ -26,6 +26,7 @@ $color-blind-warnings: #FFA100;
 $color-blind-skipped: #008EE6; 
 $color-blind-inconclusive: #0025EF; 
 $color-blind-ignored: #008EE6; 
+$color-blind-not-rebuild: #99FC00;
 
 
 
@@ -60,6 +61,9 @@ $color-blind-ignored: #008EE6;
 		background-color:$color-blind-skipped;
 		color: #fff;
 		a {color: #fff;} 
+	}
+	.not_rebuilt {
+		background-color: $color-blind-not-rebuild;
 	}
 }
 
