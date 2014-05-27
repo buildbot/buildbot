@@ -499,8 +499,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['builder_url'] = self.builder.status.getURLForThing(self.builder)
 
         if request is not None:
-            result['url']['path'] += getCodebasesArg(request)
-            result['builder_url'] += getCodebasesArg(request)
+            ss = self.getSourceStamps()
+            result['url']['path'] += getCodebasesArg(request, sourcestamps=ss)
+            result['builder_url'] += getCodebasesArg(request, sourcestamps=ss)
 
         # Transient
         result['times'] = self.getTimes(include_raw_build_time=True)
