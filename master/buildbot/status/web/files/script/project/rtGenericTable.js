@@ -180,12 +180,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }
             };
         },
-        buildLength: function (index) {
+        buildLength: function (index, timesProperty) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
-                "mRender": function (data, full, type) {
-                    var times = type.times;
+                "mRender": function (data, type, full) {
+                    var times = privFunc.getPropertyOnData(full, timesProperty);
                     if (times !== undefined) {
                         var d = moment.duration((times[1] - times[0]) * 1000);
                         if (times.length === 3) {
@@ -225,7 +225,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 }),
                 cellFunc.revision(2, "sourceStamps"),
                 cellFunc.buildStatus(3),
-                cellFunc.buildLength(4),
+                cellFunc.buildLength(4, "times"),
                 cellFunc.slaveName(5, function (data) {
                     if (data.slave_friendly_name !== undefined) {
                         return data.slave_friendly_name;

@@ -488,6 +488,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         from buildbot.status.web.base import getCodebasesArg
 
         result = {}
+        sourcestamps = self.getSourceStamps()
 
         # Constant
         result['builderName'] = self.builder.name
@@ -499,9 +500,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['builder_url'] = self.builder.status.getURLForThing(self.builder)
 
         if request is not None:
-            ss = self.getSourceStamps()
-            result['url']['path'] += getCodebasesArg(request, sourcestamps=ss)
-            result['builder_url'] += getCodebasesArg(request, sourcestamps=ss)
+            result['url']['path'] += getCodebasesArg(request, sourcestamps=sourcestamps)
+            result['builder_url'] += getCodebasesArg(request, sourcestamps=sourcestamps)
 
         # Transient
         result['times'] = self.getTimes(include_raw_build_time=True)
@@ -521,12 +521,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if include_current_step:
             result = self.currentStepDict(result)
 
-        return result
-
-    def asDict(self, request=None):
-        from buildbot.status.web.base import getCodebasesArg
-        result = self.asBaseDict(request)
-
         # Constant
         project = None
         for p, obj in self.builder.status.getProjects().iteritems():
@@ -539,8 +533,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 if c.values()[0]['repository'] == repo:
                     return c.values()[0]
 
-        sourcestamps = []
-        for ss in self.getSourceStamps():
+        stamp_array = []
+        for ss in sourcestamps:
             d = ss.asDict()
             c = getCodebaseObj(d['repository'])
             if c is not None and c.has_key("display_repository"):
@@ -548,12 +542,15 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             else:
                 d['display_repository'] = d['repository']
 
-            sourcestamps.append(d)
+            stamp_array.append(d)
 
-        result['sourceStamps'] = sourcestamps
+        result['sourceStamps'] = stamp_array
 
-        # Transient
-        result['properties'] = self.getProperties().asList()
+        return result
+
+    def asDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
+        result = self.asBaseDict(request)
 
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
@@ -565,6 +562,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         result['steps'] = [bss.asDict(request) for bss in self.steps]
         result = self.currentStepDict(result)
+
+        # Transient
+        result['properties'] = self.getProperties().asList()
 
         return result
 
