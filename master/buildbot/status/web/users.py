@@ -46,6 +46,8 @@ class UserSettingsSubmit(ActionResource):
         # save the settings
         for name, val in req.args.iteritems():
             if "_setting" in name:
+                if not isinstance(val, basestring):
+                    val = val[0]
                 authz.setUserAttr(req, name.replace("_setting", ""), val)
 
         return path_to_root(req) + "users/settings"
