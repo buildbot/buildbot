@@ -19,7 +19,7 @@ define(['jquery', 'libs/jquery.form'], function ($, form) {
             setColorField($body.hasClass(COLOR_BLIND_CSS));
 
             $colorBtn.click(function () {
-                var colorBlindActivated = $body.hasClass(COLOR_BLIND_CSS)
+                var colorBlindActivated = $body.hasClass(COLOR_BLIND_CSS);
                 if (colorBlindActivated === true) {
                     $body.removeClass(COLOR_BLIND_CSS);
                 } else {
