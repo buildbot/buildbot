@@ -46,27 +46,33 @@ base_json = {
 }
 package_json = {
     "dependencies": {
-        "grunt": "~0.4.1",
-        "grunt-cli": "~0.1.1",
-        "grunt-contrib-clean": "~0.4.0",
-        "grunt-contrib-coffee": "~0.7.0",
-        "grunt-contrib-copy": "~0.4.1",
-        "grunt-contrib-imagemin": "~0.1.3",
-        "grunt-contrib-jade": "~0.5.0",
-        "grunt-contrib-less": "~0.5.0",
-        "grunt-contrib-concat": "~0.3.0",
-        "grunt-contrib-livereload": "~0.1.2",
-        "grunt-contrib-requirejs": "~0.4.0",
-        "grunt-contrib-watch": "~0.5.1",
-        "grunt-mkdir": "~0.1.1",
-        "grunt-html2js": "~0.1.6",
+        "bower": "~1.3.3",
+        "grunt": "~0.4.4",
+        "grunt-newer": "~0.5.4",
+        "grunt-contrib-less": "~0.11.0",
+        "grunt-contrib-copy": "~0.5.0",
+        "grunt-karma": "~0.8.3",
+        "grunt-ngmin": "~0.0.3",
+        "grunt-cli": "~0.1.13",
+        "grunt-contrib-watch": "~0.6.1",
+        "grunt-contrib-uglify": "~0.4.0",
+        "grunt-angular-templates": "~0.5.4",
+        "grunt-contrib-clean": "~0.5.0",
+        "grunt-contrib-jade": "~0.11.0",
+        "grunt-contrib-imagemin": "~0.6.1",
+        "grunt-contrib-coffee": "~0.10.1",
         "grunt-requiregen": "~0.1.0",
-        "grunt-karma": "~0.6.0",
-        "bower": "~0.9.2"
+        "grunt-concurrent": "~0.5.0",
+        "load-grunt-tasks": "~0.4.0",
+        "karma-jasmine": "~0.2.2",
+        "karma-requirejs": "~0.2.1",
+        "karma-coffee-preprocessor": "~0.2.1",
+        "karma-phantomjs-launcher": "~0.1.4",
+        "karma-chrome-launcher": "~0.1.3"
     },
     "engines": {
-        "node": "0.8.x",
-        "npm": "1.1.x"
+        "node": ">=0.10.0",
+        "npm": ">=1.4.0"
     }
 }
 package_json.update(base_json)
@@ -75,11 +81,11 @@ package_json.update(base_json)
 # in a crazy CI fashion
 bower_json = {
     "dependencies": {
-        "requirejs": "~2.1.5",
-        "d3": "latest",
-        # test deps
         "angular": "latest",
-        "jasmine": "~1.3.1",
+        "d3": "~3.3.13"
+    },
+    "devDependencies": {
+        "requirejs": "~2.1.5",
         "angular-mocks": "latest"
     }
 }

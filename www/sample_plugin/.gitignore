@@ -6,4 +6,4 @@ package.json
 bower.json
 VERSION
 node_modules
-components
+bower_components
