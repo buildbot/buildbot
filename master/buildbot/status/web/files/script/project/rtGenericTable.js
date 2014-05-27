@@ -238,10 +238,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 options.aoColumns[1].sWidth = '10%';
                 options.aoColumns[2].sWidth = '25%';
                 options.aoColumns[3].sWidth = '30%';
-                options.aoColumns[4].sWidth = '30%';
-                options.aoColumns[4].sTitle = 'Builder';
-                options.aoColumnDefs.splice(4, 1);
-                options.aoColumnDefs.push(cellFunc.builderName(4));
+                options.aoColumns[5].sWidth = '30%';
+                options.aoColumns[5].sTitle = 'Builder';
+                options.aoColumnDefs.splice(5, 1);
+                options.aoColumnDefs.push(cellFunc.builderName(5));
             }
 
             return dt.initTable($tableElem, options);
