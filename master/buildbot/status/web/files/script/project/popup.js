@@ -2,6 +2,37 @@
 define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements'], function ($, helpers, form, popups, Mustache, timeElements) {
 
     "use strict";
+
+    // Extend our jquery object with popup widget
+    $.fn.popup = function (options) {
+        var opts = $.extend({}, $.fn.popup.defaults, options);
+
+        //Initialise the popup on this element
+        this.each(function () {
+            var $elem = $(this);
+            $elem.addClass("more-info-box more-info-box-js").
+                append("<span class='close-btn'></span>").
+                append(opts.title).
+                append(opts.html);
+
+            $elem.ready(function () {
+                helpers.jCenter($elem);
+                $elem.fadeIn('fast', function () {
+                    helpers.jCenter($elem);
+                    helpers.closePopup($elem);
+                });
+            });
+        });
+
+
+        return this;
+    };
+
+    $.fn.popup.defaults = {
+        title: "Katana Popup",
+        html: undefined
+    };
+
     var popup;
 
     popup = {
