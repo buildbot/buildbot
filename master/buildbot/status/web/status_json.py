@@ -860,7 +860,7 @@ class SinglePendingBuildsJsonResource(JsonResource):
         #Convert to dictionary
         output = []
         for b in pending:
-            d = yield b.asDict_async()
+            d = yield b.asDict_async(request)
             output.append(d)
 
         defer.returnValue(output)

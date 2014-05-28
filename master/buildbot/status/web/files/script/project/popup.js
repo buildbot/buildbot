@@ -242,7 +242,19 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     dataType: "json",
                     success: function (data) {
                         preloader.remove();
-                        var html = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelAllbuilderURL: data[0].builderURL});
+
+                        var cancelURL = data[0].builderURL;
+                        var properties = "";
+                        if (cancelURL.indexOf("?") > -1) {
+                            var split = cancelURL.split("?");
+                            properties += split[1] + "&";
+                            cancelURL = split[0];
+                        }
+
+                        properties += "returnpage=builders_json";
+                        cancelURL = "{0}/cancelbuild?{1}".format(cancelURL, properties);
+
+                        var html = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelURL: cancelURL});
 
                         $body.append($("<div/>").popup({
                             html: html,
