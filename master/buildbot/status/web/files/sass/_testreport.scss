@@ -1,18 +1,4 @@
-@charset "UTF-8";
-@import "compass";
-@import "breakpoint";
-@import "modules/global";
-@import "modules/base";
-
-$bkpt-small: 0 570px;
-$bkpt-small-portrait: (0 570px )(orientation portrait);
-$bkpt-medium-1: 0 1024px;
-$bkpt-medium: 571px 1024px;
-$bkpt-large: min-width 1024px;
-$bkpt-large2: min-width 1400px;
-$bkpt-xlarge: min-width 1600px;
-
-.table-holder {display:none;}
+.table-holder {display:none;} 
   
 .log-main .main-head {
 	font-size: 17px;
@@ -322,24 +308,4 @@ a.ignored:active {
 
 .pos-relative {
 	position:relative;
-}
-
-@include breakpoint($bkpt-large) {
-	.table-1 tr td:first-child .failure-detail-txt {
-		width: 900px;
-	}
-
-}
-
-@include breakpoint($bkpt-large2) {
-	.table-1 tr td:first-child .failure-detail-txt {
-		width: 1300px;
-	}
-	
-}
-
-@include breakpoint($bkpt-xlarge) {
-	.table-1 tr td:first-child .failure-detail-txt {
-		width: 1445px;
-	}
 }

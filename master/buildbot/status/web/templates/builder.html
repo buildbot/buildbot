@@ -17,9 +17,9 @@
       
   </div>
 
-  <div class="column-1">
-
-    <div class="span-6 column">
+<div class="row">
+  <div class="rounded-container">
+<div class="col-md-5">
     
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
         <a href="#" class="custom-build more-info fl-right m-top4" title="Run Custom Build" data-popup-title="Run Custom Build" data-builder-name="{{ builder_name }}" data-builder-url="{{ builder_url }}" data-return-page="pending_json">Run build
@@ -32,12 +32,13 @@
 
       <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
       </table>
+  
+      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
 
-      <h2 class="head-2 fl-left">
+      <h2 class="head-2">
         Pending builds requests
       </h2>
 
-      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
       <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
         <thead>
           <tr>
@@ -70,7 +71,7 @@
       </table>
 
     </div>
-    <div class="column span-7">    
+    <div class="col-md-7">    
       <h2 class="head-2">
         Recent Builds
       </h2>
@@ -87,6 +88,7 @@
 
     </div>
   </div>
+</div>
 </div>
 {% endblock %}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}

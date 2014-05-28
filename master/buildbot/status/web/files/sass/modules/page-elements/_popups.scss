@@ -6,8 +6,8 @@
   	border: 1px solid #FFFFFF;
     display: none;
     padding: 23px 20px 23px 20px;
-    text-align: left;
-    min-width:280px;
+    text-align: left;    
+    width: 100%;
     overflow-y: auto; 
 	z-index:200;
 	float:left;
@@ -71,9 +71,8 @@
     }
 
 }
-
-@include breakpoint($bkpt-small) {
+@media (min-width: $screen-sm-min) {
     .more-info-box {
-        min-width:auto;
+        width:auto;
     }
 }

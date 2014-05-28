@@ -142,7 +142,7 @@
 
 .graceful_shutdown {
 	float: right;
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
 .pos-content {
@@ -312,7 +312,7 @@ div.force-text {
 	    display: block;
 	    clear: both;	    
 	    padding: 7px;		
-	    width: 306px;
+	    width: 100%;
 	}
 	.label {
 		display:block;
@@ -382,7 +382,7 @@ div.force-text {
     .more-info-box & {
 		background-color: #FFF;
 	    padding: 21px;
-	    width: 345px;
+	    
     	li {
     		padding: 15px 0;
     		border-top:1px solid #e5e5e5;
@@ -445,33 +445,6 @@ div.force-text {
 	margin-bottom:5px;
 	li {
 		margin-bottom:3px;
-	}
-}
-@include breakpoint($bkpt-small-portrait) {
-	div.force-text {
-		input[type="text"] {
-			width: 266px;	
-		}
-		
-	}
-}
-@include breakpoint($bkpt-small) {
-
-	.more-info-box .pending-job-list { 
-		width: auto;
-		
-	}
-	.graceful_shutdown {
-		float: none;
-		margin-bottom: 10px; 
-
-	}
-	.step-list {
-		.result {
-			clear: both;
-		    float: none;
-		    margin-bottom: 14px;
-		}
 	}
 }
 

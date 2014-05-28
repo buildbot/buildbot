@@ -114,6 +114,7 @@ ul.building {
 		@include border-radius(4px 4px 0 0);
 	}
 	td {
+		text-align: center;
 		padding:15px 10px;		
 		border-bottom:1px solid #C8C8C8;
 		&.buttontd {
@@ -196,6 +197,8 @@ ul.building {
 		}
 	}
 }
+
+
  
 .th1 {width:25%;}
 .th2 {width:15%;}
@@ -273,13 +276,15 @@ ul.building {
 	}
 }
    
- .border-table-holder  {
-	border-left: 2px solid #2B6194;    
-    @include box-shadow (1px 0 0px #FFFFFF inset);
-    float: right;
-    margin-top: 8px;
-    padding: 0 0 0 12px; 
-    width: 88%;
+ .border-table-holder  {	
+    @include box-shadow (1px 0 0px #FFFFFF inset);    
+    margin-top: 20px;
+    padding-left: 5px;
+    @media (min-width: $screen-md-min) {
+    	margin-top: 8px;
+		border-left: 2px solid #2B6194;    
+		padding: 0 0 0 12px; 
+    }    
     .branch-overview & {
     	float: left;
     }
@@ -327,7 +332,162 @@ table.codebase-branch-table {
 .codebase-branch {padding:0 10px;}
 
 // pagination for datatables
+
+.dataTables_length,
+.dataTables_info {
+    display:none;
+} 
+	
+
 .dataTables_paginate {
+    margin: 15px 0 20px 0;
+    float: left;
+    .top & {
+	    margin:24px 0 0;
+	}
+    a {
+    	&:focus {
+    		outline: none;	    		
+    		@include box-shadow($focusShadow);	  
+    	}    	
+	    margin-right: 5px;
+	    display: inline-block;
+	    padding: 3px 11px;	    
+	    @include border-radius(4px);
+	    border: solid 1px #c0c0c0;
+	    background: #fff;
+	    @include box-shadow(1px 1px 0 #fff);
+	    font-weight: bold;
+	    text-decoration: none;	    
+	    cursor: pointer;
+	    &:hover {
+			background: #E0E0E0;
+			color:#444;
+	    }
+	    
+		&.paginate_active {
+				cursor: default;
+				border: none;
+				background: #8297AE;
+			    @include box-shadow(0 0 8px rgba(108, 108, 108, 0.5) inset, 0 1px 0 rgba(255, 255, 255, 0.8));		    
+			    color: #f0f0f0;
+			    @include text-shadow(0 0 3px rgba(0,0,0, .5));			    
+		}
+		&.paginate_button_disabled,
+		&.paginate_disabled_previous,
+		&.paginate_disabled_next {
+	    	color:#ccc;
+	    	cursor: default;
+	    	&:hover {
+	    		background:#fff;
+	    		color:#ccc;	
+	    	}
+    	}
+    	&.first {
+    		margin-right: 15px;
+    	}
+    	&.last {
+    		margin-left: 10px;
+    	}
+	}
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    .dataTables_length {
+        label:after {
+            top:-4px;
+        }
+        select {        
+            min-width: 56px;
+            padding-left:8px;
+        }
+    }
+}
+
+ 
+
+.filter-table-input {
+	margin-bottom:25px;
+}
+
+.more-info-box {
+	.filter-table-input {
+		margin-bottom:10px;
+	}	
+}
+
+.top {
+	@include pie-clearfix;
+	margin-bottom:20px;
+	&.branch-overview {
+		.border-table-holder {
+			border-left:0;		
+			padding-left:0;	
+		}
+	}
+}
+.dataTables_filter  {    	
+    width: 120px;    
+    margin-right:20px;
+    clear:both;
+	float:none;	
+	@media (min-width: $screen-md-min) {
+		width: 140px;   	
+		clear: none;
+		float:left;		
+	}
+    > label {
+    	top:7px;
+        position: relative;
+        font-weight: bold;        
+        @include text-shadow (0 1px 0 white);
+        input {
+            border: 1px solid #CCCCCC;
+            @include border-radius (4px);
+            @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+            color: #666666;
+            font-size: 12px;
+            line-height: 13px;
+            padding: 9px 11px 8px 30px;
+            @include text-shadow (0 1px 0 white);
+            width: 100%;        
+            &:focus {
+            	outline: none;	 
+            	@include box-shadow ($focusShadow, 1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+            	
+            }    
+        }
+        &:after {
+            color: #ADADAD;
+            font-family: katana_icons;
+            content: "";
+            left: 12px;
+            position: absolute;
+            top: 0;
+            line-height: 12px;
+        }
+    }
+    .more-info-box & {
+        height: 32px;   
+    }
+}
+
+
+@media (min-width: $screen-sm-min) {		
+	
+    .row .table-1 {
+		margin-bottom: 20px;
+    }
+
+    .more-info-box {
+	 min-width:inherit;		 
+	}
+ 
+}
+
+@media (min-width: $screen-md-min) {
+
+	.dataTables_paginate {
     margin: 15px 0 20px 0;
     float: left;
     .top & {
@@ -383,6 +543,7 @@ table.codebase-branch-table {
 
 // datatables info
 .dataTables_info {
+	display:block;
 	float:right;
 	margin-top:15px;
 	font-weight:bold;
@@ -395,6 +556,7 @@ table.codebase-branch-table {
 }
 
 .dataTables_length {
+	display:block;
     float:left;
     margin-top: 11px;
     @include text-shadow (0 1px 0 white);
@@ -449,203 +611,13 @@ table.codebase-branch-table {
         }
     }
 }
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-    .dataTables_length {
-        label:after {
-            top:-4px;
-        }
-        select {        
-            min-width: 56px;
-            padding-left:8px;
-        }
-    }
 }
 
- 
-
-.filter-table-input {
-	margin-bottom:25px;
-}
-
-.more-info-box {
-	.filter-table-input {
-		margin-bottom:10px;
-	}	
-}
-
-.top {
-	@include pie-clearfix;
-	margin-bottom:20px;
-	&.branch-overview {
-		.border-table-holder {
-			border-left:0;		
-			padding-left:0;	
-		}
-	}
-}
-.dataTables_filter  {    
-    width: 145px;
-    float:left;
-    margin-right:20px;
-    > label {
-        position: relative;
-        font-weight: bold;
-        top: 7px;
-        @include text-shadow (0 1px 0 white);
-        input {
-            border: 1px solid #CCCCCC;
-            @include border-radius (4px);
-            @include box-shadow (1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-            color: #666666;
-            font-size: 12px;
-            line-height: 13px;
-            padding: 9px 11px 8px 30px;
-            @include text-shadow (0 1px 0 white);
-            width: 100px;        
-            &:focus {
-            	outline: none;	 
-            	@include box-shadow ($focusShadow, 1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
-            	
-            }    
-        }
-        &:after {
-            color: #ADADAD;
-            font-family: katana_icons;
-            content: "";
-            left: 12px;
-            position: absolute;
-            top: 0;
-            line-height: 12px;
-        }
-    }
-    .more-info-box & {
-        height: 32px;   
-    }
-}
-
-@include breakpoint($bkpt-small) {
-
-	.dataTables_paginate,
-	.dataTables_filter {
-		float:none;
-		clear:both;
-	}
-
-	.top .dataTables_paginate {
-		margin:24px 0 0;
-	}
-
-	.dataTables_length,
-    .dataTables_info,
-    .border-table-holder {
-        display:none;
-    }
-    .dataTables_filter > label input {
-        width: 67px;        
-    }
-
-	.more-info-box {
-		 min-width:inherit;
-		 width: 80%;
-		.table-1 {
-			display: block;
-	    	position: relative;
-	    	width: 100%;
-	    	text-align: left;
-	    	border-collapse: collapse;
-	    	border-spacing: 0;
-	    	thead {
-	    		display: block;
-	    		float: left;
-	    	}
-	    	tbody {
-	    		display: block;
-			    overflow-x: auto;
-			    position: relative;
-			    white-space: nowrap;
-			    width: auto;
-			    display: -webkit-box;
-			    tr {
-			    	 display: inline-block;
-			    }
-	    	}
-
-	    	&.first-child tr th:first-child {
-	    		border-left:none;
-	    	}
-			th, td, tr {
-				display: block;
-			}
-			th {
-				border-top:none;
-				border-bottom:1px solid #ccc;
-			}
-			td {
-				border-top:none;
-			}
-			tr:last-child td {
-				padding-bottom:15px;
-				border-bottom:1px solid #ccc;
-			}
-
-			tr td:last-child {
-				border-bottom:none;
-			}
-
-			tr th:last-child {
-				@include border-radius(0);
-			}
-			 tr th:first-child {
-			 	@include border-radius(4px 0 0 0 );
-			 }
-			tr:nth-child(2) td,
-			tr:first-child td {
-				border-top:none;
-				@include border-radius(0);
-			}
-			tr:first-child th,
-			tbody tr:first-child td {
-				padding-left:10px;
-			}
-			
-		}
-	}
- 
-}
-@include breakpoint($bkpt-medium) {
-	.border-table-holder {
-		width: 67%;
-	}
-}
-
-@include breakpoint($bkpt-medium-1) {
-	.dataTables_length,
-    .dataTables_info {
-        display:none;
-    }
-}
-
-@include breakpoint($bkpt-large) {	
+@media (min-width: $screen-lg-min) {	
 	.table-wrapper {
 		overflow: visible;	 	
 	}
-	.border-table-holder  {
-		width: 80%;
-	}
 }
-
-@include breakpoint($bkpt-xlarge) {
-	.border-table-holder  {
-		width: 86%;
-	}
-}
-
-@include breakpoint($bkpt-xxlarge) {
-	.border-table-holder  {
-		width: 88%;
-	}
-}
-
 
 tr.italic {
   font-style: italic;

@@ -111,6 +111,7 @@ define(['datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'], function 
             var oTable = $tableElem.dataTable(options);
                              
 				// Set the marquee in the input field on load and listen for key event	
+                
 				var filterTableInput = $('.dataTables_filter input').attr('placeholder','Filter results');
                 $('body').keyup(function(event) {                                       
                     if (event.which === 70) {

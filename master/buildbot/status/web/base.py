@@ -352,7 +352,7 @@ class ContextMixin(AccessorMixin):
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
                     analytics_code = self.getAnalyticsCode(request),
-                    authenticated=authenticated,
+                    authenticated=authenticated
                     )
 
 

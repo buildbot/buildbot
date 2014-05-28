@@ -1,11 +1,14 @@
-@charset "UTF-8";
 /**
 * Main implementation.
 *
 * @section page-elements
 * @author Simon Holm
 */
-
+ 
+.dataTables_wrapper {
+	overflow:auto;
+}
+   
 .tooltip-cont {
 	position:absolute;
 	display:block;	
@@ -19,7 +22,7 @@
 	z-index:1000;
 	
 }
- 
+  
 div.force-text .label.question-icon {
 	margin-top: 9px;
 }
@@ -112,9 +115,11 @@ width: 100%;
 		position: absolute;
 		margin-top: -10px;
 	}
+	
 }
 
 #bowl_ringG{
+@include box-sizing(content-box);	
 left:50%;
 top:50%;
 position:absolute;
@@ -127,7 +132,7 @@ border:3px solid #BBBBBB;
 }
 
 // rotate ring with ball effect
-.ball_holderG{
+.ball_holderG{	
 position:absolute;
 width:8px;
 height:30px;
@@ -161,7 +166,7 @@ animation-timing-function:linear;
 
 }
 
-.ballG{
+.ballG{	
 position:absolute;
 left:0px;
 top:-7px;
@@ -190,8 +195,8 @@ background: #BBBBBB;
 	&.more-info-box {
 		display: block;
 	    float: none;
-	    padding: 44px 12px 23px 33px;
-	    width: 200px;
+	    padding: 44px 33px 23px;
+	    width: 303px;
 		h3 {
 			display: block;	
 		}
@@ -246,13 +251,14 @@ body.log.interface {
  
 
 // Ellipsis and tooltip start
-.ellipsis {
-	max-height:45px;
-	max-width:300px;
-   	white-space: normal;
-   	word-wrap: break-word;
-    position: relative;
-}
+
+	.ellipsis {
+		white-space: normal;
+	   	word-wrap: break-word;
+	    position: relative;
+		max-height:45px;
+		max-width:100px;
+	}
 
 .revision.ellipsis {
 	height:auto;
@@ -275,7 +281,7 @@ body.log.interface {
 	z-index: 1;
 	white-space: normal;
 	word-wrap: break-word;
-	max-width: 325px;
+	max-width: 175px;	
 	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
 }
 
@@ -339,10 +345,14 @@ body.log.interface {
     font-size: 9px;
     padding: 20px 0;
     text-align: center;
-    margin-top: 45px;
+    margin-top: 35px;
 }
 
 .auth-user {
+	display:none;
+	@media (min-width: 1200px) {
+		display:block;
+	}	
    color: rgba(244, 249, 255, 0.84);
     float: right;
     font-size: 10px;    
@@ -358,39 +368,34 @@ body.log.interface {
 		}
 	}
 }
- 
-@include breakpoint($bkpt-small) {
-	#image {
-		width:270px;
+
+
+    #image {
+		width:275px;
 		img {
 			width: 100%;
 		}
+		@media (min-width: $screen-lg-min) {
+			width:auto;
+			img {
+				width: auto;
+			}
+		}
+		
 	}
 
-	.auth-user {display:none;}
+
+@media (min-width: $screen-md-min) {
+	.ellipsis {	
+		max-width:300px;
+	}
+	.dataTables_wrapper {
+		overflow: visible;
+	}
 	
-	.ellipsis {
-		max-width:100px;
-	}	
 	.tool-tip {
-		max-width: 175px;
+		max-width: 325px;
 	}
-}
-
-@include breakpoint($bkpt-medium) {
-	.auth-user {display:none;}
-}
-@include breakpoint($bkpt-large) {
-	.hide-mobile {display:inline;}		
-	.auth-user {display:none;}
-}
-@include breakpoint($bkpt-xlarge) {
-	.hide-mobile {display:inline;}		
-	.auth-user {display:block;}
-}
-@include breakpoint($bkpt-xxlarge) {
-	.hide-mobile {display:inline;}		
-	.auth-user {display:block;}
 }
 
 .builders-status-truncate {
@@ -407,8 +412,7 @@ body.log.interface {
   @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
   position: fixed;
   width: 100%;
-  padding: 10px 0 5px 0;  
-  height: 20px;
+  padding: 10px 0 ;  
   overflow:hidden;
   z-index: 1000;
   a,label {
@@ -432,8 +436,7 @@ body.log.interface {
 .sticky-bar-bottom {
   left: 0;
   bottom: 0;
-  text-align: right;
-  padding-right: 0;
+  text-align: right;  
 }
  
 #log_page .footer {

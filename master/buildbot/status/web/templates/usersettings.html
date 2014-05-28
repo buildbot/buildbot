@@ -17,8 +17,9 @@
 
 {% block content %}
 
-<div class="column-1">
-	<div class="column-2 ">
+<div class="row vertical-line">
+  <div class="rounded-container">
+	<div class="col-md-6">
 		<h1 class="head-2">
 		  Settings for {{ authz.getUsernameFull(request) }}
 		</h1>
@@ -29,12 +30,14 @@
             <input id="colorBlind_setting" name="colorBlind_setting" hidden="hidden" value="0"/>
 			<span class="question-icon tooltip" title="Turns up the contrast on certain colors, to support people with colorblindness">
           	</span>
+          	
 			<input type="submit" class="blue-btn var-2 fl-right" value="Submit">
-			
+			<div class="clearfix"></div>
 		</form>		
 	</div>
-	<div class="column-2 welcome-txt last">
+	<div class="col-md-6">
 		
 	</div>
+</div>
 </div>
 {% endblock %}

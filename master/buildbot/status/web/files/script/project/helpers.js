@@ -330,7 +330,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
 
             var decodedUri = decodeURIComponent(window.location.search);
             var parsedUrl = decodedUri.split('&');
-            var cbTable = $('<div class="border-table-holder"><div id="overScrollJS" class="inner-table-holder">' +
+            var cbTable = $('<div class="border-table-holder col-xs-10"><div id="overScrollJS" class="inner-table-holder">' +
                 '<table class="codebase-branch-table"><tr class="codebase"><th>Codebase' +
                 '</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
 

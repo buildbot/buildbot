@@ -45,6 +45,7 @@
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
     <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+  
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% block extra_header %}{% endblock %}
@@ -71,7 +72,7 @@
  
     <header class="header">          
         <nav class="top-menu-container">
-          <div class="container-inner">
+          <div class="container">
             
           <h1 class="logo">
             <a href="/">
@@ -172,7 +173,7 @@
     {% block submenu -%}
     {%- endblock -%}
 
-    <div class="content container-inner">
+    <div class="content container">
       {%- block content -%}     
       {%- endblock -%}
     </div>
@@ -180,7 +181,7 @@
 
     {%- block footer -%} 
     <footer class="footer" style="clear:both">
-      <div class="container-inner">
+      <div class="container">
         <h3 class="buildbot-version">
           <a href="https://github.com/Unity-Technologies/buildbot/tree/katana">Katana</a> - a fork of <a href="http://buildbot.net/">BuildBot</a>
           <span>

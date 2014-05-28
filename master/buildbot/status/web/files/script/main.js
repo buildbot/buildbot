@@ -49,9 +49,10 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
         $('body').show();
 
 	  	// swipe or scroll in the codebases overview
-	  	if ($('#builders_page').length || $('#builder_page').length) {
+	  	if ($('#builders_page').length || $('#builder_page').length) {	  		
 	  	require(['overscroll'],
-	        function(overscroll) {	        	
+	        function(overscroll) {	      
+	        
 	        	$("#overScrollJS").overscroll({
 	        		showThumbs:false,
 	        		direction:'horizontal'
@@ -90,6 +91,7 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 		if (helpers.isRealTimePage() === true) {
 			var preloader = $(Mustache.render(popups, {'preloader':'true'}));			
 	    	$('div.content').append(preloader);        	
+	    	
         }
 
         if ($('#home_page').length > 0) {

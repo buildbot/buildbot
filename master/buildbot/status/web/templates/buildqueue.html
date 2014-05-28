@@ -11,35 +11,35 @@
 {% endblock %}
 
 {% block content %}
-<div id="formWrapper" class="initjson">
+<div id="formWrapper" class="pos-relative initjson">
     <button id="submitBtn" class="grey-btn var-2 m-bottom15 submitBtn">Remove selected</button>
     
-<form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
+    <form method="post" name="cancel_build" action={{ path_to_root+"buildqueue/_selected/cancelselected" }} >
 
-    <!--
-    
-        <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
-    -->
+        <!--
         
-<table data-default-sort-col="2" data-default-sort-dir="desc" id="tablesorterRt" class="buildqueue-table table-1 first-child tablesorter tools-js">
+            <input class="grey-btn var-2 fl-right m-bottom15" type="submit" value="Remove selected" />
+        -->
+            
+        <table data-default-sort-col="2" data-default-sort-dir="desc" id="tablesorterRt" class="buildqueue-table table-1 first-child tablesorter tools-js">
 
-    <thead>
-    <tr>
-        <th class="txt-align-left th1">Builder</th>
-        <th class="txt-align-left th2">Codebases</th>
-        <th class="txt-align-left th3">Reason</th>
-        <th class="txt-align-right th4">Compatible slaves</th>
-        <th class="select-input no-tablesorter-js th5">
-            <label for="selectall">
-                Select all
-            </label>
-            <input id="selectall" type="checkbox" name="checkuncheck" />
-        </th>
-    </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
- </form>
+            <thead>
+            <tr>
+                <th class="txt-align-left th1">Builder</th>
+                <th class="txt-align-left th2">Codebases</th>
+                <th class="txt-align-left th3">Reason</th>
+                <th class="txt-align-right th4">Compatible slaves</th>
+                <th class="select-input no-tablesorter-js th5 txt-align-right">
+                    <label for="selectall">
+                        Select all
+                    </label>
+                    <input id="selectall" type="checkbox" name="checkuncheck" />
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+     </form>
  </div>
 {% endblock %}

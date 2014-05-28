@@ -1,6 +1,6 @@
 @charset "UTF-8";
 // form elements
-.select-input {
+td.select-input {
 	text-align:right;
 	label {
 		padding-right: 3px;
@@ -57,8 +57,7 @@ form.command_forcebuild {
     width: 320px;
     clear:both;
     .grey-btn {
-        float:right;
-        margin-top: -34px;
+        float:right;     
     }
 }
 
@@ -93,13 +92,13 @@ form.command_forcebuild .force-nested > .label {
         font-size: 15px;
         line-height: 13px;
         padding: 9px 13px 8px;
-        width: 231px;
+        width: 100%;
         float: left;
         margin-bottom: 15px;
         &.not-valid {
             border: 1px solid #E42323;
         }
-    } 
+    }   
     input[type="checkbox"] {
         float: left;
         margin-left: 83px;
@@ -112,8 +111,7 @@ form.command_forcebuild .force-nested > .label {
         border: 1px solid #295E91;
         @include border-radius( 4px);
         color: #FFFFFF;
-        font-size: 10px;
-        margin: 3px 22px 0;
+        font-size: 10px;        
         padding: 8px 11px;
         float: right;
         @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
@@ -161,9 +159,3 @@ form.command_forcebuild .force-nested > .label {
     }
 }
 
-@include breakpoint($bkpt-small) {
-
-    form.command_forcebuild {
-        width: auto;
-    }
-}
