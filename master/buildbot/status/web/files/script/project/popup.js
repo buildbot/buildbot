@@ -59,6 +59,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     if (opts.center) {
                         setTimeout(function () {
                             helpers.jCenter($elem);
+                            $(window).resize(function(){
+                                helpers.jCenter($elem);
+                            });
                         }, 50);
                     }
 
@@ -217,6 +220,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 onShow: function ($elem) {
                                     selectors.init();
                                     helpers.jCenter($elem);
+                                    $(window).resize(function(){
+                                        helpers.jCenter($elem);
+                                    });
                                 }
                             }));
                         });
