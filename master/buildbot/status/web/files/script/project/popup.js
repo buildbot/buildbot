@@ -134,33 +134,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
     popup = {
         init: function () {
-
-            //For non ajax boxes
-            var $tableSorterRt = $('#tablesorterRt');
-            popup.registerJSONPopup($tableSorterRt);
-
-            $('.popup-btn-js-2').click(function (e) {
-                e.preventDefault();
-                popup.nonAjaxPopup($(this));
-            });
-
             // Display the codebases form in a popup
             popup.initCodebaseBranchesPopup($("#codebasesBtn"));
-        },
-        showjsonPopup: function (jsonObj) {
-            var mustacheTmpl = Mustache.render(popups, jsonObj);
-            var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true}, {partial: mustacheTmpl}));
-
-            $('body').append(mustacheTmplShell);
-
-            if (jsonObj.showRunningBuilds !== undefined) {
-                helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));
-            }
-
-            helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                helpers.closePopup(mustacheTmplShell);
-            });
-
         },
         validateForm: function (formContainer) { // validate the forcebuildform
             var formEl = $('.command_forcebuild', formContainer);
@@ -198,46 +173,22 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 }
             });
         },
-        nonAjaxPopup: function (thisEl) {
-            var clonedInfoBox = thisEl.next($('.more-info-box-js')).clone();
-            clonedInfoBox.appendTo($('body'));
-            helpers.jCenter(clonedInfoBox).fadeIn('fast', function () {
-                helpers.closePopup(clonedInfoBox);
-            });
-            $(window).resize(function () {
-                helpers.jCenter(clonedInfoBox);
-            });
+        initJSONPopup: function (jsonPopupElem, data) {
+            var $jsonPopupElem = $(jsonPopupElem);
 
-        },
-        customTabs: function () { // tab list for custom build
-            $('.tabs-list li').click(function (i) {
-                var indexLi = $(this).index();
-                $(this).parent().find('li').removeClass('selected');
-                $(this).addClass('selected');
-                $('.content-blocks > div').each(function (i) {
-                    if ($(this).index() !== indexLi) {
-                        $(this).hide();
-                    } else {
-                        $(this).show();
-                    }
-                });
-
-            });
-        },
-        htmlModule: function (headLine) { // html chunks
-            var mib =
-                $('<div class="more-info-box remove-js">' +
-                    '<span class="close-btn"></span>' +
-                    '<h3 class="codebases-head">' + headLine + '</h3>' +
-                    '<div id="content1"></div></div>');
-
-            return mib;
-        },
-        registerJSONPopup: function ($parentElem) {
-            $parentElem.delegate('a.popup-btn-json-js', 'click', function (e) {
+            $jsonPopupElem.click(function (e) {
                 e.preventDefault();
-                popup.showjsonPopup($(this).data());
-                timeElements.updateTimeObjects();
+                var html = Mustache.render(popups, data);
+                $body.append($("<div/>").popup({
+                    title: "",
+                    html: html,
+                    onShow : function () {
+                        if (data.showRunningBuilds !== undefined) {
+                            helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));
+                        }
+                        timeElements.updateTimeObjects();
+                    }
+                }));
             });
         },
         initCodebaseBranchesPopup: function (codebaseElem) {
@@ -256,7 +207,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         requirejs(['selectors'], function (selectors) {
                             var fw = $(html).find('#formWrapper');
                             fw.children('#getForm').attr('action', window.location.href);
-                            var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
+                            fw.find('.blue-btn[type="submit"]').val('Update');
 
 
                             $body.append($("<div/>").popup({
@@ -355,8 +306,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 $.get(url, urlParams).
                     done(function (html) {
                         $preloader.hide();
-
-                        var $html = $(html);
 
                         // Create popup
                         var $popup = $("<div/>").popup({

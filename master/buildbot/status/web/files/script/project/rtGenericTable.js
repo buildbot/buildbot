@@ -133,7 +133,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                             overtime = overtime > 0 ? overtime : false;
                         }
 
-                        $(nTd).addClass('building').find('a.popup-btn-json-js').data({showRunningBuilds: oData});
+                        var $jsonPopup = $(nTd).addClass('building').find('a.popup-btn-json-js');
+                        popup.initJSONPopup($jsonPopup, {showRunningBuilds: oData});
 
                         if (overtime) {
                             $(nTd).removeClass('building')

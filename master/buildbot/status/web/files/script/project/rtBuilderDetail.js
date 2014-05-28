@@ -23,8 +23,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 realtimeFunctions.builds = rtBuilderDetail.rtfProcessBuilds;
                 realtimeFunctions.slaves = rtBuilderDetail.rtfProcessSlaves;
 
-                popup.registerJSONPopup($tbSlavesTable);
-
                 realtimePages.initRealtime(realtimeFunctions);
 
                 helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');

@@ -1,5 +1,5 @@
 /*global define, moment*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup) {
     "use strict";
     var tbsorter,
         rtBuildQueue;
@@ -52,7 +52,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         return Mustache.render(buildqueue, {showsources: true, sources: type.sources, codebase: type.codebase, sourcesLength: sourcesLength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        $(nTd).find('a.popup-btn-json-js').data({showCodebases: oData});
+                        var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
+                        popup.initJSONPopup($jsonPopup, {showCodebases: oData});
                     }
                 },
                 {
@@ -74,7 +75,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         return Mustache.render(buildqueue, {showslaves: true, slaves: data, slavelength: slavelength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        $(nTd).find('a.popup-btn-json-js').data({showcompatibleSlaves: oData});
+                        var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
+                        popup.initJSONPopup($jsonPopup, {showCompatibleSlaves: oData});
                     }
                 },
                 {
