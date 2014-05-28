@@ -1,6 +1,6 @@
 @charset "UTF-8";
 // more info box 
-.more-info-box {
+.more-info-box {    
     position: absolute;
 	z-index:1;
   	border: 1px solid #FFFFFF;
@@ -8,7 +8,7 @@
     padding: 23px 20px 23px 20px;
     text-align: left;    
     width: 100%;
-    overflow-y: auto; 
+    overflow: auto; 
 	z-index:200;
 	float:left;
 	color:#333;
@@ -73,6 +73,7 @@
 }
 @media (min-width: $screen-sm-min) {
     .more-info-box {
-        width:auto;
+        width: auto;
+        max-width:750px;
     }
 }
