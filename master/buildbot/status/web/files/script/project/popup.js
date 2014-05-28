@@ -1,37 +1,110 @@
-/*global define, requirejs*/
+/*global define, requirejs, jQuery*/
 define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements'], function ($, helpers, form, popups, Mustache, timeElements) {
 
     "use strict";
 
     // Extend our jquery object with popup widget
-    $.fn.popup = function (options) {
-        var opts = $.extend({}, $.fn.popup.defaults, options);
+    (function ($) {
 
-        //Initialise the popup on this element
-        this.each(function () {
+        $.fn.popup = function (options) {
             var $elem = $(this);
-            $elem.addClass("more-info-box more-info-box-js").
-                append("<span class='close-btn'></span>").
-                append(opts.title).
-                append(opts.html);
+            var opts = $.extend({}, $.fn.popup.defaults, options);
+            $elem.settings = opts;
 
-            $elem.ready(function () {
-                helpers.jCenter($elem);
-                $elem.fadeIn('fast', function () {
-                    helpers.jCenter($elem);
-                    helpers.closePopup($elem);
-                });
+            var privateFunc = {
+                init: function () {
+                    privateFunc.clear();
+                    if (privateFunc.createHTML()) {
+                        if (opts.autoShow) {
+                            $elem.ready(function () {
+                                privateFunc.showPopup();
+                            });
+                        }
+                    }
+                },
+                createHTML: function () {
+                    $elem.addClass("more-info-box more-info-box-js").
+                        append("<span class='close-btn'></span>").
+                        append(opts.title).
+                        attr("data-ui-popup", true);
+
+                    if (opts.url) {
+                        $.ajax(opts.url).
+                            done(function (data) {
+                                $elem.append(data);
+                                privateFunc.showPopup();
+                            });
+
+                        return false;
+                    }
+
+                    $elem.append($("<div/>").html(opts.html));
+                    return true;
+                },
+                clear: function () {
+                    if ($elem.attr("data-ui-popup") === "true") {
+                        $elem.empty();
+                    }
+                },
+                showPopup: function () {
+                    if (opts.center) {
+                        helpers.jCenter($elem);
+                    }
+
+                    if (opts.animate) {
+                        $elem.fadeIn(opts.showAnimation, function () {
+                            privateFunc.initCloseButton();
+                        });
+                    } else {
+                        $elem.show({
+                            complete: privateFunc.initCloseButton
+                        });
+                    }
+                },
+                hidePopup: function () {
+                    if (opts.animate) {
+                        $elem.fadeOut(opts.hideAnimation, function () {
+                            privateFunc.clear();
+                        });
+                    } else {
+                        $elem.hide();
+                        privateFunc.clear();
+                    }
+                },
+                initCloseButton: function () {
+                    //Hide when clicking document or close button clicked
+                    $(document).bind("click touchstart", function (e) {
+                        if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
+                            privateFunc.hidePopup();
+                            $(this).unbind(e);
+                        }
+                    });
+                }
+            };
+
+            this.show = function () {
+                privateFunc.showPopup();
+            };
+
+            //Initialise the popup on this element
+            return this.each(function () {
+                privateFunc.init();
+                opts.initalized = true;
             });
-        });
+        };
 
+        $.fn.popup.defaults = {
+            title: "<h3>Katana Popup</h3>",
+            html: undefined,
+            url: undefined,
+            autoShow: true,
+            center: true,
+            animate: true,
+            showAnimation: "fast",
+            hideAnimation: "fast"
+        };
+    }(jQuery));
 
-        return this;
-    };
-
-    $.fn.popup.defaults = {
-        title: "Katana Popup",
-        html: undefined
-    };
 
     var popup;
 
