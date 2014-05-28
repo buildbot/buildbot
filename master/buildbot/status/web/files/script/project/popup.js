@@ -195,12 +195,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             var $codebaseElem = $(codebaseElem),
                 codebasesURL = $codebaseElem.attr("data-codebases-url");
 
-            //TODO: Remove this
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
-            $('body').append(preloader).show();
-
             $codebaseElem.click(function () {
+                //TODO: Remove this
+                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+                var preloader = $(mustacheTmpl);
+                $('body').append(preloader).show();
+
                 $.get(codebasesURL).
                     done(function (html) {
                         preloader.remove();
