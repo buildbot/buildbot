@@ -139,19 +139,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 popup.nonAjaxPopup($(this));
             });
 
-            $tableSorterRt.delegate('.popup-btn-js', 'click', function (e) {
-                e.preventDefault();
-                var currentUrl = document.URL;
-                var parser = document.createElement('a');
-                parser.href = currentUrl;
-                var builder_name = encodeURIComponent($(this).attr('data-builderName'));
-                var url = "{0}//{1}/json/pending/{2}/?".format(parser.protocol, parser.host, builder_name);
-                var urlParams = helpers.codebasesFromURL({});
-                var paramsString = helpers.urlParamsToString(urlParams);
-
-                popup.pendingJobs(url + paramsString);
-            });
-
             // Display the codebases form in a popup
             $('#getBtn').click(function (e) {
                 e.preventDefault();
@@ -219,55 +206,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 helpers.jCenter(clonedInfoBox);
             });
 
-        },
-        pendingJobs: function (url) {
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
-
-            $('body').append(preloader).show();
-
-            $.ajax({
-                url: url,
-                cache: false,
-                dataType: "json",
-
-                success: function (data) {
-                    preloader.remove();
-                    var mustacheTmpl = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelAllbuilderURL: data[0].builderURL});
-                    var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true}, {partial: mustacheTmpl}));
-                    var waitingtime = mustacheTmplShell.find('.waiting-time-js');
-                    waitingtime.each(function (i) {
-                        timeElements.addElapsedElem($(this), data[i].submittedAt);
-                        timeElements.updateTimeObjects();
-                    });
-
-                    mustacheTmplShell.find('form').ajaxForm({
-                        success: function (data, text, xhr, $form) {
-                            requirejs(['realtimePages'], function (realtimePages) {
-                                setTimeout(function () {
-                                    var name = "builders";
-                                    realtimePages.updateSingleRealTimeData(name, data);
-                                }, 300);
-                            });
-
-                            var cancelAll = $form.attr("id") === "cancelall";
-                            if (cancelAll) {
-                                $form.parent().remove();
-
-                            }
-
-                            if (cancelAll || mustacheTmplShell.find('li').length === 1) {
-                                mustacheTmplShell.remove();
-                            }
-                        }
-                    });
-
-                    mustacheTmplShell.appendTo('body');
-                    helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                        helpers.closePopup(mustacheTmplShell);
-                    });
-                }
-            });
         },
         codebasesBranches: function () {
 
@@ -340,6 +278,64 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 popup.showjsonPopup($(this).data());
                 timeElements.updateTimeObjects();
             });
+        },
+        initPendingPopup: function (pendingElem) {
+            var $pendingElem = $(pendingElem),
+                builder_name = encodeURIComponent($pendingElem.attr('data-builderName')),
+                urlParams = helpers.codebasesFromURL({}),
+                paramsString = helpers.urlParamsToString(urlParams),
+                url = "/json/pending/{0}/?{1}".format(builder_name, paramsString);
+
+            function openPopup() {
+                // TODO: Remove this
+                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+                var preloader = $(mustacheTmpl);
+                $('body').append(preloader).show();
+
+                $.ajax({
+                    url: url,
+                    cache: false,
+                    dataType: "json",
+                    success: function (data) {
+                        preloader.remove();
+                        var html = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelAllbuilderURL: data[0].builderURL});
+
+                        $body.append($("<div/>").popup({
+                            html: html,
+                            destroyAfter: true,
+                            onCreate: function ($elem) {
+                                var waitingtime = $elem.find('.waiting-time-js');
+                                waitingtime.each(function (i) {
+                                    timeElements.addElapsedElem($(this), data[i].submittedAt);
+                                    timeElements.updateTimeObjects();
+                                });
+
+                                $elem.find('form').ajaxForm({
+                                    success: function (data, text, xhr, $form) {
+                                        requirejs(['realtimePages'], function (realtimePages) {
+                                            setTimeout(function () {
+                                                var name = "builders";
+                                                realtimePages.updateSingleRealTimeData(name, data);
+                                            }, 300);
+                                        });
+
+                                        var cancelAll = $form.attr("id") === "cancelall";
+                                        if (!cancelAll) {
+                                            $form.parent().remove();
+                                        }
+
+                                        if (cancelAll || $elem.find('li').length === 1) {
+                                            $elem.hidePopup();
+                                        }
+                                    }
+                                });
+                            }
+                        }));
+                    }
+                });
+            }
+
+            $pendingElem.click(openPopup);
         },
         initRunBuild: function (customBuildElem, instantBuildElem) {
             var $customBuild = $(customBuildElem),

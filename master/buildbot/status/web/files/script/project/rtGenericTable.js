@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'popup'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup) {
 
     "use strict";
 
@@ -165,6 +165,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                         var obj = $(elem);
                         timeElements.addProgressBarElem(obj, obj.attr('data-starttime'), obj.attr('data-etatime'));
                     });
+
+                    popup.initPendingPopup($(nTd).find(".pending-popup"));
                 }
             };
         },
