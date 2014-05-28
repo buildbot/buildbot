@@ -40,9 +40,12 @@ div.common-branch-select {
 }
 
 .help-txt {
-    color: #787878;
-    display: block;
     float: right;
+    .more-info-box & {
+        float: none;        
+    }        
+    color: #787878;
+    display: block;    
     font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
     width: 188px;    

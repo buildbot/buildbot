@@ -350,6 +350,9 @@ body.log.interface {
 
 .auth-user {
 	display:none;
+	@media (min-width: 1200px) {
+		display:block;
+	}	
    color: rgba(244, 249, 255, 0.84);
     float: right;
     font-size: 10px;    
@@ -389,9 +392,7 @@ body.log.interface {
 	.dataTables_wrapper {
 		overflow: visible;
 	}
-	.auth-user {
-		display:block;
-	}
+	
 	.tool-tip {
 		max-width: 325px;
 	}
@@ -411,8 +412,7 @@ body.log.interface {
   @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
   position: fixed;
   width: 100%;
-  padding: 10px 0 5px 0;  
-  height: 20px;
+  padding: 10px 0 ;  
   overflow:hidden;
   z-index: 1000;
   a,label {
@@ -436,8 +436,7 @@ body.log.interface {
 .sticky-bar-bottom {
   left: 0;
   bottom: 0;
-  text-align: right;
-  padding-right: 0;
+  text-align: right;  
 }
  
 #log_page .footer {

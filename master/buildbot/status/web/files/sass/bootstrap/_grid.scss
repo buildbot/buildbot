@@ -26,7 +26,7 @@
   }
 }
 
-
+ 
 .rounded-container {  
   @include clearfix();
   margin-left:8px;
@@ -35,15 +35,14 @@
   border-radius: $border-radius-xlarge;
   border: $box-border;
   @include box-shadow($box-outline-shadow);
-  padding: 20px 8px 30px;
+  padding: 20px 8px;
 }
 
 .vertical-line {    
-  
     .col-md-6 {
       margin-bottom: 20px;      
       &:first-child {
-         border-bottom: 1px solid #D7D7D7;
+         border-bottom: 1px solid #D7D7D7;         
          padding-bottom: 20px;
       }
     }
@@ -73,6 +72,7 @@
         border:none;
         padding-right: $grid-gutter-width;
         padding-left:inherit;
+        padding-bottom: 0;
       }
     }
   }

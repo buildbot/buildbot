@@ -736,6 +736,23 @@
     width: percentage(($columns / $grid-columns));
   }
 }
+
+@function strip-unit($num) {
+  @return $num / ($num * 0 + 1);
+}
+
+// make a custom column width
+@mixin make-md-column-custom($width, $gutter: $grid-gutter-width) {
+  position: relative;
+  min-height: 1px;
+  padding-left:  ($gutter / 2);
+  padding-right: ($gutter / 2);
+  width: percentage(($width / strip-unit($screen-lg-min)));
+  @media (min-width: $screen-md-min) {
+    float: left;
+    
+  }
+}
 @mixin make-md-column-offset($columns) {
   @media (min-width: $screen-md-min) {
     margin-left: percentage(($columns / $grid-columns));

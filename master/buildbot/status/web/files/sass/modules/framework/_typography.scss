@@ -14,6 +14,10 @@
 // Typography
 
 .user-settings {
+	display:none;
+	@media (min-width: 1200px) {
+		display:inline;
+	}	
 	&:after {
 		color: rgba(244, 249, 255, 0.84);
 		content: "";
@@ -39,9 +43,7 @@
 	form {
 		display: inline;
 	}
-	@include breakpoint($bkpt-medium) {
-		display: none;
-	}
+	
 }
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}

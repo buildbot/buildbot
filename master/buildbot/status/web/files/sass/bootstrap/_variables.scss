@@ -12,12 +12,12 @@ $bootstrap-sass-asset-helper: (twbs-font-path("") != unquote('twbs-font-path("")
 //## Gray and brand colors for use across Bootstrap.
 
 $gray-darker:            lighten(#000, 13.5%) !default; // #222
-$gray-dark:              lighten(#000, 20%) !default;   // #333
+$gray-dark:              #444 !default;   // 
 $gray:                   lighten(#000, 33.5%) !default; // #555
 $gray-light:             lighten(#000, 60%) !default;   // #999
 $gray-lighter:           lighten(#000, 93.5%) !default; // #eee
-
-$brand-primary:         #428bca !default;
+$grey1:				    #ccc;
+$brand-primary:         #2B6194 !default;
 $brand-success:         #5cb85c !default;
 $brand-info:            #5bc0de !default;
 $brand-warning:         #f0ad4e !default;
@@ -29,27 +29,28 @@ $brand-danger:          #d9534f !default;
 // ## Settings for some of the most global styles.
 
 //** Background color for `<body>`.
-$body-bg:               #fff !default;
+$body-bg:               #EBEEF1 !default;
 //** Global text color on `<body>`.
 $text-color:            $gray-dark !default;
 
 //** Global textual link color.
 $link-color:            $brand-primary !default;
 //** Link hover color set via `darken()` function.
-$link-hover-color:      darken($link-color, 15%) !default;
+$link-hover-color:      lighten($link-color, 40%) !default;
 
+$white-bg:#fff; 
 
 //== Typography
 //
 //## Font, line-height, and color for body text, headings, and more.
 
-$font-family-sans-serif:  "Helvetica Neue", Helvetica, Arial, sans-serif !default;
+$font-family-sans-serif:  Arial,"Helvetica Neue", Helvetica, sans-serif !default;
 $font-family-serif:       Georgia, "Times New Roman", Times, serif !default;
 //** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
 $font-family-monospace:   Menlo, Monaco, Consolas, "Courier New", monospace !default;
 $font-family-base:        $font-family-sans-serif !default;
 
-$font-size-base:          14px !default;
+$font-size-base:          12px !default;
 $font-size-large:         ceil(($font-size-base * 1.25)) !default; // ~18px
 $font-size-small:         ceil(($font-size-base * 0.85)) !default; // ~12px
 
@@ -70,7 +71,9 @@ $headings-font-family:    inherit !default;
 $headings-font-weight:    500 !default;
 $headings-line-height:    1.1 !default;
 $headings-color:          inherit !default;
+$letter-spacing-base:0.4px;
 
+$background-image-base:url(/images/bg_noise.png);
 
 //-- Iconography
 //
@@ -101,6 +104,7 @@ $line-height-small:         1.5 !default;
 
 $border-radius-base:        4px !default;
 $border-radius-large:       6px !default;
+$border-radius-xlarge:      10px !default;
 $border-radius-small:       3px !default;
 
 //** Global color for active items (e.g., navs or dropdowns).
@@ -114,6 +118,8 @@ $caret-width-base:          4px !default;
 $caret-width-large:         5px !default;
 
 
+
+$box-border:1px solid $grey1;
 //== Tables
 //
 //## Customizes the `.table` component with basic values, each used across all table variations.
@@ -280,7 +286,7 @@ $screen-desktop:             $screen-md-min !default;
 
 // Large screen / wide desktop
 // Note: Deprecated $screen-lg and $screen-lg-desktop as of v3.0.1
-$screen-lg:                  1200px !default;
+$screen-lg:                  1520px !default;
 $screen-lg-min:              $screen-lg !default;
 $screen-lg-desktop:          $screen-lg-min !default;
 
@@ -297,7 +303,7 @@ $screen-md-max:              ($screen-lg-min - 1) !default;
 //** Number of columns in the grid.
 $grid-columns:              12 !default;
 //** Padding between columns. Gets divided in half for the left and right.
-$grid-gutter-width:         30px !default;
+$grid-gutter-width:         20px !default;
 // Navbar collapse
 //** Point at which the navbar becomes uncollapsed.
 $grid-float-breakpoint:     $screen-sm-min !default;
@@ -320,7 +326,7 @@ $container-desktop:            ((940px + $grid-gutter-width)) !default;
 $container-md:                 $container-desktop !default;
 
 // Large screen / wide desktop
-$container-large-desktop:      ((1140px + $grid-gutter-width)) !default;
+$container-large-desktop:      ((1500px + $grid-gutter-width)) !default;
 //** For `$screen-lg-min` and up.
 $container-lg:                 $container-large-desktop !default;
 
@@ -785,6 +791,7 @@ $close-font-weight:           bold !default;
 $close-color:                 #000 !default;
 $close-text-shadow:           0 1px 0 #fff !default;
 
+$box-outline-shadow:          1px 1px 0 #fff !default;
 
 //== Code
 //

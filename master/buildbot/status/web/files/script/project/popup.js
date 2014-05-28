@@ -156,6 +156,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
                         helpers.closePopup(mustacheTmplShell);
                     });
+                    $(window).resize(function () {
+                        helpers.jCenter(mustacheTmplShell);
+                    });
                 }
             });
         }, codebasesBranches: function () {

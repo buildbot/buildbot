@@ -19,7 +19,7 @@
 
 <div class="row">
   <div class="rounded-container">
-<div class="col-md-6">
+<div class="col-md-5">
     
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
         <a href="#" title="Run Custom Build" data-contenttype="form" data-popuptitle="Run Custom Build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" data-returnpage="pending_json" class="ajaxbtn more-info fl-right m-top4">Run build
@@ -71,7 +71,7 @@
       </table>
 
     </div>
-    <div class="col-md-6">    
+    <div class="col-md-7">    
       <h2 class="head-2">
         Recent Builds
       </h2>

@@ -207,9 +207,9 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 { "mData": null, "sTitle": "#", "sWidth": "5%" },
                 { "mData": null, "sTitle": "Date", "sWidth": "10%" },
                 { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
-                { "mData": null, "sTitle": "Result", "sWidth": "32%", "sClass": ""},
-                { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
-                { "mData": null, "sTitle": "Slave", "sWidth": "13%" }
+                { "mData": null, "sTitle": "Result", "sWidth": "30%", "sClass": ""},
+                { "mData": null, "sTitle": "Build Time", "sWidth": "15%" },
+                { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
             ];
 
             options.fnRowCallback = function (nRow, aData) {
@@ -238,8 +238,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 options.aoColumns[1].sWidth = '10%';
                 options.aoColumns[2].sWidth = '25%';
                 options.aoColumns[3].sWidth = '30%';
-                options.aoColumns[5].sWidth = '30%';
+                options.aoColumns[4].sWidth = '10%';
+                options.aoColumns[5].sWidth = '20%';
                 options.aoColumns[5].sTitle = 'Builder';
+
                 options.aoColumnDefs.splice(5, 1);
                 options.aoColumnDefs.push(cellFunc.builderName(5));
             }
