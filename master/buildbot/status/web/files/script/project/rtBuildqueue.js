@@ -1,17 +1,19 @@
+/*global define, moment*/
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements) {
     "use strict";
-    var tbsorter = undefined;
-    var rtBuildQueue;
+    var tbsorter,
+        rtBuildQueue;
+
     rtBuildQueue = {
         init: function () {
             tbsorter = rtBuildQueue.dataTableInit();
 
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
-            realtimeFunctions["queue"] = rtBuildQueue.processBuildQueue;
+            realtimeFunctions.queue = rtBuildQueue.processBuildQueue;
             realtimePages.initRealtime(realtimeFunctions);
             // check all in tables and remove builds
-            helpers.selectBuildsAction(tbsorter,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
-            
+            helpers.selectBuildsAction(tbsorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
+
         },
         processBuildQueue: function (data) {
             timeElements.clearTimeObjects(tbsorter);
@@ -19,8 +21,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
             try {
                 tbsorter.fnAddData(data);
                 timeElements.updateTimeObjects();
-            }
-            catch (err) {
+            } catch (err) {
             }
         },
         dataTableInit: function () {
@@ -49,9 +50,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                     "mRender": function (data, full, type) {
                         var sourcesLength = type.sources.length;
                         return Mustache.render(buildqueue, {showsources: true, sources: type.sources, codebase: type.codebase, sourcesLength: sourcesLength});
-                    }, "fnCreatedCell": function (nTd, sData, oData) {
-                    $(nTd).find('a.popup-btn-json-js').data({showCodebases: oData});
-                }
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
+                        $(nTd).find('a.popup-btn-json-js').data({showCodebases: oData});
+                    }
                 },
                 {
                     "aTargets": [ 2 ],
@@ -70,9 +72,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                     "mRender": function (data, full, type) {
                         var slavelength = type.slaves.length;
                         return Mustache.render(buildqueue, {showslaves: true, slaves: data, slavelength: slavelength});
-                    }, "fnCreatedCell": function (nTd, sData, oData) {
-                    $(nTd).find('a.popup-btn-json-js').data({showcompatibleSlaves: oData});
-                }
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
+                        $(nTd).find('a.popup-btn-json-js').data({showcompatibleSlaves: oData});
+                    }
                 },
                 {
                     "aTargets": [ 4 ],
