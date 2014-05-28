@@ -114,20 +114,6 @@
           <li>
             <a id="home" href="{{ path_to_root or '.' }}">Home</a>
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}waterfall">Waterfall</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}grid">Grid</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}tgrid">T-Grid</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}console">Console</a>
-          </li>
-          -->
           <li class="project-dropdown">
             <a id="projects" href="{{ path_to_root }}projects">Projects</a>            
             <span id="projectDropdown" class="arrow-down-btn"></span>            
@@ -137,11 +123,6 @@
             <a id="buildqueue" href="{{ path_to_root }}buildqueue">              
                Build queue</a>            
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
-          </li>
-          -->
           <li>
             <a id="buildslaves"  href="{{ path_to_root }}buildslaves">
               <span id="verticalProgressBar" class="outer-bar tooltip responsive-tooltip">
@@ -157,29 +138,6 @@
           <li>
             <a id="json" href="{{ path_to_root }}json/help">JSON API</a>
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}changes">Changesources</a>
-          <li>
-          -->
-          {#
-            {% if authz.advertiseAction('showUsersPage', request) %}
-           {% endif %}
-         #}
-          
-         <!--
-         <li>
-            <a href="{{ path_to_root }}json/help">JSON API</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}users">Users</a>
-          </li>
-          
-          
-          <li>
-            <a href="{{ path_to_root }}about">About</a>
-          </li>
-          -->
         </ul>
         
         <div title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
