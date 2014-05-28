@@ -71,7 +71,10 @@
 							<li>{{caption|e}}</li>
 						{% elif loop.index == 3 and pathNum >= 3 %}
 
-							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a><a id="getBtn" class="more-info" href="#"></a></li>	
+							<li class="dropdown">
+                                <a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a>
+                                <a id="codebasesBtn" class="more-info" href="#" data-codebases-url="{{ codebasesPath }}"></a>
+                            </li>
 						{% elif loop.index <= pathNum %}
 							<li><a href="{{ href|e }}">{{ caption|e }} </a></li>
 						{% endif %}

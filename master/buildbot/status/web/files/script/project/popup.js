@@ -57,7 +57,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 },
                 showPopup: function () {
                     if (opts.center) {
-                        helpers.jCenter($elem);
+                        setTimeout(function () {
+                            helpers.jCenter($elem);
+                        }, 50);
                     }
 
                     if (opts.animate) {
@@ -120,8 +122,10 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             animate: true,
             showAnimation: "fast",
             hideAnimation: "fast",
-            onCreate: function () {},
-            onShow: function () {}
+            onCreate: function () {
+            },
+            onShow: function () {
+            }
         };
     }(jQuery));
 
@@ -141,10 +145,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             });
 
             // Display the codebases form in a popup
-            $('#getBtn').click(function (e) {
-                e.preventDefault();
-                popup.codebasesBranches();
-            });
+            popup.initCodebaseBranchesPopup($("#codebasesBtn"));
         },
         showjsonPopup: function (jsonObj) {
             var mustacheTmpl = Mustache.render(popups, jsonObj);
@@ -208,47 +209,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             });
 
         },
-        codebasesBranches: function () {
-
-            var path = $('#pathToCodeBases').attr('href');
-
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
-
-            $('body').append(preloader).show();
-            var mib = popup.htmlModule('Select branches');
-
-            $(mib).appendTo('body');
-
-
-            $.get(path)
-                .done(function (data) {
-                    requirejs(['selectors'], function (selectors) {
-
-                        var formContainer = $('#content1');
-                        preloader.remove();
-
-                        var fw = $(data).find('#formWrapper');
-                        fw.children('#getForm').attr('action', window.location.href);
-                        var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
-
-
-                        fw.appendTo(formContainer);
-
-                        helpers.jCenter(mib).fadeIn('fast', function () {
-                            selectors.init();
-                            blueBtn.focus();
-                            helpers.closePopup(mib);
-
-                        });
-
-                        $(window).resize(function () {
-                            helpers.jCenter(mib);
-                        });
-
-                    });
-                });
-        },
         customTabs: function () { // tab list for custom build
             $('.tabs-list li').click(function (i) {
                 var indexLi = $(this).index();
@@ -278,6 +238,38 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 e.preventDefault();
                 popup.showjsonPopup($(this).data());
                 timeElements.updateTimeObjects();
+            });
+        },
+        initCodebaseBranchesPopup: function (codebaseElem) {
+            var $codebaseElem = $(codebaseElem),
+                codebasesURL = $codebaseElem.attr("data-codebases-url");
+
+            //TODO: Remove this
+            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+            var preloader = $(mustacheTmpl);
+            $('body').append(preloader).show();
+
+            $codebaseElem.click(function () {
+                $.get(codebasesURL).
+                    done(function (html) {
+                        preloader.remove();
+                        requirejs(['selectors'], function (selectors) {
+                            var fw = $(html).find('#formWrapper');
+                            fw.children('#getForm').attr('action', window.location.href);
+                            var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
+
+
+                            $body.append($("<div/>").popup({
+                                title: $('<h3 class="codebases-head" />').html("Select Branches"),
+                                html: fw,
+                                destroyAfter: true,
+                                onShow: function ($elem) {
+                                    selectors.init();
+                                    helpers.jCenter($elem);
+                                }
+                            }));
+                        });
+                    });
             });
         },
         initPendingPopup: function (pendingElem) {
