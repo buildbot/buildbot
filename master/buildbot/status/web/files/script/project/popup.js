@@ -17,9 +17,10 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 init: function () {
                     privateFunc.clear();
                     if (privateFunc.createHTML()) {
+                        opts.onCreate($elem);
+
                         if (opts.autoShow) {
                             $elem.ready(function () {
-                                opts.onCreate($elem);
                                 privateFunc.showPopup();
                             });
                         }
@@ -366,11 +367,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         var $html = $(html);
 
                         // Create popup
-                        $body.append($("<div/>").popup({
+                        var $popup = $("<div/>").popup({
                             title: $('<h2 class="small-head" />').html(title),
                             html: html,
                             destroyAfter: true,
-                            onShow: function ($elem) {
+                            autoShow: false,
+                            onCreate: function ($elem) {
                                 popup.validateForm($elem);
 
                                 //Setup AJAX form and instant builds
@@ -395,7 +397,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                     $form.ajaxSubmit(formOptions);
                                 }
                             }
-                        }));
+                        });
+
+                        $body.append($popup);
+                        if (!instantBuild) {
+                            $popup.showPopup();
+                        }
                     });
             }
 
