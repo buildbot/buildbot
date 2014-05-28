@@ -22,7 +22,7 @@
     <div class="span-6 column">
     
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-        <a href="#" title="Run Custom Build" data-contenttype="form" data-popuptitle="Run Custom Build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" data-returnpage="pending_json" class="ajaxbtn more-info fl-right m-top4">Run build
+        <a href="#" class="custom-build more-info fl-right m-top4" title="Run Custom Build" data-popup-title="Run Custom Build" data-builder-name="{{ builder_name }}" data-builder-url="{{ builder_url }}" data-return-page="pending_json">Run build
         </a>
       {% endif %}          
      

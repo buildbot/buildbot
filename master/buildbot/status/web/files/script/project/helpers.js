@@ -113,10 +113,6 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             // parse reason string on the buildqueue page
             helpers.parseReasonString();
 
-
-            // trigger individual builds on the builders page
-            helpers.runIndividualBuild();
-
             $('#authUserBtn').click(function () {
                 helpers.eraseCookie('fullName1', '', 'eraseCookie');
             });
@@ -204,51 +200,6 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
 
             el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
             return el;
-
-        },
-        runIndividualBuild: function () { // trigger individual builds
-            $('#tablesorterRt').delegate('.run-build-js', 'click', function (e) {
-                $('.remove-js').remove();
-                e.preventDefault();
-                var prevElem = $(this).prev();
-                var datab = prevElem.attr('data-b');
-                var dataindexb = prevElem.attr('data-indexb');
-                var dataReturnPage = prevElem.attr('data-returnpage');
-
-                var mustacheTmpl = '<h2 class="small-head">Your build will show up soon</h2>';
-                var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true, popUpClass: 'green'}, {partial: mustacheTmpl}));
-                mustacheTmplShell.appendTo($('body'));
-
-                var builder_name = $(this).prev().attr('data-b_name');
-
-                helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                    helpers.closePopup($(this));
-                    $(this).delay(1500).fadeOut('fast', function () {
-                        $(this).remove();
-                    });
-                });
-
-                // get the current url with parameters append the form to the DOM and submit it
-                var url = location.protocol + "//" + location.host + "/forms/forceBuild";
-
-                //get all branches
-                var urlParams = {rt_update: 'extforms', datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-                urlParams = helpers.codebasesFromURL(urlParams);
-
-                $.get(url, urlParams, "json").done(function (data, textStatus, jqXHR) {
-                    var formContainer = $('<div/>').attr('id', 'formCont').append($(data)).appendTo('body').hide();
-                    // Add the value from the cookie to the disabled and hidden field
-                    var form = formContainer.find('form').ajaxForm();
-
-                    $(form).ajaxSubmit(function (data) {
-                        requirejs(['realtimePages'], function (realtimePages) {
-                            mustacheTmplShell.remove();
-                            var name = dataReturnPage.replace("_json", "");
-                            realtimePages.updateSingleRealTimeData(name, data, true);
-                        });
-                    });
-                });
-            });
 
         },
         parseReasonString: function () { // parse reason string on the buildqueue page

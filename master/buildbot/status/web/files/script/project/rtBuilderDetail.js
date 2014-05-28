@@ -29,6 +29,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
 
+                //Setup run build
+                popup.initRunBuild($(".custom-build"));
+
                 // insert codebase and branch
                 if (window.location.search !== '') {
                     // Parse the url and insert current codebases and branches

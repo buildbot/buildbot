@@ -64,37 +64,32 @@ class ForceBuildDialogPage(HtmlResource):
             branches = [ b.decode(encoding) for b in args.get("branch", []) if b ]
             cxt['branches'] = branches
 
-            # Add codebase info
-            codebases = {}
-            cxt['codebases_arg'] = codebases_arg = getCodebasesArg(request=request, codebases=codebases)
-
             return_page = ""
-            if args.has_key("returnpage"):
-                return_page = args['returnpage']
+            if args.has_key("return_page"):
+                return_page = args['return_page']
                 if not isinstance(return_page, basestring):
-                    return_page = args['returnpage'][0]
-
-                if len(codebases_arg) > 0:
-                    return_page = "&returnpage={0}".format(return_page)
-                else:
-                    return_page = "?returnpage={0}".format(return_page)
-
-            cxt['return_page'] = return_page
-
+                    return_page = args['return_page'][0]
 
             #Add scheduler info
             buildForceContext(cxt, request, self.getBuildmaster(request), builder_status.getName())
 
             #URL to force page with return param
-            url = args['datab'][0]
+            url = args['builder_url'][0]
             url_parts = list(urlparse(url))
+
+            if len(url_parts) > 0 and len(return_page) > 0:
+                return_page = "&returnpage={0}".format(return_page)
+            else:
+                return_page = "?returnpage={0}".format(return_page)
+            cxt['return_page'] = return_page
+
             url_parts[2] += "/force"
             url_parts[4] += return_page
             force_url = urlunparse(url_parts)
 
-            if len(url_parts[4]) == 0:
-                force_url = force_url + codebases_arg
 
+
+            print force_url
             cxt['force_url'] = force_url
             cxt['rt_update'] = args
             request.args = args
