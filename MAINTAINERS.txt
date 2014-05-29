@@ -198,7 +198,7 @@ Security
 
 Metabuildbot Slave Donors
     D: Maintainers of buildslaves for the Metabuildbot
-    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Dustin J. Mitchell <dustin@buildbot.net> (irc:djmitche)
     M: Mozilla <dustin@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
@@ -213,7 +213,7 @@ Committers
     M: Ben Hearsum <bhearsum@mozilla.com>
     M: Brian Warner <warner@lothar.com>
     M: Chris AtLee <catlee@mozilla.com>
-    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Dustin J. Mitchell <dustin@buildbot.net> (irc:djmitche)
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Marcus Lindblom <macke@yar.nu>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
