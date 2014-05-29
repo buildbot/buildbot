@@ -312,7 +312,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
-            self.conn.disassociate_address(self.elastic_ip.public_ip)
+            # Refresh the address data to get the associationId, required
+            # for disassociation
+            self.elastic_ip = self.conn.get_all_addresses([self.elastic_ip.public_ip])[0]
+            self.elastic_ip.disassociate()
         instance.update()
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
