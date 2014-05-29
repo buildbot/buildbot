@@ -183,7 +183,7 @@ OpenCSW
 
 Gentoo
     S: Maintained
-    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Dustin J. Mitchell <dustin@buildbot.net> (irc:djmitche)
     U: http://packages.gentoo.org/package/dev-util/buildbot
 
 
