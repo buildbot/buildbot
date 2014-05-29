@@ -121,9 +121,11 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def tearDown(self):
         self.tearDownDirs()
 
-    def activeBasedir(self):
+    def activeBasedir(self, extra_lines=()):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
-            f.write("Application('buildmaster')")
+            f.write("from twisted.application import service\n")
+            f.write("service.Application('buildmaster')\n")
+            f.write("\n".join(extra_lines))
 
     def writeFile(self, path, contents):
         with open(path, 'wt') as f:
@@ -159,6 +161,20 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
         self.assertInStdout('still running')
+
+    def test_checkBasedir_invalid_rotateLength(self):
+        self.activeBasedir(extra_lines=['rotateLength="32"'])
+        rv = upgrade_master.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('WARNING')
+        self.assertInStdout('rotateLength')
+
+    def test_checkBasedir_invalid_maxRotatedFiles(self):
+        self.activeBasedir(extra_lines=['maxRotatedFiles="64"'])
+        rv = upgrade_master.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('WARNING')
+        self.assertInStdout('maxRotatedFiles')
 
     def test_loadConfig(self):
         @classmethod

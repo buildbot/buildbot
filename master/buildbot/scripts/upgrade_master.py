@@ -45,6 +45,15 @@ def checkBasedir(config):
             print "'%s' exists - is this master still running?" % (pidfile,)
             return False
 
+    tac = base.getConfigFromTac(config['basedir'])
+    if tac:
+        if isinstance(tac.get('rotateLength', 0), str):
+            print "WARNING: rotateLength is a string, it should be a number"
+            return False
+        if isinstance(tac.get('maxRotatedFiles', 0), str):
+            print "WARNING: maxRotatedFiles is a string, it should be a number"
+            return False
+
     return True
 
 
