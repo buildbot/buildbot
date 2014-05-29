@@ -191,7 +191,7 @@ Gentoo
 
 Security
     D: Contacts members of this team directly with any security concerns
-    M: Dustin J. Mitchell <dustin@v.igoro.us> (irc:djmitche)
+    M: Dustin J. Mitchell <dustin@buildbot.net> (irc:djmitche)
     M: Amber Yust <ayust@yelp.com> (irc:Aaeriele)
     M: Steve Milner <smilner@redhat.com>
     U: http://trac.buildbot.net/wiki/SecurityPolicy
