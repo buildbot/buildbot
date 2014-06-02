@@ -1,8 +1,7 @@
-/*global Handlebars */
-define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders, timeElements) {
+/*global define, Handlebars */
+define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders, timeElements, popups) {
     "use strict";
     var rtBuildDetail,
-        stepList = $('#stepList').find('> li'),
         buildHandle = Handlebars.compile(build),
         isLoaded = false,
         noMoreReloads = false;
@@ -12,6 +11,54 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
     Handlebars.registerHelper('buildCSSClass', function (value) {
         return helpers.getCssClassFromStatus(value);
     });
+
+    var privFunc = {
+        updateArtifacts: function (data) { // for the builddetailpage. Puts the artifacts and testresuts on top
+            var $artifactsJSElem = $("#artifacts-js").empty(),
+                artifactsDict = {},
+                testLogsDict = {},
+                html;
+
+            /*jslint unparam: true*/
+            $.each(data.steps, function (i, obj) {
+                if (obj.urls !== undefined) {
+                    $.each(obj.urls, function (name, url) {
+                        if (typeof url === "string") {
+                            artifactsDict[name] = url;
+                        }
+                    });
+                }
+            });
+
+            $.each(data.logs, function (i, obj) {
+                if (obj.length === 2 && (obj[1].indexOf(".xml") > -1 || obj[1].indexOf(".html") > -1)) {
+                    testLogsDict[obj[0]] = obj[1];
+                }
+            });
+            /*jslint unparam: false*/
+
+            if (artifactsDict === undefined || Object.keys(artifactsDict).length === 0) {
+                $artifactsJSElem.html("No artifacts");
+            } else {
+                html = '<a class="artifact-popup artifacts-js more-info" href="#">Artifacts ({0})&nbsp;</a>'.format(Object.keys(artifactsDict).length);
+                $artifactsJSElem.html(html);
+
+                popups.initArtifacts(artifactsDict, $artifactsJSElem.find(".artifact-popup"));
+            }
+
+            if (Object.keys(testLogsDict).length > 0) {
+                html = '<li>Test Results</li>';
+
+                $.each(testLogsDict, function (url, name) {
+                    html += '<li class="s-logs-js"><a href="{0}">{1}</a></li>'.format(name, url);
+                });
+
+                html = $("<ul/>").addClass("tests-summary-list").html(html);
+
+                $artifactsJSElem.append(html);
+            }
+        }
+    };
 
     rtBuildDetail = {
         init: function () {
@@ -44,7 +91,8 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             //Process Page
             rtBuildDetail.processBuildResult(data, buildStartTime, eta, buildFinished);
             rtBuildDetail.processSteps(data);
-            helpers.summaryArtifactTests();
+
+            privFunc.updateArtifacts(data);
 
             //If build is running
             if (buildEndTime === null) {
@@ -54,11 +102,11 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
 
             timeElements.updateTimeObjects();
         },
-        processBuildResult: function(data, startTime, eta, buildFinished) {
+        processBuildResult: function (data, startTime, eta, buildFinished) {
             var $buildResult = $('#buildResult');
             timeElements.clearTimeObjects($buildResult);
             var progressBar = "";
-            if (eta != 0) {
+            if (eta !== 0) {
                 progressBar = mustache.render(builders,
                     {progressBar: true, etaStart: startTime, etaCurrent: eta});
             }
@@ -81,6 +129,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
             var html = "";
             var $stepList = $('#stepList');
             var count = 1;
+            /*jslint unparam: true*/
             $.each(data.steps, function (i, stepData) {
                 if (stepData.hidden) {
                     return true;
@@ -103,7 +152,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                 var props = {
                     step: true,
                     index: count,
-                    stepStarted: stepData['isStarted'],
+                    stepStarted: stepData.isStarted,
                     run_time: runTime,
                     css_class: cssClass,
                     s: stepData,
@@ -114,17 +163,19 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
 
                 return true;
             });
+            /*jslint unparam: false*/
 
             $stepList.html(html);
         },
-        refreshIfRequired: function(buildFinished) {
+        refreshIfRequired: function (buildFinished) {
             //Deal with page reload
             if (!noMoreReloads && isLoaded && buildFinished) {
                 window.location = window.location + '#finished';
                 window.location.reload();
             }
-            if (noMoreReloads == false)
+            if (noMoreReloads === false) {
                 noMoreReloads = buildFinished;
+            }
 
             isLoaded = true;
         }

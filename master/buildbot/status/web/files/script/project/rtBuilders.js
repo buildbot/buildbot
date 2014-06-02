@@ -67,11 +67,15 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 {
                     "aTargets": [ 3 ],
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showStatus: true, latestBuild: type.latestBuild});
+                        return mustache.render(builders, {showStatus: true, latestBuild: type.latestBuild, data: type});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
                         $(nTd).removeClass().addClass(lb.results_text);
+
+                        if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {
+                            popup.initArtifacts(oData.latestBuild.artifacts, $(nTd).find(".artifact-js"));
+                        }
                     }
                 },
                 rtTable.cell.revision(4, function (data) {

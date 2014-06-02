@@ -1,5 +1,5 @@
 /*global define, requirejs*/
-define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, popups, Mustache, extendMoment, timeElements) {
+define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, popupsMus, Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers;
@@ -53,10 +53,6 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             if ($('#buildslave_page').length) {
                 // display the number of current jobs
                 helpers.displaySum($('#currentJobs'), $('#runningBuilds_onBuildslave').find('li'));
-            }
-
-            if ($('#builddetail_page').length > 0) {
-                helpers.summaryArtifactTests();
             }
 
             // keyboard shortcuts
@@ -219,7 +215,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
                     return;
                 }
             }
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'}),
+            var mustacheTmpl = Mustache.render(popupsMus, {'preloader': 'true'}),
                 preloader = $(mustacheTmpl),
                 selectAll = $('#selectall');
 
@@ -396,51 +392,6 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
         displaySum: function (displayEl, countEl) {
             // Insert the total length of the elements
             displayEl.text(countEl.length);
-
-        },
-        summaryArtifactTests: function () { // for the builddetailpage. Puts the artifacts and testresuts on top
-
-            // Link to hold the number of artifacts
-            var showArtifactsJS = $('#showArtifactsJS');
-            showArtifactsJS.next().find('.builders-list').empty();
-            var noArtifactsJS = $('#noArtifactsJS');
-
-            // Artifacts produced in the buildsteplist
-            var artifactJS = $('li.artifact-js');
-
-            // update the popup container if there are artifacts
-            if (artifactJS.length > 0) {
-                noArtifactsJS.hide();
-
-                showArtifactsJS
-                    .show()
-                    .text('(' + artifactJS.length + ') Artifacts ')
-                    .next()
-                    .find('.builders-list')
-                    .html(artifactJS.clone());
-            } else {
-                noArtifactsJS.show();
-            }
-
-            // Testreport and testresult
-            var testlistResultJS = $('#testsListJS').empty();
-            var sLogs = $('.s-logs-js');
-            var alist = [];
-
-            $(sLogs).each(function () {
-                // filter the test results by xml and html file
-                var str = $(this).text().split('.').pop();
-
-                if (str === 'xml' || str === 'html') {
-                    alist.push($(this).clone());
-                }
-            });
-
-            // Show the testresultlinks in the top if there are any
-            if (alist.length > 0) {
-                testlistResultJS.html($('<li>Test Results</li>'));
-                testlistResultJS.append(alist);
-            }
 
         },
         setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie

@@ -59,7 +59,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     if (opts.center) {
                         setTimeout(function () {
                             helpers.jCenter($elem);
-                            $(window).resize(function(){
+                            $(window).resize(function () {
                                 helpers.jCenter($elem);
                             });
                         }, 50);
@@ -185,7 +185,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 $body.append($("<div/>").popup({
                     title: "",
                     html: html,
-                    onShow : function () {
+                    onShow: function () {
                         if (data.showRunningBuilds !== undefined) {
                             helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));
                         }
@@ -220,7 +220,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 onShow: function ($elem) {
                                     selectors.init();
                                     helpers.jCenter($elem);
-                                    $(window).resize(function(){
+                                    $(window).resize(function () {
                                         helpers.jCenter($elem);
                                     });
                                 }
@@ -371,6 +371,26 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
             $instantBuild.click(function () {
                 openPopup(true);
+            });
+        },
+        initArtifacts: function (artifactList, artifactElem) {
+            var $artifactElem = $(artifactElem);
+
+            $artifactElem.click(function () {
+                var html = "";
+                if (artifactList !== undefined) {
+                    $.each(artifactList, function (name, url) {
+                        html += '<li class="artifact-js"><a target="_blank" href="{1}">{0}</a></li>'.format(name, url);
+                    });
+                    html = $('<ul/>').addClass("builders-list").html(html);
+                    var $popup = $("<div/>").popup({
+                        title: "<h3>Artifacts</h3>",
+                        html: html,
+                        destroyAfter: true
+                    });
+
+                    $body.append($popup);
+                }
             });
         }
     };

@@ -82,10 +82,6 @@ define(['helpers','dataTables','popup','screensize','projectdropdown', 'extend-m
 	        function(realtimeRouting) {	        		        	
 	        	realtimeRouting.init();
 	        });
-		}	
-
-		if ($('#builddetail_page').length > 0) {
-			helpers.summaryArtifactTests();
 		}
 
 		if (helpers.isRealTimePage() === true) {

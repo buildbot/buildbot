@@ -484,7 +484,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         return dict
 
-    def asBaseDict(self, request=None, include_current_step=False):
+    def asBaseDict(self, request=None, include_current_step=False, include_artifacts=False):
         from buildbot.status.web.base import getCodebasesArg
 
         result = {}
@@ -520,6 +520,17 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         if include_current_step:
             result = self.currentStepDict(result)
+
+        if include_artifacts:
+            artifacts = {}
+            for s in self.steps:
+                if len(s.urls) > 0:
+                    for name, url in s.urls.iteritems():
+                        if isinstance(url, basestring):
+                            artifacts[name] = url
+
+            if len(artifacts) > 0:
+                result['artifacts'] = artifacts
 
         # Constant
         project = None

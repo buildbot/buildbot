@@ -770,7 +770,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
                                                      num_builds=1))
 
         if len(builds) > 0:
-            d['latestBuild'] = builds[0].asBaseDict(request)
+            d['latestBuild'] = builds[0].asBaseDict(request, include_artifacts=True)
 
         defer.returnValue(d)
 
