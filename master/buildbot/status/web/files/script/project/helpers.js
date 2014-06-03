@@ -516,6 +516,9 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
 
             });
         },
+        urlHasCodebases: function () {
+            return Object.keys(helpers.codebasesFromURL({})).length > 0;
+        },
         codebasesFromURL: function (urlParams) {
             var sPageURL = window.location.search.substring(1);
             var sURLVariables = sPageURL.split('&');

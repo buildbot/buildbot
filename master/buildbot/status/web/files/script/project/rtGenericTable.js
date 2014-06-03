@@ -35,7 +35,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var cellFunc = {
-        revision: function (index, property) {
+        revision: function (index, property, hideBranch) {
+            console.log(hideBranch);
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
@@ -45,7 +46,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     if (full.properties !== undefined) {
                         history_build = privFunc.buildIsHistoric(full.properties);
                     }
-                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
+                    return hbCells({
+                        revisionCell: true,
+                        sourceStamps: sourceStamps,
+                        history_build: history_build,
+                        hide_branch: hideBranch
+                    });
                 }
             };
         },
@@ -203,7 +209,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var tableFunc = {
-        buildTableInit: function ($tableElem, showBuilderName) {
+        buildTableInit: function ($tableElem, showBuilderName, hideBranches) {
             var options = {};
 
             options.aoColumns = [
@@ -226,7 +232,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
                 }),
-                cellFunc.revision(2, "sourceStamps"),
+                cellFunc.revision(2, "sourceStamps", hideBranches),
                 cellFunc.buildStatus(3),
                 cellFunc.buildLength(4, "times"),
                 cellFunc.slaveName(5, function (data) {

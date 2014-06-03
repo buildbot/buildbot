@@ -91,7 +91,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                         return data.latestBuild.sourceStamps;
                     }
                     return undefined;
-                }),
+                }, helpers.urlHasCodebases()),
                 rtTable.cell.buildLength(6, function (data) {
                     if (data.latestBuild !== undefined) {
                         return data.latestBuild.times;
