@@ -300,19 +300,31 @@ class GitExtractor(SourceStampExtractor):
 
     def getBaseRevision(self):
         # If a branch is specified, parse out the rev it points to
-        # and extract the local name (assuming it has a slash).
-        # This may break if someone specifies the name of a local
-        # branch that has a slash in it and has no corresponding
-        # remote branch (or something similarly contrived).
+        # and extract the local name.
         if self.branch:
             d = self.dovc(["rev-parse", self.branch])
-            if '/' in self.branch:
-                self.branch = self.branch.split('/', 1)[1]
             d.addCallback(self.override_baserev)
+            d.addCallback(self.extractLocalBranch)
             return d
         d = self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
         d.addCallback(self.parseStatus)
         return d
+
+    # remove remote-prefix from self.branch (assumes format <prefix>/<branch>)
+    # this uses "git remote" to retrieve all configured remote names
+    def extractLocalBranch(self, res):
+        if '/' in self.branch:
+            d = self.dovc(["remote"])
+            d.addCallback(self.fixBranch)
+            return d
+
+    # strip remote prefix from self.branch
+    def fixBranch(self, remotes):
+        for l in remotes.split("\n"):
+            r = l.strip()
+            if r and self.branch.startswith(r):
+                self.branch = self.branch[len(r) + 1:]
+                break
 
     def readConfig(self):
         if self.config:
