@@ -33,8 +33,9 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
             options.aoColumns = [
                 { "mData": null, "sWidth": "20%" },
                 { "mData": null, "sWidth": "15%" },
+                { "mData": null, "sWidth": "10%" },
                 { "mData": null, "sWidth": "15%" },
-                { "mData": null, "sWidth": "15%" },
+                { "mData": null, "sWidth": "5%" },
                 { "mData": null, "sWidth": "15%" },
                 { "mData": null, "sWidth": "10%" },
                 { "mData": null, "sWidth": "10%", 'bSortable': false }
@@ -72,26 +73,33 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
                         $(nTd).removeClass().addClass(lb.results_text);
-
+                    }
+                },
+                {
+                    "aTargets": [4],
+                    "mRender": function (data, full, type) {
+                        return mustache.render(builders, {showArtifacts: true, data: type});
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {
                             popup.initArtifacts(oData.latestBuild.artifacts, $(nTd).find(".artifact-js"));
                         }
                     }
                 },
-                rtTable.cell.revision(4, function (data) {
+                rtTable.cell.revision(5, function (data) {
                     if (data.latestBuild !== undefined) {
                         return data.latestBuild.sourceStamps;
                     }
                     return undefined;
                 }),
-                rtTable.cell.buildLength(5, function (data) {
+                rtTable.cell.buildLength(6, function (data) {
                     if (data.latestBuild !== undefined) {
                         return data.latestBuild.times;
                     }
                     return undefined;
                 }),
                 {
-                    "aTargets": [ 6 ],
+                    "aTargets": [ 7 ],
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
                     },
