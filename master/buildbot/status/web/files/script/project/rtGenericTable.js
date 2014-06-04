@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'popup'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
 
     "use strict";
 
@@ -36,7 +36,6 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
 
     var cellFunc = {
         revision: function (index, property, hideBranch) {
-            console.log(hideBranch);
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
@@ -182,9 +181,13 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
+                    var stopURL = URI(type.url.path);
+                    stopURL = stopURL.path(stopURL.path() + "/stop");
+
                     return hbCells({
                         stopBuild: true,
-                        'data': type
+                        'data': type,
+                        stopURL: stopURL
                     });
                 }
             };

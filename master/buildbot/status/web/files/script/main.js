@@ -34,7 +34,8 @@ require.config({
         'iFrameResize' : "libs/iframeResizer.min",
         'rtGenericTable' : "project/rtGenericTable",
         'hbCells' : 'templates/rtCells.handlebars',
-        'userSettings' : 'project/userSettings'
+        'userSettings' : 'project/userSettings',
+        'URIjs' : 'libs/uri'
 	}
 });
 
