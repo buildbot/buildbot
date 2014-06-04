@@ -1,4 +1,4 @@
-# grunt-contrib-requirejs [![Build Status](https://travis-ci.org/gruntjs/grunt-contrib-requirejs.png?branch=master)](https://travis-ci.org/gruntjs/grunt-contrib-requirejs)
+# grunt-contrib-requirejs v0.4.4 [![Build Status: Linux](https://travis-ci.org/gruntjs/grunt-contrib-requirejs.png?branch=master)](https://travis-ci.org/gruntjs/grunt-contrib-requirejs)
 
 > Optimize RequireJS projects using r.js.
 
@@ -44,6 +44,7 @@ requirejs: {
     options: {
       baseUrl: "path/to/base",
       mainConfigFile: "path/to/config.js",
+      name: "path/to/almond", // assumes a production build using almond
       out: "path/to/optimized.js"
     }
   }
@@ -60,13 +61,13 @@ requirejs: {
       mainConfigFile: "path/to/config.js",
       done: function(done, output) {
         var duplicates = require('rjs-build-analysis').duplicates(output);
-        
+
         if (duplicates.length > 0) {
-          grunt.log.subhead('Duplicates found in requirejs build:')
+          grunt.log.subhead('Duplicates found in requirejs build:');
           grunt.log.warn(duplicates);
-          done(new Error('r.js built duplicate modules, please check the excludes option.');
+          done(new Error('r.js built duplicate modules, please check the excludes option.'));
         }
-        
+
         done();
       }
     }
@@ -77,6 +78,9 @@ requirejs: {
 
 ## Release History
 
+ * 2014-04-25   v0.4.4   Reduce logging verbosity unless --verbose flag is used.
+ * 2014-02-26   v0.4.3   Remove "Gruntfile.js" as package.json main.
+ * 2014-02-26   v0.4.2   Catch exceptions in `done`.
  * 2013-05-16   v0.4.1   Add 'done' option.
  * 2013-02-15   v0.4.0   First official release for Grunt 0.4.0.
  * 2013-01-23   v0.4.0rc7   Updating to work with grunt v0.4.0rc7.
@@ -90,4 +94,4 @@ requirejs: {
 
 Task submitted by [Tyler Kellen](http://goingslowly.com/)
 
-*This file was generated on Thu May 16 2013 16:08:33.*
+*This file was generated on Fri Apr 25 2014 15:35:54.*
