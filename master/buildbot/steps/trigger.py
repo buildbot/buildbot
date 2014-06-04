@@ -19,6 +19,8 @@ from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
+from buildbot.status.results import DEPENDENCY_FAILURE
+
 
 class Trigger(LoggingBuildStep):
     name = "Trigger"
@@ -189,12 +191,8 @@ class Trigger(LoggingBuildStep):
             if results == FAILURE:
                 was_failure = True
 
-        if was_exception:
-            result = EXCEPTION
-            self.step_status.setText(["Dependency failed to build."])
-            self.step_status.setText2(["(dependency failed to build)"])
-        elif was_failure:
-            result = FAILURE
+        if was_exception or was_failure:
+            result = DEPENDENCY_FAILURE
             self.step_status.setText(["Dependency failed to build."])
             self.step_status.setText2(["(dependency failed to build)"])
         else:

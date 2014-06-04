@@ -21,7 +21,7 @@ from twisted.internet import defer, reactor
 from buildbot import config, interfaces
 from buildbot.process import properties
 from buildbot.status import master
-from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION, DEPENDENCY_FAILURE
 from buildbot.steps import trigger
 from buildbot.test.util import steps, compat
 from buildbot.test.fake import fakemaster, fakedb
@@ -437,7 +437,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
         self.scheduler_a.result = FAILURE
-        self.expectOutcome(result=FAILURE, status_text=['Dependency failed to build.'])
+        self.expectOutcome(result=DEPENDENCY_FAILURE, status_text=['Dependency failed to build.'])
         self.expectTriggeredWith(a=({}, {}))
         self.expectTriggeredLinks('a')
         return self.runStep(expect_waitForFinish=True)

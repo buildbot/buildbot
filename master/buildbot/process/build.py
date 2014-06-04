@@ -23,7 +23,7 @@ from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status, NOT_REBUILT
+  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -517,7 +517,7 @@ class Build(properties.PropertiesMixin):
         # try to finish the build, but since we've already faced an exception,
         # this may not work well.
         try:
-            self.buildFinished(["Build Caught Exception"], EXCEPTION)
+            self.buildFinished(["Build Caught Exception"], DEPENDENCY_FAILURE)
         except:
             log.err(Failure(), 'while finishing a build with an exception')
 

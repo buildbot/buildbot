@@ -203,9 +203,18 @@ a.no-artifacts {
 	    content: "";
         margin-right:4px;
     	padding: 0 7px;
+        border: 1px solid #B4B7B0;
 	}
 	.log-list-not_rebuilt a:before {
 	    background-color: #F8FCF2;
+	    color: #444;
+	    content: "";
+        margin-right:4px;
+    	padding: 0 7px;
+    	border: 1px solid #B4B7B0;
+	}
+	.log-list-dependency_failure a:before {
+	    background-color: #FCF2F2;
 	    color: #444;
 	    content: "";
         margin-right:4px;
@@ -218,6 +227,7 @@ a.no-artifacts {
         margin-right: 4px;
     	padding: 0 7px;
 		background-color:#EFCFCF;
+        border: 1px solid #B4B7B0;
 	}
 	.log-list-skipped a:before {
 		color: #444;
@@ -225,6 +235,7 @@ a.no-artifacts {
         margin-right: 4px;
     	padding: 0 7px;
 		background-color:#CBDCE6;
+        border: 1px solid #B4B7B0;
 	}
 	.log-list-warnings a:before {
 		color: #444;
@@ -232,6 +243,7 @@ a.no-artifacts {
         margin-right: 4px;
     	padding: 0 7px;
 		background-color:#FFAA33;
+        border: 1px solid #B4B7B0;
 	}
 	.log-list-exception a:before,
 	.log-list-retry a:before {

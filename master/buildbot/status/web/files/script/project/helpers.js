@@ -2,21 +2,26 @@
 define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, popupsMus, Mustache, extendMoment, timeElements) {
 
     "use strict";
-    var helpers;
+    var helpers,
+        css_class_enum = {},
+        css_classes = {
+            SUCCESS: [0, "success"],
+            WARNINGS: [1, "warnings"],
+            FAILURE: [2, "failure"],
+            SKIPPED: [3, "skipped"],
+            EXCEPTION: [4, "exception"],
+            RETRY: [5, "retry"],
+            CANCELED: [6, "exception"],
+            NOT_REBUILT: [7, "not_rebuilt"],
+            DEPENDENCY_FAILURE: [8, "dependency_failure"],
+            RUNNING: [9, "running"],
+            NOT_STARTED: [10, "not_started"],
+            None: ""
+        };
 
-    var css_classes = {
-        SUCCESS: "success",
-        WARNINGS: "warnings",
-        FAILURE: "failure",
-        SKIPPED: "skipped",
-        EXCEPTION: "exception",
-        RETRY: "retry",
-        CANCELED: "exception",
-        NOT_REBUILT: "not_rebuilt",
-        RUNNING: "running",
-        NOT_STARTED: "not_started",
-        None: ""
-    };
+    $.each(css_classes, function (key, val) {
+        css_class_enum[key] = val[0];
+    });
 
     String.prototype.format = function () {
         var args = arguments;
@@ -543,7 +548,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             var values = Object.keys(css_classes).map(function (key) {
                 return css_classes[key];
             });
-            return values[status];
+            return values[status][1];
         },
         setIFrameSize: function (iFrame) {
             if (iFrame) {
@@ -565,7 +570,8 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             }
 
             return result;
-        }
+        },
+        cssClassesEnum : css_class_enum
     };
 
     return helpers;

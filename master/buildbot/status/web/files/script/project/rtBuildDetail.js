@@ -140,9 +140,9 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
 
                 var status = stepData.results[0];
                 if (!started) {
-                    status = 9;
+                    status = helpers.cssClassesEnum.NOT_STARTED;
                 } else if (started && !finished) {
-                    status = 8;
+                    status = helpers.cssClassesEnum.RUNNING;
                 }
 
                 var cssClass = helpers.getCssClassFromStatus(status);

@@ -27,6 +27,7 @@ $color-blind-skipped: #008EE6;
 $color-blind-inconclusive: #0025EF; 
 $color-blind-ignored: #008EE6; 
 $color-blind-not-rebuild: #99FC00;
+$color-blind-dependency-failure: #FFB5ED;
 
 
 
@@ -65,10 +66,17 @@ $color-blind-not-rebuild: #99FC00;
 	.not_rebuilt {
 		background-color: $color-blind-not-rebuild;
 	}
+    .dependency_failure {
+      background-color: $color-blind-dependency-failure;
+    }
 }
 
 .not_rebuilt {
 	background-color: #F8FCF2;
+}
+
+.dependency_failure {
+  background-color: #FCF2F2;
 }
  
 .table-1 .success {

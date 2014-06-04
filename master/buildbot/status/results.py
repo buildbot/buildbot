@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT = range(8)
-Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt"]
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE = range(9)
+Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt", "dependency_failure"]
 
 def worst_status(a, b):
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY
     # Retry needs to be considered the worst so that conusmers don't have to
     # worry about other failures undermining the RETRY.
-    for s in (RETRY, EXCEPTION, FAILURE, WARNINGS, SKIPPED, NOT_REBUILT, SUCCESS):
+    for s in (RETRY, EXCEPTION, DEPENDENCY_FAILURE, FAILURE, WARNINGS, SKIPPED, NOT_REBUILT, SUCCESS):
         if s in (a, b):
             return s

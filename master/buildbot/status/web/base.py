@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder, buildstep, build
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE
 from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
@@ -54,6 +54,7 @@ class IHTMLLog(Interface):
 css_classes = {SUCCESS: "success",
                WARNINGS: "warnings",
                FAILURE: "failure",
+               DEPENDENCY_FAILURE: "dependency_failure",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
                RETRY: "retry",
