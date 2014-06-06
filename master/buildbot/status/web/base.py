@@ -710,6 +710,7 @@ def emailfilter(value):
         replacing @ with <span style="display:none> reportedly works well against web-spiders
         and the next level is to use rot-13 (or something) and decode in javascript '''
 
+    value = value.decode("utf-8")
     user = jinja2.escape(value)
     obfuscator = jinja2.Markup('<span style="display:none">ohnoyoudont</span>@')
     output = user.replace('@', obfuscator)
