@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import datetime
+from twisted.internet import error, reactor
+from twisted.python import failure
 from twisted.trial import unittest
 from buildbot.changes.p4poller import P4Source, get_simple_split, P4PollerError
 from buildbot.test.util import changesource, gpo
@@ -209,6 +211,42 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertAllCommandsRan()
         return d
 
+    def test_acquire_ticket_auth(self):
+        self.attachChangeSource(
+                P4Source(p4port=None, p4user=None, p4passwd='pass',
+                         p4base='//depot/myproject/',
+                         split_file=lambda x: x.split('/', 1),
+                         use_tickets=True))
+        self.expectCommands(
+                gpo.Expect('p4', '-P', 'TICKET_ID_GOES_HERE',
+                           'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes)
+        )
+
+        class FakeTransport:
+            def __init__(self):
+                self.msg = None
+            def write(self, msg):
+                self.msg = msg
+            def closeStdin(self):
+                pass
+
+        transport = FakeTransport()
+        def spawnProcess(pp, cmd, argv, env): # p4poller uses only those arguments at the moment
+            self.assertEqual([cmd, argv],
+                             ['p4', ['p4', 'login', '-p']])
+            pp.makeConnection(transport)
+            self.assertEqual('pass\n', transport.msg)
+            pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+
+        d = self.changesource.poll()
+        def check_ticket_passwd(_):
+            self.assertEquals(self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
+        d.addCallback(check_ticket_passwd)
+        return d
+
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
         self.attachChangeSource(
@@ -228,6 +266,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d
+
 
 class TestSplit(unittest.TestCase):
     def test_get_simple_split(self):
