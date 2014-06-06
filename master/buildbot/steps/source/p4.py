@@ -201,11 +201,11 @@ class P4(Source):
             command.extend(['-p', self.p4port])
         if self.p4user:
             command.extend(['-u', self.p4user])
-        if self.p4client:
-            command.extend(['-c', self.p4client])
         if not self.use_tickets and self.p4passwd:
             # Need to find out if there's a way to obfuscate this
             command.extend(['-P', self.p4passwd])
+        if self.p4client:
+            command.extend(['-c', self.p4client])
 
         # Only add the extra arguments for the `sync` command.
         if doCommand[0] == 'sync' and self.p4extra_args:
@@ -322,6 +322,7 @@ class P4(Source):
         if debug_logging:
             log.msg("P4:acquireTicket()")
 
+        # TODO: check first if the ticket is still valid?
         initialStdin = self.p4passwd + "\n"
         yield self._dovccmd(['login'], initialStdin=initialStdin)
 

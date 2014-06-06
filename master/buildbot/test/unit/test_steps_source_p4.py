@@ -722,3 +722,63 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
+
+
+    def test_ticket_auth(self):
+        self.setupStep(P4(p4port='localhost:12000',
+                          p4base='//depot', p4branch='trunk',
+                          p4user='user', p4client='p4_client1', p4passwd='pass', use_tickets=True))
+
+        root_dir = '/home/user/workspace/wkdir'
+        if _is_windows:
+            root_dir = r'C:\Users\username\Workspace\wkdir'
+        client_spec = textwrap.dedent('''\
+        Client: p4_client1
+
+        Owner: user
+
+        Description:
+        \tCreated by user
+
+        Root:\t%s
+
+        Options:\tallwrite rmdir
+
+        LineEnd:\tlocal
+
+        View:
+        \t//depot/trunk/... //p4_client1/...
+        ''' % root_dir)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['p4', '-V'])
+            + 0,
+
+            # This is the extra step that gets run when using tickets,
+            # and the password is not passed anymore after that.
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-c', 'p4_client1',
+                                       'login'],
+                        initialStdin='pass\n')
+            + 0,
+
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-c', 'p4_client1',
+                                       'client', '-i'],
+                        initialStdin=client_spec)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-c', 'p4_client1', 'sync']))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
+                                       '-c', 'p4_client1',
+                                       'changes', '-m1', '#have'])
+            + ExpectShell.log('stdio',
+                              stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
+            + 0,
+        )
+        self.runStep()
