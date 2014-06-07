@@ -64,11 +64,10 @@ install:
       DEPTH=$(($DEPTH+200));
       git fetch origin --depth=$DEPTH --quiet;
     done
-  - git describe
 
-  - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
-  - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
-  - "[ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE"
+  - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
+  - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
+  - "echo 'travis_fold:start:sam'; [ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE; echo 'travis_fold:end:sam'"
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
   - (cd www;    python setup.py develop)
