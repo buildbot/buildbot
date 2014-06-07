@@ -19,7 +19,7 @@ Nine
   of the same name are deprecated and will be ignored.
 
 * The interface for adding changes has changed.
-  The new method is ``master.data.updates.addChanges`` (implemented by :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange`), although the old interface (``master.addChange``) will remain in place for a few versions.
+  The new method is ``master.data.updates.addChange`` (implemented by :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange`), although the old interface (``master.addChange``) will remain in place for a few versions.
   The new method:
 
   * returns a change ID, not a Change instance;
