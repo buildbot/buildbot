@@ -11,7 +11,7 @@ module.exports =
             sourceMap: true
         files: [
             src: '<%= files.less %>'
-            dest: '<%= dir.temp %>/styles/main.css'
+            dest: '.temp/styles/main.css'
         ]
 
     # Compress output using clean-css
@@ -20,5 +20,5 @@ module.exports =
             cleancss: true
         files: [
             src: '<%= files.less %>'
-            dest: '<%= dir.temp %>/styles/main.css'
+            dest: '.temp/styles/main.css'
         ]

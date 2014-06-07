@@ -10,7 +10,7 @@ module.exports =
             optimizationLevel: 7
         files: [
             src: '<%= files.images %>'
-            dest: '<%= dir.temp %>/img'
+            dest: '.temp/img'
             expand: true
             flatten: true
         ]

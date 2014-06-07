@@ -30,6 +30,6 @@ module.exports =
         define: true
 
     generate:
-        cwd: '<%= dir.temp %>/scripts'
+        cwd: '.temp/scripts'
         src: ['**/*.js', '!libs/require.js']
-        dest: '<%= dir.temp %>/scripts/main.js'
+        dest: '.temp/scripts/main.js'
