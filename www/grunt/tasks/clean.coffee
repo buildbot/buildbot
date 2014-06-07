@@ -9,6 +9,6 @@ module.exports =
     options:
         force: true
     main: [
-        '<%= dir.temp %>'
+        '.temp'
         '<%= dir.build %>'
     ]

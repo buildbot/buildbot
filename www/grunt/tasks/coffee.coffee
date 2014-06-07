@@ -11,7 +11,7 @@ module.exports =
     compile:
         files: [
             src: '<%= files.coffee %>'
-            dest: '<%= dir.temp %>/scripts'
+            dest: '.temp/scripts'
             expand: true
             flatten: true
             extDot: 'last'
@@ -21,7 +21,7 @@ module.exports =
     unit:
         files: [
             src: '<%= files.coffee_unit %>'
-            dest: '<%= dir.temp %>/scripts/test'
+            dest: '.temp/scripts/test'
             expand: true
             flatten: true
             extDot: 'last'

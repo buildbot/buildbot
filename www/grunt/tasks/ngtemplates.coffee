@@ -9,6 +9,6 @@ module.exports = (grunt, options) ->
         options:
             # Prefix name if exists
             prefix: options.config.name ? ''
-        cwd: '<%= dir.temp %>'
+        cwd: '.temp'
         src: 'views/*.html'
-        dest: '<%= dir.temp %>/scripts/app.templates.js'
+        dest: '.temp/scripts/app.templates.js'

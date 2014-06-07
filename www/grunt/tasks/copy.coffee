@@ -9,7 +9,7 @@ module.exports =
     libs:
         files: [
             src: '<%= files.library.js %>'
-            dest: '<%= dir.temp %>/scripts/libs'
+            dest: '.temp/scripts/libs'
             expand: true
             flatten: true
         ]
@@ -18,7 +18,7 @@ module.exports =
     libs_unit:
         files: [
             src: '<%= files.library.js_unit %>'
-            dest: '<%= dir.temp %>/scripts/test/libs'
+            dest: '.temp/scripts/test/libs'
             expand: true
             flatten: true
         ]
@@ -27,7 +27,7 @@ module.exports =
     fonts:
         files: [
             src: '<%= files.fonts %>'
-            dest: '<%= dir.temp %>/fonts'
+            dest: '.temp/fonts'
             expand: true
             flatten: true
         ]
@@ -36,7 +36,7 @@ module.exports =
     common:
         files: [
             src: '<%= files.common %>'
-            dest: '<%= dir.temp %>/common'
+            dest: '.temp/common'
             expand: true
             flatten: true
         ]
@@ -45,7 +45,7 @@ module.exports =
     js:
         files: [
             src: '<%= files.js %>'
-            dest: '<%= dir.temp %>/scripts'
+            dest: '.temp/scripts'
             expand: true
             flatten: true
         ]
@@ -54,7 +54,7 @@ module.exports =
     js_unit:
         files: [
             src: '<%= files.js_unit %>'
-            dest: '<%= dir.temp %>/scripts/test'
+            dest: '.temp/scripts/test'
             expand: true
             flatten: true
         ]
@@ -63,7 +63,7 @@ module.exports =
     images:
         files: [
             src: '<%= files.images %>'
-            dest: '<%= dir.temp %>/img'
+            dest: '.temp/img'
             expand: true
             flatten: true
         ]
@@ -71,7 +71,7 @@ module.exports =
     # Moving files from temp to build directory in development mode
     build_dev:
         files: [
-            cwd: '<%= dir.temp %>'
+            cwd: '.temp'
             src: '**'
             dest: '<%= dir.build %>'
             expand: true
@@ -80,7 +80,7 @@ module.exports =
     # Moving files from temp to build directory in production mode
     build_prod:
         files: [
-            cwd: '<%= dir.temp %>'
+            cwd: '.temp'
             src: [
                 'index.html'
                 'scripts/main.js'
@@ -92,6 +92,6 @@ module.exports =
             dest: '<%= dir.build %>'
             expand: true
         ,
-            src: '<%= dir.temp %>/scripts/libs/require.js'
+            src: '.temp/scripts/libs/require.js'
             dest: '<%= dir.build %>/scripts/require.js'
         ]

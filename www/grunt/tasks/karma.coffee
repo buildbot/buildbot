@@ -8,9 +8,9 @@ module.exports =
 
     options:
         files: [
-            '<%= dir.temp %>/scripts/test/main.js'
-            {pattern: "<%= dir.temp %>/scripts/**/*.js", included: false}
-            {pattern: "<%= dir.temp %>/scripts/**/*.js.map", included: false}
+            '.temp/scripts/test/main.js'
+            {pattern: ".temp/scripts/**/*.js", included: false}
+            {pattern: ".temp/scripts/**/*.js.map", included: false}
         ]
         preprocessors:
             '**/*.coffee' : ['coffee']

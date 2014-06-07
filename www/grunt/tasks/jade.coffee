@@ -9,13 +9,13 @@ module.exports =
     dev:
         files: [
             src: '<%= files.templates %>'
-            dest: '<%= dir.temp %>/views'
+            dest: '.temp/views'
             expand: true
             flatten: true
             ext: '.html'
         ,
             src: '<%= files.index %>'
-            dest: '<%= dir.temp %>/index.html'
+            dest: '.temp/index.html'
         ]
         options:
             # Output indented HTML
@@ -28,13 +28,13 @@ module.exports =
     prod:
         files: [
             src: '<%= files.templates %>'
-            dest: '<%= dir.temp %>/views'
+            dest: '.temp/views'
             expand: true
             flatten: true
             ext: '.html'
         ,
             src: '<%= files.index %>'
-            dest: '<%= dir.temp %>/index.html'
+            dest: '.temp/index.html'
         ]
         options:
             data:

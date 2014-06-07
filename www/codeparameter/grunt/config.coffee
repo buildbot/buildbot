@@ -14,8 +14,6 @@ module.exports =
     #   Directories
     ### ###########################################################################################
     dir:
-        # The temp folder is where the projects are compiled during development
-        temp: '.temp'
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www'
 

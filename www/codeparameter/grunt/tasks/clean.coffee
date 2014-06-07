@@ -9,7 +9,7 @@ module.exports =
     options:
         force: true
     scripts: [
-        '<%= dir.temp %>/scripts/libs/**'
-        '<%= dir.temp %>/scripts/*.js'
-        '<%= dir.temp %>/scripts/*.js.map'
+        '.temp/scripts/libs/**'
+        '.temp/scripts/*.js'
+        '.temp/scripts/*.js.map'
     ]
