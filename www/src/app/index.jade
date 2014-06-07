@@ -1,0 +1,21 @@
+extends layout
+block content
+    // navbar
+    nav.navbar.navbar-inverse(role="navigation")
+        .container-fluid
+            div.navbar-header
+                button.navbar-toggle(ng-init="isCollapsed=1",ng-click="isCollapsed = !isCollapsed")
+                    span.icon-bar
+                    span.icon-bar
+                    span.icon-bar
+                a.navbar-brand(href="#/")
+                    img#logo(src="img/favicon.ico")
+                    | &nbsp;Buildbot
+            div.navbar-collapse(ng-class="{collapse:isCollapsed}",ng-click="isCollapsed = 1")
+                topmenu
+                loginbar
+    // alerts: not that ng-animate does not work well with angular-ui's alert for ng-enter event
+    div(ng-controller="alertPanelController")
+        alert.anim-alert(ng-repeat="alert in alerts",type="alert.type",close="closeAlert($index)")
+            | {{alert.msg}}{{alert.occur_msg}}
+    ui-view
