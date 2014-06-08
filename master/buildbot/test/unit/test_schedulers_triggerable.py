@@ -285,3 +285,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         idsDeferred = sched.trigger(waited_for, sourcestamps=[])[0]
         self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[])
+
+    @defer.inlineCallbacks
+    def test_startService_stopService(self):
+        sched = self.makeScheduler()
+        yield sched.startService()
+        yield sched.stopService()

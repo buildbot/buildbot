@@ -131,8 +131,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 self._parentMethodCalled = True
                 return oldParent(self_)
             self.patch(base.BaseScheduler, meth, newParent)
-        if scheduler.__class__ != base.BaseScheduler:
+        if scheduler.__class__.activate != base.BaseScheduler.activate:
             patch('activate')
+        if scheduler.__class__.deactivate != base.BaseScheduler.deactivate:
             patch('deactivate')
 
         self.sched = scheduler
