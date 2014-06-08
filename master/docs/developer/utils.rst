@@ -392,7 +392,7 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
     Returns a decorator that debounces the underlying method.
     The underlying method must take no arguments (except ``self``).
 
-    For each call to the decorated method, the underlying method will be invocation at least once within *wait* seconds (plus the time the method takes to execute).
+    For each call to the decorated method, the underlying method will be invoked at least once within *wait* seconds (plus the time the method takes to execute).
     Calls are "debounced" during that time, meaning that multiple calls to the decorated method will result in a single invocation.
 
     .. note::

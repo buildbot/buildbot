@@ -18,9 +18,9 @@ from zope.interface import implements
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot.util import debounce
 from twisted.internet import defer
 from twisted.python import failure
-from twisted.python import log
 
 
 class Triggerable(base.BaseScheduler):
@@ -63,12 +63,16 @@ class Triggerable(base.BaseScheduler):
         def setup_waiter(ids):
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
-            d = self._updateWaiters()
-            d.addCallback(lambda _: ids)
-            return d
+            self._updateWaiters()
+            return ids
 
         idsDeferred.addCallback(setup_waiter)
         return idsDeferred, resultsDeferred
+
+    @defer.inlineCallbacks
+    def startService(self):
+        yield base.BaseScheduler.startService(self)
+        self._updateWaiters.start()
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -89,6 +93,7 @@ class Triggerable(base.BaseScheduler):
 
         yield base.BaseScheduler.stopService(self)
 
+    @debounce.method(wait=0)
     @defer.inlineCallbacks
     def _updateWaiters(self):
         if self._waiters and not self._buildset_complete_consumer:
@@ -107,7 +112,7 @@ class Triggerable(base.BaseScheduler):
         # pop this bsid from the waiters list,
         d, brids = self._waiters.pop(msg['bsid'])
         # ..and potentially stop consuming buildset completion notifications
-        self._updateWaiters().addErrback(log.err, "in _updateWaiters")
+        self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
         d.callback((msg['results'], brids))

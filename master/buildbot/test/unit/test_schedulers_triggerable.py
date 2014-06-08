@@ -54,6 +54,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
             self.OBJECTID)
+        sched._updateWaiters._reactor = self.clock
 
         return sched
 
@@ -163,6 +164,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
               'repository': 'r',
               'codebase': 'cb'}
         idsDeferred, d = sched.trigger(waited_for, sourcestamps=[ss], set_props=set_props)
+        self.clock.advance(0)  # let the debounced function fire
 
         self.assertTriggeredBuildset(
             idsDeferred,
@@ -202,6 +204,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         # pretend the matching buildset is complete
         self.sendCompletionMessage(200)
+        self.clock.advance(0)  # let the debounced function fire
 
         # scheduler should have reacted
         self.assertEqual(
@@ -237,6 +240,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         waited_for = True
         # and the second time
         idsDeferred, d = sched.trigger(waited_for, [makeSS('myrev2')])  # triggers bsid 201
+        self.clock.advance(0)  # let the debounced function fire
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
@@ -257,6 +261,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.sendCompletionMessage(201, results=22)
         self.sendCompletionMessage(9, results=3)
         self.sendCompletionMessage(200, results=11)
+        self.clock.advance(0)  # let the debounced function fire
 
         # both should have triggered with appropriate results, and the
         # subscription should be cancelled
