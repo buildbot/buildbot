@@ -37,7 +37,7 @@ for plugin, cfg of config.plugins
 
 # make the config global variable accessible as a DI module
 # so that it can be mocked in tests
-angular.module('app').constant("config", config)
+angular.module('buildbot.common').constant("config", config)
 
 require.config
     paths: plugins_paths

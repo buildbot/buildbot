@@ -1,0 +1,1 @@
+angular.module('buildbot.common').constant 'moment', window.moment

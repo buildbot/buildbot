@@ -1,5 +1,5 @@
 
-angular.module('app').factory 'buildbotService',
+angular.module('buildbot.common').factory 'buildbotService',
 ['$log', 'Restangular', 'mqService', '$rootScope', 'BASEURLAPI',
     'BASEURLSSE', 'plurals', 'singulars', '$q', '$timeout', 'config',
     ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE, plurals,

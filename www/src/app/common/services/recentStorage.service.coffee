@@ -2,7 +2,7 @@
     Recent storage service
 ###
 
-angular.module('app').factory 'recentStorage',
+angular.module('buildbot.common').factory 'recentStorage',
     ['$q', '$window', '$rootScope', ($q, $window, $rootScope) ->
         self = this
 

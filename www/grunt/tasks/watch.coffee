@@ -19,6 +19,7 @@ module.exports =
         files: '<%= files.coffee %>'
         tasks: [
             'newer:coffee:compile'
+            'requiregen'
             'newer:copy:build_dev'
             'karma:unit:run'
         ]
@@ -27,8 +28,9 @@ module.exports =
         files: '<%= files.coffee_unit %>'
         tasks: [
             'newer:coffee:unit'
-            'karma:unit:run'
+            'requiregen'
             'newer:copy:build_dev'
+            'karma:unit:run'
         ]
 
     jade:
