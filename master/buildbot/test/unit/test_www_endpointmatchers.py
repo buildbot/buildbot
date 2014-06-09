@@ -35,8 +35,18 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
         self.matcher.setAuthz(self.master.authz)
         self.insertData()
 
+    def makeMatcher(self):
+        raise NotImplementedError()
+
     def insertData(self):
         pass
+
+
+class ValidEndpointMixin(object):
+    @defer.inlineCallbacks
+    def test_invalidPath(self):
+        ret = yield self.matcher.match(("foo", "bar"))
+        self.assertEqual(ret, False)
 
 
 class AnyEndpointMatcher(EndpointBase):
@@ -49,7 +59,7 @@ class AnyEndpointMatcher(EndpointBase):
         self.assertEqual(ret, True)
 
 
-class ViewBuildsEndpointMatcherBranch(EndpointBase):
+class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def makeMatcher(self):
         return endpointmatchers.ViewBuildsEndpointMatcher(branch="secret", role="agent")
 
@@ -63,6 +73,38 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase):
         ])
 
     @defer.inlineCallbacks
-    def test_nominal(self):
-        ret = yield self.matcher.match(("foo", "bar"))
+    def test_build(self):
+        ret = yield self.matcher.match(("builds", "15"))
+        self.assertEqual(ret, True)
+
+
+class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
+    def makeMatcher(self):
+        return endpointmatchers.StopBuildEndpointMatcher(builder="builder", role="owner")
+
+    def insertData(self):
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=13, branch=u'secret'),
+            fakedb.Build(id=15, buildrequestid=16, masterid=1, buildslaveid=2, builderid=21),
+            fakedb.BuildRequest(id=16, buildsetid=17),
+            fakedb.Buildset(id=17),
+            fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
+            fakedb.Builder(id=21, name="builder"),
+        ])
+
+    @defer.inlineCallbacks
+    def test_build(self):
+        ret = yield self.matcher.match(("builds", "15"), "stop")
+        self.assertEqual(ret, True)
+
+    @defer.inlineCallbacks
+    def test_build_no_match(self):
+        self.matcher.builder = "foo"
+        ret = yield self.matcher.match(("builds", "15"), "stop")
+        self.assertEqual(ret, False)
+
+    @defer.inlineCallbacks
+    def test_build_no_builder(self):
+        self.matcher.builder = None
+        ret = yield self.matcher.match(("builds", "15"), "stop")
         self.assertEqual(ret, True)

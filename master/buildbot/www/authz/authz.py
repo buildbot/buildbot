@@ -2,16 +2,16 @@ import fnmatch
 import re
 
 
+# fnmatch and re.match are reversed API, we cannot just rename them
+def fnmatchStrMatcher(value, match):
+    return fnmatch.fnmatch(value, match)
+
+
+def reStrMatcher(value, match):
+    return re.match(match, value)
+
+
 class Authz(object):
-
-    # fnmatch and re.match are reversed API, we cannot just rename them
-    @staticmethod
-    def fnmatchStrMatcher(value, match):
-        return fnmatch.fnmatch(value, match)
-
-    @staticmethod
-    def reStrMatcher(value, match):
-        return re.match(match, value)
 
     def __init__(self, allowRules=None, roleMatchers=None, stringsMatcher=fnmatchStrMatcher):
         self.match = stringsMatcher
