@@ -1,0 +1,30 @@
+.panel.panel-default(ng-class="results2class(build)")
+  .panel-heading.no-select(ng-click="toggleDetails()")
+    a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
+      | {{builder.name}}/{{build.number}}
+    .pull-right
+      span(ng-repeat="s in build.state_strings")
+        | {{s}}&nbsp;
+      .label(ng-class="results2class(build)")
+        | {{results2text(build)}}
+  ul.list-group.no-select
+    li.list-group-item(ng-if="isStepDisplayed(step)", ng-repeat="step in steps",
+                       ng-click="step.fulldisplay=!step.fulldisplay")
+      span.pull-right(ng-if="step.started_at")
+        | &nbsp;{{step.state_strings.join(' ')}}
+      span.badge-status(ng-class="results2class(step, 'pulse')")
+        | {{step.number}}
+      | &nbsp;
+      i.fa.fa-chevron-circle-right.rotate(ng-class="{'rotate-90':fulldisplay}", ng-if="step.logs.length")
+      | &nbsp; {{step.name}}
+      div.anim-stepdetails(ng-show="step.fulldisplay")
+        ul.list-unstyled
+          li(ng-repeat="log in step.logs")
+            a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}") {{log.name}}
+            | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
+      ul.list-unstyled
+        li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
+          buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')
+      ul
+        li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
+          a(href="{{url.url}}") {{url.name}}

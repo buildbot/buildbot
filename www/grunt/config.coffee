@@ -36,6 +36,7 @@ module.exports =
         # CoffeeScript test
         coffee_unit: [
             'test/**/*.coffee'
+            'src/app/**/*.spec.coffee'
         ]
 
         # Jade templates

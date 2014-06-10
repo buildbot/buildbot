@@ -30,10 +30,9 @@ module.exports = (grunt) ->
 
     grunt.registerTask 'dataspec', ->
         done = @async()
-        temp = grunt.template.process('<%= dir.temp %>')
         grunt.util.spawn
             cmd: "buildbot"
-            args: "dataspec -o #{temp}/scripts/test/dataspec.js -g dataspec".split(" ")
+            args: "dataspec -o .temp/scripts/test/dataspec.js -g dataspec".split(" ")
         , (error, result, code) ->
             grunt.log.write result.toString()
             done(!error)
