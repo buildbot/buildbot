@@ -75,6 +75,8 @@ window.decorateHttpBackend = ($httpBackend) ->
             return ret
 
         hint = $httpBackend.epLastPath(ep).replace("n:","")
+        if not window.dataspec?
+            throw Error("dataspec is not available in test environment?!")
         for dataEp in window.dataspec
             dataEp.re ?= this.epRegexp(dataEp.path)
             if dataEp.re.test(ep)
@@ -138,7 +140,6 @@ if window.describe?
                 comments: 'mycomments'
                 changeid: 1,
                 codebase: 'mycodebase'
-                link: 'http://link/link'
                 branch: 'mybranch'
                 sourcestamp:
                     codebase: 'mycodebase'
@@ -153,7 +154,6 @@ if window.describe?
                         author: 'myauthor'
                         subdir: 'mysubdir'
                     project: 'myproject'
-                    link: 'http://link/link'
                     branch: 'mybranch'
                     revision: 'myrevision'
                 revision: 'myrevision'
