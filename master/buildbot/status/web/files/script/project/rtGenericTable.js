@@ -199,11 +199,25 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "mRender": function (data, type, full) {
                     var times = privFunc.getPropertyOnData(full, timesProperty);
                     if (times !== undefined) {
+                        if (type === 'sort') {
+                            if (times.length === 3) {
+                                return times[2] - times[0];
+                            }
+                            return times[1] - times[0];
+                        }
+
                         var d = moment.duration((times[1] - times[0]) * 1000);
                         if (times.length === 3) {
                             d = moment.duration((times[2] - times[0]) * 1000);
                         }
-                        return "{0}m {1}s ".format(d.minutes(), d.seconds());
+                        if (d.hours() > 0) {
+                            return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
+                        }
+                        return "{0}m {1}s".format(d.minutes(), d.seconds());
+                    }
+
+                    if (type === 'sort') {
+                        return 0;
                     }
                     return "N/A";
                 }

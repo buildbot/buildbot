@@ -29,10 +29,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 { "mData": null, "sWidth": "15%" },
                 { "mData": null, "sWidth": "10%" },
                 { "mData": null, "sWidth": "15%", "sType": "builder-status" },
-                { "mData": null, "sWidth": "5%" },
-                { "mData": null, "sWidth": "15%" },
-                { "mData": null, "sWidth": "10%" },
-                { "mData": null, "sWidth": "10%", 'bSortable': false }
+                { "mData": null, "sWidth": "5%", "bSortable": false  },
+                { "mData": null, "sWidth": "15%", "bSortable": false  },
+                { "mData": null, "sWidth": "10%", "sType": "natural" },
+                { "mData": null, "sWidth": "10%", "bSortable": false }
             ];
 
             options.aoColumnDefs = [
@@ -61,6 +61,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [ 3 ],
+                    "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         if (type === 'sort') {
                             return full;
@@ -74,6 +75,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [4],
+                    "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {showArtifacts: true, data: type});
                     },
@@ -97,6 +99,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 }),
                 {
                     "aTargets": [ 7 ],
+                    "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
                     },
