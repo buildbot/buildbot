@@ -19,12 +19,9 @@
     {% endif %}
 {% endmacro %}
 
-{% block extra_header %}   
-
+{% block extra_script %}
     <script type="text/javascript">
-        $(document).ready(function(){
-                requirejs(['testresults/testresults-common']);
-        });
+        require.deps.push('project/testresults-common');
     </script>
 {% endblock %}
 {% block content %}

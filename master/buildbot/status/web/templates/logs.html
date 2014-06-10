@@ -3,11 +3,9 @@
 
 {% set bodyId = 'id="log_page"' %}
     
-{% block extra_header %}
+{% block extra_script %}
     <script type="text/javascript">
-        $(document).ready(function(){
-            setTimeout(function() {requirejs(['project/buildLog'])}, 200);
-        });
+    require.deps.push('project/buildLog');
     </script>
 {% endblock %}
 
