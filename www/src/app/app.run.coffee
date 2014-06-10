@@ -33,7 +33,7 @@ for plugin, cfg of config.plugins
 
     plugins_modules.push("#{plugin}/scripts/main")
     plugins_paths[plugin] = config.url + "#{plugin}"
-    angular.module('app').constant("#{plugin}_config", cfg)
+    angular.module('buildbot.common').constant("#{plugin}_config", cfg)
 
 # make the config global variable accessible as a DI module
 # so that it can be mocked in tests
