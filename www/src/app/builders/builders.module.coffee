@@ -17,8 +17,11 @@ m.config ['$stateProvider',
         name = 'builders'
 
         # Configuration
+        # Configuration
         cfg =
-            tabid: 'builders'
+            tabid: name
+            tabhash: "##{name}"
+            caption: 'Builders'
 
         # Register new state
         state =
