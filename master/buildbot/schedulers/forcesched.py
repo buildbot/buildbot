@@ -710,10 +710,7 @@ class ForceScheduler(base.BaseScheduler):
         defer.returnValue((real_properties, changeids, sourcestamps))
 
     @defer.inlineCallbacks
-    def force(self, owner, builderNames=None, builderid=None, **kwargs):
-        """
-        We check the parameters, and launch the build, if everything is correct
-        """
+    def computeBuilderNames(self, builderNames=None, builderid=None):
         if builderNames is None:
             if builderid is not None:
                 builder = yield self.master.data.get(('builders', str(builderid)))
@@ -722,7 +719,14 @@ class ForceScheduler(base.BaseScheduler):
                 builderNames = self.builderNames
         else:
             builderNames = list(set(builderNames).intersection(self.builderNames))
+        defer.returnValue(builderNames)
 
+    @defer.inlineCallbacks
+    def force(self, owner, builderNames=None, builderid=None, **kwargs):
+        """
+        We check the parameters, and launch the build, if everything is correct
+        """
+        builderNames = yield self.computeBuilderNames(builderNames, builderid)
         if not builderNames:
             raise KeyError("builderNames not specified or not supported")
 

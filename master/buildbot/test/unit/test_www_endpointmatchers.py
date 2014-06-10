@@ -19,6 +19,7 @@ from twisted.internet import defer
 from buildbot.test.util import www
 from buildbot.www.authz import endpointmatchers
 from buildbot.test.fake import fakedb
+from buildbot.schedulers.forcesched import ForceScheduler
 
 # AnyEndpointMatcher
 # ForceBuildEndpointMatcher
@@ -39,7 +40,14 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
         raise NotImplementedError()
 
     def insertData(self):
-        pass
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=13, branch=u'secret'),
+            fakedb.Build(id=15, buildrequestid=16, masterid=1, buildslaveid=2, builderid=21),
+            fakedb.BuildRequest(id=16, buildsetid=17),
+            fakedb.Buildset(id=17),
+            fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
+            fakedb.Builder(id=21, name="builder"),
+        ])
 
 
 class ValidEndpointMixin(object):
@@ -63,15 +71,6 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def makeMatcher(self):
         return endpointmatchers.ViewBuildsEndpointMatcher(branch="secret", role="agent")
 
-    def insertData(self):
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch=u'secret'),
-            fakedb.Build(id=15, buildrequestid=16, masterid=1, buildslaveid=2),
-            fakedb.BuildRequest(id=16, buildsetid=17),
-            fakedb.Buildset(id=17),
-            fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
-        ])
-
     @defer.inlineCallbacks
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"))
@@ -81,16 +80,6 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def makeMatcher(self):
         return endpointmatchers.StopBuildEndpointMatcher(builder="builder", role="owner")
-
-    def insertData(self):
-        self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch=u'secret'),
-            fakedb.Build(id=15, buildrequestid=16, masterid=1, buildslaveid=2, builderid=21),
-            fakedb.BuildRequest(id=16, buildsetid=17),
-            fakedb.Buildset(id=17),
-            fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
-            fakedb.Builder(id=21, name="builder"),
-        ])
 
     @defer.inlineCallbacks
     def test_build(self):
@@ -107,4 +96,40 @@ class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def test_build_no_builder(self):
         self.matcher.builder = None
         ret = yield self.matcher.match(("builds", "15"), "stop")
+        self.assertEqual(ret, True)
+
+
+class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
+    def makeMatcher(self):
+        return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
+
+    def insertData(self):
+        EndpointBase.insertData(self)
+        self.master.allSchedulers = lambda: [ForceScheduler(name="sched1", builderNames=["builder"])]
+
+    @defer.inlineCallbacks
+    def test_build(self):
+        ret = yield self.matcher.match(("builds", "15"), "stop")
+        self.assertEqual(ret, False)
+
+    @defer.inlineCallbacks
+    def test_forcesched(self):
+        ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
+        self.assertEqual(ret, True)
+
+    @defer.inlineCallbacks
+    def test_noforcesched(self):
+        ret = yield self.matcher.match(("forceschedulers", "sched2"), "force")
+        self.assertEqual(ret, False)
+
+    @defer.inlineCallbacks
+    def test_forcesched_builder_no_match(self):
+        self.matcher.builder = "foo"
+        ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
+        self.assertEqual(ret, False)
+
+    @defer.inlineCallbacks
+    def test_forcesched_nobuilder(self):
+        self.matcher.builder = None
+        ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
         self.assertEqual(ret, True)
