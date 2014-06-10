@@ -2,11 +2,11 @@
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'popup'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup) {
     
     var rtBuilders,
-        tbsorter;
+        $tbsorter;
 
     rtBuilders = {
         init: function () {
-            tbsorter = rtBuilders.dataTableInit($('.builders-table'));
+            $tbsorter = rtBuilders.dataTableInit($('.builders-table'));
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
@@ -19,13 +19,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
             }
         },
         realtimeFunctionsProcessBuilders: function (data) {
-            timeElements.clearTimeObjects(tbsorter);
-            tbsorter.fnClearTable();
-            try {
-                tbsorter.fnAddData(data.builders);
-                timeElements.updateTimeObjects();
-            } catch (err) {
-            }
+            rtTable.table.rtfGenericTableProcess($tbsorter, data.builders);
         },
         dataTableInit: function ($tableElem) {
             var options = {};
@@ -34,7 +28,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 { "mData": null, "sWidth": "20%" },
                 { "mData": null, "sWidth": "15%" },
                 { "mData": null, "sWidth": "10%" },
-                { "mData": null, "sWidth": "15%" },
+                { "mData": null, "sWidth": "15%", "sType": "builder-status" },
                 { "mData": null, "sWidth": "5%" },
                 { "mData": null, "sWidth": "15%" },
                 { "mData": null, "sWidth": "10%" },
@@ -53,8 +47,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 {
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left last-build-js",
-                    "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showLatestBuild: true, latestBuild: type.latestBuild});
+                    "mRender": function (data, type, full) {
+                        return mustache.render(builders, {showLatestBuild: true, latestBuild: full.latestBuild});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild !== undefined) {
@@ -67,8 +61,11 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [ 3 ],
-                    "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showStatus: true, latestBuild: type.latestBuild, data: type});
+                    "mRender": function (data, type, full) {
+                        if (type === 'sort') {
+                            return full;
+                        }
+                        return mustache.render(builders, {showStatus: true, latestBuild: full.latestBuild, data: full});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
