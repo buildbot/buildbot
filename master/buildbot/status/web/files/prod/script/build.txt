@@ -14,6 +14,7 @@ project/helpers.js
 plugins/jquery-datatables.js
 libs/natural-sort.js
 libs/jquery.form.js
+plugins/toastr.js
 project/popup.js
 project/dataTables.js
 project/project-drop-down.js
@@ -21,7 +22,6 @@ libs/uri/punycode.js
 libs/uri/IPv6.js
 libs/uri/SecondLevelDomains.js
 libs/uri/URI.js
-plugins/toastr.js
 project/rtGlobal.js
 project/realtimePages.js
 project/realtimeRouting.js

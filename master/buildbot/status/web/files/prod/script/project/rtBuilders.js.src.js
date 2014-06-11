@@ -98,7 +98,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     return undefined;
                 }),
                 {
-                    "aTargets": [ 7 ],                    
+                    "aTargets": [ 7 ],
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
                     },
@@ -106,11 +106,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                         var $nTd = $(nTd);
                         var $instantBuildBtn = $nTd.find(".instant-build");
                         popup.initRunBuild($nTd.find(".custom-build"), $instantBuildBtn);
-                        $instantBuildBtn.click(function() {                            
-                            toastr.info('Your build will start shortly', 'Info', {
-                                iconClass: 'info'
-                            });                
-                        });
                     }
                 }
 

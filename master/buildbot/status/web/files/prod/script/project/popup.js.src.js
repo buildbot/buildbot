@@ -1,5 +1,5 @@
 /*global define, requirejs, jQuery*/
-define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements'], function ($, helpers, form, popups, Mustache, timeElements) {
+define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements', 'toastr'], function ($, helpers, form, popups, Mustache, timeElements, toastr) {
 
     
 
@@ -83,10 +83,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     if (opts.animate) {
                         $elem.fadeOut(opts.hideAnimation, function () {
                             privateFunc.clear();
+                            opts.onHide($elem);
                         });
                     } else {
                         $elem.hide();
                         privateFunc.clear();
+                        opts.onHide($elem);
                     }
                 },
                 initCloseButton: function () {
@@ -125,9 +127,14 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             animate: true,
             showAnimation: "fast",
             hideAnimation: "fast",
-            onCreate: function () {
+            onCreate: function ($elem) {
+                return undefined;
             },
-            onShow: function () {
+            onShow: function ($elem) {
+                return undefined;
+            },
+            onHide: function ($elem) {
+                return undefined;
             }
         };
     }(jQuery));
@@ -355,6 +362,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 if (instantBuild) {
                                     $form.ajaxSubmit(formOptions);
                                 }
+                            },
+                            onHide: function () {
+                                console.log("Moo");
+                                toastr.info('Your build will start shortly', 'Info', {
+                                    iconClass: 'info'
+                                });
                             }
                         });
 
