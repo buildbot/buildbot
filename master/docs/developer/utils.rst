@@ -419,6 +419,64 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
         This method can be called on a started debouncer without issues.
 
 
+buildbot.util.poll
+~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.poll
+
+Many Buildbot services perform some periodic, asynchronous operation.
+Change sources, for example, contact the repositories they monitor on a regular basis.
+The tricky bit is, the periodic operation must complete before the service stops.
+
+The ``@poll.method`` decorator makes this behavior easy and reliable.
+
+.. py:function:: method
+
+    This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
+    The poller is initially stopped, so peroidic calls will not begin until its ``start`` method is called.
+    The start polling interval is specified when the poller is started.
+
+    If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.
+
+    If a previous invocation of the method has not completed when the interval expires, then the next invocation is skipped and the interval timer starts again.
+
+    A common idiom is to call ``start`` and ``stop`` from ``startService`` and ``stopService``::
+
+        class WatchThings(object):
+
+            @poll.method
+            def watch(self):
+                d = self.beginCheckingSomething()
+                return d
+
+            def startService(self):
+                self.watch.start(interval=self.pollingInterval, now=False)
+
+            def stopService(self):
+                return self.watch.stop()
+
+
+.. py:class:: Poller
+
+    .. py:method:: start(interval=N, now=False)
+
+        :param interval: time, in seconds, between invocations
+        :param now: if true, call the decorated method immediately on startup.
+
+        Start the poller.
+
+    .. py:method:: stop()
+
+        :returns: Deferred
+
+        Stop the poller.
+        The returned Deferred fires when the decorated method is complete.
+
+    .. py:method:: __call__()
+
+        Force a call to the decorated method now.
+        If the decorated method is currently running, another call will begin as soon as it completes.
+
 buildbot.util.json
 ~~~~~~~~~~~~~~~~~~
 
@@ -511,25 +569,6 @@ buildbot.util.misc
         def someLockedFunction():
             # ..
             return d
-
-.. py:class:: SerializedInvocation(method)
-
-    This is a method wrapper that will serialize calls to an asynchronous
-    method.  If a second call occurs while the first call is still executing,
-    it will not begin until the first call has finished.  If multiple calls
-    queue up, they will be collapsed into a single call.  The effect is that
-    the underlying method is guaranteed to be called at least once after every
-    call to the wrapper.
-
-    Note that if this class is used as a decorator on a method, it will
-    serialize invocations across all class instances.  For synchronization
-    specific to each instance, wrap the method in the constructor::
-
-        def __init__(self):
-            self.someMethod = SerializedInovcation(self.someMethod)
-
-    Tests can monkey-patch the ``_quiet`` method of the class to be notified
-    when all planned invocations are complete.
 
 .. py:function:: cancelAfter(seconds, deferred)
 

@@ -25,7 +25,6 @@ import types
 from twisted.python import reflect
 
 from buildbot.interfaces import IConfigured
-from buildbot.util.misc import SerializedInvocation
 from buildbot.util.misc import deferredLocked
 
 from zope.interface import implements
@@ -279,6 +278,6 @@ def check_functional_environment(config):
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
-    'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
+    'NotABranch', 'deferredLocked', 'UTC',
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',
     'check_functional_environment']

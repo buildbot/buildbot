@@ -389,8 +389,6 @@ the polling is not frequent enough.
 Writing a Notification-based Change Source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.changes.base.ChangeSource
-
 A custom change source must implement
 :class:`buildbot.interfaces.IChangeSource`.
 
@@ -414,17 +412,12 @@ from the old, then the old will be stopped and the new started.
 Writing a Change Poller
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.changes.base.PollingChangeSource
+Polling is a very common means of seeking changes, so Buildbot supplies a utility parent class to make it easier.
+A poller should subclass :class:`buildbot.changes.base.PollingChangeSource`, which is a subclass of :class:`~buildbot.changes.base.ChangeSource`.
+This subclass implements the :meth:`Service` methods, and calls the :meth:`poll` method according to the ``pollInterval`` and ``pollAtLaunch`` options.
+The ``poll`` method should return a Deferred to signal its completion.
 
-Polling is a very common means of seeking changes, so Buildbot supplies a
-utility parent class to make it easier.  A poller should subclass
-:class:`buildbot.changes.base.PollingChangeSource`, which is a subclass of
-:class:`ChangeSource`.  This subclass implements the :meth:`Service` methods,
-and causes the :meth:`poll` method to be called every ``self.pollInterval``
-seconds.  This method should return a Deferred to signal its completion.
-
-Aside from the service methods, the other concerns in the previous section
-apply here, too.
+Aside from the service methods, the other concerns in the previous section apply here, too.
 
 Writing a New Latent Buildslave Implementation
 ----------------------------------------------

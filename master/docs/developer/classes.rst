@@ -15,6 +15,7 @@ The sections contained here document classes that can be used or subclassed.
     cls-buildslave
     cls-buildfactory
     cls-buildsetsummarynotifiermixin
+    cls-changesources
     cls-remotecommands
     cls-buildsteps
     cls-basescheduler
