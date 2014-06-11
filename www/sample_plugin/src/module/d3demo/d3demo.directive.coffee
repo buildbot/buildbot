@@ -1,4 +1,4 @@
-angular.module("app").directive "d3demo", ["sample_plugin_config", (config) ->
+angular.module("buildbot.sample").directive "d3demo", ["sample_plugin_config", (config) ->
   restrict: "E"
   scope:
     val: "="
