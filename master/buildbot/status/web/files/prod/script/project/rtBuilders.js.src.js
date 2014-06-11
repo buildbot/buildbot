@@ -77,7 +77,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     "aTargets": [4],
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showArtifacts: true, data: type});
+                        return mustache.render(builders, {showShortcuts: true, data: type});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {

@@ -251,6 +251,16 @@ div.welcome-txt {
 	}
 }
 
+.point-of-failure:after {
+    font-family: "katana_icons";
+    content: "";
+    display: inline-block;
+    padding: 0;
+    font-weight:normal;
+    font-size: 16px;
+    position: relative;
+}
+
 span.log-error {
  color: #FF1212;
 }

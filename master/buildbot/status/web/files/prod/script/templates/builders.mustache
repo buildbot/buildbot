@@ -43,8 +43,11 @@
 	{{/latestBuild}}
 {{/showStatus}}
 
-{{#showArtifacts}}
+{{#showShortcuts}}
     {{#data.latestBuild.artifacts}}
         <a href="#" class="artifact-js more-info" title="Show artifacts"></a>
     {{/data.latestBuild.artifacts}}
-{{/showArtifacts}}
+    {{#data.latestBuild.failure_url}}
+        <a href="{{data.latestBuild.failure_url}}" class="point-of-failure" title="Show the point of failure"></a>
+    {{/data.latestBuild.failure_url}}
+{{/showShortcuts}}
