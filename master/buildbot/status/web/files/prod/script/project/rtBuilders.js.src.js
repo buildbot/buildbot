@@ -76,7 +76,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [4],
-                    "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {showShortcuts: true, data: type});
                     },
@@ -99,8 +98,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     return undefined;
                 }),
                 {
-                    "aTargets": [ 7 ],
-                    "sClass": "txt-align-left",
+                    "aTargets": [ 7 ],                    
                     "mRender": function (data, full, type) {
                         return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
                     },
