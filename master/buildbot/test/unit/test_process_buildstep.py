@@ -360,7 +360,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'C'])
-        step.step_status.setText.assert_not_called()
 
     def test_updateSummary_running_empty_dict(self):
         step = self.setup_summary_test()
@@ -370,8 +369,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'finished'])
-        step.step_status.setText.assert_not_called()
-        step.step_status.setText2.assert_not_called()
 
     def test_updateSummary_running_not_unicode(self):
         step = self.setup_summary_test()
@@ -396,8 +393,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'CS'])
-        step.step_status.old_setText.assert_called_with([u'CS'])
-        step.step_status.old_setText2.assert_called_with([u'CB'])
 
     def test_updateSummary_finished_empty_dict(self):
         step = self.setup_summary_test()
@@ -407,8 +402,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'finished'])
-        step.step_status.old_setText.assert_called_with([u'finished'])
-        step.step_status.old_setText2.assert_called_with([])
 
     def test_updateSummary_finished_not_dict(self):
         step = self.setup_summary_test()
@@ -495,11 +488,6 @@ class InterfaceTests(interfaces.InterfaceTests):
     def test_signature_setDefaultWorkdir(self):
         @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
         def setDefaultWorkdir(self, workdir):
-            pass
-
-    def test_signature_setStepStatus(self):
-        @self.assertArgSpecMatches(self.step.setStepStatus)
-        def setStepStatus(self, step_status):
             pass
 
     def test_signature_setupProgress(self):

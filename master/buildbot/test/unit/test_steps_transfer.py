@@ -223,7 +223,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file"))
 
-        self.step.step_status.addURL = Mock()
+        self.step.addURL = Mock()
 
         self.expectCommands(
             Expect('uploadFile', dict(
@@ -240,7 +240,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkURL(_):
-            self.step.step_status.addURL.assert_called_once_with(
+            self.step.addURL.assert_called_once_with(
                 os.path.basename(self.destfile), "http://server/file")
         return d
 

@@ -475,7 +475,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
 
         def check(_):
-            self.assertEqual(self.step_statistics, {'warnings': 2})
+            self.assertEqual(self.step.statistics, {'warnings': 2})
         d.addCallback(check)
         return d
 

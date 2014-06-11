@@ -161,11 +161,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                              self.exp_a_trigger)
             self.assertEqual(self.scheduler_b.triggered_with,
                              self.exp_b_trigger)
-            for i in xrange(len(self.exp_added_urls)):
-                self.assertEqual(self.step_status.addURL.call_args_list[i],
-                                 self.exp_added_urls[i])
-            self.assertEqual(self.step_status.addURL.call_args_list,
-                             self.exp_added_urls)
+
+            # check the URLs
+            stepUrls = self.master.data.updates.stepUrls
+            if stepUrls:
+                got_added_urls = stepUrls[stepUrls.keys()[0]]
+            else:
+                got_added_urls = []
+            self.assertEqual(sorted(got_added_urls),
+                             sorted(self.exp_added_urls))
 
             if self.exp_add_sourcestamp:
                 self.assertEqual(self.addSourceStamp_kwargs,
@@ -195,19 +199,19 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def expectTriggeredLinks(self, *args):
         if 'a_br' in args:
             self.exp_added_urls.append(
-                (('a #11', 'baseurl/#buildrequests/11'), {}))
+                ('a #11', 'baseurl/#buildrequests/11'))
         if 'b_br' in args:
             self.exp_added_urls.append(
-                (('b #22', 'baseurl/#buildrequests/22'), {}))
+                ('b #22', 'baseurl/#buildrequests/22'))
         if 'a' in args:
-            self.exp_added_urls.append((('success: A #4011',
-                                         'baseurl/#builders/1/builds/4011'), {}))
+            self.exp_added_urls.append(
+                ('success: A #4011', 'baseurl/#builders/1/builds/4011'))
         if 'b' in args:
-            self.exp_added_urls.append((('success: B #4022',
-                                         'baseurl/#builders/2/builds/4022'), {}))
+            self.exp_added_urls.append(
+                ('success: B #4022', 'baseurl/#builders/2/builds/4022'))
         if 'afailed' in args:
-            self.exp_added_urls.append((('failure: A #4011',
-                                         'baseurl/#builders/1/builds/4011'), {}))
+            self.exp_added_urls.append(
+                ('failure: A #4011', 'baseurl/#builders/1/builds/4011'))
 
     # tests
     def test_no_schedulerNames(self):

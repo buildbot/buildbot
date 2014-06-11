@@ -146,9 +146,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # Set this here, so it gets rendered when we start the step
         self.slaveEnvironment = self.build.slaveEnvironment
 
-    def setStepStatus(self, step_status):
-        buildstep.LoggingBuildStep.setStepStatus(self, step_status)
-
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
         rkw['workdir'] = rkw['workdir'] or workdir
