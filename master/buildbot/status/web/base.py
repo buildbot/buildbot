@@ -160,7 +160,7 @@ def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
 
     if sourcestamps is not None:
         for ss in sourcestamps:
-            if not ss.codebase + "_branch" in request.args:
+            if request is None or ss.codebase + "_branch" not in request.args:
                 codebases_arg = addURLParam(codebases_arg, ss.codebase + "_branch", ss.branch)
     return codebases_arg
 
