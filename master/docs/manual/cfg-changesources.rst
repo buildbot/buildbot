@@ -621,6 +621,14 @@ depot for changes. It accepts the following arguments:
     (e.g: ``Europe/Stockholm``) in case it's in a different timezone than the
     buildbot master.
 
+``use_tickets``
+    Set to ``True`` to use ticket-based authentication, instead of passwords (but
+    you still need to specify ``p4passwd``).
+
+``ticket_login_interval``
+    How often to get a new ticket, in seconds, when ``use_tickets`` is enabled.
+    Defaults to 86400 (24 hours).
+
 Example
 +++++++
 

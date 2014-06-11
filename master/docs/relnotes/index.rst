@@ -106,6 +106,8 @@ Master
 Features
 ~~~~~~~~
 
+* Both the P4 source step and P4 change source support ticket-based authentication.
+
 Fixes
 ~~~~~
 
