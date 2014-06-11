@@ -20,56 +20,59 @@ from buildbot.changes.p4poller import P4Source
 from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
 from twisted.trial import unittest
 
 first_p4changes = \
-"""Change 1 on 2006/04/13 by slamb@testclient 'first rev'
+    """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
 """
 
 second_p4changes = \
-"""Change 3 on 2006/04/13 by bob@testclient 'short desc truncated'
+    """Change 3 on 2006/04/13 by bob@testclient 'short desc truncated'
 Change 2 on 2006/04/13 by slamb@testclient 'bar'
 """
 
 third_p4changes = \
-"""Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
+    """Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
 """
 
 change_4_log = \
-"""Change 4 by mpatel@testclient on 2006/04/13 21:55:39
+    """Change 4 by mpatel@testclient on 2006/04/13 21:55:39
 
     short desc truncated because this is a long description.
 """
 
 change_3_log = \
-u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
+    u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
 
     short desc truncated because this is a long description.
     ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
 """
 
 change_2_log = \
-"""Change 2 by slamb@testclient on 2006/04/13 21:46:23
+    """Change 2 by slamb@testclient on 2006/04/13 21:46:23
 
     creation
 """
 
 p4change = {
     3: change_3_log +
-"""Affected files ...
+    """Affected files ...
 
 ... //depot/myproject/branch_b/branch_b_file#1 add
 ... //depot/myproject/branch_b/whatbranch#1 branch
 ... //depot/myproject/branch_c/whatbranch#1 branch
 """,
     2: change_2_log +
-"""Affected files ...
+    """Affected files ...
 
 ... //depot/myproject/trunk/whatbranch#1 add
 ... //depot/otherproject/trunk/something#1 add
 """,
     5: change_4_log +
-"""Affected files ...
+    """Affected files ...
 
 ... //depot/myproject/branch_b/branch_b_file#1 add
 ... //depot/myproject/branch_b#75 edit
@@ -215,6 +218,47 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             # check that 2 was processed OK
             self.assertEquals(self.changesource.last_change, 2)
             self.assertAllCommandsRan()
+        return d
+
+    def test_acquire_ticket_auth(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None, p4passwd='pass',
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     use_tickets=True))
+        self.expectCommands(
+            gpo.Expect('p4', '-P', 'TICKET_ID_GOES_HERE',
+                       'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes)
+        )
+
+        class FakeTransport:
+
+            def __init__(self):
+                self.msg = None
+
+            def write(self, msg):
+                self.msg = msg
+
+            def closeStdin(self):
+                pass
+
+        transport = FakeTransport()
+
+        def spawnProcess(pp, cmd, argv, env):  # p4poller uses only those arguments at the moment
+            self.assertEqual([cmd, argv],
+                             ['p4', ['p4', 'login', '-p']])
+            pp.makeConnection(transport)
+            self.assertEqual('pass\n', transport.msg)
+            pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+
+        d = self.changesource.poll()
+
+        def check_ticket_passwd(_):
+            self.assertEquals(self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
+        d.addCallback(check_ticket_passwd)
         return d
 
     def test_poll_split_file(self):
