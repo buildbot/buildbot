@@ -62,7 +62,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             q = self._saSelectQuery()
-            q.where(reqs_tbl.c.id == brid)
+            q = q.where(reqs_tbl.c.id == brid)
             res = conn.execute(q)
             row = res.fetchone()
             rv = None
