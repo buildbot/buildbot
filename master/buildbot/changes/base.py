@@ -18,8 +18,8 @@ from twisted.python import log
 from zope.interface import implements
 
 from buildbot.interfaces import IChangeSource
-from buildbot.util import poll
 from buildbot.util import service
+from buildbot.util.poll import method as poll_method
 
 
 class ChangeSource(service.ClusteredService):
@@ -57,14 +57,14 @@ class PollingChangeSource(ChangeSource):
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 
-    @poll.method
+    def poll(self):
+        pass
+
+    @poll_method
     def doPoll(self):
         d = defer.maybeDeferred(self.poll)
         d.addErrback(log.err, 'while polling for changes')
         return d
-
-    def poll(self):
-        pass
 
     def force(self):
         self.doPoll()

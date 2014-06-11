@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.util import poll
+from buildbot.util.poll import method as poll_method
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -21,7 +21,7 @@ from twisted.trial import unittest
 
 class TestPollerSync(unittest.TestCase):
 
-    @poll.method
+    @poll_method
     def poll(self):
         self.calls += 1
         if self.fail:
@@ -107,7 +107,7 @@ class TestPollerSync(unittest.TestCase):
 
 class TestPollerAsync(unittest.TestCase):
 
-    @poll.method
+    @poll_method
     def poll(self):
         assert not self.running, "overlapping call"
         self.running = True
