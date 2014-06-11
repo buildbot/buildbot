@@ -1,4 +1,4 @@
-define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helpers, dt, extendMoment) {
+define(['jquery', 'helpers', 'dataTables', 'extend-moment', 'toastr'], function ($, helpers, dt, extendMoment, toastr) {
     "use strict";
     var buildQueueTotal = $('#buildQueueTotal');
     var buildSlavesTotal = $('#buildSlavesTotal');
@@ -43,6 +43,14 @@ define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helper
 
             buildSlavesTotal.text(slaveCount);
             infoSpan.text(buildLoad);
+
+            toastr.options = {
+                closeButton: true,          
+                timeOut:5000,
+                extendedTimeOut:0,
+                hideDuration:300
+            };       
+
         },
         initDataTable : function() {
             var table = undefined;

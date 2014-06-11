@@ -1,8 +1,9 @@
 /*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'popup'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'popup','toastr'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup, toastr) {
     
     var rtBuilders,
         $tbsorter;
+
 
     rtBuilders = {
         init: function () {
@@ -105,7 +106,13 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     },
                     "fnCreatedCell": function (nTd) {
                         var $nTd = $(nTd);
-                        popup.initRunBuild($nTd.find(".custom-build"), $nTd.find(".instant-build"));
+                        var $instantBuildBtn = $nTd.find(".instant-build");
+                        popup.initRunBuild($nTd.find(".custom-build"), $instantBuildBtn);
+                        $instantBuildBtn.click(function() {                            
+                            toastr.info('Your build will start shortly', 'Info', {
+                                iconClass: 'info'
+                            });                
+                        });
                     }
                 }
 

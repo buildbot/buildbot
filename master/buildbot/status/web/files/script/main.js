@@ -1,7 +1,7 @@
 /*global require, define, jQuery*/
 require.config({
     paths: {
-        'jquery-internal': 'libs/jquery',
+        'jquery': 'libs/jquery',
         'selectors': 'project/selectors',
         'select2': 'plugins/select2',
         'datatables-plugin': 'plugins/jquery-datatables',
@@ -33,7 +33,8 @@ require.config({
         'rtGenericTable': "project/rtGenericTable",
         'hbCells': 'templates/rtCells.handlebars',
         'userSettings': 'project/userSettings',
-        'URIjs': 'libs/uri'
+        'URIjs': 'libs/uri',
+		'toastr' : 'plugins/toastr'
     },
     shim: {
         'overscroll' : {
@@ -41,12 +42,6 @@ require.config({
         }
     }
 });
-
-define('jquery', ['jquery-internal'], function () {
-    "use strict";
-    return jQuery;
-});
-
 
 define(['jquery', 'helpers', 'dataTables', 'popup', 'screensize', 'projectdropdown', 'extend-moment', 'text!templates/popups.mustache', 'mustache', 'timeElements', 'URIjs/URI', 'rtglobal', 'realtimerouting', 'realtimePages', 'rtbuilders', 'overscroll'],
     function ($, helpers, dataTables, popup, screenSize, projectDropDown, extendMoment, popups, Mustache, timeElements, URI, rtGlobal) {
@@ -58,16 +53,17 @@ define(['jquery', 'helpers', 'dataTables', 'popup', 'screensize', 'projectdropdo
         $(document).ready(function () {
             $('body').show();
 
-            // swipe or scroll in the codebases overview
-            if ($('#builders_page').length || $('#builder_page').length) {
-                require(['overscroll'],
-                    function () {
-                        $("#overScrollJS").overscroll({
-                            showThumbs: false,
-                            direction: 'horizontal'
-                        });
-                    });
-            }
+	  	// swipe or scroll in the codebases overview
+	  	if ($('#builders_page').length || $('#builder_page').length) {	  		
+	  	require(['overscroll'],
+	        function(overscroll) {	      
+	        
+	        	$("#overScrollJS").overscroll({
+	        		showThumbs:false,
+	        		direction:'horizontal'
+	        	});
+	        });
+	  	}
 
             // tooltip for long txtstrings
             if ($('.ellipsis-js').length) {
@@ -85,13 +81,13 @@ define(['jquery', 'helpers', 'dataTables', 'popup', 'screensize', 'projectdropdo
                     });
             }
 
-            if (helpers.hasfinished() === false) {
-
-                require(['realtimerouting'],
-                    function (realtimeRouting) {
-                        realtimeRouting.init();
-                    });
-            }
+		if (helpers.hasfinished() === false) {	
+		
+			require(['realtimerouting'],
+	        function(realtimeRouting) {	        		        	
+	        	realtimeRouting.init();
+	        });
+		}	
 
             if (helpers.isRealTimePage() === true) {
                 var preloader = $(Mustache.render(popups, {'preloader': 'true'}));

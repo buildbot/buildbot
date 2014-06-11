@@ -21,6 +21,7 @@ libs/uri/punycode.js
 libs/uri/IPv6.js
 libs/uri/SecondLevelDomains.js
 libs/uri/URI.js
+plugins/toastr.js
 project/rtGlobal.js
 project/realtimePages.js
 project/realtimeRouting.js

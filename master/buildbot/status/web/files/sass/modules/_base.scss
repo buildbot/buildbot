@@ -30,6 +30,14 @@ $color-blind-not-rebuild: #99FC00;
 $color-blind-dependency-failure: #FFB5ED;
 
 
+  
+$color-success:#DDE6D6;
+$color-failure:#EFCFCF;
+$color-exception:#DDD7DD;
+$color-warnings:#fa3;
+$color-skipped:#CBDCE6;
+$color-inconclusive:#CBDCE6;
+$color-ignored:#CBDCE6;
 
 // for not implemented content
 .notimpl {color:#838383 !important;}
@@ -70,26 +78,34 @@ $color-blind-dependency-failure: #FFB5ED;
       background-color: $color-blind-dependency-failure;
     }
 }
-
-.not_rebuilt {
-	background-color: #F8FCF2;
-}
-
-.dependency_failure {
-  background-color: #FCF2F2;
-}
- 
-.table-1 .success {
-	border-top:1px solid #fff;
+    
+.table-1 {
+	.success,
+	.failure,
+	.skipped,
+	.exception,
+	.retry,
+	.current-step,
+	.running,
+	.waiting,
+	.offline,
+	.idle,
+	.not_rebuilt
+	 {
+		border-top:1px solid #fff;
+	}
 }
 
 .table-1 tr .success:first-child {
 	border-top:none;
 }
 
+.not_rebuilt {
+	background-color: #F8FCF2;
+}
+
 .failure {
-	background-color: #EFCFCF;
-	border-top:1px solid #fff;
+	background-color: #EFCFCF;	
 }
 
 .warnings {
@@ -100,12 +116,10 @@ $color-blind-dependency-failure: #FFB5ED;
 
 .skipped {
 	background: #CBDCE6;
-	border-top: 1px solid #FFFFFF;
 }
 
 .exception,.retry {
 	background-color: #DDD7DD;
-	border-top: 1px solid #FFFFFF;
 }
 
 .start {
@@ -115,8 +129,7 @@ $color-blind-dependency-failure: #FFB5ED;
 }
 
 .running,.waiting,td.building, .current-step {
-	background-color: #FCFACB;
-	border-top:1px solid #fff;
+	background-color: #FCFACB;	
 }
 
 .overtime {
@@ -132,9 +145,3 @@ $color-blind-dependency-failure: #FFB5ED;
     background-color: #F5F5F5;
     @include text-shadow(0 1px 0 #fff);
 }
- 
-.table-1 .offline,
-.table-1 .idle, 
-.table-1 .not_rebuilt {
-	border-top: 1px solid #FFFFFF;
-} 
