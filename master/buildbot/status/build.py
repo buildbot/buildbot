@@ -501,12 +501,21 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 if r != SUCCESS and r != SKIPPED:
                     logs = s.getLogs()
                     if len(logs) > 0:
-                        log = next((l for l in logs if l.getName() == "TestReport.html"), None)
-                        if log is None:
-                            log = next(l for l in logs if l.getName() == "stdio")
+                        failure_log = next((l for l in logs if l.getName() == "TestReport.html"), None)
+                        if failure_log is not None and s.getStatistic('passed', 0) == 0:
+                            failure_log = None
 
-                        self.foi_url = self.master.status.getURLForThing(log)
-                        return self.foi_url
+                        log_types = ["stdio", "interrupt", "err.text"]
+                        for t in log_types:
+                            if failure_log is not None:
+                                break
+                            failure_log = next((l for l in logs if l.getName() == t), None)
+
+                        if failure_log is not None:
+                            self.foi_url = self.master.status.getURLForThing(failure_log)
+                            return self.foi_url
+
+        return None
 
     def get_artifacts(self):
         if self.artifacts is not None:
