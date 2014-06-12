@@ -21,6 +21,9 @@
           deps : ['main']
       };
     </script>
+
+    {% block extra_script %}
+    {% endblock extra_script %}
         
     {% if instant_json %}
     <script id="instant-json" type="application/javascript">
