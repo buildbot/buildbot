@@ -329,10 +329,14 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 $body.append($preloader);
                 $preloader.show();
 
-                $.get(url, urlParams).
-                    done(function (html) {
-                        $preloader.hide();
+                function errorCreatingBuild() {
+                    toastr.error('There was an error when creating your build please try again later', 'Error', {
+                        iconClass: 'failure'
+                    });
+                }
 
+                $.get(url, urlParams)
+                    .done(function (html) {
                         // Create popup
                         var $popup = $("<div/>").popup({
                             title: $('<h2 class="small-head" />').html(title),
@@ -355,6 +359,14 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                                 realtimePages.updateSingleRealTimeData(name, data);
                                             });
                                             $preloader.remove();
+
+                                            toastr.info('Your build will start shortly', 'Info', {
+                                                iconClass: 'info'
+                                            });
+                                        },
+                                        error: function () {
+                                            $preloader.remove();
+                                            errorCreatingBuild();
                                         }
                                     };
 
@@ -363,11 +375,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 if (instantBuild) {
                                     $form.ajaxSubmit(formOptions);
                                 }
-                            },
-                            onHide: function () {
-                                toastr.info('Your build will start shortly', 'Info', {
-                                    iconClass: 'info'
-                                });
                             }
                         });
 
@@ -375,6 +382,12 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         if (!instantBuild) {
                             $popup.showPopup();
                         }
+                    })
+                    .fail(function () {
+                        errorCreatingBuild();
+                    })
+                    .always(function () {
+                        $preloader.hide();
                     });
             }
 
