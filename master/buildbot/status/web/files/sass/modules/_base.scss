@@ -104,8 +104,12 @@ $color-ignored:#CBDCE6;
 	background-color: #F8FCF2;
 }
 
+.dependency_failure {
+  background-color: #FCF2F2;
+}
+
 .failure {
-	background-color: #EFCFCF;	
+	background-color: #EFCFCF;
 }
 
 .warnings {
