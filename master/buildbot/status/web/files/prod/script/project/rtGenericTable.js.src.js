@@ -230,12 +230,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#", "sWidth": "5%" },
-                { "mData": null, "sTitle": "Date", "sWidth": "10%" },
-                { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
-                { "mData": null, "sTitle": "Result", "sWidth": "30%", "sClass": ""},
-                { "mData": null, "sTitle": "Build Time", "sWidth": "15%" },
-                { "mData": null, "sTitle": "Slave", "sWidth": "10%" }
+                { "mData": null, "sTitle": "#", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Date", "sWidth": "15%" },
+                { "mData": null, "sTitle": "Revision", "sWidth": "20%" },
+                { "mData": null, "sTitle": "Result", "sWidth": "30%", "sClass": "txt-align-left"},
+                { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Slave", "sWidth": "15%" }
             ];
 
             options.fnRowCallback = function (nRow, aData) {

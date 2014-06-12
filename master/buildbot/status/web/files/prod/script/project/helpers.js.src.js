@@ -276,7 +276,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             });
             $table.delegate('.force-individual-js', 'click', function (e) {
                 e.preventDefault();
-                var iVal = $(this).prev().prev().val();
+                var iVal = $(this).prev().val();
                 var str = parameters + iVal;
                 ajaxPost(str);
             });

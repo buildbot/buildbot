@@ -364,7 +364,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 }
                             },
                             onHide: function () {
-                                console.log("Moo");
                                 toastr.info('Your build will start shortly', 'Info', {
                                     iconClass: 'info'
                                 });
