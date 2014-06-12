@@ -294,20 +294,6 @@ SourceStamps
 <ol id="stepList" class="step-list">
 
 </ol>
-
-<h2 class="head-2">Responsible Users</h2>
-
-{% if responsible_users %}
-  <ol>
-  {% for u in responsible_users %}
-     <li class="{{ loop.cycle('alt', '') }}">{{ u|user }}</li>
-  {% endfor %}
-  </ol>
-{% else %}
-  <p>no responsible users</p>
-{% endif %}
-
-
 </div>
 </div>
 </div>
