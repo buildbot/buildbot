@@ -87,9 +87,6 @@ class ForceBuildDialogPage(HtmlResource):
             url_parts[4] += return_page
             force_url = urlunparse(url_parts)
 
-
-
-            print force_url
             cxt['force_url'] = force_url
             cxt['rt_update'] = args
             request.args = args

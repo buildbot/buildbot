@@ -321,7 +321,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     builderName = $customBuild.attr('data-builder-name'),
                     title = $customBuild.attr('data-popup-title'),
                     url = location.protocol + "//" + location.host + "/forms/forceBuild",
-                    urlParams = {builder_url: builderURL, builder_name: builderName, return_page: dataReturnPage};
+                    urlParams = helpers.codebasesFromURL({builder_url: builderURL, builder_name: builderName, return_page: dataReturnPage});
+
 
                 var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
                 var $preloader = $(mustacheTmpl); //TODO: Move elsewhere
