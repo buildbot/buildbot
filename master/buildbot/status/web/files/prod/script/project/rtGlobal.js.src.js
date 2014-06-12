@@ -1,12 +1,11 @@
 /*global define, requirejs*/
-define(['jquery', 'helpers', 'dataTables', 'extend-moment', 'toastr'], function ($, helpers, dt, extendMoment, toastr) {
+define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helpers, dt, extendMoment) {
     
-    var buildQueueTotal = $('#buildQueueTotal');
-    var buildSlavesTotal = $('#buildSlavesTotal');
-    var outerBar = $('#verticalProgressBar');
-    var $buildLoadBox = $('#buildLoad');
-    var infoSpan = $buildLoadBox.find('span');
-    var $attentionBox = $('#attentionBox');
+    var buildQueueTotal = $('#buildQueueTotal'),
+        buildSlavesTotal = $('#buildSlavesTotal'),
+        outerBar = $('#verticalProgressBar'),
+        $buildLoadBox = $('#buildLoad'),
+        infoSpan = $buildLoadBox.find('span');
 
     var rtGlobal = {
         init: function () {
@@ -18,10 +17,6 @@ define(['jquery', 'helpers', 'dataTables', 'extend-moment', 'toastr'], function 
         },
         processGlobalInfo: function (data) {
             extendMoment.setServerTime(data.utc);
-
-            if (helpers.isRealTimePage() === false) {
-                $attentionBox.addClass('show-desktop');
-            }
 
             var buildLoad = data.build_load;
 
