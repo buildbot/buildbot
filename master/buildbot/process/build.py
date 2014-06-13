@@ -439,7 +439,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY):
+        elif result in (EXCEPTION, RETRY, DEPENDENCY_FAILURE):
             terminate = True
 
         # if we skipped this step, then don't adjust the build status

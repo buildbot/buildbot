@@ -201,7 +201,7 @@ class Trigger(LoggingBuildStep):
         if brids:
             master = self.build.builder.botmaster.parent
 
-            def  getBuildResults(build):
+            def getBuildResults(build):
                 if 'results' in build:
                     return (build['results'],)
                 return ()
@@ -240,7 +240,7 @@ class Trigger(LoggingBuildStep):
                             self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
-            res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
+            res_builds = yield defer.DeferredList(builddicts, consumeErrors=True)
             if master.config.multiMaster:
                 yield add_links_multimaster(res_builds)
             else:
