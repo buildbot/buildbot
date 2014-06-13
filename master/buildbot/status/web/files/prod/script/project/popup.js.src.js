@@ -205,7 +205,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             var $codebaseElem = $(codebaseElem),
                 codebasesURL = $codebaseElem.attr("data-codebases-url");
 
-            $codebaseElem.click(function () {
+            $codebaseElem.click(function (event) {
+                event.preventDefault();
+
                 //TODO: Remove this
                 var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
                 var preloader = $(mustacheTmpl);
@@ -304,7 +306,10 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 });
             }
 
-            $pendingElem.click(openPopup);
+            $pendingElem.click(function (event) {
+                event.preventDefault();
+                openPopup();
+            });
         },
         initRunBuild: function (customBuildElem, instantBuildElem) {
             var $customBuild = $(customBuildElem),
@@ -404,7 +409,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
         initArtifacts: function (artifactList, artifactElem) {
             var $artifactElem = $(artifactElem);
 
-            $artifactElem.click(function () {
+            $artifactElem.click(function (event) {
+                event.preventDefault();
+
                 var html = "";
                 if (artifactList !== undefined) {
                     $.each(artifactList, function (name, url) {
