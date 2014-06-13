@@ -494,7 +494,7 @@ class Build(properties.PropertiesMixin):
             d.callback(None)
 
     def allStepsDone(self):
-        if self.result == FAILURE:
+        if self.result == FAILURE or self.result == DEPENDENCY_FAILURE:
             text = ["Build Failed"]
         elif self.result == WARNINGS:
             text = ["Build Finished with Warnings"]
