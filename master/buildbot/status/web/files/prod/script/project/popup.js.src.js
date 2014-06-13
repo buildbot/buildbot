@@ -391,11 +391,13 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     });
             }
 
-            $customBuild.click(function () {
+            $customBuild.click(function (event) {
+                event.preventDefault();
                 openPopup(false);
             });
 
-            $instantBuild.click(function () {
+            $instantBuild.click(function (event) {
+                event.preventDefault();
                 openPopup(true);
             });
         },
