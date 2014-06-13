@@ -145,51 +145,58 @@ define(['jquery', 'datatables-plugin', 'helpers', 'libs/natural-sort', 'popup'],
         },
         initBuilderStatusSort: function () {
             var r = helpers.cssClassesEnum,
-                priorityOrder = [r.FAILURE, r.DEPENDENCY_FAILURE, r.SUCCESS, r.NOT_REBUILT, r.EXCEPTION];
+                priorityOrder = [r.FAILURE, r.DEPENDENCY_FAILURE, r.SUCCESS, r.NOT_REBUILT, r.CANCELED, r.RETRY, r.SKIPPED, r.EXCEPTION];
 
-            var sort = function (a, b) {
-                    if (a.latestBuild !== undefined && b.latestBuild !== undefined) {
-                        var  aResult = a.latestBuild.results;
-                        var  bResult = b.latestBuild.results;
+            var sort = function (a, b, reverse) {
+                if (a.latestBuild !== undefined && b.latestBuild !== undefined) {
+                    var aResult = a.latestBuild.results;
+                    var bResult = b.latestBuild.results;
 
-                        if (aResult === bResult) {
-                            return 0;
-                        }
-
-                        var result = -1;
-                        $.each(priorityOrder, function (x, item) {
-                            if (aResult === item) {
-                                result =  -1;
-                                return false;
-                            }
-
-                            if (bResult === item) {
-                                result =  1;
-                                return false;
-                            }
-
-                            return true;
-                        });
-                        return result;
-
-                    }
-
-                    if (a.latestBuild === b.latestBuild) {
+                    if (aResult === bResult) {
                         return 0;
                     }
-                    if (a.latestBuild !== undefined) {
-                        return -1;
+
+                    var result = -1,
+                        order = priorityOrder.slice();
+
+                    if (reverse === true) {
+                        order = order.reverse();
                     }
 
-                    return 1;
-                };
+                    $.each(order, function (x, item) {
+                        if (aResult === item) {
+                            result = -1;
+                            return false;
+                        }
+
+                        if (bResult === item) {
+                            result = 1;
+                            return false;
+                        }
+
+                        return true;
+                    });
+
+
+                    return result;
+                }
+
+                if (a.latestBuild === b.latestBuild) {
+                    return 0;
+                }
+                if (a.latestBuild !== undefined) {
+                    return -1;
+                }
+
+                return 1;
+            };
 
             $.extend($.fn.dataTableExt.oSort, {
                 "builder-status-asc": function (a, b) {
-                    return sort(a, b);
+                    return sort(a, b, false);
                 },
                 "builder-status-desc": function (a, b) {
-                    return sort(a, b) * -1;
+                    return sort(a, b, true);
                 }
             });
         }
