@@ -767,7 +767,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
         #Get latest build
         builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
                                                      codebases=codebases,
-                                                     num_builds=1))
+                                                     num_builds=1, max_search=200))
 
         if len(builds) > 0:
             d['latestBuild'] = builds[0].asBaseDict(request)

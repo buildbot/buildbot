@@ -62,6 +62,7 @@ class BuilderStatus(styles.Versioned):
     category = None
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
+    unavailable_build_numbers = set()
 
     def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
@@ -82,6 +83,7 @@ class BuilderStatus(styles.Versioned):
         self.watchers = []
         self.buildCache = LRUCache(self.cacheMiss)
         self.reason = None
+        self.unavailable_build_numbers = set()
 
     # persistence
 
@@ -175,13 +177,17 @@ class BuilderStatus(styles.Versioned):
         return self.buildCache.get(number)
 
     def loadBuildFromFile(self, number):
+        if number in self.unavailable_build_numbers:
+            return None
+
         filename = self.makeBuildFilename(number)
         try:
             if not os.path.exists(filename):
+                if number < self.nextBuildNumber:
+                    self.unavailable_build_numbers.add(number)
                 return None
 
-            log.msg("Loading builder %s's build %d from on-disk pickle"
-                % (self.name, number))
+            log.msg("Loading builder %s's build %d from on-disk pickle" % (self.name, number))
             with open(filename, "rb") as f:
                 build = load(f)
             build.setProcessObjects(self, self.master)
