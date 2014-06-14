@@ -18,8 +18,12 @@ class RolesFromBase(object):
     def __init__(self):
         pass
 
-    def getRolesFromUser(self, userDetails, owner):
+    def getRolesFromUser(self, userDetails):
         return []
+
+    def setAuthz(self, authz):
+        self.authz = authz
+        self.master = authz.master
 
 
 class RolesFromGroups(RolesFromBase):
@@ -27,7 +31,7 @@ class RolesFromGroups(RolesFromBase):
         RolesFromBase.__init__(self)
         self.groupPrefix = groupPrefix
 
-    def getRolesFromUser(self, userDetails, owner):
+    def getRolesFromUser(self, userDetails):
         roles = []
         if 'groups' in userDetails:
             for group in userDetails['groups']:
@@ -44,7 +48,7 @@ class RolesFromEmails(RolesFromBase):
             for email in emails:
                 self.roles.setdefault(email, []).append(role)
 
-    def getRolesFromUser(self, userDetails, owner):
+    def getRolesFromUser(self, userDetails):
         if 'email' in userDetails:
             return self.roles.get(userDetails['email'], [])
         return []

@@ -1,6 +1,17 @@
 import fnmatch
 import re
 
+from twisted.internet import defer
+from twisted.web.error import Error
+from roles import RolesFromOwner
+from buildbot.interfaces import IConfigured
+from zope.interface import implements
+
+
+class Forbidden(Error):
+    def __init__(self, msg):
+        Error.__init__(self, 403, msg)
+
 
 # fnmatch and re.match are reversed API, we cannot just rename them
 def fnmatchStrMatcher(value, match):
@@ -12,6 +23,10 @@ def reStrMatcher(value, match):
 
 
 class Authz(object):
+    implements(IConfigured)
+
+    def getConfigDict(self):
+        return {}
 
     def __init__(self, allowRules=None, roleMatchers=None, stringsMatcher=fnmatchStrMatcher):
         self.match = stringsMatcher
@@ -20,7 +35,36 @@ class Authz(object):
         if roleMatchers is None:
             roleMatchers = []
         self.allowRules = allowRules
-        self.roleMatchers = roleMatchers
+        self.roleMatchers = [r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
+        self.ownerRoleMatchers = [r for r in roleMatchers if isinstance(r, RolesFromOwner)]
 
-    def isUserAllowed(self, ep, action, userDetails):
-        return True
+    def setMaster(self, master):
+        self.master = master
+        for r in self.roleMatchers + self.ownerRoleMatchers + self.allowRules:
+            r.setAuthz(self)
+
+    def getRolesFromUser(self, userDetails):
+        roles = set()
+        for roleMatcher in self.roleMatchers:
+            roles.update(set(roleMatcher.getRolesFromUser(userDetails)))
+        return roles
+
+    def getOwnerRolesFromUser(self, userDetails, owner):
+        roles = set()
+        for roleMatcher in self.ownerRoleMatchers:
+            roles.update(set(roleMatcher.getRolesFromUser(userDetails, owner)))
+        return roles
+
+    @defer.inlineCallbacks
+    def assertUserAllowed(self, ep, action, options, userDetails):
+        roles = self.getRolesFromUser(userDetails)
+        for rule in self.allowRules:
+            match = yield rule.match(ep, action, options)
+            if match:
+                roles.update(self.getOwnerRolesFromUser(userDetails, rule.owner))
+                if rule.role not in roles:
+                    if rule.defaultDeny:
+                        raise Forbidden("you need to have role '%s'" % (rule.role,))
+                elif not rule.defaultDeny:
+                    defer.returnValue(None)
+        defer.returnValue(None)

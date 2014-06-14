@@ -22,6 +22,7 @@ class EndpointMatcherBase(object):
     def __init__(self, role, defaultDeny=True):
         self.role = role
         self.defaultDeny = defaultDeny
+        self.owner = None
 
     def setAuthz(self, authz):
         self.authz = authz
@@ -43,13 +44,93 @@ class EndpointMatcherBase(object):
             return defer.succeed(False)
         return defer.succeed(False)
 
+    def __repr__(self):
+        # a repr for debugging. displays the class, and string attributes
+        args = []
+        for k, v in self.__dict__.items():
+            if isinstance(v, basestring):
+                args.append("%s='%s'" % (k, v))
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
+
 
 class AnyEndpointMatcher(EndpointMatcherBase):
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
 
-    def match(self, ep, action="get"):
+    def match(self, ep, action="get", options=None):
         return defer.succeed(True)
+
+
+class StopBuildEndpointMatcher(EndpointMatcherBase):
+    def __init__(self, builder=None, **kwargs):
+        self.builder = builder
+        EndpointMatcherBase.__init__(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def matchFromBuilderId(self, builderid):
+        if builderid is not None:
+            builder = yield self.master.data.get(('builders', builderid))
+            buildername = builder['name']
+            defer.returnValue(self.authz.match(buildername, self.builder))
+        defer.returnValue(False)
+
+    @defer.inlineCallbacks
+    def getOwnerFromBuild(self, build):
+        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
+        owner = yield self.getOwnerFromBuildRequest(br)
+        defer.returnValue(owner)
+
+    @defer.inlineCallbacks
+    def getOwnerFromBuildRequest(self, buildrequest):
+        props = yield self.master.data.get(("buildsets", buildrequest['buildsetid'], "properties"))
+        if 'owner' in props:
+            defer.returnValue(props['owner'][0])
+        defer.returnValue(None)
+
+    @defer.inlineCallbacks
+    def match_BuildEndpoint_stop(self, epobject, epdict, options):
+        build = yield epobject.get({}, epdict)
+        self.owner = yield self.getOwnerFromBuild(build)
+        if self.builder is None:
+            # no filtering needed: we match!
+            defer.returnValue(True)
+        # if filtering needed, we need to get some more info
+        ret = yield self.matchFromBuilderId(build['builderid'])
+        defer.returnValue(ret)
+
+    def match_BuildRequestEndpoint_stop(self, epobject, epdict, options):
+        buildrequest = yield epobject.get({}, epdict)
+        self.owner = yield self.getOwnerFromBuildRequest(build)
+        if self.builder is None:
+            # no filtering needed: we match!
+            defer.returnValue(True)
+        # if filtering needed, we need to get some more info
+        ret = yield self.matchFromBuilderId(buildrequest['builderid'])
+        defer.returnValue(ret)
+
+
+class ForceBuildEndpointMatcher(EndpointMatcherBase):
+    def __init__(self, builder=None, **kwargs):
+        self.builder = builder
+        EndpointMatcherBase.__init__(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
+        if self.builder is None:
+            # no filtering needed: we match without querying!
+            defer.returnValue(True)
+        sched = yield epobject.findForceScheduler(epdict['schedulername'])
+        if sched is not None:
+            builderNames = options.get('builderNames')
+            builderid = options.get('builderid')
+            builderNames = yield sched.computeBuilderNames(builderNames, builderid)
+            for buildername in builderNames:
+                if self.authz.match(buildername, self.builder):
+                    defer.returnValue(True)
+        defer.returnValue(False)
+
+#####
+# not yet implemented
 
 
 class ViewBuildsEndpointMatcher(EndpointMatcherBase):
@@ -63,49 +144,10 @@ class ViewBuildsEndpointMatcher(EndpointMatcherBase):
         return defer.succeed(True)
 
 
-class StopBuildEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, builder=None, **kwargs):
-        self.builder = builder
-        EndpointMatcherBase.__init__(self, **kwargs)
-
-    @defer.inlineCallbacks
-    def match_BuildEndpoint_stop(self, epobject, epdict, options):
-        if self.builder is None:
-            # no filtering needed: we match!
-            defer.returnValue(True)
-        # if filtering needed, we need to get some more info
-        build = yield epobject.get({}, epdict)
-        if build['builderid'] is not None:
-            builder = yield self.master.data.get(('builders', build['builderid']))
-            buildername = builder['name']
-            defer.returnValue(self.authz.match(buildername, self.builder))
-        defer.returnValue(False)
-
-    def match_BuildRequestEndpoint_stop(self, epobject, epdict):
-        return defer.succeed(True)
-
-
 class BranchEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, **kwargs):
+    def __init__(self, branch, **kwargs):
+        self.branch = branch
         EndpointMatcherBase.__init__(self, **kwargs)
 
-
-class ForceBuildEndpointMatcher(EndpointMatcherBase):
-    def __init__(self, builder=None, **kwargs):
-        self.builder = builder
-        EndpointMatcherBase.__init__(self, **kwargs)
-
-    @defer.inlineCallbacks
-    def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
-        if self.builder is None:
-            # no filtering needed: we match!
-            defer.returnValue(True)
-        sched = yield epobject.findForceScheduler(epdict['schedulername'])
-        if sched is not None:
-            builderNames = options.get('builderNames')
-            builderid = options.get('builderid')
-            builderNames = yield sched.computeBuilderNames(builderNames, builderid)
-            for buildername in builderNames:
-                if self.authz.match(buildername, self.builder):
-                    defer.returnValue(True)
-        defer.returnValue(False)
+    def match_BuildEndpoint_get(self, epobject, epdict, options):
+        return defer.succeed(True)

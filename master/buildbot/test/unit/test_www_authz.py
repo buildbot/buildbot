@@ -16,6 +16,7 @@
 from buildbot.test.util import www
 from buildbot.www import authz
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.www.authz.roles import RolesFromGroups, RolesFromEmails, RolesFromOwner
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
@@ -28,7 +29,7 @@ from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 class Authz(www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         authzcfg = authz.Authz(
-            stringsMatcher=authz.Authz.fnmatchStrMatcher,  # simple matcher with '*' glob character
+            stringsMatcher=authz.fnmatchStrMatcher,  # simple matcher with '*' glob character
             # stringsMatcher = authz.Authz.reStrMatcher,  # if you prefer regular expressions
             allowRules=[
                 # admins can do anything,
@@ -87,24 +88,28 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                          buildrequestid=82, number=5),
         ])
 
-    def assertUserAllowed(self, ep, action, user):
-        ret = self.authz.isUserAllowed(ep.split("/"), action, self.users[user])
-        self.assertEqual(ret, True)
+    def assertUserAllowed(self, ep, action, options, user):
+        return self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
 
-    def assertUserForbidden(self, ep, action, user):
-        ret = self.authz.isUserAllowed(ep.split("/"), action, self.users[user])
-        self.assertEqual(ret, False)
+    @defer.inlineCallbacks
+    def assertUserForbidden(self, ep, action, options, user):
+        try:
+            yield self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
+        except authz.Forbidden, e:
+            self.assertIn("need to have role", repr(e))
 
+    @defer.inlineCallbacks
     def test_anyEndpoint(self):
-        self.assertUserAllowed("foo/bar", "get", "homer")
-        self.assertUserForbidden("foo/bar", "get", "bond")
+        yield self.assertUserAllowed("foo/bar", "get", {}, "homer")
+        yield self.assertUserForbidden("foo/bar", "get", {}, "bond")
 
+    @defer.inlineCallbacks
     def test_stopBuild(self):
         # admin can always stop
-        self.assertUserAllowed("builds/13", "stop", "homer")
+        yield self.assertUserAllowed("builds/13", "stop", {}, "homer")
         # owner can always stop
-        self.assertUserAllowed("buildrequests/82", "stop", "nineuser")
-        self.assertUserAllowed("buildrequests/82", "stop", "nineuser")
+        yield self.assertUserAllowed("builds/13", "stop", {}, "nineuser")
+        yield self.assertUserAllowed("buildrequests/82", "stop", {}, "nineuser")
         # not owner cannot stop
-        self.assertUserForbidden("buildrequests/82", "stop", "eightuser")
-        self.assertUserForbidden("buildrequests/82", "stop", "eightuser")
+        yield self.assertUserForbidden("builds/13", "stop", {}, "eightuser")
+        yield self.assertUserForbidden("buildrequests/82", "stop", {}, "eightuser")

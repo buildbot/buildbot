@@ -39,6 +39,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
     """
 
     def findForceScheduler(self, schedulername):
+        # eventually this may be db backed. This is why the API is async
         for sched in self.master.allSchedulers():
             if sched.name == schedulername and isinstance(sched, forcesched.ForceScheduler):
                 return defer.succeed(sched)
@@ -52,7 +53,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action == "force":
-            sched = self.findForceScheduler(kwargs['schedulername'])
+            sched = yield self.findForceScheduler(kwargs['schedulername'])
             try:
                 res = yield sched.force("user", **args)
                 defer.returnValue(res)

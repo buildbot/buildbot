@@ -126,7 +126,7 @@ class WwwTestMixin(RequiresWwwMixin):
             master.config.buildbotURL = url
         self.master.session = FakeSession()
         self.master.authz = cfg["authz"]
-        self.master.authz.master = self.master
+        self.master.authz.setMaster(self.master)
         return master
 
     def make_request(self, path=None, method='GET'):
