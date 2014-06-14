@@ -39,6 +39,12 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
     def makeMatcher(self):
         raise NotImplementedError()
 
+    def assertMatch(self, match):
+        self.assertTrue(match is not None)
+
+    def assertNotMatch(self, match):
+        self.assertTrue(match is None)
+
     def insertData(self):
         self.db.insertTestData([
             fakedb.SourceStamp(id=13, branch=u'secret'),
@@ -54,7 +60,7 @@ class ValidEndpointMixin(object):
     @defer.inlineCallbacks
     def test_invalidPath(self):
         ret = yield self.matcher.match(("foo", "bar"))
-        self.assertEqual(ret, False)
+        self.assertNotMatch(ret)
 
 
 class AnyEndpointMatcher(EndpointBase):
@@ -64,7 +70,7 @@ class AnyEndpointMatcher(EndpointBase):
     @defer.inlineCallbacks
     def test_nominal(self):
         ret = yield self.matcher.match(("foo", "bar"))
-        self.assertEqual(ret, True)
+        self.assertMatch(ret)
 
 
 class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
@@ -74,7 +80,7 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     @defer.inlineCallbacks
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"))
-        self.assertEqual(ret, True)
+        self.assertNotMatch(ret)
 
 
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
@@ -84,19 +90,19 @@ class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     @defer.inlineCallbacks
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"), "stop")
-        self.assertEqual(ret, True)
+        self.assertMatch(ret)
 
     @defer.inlineCallbacks
     def test_build_no_match(self):
         self.matcher.builder = "foo"
         ret = yield self.matcher.match(("builds", "15"), "stop")
-        self.assertEqual(ret, False)
+        self.assertNotMatch(ret)
 
     @defer.inlineCallbacks
     def test_build_no_builder(self):
         self.matcher.builder = None
         ret = yield self.matcher.match(("builds", "15"), "stop")
-        self.assertEqual(ret, True)
+        self.assertMatch(ret)
 
 
 class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
@@ -110,26 +116,26 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     @defer.inlineCallbacks
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"), "stop")
-        self.assertEqual(ret, False)
+        self.assertNotMatch(ret)
 
     @defer.inlineCallbacks
     def test_forcesched(self):
         ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
-        self.assertEqual(ret, True)
+        self.assertMatch(ret)
 
     @defer.inlineCallbacks
     def test_noforcesched(self):
         ret = yield self.matcher.match(("forceschedulers", "sched2"), "force")
-        self.assertEqual(ret, False)
+        self.assertNotMatch(ret)
 
     @defer.inlineCallbacks
     def test_forcesched_builder_no_match(self):
         self.matcher.builder = "foo"
         ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
-        self.assertEqual(ret, False)
+        self.assertNotMatch(ret)
 
     @defer.inlineCallbacks
     def test_forcesched_nobuilder(self):
         self.matcher.builder = None
         ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
-        self.assertEqual(ret, True)
+        self.assertMatch(ret)

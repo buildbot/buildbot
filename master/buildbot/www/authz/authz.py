@@ -60,8 +60,12 @@ class Authz(object):
         roles = self.getRolesFromUser(userDetails)
         for rule in self.allowRules:
             match = yield rule.match(ep, action, options)
-            if match:
-                roles.update(self.getOwnerRolesFromUser(userDetails, rule.owner))
+            if match is not None:
+                # only try to get owner if there are owner Matchers
+                if self.ownerRoleMatchers:
+                    owner = yield match.getOwner()
+                    if owner is not None:
+                        roles.update(self.getOwnerRolesFromUser(userDetails, owner))
                 if rule.role not in roles:
                     if rule.defaultDeny:
                         raise Forbidden("you need to have role '%s'" % (rule.role,))

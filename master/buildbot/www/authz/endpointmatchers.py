@@ -41,8 +41,8 @@ class EndpointMatcherBase(object):
                 if m is not None:
                     return m(epobject, epdict, options)
         except InvalidPathError:
-            return defer.succeed(False)
-        return defer.succeed(False)
+            return defer.succeed(None)
+        return defer.succeed(None)
 
     def __repr__(self):
         # a repr for debugging. displays the class, and string attributes
@@ -53,12 +53,45 @@ class EndpointMatcherBase(object):
         return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 
 
+class Match(object):
+    def __init__(self, master, build=None, buildrequest=None, buildset=None):
+        self.master = master
+        self.build = build
+        self.buildrequest = buildrequest
+        self.buildset = buildset
+
+    def getOwner(self):
+        if self.buildset:
+            return self.getOwnerFromBuildset(self.buildset)
+        elif self.buildrequest:
+            return self.getOwnerFromBuildRequest(self.buildrequest)
+        elif self.build:
+            return self.getOwnerFromBuild(self.build)
+        return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def getOwnerFromBuild(self, build):
+        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
+        owner = yield self.getOwnerFromBuildRequest(br)
+        defer.returnValue(owner)
+
+    @defer.inlineCallbacks
+    def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
+        props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'], "properties"))
+        if 'owner' in props:
+            defer.returnValue(props['owner'][0])
+        defer.returnValue(None)
+
+    getOwnerFromBuildRequest = getOwnerFromBuildsetOrBuildRequest
+    getOwnerFromBuildSet = getOwnerFromBuildsetOrBuildRequest
+
+
 class AnyEndpointMatcher(EndpointMatcherBase):
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
 
     def match(self, ep, action="get", options=None):
-        return defer.succeed(True)
+        return defer.succeed(Match(self.master))
 
 
 class StopBuildEndpointMatcher(EndpointMatcherBase):
@@ -75,38 +108,29 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         defer.returnValue(False)
 
     @defer.inlineCallbacks
-    def getOwnerFromBuild(self, build):
-        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
-        owner = yield self.getOwnerFromBuildRequest(br)
-        defer.returnValue(owner)
+    def match_BuildEndpoint_stop(self, epobject, epdict, options):
+        build = yield epobject.get({}, epdict)
+        if self.builder is None:
+            # no filtering needed: we match!
+            defer.returnValue(Match(self.master, build=build))
+        # if filtering needed, we need to get some more info
+        ret = yield self.matchFromBuilderId(build['builderid'])
+        if ret:
+            defer.returnValue(Match(self.master, build=build))
 
-    @defer.inlineCallbacks
-    def getOwnerFromBuildRequest(self, buildrequest):
-        props = yield self.master.data.get(("buildsets", buildrequest['buildsetid'], "properties"))
-        if 'owner' in props:
-            defer.returnValue(props['owner'][0])
         defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def match_BuildEndpoint_stop(self, epobject, epdict, options):
-        build = yield epobject.get({}, epdict)
-        self.owner = yield self.getOwnerFromBuild(build)
-        if self.builder is None:
-            # no filtering needed: we match!
-            defer.returnValue(True)
-        # if filtering needed, we need to get some more info
-        ret = yield self.matchFromBuilderId(build['builderid'])
-        defer.returnValue(ret)
-
     def match_BuildRequestEndpoint_stop(self, epobject, epdict, options):
         buildrequest = yield epobject.get({}, epdict)
-        self.owner = yield self.getOwnerFromBuildRequest(build)
         if self.builder is None:
             # no filtering needed: we match!
-            defer.returnValue(True)
+            defer.returnValue(Match(self.master, buildrequest=buildrequest))
         # if filtering needed, we need to get some more info
         ret = yield self.matchFromBuilderId(buildrequest['builderid'])
-        defer.returnValue(ret)
+        if ret:
+            defer.returnValue(Match(self.master, buildrequest=buildrequest))
+        defer.returnValue(None)
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
@@ -118,7 +142,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
     def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
         if self.builder is None:
             # no filtering needed: we match without querying!
-            defer.returnValue(True)
+            defer.returnValue(Match(self.master))
         sched = yield epobject.findForceScheduler(epdict['schedulername'])
         if sched is not None:
             builderNames = options.get('builderNames')
@@ -126,8 +150,8 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
             builderNames = yield sched.computeBuilderNames(builderNames, builderid)
             for buildername in builderNames:
                 if self.authz.match(buildername, self.builder):
-                    defer.returnValue(True)
-        defer.returnValue(False)
+                    defer.returnValue(Match(self.master))
+        defer.returnValue(None)
 
 #####
 # not yet implemented
@@ -140,14 +164,8 @@ class ViewBuildsEndpointMatcher(EndpointMatcherBase):
         self.project = project
         self.builder = builder
 
-    def match_BuildEndpoint_get(self, epobject, epdict, options):
-        return defer.succeed(True)
-
 
 class BranchEndpointMatcher(EndpointMatcherBase):
     def __init__(self, branch, **kwargs):
         self.branch = branch
         EndpointMatcherBase.__init__(self, **kwargs)
-
-    def match_BuildEndpoint_get(self, epobject, epdict, options):
-        return defer.succeed(True)
