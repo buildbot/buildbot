@@ -83,17 +83,16 @@
             </tbody>
         </table>
         {% for ts in test_suites %}
-            {% for tso in ts['test-suite'] %}
-            {%  if tso.results  %}
+            {%  if ts.results  %}
             <div class="table-holder">
                 <ul class="summary-list">
-                    <li><b id="Tests">Tests </b>{{ tso.tests }}</li>
-                    <li><b id="Passed">Passed </b>{{ tso.passed }}</li>
-                    <li><b id="Failures">Failures </b><span>{{ tso.failed }}</span></li>
-                    <li><b id="Error">Ignored </b><span>{{ tso.ignored }}</span></li>
-                    <li><b id="Error">Skipped </b><span>{{ tso.skipped }}</span></li>
-                    <li><b id="Error">Inconclusive </b><span>{{ tso.inconclusive }}</span></li>
-                    <li data-time="{{ tso.time }}"><b id="Time">Time(s) </b>{{ tso.time }}</li>
+                    <li><b id="Tests">Tests </b>{{ ts.tests }}</li>
+                    <li><b id="Passed">Passed </b>{{ ts.passed }}</li>
+                    <li><b id="Failures">Failures </b><span>{{ ts.failed }}</span></li>
+                    <li><b id="Error">Ignored </b><span>{{ ts.ignored }}</span></li>
+                    <li><b id="Error">Skipped </b><span>{{ ts.skipped }}</span></li>
+                    <li><b id="Error">Inconclusive </b><span>{{ ts.inconclusive }}</span></li>
+                    <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b>{{ ts.time }}</li>
                 </ul>
                 <h1 class="main-head">{{ ts.name }}</h1>
                 <table class="table-1 tablesorter tablesorter-log-js">
@@ -106,10 +105,10 @@
                     </thead>
 
                     <tbody>
-                        {% for test in tso.results %}
+                        {% for test in ts.results %}
                         <tr>
                             <td class="txt-align-left first-child "><span class="case-names">{{ test.name }}</span></td>
-                            <td class="{{ test_case_result(test) }}">{{ test_case_result(test) }}</td>
+                            <td class="{{ test.result }}">{{ test.result }}</td>
                             {% if test.time %}
                             <td data-time="{{ test.time }}">{{ test.time }}</td>
                             {% else %}
@@ -121,21 +120,13 @@
                             <td class="txt-align-left failure-detail-cont colspan-js">
                                  <div class="pos-relative">
                                      <div class="failure-detail-txt">
-                                         {% for tf in test['test-case'] %}
-                                            {% if tf.reason %}
-                                                {% for line in tf.reason %}
-                                                    {{ line.text|e|trim }}
-                                                {% endfor %}
-                                            {% elif tf.failure %}
-                                                {% for line in tf.failure %}
-                                                    {{ line.text|e|trim }}
-                                                {% endfor %}
-                                            {% endif %}
-                                         {% endfor %}
+                                            {% for line in test.failure_text %}
+                                                {{ line.text|e|trim }}
+                                            {% endfor %}
                                      </div>
                                  </div>
                             </td>
-                            <td class="hidden-result">{{ test_case_result(test) }}</td>
+                            <td class="hidden-result">{{ test.result }}</td>
                             <td>&nbsp;</td>
                         </tr>
                         {% endif %}
@@ -145,7 +136,6 @@
                 <a class="back-top-top" href="#top">Back to top</a>
             </div>
             {% endif %}
-            {% endfor %}
         {% endfor %}
     </div>
 {% endblock %}
