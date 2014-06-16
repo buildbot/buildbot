@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import with_statement
-
 import mock
 import os
 
@@ -646,16 +644,24 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         won't break generated TAC file.
         """
 
-        with mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"}):
+        p = mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"})
+        p.start()
+        try:
             self.assertTACFileContents(self.options)
+        finally:
+            p.stop()
 
     def testQuotesInBasedir(self):
         """
         test that using quotes in basedir won't break generated TAC file.
         """
 
-        with mock.patch.dict(self.options, {"basedir": r"Buildbot's \"dir"}):
+        p = mock.patch.dict(self.options, {"basedir": r"Buildbot's \"dir"})
+        p.start()
+        try:
             self.assertTACFileContents(self.options)
+        finally:
+            p.stop()
 
     def testDoubleQuotesInBasedir(self):
         """
@@ -663,8 +669,12 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         generated TAC file.
         """
 
-        with mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"}):
+        p = mock.patch.dict(self.options, {"basedir": r"\"\"Buildbot''"})
+        p.start()
+        try:
             self.assertTACFileContents(self.options)
+        finally:
+            p.stop()
 
     def testSpecialCharactersInOptions(self):
         """
@@ -674,13 +684,17 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         test_string = ("\"\" & | ^ # @ \\& \\| \\^ \\# \\@ \\n"
                        " \x07 \" \\\" ' \\' ''")
-        with mock.patch.dict(self.options, {
-                "basedir": test_string,
-                "host": test_string,
-                "passwd": test_string,
-                "name": test_string,
-        }):
+        p = mock.patch.dict(self.options, {
+            "basedir": test_string,
+            "host": test_string,
+            "passwd": test_string,
+            "name": test_string,
+        })
+        p.start()
+        try:
             self.assertTACFileContents(self.options)
+        finally:
+            p.stop()
 
     def testNoLogRotate(self):
         """

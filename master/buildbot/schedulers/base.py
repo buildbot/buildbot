@@ -105,7 +105,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 if not isinstance(codebase_attrs, dict):
                     config.error("Codebases must be a dict of dicts")
                 if (codebases != BaseScheduler.DefaultCodebases and
-                   'repository' not in codebase_attrs):
+                        'repository' not in codebase_attrs):
                     config.error("The key 'repository' is mandatory in codebases")
         else:
             config.error("Codebases cannot be None")
@@ -329,8 +329,8 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # This results in a new sourcestamp for each codebase
         for codebase in self.codebases:
             ss = self.codebases[codebase].copy()
-             # apply info from passed sourcestamps onto the configured default
-             # sourcestamp attributes for this codebase.
+            # apply info from passed sourcestamps onto the configured default
+            # sourcestamp attributes for this codebase.
             ss.update(sourcestamps.get(codebase, {}))
 
             # add sourcestamp to the new setid

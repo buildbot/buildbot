@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import mock
+import os
 
 from twisted.internet import reactor
 from twisted.internet import task
@@ -214,3 +216,20 @@ class AsyncSleep(unittest.TestCase):
         self.assertFalse(d.called)
         clock.advance(1)
         self.assertTrue(d.called)
+
+
+class FunctionalEnvironment(unittest.TestCase):
+
+    def test_working_locale(self):
+        environ = {'LANG': 'en_GB.UTF-8'}
+        self.patch(os, 'environ', environ)
+        config = mock.Mock()
+        util.check_functional_environment(config)
+        self.assertEqual(config.error.called, False)
+
+    def test_broken_locale(self):
+        environ = {'LANG': 'NINE.UTF-8'}
+        self.patch(os, 'environ', environ)
+        config = mock.Mock()
+        util.check_functional_environment(config)
+        config.error.assert_called()

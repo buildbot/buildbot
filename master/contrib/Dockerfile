@@ -57,8 +57,9 @@
 from ubuntu:12.04
 
 # Make dpkg happy with the upstart issue
-run dpkg-divert --local --rename --add /sbin/initctl
-run ln -s /bin/true /sbin/initctl
+## appears to not be necessary anymore --dustin
+#run dpkg-divert --local --rename --add /sbin/initctl
+#run ln -s /bin/true /sbin/initctl
 
 # Install buildbot and its dependencies
 run echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > \

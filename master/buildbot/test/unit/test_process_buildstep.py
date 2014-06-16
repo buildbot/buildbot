@@ -34,6 +34,7 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import steps
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -354,6 +355,88 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.expectOutcome(result=EXCEPTION,
                            status_text=["generic", "exception"])
         yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
+
+    def setup_summary_test(self):
+        self.clock = task.Clock()
+        self.patch(NewStyleStep, 'getCurrentSummary',
+                   lambda self: defer.succeed({'step': u'C'}))
+        self.patch(NewStyleStep, 'getResultSummary',
+                   lambda self: defer.succeed({'step': u'CS', 'build': u'CB'}))
+        step = NewStyleStep()
+        step.updateSummary._reactor = self.clock
+        return step
+
+    def test_updateSummary_running(self):
+        step = self.setup_summary_test()
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: False
+        step.updateSummary()
+        self.clock.advance(1)
+        step._step_status.setText.assert_called_with(['C'])
+        step._step_status.setText2.assert_not_called()
+
+    def test_updateSummary_running_empty_dict(self):
+        step = self.setup_summary_test()
+        step.getCurrentSummary = lambda: {}
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: False
+        step.updateSummary()
+        self.clock.advance(1)
+        step._step_status.setText.assert_not_called()
+        step._step_status.setText2.assert_not_called()
+
+    def test_updateSummary_running_not_unicode(self):
+        step = self.setup_summary_test()
+        step.getCurrentSummary = lambda: {'step': 'bytestring'}
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: False
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
+
+    def test_updateSummary_running_not_dict(self):
+        step = self.setup_summary_test()
+        step.getCurrentSummary = lambda: 'foo!'
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: False
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
+
+    def test_updateSummary_finished(self):
+        step = self.setup_summary_test()
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: True
+        step.updateSummary()
+        self.clock.advance(1)
+        step._step_status.setText.assert_called_with(['CS'])
+        step._step_status.setText2.assert_called_with(['CB'])
+
+    def test_updateSummary_finished_empty_dict(self):
+        step = self.setup_summary_test()
+        step.getResultSummary = lambda: {}
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: True
+        step.updateSummary()
+        self.clock.advance(1)
+        step._step_status.setText.assert_called_with(['finished'])
+        step._step_status.setText2.assert_called_with([])
+
+    def test_updateSummary_finished_not_dict(self):
+        step = self.setup_summary_test()
+        step.getResultSummary = lambda: 'foo!'
+        step._step_status = mock.Mock()
+        step._step_status.isFinished = lambda: True
+        step.updateSummary()
+        self.clock.advance(1)
+        self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
+
+    def test_updateSummary_old_style(self):
+        step = OldStyleStep()
+        step.updateSummary._reactor = clock = task.Clock()
+        step.updateSummary()
+        clock.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
 

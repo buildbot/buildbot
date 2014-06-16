@@ -20,7 +20,6 @@
 # 22.03.10 by Johnnie Pittman, added support for category and interval
 # options.
 
-import os
 import subprocess
 import sys
 import time

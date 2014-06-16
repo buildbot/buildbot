@@ -252,7 +252,7 @@ class LRUCacheTest(unittest.TestCase):
         self.assertEqual(self.lru.get('p'), short('p'))
         self.lru.put('q', set(['new-q']))
         self.assertEqual(self.lru.get('p'), set(['PPP']))
-        self.assertEqual(self.lru.get('q'), set(['QQQ']))  # not updated
+        self.assertEqual(self.lru.get('q'), set(['new-q']))  # updated
 
 
 class AsyncLRUCacheTest(unittest.TestCase):

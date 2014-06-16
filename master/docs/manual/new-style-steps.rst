@@ -106,7 +106,7 @@ Log Objects
 Old steps had two ways of interacting with logfiles, both of which have changed.
 
 The first is writing to logs while a step is executing.
-When using :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog` or :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`, this is straightforward, except that in new-style steps the methods return a Deferred.
+When using :py:meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog` or :py:meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog`, this is straightforward, except that in new-style steps these methods return a Deferred.
 
 The second method is via :py:meth:`buildbot.process.buildstep.BuildStep.addLog`.
 In new-style steps, the returned object (via Deferred) has the following methods to add log content:
@@ -117,7 +117,7 @@ In new-style steps, the returned object (via Deferred) has the following methods
  * :py:meth:`~buildbot.process.log.Log.finish`
 
 All of these methods now return Deferreds.
-Note that the log-reading methods are not available on this object:
+None of the old log-reading methods are available on this object:
 
  * ``hasContents``
  * ``getText``
@@ -125,7 +125,7 @@ Note that the log-reading methods are not available on this object:
  * ``getTextWithHeaders``
  * ``getChunks``
 
-If your step uses such methods, consider using a LogObserver instead, or using the Data API to get the required data.
+If your step uses such methods, consider using a :class:`~buildbot.process.logobserver.LogObserver` instead, or using the Data API to get the required data.
 
 The undocumented and unused ``subscribeConsumer`` method of logfiles has also been removed.
 
@@ -133,11 +133,19 @@ The :py:meth:`~buildbot.process.log.Log.subscribe` method now takes a callable, 
 This method was primarily used by :py:class:`~buildbot.process.logobserver.LogObserver`, the implementation of which has been modified accordingly.
 Any other uses of the subscribe method should be refactored to use a :py:class:`~buildbot.process.logobserver.LogObserver`.
 
-Removed Methods
-+++++++++++++++
+Status Strings
+++++++++++++++
 
 The ``self.step_status.setText`` and ``setText2`` methods have been removed.
-Replace them with asynchronous calls to :py:class:`buildbot.process.buildstep.BuildStep.setStateStrings`.
+Similarly, the ``_describe`` and ``describe`` methods are not used in new-style steps.
+In fact, steps no longer set their status directly.
+
+Instead, steps call :py:meth:`buildbot.process.buildstep.BuildStep.updateSummary` whenever the status may have changed.
+This method calls :py:meth:`~buildbot.process.buildstep.BuildStep.getCurrentSummary` or :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary` as appropriate and update displays of the step's status.
+Steps override the latter two methods to provide appropriate summaries.
+
+Statistics
+++++++++++
 
 Support for statistics has been moved to the ``BuildStep`` and ``Build`` objects.
 Calls to ``self.step_status.setStatistic`` should be rewritten as ``self.setStatistic``.

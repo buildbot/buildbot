@@ -33,6 +33,10 @@ The rest of this section describes all the standard :class:`BuildStep` objects
 available for use in a :class:`Build`, and the parameters which can be used to
 control each.  A full list of build steps is available in the :bb:index:`step`.
 
+.. contents::
+    :depth: 2
+    :local:
+
 .. index:: Buildstep Parameter
 
 .. _Buildstep-Common-Parameters:
@@ -859,6 +863,9 @@ you will receive a configuration error exception.
 
         P4(p4extra_args=['-Zproxyload'], ...)
 
+``use_tickets``
+    Set to ``True`` to use ticket-based authentication, instead of passwords (but
+    you still need to specify ``p4passwd``).
 
 
 .. index:: double: Gerrit integration; Repo Build Step
@@ -905,6 +912,11 @@ The Repo step takes the following arguments:
 ``syncAllBranches``
     (optional, defaults to ``False``): renderable boolean to control whether ``repo``
     syncs all branches. i.e. ``repo sync -c``
+
+``depth``
+    (optional, defaults to 0): Depth argument passed to repo init.
+    Specifies the amount of git history to store. A depth of 1 is useful for shallow clones.
+    This can save considerable disk space on very large projects.
 
 ``updateTarballAge``
     (optional, defaults to "one week"):
@@ -957,7 +969,7 @@ for example::
    from buildbot.steps.source.repo import RepoDownloadsFromProperties
    from buildbot.process.properties import FlattenList
 
-   factory.addStep(Repo(manifestUrl='git://mygerrit.org/manifest.git',
+   factory.addStep(Repo(manifestURL='git://mygerrit.org/manifest.git',
                         repoDownloads=FlattenList([RepoDownloadsFromChangeSource(),
                                                    RepoDownloadsFromProperties("repo_downloads")
                                                    ]
@@ -2226,8 +2238,14 @@ Available constructor arguments are:
 ``move``
     Delete the source directory after the copy is complete (``/MOVE`` parameter).
 
-``exclude``
+``exclude_files``
     An array of file names or patterns to exclude from the copy (``/XF`` parameter).
+
+``exclude_dirs``
+    An array of directory names or patterns to exclude from the copy (``/XD`` parameter).
+
+``custom_opts``
+    An array of custom parameters to pass directly to the ``robocopy`` command.
 
 ``verbose``
     Whether to output verbose information (``/V /TS /TP`` parameters).
@@ -3090,6 +3108,39 @@ displayed as :envvar:`TMP` in the Windows GUI. ::
 Note that this step requires that the Buildslave be at least version 0.8.3.
 For previous versions, no environment variables are available (the slave
 environment will appear to be empty).
+
+.. _Setting-Buildslave-Info:
+
+Setting Buildslave Info
+-----------------------
+
+Each buildslave has a dictionary of properties (the "buildslave info dictionary") that is persisted into the database.
+This info dictionary is displayed on the "buildslave" web page and is available in Interpolate operations.
+
+.. bb:step:: SetSlaveInfo
+
+.. _Step-SetSlaveInfo:
+
+SetSlaveInfo
+++++++++++++
+
+.. py:class:: buildbot.steps.master.SetSlaveInfo
+
+``SetSlaveInfo`` is a base class to provide a facility to set values in the buildslave info dictionary.
+For example::
+
+    from buildbot.steps.master import SetSlaveInfo
+
+    class SetSlaveFromPropInfo(SetSlaveInfo):
+        name = "SetSlaveFromPropInfo"
+
+        # override this to return the dictionary update
+        def getSlaveInfoUpdate(self):
+            # for example, copy a property into the buildslave dict
+            update = { 
+                "foo": self.getProperty("foo")
+            }
+            return update
 
 
 .. index:: Properties; triggering schedulers

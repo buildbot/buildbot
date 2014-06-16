@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
-import os
 import re
 
 from buildbot import config
@@ -47,7 +46,7 @@ class P4(Source):
 
     name = 'p4'
 
-    renderables = ['p4base', 'p4client', 'p4viewspec', 'p4branch']
+    renderables = ['mode', 'p4base', 'p4client', 'p4viewspec', 'p4branch']
     possible_modes = ('incremental', 'full')
 
     def __init__(self, mode='incremental',
@@ -59,6 +58,7 @@ class P4(Source):
                  p4client_spec_options='allwrite rmdir',
                  p4extra_args=None,
                  p4bin='p4',
+                 use_tickets=False,
                  **kwargs):
         self.method = method
         self.mode = mode
@@ -75,11 +75,12 @@ class P4(Source):
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
         self.p4extra_args = p4extra_args
+        self.use_tickets = use_tickets
 
         Source.__init__(self, **kwargs)
 
-        if self.mode not in self.possible_modes:
-            config.error("mode %s is not one of %s" % (self.mode, self.possible_modes))
+        if self.mode not in self.possible_modes and not interfaces.IRenderable.providedBy(self.mode):
+            config.error("mode %s is not an IRenderable, or one of %s" % (self.mode, self.possible_modes))
 
         if not p4viewspec and p4base is None:
             config.error("You must provide p4base or p4viewspec")
@@ -117,6 +118,9 @@ class P4(Source):
                 raise BuildSlaveTooOldError("p4 is not installed on slave")
             return 0
         d.addCallback(checkInstall)
+
+        if self.use_tickets and self.p4passwd:
+            d.addCallback(self._acquireTicket)
 
         if self.mode == 'full':
             d.addCallback(self.full)
@@ -198,11 +202,12 @@ class P4(Source):
             command.extend(['-p', self.p4port])
         if self.p4user:
             command.extend(['-u', self.p4user])
-        if self.p4passwd:
+        if not self.use_tickets and self.p4passwd:
             # Need to find out if there's a way to obfuscate this
             command.extend(['-P', self.p4passwd])
         if self.p4client:
             command.extend(['-c', self.p4client])
+
         # Only add the extra arguments for the `sync` command.
         if doCommand[0] == 'sync' and self.p4extra_args:
             command.extend(self.p4extra_args)
@@ -217,6 +222,7 @@ class P4(Source):
 
         if debug_logging:
             log.msg("P4:_dovccmd():workdir->%s" % self.workdir)
+
         cmd = buildstep.RemoteShellCommand(self.workdir, command,
                                            env=self.env,
                                            logEnviron=self.logEnviron,
@@ -272,7 +278,9 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
-        client_spec += "Root:\t%s\n\n" % os.path.normpath(os.path.join(builddir, self.workdir))
+        client_spec += "Root:\t%s\n\n" % self.build.path_module.normpath(
+            self.build.path_module.join(builddir, self.workdir)
+        )
         client_spec += "Options:\t%s\n\n" % self.p4client_spec_options
         if self.p4line_end:
             client_spec += "LineEnd:\t%s\n\n" % self.p4line_end
@@ -311,6 +319,15 @@ class P4(Source):
         stdout = yield self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
         mo = re.search(r'Client (\S+) (.+)$', stdout, re.M)
         defer.returnValue(mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.'))
+
+    @defer.inlineCallbacks
+    def _acquireTicket(self, _):
+        if debug_logging:
+            log.msg("P4:acquireTicket()")
+
+        # TODO: check first if the ticket is still valid?
+        initialStdin = self.p4passwd + "\n"
+        yield self._dovccmd(['login'], initialStdin=initialStdin)
 
     def parseGotRevision(self, _):
         command = self._buildVCCommand(['changes', '-m1', '#have'])

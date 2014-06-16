@@ -16,10 +16,30 @@
 from buildbot import util
 from buildbot.changes import base
 from buildbot.util import json
+from buildbot.changes.filter import ChangeFilter
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
+
+
+class GerritChangeFilter(ChangeFilter):
+
+    """This gerrit specific change filter helps creating pre-commit and post-commit builders"""
+
+    def __init__(self,
+                 eventtype=None, eventtype_re=None, eventtype_fn=None, **kw):
+        ChangeFilter.__init__(self, **kw)
+
+        self.checks.update(
+            self.createChecks(
+                (eventtype, eventtype_re, eventtype_fn, "prop:event.type"),
+            ))
+        # for branch change filter, we take the real gerrit branch
+        # instead of the change's branch, which is also used as a grouping key
+        if "branch" in self.checks:
+            self.checks["prop:event.change.branch"] = self.checks["branch"]
+            del self.checks["branch"]
 
 
 class GerritChangeSource(base.ChangeSource):
@@ -130,7 +150,7 @@ class GerritChangeSource(base.ChangeSource):
         func_name = "eventReceived_%s" % event["type"].replace("-", "_")
         func = getattr(self, func_name, None)
         if func is None and event_with_change:
-            return self. addChangeFromEvent(properties, event)
+            return self.addChangeFromEvent(properties, event)
         elif func is None:
             log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
@@ -143,7 +163,22 @@ class GerritChangeSource(base.ChangeSource):
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
 
+    def getGroupingPolicyFromEvent(self, event):
+        # At the moment, buildbot's change grouping strategy is hardcoded at various place
+        # to be the 'branch' of an event.
+        # With gerrit, you usually want to group by branch on post commit, and by changeid
+        # on pre-commit.
+        # we keep this customization point here, waiting to have a better grouping strategy support
+        # in the core
+        event_change = event["change"]
+        if event['type'] in ('patchset-created',):
+            return "%s/%s" % (event_change["branch"],
+                              event_change['number'])
+        else:
+            return event_change["branch"]
+
     def addChangeFromEvent(self, properties, event):
+
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
             return self.addChange({
@@ -154,8 +189,7 @@ class GerritChangeSource(base.ChangeSource):
                 'repository': "ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
-                'branch': "%s/%s" % (event_change["branch"],
-                                     event_change['number']),
+                'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],

@@ -53,6 +53,7 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.process.users import users
 from buildbot.status import base
+from buildbot.status import buildset
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
@@ -215,10 +216,10 @@ def defaultMessage(mode, name, build, results, master_status):
 
 
 def defaultGetPreviousBuild(current_build):
-        return current_build.getPreviousBuild()
+    return current_build.getPreviousBuild()
 
 
-class MailNotifier(base.StatusReceiverMultiService):
+class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNotifierMixin):
 
     """This is a status notifier which sends email to a list of recipients
     upon the completion of each build. It can be configured to only send out
@@ -460,15 +461,12 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def startService(self):
         if self.buildSetSummary:
-            self.buildSetSubscription = \
-                self.master.subscribeToBuildsetCompletions(self.buildsetFinished)
+            self.summarySubscribe()
 
         base.StatusReceiverMultiService.startService(self)
 
     def stopService(self):
-        if self.buildSetSubscription is not None:
-            self.buildSetSubscription.unsubscribe()
-            self.buildSetSubscription = None
+        self.summaryUnsubscribe()
 
         return base.StatusReceiverMultiService.stopService(self)
 
@@ -523,6 +521,12 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return False
 
+    def sendBuildSetSummary(self, buildset, builds):
+        # only include builds for which isMailNeeded returns true
+        builds = [build for build in builds if self.isMailNeeded(build, build.getResults())]
+        if builds:
+            self.buildMessage("(whole buildset)", builds, buildset['results'])
+
     def buildFinished(self, name, build, results):
         if (not self.buildSetSummary and
                 self.isMailNeeded(build, results)):
@@ -534,39 +538,6 @@ class MailNotifier(base.StatusReceiverMultiService):
             # rearrange this.
             return self.buildMessage(name, [build], results)
         return None
-
-    def _gotBuilds(self, res, buildset):
-        builds = []
-        for (builddictlist, builder) in res:
-            for builddict in builddictlist:
-                build = builder.getBuild(builddict['number'])
-                if build is not None and self.isMailNeeded(build, build.results):
-                    builds.append(build)
-
-        if builds:
-            self.buildMessage("(whole buildset)", builds, buildset['results'])
-
-    def _gotBuildRequests(self, breqs, buildset):
-        dl = []
-        for breq in breqs:
-            buildername = breq['buildername']
-            builder = self.master_status.getBuilder(buildername)
-            d = self.master.db.builds.getBuildsForRequest(breq['brid'])
-            d.addCallback(lambda builddictlist, builder=builder:
-                          (builddictlist, builder))
-            dl.append(d)
-        d = defer.gatherResults(dl)
-        d.addCallback(self._gotBuilds, buildset)
-
-    def _gotBuildSet(self, buildset, bsid):
-        d = self.master.db.buildrequests.getBuildRequests(bsid=bsid)
-        d.addCallback(self._gotBuildRequests, buildset)
-
-    def buildsetFinished(self, bsid, result):
-        d = self.master.db.buildsets.getBuildset(bsid=bsid)
-        d.addCallback(self._gotBuildSet, bsid)
-
-        return d
 
     def getCustomMesgData(self, mode, name, build, results, master_status):
         #
@@ -635,7 +606,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # far the most common encoding.
         if not isinstance(patch[1], types.UnicodeType):
             try:
-                    unicode = patch[1].decode('utf8')
+                unicode = patch[1].decode('utf8')
             except UnicodeDecodeError:
                 unicode = None
         else:
@@ -693,6 +664,14 @@ class MailNotifier(base.StatusReceiverMultiService):
                                   log.getName())
                 if (self._shouldAttachLog(log.getName()) or
                         self._shouldAttachLog(name)):
+                    # Use distinct filenames for the e-mail summary
+                    if self.buildSetSummary:
+                        filename = "%s.%s.%s" % (log.getStep().getBuild().getBuilder().getName(),
+                                                 log.getStep().getName(),
+                                                 log.getName())
+                    else:
+                        filename = name
+
                     text = log.getText()
                     if not isinstance(text, unicode):
                         # guess at the encoding, and use replacement symbols
@@ -701,10 +680,10 @@ class MailNotifier(base.StatusReceiverMultiService):
                     a = MIMEText(text.encode(ENCODING),
                                  _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
-                                 filename=name)
+                                 filename=filename)
                     m.attach(a)
 
-        #@todo: is there a better way to do this?
+        # @todo: is there a better way to do this?
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if only one build was given
         if self.extraHeaders:

@@ -340,3 +340,104 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_compressLog_none(self):
         self.config.logCompressionMethod = None
         return self.do_test_compressLog('', expect_comp=False)
+
+
+class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
+
+    # The following script was used to pickle an 0.8.8 logfile. It was then
+    # base64 encoded to be safely embedded in this test class.
+    #
+    # from buildbot.status import logfile
+    # import pickle
+    # lf = logfile.HTMLLogFile('error.html', '123-error_html', '<span>You lost the game</span>')
+    # with open('123-error_html', 'w') as f:
+    #     pickle.dump(lf, f)
+    buildbot088pickle = '''
+    KGlidWlsZGJvdC5zdGF0dXMubG9nZmlsZQpIVE1MTG9nRmlsZQpwMAooZHAyClMnaHRtbCcKcD
+    MKUyc8c3Bhbj5Zb3UgbG9zdCB0aGUgZ2FtZTwvc3Bhbj4nCnA0CnNTJ25hbWUnCnA1ClMnZXJy
+    b3IuaHRtbCcKcDYKc1MnZmlsZW5hbWUnCnA3ClMnMTIzLWVycm9yX2h0bWwnCnA4CnNiLg==
+    '''
+
+    def setUp(self):
+        step = self.build_step_status = mock.Mock(name='build_step_status')
+        self.basedir = step.build.builder.basedir = os.path.abspath('basedir')
+        self.setUpDirs(self.basedir)
+        self.logfile = logfile.HTMLLogFile(step, 'error.html', '123-error_html', '<span>You lost the game</span>')
+        self.master = self.logfile.master = mock.Mock()
+        self.config = self.logfile.master.config = config.MasterConfig()
+
+    def tearDown(self):
+        if self.logfile.openfile:
+            try:
+                self.logfile.openfile.close()
+            except:
+                pass  # oh well, we tried
+        self.tearDownDirs()
+
+    def pickle_and_restore(self):
+        pkl = cPickle.dumps(self.logfile)
+        self.logfile = cPickle.loads(pkl)
+        step = self.build_step_status
+        self.logfile.step = step
+        self.logfile.master = self.master
+        step.build.builder.basedir = self.basedir
+
+    def test_unpickle(self):
+        self.pickle_and_restore()
+
+        d = self.logfile.finish()
+
+        def check(_):
+            fn = os.path.join('basedir', '123-error_html')
+            self.assertTrue(os.path.exists(fn))
+            fp = open(fn, 'r')
+            self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')
+            fp.close()
+
+        d.addCallback(check)
+        return d
+
+    def test_unpickle_buildbot088pickle(self):
+        import base64
+        s = base64.b64decode(self.buildbot088pickle)
+        self.logfile = cPickle.loads(s)
+        step = self.build_step_status
+        self.logfile.step = step
+        self.logfile.master = self.master
+        step.build.builder.basedir = self.basedir
+
+        self.assertEqual(self.logfile.getName(), 'error.html')
+        self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
+
+    def test_hasContents(self):
+        self.assertTrue(self.logfile.hasContents())
+
+    def test_getName(self):
+        self.assertEqual(self.logfile.getName(), 'error.html')
+
+    def test_getStep(self):
+        self.assertEqual(self.logfile.getStep(), self.build_step_status)
+
+    def test_isFinished(self):
+        self.assertTrue(self.logfile.isFinished())
+
+    def test_waitUntilFinished(self):
+        d = self.logfile.waitUntilFinished()
+        return d
+
+    def test_getText(self):
+        self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
+
+    def test_getTextWithHeaders(self):
+        self.assertEqual(self.logfile.getTextWithHeaders(), '<span>You lost the game</span>')
+
+    def test_getFile(self):
+        fp = self.logfile.getFile()
+        fp.seek(0, 0)
+        self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')
+
+        self.pickle_and_restore()
+
+        fp = self.logfile.getFile()
+        fp.seek(0, 0)
+        self.assertEqual(fp.read(), '31:1<span>You lost the game</span>,')

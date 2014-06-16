@@ -73,6 +73,8 @@ class ForceAction(ActionResource):
                 except ValidationError, e:
                     msg = html.escape(e.message.encode('ascii', 'ignore'))
                 break
+        else:
+            msg = 'no scheduler found'
 
         # send the user back to the builder page
         defer.returnValue(msg)

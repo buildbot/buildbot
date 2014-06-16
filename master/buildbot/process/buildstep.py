@@ -39,6 +39,7 @@ from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
+from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.util.eventual import eventually
 
@@ -216,10 +217,35 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
-    def setStateStrings(self, strings):
-        self._step_status.old_setText(strings)
-        self._step_status.old_setText2(strings)
-        return defer.succeed(None)
+    def getCurrentSummary(self):
+        return u'running'
+
+    def getResultSummary(self):
+        return {}
+
+    @debounce.method(wait=1)
+    @defer.inlineCallbacks
+    def updateSummary(self):
+        assert self.isNewStyle(), "updateSummary is a new-style step method"
+        if self._step_status.isFinished():
+            summary = yield self.getResultSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getResultSummary must return a dictionary')
+        else:
+            summary = yield self.getCurrentSummary()
+            if not isinstance(summary, dict):
+                raise TypeError('getCurrentSummary must return a dictionary')
+
+        stepResult = summary.get('step', u'finished')
+        if not isinstance(stepResult, unicode):
+            raise TypeError("step summary must be unicode")
+        self._step_status.setText([stepResult])
+
+        if self._step_status.isFinished():
+            buildResult = summary.get('build', None)
+            if buildResult and not isinstance(buildResult, unicode):
+                raise TypeError("build result must be unicode")
+            self._step_status.setText2([buildResult] if buildResult else [])
 
     @defer.inlineCallbacks
     def startStep(self, remote):
@@ -236,7 +262,7 @@ class BuildStep(object, properties.PropertiesMixin):
             self.failed = nope
 
         # convert all locks into their real form
-        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
+        self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
@@ -346,8 +372,8 @@ class BuildStep(object, properties.PropertiesMixin):
         return self.run.im_func is not BuildStep.run.im_func
 
     def run(self):
-        # new-style tests override this, by definition.
-        # old-style tests don't call it.
+        # new-style steps override this, by definition.
+        # old-style steps don't call it.
         raise NotImplementedError
 
     def start(self):
@@ -548,7 +574,7 @@ class BuildStep(object, properties.PropertiesMixin):
         return self._step_status.getStatistics()
 
     def setStatistic(self, name, value):
-        return self._step_status.setStatistics(name, value)
+        return self._step_status.setStatistic(name, value)
 
 
 components.registerAdapter(

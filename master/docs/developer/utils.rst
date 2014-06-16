@@ -220,10 +220,9 @@ buildbot.util.lru
         :param key: key at which to place the value
         :param value: value to place there
 
-        Update the cache with the given key and value, but only if the key is
-        already in the cache.  The purpose of this method is to insert a new
-        value into the cache *without* invoking the miss_fn (e.g., to avoid
-        unnecessary overhead).
+        Add the given key and value into the cache.  The purpose of this
+        method is to insert a new value into the cache *without* invoking
+        the miss_fn (e.g., to avoid unnecessary overhead).
 
     .. py:method set_max_size(max_size)
 
@@ -344,6 +343,46 @@ a good way to avoid long loops that block other activity in the reactor.
     This returns a Deferred which fires when the eventual-send queue is finally
     empty. This is useful for tests and other circumstances where it is useful
     to know that "later" has arrived.
+
+buildbot.util.debounce
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.debounce
+
+Often, a method must be called exactly once at a time, but many events may trigger a call to the method.
+A simple example is the step method :py:meth:`~buildbot.process.buildstep.BuildStep.updateSummary`.
+
+The ``debounce.method(wait)`` decorator is the tool for the job.
+
+.. py:function:: method(wait)
+
+    :param wait: time to wait before invoking, in seconds
+
+    Returns a decorator that debounces the underlying method.
+    The underlying method must take no arguments (except ``self``).
+
+    For each call to the decorated method, the underlying method will be invocation at least once within *wait* seconds (plus the time the method takes to execute).
+    Calls are "debounced" during that time, meaning that multiple calls to the decorated method may result in a single invocation.
+
+    The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
+    This is useful when the method is a part of a Buidbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
+
+.. py:class:: Debouncer
+
+    .. py:method:: stop()
+
+        :returns: Deferred
+
+        Stop the debouncer.
+        While the debouncer is stopped, calls to the decorated method will be ignored.
+        When the Deferred that ``stop`` returns fires, the underlying method is not executing.
+
+    .. py:method:: start()
+
+        Start the debouncer.
+        This reverses the effects of ``stop``.
+        This method can be called on a started debouncer without issues.
+
 
 buildbot.util.json
 ~~~~~~~~~~~~~~~~~~
@@ -572,3 +611,38 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
 
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
+
+buildbot.util.identifiers
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.identifiers
+
+This module makes it easy to manipulate identifiers.
+
+.. py:function:: isIdentifier(maxLength, object)
+
+    :param maxLength: maximum length of the identifier
+    :param object: object to test for identifier-ness
+    :returns: boolean
+
+    Is object an identifier?
+
+.. py:function:: forceIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: string to coerce to an identifier
+    :returns: identifer of maximum length ``maxLength``
+
+    Coerce a string (assuming ASCII for bytestrings) into an identifier.
+    This method will replace any invalid characters with ``_`` and truncate to the given length.
+
+.. py:function:: incrementIdentifier(maxLength, str)
+
+    :param maxLength: maximum length of the identifier
+    :param str: identifier to increment
+    :returns: identifer of maximum length ``maxLength``
+    :raises: ValueError if no suitable identifier can be constructed
+
+    "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.
+    This is useful when selecting a unique identifier for an object.
+    Maximum-length identifiers like ``_999999`` cannot be incremented and will raise :py:exc:`ValueError`.

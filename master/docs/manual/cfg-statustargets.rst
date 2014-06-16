@@ -5,6 +5,10 @@
 Status Targets
 --------------
 
+.. contents::
+    :depth: 2
+    :local:
+
 The Buildmaster has a variety of ways to present build status to
 various users. Each such delivery method is a `Status Target` object
 in the configuration's :bb:cfg:`status` list. To add status targets, you
@@ -889,8 +893,9 @@ The GitLab hook is as simple as GitHub one and it also takes no options. ::
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab``
 relative to the root of the web status. For example, it the grid URL is
 ``http://builds.mycompany.com/bbot/grid``, then point GitLab to
-``http://builds.mycompany.com/change_hook/gitlab``. To specify a project associated
-to the repository, append ``?project=name`` to the URL.
+``http://builds.mycompany.com/change_hook/gitlab``. The project and/or codebase can
+also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
+These parameters will be passed along to the scheduler.
 
 .. warning::
 
@@ -906,7 +911,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     ))
 
-Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -1181,7 +1186,7 @@ MailNotifier arguments
 
     ``all``
         Always send mail about builds. Equivalent to (``change``, ``failing``,
-        ``passing``, ``passing``, ``problem``, ``warnings``, ``exception``).
+        ``passing``, ``problem``, ``warnings``, ``exception``).
 
     ``warnings``
         Equivalent to (``warnings``, ``failing``).
@@ -1661,24 +1666,64 @@ GerritStatusPush
         message = "Buildbot started compiling your patchset\n"
         message += "on configuration: %s\n" % builderName
 
-        if arg:
-            message += "\nFor more details visit:\n"
-            message += status.getURLForThing(build) + "\n"
-
         return message
+
+    def gerritSummaryCB(buildInfoList, results, status, arg):
+        success = False
+        failure = False
+
+        msgs = []
+
+        for buildInfo in buildInfoList:
+            msg = "Builder %(name)s %(resultText)s (%(text)s)" % buildInfo
+            link = buildInfo.get('url', None)
+            if link:
+                msg += " - " + link
+            else:
+                msg += "."
+            msgs.append(msg)
+
+            if buildInfo['result'] == SUCCESS:
+                success = True
+            else:
+                failure = True
+
+        msg = '\n\n'.join(msgs)
+
+        if success and not failure:
+            verified = 1
+        else:
+            verified = -1
+
+        reviewed = 0
+        return (msg, verified, reviewed)
 
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
                                         reviewCB=gerritReviewCB,
                                         reviewArg=c['buildbotURL'],
                                         startCB=gerritStartCB,
-                                        startArg=c['buildbotURL']))
+                                        startArg=c['buildbotURL'],
+                                        summaryCB=gerritSummaryCB,
+                                        summaryArg=c['buildbotURL']))
 
 GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
-optionally also sending a message when a build is started.
-``reviewCB`` should return a tuple of message, verified, reviewed. If message
-is ``None``, no review will be sent.
-``startCB`` should return a message.
+optionally also sending a message when a build is started. GerritStatusPush
+can send a separate review for each build that completes, or a single review
+summarizing the results for all of the builds. By default, a single summary
+review is sent; that is, a default summaryCB is provided, but no reviewCB or
+startCB.
+
+``reviewCB``, if specified, determines the message and score to give when
+sending a review for each separate build. It should return a tuple of
+(message, verified, reviewed).
+
+If ``startCB`` is specified, it should return a message. This message will be
+sent to the Gerrit server when each build is started.
+
+``summaryCB``, if specified, determines the message and score to give when
+sending a single review summarizing all of the builds. It should return a
+tuple of (message, verified, reviewed).
 
 .. bb:status:: GitHubStatus
 

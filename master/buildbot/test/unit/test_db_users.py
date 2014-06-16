@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import sqlalchemy as sa
-
 from buildbot.db import users
 from buildbot.test.fake import fakedb
 from buildbot.test.util import connector_component
@@ -198,13 +196,31 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         return d
 
     def test_addUser_existing_identifier(self):
+        # see http://trac.buildbot.net/ticket/2587
         d = self.insertTestData(self.user1_rows)
         d.addCallback(lambda _: self.db.users.findUserByAttr(
-            identifier='soap',
-            attr_type='telepathIO(tm)',
-            attr_data='hmm,lye'))
-        return self.assertFailure(d, sa.exc.IntegrityError,
-                                  sa.exc.ProgrammingError)
+            identifier='soap',  # same identifier
+            attr_type='IPv9',
+            attr_data='fffffff.ffffff'))  # different attr
+
+        def check_user(uid):
+            # creates a new user
+            self.assertEqual(uid, 2)
+
+            def thd(conn):
+                users_tbl = self.db.model.users
+                users_info_tbl = self.db.model.users_info
+                users = conn.execute(users_tbl.select(order_by=users_tbl.c.identifier)).fetchall()
+                infos = conn.execute(users_info_tbl.select(users_info_tbl.c.uid == uid)).fetchall()
+                self.assertEqual(len(users), 2)
+                self.assertEqual(users[1].uid, uid)
+                self.assertEqual(users[1].identifier, 'soap_2')  # unique'd
+                self.assertEqual(len(infos), 1)
+                self.assertEqual(infos[0].attr_type, 'IPv9')
+                self.assertEqual(infos[0].attr_data, 'fffffff.ffffff')
+            return self.db.pool.do(thd)
+        d.addCallback(check_user)
+        return d
 
     def test_getUser(self):
         d = self.insertTestData(self.user1_rows)

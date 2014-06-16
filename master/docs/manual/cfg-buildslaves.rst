@@ -13,6 +13,13 @@ that will try to connect to the buildbot master as a slave.  Buildbot also
 supports "on-demand", or latent, buildslaves, which allow buildbot to
 dynamically start and stop buildslave instances.
 
+.. contents::
+    :depth: 1
+    :local:
+
+Defining Buildslaves
+~~~~~~~~~~~~~~~~~~~~
+
 A :class:`BuildSlave` instance is created with a ``slavename`` and a
 ``slavepassword``. These are the same two values that need to be provided to
 the buildslave administrator when they create the buildslave.
@@ -348,6 +355,18 @@ specify it in your configuration using the ``elastic_ip`` argument. ::
                                        identifier='publickey',
                                        secret_identifier='privatekey',
                                        elastic_ip='208.77.188.166'
+                                       )]
+
+One other way to configure a slave is by settings AWS tags. They can for example be used to 
+have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy. To get Buildbot to tag the latent slave 
+specify the tag keys and values in your configuration using the ``tags`` argument. ::
+
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                       'ami-12345',
+                                       identifier='publickey',
+                                       secret_identifier='privatekey',
+                                       tags={'SomeTag': 'foo'}
                                        )]
 
 The :class:`EC2LatentBuildSlave` supports all other configuration from the standard

@@ -92,6 +92,12 @@ class BaseParameter(object):
            the optional regex field and calls 'parse_from_args' for the final conversion.
         """
         args = kwargs.get(self.fullName, [])
+
+        # delete white space for args
+        for arg in args:
+            if not arg.strip():
+                args.remove(arg)
+
         if len(args) == 0:
             if self.required:
                 raise ValidationError("'%s' needs to be specified" % (self.label))
@@ -216,7 +222,7 @@ class ChoiceStringParameter(BaseParameter):
     strict = True
 
     def parse_from_arg(self, s):
-        if self.strict and not s in self.choices:
+        if self.strict and s not in self.choices:
             raise ValidationError("'%s' does not belongs to list of available choices '%s'" % (s, self.choices))
         return s
 
@@ -475,6 +481,7 @@ class ForceScheduler(base.BaseScheduler):
                  username=UserNameParameter(),
                  reason=StringParameter(name="reason", default="force build", size=20),
                  reasonString="A build was forced by '%(owner)s': %(reason)s",
+                 buttonName="Force Build",
                  codebases=None,
 
                  properties=[
@@ -599,6 +606,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
+        self.buttonName = buttonName
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)

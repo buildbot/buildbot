@@ -41,6 +41,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave,
                           'bot', 'pass', None, 'path', 'path')
 
+    @defer.inlineCallbacks
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
         yield bs._find_existing_deferred
@@ -206,7 +207,7 @@ class TestWorkQueue(unittest.TestCase):
         d.addCallback(shouldnt_get_called)
 
         def errback(f):
-            #log.msg("errback called?")
+            # log.msg("errback called?")
             pass
         d.addErrback(errback)
         return d

@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted import version
 from twisted.python import log
+from twisted.python import versions
 from twisted.spread import pb
 from twisted.spread.interfaces import IJellyable
 
 
 def patch():
+    if version < versions.Version('twisted', 8, 2, 0):
+        return  # too old
     log.msg("Applying patch for http://twistedmatrix.com/trac/ticket/5079")
     if not hasattr(pb, '_JellyableAvatarMixin'):
         log.msg("..patch not applicable; please file a bug at buildbot.net")
