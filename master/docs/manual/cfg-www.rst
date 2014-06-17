@@ -267,13 +267,11 @@ Currently only one provider is available:
                             avatar_methods=[userInfoProvider, AvatarGravatar()]
                             )
 
-        In order to use this module, you need to install the ``python-ldap`` module
-        It is not a pure python module, so you need to install some C library dependancies; in Debian distributions:
+        In order to use this module, you need to install the ``python3-ldap`` module:
 
         .. code-block:: bash
 
-                sudo apt-get builddep python-ldap
-                pip install python-ldap
+                pip install python3-ldap
 
 
 

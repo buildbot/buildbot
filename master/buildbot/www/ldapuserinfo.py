@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import ldap
+import ldap3
 
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
 from twisted.internet import threads
+from urlparse import urlparse
 
 
 class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
@@ -49,27 +50,42 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         self.avatarData = avatarData
         self.accountExtraFields = accountExtraFields
 
+    def connectLdap(self):
+            server = urlparse(self.uri)
+            netloc = server.netloc.split(":")
+            # define the server and the connection
+            s = ldap3.Server(netloc[0], port=int(netloc[1]), use_ssl=server.scheme == 'ldaps',
+                             get_info=ldap3.GET_ALL_INFO)
+            c = ldap3.Connection(s, auto_bind=True, client_strategy=ldap3.STRATEGY_SYNC,
+                                 user=self.bindUser, password=self.bindPw,
+                                 authentication=ldap3.AUTH_SIMPLE)
+            return c
+
+    def search(self, c, base, filterstr='f', attributes=None):
+        c.search(base, filterstr, ldap3.SEARCH_SCOPE_WHOLE_SUBTREE, attributes=attributes)
+        return c.response
+
     def getUserInfo(self, username):
         def thd():
+            c = self.connectLdap()
             infos = {'username': username}
-            l = ldap.initialize(self.uri)
-            l.simple_bind_s(self.bindUser, self.bindPw)
             pattern = self.accountPattern % dict(username=username)
-            res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [
-                self.accountEmail, self.accountFullName, 'dn'] + self.accountExtraFields)
+            res = self.search(c, self.accountBase, pattern,
+                              attributes=[self.accountEmail, self.accountFullName, 'dn']
+                              + self.accountExtraFields)
             if len(res) != 1:
                 raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
-            dn, ldap_infos = res[0]
-            infos['full_name'] = ldap_infos[self.accountFullName][0]
-            infos['email'] = ldap_infos[self.accountEmail][0]
+            dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
+            infos['full_name'] = ldap_infos[self.accountFullName]
+            infos['email'] = ldap_infos[self.accountEmail]
             for f in self.accountExtraFields:
                 if f in ldap_infos:
-                    infos[f] = ldap_infos[f][0]
+                    infos[f] = ldap_infos[f]
             # needs double quoting of backslashing
-            pattern = self.groupMemberPattern % dict(dn=dn.replace('\\', '\\\\'))
-            res = l.search_s(self.groupBase, ldap.SCOPE_SUBTREE, pattern, [
-                self.groupName])
-            infos['groups'] = flatten([group_infos[self.groupName] for gdn, group_infos in res])
+            pattern = self.groupMemberPattern % dict(dn=dn)
+            res = self.search(c, self.groupBase, pattern,
+                              attributes=[self.groupName])
+            infos['groups'] = flatten([group_infos['raw_attributes'][self.groupName] for group_infos in res])
             return infos
         return threads.deferToThread(thd)
 
@@ -86,13 +102,13 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
 
     def getUserAvatar(self, user_email, size, defaultAvatarUrl):
         def thd():
-            l = ldap.initialize(self.uri)
-            l.simple_bind_s(self.bindUser, self.bindPw)
+            c = self.connectLdap()
             pattern = self.avatarPattern % dict(email=user_email)
-            res = l.search_s(self.accountBase, ldap.SCOPE_SUBTREE, pattern, [self.avatarData])
+            res = self.search(c, self.accountBase, pattern,
+                              attributes=[self.avatarData])
             if len(res) == 0:
                 return None
-            dn, ldap_infos = res[0]
+            ldap_infos = res[0]['raw_attributes']
             if self.avatarData in ldap_infos and len(ldap_infos[self.avatarData]) > 0:
                 data = ldap_infos[self.avatarData][0]
                 return self.findAvatarMime(data)
