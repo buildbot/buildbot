@@ -59,7 +59,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
-                 placement=None, price_multiplier=1.2, tags={},
+                 placement=None, price_multiplier=1.2, tags={}, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX'):
 
         AbstractLatentBuildSlave.__init__(
