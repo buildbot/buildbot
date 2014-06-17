@@ -130,11 +130,11 @@ The available classes are described here:
             'auth': GoogleAuth("clientid", "clientsecret"),
         }
 
-    in order to use this module, you need to install the python ``sanction`` module
+    in order to use this module, you need to install the python ``requests`` module
 
     .. code-block:: bash
 
-            pip install sanction
+            pip install requests
 
 .. _Google: https://developers.google.com/accounts/docs/OAuth2
 

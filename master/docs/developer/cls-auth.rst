@@ -75,22 +75,18 @@ Authentication
     * OAuth2Auth module verifies the code, and get the user's additional information
     * buildbot UI is reloaded, with the user authenticated.
 
-    This implementation is using sanction_
-
-    .. py:method:: __init__(self, authUri, tokenUri, clientId, authUriConfig, tokenConfig)
-
-        :param authUri: the Uri for the authentication part (first phase)
-
-        :param tokenUri: the Uri for the verification of the token (second phase)
-
-        :param clientId: the clientId
-
-        :param authUriConfig: the additional configuration to pass to sanction_ ``auth_uri`` api.
-
-        :param tokenConfig: the additional configuration to pass to sanction_ ``Client`` api for the verify token phase.
+    This implementation is using requests_
+    subclasses must override following class attributes:
+    * ``name`` Name of the oauth plugin
+    * ``faIcon`` font awesome class to use for login button logo
+    * ``resourceEndpoint`` URI of the resource where the authentication token is used
+    * ``authUri`` URI the browser is pointed to to let the user enter creds
+    * ``tokenUri`` URI to verify the browser code and get auth token
+    * ``authUriAdditionalParams`` Additional parameters for the authUri
+    * ``tokenUriAdditionalParams`` Additional parameters for the tokenUri
 
     .. py:method:: getUserInfoFromOAuthClient(self, c)
 
         This method is called after a successful authentication to get additional information about the user from the oauth2 provider.
 
-.. _sanction: http://sanction.readthedocs.org/en/latest/
+.. _requests: http://docs.python-requests.org/en/latest/

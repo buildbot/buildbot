@@ -14,33 +14,45 @@
 # Copyright Buildbot Team Members
 
 import mock
-import sys
+import os
+from twisted.web.server import Site
+from twisted.web.resource import Resource
+from twisted.internet import reactor
+import webbrowser
+from twisted.internet import threads
+from twisted.python import failure
+from buildbot.util import json
+
+try:
+    import requests
+    assert requests
+except ImportError:
+    requests = None
 
 from buildbot.test.util import www
 from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class FakeClient(object):
-    auth_uri = mock.Mock(return_value="uri://foo")
-    request_token = mock.Mock()
+class FakeResponse(object):
+    def __init__(self, _json):
+        self.json = lambda: _json
+        self.content = json.dumps(_json)
 
-
-class FakeSanction(object):
-    transport_headers = "sanction.transport_headers"
-    Client = mock.Mock(return_value=FakeClient())
+    def raise_for_status(self):
+        pass
 
 
 class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
-    # we completely fake the python sanction module, so no need to require
-    # it to run the unit tests
 
     def setUp(self):
-        self.oldsanction = sys.modules.get("sanction", None)
-        self.sanction = FakeSanction()
-        sys.modules["sanction"] = self.sanction
-        # need to import it here if we want this trick to work
+        if requests is None:
+            raise unittest.SkipTest("Need to install requests to test oauth2")
+
         from buildbot.www import oauth2
+        self.patch(requests, 'request', mock.Mock(spec=requests.request))
+        self.patch(requests, 'post', mock.Mock(spec=requests.post))
+        self.patch(requests, 'get', mock.Mock(spec=requests.get))
 
         self.googleAuth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
         self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
@@ -50,56 +62,40 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             url='h:/a/b/', auth=self.githubAuth)
         self.githubAuth.reconfigAuth(master, master.config)
 
-    def tearDown(self):
-        if self.oldsanction is None:
-            del sys.modules["sanction"]
-        else:
-            sys.modules["sanction"] = self.oldsanction
-
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
         res = yield self.googleAuth.getLoginURL()
-        self.sanction.Client.assert_called_with(
-            client_id='ggclientID',
-            auth_endpoint='https://accounts.google.com/o/oauth2/auth')
-        self.sanction.Client().auth_uri.assert_called_with(
-            scope='https://www.googleapis.com/auth/userinfo.email'
-                  ' https://www.googleapis.com/auth/userinfo.profile',
-            redirect_uri='h:/a/b/login', access_type='offline')
-        self.assertEqual(res, "uri://foo")
+        exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
+               "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
+               "ogleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=h%3A%2Fa%2Fb"
+               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID&access_type=offline")
+        self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
         res = yield self.githubAuth.getLoginURL()
-        self.sanction.Client.assert_called_with(
-            client_id='ghclientID',
-            auth_endpoint='https://github.com/login/oauth/authorize')
-        self.sanction.Client().auth_uri.assert_called_with(
-            redirect_uri='h:/a/b/login')
-        self.assertEqual(res, "uri://foo")
+        exp = ("https://github.com/login/oauth/authorize?redirect_uri="
+               "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
+        self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_GoogleVerifyCode(self):
-        self.sanction.Client().request = mock.Mock(return_value=dict(
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.googleAuth.get = mock.Mock(side_effect=[dict(
             name="foo bar",
-            sub='foo',
-            email="bar@foo", picture="http://pic"))
+            email="bar@foo", picture="http://pic")])
         res = yield self.googleAuth.verifyCode("code!")
-        self.sanction.Client.assert_called_with(
-            client_secret='clientSECRET',
-            token_endpoint='https://accounts.google.com/o/oauth2/token',
-            client_id='ggclientID',
-            token_transport="sanction.transport_headers",
-            resource_endpoint='https://www.googleapis.com/oauth2/v1')
-
-        self.sanction.Client().request_token.assert_called_with(
-            code='code!', redirect_uri='h:/a/b/login')
         self.assertEqual({'avatar_url': 'http://pic', 'email': 'bar@foo',
-                          'full_name': 'foo bar', 'username': 'foo'}, res)
+                          'full_name': 'foo bar', 'username': 'bar'}, res)
 
     @defer.inlineCallbacks
     def test_GithubVerifyCode(self):
-        self.sanction.Client().request = mock.Mock(side_effect=[
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.githubAuth.get = mock.Mock(side_effect=[
             dict(  # /user
                 login="bar",
                 name="foo bar",
@@ -108,18 +104,6 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                 login="group",)
              ]])
         res = yield self.githubAuth.verifyCode("code!")
-        self.sanction.Client.assert_called_with(
-            client_secret='clientSECRET',
-            token_endpoint='https://github.com/login/oauth/access_token',
-            client_id='ghclientID', token_transport='sanction.transport_headers',
-            resource_endpoint='https://api.github.com')
-
-        self.sanction.Client().request_token.assert_called_with(
-            code='code!', redirect_uri='h:/a/b/login')
-
-        self.assertEqual(self.sanction.Client().request.call_args_list, [
-            mock.call('/user'), mock.call('/users/bar/orgs')])
-
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
                           'groups': ['group'],
@@ -133,7 +117,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             verifyCode = mock.Mock(
                 side_effect=lambda code: defer.succeed({"username": "bar"}))
 
-        rsrc = self.githubAuth.getLoginResource(self.master)
+        rsrc = self.githubAuth.getLoginResource()
         rsrc.auth = fakeAuth()
         res = yield self.render_resource(rsrc, '/')
         rsrc.auth.getLoginURL.assert_called_once_with()
@@ -152,3 +136,93 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                                                            'name': 'GitHub', 'oauth2': True})
         self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus',
                                                            'name': 'Google', 'oauth2': True})
+
+# unit tests are not very usefull to write new oauth support
+# so following is an e2e test, which opens a browser, and do the oauth
+# negociation. The browser window close in the end of the test
+
+# in order to use this tests, you need to create Github/Google ClientID (see doc on how to do it)
+# point OAUTHCONF environment variable to a file with following params:
+#  {
+#  "GitHubAuth": {
+#     "CLIENTID": "XX
+#     "CLIENTSECRET": "XX"
+#  },
+#  "GoogleAuth": {
+#     "CLIENTID": "XX",
+#     "CLIENTSECRET": "XX"
+#  }
+#  }
+
+
+class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
+    authClass = "GitHubAuth"
+
+    def setUp(self):
+        if requests is None:
+            raise unittest.SkipTest("Need to install requests to test oauth2")
+
+        if "OAUTHCONF" not in os.environ:
+            raise unittest.SkipTest("Need to pass OAUTHCONF path to json file via environ to run this e2e test")
+
+        from buildbot.www import oauth2
+        import json
+        config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
+        self.auth = getattr(oauth2, self.authClass)(config["CLIENTID"], config["CLIENTSECRET"])
+
+        # 5000 has to be hardcoded, has oauth clientids are bound to a fully classified web site
+        master = self.make_master(url='http://localhost:5000/', auth=self.auth)
+        self.auth.reconfigAuth(master, master.config)
+
+    def tearDown(self):
+        from twisted.internet.tcp import Server
+        # browsers has the bad habbit on not closing the persistent
+        # connections, so we need to hack them away to make trial happy
+        f = failure.Failure(Exception("test end"))
+        for reader in reactor.getReaders():
+            if isinstance(reader, Server):
+                reader.connectionLost(f)
+
+    @defer.inlineCallbacks
+    def test_E2E(self):
+        d = defer.Deferred()
+        import twisted
+        twisted.web.http._logDateTimeUsers = 1
+
+        class HomePage(Resource):
+            isLeaf = True
+
+            def render_GET(self, request):
+                info = request.getSession().user_info
+                reactor.callLater(0, d.callback, info)
+                return "<html><script>setTimeout(close,1000)</script><body>WORKED: %s</body></html>" % (info)
+
+        class MySite(Site):
+            def makeSession(self):
+                    uid = self._mkuid()
+                    session = self.sessions[uid] = self.sessionFactory(self, uid)
+                    return session
+        root = Resource()
+        root.putChild("", HomePage())
+        auth = Resource()
+        root.putChild('auth', auth)
+        auth.putChild('login', self.auth.getLoginResource())
+        site = MySite(root)
+        l = reactor.listenTCP(5000, site)
+
+        def thd():
+            res = requests.get('http://localhost:5000/auth/login')
+            webbrowser.open(res.content)
+        threads.deferToThread(thd)
+        res = yield d
+        yield l.stopListening()
+        yield site.stopFactory()
+
+        self.assertIn("full_name", res)
+        self.assertIn("email", res)
+        self.assertIn("groups", res)
+        self.assertIn("username", res)
+
+
+class OAuth2AuthGoogleE2E(OAuth2AuthGitHubE2E):
+    authClass = "GoogleAuth"

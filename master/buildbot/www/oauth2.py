@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import sanction
+import requests
 
+from urllib import urlencode
+from urlparse import parse_qs
+from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import resource
 from posixpath import join
@@ -44,19 +47,24 @@ class OAuth2LoginResource(auth.LoginResource):
 
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
+    getTokenUseAuthHeaders = False
+    authUri = None
+    tokenUri = None
+    grantType = 'authorization_code'
+    authUriAdditionalParams = {}
+    tokenUriAdditionalParams = {}
+    loginUri = None
+    homeUri = None
 
-    def __init__(self, authUri, tokenUri, clientId,
-                 authUriConfig, tokenConfig, **kwargs):
+    def __init__(self,
+                 clientId, clientSecret, **kwargs):
         auth.AuthBase.__init__(self, **kwargs)
-        self.authUri = authUri
-        self.tokenUri = tokenUri
         self.clientId = clientId
-        self.authUriConfig = authUriConfig
-        self.tokenConfig = tokenConfig
+        self.clientSecret = clientSecret
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = join(new_config.www['url'], "login")
+        self.loginUri = join(new_config.www['url'], "auth/login")
         self.homeUri = new_config.www['url']
 
     def getConfigDict(self):
@@ -64,28 +72,54 @@ class OAuth2Auth(auth.AuthBase):
                     oauth2=True,
                     fa_icon=self.faIcon
                     )
-        pass
 
-    def getLoginResource(self, master):
-        return OAuth2LoginResource(master, self)
+    def getLoginResource(self):
+        return OAuth2LoginResource(self.master, self)
 
     def getLoginURL(self):
-        def thd():
-            c = sanction.Client(auth_endpoint=self.authUri,
-                                client_id=self.clientId)
-            return c.auth_uri(redirect_uri=self.loginUri,
-                              **self.authUriConfig)
-        return threads.deferToThread(thd)
+        """
+        Returns the url to redirect the user to for user consent
+        """
+        oauth_params = {'redirect_uri': self.loginUri, 'client_id': self.clientId,
+                        'response_type': 'code'}
+        oauth_params.update(self.authUriAdditionalParams)
+        return defer.succeed("%s?%s" % (self.authUri, urlencode(oauth_params)))
 
+    def createSessionFromToken(self, token):
+        s = requests.Session()
+        s.params = {'access_token': token['access_token']}
+        return s
+
+    def get(self, session, path):
+        return session.get(self.resourceEndpoint + path).json()
+
+    # based on https://github.com/maraujop/requests-oauth
+    # from Miguel Araujo, augmented to support header based clientSecret passing
     def verifyCode(self, code):
         def thd():  # everything in deferToThread is not counted with trial  --coverage :-(
-            c = sanction.Client(token_endpoint=self.tokenUri,
-                                client_id=self.clientId,
-                                **self.tokenConfig)
-            c.request_token(code=code,
-                            redirect_uri=self.loginUri)
+            url = self.tokenUri
+            data = {'redirect_uri': self.loginUri, 'code': code,
+                    'grant_type': self.grantType}
+            auth = None
+            if self.getTokenUseAuthHeaders:
+                auth = (self.clientId, self.clientSecret)
+            else:
+                data.update({'client_id': self.clientId, 'client_secret': self.clientSecret})
+            data.update(self.tokenUriAdditionalParams)
+            response = requests.post(url, data=data, auth=auth)
+            response.raise_for_status()
+            if isinstance(response.content, basestring):
+                try:
+                    content = json.loads(response.content)
+                except ValueError:
+                    content = parse_qs(response.content)
+                    for k, v in content.items():
+                        content[k] = v[0]
+            else:
+                content = response.content
 
-            return self.getUserInfoFromOAuthClient(c)
+            session = self.createSessionFromToken(content)
+            return self.getUserInfoFromOAuthClient(session)
         return threads.deferToThread(thd)
 
     def getUserInfoFromOAuthClient(self, c):
@@ -95,28 +129,19 @@ class OAuth2Auth(auth.AuthBase):
 class GoogleAuth(OAuth2Auth):
     name = "Google"
     faIcon = "fa-google-plus"
-
-    def __init__(self, clientId, clientSecret, **kwargs):
-        OAuth2Auth.__init__(self,
-                            authUri='https://accounts.google.com/o/oauth2/auth',
-                            tokenUri='https://accounts.google.com/o/oauth2/token',
-                            clientId=clientId,
-                            authUriConfig=dict(scope=" ".join([
-                                               'https://www.googleapis.com/auth/userinfo.email',
-                                               'https://www.googleapis.com/auth/userinfo.profile',
-                                               ]),
-                                               access_type='offline'),
-                            tokenConfig=dict(
-                                resource_endpoint='https://www.googleapis.com/oauth2/v1',
-                                client_secret=clientSecret,
-                                token_transport=sanction.transport_headers),
-                            **kwargs
-                            )
+    resourceEndpoint = "https://www.googleapis.com/oauth2/v1"
+    authUri = 'https://accounts.google.com/o/oauth2/auth'
+    tokenUri = 'https://accounts.google.com/o/oauth2/token'
+    authUriAdditionalParams = dict(scope=" ".join([
+                                   'https://www.googleapis.com/auth/userinfo.email',
+                                   'https://www.googleapis.com/auth/userinfo.profile',
+                                   ]),
+                                   access_type='offline')
 
     def getUserInfoFromOAuthClient(self, c):
-        data = c.request('/userinfo')
+        data = self.get(c, '/userinfo')
         return dict(full_name=data["name"],
-                    username=data['sub'],
+                    username=data['email'].split("@")[0],
                     email=data["email"],
                     avatar_url=data["picture"])
 
@@ -124,23 +149,13 @@ class GoogleAuth(OAuth2Auth):
 class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
-
-    def __init__(self, clientId, clientSecret, **kwargs):
-        OAuth2Auth.__init__(self,
-                            authUri='https://github.com/login/oauth/authorize',
-                            tokenUri='https://github.com/login/oauth/access_token',
-                            clientId=clientId,
-                            authUriConfig=dict(),
-                            tokenConfig=dict(
-                                resource_endpoint='https://api.github.com',
-                                client_secret=clientSecret,
-                                token_transport=sanction.transport_headers),
-                            **kwargs
-                            )
+    authUri = 'https://github.com/login/oauth/authorize'
+    tokenUri = 'https://github.com/login/oauth/access_token'
+    resourceEndpoint = 'https://api.github.com'
 
     def getUserInfoFromOAuthClient(self, c):
-        user = c.request('/user')
-        orgs = c.request(join('/users', user['login'], "orgs"))
+        user = self.get(c, '/user')
+        orgs = self.get(c, join('/users', user['login'], "orgs"))
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
