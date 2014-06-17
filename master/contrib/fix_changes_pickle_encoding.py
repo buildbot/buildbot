@@ -6,7 +6,7 @@ Re-encodes changes in a pickle file to UTF-8 from the given encoding
 
 if __name__ == '__main__':
     import os
-    from cPickle import load, dump
+    from buildbot.util.pickle import load, dump
     from optparse import OptionParser
 
     parser = OptionParser(__doc__)

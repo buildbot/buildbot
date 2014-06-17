@@ -20,7 +20,6 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.pbutil import NewCredPerspective
-from buildbot.util import epoch2datetime
 
 
 class ChangePerspective(NewCredPerspective):
@@ -50,19 +49,13 @@ class ChangePerspective(NewCredPerspective):
         # rename arguments to new names.  Note that the client still uses the
         # "old" names (who, when, and isdir), as they are not deprecated yet,
         # although the master will accept the new names (author,
-        # when_timestamp, and is_dir).  After a few revisions have passed, we
+        # when_timestamp).  After a few revisions have passed, we
         # can switch the client to use the new names.
-        if 'isdir' in changedict:
-            changedict['is_dir'] = changedict['isdir']
-            del changedict['isdir']
         if 'who' in changedict:
             changedict['author'] = changedict['who']
             del changedict['who']
         if 'when' in changedict:
-            when = None
-            if changedict['when'] is not None:
-                when = epoch2datetime(changedict['when'])
-            changedict['when_timestamp'] = when
+            changedict['when_timestamp'] = changedict['when']
             del changedict['when']
 
         # turn any bytestring keys into unicode, assuming utf8 but just
@@ -94,18 +87,27 @@ class ChangePerspective(NewCredPerspective):
             log.msg("Found links: " + repr(changedict['links']))
             del changedict['links']
 
-        d = self.master.addChange(**changedict)
-        # since this is a remote method, we can't return a Change instance, so
-        # this just sets the return value to None:
+        d = self.master.data.updates.addChange(**changedict)
+
+        # set the return value to None, so we don't get users depending on
+        # getting a changeid
         d.addCallback(lambda _: None)
         return d
 
 
 class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
-    compare_attrs = ["user", "passwd", "port", "prefix", "port"]
+    compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None,
-                 prefix=None):
+                 prefix=None, name=None):
+
+        if name is None:
+            if prefix:
+                name = "PBChangeSource:%s:%s" % (prefix, port)
+            else:
+                name = "PBChangeSource:%s" % (port,)
+
+        base.ChangeSource.__init__(self, name)
 
         self.user = user
         self.passwd = passwd
@@ -121,29 +123,39 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             d += " (prefix '%s')" % self.prefix
         return d
 
-    @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        # calculate the new port
+    def _calculatePort(self, cfg):
+        # calculate the new port, defaulting to the slave's PB port if
+        # none was specified
         port = self.port
         if port is None:
-            port = new_config.protocols['pb']['port']
+            port = cfg.protocols.get('pb', {}).get('port')
+        return port
+
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        port = self._calculatePort(new_config)
+        if not port:
+            config.error("No port specified for PBChangeSource, and no "
+                         "slave port configured")
 
         # and, if it's changed, re-register
-        if port != self.registered_port:
+        if port != self.registered_port and self.isActive():
             yield self._unregister()
             self._register(port)
 
         yield config.ReconfigurableServiceMixin.reconfigService(
             self, new_config)
 
-    def stopService(self):
-        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
-        d.addCallback(lambda _: self._unregister())
-        return d
+    def activate(self):
+        port = self._calculatePort(self.master.config)
+        self._register(port)
+        return defer.succeed(None)
+
+    def deactivate(self):
+        return self._unregister()
 
     def _register(self, port):
         if not port:
-            log.msg("PBChangeSource has no port to listen on")
             return
         self.registered_port = port
         self.registration = self.master.pbmanager.register(

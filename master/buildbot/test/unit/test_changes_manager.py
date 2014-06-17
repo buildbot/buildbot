@@ -16,11 +16,11 @@
 import mock
 
 from buildbot.changes import manager
-from twisted.application import service
+from buildbot.util import service
 from twisted.trial import unittest
 
 
-class FakeChangeSource(service.Service):
+class FakeChangeSource(service.AsyncService):
     pass
 
 

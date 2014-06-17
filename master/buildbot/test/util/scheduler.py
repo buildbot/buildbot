@@ -13,70 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-import os
-
+from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.test.util import interfaces
+from twisted.internet import defer
 
 
-class FakeMaster(object):
-
-    def __init__(self, basedir, db):
-        self.basedir = basedir
-        self.db = db
-        self.changes_subscr_cb = None
-        self.bset_subscr_cb = None
-        self.bset_completion_subscr_cb = None
-        self.caches = mock.Mock(name="caches")
-        self.caches.get_cache = self.get_cache
-
-    def addBuildset(self, **kwargs):
-        return self.db.buildsets.addBuildset(**kwargs)
-
-    # subscriptions
-    # note that only one subscription of each type is supported
-
-    def _makeSubscription(self, attr_to_clear):
-        sub = mock.Mock()
-
-        def unsub():
-            setattr(self, attr_to_clear, None)
-        sub.unsubscribe = unsub
-        return sub
-
-    def subscribeToChanges(self, callback):
-        assert not self.changes_subscr_cb
-        self.changes_subscr_cb = callback
-        return self._makeSubscription('changes_subscr_cb')
-
-    def subscribeToBuildsets(self, callback):
-        assert not self.bset_subscr_cb
-        self.bset_subscr_cb = callback
-        return self._makeSubscription('bset_subscr_cb')
-
-    def subscribeToBuildsetCompletions(self, callback):
-        assert not self.bset_completion_subscr_cb
-        self.bset_completion_subscr_cb = callback
-        return self._makeSubscription('bset_completion_subscr_cb')
-
-    # caches
-
-    def get_cache(self, cache_name, miss_fn):
-        c = mock.Mock(name=cache_name)
-        c.get = miss_fn
-        return c
-
-    # useful assertions
-
-    def getSubscriptionCallbacks(self):
-        """get the subscription callbacks set on the master, in a dictionary
-        with keys @{buildsets}, @{buildset_completion}, and C{changes}."""
-        return dict(buildsets=self.bset_subscr_cb,
-                    buildset_completion=self.bset_completion_subscr_cb,
-                    changes=self.changes_subscr_cb)
-
-
-class SchedulerMixin(object):
+class SchedulerMixin(interfaces.InterfaceTests):
 
     """
     This class fakes out enough of a master and the various relevant database
@@ -94,24 +38,39 @@ class SchedulerMixin(object):
     @ivar db: the fake db (same as C{self.master.db}, but shorter)
     """
 
+    OTHER_MASTER_ID = 93
+
     def setUpScheduler(self):
         pass
 
     def tearDownScheduler(self):
         pass
 
-    def attachScheduler(self, scheduler, objectid):
+    def attachScheduler(self, scheduler, objectid,
+                        overrideBuildsetMethods=False):
         """Set up a scheduler with a fake master and db; sets self.sched, and
         sets the master's basedir to the absolute path of 'basedir' in the test
         directory.
+
+        If C{overrideBuildsetMethods} is true, then all of the
+        addBuildsetForXxx methods are overriden to simply append the method
+        name and arguments to self.addBuildsetCalls.  These overriden methods
+        return buildsets starting with 500 and buildrequest IDs starting with
+        100.
+
+        For C{addBuildsetForSourceStamp}, this also overrides DB API methods
+        C{addSourceStamp} and C{addSourceStampSet}, and uses that information
+        to generate C{addBuildsetForSourceStamp} results.
 
         @returns: scheduler
         """
         scheduler.objectid = objectid
 
         # set up a fake master
-        db = self.db = fakedb.FakeDBConnector(self)
-        self.master = FakeMaster(os.path.abspath('basedir'), db)
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantDb=True, wantMq=True, wantData=True)
+        db = self.db = self.master.db
+        self.mq = self.master.mq
         scheduler.master = self.master
 
         db.insertTestData([
@@ -119,8 +78,73 @@ class SchedulerMixin(object):
                           class_name='SomeScheduler'),
         ])
 
+        if overrideBuildsetMethods:
+            for method in (
+                    'addBuildsetForSourceStampsWithDefaults',
+                    'addBuildsetForChanges',
+                    'addBuildsetForSourceStamps'):
+                actual = getattr(scheduler, method)
+                fake = getattr(self, 'fake_%s' % method)
+
+                self.assertArgSpecMatches(actual, fake)
+                setattr(scheduler, method, fake)
+            self.addBuildsetCalls = []
+            self._bsidGenerator = iter(xrange(500, 999))
+            self._bridGenerator = iter(xrange(100, 999))
+
+            # temporarily override the sourcestamp and sourcestampset methods
+            self.addedSourceStamps = []
+            self.addedSourceStampSets = []
+
+            def fake_addSourceStamp(**kwargs):
+                self.assertEqual(kwargs['sourcestampsetid'],
+                                 400 + len(self.addedSourceStampSets) - 1)
+                self.addedSourceStamps.append(kwargs)
+                return defer.succeed(300 + len(self.addedSourceStamps) - 1)
+            self.db.sourcestamps.addSourceStamp = fake_addSourceStamp
+
+            def fake_addSourceStampSet():
+                self.addedSourceStampSets.append([])
+                return defer.succeed(400 + len(self.addedSourceStampSets) - 1)
+            self.db.sourcestamps.addSourceStampSet = fake_addSourceStampSet
+
+        # patch methods to detect a failure to upcall the activate and
+        # deactivate methods .. unless we're testing BaseScheduler
+        def patch(meth):
+            oldMethod = getattr(scheduler, meth)
+
+            def newMethod():
+                self._parentMethodCalled = False
+                d = defer.maybeDeferred(oldMethod)
+
+                @d.addCallback
+                def check(rv):
+                    self.assertTrue(self._parentMethodCalled,
+                                    "'%s' did not call its parent" % meth)
+                    return rv
+                return d
+            setattr(scheduler, meth, newMethod)
+
+            oldParent = getattr(base.BaseScheduler, meth)
+
+            def newParent(self_):
+                self._parentMethodCalled = True
+                return oldParent(self_)
+            self.patch(base.BaseScheduler, meth, newParent)
+        if scheduler.__class__.activate != base.BaseScheduler.activate:
+            patch('activate')
+        if scheduler.__class__.deactivate != base.BaseScheduler.deactivate:
+            patch('deactivate')
+
         self.sched = scheduler
         return scheduler
+
+    def setSchedulerToMaster(self, otherMaster):
+        self.master.data.updates.schedulerIds[self.sched.name] = self.sched.objectid
+        if otherMaster:
+            self.master.data.updates.schedulerMasters[self.sched.objectid] = otherMaster
+        else:
+            del self.master.data.updates.schedulerMasters[self.sched.objectid]
 
     class FakeChange:
         who = ''
@@ -144,3 +168,46 @@ class SchedulerMixin(object):
         ch = self.FakeChange()
         ch.__dict__.update(kwargs)
         return ch
+
+    def _addBuildsetReturnValue(self, builderNames):
+        if builderNames is None:
+            builderNames = self.sched.builderNames
+        bsid = self._bsidGenerator.next()
+        brids = dict(zip(builderNames, self._bridGenerator))
+        return defer.succeed((bsid, brids))
+
+    def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+                                                    waited_for=False, properties=None,
+                                                    builderNames=None, **kw):
+        properties = properties.asDict()
+        self.assertIsInstance(sourcestamps, list)
+        sourcestamps.sort()
+        self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
+                                      dict(reason=reason, sourcestamps=sourcestamps,
+                                           waited_for=waited_for, properties=properties,
+                                           builderNames=builderNames)))
+        return self._addBuildsetReturnValue(builderNames)
+
+    def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
+                                   changeids=[], builderNames=None, properties=None, **kw):
+        properties = properties.asDict() if properties is not None else None
+        self.addBuildsetCalls.append(('addBuildsetForChanges',
+                                      dict(waited_for=waited_for, reason=reason,
+                                           external_idstring=external_idstring,
+                                           changeids=changeids,
+                                           properties=properties, builderNames=builderNames,
+                                           )))
+        return self._addBuildsetReturnValue(builderNames)
+
+    def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
+                                        reason='', external_idstring=None, properties=None,
+                                        builderNames=None, **kw):
+        properties = properties.asDict() if properties is not None else None
+        self.assertIsInstance(sourcestamps, list)
+        sourcestamps.sort()
+        self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
+                                      dict(reason=reason, external_idstring=external_idstring,
+                                           properties=properties, builderNames=builderNames,
+                                           sourcestamps=sourcestamps)))
+
+        return self._addBuildsetReturnValue(builderNames)

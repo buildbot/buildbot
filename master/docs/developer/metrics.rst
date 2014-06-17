@@ -8,9 +8,6 @@ metrics inside the buildbot master process. Currently these are logged
 periodically according to the ``log_interval`` configuration
 setting of the @ref{Metrics Options} configuration.
 
-If :bb:status:`WebStatus` is enabled, the metrics data is also available
-via ``/json/metrics``. 
-
 The metrics subsystem is implemented in
 :mod:`buildbot.process.metrics`. It makes use of twisted's logging
 system to pass metrics data from all over buildbot's code to a central

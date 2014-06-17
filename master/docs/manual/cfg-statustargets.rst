@@ -48,667 +48,15 @@ show status for Builders that are in one of the named categories.
 The remainder of this section describes each built-in status target.  A full
 list of status targets is available in the :bb:index:`status`.
 
-.. bb:status:: WebStatus
-
-WebStatus
-~~~~~~~~~
-
-.. py:class:: buildbot.status.web.baseweb.WebStatus
-
-The :class:`buildbot.status.html.WebStatus` status target runs a small
-web server inside the buildmaster. You can point a browser at this web
-server and retrieve information about every build the buildbot knows
-about, as well as find out what the buildbot is currently working on.
-
-The first page you will see is the *Welcome Page*, which contains
-links to all the other useful pages. By default, this page is served from the
-:file:`status/web/templates/root.html` file in buildbot's library area.
-
-One of the most complex resource provided by :class:`WebStatus` is the
-*Waterfall Display*, which shows a time-based chart of events. This
-somewhat-busy display provides detailed information about all steps of all
-recent builds, and provides hyperlinks to look at individual build logs and
-source changes. By simply reloading this page on a regular basis, you will see
-a complete description of everything the buildbot is currently working on.
-
-A similar, but more developer-oriented display is the `Grid` display.  This
-arranges builds by :class:`SourceStamp` (horizontal axis) and builder (vertical axis),
-and can provide quick information as to which revisions are passing or failing
-on which builders.
-
-There are also pages with more specialized information. For example,
-there is a page which shows the last 20 builds performed by the
-buildbot, one line each. Each line is a link to detailed information
-about that build. By adding query arguments to the URL used to reach
-this page, you can narrow the display to builds that involved certain
-branches, or which ran on certain :class:`Builder`\s. These pages are described
-in great detail below.
-
-Configuration
-+++++++++++++
-
-The simplest possible configuration for WebStatus is::
-
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(8080))
-
-Buildbot uses a templating system for the web interface. The source
-of these templates can be found in the :file:`status/web/templates/` directory
-in buildbot's library area. You can override these templates by creating
-alternate versions in a :file:`templates/` directory within the buildmaster's
-base directory.
-
-If that isn't enough you can also provide additional Jinja2 template loaders::
-
-    import jinja2
-    myloaders = [
-        jinja2.FileSystemLoader("/tmp/mypath"),
-        ]
-
-    c['status'].append(html.WebStatus(
-        # ...
-        jinja_loaders = myloaders,
-    ))
-
-The first time a buildmaster is created, the :file:`public_html/`
-directory is populated with some sample files, which you will probably
-want to customize for your own project. These files are all static:
-the buildbot does not modify them in any way as it serves them to HTTP
-clients.
-
-Templates in :file:`templates/` take precedence over static files in
-:file:`public_html/`.
-
-The initial :file:`robots.txt` file has Disallow lines for all of
-the dynamically-generated buildbot pages, to discourage web spiders
-and search engines from consuming a lot of CPU time as they crawl
-through the entire history of your buildbot. If you are running the
-buildbot behind a reverse proxy, you'll probably need to put the
-:file:`robots.txt` file somewhere else (at the top level of the parent web
-server), and replace the URL prefixes in it with more suitable values.
-
-If you would like to use an alternative root directory, add the
-``public_html=`` option to the :class:`WebStatus` creation::
-
-    c['status'].append(WebStatus(8080, public_html="/var/www/buildbot"))
-
-In addition, if you are familiar with twisted.web *Resource
-Trees*, you can write code to add additional pages at places inside
-this web space. Just use :meth:`webstatus.putChild` to place these
-resources.
-
-The following section describes the special URLs and the status views
-they provide.
-
-Buildbot Web Resources
-++++++++++++++++++++++
-
-Certain URLs are `magic`, and the pages they serve are created by
-code in various classes in the :file:`buildbot.status.web` package
-instead of being read from disk. The most common way to access these
-pages is for the buildmaster admin to write or modify the
-:file:`index.html` page to contain links to them. Of course other
-project web pages can contain links to these buildbot pages as well.
-
-Many pages can be modified by adding query arguments to the URL. For
-example, a page which shows the results of the most recent build
-normally does this for all builders at once. But by appending
-``?builder=i386`` to the end of the URL, the page will show only the
-results for the `i386` builder. When used in this way, you can add
-multiple ``builder=`` arguments to see multiple builders. Remembering
-that URL query arguments are separated *from each other* with
-ampersands, a URL that ends in ``?builder=i386&builder=ppc`` would
-show builds for just those two Builders.
-
-The ``branch=`` query argument can be used on some pages. This
-filters the information displayed by that page down to only the builds
-or changes which involved the given branch. Use ``branch=trunk`` to
-reference the trunk: if you aren't intentionally using branches,
-you're probably using trunk. Multiple ``branch=`` arguments can be
-used to examine multiple branches at once (so appending
-``?branch=foo&branch=bar`` to the URL will show builds involving
-either branch). No ``branch=`` arguments means to show builds and
-changes for all branches.
-
-Some pages may include the Builder name or the build number in the
-main part of the URL itself. For example, a page that describes Build
-#7 of the `i386` builder would live at :file:`/builders/i386/builds/7`.
-
-The table below lists all of the internal pages and the URLs that can
-be used to access them.
-
-``/waterfall``
-    This provides a chronologically-oriented display of the activity of
-    all builders. It is the same display used by the Waterfall display.
-
-    By adding one or more ``builder=`` query arguments, the Waterfall is
-    restricted to only showing information about the given Builders. By
-    adding one or more ``branch=`` query arguments, the display is
-    restricted to showing information about the given branches. In
-    addition, adding one or more ``category=`` query arguments to the URL
-    will limit the display to Builders that were defined with one of the
-    given categories.
-
-    A ``show_events=true`` query argument causes the display to include
-    non-:class:`Build` events, like slaves attaching and detaching, as well as
-    reconfiguration events. ``show_events=false`` hides these events. The
-    default is to show them.
-
-    By adding the ``failures_only=true`` query argument, the Waterfall is
-    restricted to only showing information about the builders that
-    are currently failing. A builder is considered failing if the
-    last finished build was not successful, a step in the current
-    build(s) is failing, or if the builder is offline.
-
-    The ``last_time=``, ``first_time=``, and  ``show_time=``
-    arguments will control what interval of time is displayed. The default
-    is to show the latest events, but these can be used to look at earlier
-    periods in history. The ``num_events=`` argument also provides a
-    limit on the size of the displayed page.
-
-    The Waterfall has references to resources many of the other portions
-    of the URL space: :file:`/builders` for access to individual builds,
-    :file:`/changes` for access to information about source code changes,
-    etc.
-
-``/grid``
-    This provides a chronologically oriented display of builders, by
-    revision.  The builders are listed down the left side of the page,
-    and the revisions are listed across the top.
-
-    By adding one or more ``category=`` arguments the grid will be
-    restricted to revisions in those categories.
-
-    A :samp:`width={N}` argument will limit the number of revisions shown to *N*,
-    defaulting to 5.
-
-    A :samp:`branch={BRANCHNAME}` argument will limit the grid to revisions on
-    branch *BRANCHNAME*.
-
-``/tgrid``
-    The Transposed Grid is similar to the standard grid, but, as the name
-    implies, transposes the grid: the revisions are listed down the left side
-    of the page, and the build hosts are listed across the top.  It accepts
-    the same query arguments. The exception being that instead of ``width``
-    the argument is named ``length``.
-
-    This page also has a ``rev_order=`` query argument that lets you
-    change in what order revisions are shown. Valid values are ``asc``
-    (ascending, oldest revision first) and ``desc`` (descending,
-    newest revision first).
-
-
-``/console``
-    EXPERIMENTAL: This provides a developer-oriented display of the last
-    changes and how they affected the builders.
-
-    It allows a developer to quickly see the status of each builder for the
-    first build including his or her change. A green box means that the change
-    succeeded for all the steps for a given builder. A red box means that
-    the changed introduced a new regression on a builder. An orange box
-    means that at least one of the tests failed, but it was also failing
-    in the previous build, so it is not possible to see if there were any
-    regressions from this change. Finally a yellow box means that the test
-    is in progress.
-
-    By adding one or more ``builder=`` query arguments, the Console view is
-    restricted to only showing information about the given Builders. Adding a
-    ``repository=`` argument will limit display to a given repository. By
-    adding one or more ``branch=`` query arguments, the display is restricted
-    to showing information about the given branches. In addition, adding one or
-    more ``category=`` query arguments to the URL will limit the display to
-    Builders that were defined with one of the given categories.  With the
-    ``project=`` query argument, it's possible to restrict the view to changes
-    from the given project.  With the ``codebase=`` query argument, it's possible
-    to restrict the view to changes for the given codebase.
-
-    By adding one or more ``name=`` query arguments to the URL, the console view is
-    restricted to only showing changes made by the given users.
-
-    NOTE: To use this page, your :file:`buildbot.css` file in
-    :file:`public_html` must be the one found in
-    :bb:src:`master/buildbot/status/web/files/default.css`. This is the default
-    for new installs, but upgrades of very old installs of Buildbot may need to
-    manually fix the CSS file.
-
-    The console view is still in development. At this moment by
-    default the view sorts revisions lexically, which can lead to odd
-    behavior with non-integer revisions (e.g., Git), or with integer
-    revisions of different length (e.g., 999 and 1000). It also has
-    some issues with displaying multiple branches at the same time. If
-    you do have multiple branches, you should use the ``branch=``
-    query argument.  The ``order_console_by_time`` option may help
-    sorting revisions, although it depends on the date being set
-    correctly in each commit::
-
-        w = html.WebStatus(http_port=8080, order_console_by_time=True)
-
-``/rss``
-    This provides a rss feed summarizing all failed builds. The same
-    query-arguments used by 'waterfall' can be added to filter the
-    feed output.
-
-``/atom``
-    This provides an atom feed summarizing all failed builds. The same
-    query-arguments used by 'waterfall' can be added to filter the feed
-    output.
-
-``/json``
-    This view provides quick access to Buildbot status information in a form that
-    is easily digested from other programs, including JavaScript.  See
-    ``/json/help`` for detailed interactive documentation of the output formats
-    for this view.
-
-:samp:`/buildstatus?builder=${BUILDERNAME}&number=${BUILDNUM}`
-    This displays a waterfall-like chronologically-oriented view of all the
-    steps for a given build number on a given builder.
-
-:samp:`/builders/${BUILDERNAME}`
-    This describes the given :class:`Builder` and provides buttons to force a
-    build.  A ``numbuilds=`` argument will control how many build lines
-    are displayed (5 by default).  This page also accepts property filters
-    of the form ``property.${PROPERTYNAME}=${PROPERTVALUE}``.  When used,
-    only builds and build requests which have properties with matching string
-    representations will be shown.
-
-:samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}`
-    This describes a specific Build.
-
-:samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}/steps/${STEPNAME}`
-    This describes a specific BuildStep.
-
-:samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}/steps/${STEPNAME}/logs/${LOGNAME}`
-    This provides an HTML representation of a specific logfile.
-
-:samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}/steps/${STEPNAME}/logs/${LOGNAME}/text`
-    This returns the logfile as plain text, without any HTML coloring
-    markup. It also removes the `headers`, which are the lines that
-    describe what command was run and what the environment variable
-    settings were like. This maybe be useful for saving to disk and
-    feeding to tools like :command:`grep`.
-
-``/changes``
-    This provides a brief description of the :class:`ChangeSource` in use
-    (see :ref:`Change-Sources`).
-
-:samp:`/changes/{NN}`
-    This shows detailed information about the numbered :class:`Change`: who was the
-    author, what files were changed, what revision number was represented,
-    etc.
-
-``/buildslaves``
-    This summarizes each :class:`BuildSlave`, including which `Builder`\s are
-    configured to use it, whether the buildslave is currently connected or
-    not, and host information retrieved from the buildslave itself.
-
-    A ``no_builders=1`` URL argument will omit the builders column.  This is
-    useful if each buildslave is assigned to a large number of builders.
-
-``/one_line_per_build``
-    This page shows one line of text for each build, merging information
-    from all :class:`Builder`\s [#]_. Each line specifies
-    the name of the Builder, the number of the :class:`Build`, what revision it
-    used, and a summary of the results. Successful builds are in green,
-    while failing builds are in red. The date and time of the build are
-    added to the right-hand edge of the line. The lines are ordered by
-    build finish timestamp.
-
-    One or more ``builder=`` or ``branch=`` arguments can be used to
-    restrict the list. In addition, a ``numbuilds=`` argument will
-    control how many lines are displayed (20 by default).
-
-``/builders``
-    This page shows a small table, with one box for each :class:`Builder`,
-    containing the results of the most recent :class:`Build`. It does not show the
-    individual steps, or the current status. This is a simple summary of
-    buildbot status: if this page is green, then all tests are passing.
-
-    As with ``/one_line_per_build``, this page will also honor
-    ``builder=`` and ``branch=`` arguments.
-
-``/png``
-    This view produces an image in png format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
-
-:samp:`/png?builder=${BUILDERNAME}&number=$BUILDNUM&size=large`
-    This generate a large png image reporting the status of the given $BUILDNUM for the given builder $BUILDERNAME. The sizes are `small`, `normal` and `large` if no size is given the `normal` size is returned, if no $BUILDNUM is given the last build is returned. For example:
-
-    .. image:: ../_images/success_normal.png
-
-:samp:`/png?builder=${BUILDERNAME}&revision=$REVHASH&size=large`
-    This generate a large png image reporting the status of the build of the given $REVHASH for the given builder $BUILDERNAME. If both number and revision are specified revision will be ignored. $REVHASH must be the full length hash not the short one.  
-
-.. note::
-
-    Buildbot stores old build details in pickle files so it's a good idea to enable
-    cache if you are planning to actively search build statuses by revision.
-
-``/users``
-    This page exists for authentication reasons when checking ``showUsersPage``.
-    It'll redirect to ``/authfail`` on ``False``, ``/users/table`` on ``True``,
-    and give a username/password login prompt on ``'auth'``. Passing or failing
-    results redirect to the same pages as ``False`` and ``True``.
-
-``/users/table``
-    This page shows a table containing users that are stored in the database.
-    It has columns for their respective ``uid`` and ``identifier`` values,
-    with the ``uid`` values being clickable for more detailed information
-    relating to a user.
-
-``/users/table/{NN}``
-    Shows all the attributes stored in the database relating to the user
-    with uid ``{NN}`` in a table.
-
-``/about``
-    This page gives a brief summary of the Buildbot itself: software
-    version, versions of some libraries that the Buildbot depends upon,
-    etc. It also contains a link to the buildbot.net home page.
-
-There are also a set of web-status resources that are intended for use
-by other programs, rather than humans.
-
-``/change_hook``
-    This provides an endpoint for web-based source change
-    notification. It is used by GitHub and
-    contrib/post_build_request.py. See :ref:`Change-Hooks` for more
-    details.
-
-WebStatus Configuration Parameters
-++++++++++++++++++++++++++++++++++
-
-HTTP Connection
-###############
-
-The most common way to run a :class:`WebStatus` is on a regular TCP
-port. To do this, just pass in the TCP port number when you create the
-:class:`WebStatus` instance; this is called the ``http_port`` argument::
-
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(http_port=8080))
-
-The ``http_port`` argument is actually a `strports specification` for the
-port that the web server should listen on. This can be a simple port number, or
-a string like ``http_port="tcp:8080:interface=127.0.0.1"`` (to limit
-connections to the loopback interface, and therefore to clients running on the
-same host) [#]_.
-
-If instead (or in addition) you provide the ``distrib_port``
-argument, a twisted.web distributed server will be started either on a
-TCP port (if ``distrib_port`` is like ``"tcp:12345"``) or more
-likely on a UNIX socket (if ``distrib_port`` is like
-``"unix:/path/to/socket"``).
-
-The ``public_html`` option gives the path to a regular directory of HTML
-files that will be displayed alongside the various built-in URLs buildbot
-supplies.  This is most often used to supply CSS files (:file:`/buildbot.css`)
-and a top-level navigational file (:file:`/index.html`), but can also serve any
-other files required - even build results!
-
-.. _Authorization:
-
-Authorization
-#############
-
-The buildbot web status is, by default, read-only.  It displays lots of
-information, but users are not allowed to affect the operation of the
-buildmaster.  However, there are a number of supported activities that can
-be enabled, and Buildbot can also perform rudimentary username/password
-authentication.  The actions are:
-
-``view``
-    view buildbot web status
-
-``forceBuild``
-    force a particular builder to begin building, optionally with a specific revision, branch, etc.
-
-``forceAllBuilds``
-    force *all* builders to start building
-
-``pingBuilder``
-    "ping" a builder's buildslaves to check that they are alive
-
-``gracefulShutdown``
-    gracefully shut down a slave when it is finished with its current build
-
-``pauseSlave``
-    temporarily stop running new builds on a slave
-
-``stopBuild``
-    stop a running build
-
-``stopAllBuilds``
-    stop all running builds
-
-``cancelPendingBuild``
-    cancel a build that has not yet started
-
-``cancelAllPendingBuilds``
-    cancel all or selected subset of builds that has not yet started
-
-``stopChange``
-    cancel builds that include a given change number
-
-``cleanShutdown``
-    shut down the master gracefully, without interrupting builds
-
-``showUsersPage``
-    access to page displaying users in the database, see :ref:`User-Objects`
-
-For each of these actions, you can configure buildbot to never allow the
-action, always allow the action, allow the action to any authenticated user, or
-check with a function of your creation to determine whether the action is OK
-(see below).
-
-This is all configured with the :class:`Authz` class::
-
-    from buildbot.status.html import WebStatus
-    from buildbot.status.web.authz import Authz
-    authz = Authz(
-        forceBuild=True,
-        stopBuild=True)
-    c['status'].append(WebStatus(http_port=8080, authz=authz))
-
-Each of the actions listed above is an option to :class:`Authz`.  You can
-specify ``False`` (the default) to prohibit that action or ``True`` to enable
-it.  Or you can specify a callable.  Each such callable will take a username as
-its first argument.  The remaining arguments vary depending on the type of
-authorization request.  For ``forceBuild``, the second argument is the builder
-status.
-
-Authentication
-##############
-
-If you do not wish to allow strangers to perform actions, but do want
-developers to have such access, you will need to add some authentication
-support.  Pass an instance of :class:`status.web.auth.IAuth` as a ``auth``
-keyword argument to :class:`Authz`, and specify the action as ``"auth"``. ::
-
-    from buildbot.status.html import WebStatus
-    from buildbot.status.web.authz import Authz
-    from buildbot.status.web.auth import BasicAuth
-    users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
-    authz = Authz(auth=BasicAuth(users),
-        forceBuild='auth', # only authenticated users
-        pingBuilder=True, # but anyone can do this
-    )
-    c['status'].append(WebStatus(http_port=8080, authz=authz))
-    # or
-    from buildbot.status.web.auth import HTPasswdAuth
-    auth = (HTPasswdAuth('/path/to/htpasswd'))
-    # or
-    from buildbot.status.web.auth import UsersAuth
-    auth = UsersAuth()
-
-The class :class:`BasicAuth` implements a basic authentication mechanism using a
-list of user/password tuples provided from the configuration file.  The class
-`HTPasswdAuth` implements an authentication against an :file:`.htpasswd`
-file. The `HTPasswdAprAuth` a subclass of `HTPasswdAuth` use libaprutil for
-authenticating. This adds support for apr1/md5 and sha1 password hashes but
-requires libaprutil at runtime. The :class:`UsersAuth` works with
-:ref:`User-Objects` to check for valid user credentials.
-
-If you need still-more flexibility, pass a function for the authentication
-action.  That function will be called with an authenticated username and some
-action-specific arguments, and should return true if the action is authorized. ::
-
-    def canForceBuild(username, builder_status):
-        if builder_status.getName() == 'smoketest':
-            return True # any authenticated user can run smoketest
-        elif username == 'releng':
-            return True # releng can force whatever they want
-        else:
-            return False # otherwise, no way.
-
-    authz = Authz(auth=BasicAuth(users),
-        forceBuild=canForceBuild)
-
-The ``forceBuild`` and ``pingBuilder`` actions both supply a
-:class:`BuilderStatus` object.  The ``stopBuild`` action supplies a :class:`BuildStatus`
-object.  The ``cancelPendingBuild`` action supplies a :class:`BuildRequest`.  The
-remainder do not supply any extra arguments.
-
-HTTP-based authentication by frontend server
-############################################
-
-In case if WebStatus is served through reverse proxy that supports HTTP-based
-authentication (like apache, lighttpd), it's possible to to tell WebStatus to
-trust web server and get username from request headers. This allows displaying
-correct usernames in build reason, interrupt messages, etc.
-
-Just set ``useHttpHeader`` to ``True`` in :class:`Authz` constructor. ::
-
-    authz = Authz(useHttpHeader=True) # WebStatus secured by web frontend with HTTP auth
-
-Please note that WebStatus can decode password for HTTP Basic requests only (for
-Digest authentication it's just impossible). Custom :class:`status.web.auth.IAuth`
-subclasses may just ignore password at all since it's already validated by web server.
-
-Administrator must make sure that it's impossible to get access to WebStatus
-using other way than through frontend. Usually this means that WebStatus should
-listen for incoming connections only on localhost (or on some firewall-protected
-port). Frontend must require HTTP authentication to access WebStatus pages
-(using any source for credentials, such as htpasswd, PAM, LDAP).
-
-If you allow unauthenticated access through frontend as well, it's possible to
-specify a ``httpLoginUrl`` which will be rendered on the WebStatus for
-unauthenticated users as a link named Login. ::
-
-    authz = Authz(useHttpHeader=True, httpLoginUrl='https://buildbot/login')
-
-A configuration example with Apache HTTPD as reverse proxy could look like the
-following. ::
-
-    authz = Authz(
-      useHttpHeader=True,
-      httpLoginUrl='https://buildbot/login',
-      auth = HTPasswdAprAuth('/var/www/htpasswd'),
-      forceBuild = 'auth')
-
-Corresponding Apache configuration.
-
-.. code-block:: apache
-
-    ProxyPass / http://127.0.0.1:8010/
-
-    <Location /login>
-        AuthType Basic
-        AuthName "Buildbot"
-        AuthUserFile /var/www/htpasswd
-        Require valid-user
-
-        RewriteEngine on
-        RewriteCond %{HTTP_REFERER} ^https?://([^/]+)/(.*)$
-        RewriteRule ^.*$ https://%1/%2 [R,L]
-    </Location>
-
-Logging configuration
-#####################
-
-The `WebStatus` uses a separate log file (:file:`http.log`) to avoid clutter
-buildbot's default log (:file:`twistd.log`) with request/response messages.
-This log is also, by default, rotated in the same way as the twistd.log
-file, but you can also customize the rotation logic with the following
-parameters if you need a different behaviour.
-
-``rotateLength``
-    An integer defining the file size at which log files are rotated.
-
-``maxRotatedFiles``
-    The maximum number of old log files to keep.
-
-URL-decorating options
-######################
-
-These arguments adds an URL link to various places in the WebStatus,
-such as revisions, repositories, projects and, optionally, ticket/bug references
-in change comments.
-
-revlink
-'''''''
-
-The ``revlink`` argument on :class:`WebStatus` is deprecated in favour of the
-global :bb:cfg:`revlink` option. Only use this if you need to generate
-different URLs for different web status instances.
-
-In addition to a callable like :bb:cfg:`revlink`, this argument accepts a
-format string or a dict mapping a string (repository name) to format strings.
-
-The format string should use ``%s`` to insert the revision id in the url.  For
-example, for Buildbot on GitHub::
-
-    revlink='http://github.com/buildbot/buildbot/tree/%s'
-
-The revision ID will be URL encoded before inserted in the replacement string
-
-changecommentlink
-'''''''''''''''''
-
-The ``changecommentlink`` argument can be used to create links to
-ticket-ids from change comments (i.e. #123).
-
-The argument can either be a tuple of three strings, a dictionary
-mapping strings (project names) to tuples or a callable taking a
-changetext (a :class:`jinja2.Markup` instance) and a project name,
-returning a the same change text with additional links/html tags added
-to it.
-
-If the tuple is used, it should contain three strings where the first
-element is a regex that searches for strings (with match groups), the
-second is a replace-string that, when substituted with ``\1`` etc,
-yields the URL and the third is the title attribute of the link. (The
-``<a href="" title=""></a>`` is added by the system.) So, for Trac
-tickets (#42, etc): ``changecommentlink(r"#(\d+)",
-r"http://buildbot.net/trac/ticket/\1", r"Ticket \g<0>")`` .
-
-projects
-''''''''
-
-A dictionary from strings to strings, mapping project names to URLs,
-or a callable taking a project name and returning an URL.
-
-repositories
-''''''''''''
-
-Same as the projects arg above, a dict or callable mapping project names
-to URLs.
-
-Display-Specific Options
-########################
-
-The ``order_console_by_time`` option affects the rendering of the console;
-see the description of the console above.
-
-The ``numbuilds`` option determines the number of builds that most status
-displays will show.  It can usually be overriden in the URL, e.g.,
-``?numbuilds=13``.
-
-The ``num_events`` option gives the default number of events that the
-waterfall will display.  The ``num_events_max`` gives the maximum number of
-events displayed, even if the web browser requests more.
-
 .. _Change-Hooks:
 
 Change Hooks
-++++++++++++
+~~~~~~~~~~~~
+
+.. warning::
+
+    Tihs section corresponds to the WebStatus, which has been removed.
+    The content remains here for a later move to another location.
 
 The ``/change_hook`` url is a magic URL which will accept HTTP requests and translate
 them into changes for buildbot. Implementations (such as a trivial json-based endpoint
@@ -735,7 +83,7 @@ submission of an arbitrary change request. Run :command:`post_build_request.py
 work.
 
 GitHub hook
-###########
++++++++++++
 
 The GitHub hook is simple and takes no options. ::
 
@@ -777,7 +125,7 @@ See the `documentation <https://twistedmatrix.com/documents/current/core/howto/c
 Note that not using ``change_hook_auth`` can expose you to security risks.
 
 BitBucket hook
-##############
+++++++++++++++
 
 The BitBucket hook is as simple as GitHub one and it also takes no options. ::
 
@@ -811,7 +159,7 @@ Then, create a BitBucket service hook (see https://confluence.atlassian.com/disp
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
 Google Code hook
-################
+++++++++++++++++
 
 The Google Code hook is quite similar to the GitHub Hook. It has one option
 for the "Post-Commit Authentication Key" used to check if the request is
@@ -838,7 +186,7 @@ that periodically poll the Google Code commit feed for changes.
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
 
 Poller hook
-###########
++++++++++++
 
 The poller hook allows you to use GET or POST requests to trigger
 polling. One advantage of this is your buildbot instance can poll
@@ -881,7 +229,7 @@ option::
     ))
 
 GitLab hook
-###########
++++++++++++
 
 The GitLab hook is as simple as GitHub one and it also takes no options. ::
 
@@ -916,7 +264,7 @@ Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hook
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
 Gitorious Hook
-##############
+++++++++++++++
 
 The Gitorious hook is as simple as GitHub one and it also takes no options. ::
 
@@ -953,7 +301,6 @@ Note that as before, not using ``change_hook_auth`` can expose you to security r
     Web hooks are only available for local Gitorious
     installations, since this feature is not offered as part of
     Gitorious.org yet.
-
 
 .. bb:status:: MailNotifier
 
@@ -1130,6 +477,7 @@ given below::
                     break
             name = "%s.%s" % (log.getStep().getName(), log.getName())
             status, dummy = log.getStep().getResults()
+            # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
@@ -1394,6 +742,7 @@ Log information ::
     for log in build.getLogs():
         log_name = "%s.%s" % (log.getStep().getName(), log.getName())
         log_status, dummy = log.getStep().getResults()
+        # XXX logs no longer have a getText method
         log_body = log.getText().splitlines() # Note: can be VERY LARGE
         log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
@@ -1568,27 +917,6 @@ the connection failed. ``lostDelay`` defaults to a random number between 1 and 5
 while ``failedDelay`` defaults to a random one between 45 and 60. Setting random
 defaults like this means multiple IRC bots are less likely to deny each other
 by flooding the server.
-
-.. bb:status:: PBListener
-
-PBListener
-~~~~~~~~~~
-
-.. @cindex PBListener
-.. py:class:: buildbot.status.client.PBListener
-
-::
-
-    import buildbot.status.client
-    pbl = buildbot.status.client.PBListener(port=int, user=str,
-                                            passwd=str)
-    c['status'].append(pbl)
-
-This sets up a PB listener on the given TCP port, to which a PB-based
-status client can connect and retrieve status information.
-:command:`buildbot statusgui` (:bb:cmdline:`statusgui`) is an example of such a
-status client. The ``port`` argument can also be a strports
-specification string.
 
 .. bb:status:: StatusPush
 

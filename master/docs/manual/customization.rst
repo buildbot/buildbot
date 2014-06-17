@@ -40,6 +40,10 @@ Merge Request Functions
 
 .. index:: Builds; merging
 
+.. warning:
+
+    This section is no longer accurate in Buildbot 0.9.x
+
 The logic Buildbot uses to decide which build request can be merged can be
 customized by providing a Python function (a callable) instead of ``True`` or
 ``False`` described in :ref:`Merging-Build-Requests`.
@@ -57,10 +61,12 @@ In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildReques
 In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus
 developers forcing builds for different reasons will see distinct builds.  Note
 the use of the :func:`canBeMergedWith` method to access the source stamp
-compatibility algorithm. ::
+compatibility algorithm.  Note, in particular, that this function returns a Deferred
+as of Buildbot-0.9.0.  ::
 
+    @defer.inlineCallbacks
     def mergeRequests(builder, req1, req2):
-        if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+        if (yield req1.source.canBeMergedWith(req2.source)) and  req1.reason == req2.reason:
            return True
         return False
     c['mergeRequests'] = mergeRequests
@@ -383,8 +389,6 @@ the polling is not frequent enough.
 Writing a Notification-based Change Source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.changes.base.ChangeSource
-
 A custom change source must implement
 :class:`buildbot.interfaces.IChangeSource`.
 
@@ -408,17 +412,12 @@ from the old, then the old will be stopped and the new started.
 Writing a Change Poller
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.changes.base.PollingChangeSource
+Polling is a very common means of seeking changes, so Buildbot supplies a utility parent class to make it easier.
+A poller should subclass :class:`buildbot.changes.base.PollingChangeSource`, which is a subclass of :class:`~buildbot.changes.base.ChangeSource`.
+This subclass implements the :meth:`Service` methods, and calls the :meth:`poll` method according to the ``pollInterval`` and ``pollAtLaunch`` options.
+The ``poll`` method should return a Deferred to signal its completion.
 
-Polling is a very common means of seeking changes, so Buildbot supplies a
-utility parent class to make it easier.  A poller should subclass
-:class:`buildbot.changes.base.PollingChangeSource`, which is a subclass of
-:class:`ChangeSource`.  This subclass implements the :meth:`Service` methods,
-and causes the :meth:`poll` method to be called every ``self.pollInterval``
-seconds.  This method should return a Deferred to signal its completion.
-
-Aside from the service methods, the other concerns in the previous section
-apply here, too.
+Aside from the service methods, the other concerns in the previous section apply here, too.
 
 Writing a New Latent Buildslave Implementation
 ----------------------------------------------
@@ -517,9 +516,10 @@ Writing New BuildSteps
 
 .. warning::
 
-    Buildbot is transitioning to a new, simpler style for writing custom steps.
+    Buildbot has transitioned to a new, simpler style for writing custom steps.
     See :doc:`new-style-steps` for details.
-    This section documents new-style steps exclusively, although old-style steps are still supported.
+    This section documents new-style steps.
+    Old-style steps are supported in Buildbot-0.9.0, but not in later releases.
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
@@ -760,11 +760,7 @@ can choose from (defined in :mod:`buildbot.process.buildstep`, and of
 course you can subclass them to add further customization. The
 :class:`LogLineObserver` class handles the grunt work of buffering and
 scanning for end-of-line delimiters, allowing your parser to operate
-on complete :file:`stdout`/:file:`stderr` lines. (Lines longer than a set maximum
-length are dropped; the maximum defaults to 16384 bytes, but you can
-change it by calling :meth:`setMaxLineLength()` on your
-:class:`LogLineObserver` instance.  Use ``sys.maxint`` for effective
-infinity.)
+on complete :file:`stdout`/:file:`stderr` lines.
 
 For example, let's take a look at the :class:`TrialTestCaseCounter`,
 which is used by the :bb:step:`Trial` step to count test cases as they are run.

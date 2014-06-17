@@ -1,0 +1,33 @@
+ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
+    li.dropdown(ng-show="anonymous", ng-class="loginCollapsed ? '':'open'")
+        a(ng-click="loginCollapsed = !loginCollapsed")
+            | Anonymous
+            b.caret
+        ul.dropdown-menu(style="padding:17px;")
+            form(role='login', ng-hide="config.auth.oauth2")
+                | Login:
+                .form-group
+                    input(type='text', placeholder='username', ng-model="username")
+                .form-group
+                    input(type='password', placeholder='password', ng-model="password")
+                button.btn.btn-default(type='submit', ng-click="login()")
+                   i.fa.fa-sign-in
+                   | Login
+            form(role='login', ng-show="config.auth.oauth2")
+                button.btn.btn-default(type='submit', ng-click="loginoauth2()")
+                   i.fa(ng-class="config.auth.fa_icon")
+                   | &nbsp;login with {{config.auth.name}}
+    li.dropdown(ng-hide="anonymous")
+        a.dropdown-toggle
+            .avatar(ng-if="email")
+                img(ng-src="avatar?email={{email}}")
+            span(ng-if="!email")
+                | {{full_name || username}}
+                b.caret
+        ul.dropdown-menu
+            li(ng-if="full_name")
+                span {{ full_name }} {{ email }}
+            li
+                a(ng-click="logout()")
+                   i.fa.fa-sign-out
+                   | Logout

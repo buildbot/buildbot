@@ -1,0 +1,42 @@
+.container
+  .row
+    ul.breadcrumb
+      li.active
+        a(href="#/about") About
+  .row
+    .well
+        h2 About this buildbot
+        .row
+          .col-sm-4
+            ul
+              li Buildbot version: {{config.bbversion}}
+              li Twisted version: {{config.txversion}}
+          .col-sm-4
+            ul
+              li Project Name: {{config.projectname}}
+              li Project Version: {{config.projectversion}}
+              li Project Url: {{config.projecturl}}
+        .row
+          small
+
+            | buildbot-www is configured using:
+            rawdata(data='config.config')
+            | buildbot-www is using the following open-source JavaScript libraries:
+            dl.dl-horizontal
+              div(ng-repeat='module in bower_configs')
+                dt
+                  a(ng-show='module.http_url', href='{{module.http_url}}') {{module.name}}
+                  span(ng-hide='module.http_url') {{module.name}}
+                dd {{module.version}}
+  .row
+    .well
+      h2 API description
+      ul.list-group
+        li.list-group-item(ng-repeat='spec in specs |orderBy:"path"')
+          b(ng-click="show_detail = ! show_detail", ng-init='show_detail=0') /{{spec.path}}:
+          | {{spec.type_spec.fields.length}} fields
+          dl.dl-horizontal(ng-show='show_detail')
+            span(ng-repeat='field in spec.type_spec.fields |orderBy:"path"')
+              dt {{field.name}}
+              dd {{field.type}}
+                span(ng-show="field.type=='list'") {{field.type_spec}}

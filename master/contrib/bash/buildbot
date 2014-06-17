@@ -6,7 +6,7 @@ _buildbot()
 {
     local buildbot_subcommands="
         create-master upgrade-master start stop restart reconfig sighup user
-        sendchange debugclient statuslog statusgui try tryserver checkconfig"
+        sendchange try tryserver checkconfig"
 
     local cur=${COMP_WORDS[COMP_CWORD]}
     local subcommand=

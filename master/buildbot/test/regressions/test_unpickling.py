@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 
 import base64
-import cPickle
 
 from buildbot.status.build import BuildStatus
 from buildbot.status.builder import BuilderStatus
 from buildbot.status.buildstep import BuildStepStatus
+from buildbot.util import pickle
 from twisted.persisted import styles
 from twisted.trial import unittest
 
@@ -58,6 +58,6 @@ class StatusPickles(unittest.TestCase):
                    self.fail("BuildStatus.upgradeToVersion1 called"))
         self.patch(BuilderStatus, 'upgradeToVersion1', lambda _:
                    self.fail("BuilderStatus.upgradeToVersion1 called"))
-        pkl_result = cPickle.loads(self.pickle_data)
+        pkl_result = pickle.loads(self.pickle_data)
         styles.doUpgrade()
         del pkl_result

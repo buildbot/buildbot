@@ -87,7 +87,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
             sch.master = self.master
 
             # *then* attacah and start it
-            sch.setServiceParent(self)
+            yield sch.setServiceParent(self)
 
         metrics.MetricCountEvent.log("num_schedulers", len(list(self)),
                                      absolute=True)

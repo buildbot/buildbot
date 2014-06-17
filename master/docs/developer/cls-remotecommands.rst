@@ -1,7 +1,7 @@
 RemoteCommands
 ==============
 
-.. py:currentmodule:: buildbot.process.buildstep
+.. py:currentmodule:: buildbot.process.remotecommand
 
 Most of the action in build steps consists of performing operations on the
 slave.  This is accomplished via :class:`RemoteCommand` and its subclasses.
@@ -13,7 +13,7 @@ detail in :ref:`master-slave-updates`.
 RemoteCommand
 ~~~~~~~~~~~~~
 
-.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0))
+.. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0), stdioLogName='stdio')
 
     :param remote_command: command to run on the slave
     :type remote_command: string
@@ -21,16 +21,17 @@ RemoteCommand
     :type args: dictionary
     :param collectStdout: if True, collect the command's stdout
     :param ignore_updates: true to ignore remote updates
-    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants
-    	   	     (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
+    :param stdioLogName: name of the log to which to write the command's stdio
 
     This class handles running commands, consisting of a command name and
     a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
     updates sent from the slave.
 
-    This class handles updates for ``stdout``, ``stderr``, and ``header`` by
-    appending them to a ``stdio`` logfile, if one is in use.  It handles
-    updates for ``rc`` by recording the value in its ``rc`` attribute.
+    This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to s stdio logfile named by the ``stdioLogName`` parameter.
+    Steps that run multiple commands and want to separate those commands' stdio streams can use this parameter.
+
+    It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
 
     Most slave-side commands, even those which do not spawn a new process on
     the slave, generate logs and an ``rc``, requiring this class or one of its
@@ -161,39 +162,42 @@ RemoteCommand
             :meth:`~buildbot.status.logfile.LogFile.finish` when the command is
             finished.
 
-        Similar to :meth:`useLog`, but the logfile is only actually added when
-        an update arrives for it.  The callback, ``activateCallback``, will be
-        called with the :class:`~buildbot.process.buildstep.RemoteCommand`
-        instance when the first update for the log is delivered.
+        Similar to :meth:`useLog`, but the logfile is only actually added when an update arrives for it.
+        The callback, ``activateCallback``, will be called with the :class:`~buildbot.process.remotecommand.RemoteCommand` instance when the first update for the log is delivered.
+        It should return the desired log instance, optionally via a Deferred.
 
     With that finished, run the command using the inherited
-    :meth:`~buildbot.process.buildstep.RemoteCommand.run` method.  During the
+    :meth:`~buildbot.process.remotecommand.RemoteCommand.run` method.  During the
     run, you can inject data into the logfiles with any of these methods:
 
     .. py:method:: addStdout(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add stdout data to the ``stdio`` log.
+        Add stdout data to the ``stdio`` log.
 
     .. py:method:: addStderr(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add stderr data to the ``stdio`` log.
+        Add stderr data to the ``stdio`` log.
 
     .. py:method:: addHeader(data)
 
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add header data to the ``stdio`` log.
+        Add header data to the ``stdio`` log.
 
     .. py:method:: addToLog(logname, data)
 
         :param logname: the logfile to receive the data
         :param data: data to add to the logfile
+        :returns: Deferred
 
-    Add data to a logfile other than ``stdio``.
+        Add data to a logfile other than ``stdio``.
 
 .. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
 

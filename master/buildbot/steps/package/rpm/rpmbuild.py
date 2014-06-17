@@ -12,15 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
-
-from __future__ import with_statement
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+
+from __future__ import with_statement
 
 import os
 
 from buildbot import config
 from buildbot.process import buildstep
+from buildbot.process import logobserver
 from buildbot.steps.shell import ShellCommand
 
 
@@ -86,6 +87,9 @@ class RpmBuild(ShellCommand):
         if not self.specfile:
             config.error("You must specify a specfile")
 
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
     def start(self):
         if self.autoRelease:
             relfile = '%s.release' % (
@@ -116,25 +120,29 @@ class RpmBuild(ShellCommand):
         cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.startCommand(cmd)
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def createSummary(self, log):
+    def logConsumer(self):
         rpm_prefixes = ['Provides:', 'Requires(', 'Requires:',
                         'Checking for unpackaged', 'Wrote:',
                         'Executing(%', '+ ', 'Processing files:']
         rpm_err_pfx = ['   ', 'RPM build errors:', 'error: ']
+        self.rpmcmdlog = []
+        self.rpmerrors = []
 
-        rpmcmdlog = []
-        rpmerrors = []
-
-        for line in log.getText().splitlines(True):
+        while True:
+            stream, line = yield
             for pfx in rpm_prefixes:
                 if line.startswith(pfx):
-                    rpmcmdlog.append(line)
+                    self.rpmcmdlog.append(line)
                     break
             for err in rpm_err_pfx:
                 if line.startswith(err):
-                    rpmerrors.append(line)
+                    self.rpmerrors.append(line)
                     break
-        self.addCompleteLog('RPM Command Log', "".join(rpmcmdlog))
-        if rpmerrors:
-            self.addCompleteLog('RPM Errors', "".join(rpmerrors))
+
+    def createSummary(self, log):
+        self.addCompleteLog('RPM Command Log', "".join(self.rpmcmdlog))
+        if self.rpmerrors:
+            self.addCompleteLog('RPM Errors', "".join(self.rpmerrors))

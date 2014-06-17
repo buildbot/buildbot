@@ -16,12 +16,10 @@ Tests are divided into a few suites:
   mechanism of achieving test coverage, and all new code should be well-covered
   by corresponding unit tests.
 
-* Interface tests (``buildbot.test.interface``).  In many cases, Buildbot has
-  multiple implementations of the same interface -- at least one "real"
-  implementation and a fake implementation used in unit testing.  The interface
-  tests ensure that these implementations all meet the same standards.  This
-  ensures consistency between implementations, and also ensures that the unit
-  tests are testing against realistic fakes.
+  * Interface tests are a special type of unit tests, and are found in the same directory and often the same file.
+    In many cases, Buildbot has multiple implementations of the same interface -- at least one "real" implementation and a fake implementation used in unit testing.
+    The interface tests ensure that these implementations all meet the same standards.
+    This ensures consistency between implementations, and also ensures that the unit tests are testing against realistic fakes.
 
 * Integration tests (``buildbot.test.integration``) - these test combinations
   of multiple units.  Of necessity, integration tests are incomplete - they
@@ -65,8 +63,9 @@ context, an interface is any boundary between testable units.
 Ideally, all interfaces, both public and private, should be tested.  Certainly,
 any *public* interfaces need interface tests.
 
-Interface test modules are named after the interface they are testing, e.g.,
-:file:`test_mq.py`.  They generally begin as follows::
+Interface tests are most often found in files named for the "real" implementation, e.g., :file:`test_db_changes.py`.
+When there is ambiguity, test modules should be named after the interface they are testing.
+Interface tests have the following form::
 
     from buildbot.test.util import interfaces
     from twistd.trial import unittest
@@ -77,31 +76,29 @@ Interface test modules are named after the interface they are testing, e.g.,
         def someSetupMethod(self):
             raise NotImplementedError
 
-        # tests that all implementations must pass
+        # method signature tests
         def test_signature_someMethod(self):
             @self.assertArgSpecMatches(self.systemUnderTest.someMethod)
             def someMethod(self, arg1, arg2):
                 pass
 
+        # tests that all implementations must pass
         def test_something(self):
             pass # ...
 
     class RealTests(Tests):
 
-        # tests that all *real* implementations must pass
+        # tests that only *real* implementations must pass
         def test_something_else(self):
             pass # ...
 
-All of the test methods are defined here, segregated into tests that all
-implementations must pass, and tests that the fake implementation is not
-expected to pass.  The ``test_signature_someMethod`` test above illustrates the
-``assertArgSpecMatches`` decorator, which can be used to compare the argument
-specification of a callable with a reference implementation conveniently
-written as a nested function.
+All of the test methods are defined here, segregated into tests that all implementations must pass, and tests that the fake implementation is not expected to pass.
+The ``test_signature_someMethod`` test above illustrates the :py:func:`buildbot.test.util.interfaces.assertArgSpecMatches` decorator, which can be used to compare the argument specification of a callable with a reference signature conveniently written as a nested function.
+Wherever possible, prefer to add tests to the ``Tests`` class, even if this means testing one method (e.g,. ``setFoo``) in terms of another (e.g., ``getFoo``).
 
-At the bottom of the test module, a subclass is created for each
-implementation, implementing the setup methods that were stubbed out in the
-parent classes::
+The ``assertArgSpecMatches`` method can take multiple methods to test; it will check each one in turn.
+
+At the bottom of the test module, a subclass is created for each implementation, implementing the setup methods that were stubbed out in the parent classes::
 
     class TestFakeThing(unittest.TestCase, Tests):
 
@@ -113,9 +110,7 @@ parent classes::
         def someSetupMethod(self):
             pass # ...
 
-For implementations which require optional software, this is the appropriate
-place to signal that tests should be skipped when their prerequisites are not
-available.
+For implementations which require optional software, such as an AMQP server, this is the appropriate place to signal that tests should be skipped when their prerequisites are not available.
 
 Integration Tests
 ~~~~~~~~~~~~~~~~~
@@ -181,6 +176,100 @@ differ.  The interface tests exist to solve this problem.  All fakes should be
 fully tested in an integration test, so that the fakes pass the same tests as
 the "real" thing.  It is particularly important that the method signatures be
 compared.
+
+Type Validation
+---------------
+
+The :bb:src:`master/buildbot/test/util/validation.py` provides a set of classes and definitions for validating Buildbot data types.
+It supports four types of data:
+
+ * DB API dictionaries, as returned from the ``getXxx`` methods,
+ * Data API dictionaries, as returned from ``get``,
+ * Data API messages, and
+ * Simple data types.
+
+These are validated from elsewhere in the codebase with calls to
+
+ * ``verifyDbDict(testcase, type, value)``,
+ * ``verifyData(testcase, type, options, value)``,
+ * ``verifyMessage(testcase, routingKey, message)``, and
+ * ``verifyType(testcase, name, value, validator)``.
+
+respectively.
+The ``testcase`` argument is used to fail the test case if the validation does not succeed.
+For DB dictionaries and data dictionaries, the ``type`` identifies the expected data type.
+For messages, the type is determined from the first element of the routing key.
+
+All messages sent with the fake MQ implementation are automatically validated using ``verifyMessage``.
+The ``verifyType`` method is used to validate simple types, e.g., ::
+
+    validation.verifyType(self, 'param1', param1, validation.StringValidator())
+
+In any case, if ``testcase`` is None, then the functions will raise an :py:exc:`AssertionError` on failure.
+
+Validator Classes
+~~~~~~~~~~~~~~~~~
+
+A validator is an instance of the ``Validator`` class.
+Its ``validate`` method is a generator function that takes a name and an object to validate.
+It yields error messages describing any deviations of ``object`` from the designated data type.
+The ``name`` argument is used to make such messages more helpful.
+
+A number of validators are supplied for basic types.
+A few classes deserve special mention:
+
+ * ``NoneOk`` wraps another validator, allowing the object to be None.
+ * ``Any`` will match any object without error.
+ * ``IdentifierValidator`` will match identifiers; see :ref:`identifier <type-identifier>`.
+ * ``DictValidator`` takes key names as keyword arguments, with the values giving validators for each key.
+   The ``optionalNames`` argument is a list of keys which may be omitted without error.
+ * ``SourcedPropertiesValidator`` matches dictionaries with (value, source) keys, the representation used for properties in the data API.
+ * ``MessageValidator`` validates messages.
+   It checks that the routing key is a tuple of strings.
+   The first tuple element gives the message type.
+   The last tuple element is the event, and must be a member of the ``events`` set.
+   The remaining "middle" tuple elements must match the message values identified by ``keyFields``.
+   The ``messageValidator`` should be a ``DictValidator`` configured to check the message body.
+   This validator's ``validate`` method is called with a tuple ``(routingKey, message)``.
+ * ``Selector`` allows different validators to be selected based on matching functions.
+   Its ``add`` method takes a matching function, which should return a boolean, and a validator to use if the matching function returns true.
+   If the matching function is None, it is used as a default.
+   This class is used for message and data validation.
+
+Defining Validators
+~~~~~~~~~~~~~~~~~~~
+
+DB validators are defined in the ``dbdict`` dictionary, e.g., ::
+
+    dbdict['foodict'] = DictValidator(
+        id=IntValidator(),
+        name=StringValidator(),
+        ...
+    )
+
+Data validators are ``Selector`` validators, where the selector is the ``options`` passed to ``verifyData``. ::
+
+    data['foo'] = Selector()
+    data['foo'].add(lambda opts : opt.get('fanciness') > 10,
+        DictValidator(
+            fooid=IntValidator(),
+            name=StringValidator(),
+            ...
+    ))
+
+Similarly, message validators are ``Selector`` validators, where the selector is the routing key.
+The underlying validator should be a ``MessageValidator``. ::
+
+    message['foo'] = Selector()
+    message['foo'].add(lambda rk : rk[-1] == 'new',
+        MessageValidator(
+            keyFields=['fooid'],
+            events=['new', 'complete'],
+            messageValidator=DictValidator(
+                fooid=IntValidator(),
+                name=StringValidator(),
+                ...
+           )))
 
 Good Tests
 ----------

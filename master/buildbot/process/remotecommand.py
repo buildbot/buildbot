@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE
@@ -57,10 +56,11 @@ class RemoteCommand(pb.Referenceable):
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
-    def run(self, step, remote):
+    def run(self, step, conn, builder_name):
         self.active = True
         self.step = step
-        self.remote = remote
+        self.conn = conn
+        self.builder_name = builder_name
 
         # generate a new command id
         cmd_id = RemoteCommand._commandCounter
@@ -85,7 +85,7 @@ class RemoteCommand(pb.Referenceable):
         return self.deferred
 
     def useLog(self, log, closeWhenFinished=False, logfileName=None):
-        assert interfaces.ILogFile.providedBy(log)
+        # NOTE: log may be a SyngLogFileWrapper or a Log instance, depending on the step
         if not logfileName:
             logfileName = log.getName()
         assert logfileName not in self.logs
@@ -105,8 +105,9 @@ class RemoteCommand(pb.Referenceable):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
-        d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, self.args)
+        d = self.conn.remoteStartCommand(self, self.builder_name,
+                                         self.commandID, self.remote_command,
+                                         self.args)
         return d
 
     def _finished(self, failure=None):
@@ -129,20 +130,19 @@ class RemoteCommand(pb.Referenceable):
         if not self.active:
             log.msg(" but this RemoteCommand is already inactive")
             return defer.succeed(None)
-        if not self.remote:
-            log.msg(" but our .remote went away")
+        if not self.conn:
+            log.msg(" but our .conn went away")
             return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
             log.msg("RemoteCommand.disconnect: lost slave")
-            self.remote = None
+            self.conn = None
             self._finished(why)
             return defer.succeed(None)
 
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
 
-        d = defer.maybeDeferred(self.remote.callRemote, "interruptCommand",
-                                self.commandID, str(why))
+        d = self.conn.remoteInterruptCommand(self.commandID, str(why))
         # the slave may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d
@@ -193,62 +193,74 @@ class RemoteCommand(pb.Referenceable):
             eventually(self._finished, failure)
         return None
 
+    def _unwrap(self, log):
+        from buildbot.process import buildstep
+        if isinstance(log, buildstep.SyncLogFileWrapper):
+            return log.unwrap()
+        return log
+
+    @defer.inlineCallbacks
     def addStdout(self, data):
-        if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            self.logs[self.stdioLogName].addStdout(data)
         if self.collectStdout:
             self.stdout += data
-        return defer.succeed(None)
-
-    def addStderr(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            self.logs[self.stdioLogName].addStderr(data)
+            log = yield self._unwrap(self.logs[self.stdioLogName])
+            log.addStdout(data)
+
+    @defer.inlineCallbacks
+    def addStderr(self, data):
         if self.collectStderr:
             self.stderr += data
-        return defer.succeed(None)
+        if self.stdioLogName is not None and self.stdioLogName in self.logs:
+            log = yield self._unwrap(self.logs[self.stdioLogName])
+            log.addStderr(data)
 
+    @defer.inlineCallbacks
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            self.logs[self.stdioLogName].addHeader(data)
-        return defer.succeed(None)
+            log = yield self._unwrap(self.logs[self.stdioLogName])
+            log.addHeader(data)
 
+    @defer.inlineCallbacks
     def addToLog(self, logname, data):
         # Activate delayed logs on first data.
         if logname in self.delayedLogs:
             (activateCallBack, closeWhenFinished) = self.delayedLogs[logname]
             del self.delayedLogs[logname]
-            loog = activateCallBack(self)
+            loog = yield activateCallBack(self)
+            loog = yield self._unwrap(loog)
             self.logs[logname] = loog
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            self.logs[logname].addStdout(data)
+            log = yield self._unwrap(self.logs[logname])
+            yield log.addStdout(data)
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
-        return defer.succeed(None)
 
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
+    @defer.inlineCallbacks
     def remoteUpdate(self, update):
         if self.debug:
             for k, v in update.items():
                 log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
-            self.addStdout(update['stdout'])
+            yield self.addStdout(update['stdout'])
         if "stderr" in update:
             # 'stderr': data
-            self.addStderr(update['stderr'])
+            yield self.addStderr(update['stderr'])
         if "header" in update:
             # 'header': data
-            self.addHeader(update['header'])
+            yield self.addHeader(update['header'])
         if "log" in update:
             # 'log': (logname, data)
             logname, data = update['log']
-            self.addToLog(logname, data)
+            yield self.addToLog(logname, data)
         if "rc" in update:
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
-            self.addHeader("program finished with exit code %d\n" % rc)
+            yield self.addHeader("program finished with exit code %d\n" % rc)
         if "elapsed" in update:
             self._remoteElapsed = update['elapsed']
 
@@ -259,6 +271,7 @@ class RemoteCommand(pb.Referenceable):
                     self.updates[k] = []
                 self.updates[k].append(update[k])
 
+    @defer.inlineCallbacks
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:
             delta = (util.now() - self._startTime) - self._remoteElapsed
@@ -267,11 +280,13 @@ class RemoteCommand(pb.Referenceable):
         for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
-                    loog.addHeader("\nremoteFailed: %s" % maybeFailure)
+                    loog = yield self._unwrap(loog)
+                    yield loog.addHeader("\nremoteFailed: %s" % maybeFailure)
                 else:
                     log.msg("closing log %s" % loog)
                 loog.finish()
-        return maybeFailure
+        if maybeFailure:
+            raise maybeFailure
 
     def results(self):
         if self.rc in self.decodeRC:

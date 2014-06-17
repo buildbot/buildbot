@@ -22,6 +22,7 @@ from twisted.python import log
 from buildbot.config import ConfigErrors
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.base import Source
 
@@ -100,7 +101,8 @@ class Mercurial(Source):
 
         def checkInstall(hgInstalled):
             if not hgInstalled:
-                raise BuildSlaveTooOldError("Mercurial is not installed on slave")
+                raise BuildSlaveTooOldError(
+                    "Mercurial is not installed on slave")
             return 0
         d.addCallback(checkInstall)
 
@@ -167,8 +169,8 @@ class Mercurial(Source):
         return d
 
     def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron})
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         return d
@@ -196,7 +198,8 @@ class Mercurial(Source):
         return d
 
     def parseGotRevision(self, _):
-        d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
+        d = self._dovccmd(
+            ['parents', '--template', '{node}\\n'], collectStdout=True)
 
         def _setrev(stdout):
             revision = stdout.strip()
@@ -214,10 +217,10 @@ class Mercurial(Source):
         msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % \
               (current_branch, self.update_branch)
         if current_branch != self.update_branch and self.clobberOnBranchChange:
-                msg += ' Clobbering.'
-                log.msg(msg)
-                yield self.clobber()
-                return
+            msg += ' Clobbering.'
+            log.msg(msg)
+            yield self.clobber()
+            return
         msg += ' Updating.'
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
@@ -232,13 +235,13 @@ class Mercurial(Source):
                  abandonOnFailure=True):
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin,
-                                           decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin,
+                                               decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -290,7 +293,8 @@ class Mercurial(Source):
 
     def _removeAddedFilesAndUpdate(self, _):
         command = ['locate', 'set:added()']
-        d = self._dovccmd(command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS})
+        d = self._dovccmd(
+            command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS})
 
         def parseAndRemove(stdout):
             files = []
@@ -303,9 +307,9 @@ class Mercurial(Source):
                 if self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
-                                                            'logEnviron':
-                                                            self.logEnviron, })
+                    cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,
+                                                                'logEnviron':
+                                                                self.logEnviron, })
                     cmd.useLog(self.stdio_log, False)
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
@@ -317,8 +321,8 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
-                                                    'logEnviron': self.logEnviron, })
+            cmd = remotecommand.RemoteCommand('rmdir', {'dir': filename,
+                                                        'logEnviron': self.logEnviron, })
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:

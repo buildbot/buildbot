@@ -15,8 +15,8 @@
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import json
 from buildbot.changes.filter import ChangeFilter
+from buildbot.util import json
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
@@ -47,7 +47,7 @@ class GerritChangeSource(base.ChangeSource):
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
-    compare_attrs = ["gerritserver", "gerritport"]
+    compare_attrs = ("gerritserver", "gerritport")
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -66,6 +66,7 @@ class GerritChangeSource(base.ChangeSource):
                  username,
                  gerritport=29418,
                  identity_file=None,
+                 name=None,
                  handled_events=("patchset-created", "ref-updated")):
         """
         @type  gerritserver: string
@@ -84,6 +85,11 @@ class GerritChangeSource(base.ChangeSource):
         @param handled_events: event to be handled (optional).
         """
         # TODO: delete API comment when documented
+
+        if not name:
+            name = "GerritChangeSource:%s@%s:%d" % (username, gerritserver, gerritport)
+
+        base.ChangeSource.__init__(self, name=name)
 
         self.gerritserver = gerritserver
         self.gerritport = gerritport
@@ -158,7 +164,7 @@ class GerritChangeSource(base.ChangeSource):
             return func(properties, event)
 
     def addChange(self, chdict):
-        d = self.master.addChange(**chdict)
+        d = self.master.data.updates.addChange(**chdict)
         # eat failures..
         d.addErrback(log.err, 'error adding change from GerritChangeSource')
         return d
@@ -181,19 +187,20 @@ class GerritChangeSource(base.ChangeSource):
 
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
+            username = event_change["owner"].get("username", u"unknown")
             return self.addChange({
                 'author': "%s <%s>" % (
-                    event_change["owner"]["name"],
-                    event_change["owner"]["email"]),
-                'project': event_change["project"],
-                'repository': "ssh://%s@%s:%s/%s" % (
+                    event_change["owner"].get("name", username),
+                    event_change["owner"].get("email", u'unknown@example.com')),
+                'project': util.ascii2unicode(event_change["project"]),
+                'repository': u"ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],
-                'files': ["unknown"],
+                'files': [u"unknown"],
                 'category': event["type"],
                 'properties': properties})
 
@@ -214,7 +221,7 @@ class GerritChangeSource(base.ChangeSource):
             branch=ref["refName"],
             revision=ref["newRev"],
             comments="Gerrit: patchset(s) merged.",
-            files=["unknown"],
+            files=[u"unknown"],
             category=event["type"],
             properties=properties))
 
@@ -256,17 +263,16 @@ class GerritChangeSource(base.ChangeSource):
             self.LocalPP(self), "ssh",
             ["ssh"] + args + ["gerrit", "stream-events"])
 
-    def startService(self):
+    def activate(self):
         self.wantProcess = True
         self.startStreamProcess()
 
-    def stopService(self):
+    def deactivate(self):
         self.wantProcess = False
         if self.process:
             self.process.signalProcess("KILL")
         # TODO: if this occurs while the process is restarting, some exceptions
         # may be logged, although things will settle down normally
-        return base.ChangeSource.stopService(self)
 
     def describe(self):
         status = ""

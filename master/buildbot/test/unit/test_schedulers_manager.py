@@ -76,7 +76,7 @@ class SchedulerManager(unittest.TestCase):
 
         def reconfigService(self, new_config):
             self.reconfig_count += 1
-            new_sched = self.findNewSchedulerInstance(new_config)
+            new_sched = new_config.schedulers[self.name]
             self.attr = new_sched.attr
             return config.ReconfigurableServiceMixin.reconfigService(self,
                                                                      new_config)

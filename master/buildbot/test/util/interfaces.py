@@ -20,14 +20,24 @@ class InterfaceTests(object):
 
     # assertions
 
-    def assertArgSpecMatches(self, actual):
+    def assertArgSpecMatches(self, actualMethod, *fakeMethods):
+        """Usage::
+
+            @self.assertArgSpecMatches(obj.methodUnderTest)
+            def methodTemplate(self, arg1, arg2):
+                pass
+
+        or, more useful when you will be faking out C{methodUnderTest}:
+
+            self.assertArgSpecMatches(obj.methodUnderTest, self.fakeMethod)
+        """
         def filter(spec):
             # the tricky thing here is to align args and defaults, since the
             # defaults correspond to the *last* n elements of args.  To make
             # things easier, we go in reverse, and keep a separate counter for
             # the defaults
             args = spec[0]
-            defaults = list(spec[3] or [])
+            defaults = list(spec[3] if spec[3] is not None else [])
             di = -1
             for ai in xrange(len(args) - 1, -1, -1):
                 arg = args[ai]
@@ -35,6 +45,7 @@ class InterfaceTests(object):
                     del args[ai]
                     if -di <= len(defaults):
                         del defaults[di]
+                        di += 1
                 di -= 1
 
             return (args, spec[1], spec[2], defaults or None)
@@ -45,15 +56,47 @@ class InterfaceTests(object):
             except AttributeError:
                 return func
 
-        def wrap(template):
-            actual_argspec = filter(
-                inspect.getargspec(remove_decorators(actual)))
-            template_argspec = filter(
-                inspect.getargspec(remove_decorators(template)))
-            if actual_argspec != template_argspec:
+        def assert_same_argspec(expected, actual):
+            if expected != actual:
                 msg = "Expected: %s; got: %s" % (
-                    inspect.formatargspec(*template_argspec),
-                    inspect.formatargspec(*actual_argspec))
+                    inspect.formatargspec(*expected),
+                    inspect.formatargspec(*actual))
                 self.fail(msg)
-            return template  # just in case it's useful
-        return wrap
+
+        actual_argspec = filter(
+            inspect.getargspec(remove_decorators(actualMethod)))
+
+        for fakeMethod in fakeMethods:
+            fake_argspec = filter(
+                inspect.getargspec(remove_decorators(fakeMethod)))
+            assert_same_argspec(actual_argspec, fake_argspec)
+
+        def assert_same_argspec_decorator(decorated):
+            expected_argspec = filter(
+                inspect.getargspec(remove_decorators(decorated)))
+            assert_same_argspec(expected_argspec, actual_argspec)
+            # The decorated function works as usual.
+            return decorated
+        return assert_same_argspec_decorator
+
+    def assertInterfacesImplemented(self, cls):
+        "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
+        import zope.interface.interface
+        for interface in zope.interface.implementedBy(cls):
+            for attr, template_argspec in interface.namesAndDescriptions():
+                if not hasattr(cls, attr):
+                    msg = "Expected: %r; to implement: %s as specified in %r" % (
+                        cls, attr,
+                        interface)
+                    self.fail(msg)
+                actual_argspec = getattr(cls, attr)
+                while hasattr(actual_argspec, 'func_original'):
+                    actual_argspec = actual_argspec.func_original
+                actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
+
+                if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
+                    msg = "%s: expected: %s; got: %s" % (
+                        attr,
+                        template_argspec.getSignatureString(),
+                        actual_argspec.getSignatureString())
+                    self.fail(msg)

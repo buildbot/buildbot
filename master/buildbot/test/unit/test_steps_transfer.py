@@ -82,6 +82,7 @@ class UploadError(object):
 class TestFileWriter(unittest.TestCase):
 
     # test _FileWrite.__init__() method.
+
     def testInit(self):
         #
         # patch functions called in constructor
@@ -125,6 +126,7 @@ class TestTransferBuildStep(unittest.TestCase):
 
     # Test calling checkSlaveVersion() when buildslave have support for
     # requested remote command.
+
     def testCheckSlaveVersionGood(self):
         # patch BuildStep.slaveVersion() to return success
         mockedSlaveVersion = Mock()
@@ -180,7 +182,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "srcfile"])
+        self.expectOutcome(
+            result=SUCCESS, status_text=["uploading", "srcfile"])
         d = self.runStep()
         return d
 
@@ -199,7 +202,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString('test', timestamp=timestamp))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
+        self.expectOutcome(
+            result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
 
         d = self.runStep()
 
@@ -229,7 +233,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
+        self.expectOutcome(
+            result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
 
         d = self.runStep()
 
@@ -250,7 +255,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._FileWriter)))
             + 1)
 
-        self.expectOutcome(result=FAILURE, status_text=["uploading", "srcfile"])
+        self.expectOutcome(
+            result=FAILURE, status_text=["uploading", "srcfile"])
         d = self.runStep()
         return d
 
@@ -268,7 +274,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._FileWriter)))
             + Expect.behavior(behavior))
 
-        self.expectOutcome(result=EXCEPTION, status_text=["upload", "exception"])
+        self.expectOutcome(
+            result=EXCEPTION, status_text=["upload", "exception"])
         d = self.runStep()
 
         @d.addCallback
@@ -340,7 +347,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._DirectoryWriter)))
             + Expect.behavior(behavior))
 
-        self.expectOutcome(result=EXCEPTION, status_text=["upload", "exception"])
+        self.expectOutcome(
+            result=EXCEPTION, status_text=["upload", "exception"])
         d = self.runStep()
 
         @d.addCallback
@@ -443,7 +451,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "2 files"])
+        self.expectOutcome(
+            result=SUCCESS, status_text=["uploading", "2 files"])
         d = self.runStep()
         return d
 
@@ -462,7 +471,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._FileWriter)))
             + 1)
 
-        self.expectOutcome(result=FAILURE, status_text=["uploading", "2 files"])
+        self.expectOutcome(
+            result=FAILURE, status_text=["uploading", "2 files"])
         d = self.runStep()
         return d
 
@@ -484,7 +494,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._FileWriter)))
             + Expect.behavior(behavior))
 
-        self.expectOutcome(result=EXCEPTION, status_text=["upload", "exception"])
+        self.expectOutcome(
+            result=EXCEPTION, status_text=["upload", "exception"])
         d = self.runStep()
 
         @d.addCallback
@@ -500,7 +511,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             uploadDone = Mock(return_value=None)
             allUploadsDone = Mock(return_value=None)
 
-        step = CustomStep(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir)
+        step = CustomStep(
+            slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir)
         self.setupStep(step)
 
         self.expectCommands(
@@ -525,7 +537,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "2 files"])
+        self.expectOutcome(
+            result=SUCCESS, status_text=["uploading", "2 files"])
 
         d = self.runStep()
 
@@ -547,6 +560,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 class TestStringDownload(unittest.TestCase):
 
     # check that ConfigErrors is raised on invalid 'mode' argument
+
     def testModeConfError(self):
         self.assertRaisesRegexp(
             config.ConfigErrors,
@@ -561,7 +575,7 @@ class TestStringDownload(unittest.TestCase):
         s.build.getProperties.return_value = Properties()
         s.build.getSlaveCommandVersion.return_value = 1
 
-        s._step_status = Mock()
+        s.step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 
@@ -590,7 +604,7 @@ class TestJSONStringDownload(unittest.TestCase):
         s.build.getProperties.return_value = Properties()
         s.build.getSlaveCommandVersion.return_value = 1
 
-        s._step_status = Mock()
+        s.step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 
@@ -623,7 +637,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         ss.asDict.return_value = dict(revision="12345")
         s.build.getSourceStamp.return_value = ss
 
-        s._step_status = Mock()
+        s.step_status = Mock()
         s.buildslave = Mock()
         s.remote = Mock()
 
@@ -637,7 +651,8 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEquals(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(data, json.dumps(dict(sourcestamp=ss.asDict(), properties={'key1': 'value1'})))
+                self.assertEquals(
+                    data, json.dumps(dict(sourcestamp=ss.asDict(), properties={'key1': 'value1'})))
                 break
         else:
             self.assert_(False, "No downloadFile command found")

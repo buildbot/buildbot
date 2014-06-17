@@ -35,9 +35,9 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
                               {
                                   'branch': 'other-branch',
                                   'revision': 'revision',
-                              },
-                              patch='patch'
-                              )
+        },
+            patch='patch'
+        )
         step.branch = 'branch'
         step.startVC = mock.Mock()
 
@@ -50,15 +50,16 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
                               {
                                   'branch': 'other-branch',
                                   'revision': 'revision',
-                              },
-                              patch='patch'
-                              )
+        },
+            patch='patch'
+        )
         step.branch = 'branch'
         step.startVC = mock.Mock()
 
         step.startStep(mock.Mock())
 
-        self.assertEqual(step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
+        self.assertEqual(
+            step.startVC.call_args, (('other-branch', 'revision', 'patch'), {}))
 
     def test_start_alwaysUseLatest_False_no_branch(self):
         step = self.setupStep(Source())
@@ -92,7 +93,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'codebase'])
-        self.assertEqual(step.name, Source.name + " codebase")
+        self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('codebase',))
@@ -108,7 +109,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'suffix'])
-        self.assertEqual(step.name, Source.name + " my-code")
+        self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())
         self.assertEqual(step.build.getSourceStamp.call_args[0], ('my-code',))

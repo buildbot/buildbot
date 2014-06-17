@@ -39,7 +39,7 @@ class UserManagerManager(config.ReconfigurableServiceMixin,
 
         for mgr in new_config.user_managers:
             mgr.master = self.master
-            mgr.setServiceParent(self)
+            yield mgr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,

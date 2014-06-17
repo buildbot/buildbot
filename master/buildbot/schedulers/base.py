@@ -15,62 +15,28 @@
 
 from buildbot import config
 from buildbot import interfaces
+from buildbot.changes import changes
 from buildbot.process.properties import Properties
-from buildbot.util import ComparableMixin
+from buildbot.util.service import ClusteredService
 from buildbot.util.state import StateMixin
-from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from zope.interface import implements
 
 
-class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
-
-    """
-    Base class for all schedulers; this provides the equipment to manage
-    reconfigurations and to handle basic scheduler state.  It also provides
-    utility methods to begin various sorts of builds.
-
-    Subclasses should add any configuration-derived attributes to
-    C{base.Scheduler.compare_attrs}.
-    """
+class BaseScheduler(ClusteredService, StateMixin):
 
     implements(interfaces.IScheduler)
 
-    DefaultCodebases = {'': {}}
+    DEFAULT_CODEBASES = {'': {}}
 
-    compare_attrs = ('name', 'builderNames', 'properties', 'codebases')
+    compare_attrs = ClusteredService.compare_attrs + \
+        ('builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties,
-                 codebases=DefaultCodebases):
-        """
-        Initialize a Scheduler.
-
-        @param name: name of this scheduler (used as a key for state)
-        @type name: unicode
-
-        @param builderNames: list of builders this scheduler may start
-        @type builderNames: list of unicode
-
-        @param properties: properties to add to builds triggered by this
-        scheduler
-        @type properties: dictionary
-
-        @param codebases: codebases that are necessary to process the changes
-        @type codebases: dict with following struct:
-            key: '<codebase>'
-            value: {'repository':'<repo>', 'branch':'<br>', 'revision:'<rev>'}
-
-        @param consumeChanges: true if this scheduler wishes to be informed
-        about the addition of new changes.  Defaults to False.  This should
-        be passed explicitly from subclasses to indicate their interest in
-        consuming changes.
-        @type consumeChanges: boolean
-        """
-        service.MultiService.__init__(self)
-        self.name = name
-        "name of this scheduler; used to identify replacements on reconfig"
+                 codebases=DEFAULT_CODEBASES):
+        ClusteredService.__init__(self, name)
 
         ok = True
         if not isinstance(builderNames, (list, tuple)):
@@ -85,274 +51,164 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 "of Builder names.")
 
         self.builderNames = builderNames
-        "list of builder names to start in each buildset"
 
         self.properties = Properties()
-        "properties that are contributed to each buildset"
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
-
         self.objectid = None
-
         self.master = None
 
         # Set the codebases that are necessary to process the changes
-        # These codebases will always result in a sourcestamp with or without changes
+        # These codebases will always result in a sourcestamp with or without
+        # changes
         if codebases is not None:
             if not isinstance(codebases, dict):
                 config.error("Codebases must be a dict of dicts")
             for codebase, codebase_attrs in codebases.iteritems():
                 if not isinstance(codebase_attrs, dict):
                     config.error("Codebases must be a dict of dicts")
-                if (codebases != BaseScheduler.DefaultCodebases and
+                if (codebases != BaseScheduler.DEFAULT_CODEBASES and
                         'repository' not in codebase_attrs):
-                    config.error("The key 'repository' is mandatory in codebases")
+                    config.error(
+                        "The key 'repository' is mandatory in codebases")
         else:
             config.error("Codebases cannot be None")
 
         self.codebases = codebases
 
         # internal variables
-        self._change_subscription = None
+        self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
+
+    # activity handling
+
+    def activate(self):
+        return defer.succeed(None)
+
+    def deactivate(self):
+        return defer.maybeDeferred(self._stopConsumingChanges)
 
     # service handling
 
-    def startService(self):
-        service.MultiService.startService(self)
+    def _getServiceId(self):
+        return self.master.data.updates.findSchedulerId(self.name)
 
-    def findNewSchedulerInstance(self, new_config):
-        return new_config.schedulers[self.name]  # should exist!
+    def _claimService(self):
+        return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
+                                                              self.master.masterid)
 
-    def stopService(self):
-        d = defer.maybeDeferred(self._stopConsumingChanges)
-        d.addCallback(lambda _: service.MultiService.stopService(self))
-        return d
+    def _unclaimService(self):
+        return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
+                                                              None)
 
     # status queries
-    # TODO: these aren't compatible with distributed schedulers
+
+    # deprecated: these aren't compatible with distributed schedulers
+
     def listBuilderNames(self):
-        "Returns the list of builder names"
         return self.builderNames
 
     def getPendingBuildTimes(self):
-        "Returns a list of the next times that builds are scheduled, if known."
         return []
 
     # change handling
 
+    @defer.inlineCallbacks
     def startConsumingChanges(self, fileIsImportant=None, change_filter=None,
                               onlyImportant=False):
-        """
-        Subclasses should call this method from startService to register to
-        receive changes.  The BaseScheduler class will take care of filtering
-        the changes (using change_filter) and (if fileIsImportant is not None)
-        classifying them.  See L{gotChange}.  Returns a Deferred.
-
-        @param fileIsImportant: a callable provided by the user to distinguish
-        important and unimportant changes
-        @type fileIsImportant: callable
-
-        @param change_filter: a filter to determine which changes are even
-        considered by this scheduler, or C{None} to consider all changes
-        @type change_filter: L{buildbot.changes.filter.ChangeFilter} instance
-
-        @param onlyImportant: If True, only important changes, as specified by
-        fileIsImportant, will be added to the buildset.
-        @type onlyImportant: boolean
-
-        """
         assert fileIsImportant is None or callable(fileIsImportant)
 
-        # register for changes with master
-        assert not self._change_subscription
+        # register for changes with the data API
+        assert not self._change_consumer
+        self._change_consumer = yield self.master.data.startConsuming(
+            lambda k, m: self._changeCallback(k, m, fileIsImportant,
+                                              change_filter, onlyImportant),
+            {},
+            ('changes',))
 
-        def changeCallback(change):
-            # ignore changes delivered while we're not running
-            if not self._change_subscription:
-                return
+    @defer.inlineCallbacks
+    def _changeCallback(self, key, msg, fileIsImportant, change_filter,
+                        onlyImportant):
 
-            if change_filter and not change_filter.filter_change(change):
-                return
-            if change.codebase not in self.codebases:
-                log.msg(format='change contains codebase %(codebase)s that is '
-                        'not processed by scheduler %(name)s',
-                        codebase=change.codebase, name=self.name)
-                return
-            if fileIsImportant:
-                try:
-                    important = fileIsImportant(change)
-                    if not important and onlyImportant:
-                        return
-                except:
-                    log.err(failure.Failure(),
-                            'in fileIsImportant check for %s' % change)
+        # ignore changes delivered while we're not running
+        if not self._change_consumer:
+            return
+
+        # get a change object, since the API requires it
+        chdict = yield self.master.db.changes.getChange(msg['changeid'])
+        change = yield changes.Change.fromChdict(self.master, chdict)
+
+        # filter it
+        if change_filter and not change_filter.filter_change(change):
+            return
+        if change.codebase not in self.codebases:
+            log.msg(format='change contains codebase %(codebase)s that is '
+                    'not processed by scheduler %(name)s',
+                    codebase=change.codebase, name=self.name)
+            return
+        if fileIsImportant:
+            try:
+                important = fileIsImportant(change)
+                if not important and onlyImportant:
                     return
-            else:
-                important = True
+            except:
+                log.err(failure.Failure(),
+                        'in fileIsImportant check for %s' % change)
+                return
+        else:
+            important = True
 
-            # use change_consumption_lock to ensure the service does not stop
-            # while this change is being processed
-            d = self._change_consumption_lock.run(self.gotChange, change, important)
-            d.addErrback(log.err, 'while processing change')
-        self._change_subscription = self.master.subscribeToChanges(changeCallback)
-
-        return defer.succeed(None)
+        # use change_consumption_lock to ensure the service does not stop
+        # while this change is being processed
+        d = self._change_consumption_lock.run(
+            self.gotChange, change, important)
+        d.addErrback(log.err, 'while processing change')
 
     def _stopConsumingChanges(self):
-        # (note: called automatically in stopService)
+        # (note: called automatically in deactivate)
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption
         def stop():
-            if self._change_subscription:
-                self._change_subscription.unsubscribe()
-                self._change_subscription = None
+            if self._change_consumer:
+                self._change_consumer.stopConsuming()
+                self._change_consumer = None
         return self._change_consumption_lock.run(stop)
 
     def gotChange(self, change, important):
-        """
-        Called when a change is received; returns a Deferred.  If the
-        C{fileIsImportant} parameter to C{startConsumingChanges} was C{None},
-        then all changes are considered important.
-        The C{codebase} of the change has always an entry in the C{codebases}
-        dictionary of the scheduler.
-
-        @param change: the new change object
-        @type change: L{buildbot.changes.changes.Change} instance
-        @param important: true if this is an important change, according to
-        C{fileIsImportant}.
-        @type important: boolean
-        @returns: Deferred
-        """
         raise NotImplementedError
 
     # starting builds
 
-    @defer.inlineCallbacks
-    def addBuildsetForLatest(self, reason='', external_idstring=None,
-                             branch=None, repository='', project='',
-                             builderNames=None, properties=None):
-        """
-        Add a buildset for the 'latest' source in the given branch,
-        repository, and project.  This will create a relative sourcestamp for
-        the buildset.
+    def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+                                               waited_for=False, properties=None, builderNames=None,
+                                               **kw):
 
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's addBuildset
-        method with the appropriate parameters.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param branch: branch to build (note that None often has a special meaning)
-        @param repository: repository name for sourcestamp
-        @param project: project name for sourcestamp
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
-        # add a sourcestamp for each codebase
-        for codebase, cb_info in self.codebases.iteritems():
-            ss_repository = cb_info.get('repository', repository)
-            ss_branch = cb_info.get('branch', branch)
-            ss_revision = cb_info.get('revision', None)
-            yield self.master.db.sourcestamps.addSourceStamp(
-                codebase=codebase,
-                repository=ss_repository,
-                branch=ss_branch,
-                revision=ss_revision,
-                project=project,
-                changeids=set(),
-                sourcestampsetid=setid)
-
-        bsid, brids = yield self.addBuildsetForSourceStamp(
-            setid=setid, reason=reason,
-            external_idstring=external_idstring,
-            builderNames=builderNames,
-            properties=properties)
-
-        defer.returnValue((bsid, brids))
-
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStampDetails(self, reason='', external_idstring=None,
-                                         branch=None, repository='', project='', revision=None,
-                                         builderNames=None, properties=None):
-        """
-        Given details about the source code to build, create a source stamp and
-        then add a buildset for it.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param branch: branch to build (note that None often has a special meaning)
-        @param repository: repository name for sourcestamp
-        @param project: project name for sourcestamp
-        @param revision: revision to build - default is latest
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
-        yield self.master.db.sourcestamps.addSourceStamp(
-            branch=branch, revision=revision, repository=repository,
-            project=project, sourcestampsetid=setid)
-
-        rv = yield self.addBuildsetForSourceStamp(
-            setid=setid, reason=reason,
-            external_idstring=external_idstring,
-            builderNames=builderNames,
-            properties=properties)
-        defer.returnValue(rv)
-
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
-                                            properties, builderNames=None):
         if sourcestamps is None:
-            sourcestamps = {}
+            sourcestamps = []
 
-        # Define new setid for this set of sourcestamps
-        new_setid = yield self.master.db.sourcestampsets.addSourceStampSet()
+        # convert sourcestamps to a dictionary keyed by codebase
+        stampsByCodebase = {}
+        for ss in sourcestamps:
+            cb = ss['codebase']
+            if cb in stampsByCodebase:
+                raise RuntimeError("multiple sourcestamps with same codebase")
+            stampsByCodebase[cb] = ss
 
         # Merge codebases with the passed list of sourcestamps
         # This results in a new sourcestamp for each codebase
-        for codebase in self.codebases:
-            ss = self.codebases[codebase].copy()
+        stampsWithDefaults = []
+        for codebase in stampsByCodebase:
+            ss = self.codebases.get(codebase, {}).copy()
             # apply info from passed sourcestamps onto the configured default
             # sourcestamp attributes for this codebase.
-            ss.update(sourcestamps.get(codebase, {}))
+            ss.update(stampsByCodebase[codebase])
+            stampsWithDefaults.append(ss)
 
-            # add sourcestamp to the new setid
-            yield self.master.db.sourcestamps.addSourceStamp(
-                codebase=codebase,
-                repository=ss.get('repository', ''),
-                branch=ss.get('branch', None),
-                revision=ss.get('revision', None),
-                project=ss.get('project', ''),
-                changeids=[c['number'] for c in ss.get('changes', [])],
-                patch_body=ss.get('patch_body', None),
-                patch_level=ss.get('patch_level', None),
-                patch_author=ss.get('patch_author', None),
-                patch_comment=ss.get('patch_comment', None),
-                sourcestampsetid=new_setid)
-
-        rv = yield self.addBuildsetForSourceStamp(
-            setid=new_setid, reason=reason,
-            properties=properties,
-            builderNames=builderNames)
-
-        defer.returnValue(rv)
+        return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
+                                               reason=reason, waited_for=waited_for, properties=properties,
+                                               builderNames=builderNames,
+                                               **kw)
 
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does
@@ -360,74 +216,49 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         return self.codebases[codebase]
 
     @defer.inlineCallbacks
-    def addBuildsetForChanges(self, reason='', external_idstring=None,
-                              changeids=[], builderNames=None, properties=None):
+    def addBuildsetForChanges(self, waited_for=False, reason='',
+                              external_idstring=None, changeids=[], builderNames=None,
+                              properties=None,
+                              **kw):
         changesByCodebase = {}
 
         def get_last_change_for_codebase(codebase):
             return max(changesByCodebase[codebase], key=lambda change: change["changeid"])
 
-        # Define setid for this set of changed repositories
-        setid = yield self.master.db.sourcestampsets.addSourceStampSet()
-
         # Changes are retrieved from database and grouped by their codebase
         for changeid in changeids:
             chdict = yield self.master.db.changes.getChange(changeid)
-            # group change by codebase
             changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
+        sourcestamps = []
         for codebase in self.codebases:
-            args = {'codebase': codebase, 'sourcestampsetid': setid}
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
                 cb = self.getCodebaseDict(codebase)
-                args['repository'] = cb['repository']
-                args['branch'] = cb.get('branch', None)
-                args['revision'] = cb.get('revision', None)
-                args['changeids'] = set()
-                args['project'] = ''
+                ss = {
+                    'codebase': codebase,
+                    'repository': cb['repository'],
+                    'branch': cb.get('branch', None),
+                    'revision': cb.get('revision', None),
+                    'project': '',
+                }
             else:
-                # codebase has changes
-                args['changeids'] = [c["changeid"] for c in changesByCodebase[codebase]]
                 lastChange = get_last_change_for_codebase(codebase)
-                for key in ['repository', 'branch', 'revision', 'project']:
-                    args[key] = lastChange[key]
+                ss = lastChange['sourcestampid']
+            sourcestamps.append(ss)
 
-            yield self.master.db.sourcestamps.addSourceStamp(**args)
-
-        # add one buildset, this buildset is connected to the sourcestamps by the setid
-        bsid, brids = yield self.addBuildsetForSourceStamp(setid=setid,
-                                                           reason=reason, external_idstring=external_idstring,
-                                                           builderNames=builderNames, properties=properties)
+        # add one buildset, using the calculated sourcestamps
+        bsid, brids = yield self.addBuildsetForSourceStamps(
+            waited_for, sourcestamps=sourcestamps, reason=reason,
+            external_idstring=external_idstring, builderNames=builderNames,
+            properties=properties, **kw)
 
         defer.returnValue((bsid, brids))
 
-    @defer.inlineCallbacks
-    def addBuildsetForSourceStamp(self, ssid=None, setid=None, reason='', external_idstring=None,
-                                  properties=None, builderNames=None):
-        """
-        Add a buildset for the given, already-existing sourcestamp.
-
-        This method will add any properties provided to the scheduler
-        constructor to the buildset, and will call the master's
-        L{BuildMaster.addBuildset} method with the appropriate parameters, and
-        return the same result.
-
-        @param reason: reason for this buildset
-        @type reason: unicode string
-        @param external_idstring: external identifier for this buildset, or None
-        @param properties: a properties object containing initial properties for
-            the buildset
-        @type properties: L{buildbot.process.properties.Properties}
-        @param builderNames: builders to name in the buildset (defaults to
-            C{self.builderNames})
-        @param setid: idenitification of a set of sourcestamps
-        @returns: (buildset ID, buildrequest IDs) via Deferred
-        """
-        assert (ssid is None and setid is not None) \
-            or (ssid is not None and setid is None), "pass a single sourcestamp OR set not both"
-
+    def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
+                                   reason='', external_idstring=None, properties=None,
+                                   builderNames=None, **kw):
         # combine properties
         if properties:
             properties.updateFromProperties(self.properties)
@@ -442,16 +273,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
         # addBuildset method
         properties_dict = properties.asDict()
 
-        if setid is None:
-            if ssid is not None:
-                ssdict = yield self.master.db.sourcestamps.getSourceStamp(ssid)
-                setid = ssdict['sourcestampsetid']
-            else:
-                # no sourcestamp and no sets
-                yield None
-
-        rv = yield self.master.addBuildset(sourcestampsetid=setid,
-                                           reason=reason, properties=properties_dict,
-                                           builderNames=builderNames,
-                                           external_idstring=external_idstring)
-        defer.returnValue(rv)
+        return self.master.data.updates.addBuildset(
+            scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
+            waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
+            external_idstring=external_idstring, **kw)

@@ -40,6 +40,9 @@ class PBManagerMixin:
     def assertNotRegistered(self):
         self.assertEqual(self.registrations, [])
 
+    def assertNotUnregistered(self):
+        self.assertEqual(self.unregistrations, [])
+
     def assertRegistered(self, portstr, username, password):
         for ps, un, pw in self.registrations:
             if ps == portstr and username == un and pw == password:

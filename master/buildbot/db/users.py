@@ -26,16 +26,18 @@ class UsDict(dict):
 
 
 class UsersConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
+        # note that since this involves two tables, self.findSomethingId is not
+        # helpful
         def thd(conn, no_recurse=False, identifier=identifier):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
 
-            self.check_length(tbl.c.identifier, identifier)
-            self.check_length(tbl_info.c.attr_type, attr_type)
-            self.check_length(tbl_info.c.attr_data, attr_data)
+            self.checkLength(tbl.c.identifier, identifier)
+            self.checkLength(tbl_info.c.attr_type, attr_type)
+            self.checkLength(tbl_info.c.attr_data, attr_data)
 
             # try to find the user
             q = sa.select([tbl_info.c.uid],
@@ -173,14 +175,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # first, add the identifier is it exists
             if identifier is not None:
-                self.check_length(tbl.c.identifier, identifier)
+                self.checkLength(tbl.c.identifier, identifier)
                 update_dict['identifier'] = identifier
 
             # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
-                self.check_length(tbl.c.bb_username, bb_username)
-                self.check_length(tbl.c.bb_password, bb_password)
+                self.checkLength(tbl.c.bb_username, bb_username)
+                self.checkLength(tbl.c.bb_password, bb_password)
                 update_dict['bb_username'] = bb_username
                 update_dict['bb_password'] = bb_password
 
@@ -194,8 +196,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if attr_type is not None:
                 assert attr_data is not None
 
-                self.check_length(tbl_info.c.attr_type, attr_type)
-                self.check_length(tbl_info.c.attr_data, attr_data)
+                self.checkLength(tbl_info.c.attr_type, attr_type)
+                self.checkLength(tbl_info.c.attr_data, attr_data)
 
                 # first update, then insert
                 q = tbl_info.update(

@@ -13,7 +13,6 @@
 
 import sys
 
-from twisted.application import service
 from twisted.application import strports
 from twisted.cred import checkers
 from twisted.cred import portal
@@ -26,6 +25,7 @@ from twisted.internet import stdio
 from twisted.protocols import basic
 
 from buildbot.process.buildstep import RemoteShellCommand
+from buildbot.util import service
 
 
 class Dispatcher:
@@ -129,10 +129,10 @@ class CmdInterface(basic.LineReceiver):
         d.addBoth(_done)
 
 
-class FakeMaster(service.MultiService):
+class FakeMaster(service.AsyncMultiService):
 
     def __init__(self, port):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("fakemaster")
 
         self.dispatcher = Dispatcher()
@@ -144,11 +144,11 @@ class FakeMaster(service.MultiService):
         self.stdio = CmdInterface()
 
     def startService(self):
-        service.MultiService.startService(self)
         self.slavePort = strports.service(self.slavePort, self.slavefactory)
         self.slavePort.setServiceParent(self)
 
         stdio.StandardIO(self.stdio)
+        return service.AsyncMultiService.startService(self)
 
     def getPerspective(self, mind, avatarID):
         self.bot = FakeBot()

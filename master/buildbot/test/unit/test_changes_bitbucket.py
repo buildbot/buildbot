@@ -20,6 +20,7 @@ from datetime import datetime
 from buildbot.changes.bitbucket import BitbucketPullrequestPoller
 from buildbot.test.util import changesource
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
 from twisted.web.error import Error
@@ -338,7 +339,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.fail('Polling a non-existent repository should result in a 404.')
+            self.fail(
+                'Polling a non-existent repository should result in a 404.')
 
         def err(e):
             self.assertEqual(e.getErrorMessage(), '404 Not Found')
@@ -353,7 +355,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 0)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         d.addCallback(check)
         return d
@@ -366,11 +368,21 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['author'], "contributor")
-            self.assertEqual(int(self.changes_added[0]['revision']), 1)
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             self.date_epoch)
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'contributor',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'files': None,
+                'project': u'',
+                'properties': {},
+                'repository': u'https://bitbucket.org/contributor/slug',
+                'revision': u'000000000000000000000000000001',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'src': u'bitbucket',
+                'when_timestamp': 1381869500,
+            }])
 
         d.addCallback(check)
         return d
@@ -383,17 +395,27 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['author'], "contributor")
-            self.assertEqual(int(self.changes_added[0]['revision']), 1)
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             self.date_epoch)
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'contributor',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'files': None,
+                'project': u'',
+                'properties': {},
+                'repository': u'https://bitbucket.org/contributor/slug',
+                'revision': u'000000000000000000000000000001',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'src': u'bitbucket',
+                'when_timestamp': 1381869500,
+            }])
 
             # repoll
             d = self.changesource.poll()
 
             def check2(_):
-                self.assertEqual(len(self.changes_added), 1)
+                self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
             d.addCallback(check2)
 
@@ -408,21 +430,58 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['author'], "contributor")
-            self.assertEqual(int(self.changes_added[0]['revision']), 1)
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             self.date_epoch)
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'contributor',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'files': None,
+                'project': u'',
+                'properties': {},
+                'repository': u'https://bitbucket.org/contributor/slug',
+                'revision': u'000000000000000000000000000001',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'src': u'bitbucket',
+                'when_timestamp': 1381869500,
+            }])
 
             self.patch(client, "getPage", self.pr_list2.getPage)
             d = self.changesource.poll()
 
             def check2(_):
-                self.assertEqual(len(self.changes_added), 2)
-                self.assertEqual(self.changes_added[1]['author'], "contributor")
-                self.assertEqual(int(self.changes_added[1]['revision']), 2)
-                self.assertEqual(self.changes_added[1]['when_timestamp'],
-                                 self.date_epoch)
+                self.assertEqual(self.master.data.updates.changesAdded, [
+                    {
+                        'author': u'contributor',
+                        'branch': None,
+                        'category': None,
+                        'codebase': None,
+                        'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                        'files': None,
+                        'project': u'',
+                        'properties': {},
+                        'repository': u'https://bitbucket.org/contributor/slug',
+                        'revision': u'000000000000000000000000000001',
+                        'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                        'src': u'bitbucket',
+                        'when_timestamp': 1381869500,
+                    },
+                    {
+                        'author': u'contributor',
+                        'branch': None,
+                        'category': None,
+                        'codebase': None,
+                        'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                        'files': None,
+                        'project': u'',
+                        'properties': {},
+                        'repository': u'https://bitbucket.org/contributor/slug',
+                        'revision': u'000000000000000000000000000002',
+                        'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000002',
+                        'src': u'bitbucket',
+                        'when_timestamp': 1381869500,
+                    }
+                ])
 
             d.addCallback(check2)
             return d
@@ -443,7 +502,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 0)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
         d.addCallback(check)
         return d
@@ -461,11 +520,21 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['author'], "contributor")
-            self.assertEqual(int(self.changes_added[0]['revision']), 1)
-            self.assertEqual(self.changes_added[0]['when_timestamp'],
-                             self.date_epoch)
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'contributor',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'files': None,
+                'project': u'',
+                'properties': {},
+                'repository': u'https://bitbucket.org/contributor/slug',
+                'revision': u'000000000000000000000000000001',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'src': u'bitbucket',
+                'when_timestamp': 1381869500,
+            }])
 
         d.addCallback(check)
         return d
@@ -479,15 +548,26 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         # patch client.getPage()
         self.patch(client, "getPage", self.pr_list.getPage)
+        self.patch(reactor, "seconds", lambda: 1396825656)
 
         d = self.changesource.poll()
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            self.assertEqual(self.changes_added[0]['author'], "contributor")
-            self.assertEqual(int(self.changes_added[0]['revision']), 1)
-            self.assertNotEqual(self.changes_added[0]['when_timestamp'],
-                                self.date_epoch)
+            self.assertEqual(self.master.data.updates.changesAdded, [{
+                'author': u'contributor',
+                'branch': None,
+                'category': None,
+                'codebase': None,
+                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'files': None,
+                'project': u'',
+                'properties': {},
+                'repository': u'https://bitbucket.org/contributor/slug',
+                'revision': u'000000000000000000000000000001',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'src': u'bitbucket',
+                'when_timestamp': 1396825656,
+            }])
 
         d.addCallback(check)
         return d

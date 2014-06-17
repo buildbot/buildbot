@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import mock
+import warnings
 
 from twisted.python import log
 
@@ -22,8 +23,11 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import slave
+from twisted.internet import defer
+from twisted.internet import task
 
 
 class BuildStepMixin(object):
@@ -63,12 +67,13 @@ class BuildStepMixin(object):
 
     # utilities
 
-    def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={}):
+    def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
+                  buildFiles=[]):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
         arguments are handled correctly.  It then creates a comfortable
-        environment for the slave to run in, repleate with a fake build and a
+        environment for the slave to run in, replete with a fake build and a
         fake slave.
 
         As a convenience, it calls the step's setDefaultWorkdir method with
@@ -82,11 +87,12 @@ class BuildStepMixin(object):
         """
         factory = interfaces.IBuildStepFactory(step)
         step = self.step = factory.buildStep()
-        self.master = fakemaster.make_master(testcase=self)
+        self.master = fakemaster.make_master(wantData=True, testcase=self)
 
         # step.build
 
-        b = self.build = fakebuild.FakeBuild()
+        b = self.build = fakebuild.FakeBuild(master=self.master)
+        b.allFiles = lambda: buildFiles
         b.master = self.master
 
         def getSlaveVersion(cmd, oldversion):
@@ -108,7 +114,6 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.master = fakemaster.make_master(testcase=self)
         self.buildslave = step.buildslave = slave.FakeSlave(self.master)
 
         # step.step_status
@@ -120,37 +125,44 @@ class BuildStepMixin(object):
 
         def ss_setText(strings):
             ss.status_text = strings
-        ss.setText = ss_setText
+        ss.old_setText = ss_setText
+
+        def ss_setText2(strings):
+            ss.status_text2 = strings
+        ss.old_setText2 = ss_setText2
 
         ss.getLogs = lambda: ss.logs.values()
 
         self.step_statistics = {}
-        ss.setStatistic = self.step_statistics.__setitem__
-        ss.getStatistic = self.step_statistics.get
-        ss.hasStatistic = self.step_statistics.__contains__
+        self.step.setStatistic = self.step_statistics.__setitem__
+        self.step.getStatistic = self.step_statistics.get
+        self.step.hasStatistic = self.step_statistics.__contains__
 
         self.step.setStepStatus(ss)
 
         # step overrides
 
-        def addLog(name):
-            l = remotecommand.FakeLogFile(name, step)
+        def addLog(name, type='s', logEncoding=None):
+            assert type == 's', "type must be 's' until Data API backend is in place"
+            l = logfile.FakeLogFile(name, step)
+            self.step.logs[name] = l
             ss.logs[name] = l
-            return l
+            return defer.succeed(l)
         step.addLog = addLog
+        step.addLog_newStyle = addLog
 
         def addHTMLLog(name, html):
-            l = remotecommand.FakeLogFile(name, step)
+            l = logfile.FakeLogFile(name, step)
             l.addStdout(html)
             ss.logs[name] = l
-            return l
+            return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
-            l = remotecommand.FakeLogFile(name, step)
+            l = logfile.FakeLogFile(name, step)
             l.addStdout(text)
             ss.logs[name] = l
-            return l
+            return defer.succeed(None)
         step.addCompleteLog = addCompleteLog
 
         step.logobservers = self.logobservers = {}
@@ -160,7 +172,8 @@ class BuildStepMixin(object):
             observer.step = step
         step.addLogObserver = addLogObserver
 
-        # add any observers defined in the constructor, before this monkey-patch
+        # add any observers defined in the constructor, before this
+        # monkey-patch
         for n, o in step._pendingLogObservers:
             addLogObserver(n, o)
 
@@ -178,6 +191,10 @@ class BuildStepMixin(object):
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
+
+        # mock out the reactor for updateSummary's debouncing
+        self.debounceClock = task.Clock()
+        step.updateSummary._reactor = self.debounceClock
 
         return step
 
@@ -225,17 +242,21 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.remote = mock.Mock(name="SlaveBuilder(remote)")
+        self.conn = mock.Mock(name="SlaveBuilder(connection)")
         # TODO: self.step.setupProgress()
-        d = self.step.startStep(self.remote)
+        d = self.step.startStep(self.conn)
 
+        @d.addCallback
         def check(result):
+            # finish up the debounced updateSummary before checking
+            self.debounceClock.advance(1)
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
             got_outcome = dict(result=result,
                                status_text=self.step_status.status_text)
-            self.assertEqual(got_outcome, self.exp_outcome,
+            self.assertEqual(got_outcome['result'], self.exp_outcome['result'],
                              "expected step outcome")
+            warnings.warn("expectOutcome's second argument ignored; fix after 0.8.9 release")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
@@ -251,14 +272,13 @@ class BuildStepMixin(object):
                 self.assertEqual(
                     self.step_status.logs[l].stdout, contents, "log '%s' contents" % l)
             self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
-        d.addCallback(check)
         return d
 
     # callbacks from the running step
 
-    def _remotecommand_run(self, command, step, remote):
+    def _remotecommand_run(self, command, step, conn, builder_name):
         self.assertEqual(step, self.step)
-        self.assertEqual(remote, self.remote)
+        self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
 
         if not self.expected_remote_commands:

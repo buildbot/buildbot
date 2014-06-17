@@ -124,6 +124,20 @@ All these Schedulers are defined in modules under :mod:`buildbot.schedulers`,
 and the docstrings there are the best source of documentation on the arguments
 taken by each one.
 
+Scheduler Resiliency
+~~~~~~~~~~~~~~~~~~~~
+
+In a multi-master configuration, schedulers with the same name can be configured on multiple masters.
+Only one instance of the scheduler will be active.
+If that instance becomes inactive, due to its master being shut down or failing, then another instance will become active after a short delay.
+This provides resiliency in scheduler configurations, so that schedulers are not a single point of failure in a Buildbot infrastructure.
+
+The Data API and web UI display the master on which each scheduler is running.
+
+There is currently no mechanism to control which master's scheduler instance becomes active.
+The behavior is nondeterministic, based on the timing of polling by inactive schedulers.
+The failover is non-revertive.
+
 .. _Change-Filters:
 
 Change Filters
@@ -207,13 +221,21 @@ A Change passes the filter only if *all* arguments are satisfied.  If no
 filter object is given to a scheduler, then all changes will be built (subject
 to any other restrictions the scheduler enforces).
 
+Scheduler Types
+~~~~~~~~~~~~~~~
+
+The remaining subsections represent a catalog of the available Scheduler types.
+All these Schedulers are defined in modules under :mod:`buildbot.schedulers`,
+and the docstrings there are the best source of documentation on the arguments
+taken by each one.
+
 .. bb:sched:: SingleBranchScheduler
 .. bb:sched:: Scheduler
 
 .. _Scheduler-SingleBranchScheduler:
 
 SingleBranchScheduler
-~~~~~~~~~~~~~~~~~~~~~
+:::::::::::::::::::::
 
 This is the original and still most popular scheduler class. It follows
 exactly one branch, and starts a configurable tree-stable-timer after
@@ -310,7 +332,7 @@ accurate name ``buildbot.schedulers.basic.SingleBranchScheduler``.
 .. _AnyBranchScheduler:
 
 AnyBranchScheduler
-~~~~~~~~~~~~~~~~~~
+::::::::::::::::::
 
 This scheduler uses a tree-stable-timer like the default one, but
 uses a separate timer for each branch.
@@ -352,7 +374,7 @@ The arguments to this scheduler are:
 .. _Dependent-Scheduler:
     
 Dependent Scheduler
-~~~~~~~~~~~~~~~~~~~
+:::::::::::::::::::
 
 It is common to wind up with one kind of build which should only be
 performed if the same source code was successfully handled by some
@@ -415,7 +437,7 @@ Example::
 .. _Periodic-Scheduler:
     
 Periodic Scheduler
-~~~~~~~~~~~~~~~~~~
+::::::::::::::::::
 
 This simple scheduler just triggers a build every *N* seconds.
 
@@ -454,7 +476,7 @@ depending upon when it was first activated.
 .. _Nightly-Scheduler:
 
 Nightly Scheduler
-~~~~~~~~~~~~~~~~~
+:::::::::::::::::
 
 This is highly configurable periodic build scheduler, which triggers
 a build at particular times of day, week, month, or year. The
@@ -573,7 +595,7 @@ Finally, this example will run only on December 24th::
 .. _Try-Schedulers:
             
 Try Schedulers
-~~~~~~~~~~~~~~
+::::::::::::::
 
 This scheduler allows developers to use the :command:`buildbot try`
 command to trigger builds of code they have not yet committed. See
@@ -715,7 +737,7 @@ details.
 .. _Triggerable-Scheduler:
 
 Triggerable Scheduler
-~~~~~~~~~~~~~~~~~~~~~
+:::::::::::::::::::::
 
 The :class:`Triggerable` scheduler waits to be triggered by a Trigger
 step (see :ref:`Triggering-Schedulers`) in another build. That step
@@ -790,7 +812,7 @@ Here is a fully-worked example::
 .. bb:sched:: NightlyTriggerable
 
 NightlyTriggerable Scheduler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::::::::::::::::::::::::::::
 
 .. py:class:: buildbot.schedulers.timed.NightlyTriggerable
 
@@ -854,7 +876,7 @@ Here is a fully-worked example::
 .. index:: Forced Builds
 
 ForceScheduler Scheduler
-~~~~~~~~~~~~~~~~~~~~~~~~
+::::::::::::::::::::::::
 
 The :class:`ForceScheduler` scheduler is the way you can configure a
 force build form in the web UI.
@@ -952,7 +974,7 @@ file is something like::
 Authorization
 .............
 
-The force scheduler uses the web status's :ref:`authorization <Authorization>`
+The force scheduler uses the web interface's authorization
 framework to determine which user has the right to force which build.  Here is
 an example of code on how you can define which user has which right::
 
@@ -1213,7 +1235,7 @@ the new build.  The new parameter is:
 Example::
 
     def get_compatible_builds(status, builder):
-        if builder == None: # this is the case for force_build_all
+        if builder is None: # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
         builds = []

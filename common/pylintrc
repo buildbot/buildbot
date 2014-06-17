@@ -29,116 +29,102 @@ load-plugins=
 
 # Following are the checks we don't care about, and thus should remain disabled
 #
-# C0102: Black listed name "%s"
-# C0111: Missing docstring
-# C0302: Too many lines in module (%s)*
-# R0201: Method could be a function*
-# R0801: Similar lines in %s files*
-# R0901: Too many ancestors (%s/%s)*
-# R0902: Too many instance attributes (%s/%s)*
-# R0903: Too few public methods (%s/%s)*
-# R0904: Too many public methods (%s/%s)*
-# R0911: Too many return statements (%s/%s)*
-# R0912: Too many branches (%s/%s)*
-# R0913: Too many arguments (%s/%s)*
-# R0914: Too many local variables (%s/%s)*
-# R0915: Too many statements (%s/%s)*
-# R0921: Abstract class not referenced*
-# R0922: Abstract class is only
-# W0122: Use of the exec statement*
-# W0142: Used * or ** magic
-# W0402: Uses of a deprecated module %r
-# W0511: FIXME or XXX is detected
-# W0601: Global variable %r undefined at the module level
-# W0613: Unused argument %r
-# W0633: Attempting to unpack a non-sequence
-# E1103: %s %r has no %r member (but some types could not be inferred)
+# blacklisted-name
+# missing-docstring
+# too-many-lines
+# no-self-use
+# duplicate-code
+# too-many-ancestors
+# too-many-instance-attributes
+# too-few-public-methods
+# too-many-public-methods
+# too-many-return-statements
+# too-many-branches
+# too-many-arguments
+# too-many-locals
+# too-many-statements
+# abstract-class-not-used
+# abstract-class-little-used
+# exec-used
+# star-args
+# deprecated-module
+# fixme
+# global-variable-undefined
+# unused-argument
+# unpacking-non-sequence
+# maybe-no-member
 
 disable=
-  C0102,
-  C0103,
-  C0111,
-  C0302,
-  R0201,
-  R0801,
-  R0901,
-  R0902,
-  R0903,
-  R0904,
-  R0911,
-  R0912,
-  R0913,
-  R0914,
-  R0915,
-  R0921,
-  R0922,
-  W0402,
-  W0511,
-  W0601,
-  W0613,
-  E1103,
-  I0011,
-  C0202,
-  C0301,
-  C0303,
-  C0304,
-  C0321,
-  C0322,
-  C0323,
-  C0324,
-  C1001,
-  E0202,
-  E0611,
-  E1002,
-  E1101,
-  E1102,
-  E1121,
-  E1123,
-  E1124,
-  F0401,
-  R0401,
-  W0121,
-  W0122,
-  W0142,
-  W0101,
-  W0102,
-  W0104,
-  W0105,
-  W0106,
-  W0107,
-  W0108,
-  W0110,
-  W0120,
-  W0141,
-  W0201,
-  W0212,
-  W0221,
-  W0222,
-  W0223,
-  W0231,
-  W0232,
-  W0233,
-  W0301,
-  W0311,
-  W0312,
-  W0333,
-  W0403,
-  W0406,
-  W0603,
-  W0611,
-  W0612,
-  W0621,
-  W0622,
-  W0631,
-  W0632,
-  W0633,
-  W0701,
-  W0702,
-  W0703,
-  W0710,
-  W1001,
-  W1402,
-  W1501,
+  blacklisted-name,
+  invalid-name,
+  missing-docstring,
+  too-many-lines,
+  no-self-use,
+  duplicate-code,
+  too-many-ancestors,
+  too-many-instance-attributes,
+  too-few-public-methods,
+  too-many-public-methods,
+  too-many-return-statements,
+  too-many-branches,
+  too-many-arguments,
+  too-many-locals,
+  too-many-statements,
+  abstract-class-not-used,
+  abstract-class-little-used,
+  deprecated-module,
+  fixme,
+  global-variable-undefined,
+  unused-argument,
+  maybe-no-member,
+  locally-disabled,
+  bad-classmethod-argument,
+  line-too-long,
+  old-style-class,
+  method-hidden,
+  no-name-in-module,
+  no-member,
+  not-callable,
+  too-many-function-args,
+  unexpected-keyword-arg,
+  redundant-keyword-arg,
+  import-error,
+  cyclic-import,
+  exec-used,
+  star-args,
+  unreachable,
+  dangerous-default-value,
+  pointless-statement,
+  pointless-string-statement,
+  expression-not-assigned,
+  unnecessary-pass,
+  unnecessary-lambda,
+  deprecated-lambda,
+  useless-else-on-loop,
+  bad-builtin,
+  attribute-defined-outside-init,
+  protected-access,
+  arguments-differ,
+  signature-differs,
+  abstract-method,
+  super-init-not-called,
+  no-init,
+  non-parent-init-called,
+  bad-indentation,
+  relative-import,
+  global-statement,
+  unused-variable,
+  redefined-outer-name,
+  redefined-builtin,
+  undefined-loop-variable,
+  unbalanced-tuple-unpacking,
+  unpacking-non-sequence,
+  raising-string,
+  bare-except,
+  broad-except,
+  nonstandard-exception,
+  anomalous-unicode-escape-in-string,
+  bad-open-mode,
   superfluous-parens
 
 [REPORTS]

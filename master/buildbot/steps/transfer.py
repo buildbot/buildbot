@@ -27,7 +27,7 @@ except ImportError:
     from StringIO import StringIO
 from buildbot import config
 from buildbot.interfaces import BuildSlaveTooOldError
-from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SKIPPED
@@ -182,7 +182,7 @@ class _DirectoryWriter(_FileWriter):
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = buildstep.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
+    self = remotecommand.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self
@@ -481,8 +481,9 @@ class MultipleFileUpload(_TransferBuildStep):
             for source in sources:
                 result = yield self.startUpload(source, masterdest)
                 if result == FAILURE:
-                    yield defer.returnValue(FAILURE)
-            yield defer.returnValue(SUCCESS)
+                    defer.returnValue(FAILURE)
+                    return
+            defer.returnValue(SUCCESS)
 
         d = uploadSources()
 

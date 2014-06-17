@@ -24,6 +24,7 @@ from twisted.python import log
 
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.steps.shell import StringFileWriter
 from buildbot.steps.source.base import Source
 
@@ -117,9 +118,9 @@ class CVS(Source):
         defer.returnValue(rv)
 
     def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout})
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -146,9 +147,9 @@ class CVS(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout})
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         old_workdir = self.workdir
@@ -156,11 +157,11 @@ class CVS(Source):
         d.addCallback(lambda _: self.incremental())
 
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
-                                          {'fromdir': self.srcdir,
-                                           'todir': old_workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout})
+            cmd = remotecommand.RemoteCommand('cpdir', {
+                'fromdir': self.srcdir,
+                'todir': old_workdir,
+                'logEnviron': self.logEnviron,
+                'timeout': self.timeout})
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -176,10 +177,10 @@ class CVS(Source):
         command = ['cvsdiscard']
         if ignore_ignores:
             command += ['--ignore']
-        cmd = buildstep.RemoteShellCommand(self.workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -265,11 +266,11 @@ class CVS(Source):
             workdir = self.workdir
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
-                                           command,
-                                           env=self.env,
-                                           timeout=self.timeout,
-                                           logEnviron=self.logEnviron)
+        cmd = remotecommand.RemoteShellCommand(workdir, ['cvs'] +
+                                               command,
+                                               env=self.env,
+                                               timeout=self.timeout,
+                                               logEnviron=self.logEnviron)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -301,9 +302,9 @@ class CVS(Source):
             'blocksize': 32 * 1024,
         }
 
-        cmd = buildstep.RemoteCommand('uploadFile',
-                                      dict(slavesrc='Root', **args),
-                                      ignore_updates=True)
+        cmd = remotecommand.RemoteCommand('uploadFile',
+                                          dict(slavesrc='Root', **args),
+                                          ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)
@@ -319,9 +320,9 @@ class CVS(Source):
             return
 
         myFileWriter.buffer = ""
-        cmd = buildstep.RemoteCommand('uploadFile',
-                                      dict(slavesrc='Repository', **args),
-                                      ignore_updates=True)
+        cmd = remotecommand.RemoteCommand('uploadFile',
+                                          dict(slavesrc='Repository', **args),
+                                          ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
             defer.returnValue(False)

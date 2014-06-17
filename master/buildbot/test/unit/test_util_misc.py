@@ -14,12 +14,9 @@
 # Copyright Buildbot Team Members
 
 from buildbot import util
-from buildbot.test.util import compat
 from buildbot.util import misc
-from buildbot.util.eventual import eventually
 from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
+from twisted.internet import task
 from twisted.trial import unittest
 
 
@@ -90,57 +87,43 @@ class deferredLocked(unittest.TestCase):
         return d
 
 
-class SerializedInvocation(unittest.TestCase):
+class TestCancelAfter(unittest.TestCase):
 
-    def waitForQuiet(self, si):
-        d = defer.Deferred()
-        si._quiet = lambda: d.callback(None)
-        return d
+    def setUp(self):
+        self.d = defer.Deferred()
 
-    # tests
+    def test_succeeds(self):
+        d = misc.cancelAfter(10, self.d)
+        self.assertIdentical(d, self.d)
 
-    def test_name(self):
-        self.assertEqual(util.SerializedInvocation, misc.SerializedInvocation)
+        @d.addCallback
+        def check(r):
+            self.assertEqual(r, "result")
+        self.assertFalse(d.called)
+        self.d.callback("result")
+        self.assertTrue(d.called)
 
-    def testCallFolding(self):
-        events = []
+    def test_fails(self):
+        d = misc.cancelAfter(10, self.d)
+        self.assertFalse(d.called)
+        self.d.errback(RuntimeError("oh noes"))
+        self.assertTrue(d.called)
+        self.assertFailure(d, RuntimeError)
 
-        def testfn():
-            d = defer.Deferred()
+    def test_timeout_succeeds(self):
+        c = task.Clock()
+        d = misc.cancelAfter(10, self.d, _reactor=c)
+        self.assertFalse(d.called)
+        c.advance(11)
+        d.callback("result")  # ignored
+        self.assertTrue(d.called)
+        self.assertFailure(d, defer.CancelledError)
 
-            def done():
-                events.append('TM')
-                d.callback(None)
-            eventually(done)
-            return d
-        si = misc.SerializedInvocation(testfn)
-
-        # run three times - the first starts testfn, the second
-        # requires a second run, and the third is folded.
-        d1 = si()
-        d2 = si()
-        d3 = si()
-
-        dq = self.waitForQuiet(si)
-        d = defer.gatherResults([d1, d2, d3, dq])
-
-        def check(_):
-            self.assertEqual(events, ['TM', 'TM'])
-        d.addCallback(check)
-        return d
-
-    @compat.usesFlushLoggedErrors
-    def testException(self):
-        def testfn():
-            d = defer.Deferred()
-            reactor.callLater(0, d.errback,
-                              failure.Failure(RuntimeError("oh noes")))
-            return d
-        si = misc.SerializedInvocation(testfn)
-
-        d = si()
-
-        def check(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(check)
-        return d
+    def test_timeout_fails(self):
+        c = task.Clock()
+        d = misc.cancelAfter(10, self.d, _reactor=c)
+        self.assertFalse(d.called)
+        c.advance(11)
+        self.d.errback(RuntimeError("oh noes"))  # ignored
+        self.assertTrue(d.called)
+        self.assertFailure(d, defer.CancelledError)

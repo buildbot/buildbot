@@ -292,38 +292,6 @@ class MetricAlarmHandler(MetricHandler):
         return dict(alarms=retval)
 
 
-class PollerWatcher(object):
-
-    def __init__(self, metrics):
-        self.metrics = metrics
-
-    def run(self):
-        # Check if 'BuildMaster.pollDatabaseChanges()' and
-        # 'BuildMaster.pollDatabaseBuildRequests()' are running fast enough
-        h = self.metrics.getHandler(MetricTimeEvent)
-        if not h:
-            log.msg("Couldn't get MetricTimeEvent handler")
-            MetricAlarmEvent.log('PollerWatcher',
-                                 msg="Coudln't get MetricTimeEvent handler",
-                                 level=ALARM_WARN)
-            return
-
-        for method in ('BuildMaster.pollDatabaseChanges()',
-                       'BuildMaster.pollDatabaseBuildRequests()'):
-            t = h.get(method)
-            master = self.metrics.parent
-            db_poll_interval = master.config.db['db_poll_interval']
-
-            if db_poll_interval:
-                if t < 0.8 * db_poll_interval:
-                    level = ALARM_OK
-                elif t < db_poll_interval:
-                    level = ALARM_WARN
-                else:
-                    level = ALARM_CRIT
-                MetricAlarmEvent.log(method, level=level)
-
-
 class AttachedSlavesWatcher(object):
 
     def __init__(self, metrics):
@@ -424,8 +392,6 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
         self.registerHandler(MetricTimeEvent, MetricTimeHandler(self))
         self.registerHandler(MetricAlarmEvent, MetricAlarmHandler(self))
 
-        # Make sure our changes poller is behaving
-        self.getHandler(MetricTimeEvent).addWatcher(PollerWatcher(self))
         self.getHandler(MetricCountEvent).addWatcher(
             AttachedSlavesWatcher(self))
 

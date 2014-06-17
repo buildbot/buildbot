@@ -27,6 +27,22 @@ Summary of Changes
  * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be uesd in new-style steps.
    Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
 
+Backward Compatibility
+++++++++++++++++++++++
+
+Some hacks are in place to support old-style steps.
+These hacks are only activated when an old-style step is detected.
+Support for old-style steps will be dropped soon after Buildbot-0.9.0 is released.
+
+* The Deferreds from all asynchronous methods invoked during step execution are gathered internally.
+  The step is not considered finished until all such Deferreds have fired, and is marked EXCEPTION if any fail.
+  For logfiles, this is accomplished by means of a synchronous wrapper class.
+
+* Logfile data is available while the step is still in memory.
+  This means that logs returned from ``step.getLog`` have the expected methods ``getText``, ``readlines`` and so on.
+
+* :py:class:`~buildbot.steps.shell.ShellCommand` subclasses implicitly gather all stdio output in memory and provide it to the ``createSummary`` method.
+
 Rewriting ``start``
 +++++++++++++++++++
 

@@ -54,6 +54,7 @@ from buildbot import util
 from buildbot.process.users import users
 from buildbot.status import base
 from buildbot.status import buildset
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
@@ -71,7 +72,8 @@ from buildbot.status.results import WARNINGS
 #    Full Name <full.name@example.net>
 #    <full.name@example.net>
 VALID_EMAIL_ADDR = r"(?:\S+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+\.?)"
-VALID_EMAIL = re.compile(r"^(?:%s|(.+\s+)?<%s>\s*)$" % ((VALID_EMAIL_ADDR,) * 2))
+VALID_EMAIL = re.compile(r"^(?:%s|(.+\s+)?<%s>\s*)$" %
+                         ((VALID_EMAIL_ADDR,) * 2))
 VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
 ENCODING = 'utf8'
@@ -111,6 +113,8 @@ def _defaultMessageIntro(mode, results, build):
             text = "The Buildbot has detected a passing build"
     elif results == EXCEPTION:
         text = "The Buildbot has detected a build exception"
+    elif results == CANCELLED:
+        text = "The Build was cancelled by the user"
 
     return text
 
@@ -183,6 +187,8 @@ def _defaultMessageSummary(build, results):
         text = "Build succeeded!\n"
     elif results == WARNINGS:
         text = "Build Had Warnings%s\n" % t
+    elif results == CANCELLED:
+        text = "Build was cancelled by %s\n" % build.getResponsibleUsers()
     else:
         text = "BUILD FAILED%s\n" % t
 
@@ -242,14 +248,15 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
     implements(interfaces.IEmailSender)
 
     compare_attrs = ["extraRecipients", "lookup", "fromaddr", "mode",
-                     "categories", "builders", "addLogs", "relayhost",
+                     "tags", "builders", "addLogs", "relayhost",
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
-    possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception")
+    possible_modes = ("change", "failing", "passing", "problem", "warnings",
+                      "exception", "cancelled")
 
     def __init__(self, fromaddr, mode=("failing", "passing", "warnings"),
-                 categories=None, builders=None, addLogs=False,
+                 tags=None, builders=None, addLogs=False,
                  relayhost="localhost", buildSetSummary=False,
                  subject="buildbot %(result)s in %(title)s on %(builder)s",
                  lookup=None, extraRecipients=[],
@@ -257,7 +264,9 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                  messageFormatter=defaultMessage, extraHeaders=None,
                  addPatch=True, useTls=False,
                  smtpUser=None, smtpPassword=None, smtpPort=25,
-                 previousBuildGetter=defaultGetPreviousBuild):
+                 previousBuildGetter=defaultGetPreviousBuild,
+                 categories=None  # deprecated, use tags
+                 ):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -291,19 +300,23 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                   when the previous build passed
                      - "warnings": send mail if a build contain warnings
                      - "exception": send mail if a build fails due to an exception
+                     - "cancelled": send mail if a build is cancelled
                      - "all": always send mail
                      Defaults to ("failing", "passing", "warnings").
 
         @type  builders: list of strings
         @param builders: a list of builder names for which mail should be
                          sent. Defaults to None (send mail for all builds).
-                         Use either builders or categories, but not both.
+                         Use either builders or tags, but not both.
+
+        @type  tags: list of strings
+        @param tags: a list of tag names to serve status
+                           information for. Defaults to None (all
+                           tags). Use either builders or tags,
+                           but not both.
 
         @type  categories: list of strings
-        @param categories: a list of category names to serve status
-                           information for. Defaults to None (all
-                           categories). Use either builders or categories,
-                           but not both.
+        @param categories: (this attribute is deprecated; use 'tags' instead)
 
         @type  addLogs: boolean
         @param addLogs: if True, include all build logs as attachments to the
@@ -396,7 +409,8 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
             if mode == "all":
-                mode = ("failing", "passing", "warnings", "exception")
+                mode = ("failing", "passing", "warnings",
+                        "exception", "cancelled")
             elif mode == "warnings":
                 mode = ("failing", "warnings")
             else:
@@ -410,7 +424,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                     config.error(
                         "mode %s is not a valid mode" % (m,))
         self.mode = mode
-        self.categories = categories
+        self.tags = tags or categories
         self.builders = builders
         self.addLogs = addLogs
         self.relayhost = relayhost
@@ -435,15 +449,15 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
         self.buildSetSummary = buildSetSummary
-        self.buildSetSubscription = None
+        self._buildset_complete_consumer = None
         self.getPreviousBuild = previousBuildGetter
         self.watched = []
         self.master_status = None
 
-        # you should either limit on builders or categories, not both
-        if self.builders is not None and self.categories is not None:
+        # you should either limit on builders or tags, not both
+        if self.builders is not None and self.tags is not None:
             config.error(
-                "Please specify only builders or categories to include - " +
+                "Please specify only builders or tags to include - " +
                 "not both.")
 
         if customMesg:
@@ -451,17 +465,15 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                 "customMesg is deprecated; use messageFormatter instead")
 
     def setServiceParent(self, parent):
-        """
-        @type  parent: L{buildbot.master.BuildMaster}
-        """
-        base.StatusReceiverMultiService.setServiceParent(self, parent)
         self.master_status = self.parent
         self.master_status.subscribe(self)
         self.master = self.master_status.master
+        return base.StatusReceiverMultiService.setServiceParent(self, parent)
 
     def startService(self):
         if self.buildSetSummary:
-            self.summarySubscribe()
+            # TODO: handle deferred
+            self.summarySubscribe().addErrback(twlog.err, 'while subscribing')
 
         base.StatusReceiverMultiService.startService(self)
 
@@ -479,7 +491,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
 
     def builderAdded(self, name, builder):
         # only subscribe to builders we are interested in
-        if self.categories is not None and builder.category not in self.categories:
+        if self.tags is not None and not builder.matchesAnyTag(self.tags):
             return None
 
         self.watched.append(builder)
@@ -499,8 +511,8 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         builder = build.getBuilder()
         if self.builders is not None and builder.name not in self.builders:
             return False  # ignore this build
-        if self.categories is not None and \
-                builder.category not in self.categories:
+        if self.tags is not None and \
+                not builder.matchesAnyTag(self.tags):
             return False  # ignore this build
 
         prev = self.getPreviousBuild(build)
@@ -518,12 +530,15 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
             return True
         if "exception" in self.mode and results == EXCEPTION:
             return True
+        if "cancelled" in self.mode and results == CANCELLED:
+            return True
 
         return False
 
     def sendBuildSetSummary(self, buildset, builds):
         # only include builds for which isMailNeeded returns true
-        builds = [build for build in builds if self.isMailNeeded(build, build.getResults())]
+        builds = [build for build in builds if self.isMailNeeded(
+            build, build.getResults())]
         if builds:
             self.buildMessage("(whole buildset)", builds, buildset['results'])
 

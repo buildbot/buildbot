@@ -26,12 +26,11 @@ class TestBuildStepStatus(unittest.TestCase):
     # that buildstep.BuildStepStatus is never instantiated here should tell you
     # that these classes are not well isolated!
 
-    def setupBuilder(self, buildername, category=None, description=None):
+    def setupBuilder(self, buildername, tags=None, description=None):
         self.master = fakemaster.make_master()
         self.master.basedir = '/basedir'
 
-        b = builder.BuilderStatus(buildername, self.master, category, description)
-        b.master = self.master
+        b = builder.BuilderStatus(buildername, tags, self.master, description)
         # Ackwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())
         os.mkdir(b.basedir)
@@ -65,6 +64,4 @@ class TestBuildStepStatus(unittest.TestCase):
         bss1.addLog('log_1')
         self.assertEquals(
             bss1.asDict()['logs'],
-            [['log_1', ('http://localhost:8080/builders/builder_1/'
-                        'builds/0/steps/step_1/logs/log_1')]]
-        )
+            [['log_1', None]])

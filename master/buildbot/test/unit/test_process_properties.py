@@ -17,6 +17,7 @@ import mock
 
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
+from buildbot.process.properties import FlattenList
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.properties import PropertiesMixin
@@ -86,7 +87,7 @@ class TestPropertyMap(unittest.TestCase):
             prop_true=True,
             prop_empty='',
         )
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
         d = self.build.render(WithProperties(fmtstring, **kwargs))
@@ -336,7 +337,7 @@ class TestInterpolatePositional(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_string(self):
         command = Interpolate("test %s", "one fish")
@@ -372,7 +373,7 @@ class TestInterpolateProperties(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_properties(self):
         self.props.setProperty("buildername", "winbld", "test")
@@ -518,7 +519,7 @@ class TestInterpolateSrc(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
         sa = FakeSource()
         sb = FakeSource()
         sc = FakeSource()
@@ -641,7 +642,7 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
         sa = FakeSource()
 
         sa.repository = 'cvs://A..'
@@ -770,43 +771,11 @@ class TestInterpolateKwargs(unittest.TestCase):
         return d
 
 
-class TestInterpolateSlaveInfo(unittest.TestCase):
-
-    def setUp(self):
-        self.props = Properties()
-        self.build = FakeBuild(self.props)
-
-        # this is a bit ugly... but we dont really have fakes for all this yet:
-        self.build.slavebuilder = mock.Mock()
-        self.build.slavebuilder.slave.slave_status.getInfoAsDict.return_value = {
-            'admin': "TheAdmin"
-        }
-
-    # Spot-check a couple of the use cases. If the various substitutions work for the other
-    # interpolate source kinds, there's no reason it wont all just work for this one, provided
-    # that the plumbing is hooked up right. These use cases verify that this is true and will
-    # rely on the unit tests for Properties/Source/Kwargs to cover the rest of the possibilities.
-
-    def test_slaveinfo(self):
-        command = Interpolate("echo %(slave:admin)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                      "echo TheAdmin")
-        return d
-
-    def test_slaveinfo_colon_minus(self):
-        command = Interpolate("echo buildby-%(slave:missing_key:-blddef)s")
-        d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
-                      "echo buildby-blddef")
-        return d
-
-
 class TestWithProperties(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def testInvalidParams(self):
         self.assertRaises(ValueError, lambda:
@@ -1142,7 +1111,7 @@ class TestProperty(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def testIntProperty(self):
         self.props.setProperty("do-tests", 1, "scheduler")
@@ -1238,6 +1207,35 @@ class TestProperty(unittest.TestCase):
         default.callback("default-value")
         return d
 
+    def testFlattenList(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla"])
+        return d
+
+    def testFlattenListAdd(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+        value = value + FlattenList([Property("do-tests"), ["bla"]])
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla", "string", "bla"])
+        return d
+
+    def testFlattenListAdd2(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        value = FlattenList([Property("do-tests"), ["bla"]])
+        value = value + [Property("do-tests"), ["bla"]]
+
+        d = self.build.render(value)
+        d.addCallback(self.failUnlessEqual,
+                      ["string", "bla", "string", "bla"])
+        return d
+
 
 class TestRenderalbeAdapters(unittest.TestCase):
 
@@ -1247,7 +1245,7 @@ class TestRenderalbeAdapters(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_list_deferred(self):
         r1 = DeferredRenderable()
@@ -1288,7 +1286,7 @@ class Renderer(unittest.TestCase):
 
     def setUp(self):
         self.props = Properties()
-        self.build = FakeBuild(self.props)
+        self.build = FakeBuild(props=self.props)
 
     def test_renderer(self):
         self.props.setProperty("x", "X", "test")

@@ -1,0 +1,9 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href:"#/buildslaves") Buildslaves
+  .row
+    ul
+      lu(ng-repeat='buildslave in buildslaves')
+        rawdata(data='buildslave')

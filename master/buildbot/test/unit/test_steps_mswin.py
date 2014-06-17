@@ -39,6 +39,7 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
     def _run_simple_test(self, source, destination, expected_args=None, expected_code=0, expected_res=SUCCESS, **kwargs):
         s = mswin.Robocopy(source, destination, **kwargs)
         self.setupStep(s)
+        s.rendered = True
         self.assertEqual(s.describe(), ['???'])
         self.assertEqual(s.describe(done=True), ['???'])
 

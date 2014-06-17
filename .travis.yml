@@ -40,13 +40,37 @@ matrix:
     - python: "2.7"
       env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.2
 
+before_install:
+  # Disable SSH host key checking. Otherwize ssh will ask confirmation from
+  # command prompt.
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+  # Install fresh Node.js from PPA
+  - sudo add-apt-repository -y ppa:chris-lea/node.js
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq nodejs
+
 # Dependencies installation commands
 install:
+  # Fetch objects and tags from upstream git repository.
+  # Required for proper work of `git describe`.
+  - git describe || true
+  - git remote add upstream git://github.com/buildbot/buildbot.git
+  - git fetch upstream --tags
+  - git fetch origin --tags
+  - |
+    DEPTH=300;
+    while [ "$(git describe 2> /dev/null)" == "" ]; do
+      DEPTH=$(($DEPTH+200));
+      git fetch origin --depth=$DEPTH --quiet;
+    done
+
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
   - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
-  - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE; echo 'travis_fold:end:sam'"
+  - "echo 'travis_fold:start:sam'; [ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE; echo 'travis_fold:end:sam'"
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
+  - (cd www;    python setup.py develop)
   # mock is preinstalled on Travis
   # txgithub requires Twisted >= 12.3.0
   - pip install txgithub

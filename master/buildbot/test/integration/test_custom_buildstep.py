@@ -18,22 +18,20 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
-from buildbot import util
 from buildbot.buildslave.base import BuildSlave
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
-from buildbot.process import remotecommand
 from buildbot.process import slavebuilder
 from buildbot.status import results
 from buildbot.steps import shell
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
-from twisted.spread import pb
 from twisted.trial import unittest
 
 
@@ -89,43 +87,6 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
             self.failed(failure.Failure(e))
 
 
-class NewStyleCustomBuildStep(buildstep.BuildStep):
-
-    @defer.inlineCallbacks
-    def run(self):
-        def dCheck(d):
-            if not isinstance(d, defer.Deferred):
-                raise AssertionError("expected Deferred")
-            return d
-
-        # don't complete immediately, or synchronously
-        yield util.asyncSleep(0)
-
-        lo = TestLogObserver()
-        self.addLogObserver('testlog', lo)
-
-        log = yield dCheck(self.addLog('testlog'))
-        yield dCheck(log.addStdout(u'stdout\n'))
-
-        yield dCheck(self.addCompleteLog('obs',
-                                         'Observer saw %r' % (map(unicode, lo.observed),)))
-        yield dCheck(self.addHTMLLog('foo.html', '<head>\n'))
-        yield dCheck(self.addURL('linkie', 'http://foo'))
-
-        cmd = remotecommand.RemoteCommand('fake', {})
-        cmd.useLog(log)
-        stdio = yield dCheck(self.addLog('stdio'))
-        cmd.useLog(stdio)
-        yield dCheck(cmd.addStdout(u'stdio\n'))
-        yield dCheck(cmd.addStderr(u'stderr\n'))
-        yield dCheck(cmd.addHeader(u'hdr\n'))
-        yield dCheck(cmd.addToLog('testlog', 'fromcmd\n'))
-
-        yield dCheck(log.finish())
-
-        defer.returnValue(results.SUCCESS)
-
-
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
 
     @defer.inlineCallbacks
@@ -148,34 +109,6 @@ class FailingCustomStep(buildstep.LoggingBuildStep):
     def start(self):
         yield defer.succeed(None)
         raise self.exception()
-
-
-class FakeBot():
-
-    def __init__(self):
-        self.commands = []
-        info = {'basedir': '/sl'}
-        doNothing = lambda *args: defer.succeed(None)
-        self.response = {
-            'getSlaveInfo': lambda: defer.succeed(info),
-            'setMaster': doNothing,
-            'print': doNothing,
-            'startBuild': doNothing,
-        }
-
-    def notifyOnDisconnect(self, cb):
-        pass
-
-    def dontNotifyOnDisconnect(self, cb):
-        pass
-
-    def callRemote(self, command, *args):
-        self.commands.append((command,) + args)
-        response = self.response.get(command)
-        if response:
-            return response(*args)
-        else:
-            return defer.fail(pb.NoSuchMethod(command))
 
 
 class OldBuildEPYDoc(shell.ShellCommand):
@@ -220,7 +153,8 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantData=True, wantMq=True, wantDb=True)
         self.builder = builder.Builder('test', _addServices=False)
         self.builder.master = self.master
         yield self.builder.startService()
@@ -238,21 +172,17 @@ class RunSteps(unittest.TestCase):
         self.slave.botmaster.maybeStartBuildsForSlave = lambda sl: None
         self.slave.master = self.master
         self.slave.startService()
-        self.remote = FakeBot()
-        yield self.slave.attached(self.remote)
+        self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
+        yield self.slave.attached(self.conn)
 
         sb = self.slavebuilder = slavebuilder.SlaveBuilder()
         sb.setBuilder(self.builder)
-        yield sb.attached(self.slave, self.remote, {})
+        yield sb.attached(self.slave, {})
 
         # add the buildset/request
-        sssid = yield self.master.db.sourcestampsets.addSourceStampSet()
-        yield self.master.db.sourcestamps.addSourceStamp(branch='br',
-                                                         revision='1', repository='r://', project='',
-                                                         sourcestampsetid=sssid)
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestampsetid=sssid, reason=u'x', properties={},
-            builderNames=['test'])
+            sourcestamps=[{}], reason=u'x', properties={},
+            builderNames=['test'], waited_for=False)
 
         self.brdict = \
             yield self.master.db.buildrequests.getBuildRequest(brids['test'])
@@ -261,7 +191,6 @@ class RunSteps(unittest.TestCase):
             yield buildrequest.BuildRequest.fromBrdict(self.master, self.brdict)
 
     def tearDown(self):
-        self.slave.stopKeepaliveTimer()
         return self.builder.stopService()
 
     @defer.inlineCallbacks
@@ -286,11 +215,10 @@ class RunSteps(unittest.TestCase):
         defer.returnValue(self.master.status.lastBuilderStatus.lastBuildStatus)
 
     def assertLogs(self, exp_logs):
-        bs = self.master.status.lastBuilderStatus.lastBuildStatus
-        # tell the steps they're not new-style anymore, so they don't assert
-        for l in bs.getLogs():
-            l._isNewStyle = False
-        got_logs = dict((l.name, l.getText()) for l in bs.getLogs())
+        got_logs = {}
+        for id, l in self.master.data.updates.logs.iteritems():
+            self.failUnless(l['finished'])
+            got_logs[l['name']] = ''.join(l['content'])
         self.assertEqual(got_logs, exp_logs)
 
     @defer.inlineCallbacks
@@ -303,11 +231,11 @@ class RunSteps(unittest.TestCase):
             # this is one of the things that differs independently of
             # new/old style: encoding of logs and newlines
             u'foo':
-            'stdout\n\xe2\x98\x83\nstderr\n',
-            # u'ostdout\no\N{SNOWMAN}\nestderr\n',
+            # 'stdout\n\xe2\x98\x83\nstderr\n',
+            u'ostdout\no\N{SNOWMAN}\nestderr\n',
             u'obs':
-            'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
-            # u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
+            # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
+            u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
         })
 
     @defer.inlineCallbacks
@@ -316,17 +244,6 @@ class RunSteps(unittest.TestCase):
         bs = yield self.do_test_step()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertEqual(bs.getResults(), results.EXCEPTION)
-
-    @defer.inlineCallbacks
-    def test_NewStyleCustomBuildStep(self):
-        self.factory.addStep(NewStyleCustomBuildStep())
-        yield self.do_test_step()
-        self.assertLogs({
-            'foo.html': '<head>\n',
-            'testlog': 'stdout\nfromcmd\n',
-            'obs': "Observer saw [u'stdout\\n']",
-            'stdio': "stdio\nstderr\n",
-        })
 
     @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):
@@ -355,7 +272,6 @@ class RunSteps(unittest.TestCase):
         self.assertLogs({
             u'xx': u'o\N{CENT SIGN}\n',
         })
-    test_Latin1ProducingCustomBuildStep.skip = "logEncoding not supported in 0.8.x"
 
     @defer.inlineCallbacks
     def test_OldBuildEPYDoc(self):

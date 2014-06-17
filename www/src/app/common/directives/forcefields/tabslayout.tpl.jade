@@ -1,0 +1,7 @@
+div
+    tabset(justified="true")
+        tab(ng-repeat='field in field.fields | filter:{hide:false}',
+            heading="{{field.tablabel}}",
+            class="{{column_class}}")
+            forcefield(recursive,
+                       field="field")
