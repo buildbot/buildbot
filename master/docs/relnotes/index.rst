@@ -180,7 +180,7 @@ Features
 
 * An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
 
-* Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+* Systemd unit files for Buildbot are available in the :bb:src:`master/contrib/` directory.
 
 * We've added some extra checking to make sure that you have a valid locale before starting buildbot (#2608).
 
