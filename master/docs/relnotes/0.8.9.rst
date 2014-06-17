@@ -1,13 +1,13 @@
-Release Notes for Buildbot v0.8.9
-=================================
+Release Notes for Buildbot 0.8.9
+================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot v0.8.9.
-Buildbot v0.8.9 was released on XXX.
+The following are the release notes for Buildbot 0.8.9. Buildbot 0.8.9 was
+released on 14 June, 2014.
 
 Master
 ------
@@ -180,7 +180,7 @@ Features
 
 * An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
 
-* Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+* Systemd unit files for Buildbot are available in the :bb:src:`master/contrib/` directory.
 
 * We've added some extra checking to make sure that you have a valid locale before starting buildbot (#2608).
 
