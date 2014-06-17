@@ -105,6 +105,9 @@ Requirements
 Changes and Removals
 ....................
 
+* Builders now have "tags" instead of a category.
+  Builders can have multiple tags, allowing more flexible builder displays.
+
 * :py:mod:`buildbot.schedulers.forcesched` has the following changes:
 
   - The default configuration no longer contains four ``AnyPropertyParameter`` instances.

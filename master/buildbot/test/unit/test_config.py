@@ -1144,7 +1144,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_tags_no_categories_too(self):
         self.assertRaisesConfigError(
-            "category is deprecated and replaced by tags; you should only specify tags",
+            "categories are deprecated and replaced by tags; you should only specify tags",
             lambda: config.BuilderConfig(tags=['abc'],
                                          category='def',
                                          name='a', slavenames=['a'], factory=self.factory))

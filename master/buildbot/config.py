@@ -751,9 +751,11 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # remainder are optional
 
         if category and tags:
-            error("builder '%s': category is deprecated and replaced by tags; you should only specify tags" % (name,))
+            error("builder '%s': builder categories are deprecated and "
+                  "replaced by tags; you should only specify tags" % (name,))
         if category:
-            warnDeprecated("0.9", "category is deprecated and should be replaced with 'tags=[cat]'")
+            warnDeprecated("0.9", "builder categories are deprecated and "
+                                  "should be replaced with 'tags=[cat]'")
             if not isinstance(category, str):
                 error("builder '%s': category must be a string" % (name,))
             tags = [category]
