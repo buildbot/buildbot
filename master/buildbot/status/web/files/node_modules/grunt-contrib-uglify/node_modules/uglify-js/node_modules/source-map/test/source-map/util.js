@@ -143,7 +143,8 @@ define(function (require, exports, module) {
                  expectedMap.sourceRoot,
                  "sourceRoot mismatch: " +
                    actualMap.sourceRoot + " != " + expectedMap.sourceRoot);
-    assert.equal(actualMap.mappings, expectedMap.mappings, "mappings mismatch");
+    assert.equal(actualMap.mappings, expectedMap.mappings,
+                 "mappings mismatch:\nActual:   " + actualMap.mappings + "\nExpected: " + expectedMap.mappings);
     if (actualMap.sourcesContent) {
       assert.equal(actualMap.sourcesContent.length,
                    expectedMap.sourcesContent.length,

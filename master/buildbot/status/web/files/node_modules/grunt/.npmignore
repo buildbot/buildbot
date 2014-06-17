@@ -1,3 +1,7 @@
-node_modules
-.npm-debug.log
-tmp
+docs
+test
+.travis.yml
+AUTHORS
+CHANGELOG
+custom-gruntfile.js
+Gruntfile.js
