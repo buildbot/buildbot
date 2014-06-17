@@ -60,7 +60,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  build_wait_timeout=60 * 10, properties={}, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=[],
                  placement=None, price_multiplier=1.2, tags={},
-                 retry_price_adjustment=1, product_description='Linux/UNIX'):):
+                 retry_price_adjustment=1, product_description='Linux/UNIX'):
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
@@ -341,7 +341,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
         spot_prices = self.conn.get_spot_price_history(
             start_time=spot_history_starttime,
-            product_description='Linux/UNIX (Amazon VPC)',
+            product_description=self.product_description,
             availability_zone=self.placement)
         price_sum = 0.0
         price_count = 0
