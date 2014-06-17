@@ -64,6 +64,16 @@ module.exports = function (grunt) {
                 }
 
             }
+        },
+
+        // karma
+        karma: {
+            unit: {
+                configFile: "script/karma.config.js",
+                browsers: ["Chrome"],
+                singleRun: true,
+                runnerPort: 9876
+            }
         }
     });
 
@@ -72,11 +82,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch'); // run grunt watch for converting sass files to css in realtime
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-karma');
 
     // Define your tasks here
     grunt.registerTask('default', ['compass']);
     grunt.registerTask('default', ['uglify']);
     grunt.registerTask('default', ['requirejs']);
     grunt.registerTask('prod', ['compass:prod', 'requirejs:compile']); // grunt prod for production
+    grunt.registerTask('test', ["karma:unit"]);
 
 };
