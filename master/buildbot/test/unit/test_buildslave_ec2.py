@@ -123,14 +123,15 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(instances[0].tags, tags)
 
     @mock_ec2
-    def test_start_instance_product_description(self):
+    def test_start_spot_instance(self):
         c = self.botoSetup()
         amis = c.get_all_images()
         product_description = 'Linux/Unix'
         bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
-                                     ami=amis[0].id,
+                                     ami=amis[0].id, spot_instance=True,
+                                     max_spot_price=1.5,
                                      product_description=product_description
                                      )
         id, _, _ = bs._start_instance()
@@ -141,7 +142,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(instances[0].product_description, product_description)
 
     @mock_ec2
-    def test_start_instance_retry(self):
+    def test_start_spot_instance_retry(self):
         c = self.botoSetup()
         amis = c.get_all_images()
         product_description = 'Linux/Unix'
@@ -150,6 +151,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                                      identifier='publickey',
                                      secret_identifier='privatekey',
                                      ami=amis[0].id, retry=retry,
+                                     spot_instance=True, max_spot_price=1.5,
                                      product_description=product_description
                                      )
         id, _, _ = bs._start_instance()
@@ -158,4 +160,3 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
         self.assertEqual(instances[0].retry, retry)
-
