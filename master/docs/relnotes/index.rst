@@ -78,12 +78,32 @@ Deprecations, Removals, and Non-Compatible Changes
 ..
     TODO: 0.9.0 release notes should include a warning similar to that in 0.8.9 about new-style steps
 
+WebStatus
+.........
+
+The old, clunky WebStatus has been removed.
+You will like the new interface!
+RIP WebStatus, you were a good friend.
+
+If you have code like this in your configuration (and you probably do!) ::
+
+    from buildbot.status import html
+    c['status'].append(html.WebStatus(http_port=8010, allowForce=True)
+
+remove it and replace it with :bb:cfg:`www configuration <www>`.
+
+Requirements
+............
+
 * Buildbot's tests now require at least Mock-0.8.0.
 
 * SQLAlchemy-Migrate-0.6.1 is no longer supported.
 
 * Bulider names are now restricted to unicode strings or ASCII bytestrings.
   Encoded bytestrings are not accepted.
+
+Changes and Removals
+....................
 
 * :py:mod:`buildbot.schedulers.forcesched` has the following changes:
 
