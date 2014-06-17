@@ -30,7 +30,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     $elem.addClass("more-info-box more-info-box-js").
                         append("<span class='close-btn'></span>").
                         append(opts.title).
-                        attr("data-ui-popup", true);
+                        attr("data-ui-popup", true).hide();
 
                     if (opts.url) {
                         $.ajax(opts.url).
@@ -38,6 +38,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 $elem.append(data);
                                 opts.onCreate($elem);
                                 privateFunc.showPopup();
+
+                                return true;
                             });
 
                         return false;
@@ -82,6 +84,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 hidePopup: function () {
                     if (opts.animate) {
                         $elem.fadeOut(opts.hideAnimation, function () {
+                            $elem.hide();
                             privateFunc.clear();
                             opts.onHide($elem);
                         });
@@ -108,6 +111,10 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
             $elem.hidePopup = function () {
                 privateFunc.hidePopup();
+            };
+
+            $elem.options = function (options) {
+                opts = $.extend({}, $.fn.popup.defaults, opts, options);
             };
 
             //Initialise the popup on this element
