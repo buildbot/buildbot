@@ -1,9 +1,6 @@
 Release Notes for Buildbot |version|
 ====================================
 
-Nine
-----
-
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
