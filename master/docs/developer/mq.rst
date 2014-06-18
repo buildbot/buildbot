@@ -126,34 +126,6 @@ Simple
     message-queueing server.  It is intended for Buildbot installations with
     only one master.
 
-.. index::
-    AMQP
-    RabbitMQ
-    Qpid
-
-AMQP
-....
-
-.. py:module:: buildbot.mq.amqp
-
-.. py:class:: AmqpConnector
-
-    The AMQP MQ connector can connect to queuing applications which use AMQP,
-    including `RabbitMQ <http://www.rabbitmq.com/>`_ and `Qpid
-    <http://qpid.apache.org/>`_.
-
-    The AMQP protocol specifies that most of the server configuration is
-    carried out via the protocol itself, so once a server is set up, Buildbot
-    can create the necessary queues, exchanges, and so on without additional
-    user interaction.
-
-    This connector is based on `txAMQP <https://launchpad.net/txamqp>`_.
-
-ØMQ
-...
-
-TBD
-
 .. _queue-schema:
 
 Queue Schema
@@ -172,225 +144,42 @@ are disconnected.
 Message Schema
 --------------
 
-This section describes the structure of each message.  Routing keys are
-represented with variables when one or more of the words in the key are defined
-by the content of the message.  For example, ``buildset.$bsid`` describes
-routing keys such as ``buildset.1984``, where 1984 is the ID of the buildset
-described by the message body.
+This section describes the general structure messages.
+The specific routing keys and content of each message are described in the relevant sub-section of :ref:`Data_API`.
 
-Cautions
-~~~~~~~~
+Routing Keys
+~~~~~~~~~~~~
 
-Message ordering is generally maintained by the backend implementations, but
-this should not be depended on.  That is, messages originating from the same
-master are *usually* delivered to consumers in the order they were produced.
-Thus, for example, a consumer can expect to see a build request claimed before
-it is completed.  That said, consumers should be resilient to messages
-delivered out of order, at the very least by scheduling a "reload" from state
-stored in the database when messages arrive in an invalid order.
-
-Unit tests should be used to ensure this resiliency.
-
-Some related messages are sent at approximately the same time.  Due to the
-non-blocking nature of message delivery, consumers should *not* assume that
-subsequent messages in a sequence remain queued.  For example, upon receipt of
-a :bb:msg:`buildset.$bsid.new` message, it is already too late to try to
-subscribe to the associated build requests messages, as they may already have
-been consumed.
+Routing keys are a sequence of strings, usually written with dot separators.
+Routing keys are represented with variables when one or more of the words in the key are defined by the content of the message.
+For example, ``buildset.$bsid`` describes routing keys such as ``buildset.1984``, where 1984 is the ID of the buildset described by the message body.
+Internally, keys are represented as tuples of strings.
 
 Body Format
 ~~~~~~~~~~~
 
-Message bodies are encoded in JSON.  Most simple Python types - strings,
-numbers, lists, and dictionaries - are mapped directly to the corresponding
-JSON types. Timestamps are represented as seconds since the UNIX epoch in
-message bodies.
+Message bodies are encoded in JSON.
+The top level of each message is an object (a dictionary).
 
-The top level of each message is an object (a dictionary), the keys of which
-are given in each section, below.
+Most simple Python types - strings, numbers, lists, and dictionaries - are mapped directly to the corresponding JSON types.
+Timestamps are represented as seconds since the UNIX epoch in message bodies.
+
+Cautions
+~~~~~~~~
+
+Message ordering is generally maintained by the backend implementations, but this should not be depended on.
+That is, messages originating from the same master are *usually* delivered to consumers in the order they were produced.
+Thus, for example, a consumer can expect to see a build request claimed before it is completed.
+That said, consumers should be resilient to messages delivered out of order, at the very least by scheduling a "reload" from state stored in the database when messages arrive in an invalid order.
+
+Unit tests should be used to ensure this resiliency.
+
+Some related messages are sent at approximately the same time.
+Due to the non-blocking nature of message delivery, consumers should *not* assume that subsequent messages in a sequence remain queued.
+For example, upon receipt of a :bb:msg:`buildset.$bsid.new` message, it is already too late to try to subscribe to the associated build requests messages, as they may already have been consumed.
 
 Schema Changes
 ~~~~~~~~~~~~~~
 
 Future versions of Buildbot may add keys to messages, or add new messages.
-Consumers should expect unknown keys and, if using wildcard topics, unknown
-messages.
-
-Master Components
-~~~~~~~~~~~~~~~~~
-
-Masters use these messages to announce starts, stops, and reconfigurations of
-various components.
-
-.. bb:msg:: scheduler.$schedulerid.started (TODO)
-
-    :var $schedulerid: the ID of the scheduler that is starting up
-    :key integer schedulerid: the ID of the scheduler that is starting up
-    :key integer masterid: the ID of the master where the scheduler is running
-    :key string name: the scheduler name
-    :key string class: the scheduler class
-
-    This message indicates that a scheduler has started.
-
-.. bb:msg:: scheduler.$schedulerid.stopped (TODO)
-
-    :var $schedulerid: the ID of the scheduler that is starting up
-    :key integer schedulerid: the ID of the scheduler that is starting up
-    :key integer masterid: the ID of the master where the scheduler is running
-    :key string name: the scheduler name
-    :key string class: the scheduler class
-
-    This message indicates that a scheduler has stopped.
-
-.. bb:msg:: builder.$builderid.started (TODO)
-
-    :var $builderid: the ID of the builder that is starting up
-    :key integer builderid: the ID of the builder that is starting up
-    :key integer masterid: the ID of the master where the builder is running
-    :key string buildername: the builder name
-
-    This message indicates that a builder has started.
-
-.. bb:msg:: builder.$builderid.stopped (TODO)
-
-    :var $builderid: the ID of the builder that is starting up
-    :key integer builderid: the ID of the builder that is starting up
-    :key integer masterid: the ID of the master where the builder is running
-    :key string buildername: the builder name
-
-    This message indicates that a builder has stopped.
-
-Changes
-~~~~~~~
-
-See :bb:rtype:`change`.
-
-Buildsets
-~~~~~~~~~
-
-.. bb:msg:: buildset.$bsid.new
-
-    :var $bsid: the ID of the new buildset
-    :key bsid: the ID of the new buildset
-    :key string external_idstring: arbitrary string for mapping builds
-        externally
-    :key string reason: reason these builds were triggered
-    :key integer sourcestampsetid: source stamp set for this buildset
-    :key timestamp submitted_at: time this buildset was created
-    :key brids: buildrequest IDs for this buildset
-    :type brids: list of integers
-    :key object properties: user-specified properties for this change,
-        represented as an object mapping keys to tuple (value, source)
-    :key string scheduler: the scheduler that created the buildset
-
-    This message indicates that a new buildset has been added, and indicates
-    the associated build requests.   Each such build request will be indicated
-    with a :bb:msg:`buildrequest.$bsid.$builderid.$brid.new`, but note,
-    as mentioned above, that these messages may arrive in any order.
-
-.. bb:msg:: buildset.$bsid.complete
-
-    :var $bsid: the ID of the completed buildset
-    :key bsid: the ID of the completed buildset
-    :key timestamp complete_at: time this buildset was completed
-    :key integer results: aggregate result of this buildset; see
-        :ref:`Build-Result-Codes`
-
-    This message indicates that a buildset has been completed: all of its
-    constituent build requests are complete, and an aggregate result has been
-    calculated for the set.
-
-    Note that, if build requests finish on different masters at approximately
-    the same time, it is possible for multiple copies of this message to be
-    sent for a single buildset.
-
-Build Requests
-~~~~~~~~~~~~~~
-
-Due to the very complex request-claiming semantics Buildbot supportsa (see
-:ref:`Claiming-Build-Requests`), build requests are claimed in the database,
-and the subsequent messages are considered advisory in nature.  The
-:bb:msg:`buildrequest.$bsid.$builderid.$brid.new` and
-:bb:msg:`buildrequest.$bsid.$builderid.$brid.unclaimed`, messages indicate that
-masters supporting the given builder should, if resources are available,
-attempt to claim the requeset in the database.  Only if that attempt succeeds
-will the master send a :bb:msg:`buildrequest.$bsid.$builderid.$brid.claimed`
-message.
-
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.new
-
-    :var $bsid: the ID of the buildset containing this build request
-    :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
-    :var $brid: the ID of the new build request
-    :key integer brid: the ID of the new build request
-    :key integer bsid: the ID of the buildset containing this build request
-    :key string buildername: the name of the builder this request is for
-    :key integer builderid: th ID of the builder this request is for (TODO: -1 for now)
-
-    This message indicates that a new build request has been added.
-
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.claimed
-
-    :var $bsid: the ID of the buildset containing this build request
-    :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
-    :var $brid: the ID of the new build request
-    :key integer bsid: the ID of the buildset containing this build request
-    :key integer builderid: th ID of the builder this request is for (TODO: -1 for now)
-    :key integer brid: the ID of the new build request
-    :key string buildername: the name of the builder this request is for
-    :key timestamp claimed_at: time this request was claimed
-    :key masterid: objectid of the master claiming this request
-
-    This message indicates that a master has successfully claimed this build
-    request and will begin a build.
-
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.unclaimed
-
-    :var $bsid: the ID of the buildset containing this build request
-    :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
-    :var $brid: the ID of the new build request
-    :key integer brid: the ID of the build request
-    :key integer bsid: the ID of the buildset containing this build request
-    :key string buildername: the name of the builder this request is for
-    :key integer builderid: th ID of the builder this request is for (TODO: -1 for now)
-
-    This message indicates that the build request has been unclaimed, and may
-    be available for other masters to claim.  This generally represents
-    recovery from an error condition, and may occur several times for the same
-    build request, as it is marked as unclaimed by other masters.
-
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.cancelled (TODO - untested)
-
-    :var $bsid: the ID of the buildset containing this build request
-    :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
-    :var $brid: the ID of the new build request
-    :key integer brid: the ID of the build request
-    :key integer bsid: the ID of the buildset containing this build request
-    :key string buildername: the name of the builder this request is for
-    :key integer builderid: th ID of the builder this request is for (TODO: -1 for now)
-
-    This message indicates that the build request has been cancelled, and
-    should not result in a build.  A
-    :bb:msg:`buildrequest.$bsid.$builderid.$brid.complete` will be sent as
-    well, for consistency.
-
-.. bb:msg:: buildrequest.$bsid.$builderid.$brid.complete
-
-    :var $bsid: the ID of the buildset containing this build request
-    :var $builderid: the ID of the builder this request is for (TODO: just a name for now)
-    :var $brid: the ID of the new build request
-    :key integer brid: the ID of the new build request
-    :key integer bsid: the ID of the buildset containing this build request
-    :key string buildername: the name of the builder this request is for
-    :key integer builderid: th ID of the builder this request is for (TODO: -1 for now)
-    :key timestamp complete_at: time this request was completed
-    :key integer results: aggregate result of this build request; see
-        :ref:`Build-Result-Codes`
-
-    This message indicates that the build request is completed.
-    TODO: untested
-
-.. todo::
-    user.new
-    users in changes?
-    slave attach/detach
+Consumers should expect unknown keys and, if using wildcard topics, unknown messages.

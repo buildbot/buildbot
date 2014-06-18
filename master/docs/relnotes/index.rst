@@ -1,9 +1,6 @@
 Release Notes for Buildbot |version|
 ====================================
 
-Nine
-----
-
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
@@ -105,13 +102,16 @@ Requirements
 Changes and Removals
 ....................
 
+* Buildslave names must now be 50-character :ref:`identifier <type-identifier>`.
+  Note that this disallows some common characters in bulidslave names, including spaces, ``/``, and ``.``.
+
 * Builders now have "tags" instead of a category.
   Builders can have multiple tags, allowing more flexible builder displays.
 
-* :py:mod:`buildbot.schedulers.forcesched` has the following changes:
+* :bb:sched:`ForceScheduler` has the following changes:
 
   - The default configuration no longer contains four ``AnyPropertyParameter`` instances.
-  - Configuring ``codebase`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
+  - Configuring ``codebases`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
   - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
 
 * Logs are now stored as Unicode strings, and thus must be decoded properly from the bytestrings provided by shell commands.

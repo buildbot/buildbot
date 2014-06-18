@@ -151,7 +151,7 @@ class bower_install(npm_install):
         json.dump(bower_rc, open(".bowerrc", "w"))
         json.dump(bower_json, open("bower.json", "w"))
         self.spawn(['rm', '-rf', 'src/libs'])
-        self.spawn(['./node_modules/.bin/bower', 'install'])
+        self.spawn(['./node_modules/.bin/bower', 'install', '--config.interactive=false'])
 
 cmdclass['bower_install'] = bower_install
 

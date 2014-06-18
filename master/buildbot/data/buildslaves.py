@@ -15,6 +15,7 @@
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util import identifiers
 from twisted.internet import defer
 
 
@@ -106,6 +107,8 @@ class Buildslave(base.ResourceType):
 
     @base.updateMethod
     def findBuildslaveId(self, name):
+        if not identifiers.isIdentifier(50, name):
+            raise ValueError("Buildslave name %r is not a 50-character identifier" % (name,))
         return self.master.db.buildslaves.findBuildslaveId(name)
 
     @base.updateMethod

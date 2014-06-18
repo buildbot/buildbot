@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import locale
 import mock
 import os
 
@@ -280,8 +281,9 @@ class FunctionalEnvironment(unittest.TestCase):
         self.assertEqual(config.error.called, False)
 
     def test_broken_locale(self):
-        environ = {'LANG': 'NINE.UTF-8'}
-        self.patch(os, 'environ', environ)
+        def err():
+            raise KeyError
+        self.patch(locale, 'getdefaultlocale', err)
         config = mock.Mock()
         util.check_functional_environment(config)
-        config.error.assert_called()
+        config.error.assert_called_with(mock.ANY)

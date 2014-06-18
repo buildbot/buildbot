@@ -67,8 +67,9 @@ as of Buildbot-0.9.0.  ::
     @defer.inlineCallbacks
     def mergeRequests(builder, req1, req2):
         if (yield req1.source.canBeMergedWith(req2.source)) and  req1.reason == req2.reason:
-           return True
-        return False
+           defer.returnValue(True)
+        else:
+           defer.returnValue(False)
     c['mergeRequests'] = mergeRequests
 
 If it's necessary to perform some extended operation to determine whether two
