@@ -65,3 +65,4 @@ master/buildbot/status/web/files/builders.json
 master/buildbot/status/web/files/css/default.css
 
 master/buildbot/status/web/files/css/log.css
+master/buildbot/status/web/files/node_modules/karma/
