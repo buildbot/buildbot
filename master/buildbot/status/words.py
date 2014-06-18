@@ -272,6 +272,9 @@ class IRCContact(base.StatusReceiver):
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
+        if isinstance(args, unicode):
+            # shlex does not handle unicode.  See http://bugs.python.org/issue1170
+            args = args.encode('ascii')
         try:
             return shlex.split(args)
         except ValueError, e:
