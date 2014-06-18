@@ -69,9 +69,6 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
     def test_getLoginResource(self):
         self.assertRaises(Error, self.auth.getLoginResource)
 
-    def test_getLogoutResource(self):
-        self.assertRaises(Error, self.auth.getLogoutResource)
-
     @defer.inlineCallbacks
     def test_updateUserInfo(self):
         self.auth.userInfoProvider.getUserInfo = lambda un: {'info': un}

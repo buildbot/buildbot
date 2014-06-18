@@ -132,9 +132,9 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(res, {'redirected': '://me'})
 
     def test_getConfig(self):
-        self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github',
+        self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
                                                            'name': 'GitHub', 'oauth2': True})
-        self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus',
+        self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus', 'autologin': False,
                                                            'name': 'Google', 'oauth2': True})
 
 # unit tests are not very usefull to write new oauth support
@@ -220,7 +220,6 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
         self.assertIn("full_name", res)
         self.assertIn("email", res)
-        self.assertIn("groups", res)
         self.assertIn("username", res)
 
 
