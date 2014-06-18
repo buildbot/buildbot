@@ -106,7 +106,7 @@ class bower_install(npm_install):
         for command in self.get_sub_commands():
             self.run_command(command)
         json.dump(bower_json, open("bower.json", "w"))
-        self.spawn(['./node_modules/.bin/bower', 'install'])
+        self.spawn(['./node_modules/.bin/bower', 'install', '--config.interactive=false'])
 
 cmdclass['bower_install'] = bower_install
 
