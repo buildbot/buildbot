@@ -33,6 +33,9 @@ class OAuth2LoginResource(auth.LoginResource):
         auth.LoginResource.__init__(self, master)
         self.auth = _auth
 
+    def render_POST(self, request):
+        return self.asyncRenderHelper(request, self.renderLogin)
+
     @defer.inlineCallbacks
     def renderLogin(self, request):
         code = request.args.get("code", [""])[0]
@@ -55,12 +58,14 @@ class OAuth2Auth(auth.AuthBase):
     tokenUriAdditionalParams = {}
     loginUri = None
     homeUri = None
+    sslVerify = None
 
     def __init__(self,
-                 clientId, clientSecret, **kwargs):
+                 clientId, clientSecret, autologin=False, **kwargs):
         auth.AuthBase.__init__(self, **kwargs)
         self.clientId = clientId
         self.clientSecret = clientSecret
+        self.autologin = autologin
 
     def reconfigAuth(self, master, new_config):
         self.master = master
@@ -70,7 +75,8 @@ class OAuth2Auth(auth.AuthBase):
     def getConfigDict(self):
         return dict(name=self.name,
                     oauth2=True,
-                    fa_icon=self.faIcon
+                    fa_icon=self.faIcon,
+                    autologin=self.autologin
                     )
 
     def getLoginResource(self):
@@ -91,7 +97,8 @@ class OAuth2Auth(auth.AuthBase):
         return s
 
     def get(self, session, path):
-        return session.get(self.resourceEndpoint + path).json()
+        ret = session.get(self.resourceEndpoint + path)
+        return ret.json()
 
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret passing
@@ -106,7 +113,7 @@ class OAuth2Auth(auth.AuthBase):
             else:
                 data.update({'client_id': self.clientId, 'client_secret': self.clientSecret})
             data.update(self.tokenUriAdditionalParams)
-            response = requests.post(url, data=data, auth=auth)
+            response = requests.post(url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
             if isinstance(response.content, basestring):
                 try:

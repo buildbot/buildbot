@@ -16,7 +16,6 @@ angular.module('buildbot.common').directive 'loginbar',
                     method: "GET"
                     url: "#{config.url}auth/login"
                 .success (data, status) ->
-                    console.log data
                     window.location.reload()
 
             $scope.logout = ->
@@ -32,6 +31,8 @@ angular.module('buildbot.common').directive 'loginbar',
                     url: "#{config.url}auth/login"
                 .success (data, status) ->
                     document.location = data
+            if config.auth.autologin and config.user.anonymous and config.auth.oauth2
+                $scope.loginoauth2()
     ]
     controller: controller
     replace: true

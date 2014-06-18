@@ -60,7 +60,7 @@ class AuthBase(config.ConfiguredMixin):
         raise Error(501, "not implemented")
 
     def getLogoutResource(self):
-        raise Error(501, "not implemented")
+        return LogoutResource(self.master)
 
     @defer.inlineCallbacks
     def updateUserInfo(self, request):
@@ -148,9 +148,6 @@ class TwistedICredAuthBase(AuthBase):
         return HTTPAuthSessionWrapper(
             Portal(AuthRealm(self.master, self), self.checkers),
             self.credentialFactories)
-
-    def getLogoutResource(self):
-        return LogoutResource(self.master)
 
 
 class HTPasswdAuth(TwistedICredAuthBase):
