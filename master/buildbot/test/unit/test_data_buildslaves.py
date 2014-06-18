@@ -242,4 +242,8 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
         rv = defer.succeed(None)
         self.master.db.buildslaves.findBuildslaveId = \
             mock.Mock(return_value=rv)
-        self.assertIdentical(self.rtype.findBuildslaveId('foo'), rv)
+        self.assertIdentical(self.rtype.findBuildslaveId(u'foo'), rv)
+
+    def test_findBuildslaveId_not_id(self):
+        self.assertRaises(ValueError, self.rtype.findBuildslaveId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findBuildslaveId, u'123/foo')
