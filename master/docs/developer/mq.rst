@@ -126,34 +126,6 @@ Simple
     message-queueing server.  It is intended for Buildbot installations with
     only one master.
 
-.. index::
-    AMQP
-    RabbitMQ
-    Qpid
-
-AMQP
-....
-
-.. py:module:: buildbot.mq.amqp
-
-.. py:class:: AmqpConnector
-
-    The AMQP MQ connector can connect to queuing applications which use AMQP,
-    including `RabbitMQ <http://www.rabbitmq.com/>`_ and `Qpid
-    <http://qpid.apache.org/>`_.
-
-    The AMQP protocol specifies that most of the server configuration is
-    carried out via the protocol itself, so once a server is set up, Buildbot
-    can create the necessary queues, exchanges, and so on without additional
-    user interaction.
-
-    This connector is based on `txAMQP <https://launchpad.net/txamqp>`_.
-
-ØMQ
-...
-
-TBD
-
 .. _queue-schema:
 
 Queue Schema
@@ -173,7 +145,7 @@ Message Schema
 --------------
 
 This section describes the general structure messages.
-The specific routing keys and content of each message are described in the relevant sub-section of :ref:`Data-API`.
+The specific routing keys and content of each message are described in the relevant sub-section of :ref:`Data_API`.
 
 Routing Keys
 ~~~~~~~~~~~~
