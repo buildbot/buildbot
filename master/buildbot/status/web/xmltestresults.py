@@ -15,8 +15,10 @@
 from xml.etree import ElementTree
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
 
+NUNIT, NOSE, JUNIT = range(3)
 
 class XMLTestResource(HtmlResource):
+
     def __init__(self, log, step_status):
         HtmlResource.__init__(self)
         self.log = log
@@ -28,8 +30,8 @@ class XMLTestResource(HtmlResource):
         d['text'] = t.text
         return d
 
-    def test_result_to_status(self, test, nose_test):
-        if not nose_test:
+    def test_result_to_status(self, test, xml_type):
+        if xml_type is NUNIT:
             if test['executed'].lower() == "true" and ('success' in test and test['success'].lower() == "true"):
                 return ("passed", "Pass")
             if test['executed'].lower() == "true" and ('result' in test and test['result'].lower() == "inconclusive"):
@@ -40,13 +42,17 @@ class XMLTestResource(HtmlResource):
                 return "skipped", "Skipped"
             else:
                 return "failed", "Failure"
-        else:
+        elif xml_type is NOSE:
             if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("error"):
                 return "failed", "Failure"
             return "passed", "Pass"
+        elif xml_type is JUNIT:
+            if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("failure"):
+                return "failed", "Failure"
+            return "passed", "Pass"
 
-    def test_result_xml_to_dict(self, test, nose_test):
-        result = {'result': self.test_result_to_status(test, nose_test)[1]}
+    def test_result_xml_to_dict(self, test, xml_type):
+        result = {'result': self.test_result_to_status(test, xml_type)[1]}
 
         if test.has_key('time'):
             result['time'] = float(test['time'])
@@ -63,10 +69,18 @@ class XMLTestResource(HtmlResource):
                 if ft.has_key('failure'):
                     failure_text = ft['failure']
 
-        if nose_test:
+        if xml_type is NOSE:
             if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("error"):
                 result["success"] = "false"
                 failure_text = [{"text": test["testcase"][0]["message"]}]
+            else:
+                result["success"] = "true"
+
+        if xml_type is JUNIT:
+            if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("failure"):
+                result["success"] = "false"
+                print test
+                failure_text = [{"text": test["testcase"][0]["text"]}]
             else:
                 result["success"] = "true"
 
@@ -99,22 +113,28 @@ class XMLTestResource(HtmlResource):
         cxt['build_number'] = b.getNumber()
         cxt['selectedproject'] = project
 
+        xml_type = NUNIT
+
         try:
             html = self.log.html
-            nose_test = False
             if "nosetests" in html:
-                nose_test = True
+                xml_type = NOSE
+            elif "<testsuites>" and "testsuite" in html:
+                xml_type = JUNIT
             if "utf-16" in html:
                 html = html.replace("utf-16", "utf-8")
 
             root = ElementTree.fromstring(html)
             root_dict = self.etree_to_dict(root)
             xpath =".//test-suite/results/test-case/../.."
-            if nose_test:
+            if xml_type is NOSE or xml_type is JUNIT:
                 xpath = ".//testcase"
             test_suites_dict = [self.etree_to_dict(r) for r in root.findall(xpath)]
 
-            def parseTest(test, nose_test):
+            if xml_type is JUNIT:
+                root_dict = root_dict["testsuites"][0]
+
+            def parseTest(test, xml_type):
                 total = 0
                 time_count = 0
                 test_parent = self.test_dict()
@@ -130,22 +150,29 @@ class XMLTestResource(HtmlResource):
                 if test.has_key("name"):
                     test_parent["name"] = test["name"]
 
-                if not nose_test and 'results' in test:
+                if xml_type is NUNIT and 'results' in test:
                     test_parent['tests_length'] = len(test['results'])
                     for r in tso['results']:
-                        result_object = self.test_result_xml_to_dict(r, nose_test)
+                        result_object = self.test_result_xml_to_dict(r, xml_type)
                         test_parent['results'].append(result_object)
                         total += 1
 
                         time_count += updateTime(result_object)
-                        test_parent[self.test_result_to_status(r, nose_test)[0]] += 1
-                elif nose_test:
-                    result_object = self.test_result_xml_to_dict(test, nose_test)
+                        test_parent[self.test_result_to_status(r, xml_type)[0]] += 1
+                elif xml_type is NOSE:
+                    result_object = self.test_result_xml_to_dict(test, xml_type)
                     test_parent['results'].append(result_object)
 
                     total += 1
                     time_count += updateTime(result_object)
-                    test_parent[self.test_result_to_status(test, nose_test)[0]] += 1
+                    test_parent[self.test_result_to_status(test, xml_type)[0]] += 1
+                elif xml_type is JUNIT:
+                    result_object = self.test_result_xml_to_dict(test, xml_type)
+                    test_parent["results"].append(result_object)
+
+                    total += 1
+                    time_count += updateTime(result_object)
+                    test_parent[self.test_result_to_status(test, xml_type)[0]] += 1
 
                 return test_parent, total, time_count
 
@@ -155,20 +182,20 @@ class XMLTestResource(HtmlResource):
             total = 0
             output_tests = []
 
-            if not nose_test:
+            if xml_type is NUNIT:
                 for ts in test_suites_dict:
-                    tests = ts['test-suite'] if not nose_test else ts
+                    tests = ts['test-suite']
                     for tso in tests:
-                        o, c, t = parseTest(tso, nose_test)
+                        o, c, t = parseTest(tso, xml_type)
                         o["name"] = ts["name"]
                         output_tests.append(o)
                         total += c
                         time_count += t
-            elif nose_test:
+            elif xml_type is NOSE:
                 classes = {}
                 for tso in test_suites_dict:
                     class_name = tso["classname"]
-                    o, c, t = parseTest(tso, nose_test)
+                    o, c, t = parseTest(tso, xml_type)
                     if class_name not in classes:
                         classes[class_name] = self.test_dict()
                         classes[class_name]["name"] = class_name
@@ -182,7 +209,25 @@ class XMLTestResource(HtmlResource):
                     time_count += t
 
                 output_tests = classes.values()
+            elif xml_type is JUNIT:
+                classes = {}
+                for tso in test_suites_dict:
+                    o, c, t = parseTest(tso, xml_type)
+                    class_name = tso["classname"]
+                    if class_name not in classes:
+                        classes[class_name] = self.test_dict()
+                        classes[class_name]["name"] = class_name
 
+                    classes[class_name]["results"].append(o["results"][0])
+                    classes[class_name]["passed"] += o["passed"]
+                    classes[class_name]["failed"] += o["failed"]
+                    classes[class_name]["time"] += t
+                    classes[class_name]["tests"] += c
+                    total += c
+                    time_count += t
+
+                print classes
+                output_tests = classes.values()
 
             cxt['test_suites'] = output_tests
 
