@@ -105,6 +105,9 @@ Requirements
 Changes and Removals
 ....................
 
+* Buildslave names must now be 50-character :ref:`identifier <type-identifier>`.
+  Note that this disallows some common characters in bulidslave names, including spaces, ``/``, and ``.``.
+
 * Builders now have "tags" instead of a category.
   Builders can have multiple tags, allowing more flexible builder displays.
 
