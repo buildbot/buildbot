@@ -66,3 +66,5 @@ master/buildbot/status/web/files/css/default.css
 
 master/buildbot/status/web/files/css/log.css
 master/buildbot/status/web/files/node_modules/karma/
+master/buildbot/status/web/files/node_modules/.bin/karma
+master/buildbot/status/web/files/node_modules/.bin/karma.cmd
