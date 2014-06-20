@@ -59,6 +59,7 @@ class CachedURL():
     def pollSuccess(self):
         self.lastChecked = time.time()
         self.locked = False
+        self.errorCount = 0
 
         if self.currentPollInterval > self.pollInterval:
             self.currentPollInterval -= POLL_INTERVAL_STEP
@@ -135,7 +136,9 @@ class BroadcastServerFactory(WebSocketServerFactory):
             if urlCache.locked is False and urlCache.pollNeeded():
                 updateLock.acquire()
                 urlCache.locked = True
-                updateLock.release()
+                if updateLock.locked():
+                    updateLock.release()
+                    
                 p = Thread(target=self.checkURL, args=(urlCache, ))
                 p.start()
 
