@@ -133,14 +133,14 @@ class BroadcastServerFactory(WebSocketServerFactory):
     def checkURLs(self):
         for urlCache in self.urlCacheDict.values():
             #Thread each of these
-            if urlCache.locked is False and urlCache.pollNeeded():
-                updateLock.acquire()
-                urlCache.locked = True
-                if updateLock.locked():
-                    updateLock.release()
-                    
-                p = Thread(target=self.checkURL, args=(urlCache, ))
-                p.start()
+            try:
+                if urlCache.locked is False and urlCache.pollNeeded():
+                    urlCache.locked = True
+
+                    p = Thread(target=self.checkURL, args=(urlCache, ))
+                    p.start()
+            except Exception as e:
+                logging.error("{0}".format(e))
 
     def checkURL(self, urlCache):
         url = urlCache.url
