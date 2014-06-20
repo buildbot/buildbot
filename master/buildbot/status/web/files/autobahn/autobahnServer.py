@@ -51,12 +51,14 @@ class CachedURL():
         self.errorCount = 0
         self.pollInterval = POLL_INTERVAL
         self.currentPollInterval = POLL_INTERVAL
+        self.locked = False
 
     def pollNeeded(self):
         return (time.time() - self.lastChecked) > self.currentPollInterval
 
     def pollSuccess(self):
         self.lastChecked = time.time()
+        self.locked = False
 
         if self.currentPollInterval > self.pollInterval:
             self.currentPollInterval -= POLL_INTERVAL_STEP
@@ -65,6 +67,7 @@ class CachedURL():
             self.currentPollInterval = self.pollInterval
 
     def pollFailure(self):
+        self.locked = False
         self.lastChecked = time.time()
         self.errorCount += 1
 
@@ -127,15 +130,14 @@ class BroadcastServerFactory(WebSocketServerFactory):
         return False
 
     def checkURLs(self):
-        threads = []
         for urlCache in self.urlCacheDict.values():
             #Thread each of these
-            p = Thread(target=self.checkURL, args=(urlCache, ))
-            p.start()
-            threads.append(p)
-
-        for t in threads:
-            t.join()
+            if urlCache.locked is False and urlCache.pollNeeded():
+                updateLock.acquire()
+                urlCache.locked = True
+                updateLock.release()
+                p = Thread(target=self.checkURL, args=(urlCache, ))
+                p.start()
 
     def checkURL(self, urlCache):
         url = urlCache.url
@@ -168,6 +170,8 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 logging.error("{0}: {1}".format(e, url))
                 cachedURL.pollFailure()
             finally:
+                cachedURL.locked = False
+
                 if updateLock.locked():
                     updateLock.release()
 
