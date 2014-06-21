@@ -447,7 +447,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
             waitForFinish=True))
         self.scheduler_b.exception = True
-        self.expectOutcome(result=EXCEPTION,
+        self.expectOutcome(result=DEPENDENCY_FAILURE,
                         status_text=['Dependency failed to build.'])
         self.expectTriggeredWith(
             a=({}, {}),

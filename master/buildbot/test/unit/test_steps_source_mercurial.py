@@ -58,25 +58,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
-            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'])
@@ -102,29 +99,23 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         timeout=1,
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+                        Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        timeout=1,
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        timeout=1,
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        timeout=1,
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
-            + 1,
             ExpectShell(workdir='wkdir',
                         timeout=1,
                         command=['hg', '--traceback', 'update',
@@ -151,25 +142,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
-            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'])
@@ -199,25 +187,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                      logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
-            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'])
@@ -239,20 +224,21 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
                                 logEnviron=True))
-            + 1,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'clone', '--uncompressed',
-                                    'http://hg.mozilla.org', '.'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                              stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
@@ -281,7 +267,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'clone', '--noupdate',
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -306,25 +292,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge', '--all'])
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
-            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'])
@@ -348,20 +331,21 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+                        Expect('stat', dict(file='wkdir/.hg/store/journal',
                                 logEnviron=True))
-            + 1,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'clone', '--uncompressed',
-                                    'http://hg.mozilla.org', '.'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'])
-            + ExpectShell.log('stdio',
-                              stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'])
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
@@ -433,7 +417,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'clone', '--noupdate',
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
                                     'http://hg.mozilla.org/stable', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -676,7 +660,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'clone', '--noupdate',
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
                                     'http://hg.mozilla.org', '.'])
             + 0,
             ExpectShell(workdir='wkdir',
@@ -743,30 +727,25 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'], env={'abc': '123'})
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'], env={'abc': '123'})
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'], env={'abc': '123'})
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'], env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'],
-                        env={'abc': '123'})
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'],
-                        env={'abc': '123'})
-            + 1,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'update', '--clean',
-                                 '--rev', 'default'], env={'abc': '123'})
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'default'], env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'parents',
@@ -790,29 +769,23 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', '--version'],
                         logEnviron=False)
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                    logEnviron=False))
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
                                 logEnviron=False))
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config',
-                                 'extensions.purge=', 'purge'],
-                        logEnviron=False)
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=False))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=False))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'],
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'],
                         logEnviron=False)
             + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'identify', '--branch'],
-                        logEnviron=False)
-            + ExpectShell.log('stdio',
-                stdout='default')
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'locate', 'set:added()'],
-                        logEnviron=False)
-            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'],
