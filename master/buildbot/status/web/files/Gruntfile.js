@@ -49,7 +49,7 @@ module.exports = function (grunt) {
                     optimize: 'uglify2',
                     preserveLicenseComments: false,
                     generateSourceMaps: true,
-                    fileExclusionRegExp: /^test$|^karma\.config\.js$/
+                    fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/
                 }
             }
         },
