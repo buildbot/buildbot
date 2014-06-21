@@ -36,9 +36,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 lastBeat = now;
             }
 
-            if (interval !== undefined) {
-                privateFunc.heartbeatInterval();
-            }
+            privateFunc.heartbeatInterval();
         },
         addElem: function (el, obj, array) {
             if (el.length) {
@@ -149,7 +147,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         },
         clearTimeObjects: function (parentElem) {
             if (parentElem !== undefined) {
-                var childElems = $(parentElem).find("[data-timeElem]");
+                var childElems = $(parentElem).find("[data-timeelem]");
 
                 //Find elements that are in the given parentElem and remove them
                 $.each(timeObjects, function (i, arr) {
@@ -182,6 +180,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         setHeartbeat: function (interval) {
             HEARTBEAT = interval;
             privateFunc.heartbeatInterval();
-        }
+        },
+        _timeObjects: timeObjects
     };
 });

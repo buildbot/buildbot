@@ -41,7 +41,8 @@ define(['moment', 'helpers'], function (moment) {
         },
         getRelativeTimeDict: function () {
             return {
-                s: "%d seconds",
+                s: momentExtend.parseMinutesSeconds,
+                ss: momentExtend.parseMinutesSeconds,
                 m: momentExtend.parseMinutesSeconds,
                 mm: momentExtend.parseMinutesSeconds,
                 h: momentExtend.parseHoursMinutes,
