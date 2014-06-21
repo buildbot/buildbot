@@ -74,7 +74,7 @@ class GitHubBuildBot(resource.Resource):
                 Python Object that represents the JSON sent by GitHub Service
                 Hook.
         """
-
+        changes = None
         branch = payload['ref'].split('/')[-1]
 
         if payload['deleted'] is True:
