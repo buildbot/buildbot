@@ -69,3 +69,5 @@ master/buildbot/status/web/files/css/log.css
 master/buildbot/status/web/files/node_modules/karma/
 master/buildbot/status/web/files/node_modules/.bin/karma
 master/buildbot/status/web/files/node_modules/.bin/karma.cmd
+master/buildbot/status/web/files/node_modules/karma-coverage/
+master/buildbot/status/web/files/script/coverage/
