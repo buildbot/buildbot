@@ -50,7 +50,7 @@ class GitHubBuildBot(resource.Resource):
                 the http request object
         """
         # Reject non-push events
-        event_type = request.received_headers.get("X-GitHub-Event")
+        event_type = request.getHeader("X-GitHub-Event")
         if event_type != "push":
             logging.info(
                 "Rejecting request.  Expected a push even got %r instead.",
