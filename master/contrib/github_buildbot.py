@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json
 
-#
+
 
 
 class GitHubBuildBot(resource.Resource):
@@ -155,7 +155,7 @@ def setup_options():
 
     parser.add_option("-m", "--buildmaster",
                       help="Buildbot Master host and port. ie: localhost:9989 [default:"
-                      + " %default]", default="10.108.0.6:9989", dest="buildmaster")
+                      + " %default]", default="127.0.0.1:9989", dest="buildmaster")
 
     parser.add_option("-l", "--log",
                       help="The absolute path, including filename, to save the log to"
