@@ -16,10 +16,9 @@ trigger this webhook.
 import logging
 import os
 import sys
-import tempfile
 import traceback
-
 from optparse import OptionParser
+
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
@@ -148,37 +147,39 @@ def setup_options():
     parser = OptionParser(usage)
 
     parser.add_option("-p", "--port",
-                      help="Port the HTTP server listens to for the GitHub Service Hook"
-                      + " [default: %default]", default=9001, type=int, dest="port")
+                      help="Port the HTTP server listens to for the GitHub "
+                           "Service Hook [default: %default]",
+                      default=9001, type=int, dest="port")
 
     parser.add_option("-m", "--buildmaster",
-                      help="Buildbot Master host and port. ie: localhost:9989 [default:"
-                      + " %default]", default="127.0.0.1:9989", dest="buildmaster")
+                      help="Buildbot Master host and port. ie: localhost:9989 "
+                           "[default: %default]",
+                      default="localhost:9989", dest="buildmaster")
 
     parser.add_option("-l", "--log",
-                      help="The absolute path, including filename, to save the log to"
-                      + " [default: %default].  This may also be 'stdout' "
-                      + "indicating logs should output directly to standard "
-                      + "output instead.",
-                      default=tempfile.gettempdir() + "/github_buildbot.log",
-                      dest="log")
+                      help="The absolute path, including filename, to save the "
+                           "log to [default: %default].  This may also be "
+                           "'stdout' indicating logs should output directly to "
+                           "standard output instead.",
+                      default="github_buildbot.log", dest="log")
 
     parser.add_option("-L", "--level",
-                      help="The logging level: debug, info, warn, error, fatal [default:"
-                      + " %default]", default='warn', dest="level")
+                      help="The logging level: debug, info, warn, error, "
+                           "fatal [default: %default]", default='warn',
+                      dest="level",
+                      choices=("debug", "info", "warn", "error", "fatal"))
 
     parser.add_option("-g", "--github",
-                      help="The github server.  Changing this is useful if you've specified"
-                      + "  a specific HOST handle in ~/.ssh/config for github "
-                      + "[default: %default]", default='github.com',
-                      dest="github")
+                      help="The github server.  Changing this is useful if"
+                           " you've specified a specific HOST handle in "
+                           "~/.ssh/config for github [default: %default]",
+                      default='github.com', dest="github")
 
     parser.add_option("--pidfile",
-                      help="Write the process identifier (PID) to this file on start."
-                      +
-                      " The file is removed on clean exit. [default: %default]",
-                      default=None,
-                      dest="pidfile")
+                      help="Write the process identifier (PID) to this "
+                           "file on start. The file is removed on clean "
+                           "exit. [default: %default]",
+                      default=None, dest="pidfile")
 
     (options, _) = parser.parse_args()
 
