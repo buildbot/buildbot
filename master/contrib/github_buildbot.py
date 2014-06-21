@@ -49,6 +49,14 @@ class GitHubBuildBot(resource.Resource):
             request
                 the http request object
         """
+        # Reject non-push events
+        event_type = request.received_headers.get("X-GitHub-Event")
+        if event_type != "push":
+            logging.info(
+                "Rejecting request.  Expected a push even got %r instead.",
+                event_type)
+            return
+
         try:
             payload = json.loads(request.content.read())
             user = payload['pusher']['name']
