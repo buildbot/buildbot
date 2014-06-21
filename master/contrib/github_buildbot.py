@@ -32,8 +32,6 @@ except ImportError:
     import simplejson as json
 
 
-
-
 class GitHubBuildBot(resource.Resource):
 
     """
@@ -159,7 +157,9 @@ def setup_options():
 
     parser.add_option("-l", "--log",
                       help="The absolute path, including filename, to save the log to"
-                      + " [default: %default]",
+                      + " [default: %default].  This may also be 'stdout' "
+                      + "indicating logs should output directly to standard "
+                      + "output instead.",
                       default=tempfile.gettempdir() + "/github_buildbot.log",
                       dest="log")
 
@@ -186,18 +186,15 @@ def setup_options():
         with open(options.pidfile, 'w') as f:
             f.write(str(os.getpid()))
 
-    levels = {
-        'debug': logging.DEBUG,
-        'info': logging.INFO,
-        'warn': logging.WARNING,
-        'error': logging.ERROR,
-        'fatal': logging.FATAL,
-    }
-
     filename = options.log
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(filename=filename, format=log_format,
-                        level=levels[options.level])
+    if options.log != "stdout":
+        logging.basicConfig(filename=filename, format=log_format,
+                            level=logging._levelNames[options.level.upper()])
+    else:
+        logging.basicConfig(format=log_format,
+                            handlers=[logging.StreamHandler(stream=sys.stdout)],
+                            level=logging._levelNames[options.level.upper()])
 
     return options
 
