@@ -13,13 +13,18 @@ trigger this webhook.
 
 """
 
+import hmac
 import logging
 import os
 import sys
-import tempfile
-import traceback
 
+from hashlib import sha1
+from httplib import ACCEPTED
+from httplib import BAD_REQUEST
+from httplib import INTERNAL_SERVER_ERROR
+from httplib import OK
 from optparse import OptionParser
+
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
@@ -30,8 +35,6 @@ try:
     import json
 except ImportError:
     import simplejson as json
-
-#
 
 
 class GitHubBuildBot(resource.Resource):
@@ -52,8 +55,57 @@ class GitHubBuildBot(resource.Resource):
             request
                 the http request object
         """
+        event_type = request.getHeader("X-GitHub-Event")
+
+        # Reject non-push events
+        if event_type != "push":
+            logging.info(
+                "Rejecting request.  Expected a push even got %r instead.",
+                event_type)
+            request.setResponseCode(BAD_REQUEST)
+            return json.dumps({"error": "Bad Request."})
+
+        content = request.content.read()
+
+        # Verify the message if a secret was provided
+        #
+        # NOTE: We always respond with '400 BAD REQUEST' if we can't
+        # validate the message.  This is done to prevent malicious
+        # requests from learning about why they failed to POST data
+        # to us.
+        if self.secret is not None:
+            signature = request.getHeader("X-Hub-Signature")
+
+            if signature is None:
+                logging.error("Rejecting request.  Signature is missing.")
+                request.setResponseCode(BAD_REQUEST)
+                return json.dumps({"error": "Bad Request."})
+
+            try:
+                hash_type, hexdigest = signature.split("=")
+
+            except ValueError:
+                logging.error("Rejecting request.  Bad signature format.")
+                request.setResponseCode(BAD_REQUEST)
+                return json.dumps({"error": "Bad Request."})
+
+            else:
+                # sha1 is hard coded into github's source code so it's
+                # unlikely this will ever change.
+                if hash_type != "sha1":
+                    logging.error("Rejecting request.  Unexpected hash type.")
+                    request.setResponseCode(BAD_REQUEST)
+                    return json.dumps({"error": "Bad Request."})
+
+                mac = hmac.new(self.secret, msg=content, digestmod=sha1)
+                if mac.hexdigest() != hexdigest:
+                    logging.error("Rejecting request.  Hash mismatch.")
+                    request.setResponseCode(BAD_REQUEST)
+                    return json.dumps({"error": "Bad Request."})
+
         try:
-            payload = json.loads(request.content.read())
+            payload = json.loads(content)
+            logging.debug("Payload: %r", payload)
             user = payload['pusher']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
@@ -61,14 +113,15 @@ class GitHubBuildBot(resource.Resource):
             project = request.args.get('project', None)
             if project:
                 project = project[0]
-            logging.debug("Payload: " + str(payload))
-            self.process_change(payload, user, repo, repo_url, project)
-        except Exception:
-            logging.error("Encountered an exception:")
-            for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
+            self.process_change(payload, user, repo, repo_url, project, request)
+            return server.NOT_DONE_YET
 
-    def process_change(self, payload, user, repo, repo_url, project):
+        except Exception, e:
+            logging.exception(e)
+            request.setResponseCode(INTERNAL_SERVER_ERROR)
+            return json.dumps({"error": e.message})
+
+    def process_change(self, payload, user, repo, repo_url, project, request):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -77,49 +130,67 @@ class GitHubBuildBot(resource.Resource):
                 Python Object that represents the JSON sent by GitHub Service
                 Hook.
         """
-
+        changes = None
         branch = payload['ref'].split('/')[-1]
 
         if payload['deleted'] is True:
-            logging.info("Branch `%s' deleted, ignoring", branch)
+            logging.info("Branch %r deleted, ignoring", branch)
         else:
-            changes = [{'revision': c['id'],
-                        'revlink': c['url'],
-                        'who': c['author']['username'] + " <" + c['author']['email'] + "> ",
-                        'comments': c['message'],
-                        'repository': payload['repository']['url'],
-                        'files': c['added'] + c['removed'] + c['modified'],
-                        'project': project,
-                        'branch': branch}
-                       for c in payload['commits']]
+            changes = []
+
+            for change in payload['commits']:
+                files = change['added'] + change['removed'] + change['modified']
+                who = "%s <%s>" % (
+                    change['author']['username'], change['author']['email'])
+
+                changes.append(
+                    {'revision': change['id'],
+                     'revlink': change['url'],
+                     'who': who,
+                     'comments': change['message'],
+                     'repository': payload['repository']['url'],
+                     'files': files,
+                     'project': project,
+                     'branch': branch})
 
         if not changes:
             logging.warning("No changes found")
+            request.setResponseCode(OK)
+            request.write(json.dumps({"result": "No changes found."}))
+            request.finish()
             return
 
         host, port = self.master.split(':')
         port = int(port)
 
-        factory = pb.PBClientFactory()
-        deferred = factory.login(credentials.UsernamePassword("change",
-                                                              "changepw"))
-        reactor.connectTCP(host, port, factory)
-        deferred.addErrback(self.connectFailed)
-        deferred.addCallback(self.connected, changes)
+        if self.auth is not None:
+            auth = credentials.UsernamePassword(*self.auth.split(":"))
+        else:
+            auth = credentials.Anonymous()
 
-    def connectFailed(self, error):
+        factory = pb.PBClientFactory()
+        deferred = factory.login(auth)
+        reactor.connectTCP(host, port, factory)
+        deferred.addErrback(self.connectFailed, request)
+        deferred.addCallback(self.connected, changes, request)
+
+    def connectFailed(self, error, request):
         """
         If connection is failed.  Logs the error.
         """
         logging.error("Could not connect to master: %s",
                       error.getErrorMessage())
+        request.setResponseCode(INTERNAL_SERVER_ERROR)
+        request.write(
+            json.dumps({"error": "Failed to connect to buildbot master."}))
+        request.finish()
         return error
 
-    def addChange(self, dummy, remote, changei, src='git'):
+    def addChange(self, _, remote, changei, src='git'):
         """
         Sends changes from the commit to the buildmaster.
         """
-        logging.debug("addChange %s, %s", repr(remote), repr(changei))
+        logging.debug("addChange %r, %r", remote, changei)
         try:
             change = changei.next()
         except StopIteration:
@@ -135,10 +206,17 @@ class GitHubBuildBot(resource.Resource):
         deferred.addCallback(self.addChange, remote, changei, src)
         return deferred
 
-    def connected(self, remote, changes):
+    def connected(self, remote, changes, request):
         """
         Responds to the connected event.
         """
+        # By this point we've connected to buildbot so
+        # we don't really need to keep github waiting any
+        # longer
+        request.setResponseCode(ACCEPTED)
+        request.write(json.dumps({"result": "Submitting changes."}))
+        request.finish()
+
         return self.addChange(None, remote, changes.__iter__())
 
 
@@ -150,54 +228,70 @@ def setup_options():
     parser = OptionParser(usage)
 
     parser.add_option("-p", "--port",
-                      help="Port the HTTP server listens to for the GitHub Service Hook"
-                      + " [default: %default]", default=9001, type=int, dest="port")
+                      help="Port the HTTP server listens to for the GitHub "
+                           "Service Hook [default: %default]",
+                      default=9001, type=int, dest="port")
 
     parser.add_option("-m", "--buildmaster",
-                      help="Buildbot Master host and port. ie: localhost:9989 [default:"
-                      + " %default]", default="10.108.0.6:9989", dest="buildmaster")
+                      help="Buildbot Master host and port. ie: localhost:9989 "
+                           "[default: %default]",
+                      default="localhost:9989", dest="buildmaster")
+
+    parser.add_option("--auth",
+                      help="The username and password, separated by a colon, "
+                           "to use when connecting to buildbot over the "
+                           "perspective broker.",
+                      default="change:changepw", dest="auth")
+
+    parser.add_option("--secret",
+                      help="If provided then use the X-Hub-Signature header "
+                           "to verify that the request is coming from "
+                           "github. [default: %default]",
+                      default=None, dest="secret")
 
     parser.add_option("-l", "--log",
-                      help="The absolute path, including filename, to save the log to"
-                      + " [default: %default]",
-                      default=tempfile.gettempdir() + "/github_buildbot.log",
-                      dest="log")
+                      help="The absolute path, including filename, to save the "
+                           "log to [default: %default].  This may also be "
+                           "'stdout' indicating logs should output directly to "
+                           "standard output instead.",
+                      default="github_buildbot.log", dest="log")
 
     parser.add_option("-L", "--level",
-                      help="The logging level: debug, info, warn, error, fatal [default:"
-                      + " %default]", default='warn', dest="level")
+                      help="The logging level: debug, info, warn, error, "
+                           "fatal [default: %default]", default='warn',
+                      dest="level",
+                      choices=("debug", "info", "warn", "error", "fatal"))
 
     parser.add_option("-g", "--github",
-                      help="The github server.  Changing this is useful if you've specified"
-                      + "  a specific HOST handle in ~/.ssh/config for github "
-                      + "[default: %default]", default='github.com',
-                      dest="github")
+                      help="The github server.  Changing this is useful if"
+                           " you've specified a specific HOST handle in "
+                           "~/.ssh/config for github [default: %default]",
+                      default='github.com', dest="github")
 
     parser.add_option("--pidfile",
-                      help="Write the process identifier (PID) to this file on start."
-                      +
-                      " The file is removed on clean exit. [default: %default]",
-                      default=None,
-                      dest="pidfile")
+                      help="Write the process identifier (PID) to this "
+                           "file on start. The file is removed on clean "
+                           "exit. [default: %default]",
+                      default=None, dest="pidfile")
 
     (options, _) = parser.parse_args()
+
+    if options.auth is not None and ":" not in options.auth:
+        parser.error("--auth did not contain ':'")
 
     if options.pidfile:
         with open(options.pidfile, 'w') as f:
             f.write(str(os.getpid()))
 
-    levels = {
-        'debug': logging.DEBUG,
-        'info': logging.INFO,
-        'warn': logging.WARNING,
-        'error': logging.ERROR,
-        'fatal': logging.FATAL,
-    }
-
     filename = options.log
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(filename=filename, format=log_format,
-                        level=levels[options.level])
+    if options.log != "stdout":
+        logging.basicConfig(filename=filename, format=log_format,
+                            level=logging._levelNames[options.level.upper()])
+    else:
+        logging.basicConfig(format=log_format,
+                            handlers=[logging.StreamHandler(stream=sys.stdout)],
+                            level=logging._levelNames[options.level.upper()])
 
     return options
 
@@ -206,6 +300,8 @@ def run_hook(options):
     github_bot = GitHubBuildBot()
     github_bot.github = options.github
     github_bot.master = options.buildmaster
+    github_bot.secret = options.secret
+    github_bot.auth = options.auth
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
