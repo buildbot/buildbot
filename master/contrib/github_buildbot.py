@@ -131,15 +131,22 @@ class GitHubBuildBot(resource.Resource):
         if payload['deleted'] is True:
             logging.info("Branch %r deleted, ignoring", branch)
         else:
-            changes = [{'revision': c['id'],
-                        'revlink': c['url'],
-                        'who': c['author']['username'] + " <" + c['author']['email'] + "> ",
-                        'comments': c['message'],
-                        'repository': payload['repository']['url'],
-                        'files': c['added'] + c['removed'] + c['modified'],
-                        'project': project,
-                        'branch': branch}
-                       for c in payload['commits']]
+            changes = []
+
+            for change in payload['commits']:
+                files = change['added'] + change['removed'] + change['modified']
+                who = "%s <%s>" % (
+                    change['author']['username'], change['author']['email'])
+
+                changes.append(
+                    {'revision': change['id'],
+                     'revlink': change['url'],
+                     'who': who,
+                     'comments': change['message'],
+                     'repository': payload['repository']['url'],
+                     'files': files,
+                     'project': project,
+                     'branch': branch})
 
         if not changes:
             logging.warning("No changes found")
