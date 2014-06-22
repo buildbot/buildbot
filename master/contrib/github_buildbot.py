@@ -108,7 +108,7 @@ class GitHubBuildBot(resource.Resource):
             if project:
                 project = project[0]
             logging.debug("Payload: " + str(payload))
-            print self.process_change(payload, user, repo, repo_url, project, request)
+            self.process_change(payload, user, repo, repo_url, project, request)
             return server.NOT_DONE_YET
 
         except Exception, e:
@@ -148,9 +148,13 @@ class GitHubBuildBot(resource.Resource):
         host, port = self.master.split(':')
         port = int(port)
 
+        if self.auth is not None:
+            auth = credentials.UsernamePassword(*self.auth.split(":"))
+        else:
+            auth = credentials.Anonymous()
+
         factory = pb.PBClientFactory()
-        deferred = factory.login(credentials.UsernamePassword("change",
-                                                              "changepw"))
+        deferred = factory.login(auth)
         reactor.connectTCP(host, port, factory)
         deferred.addErrback(self.connectFailed, request)
         deferred.addCallback(self.connected, changes, request)
@@ -167,7 +171,7 @@ class GitHubBuildBot(resource.Resource):
         request.finish()
         return error
 
-    def addChange(self, dummy, remote, changei, src='git'):
+    def addChange(self, _, remote, changei, src='git'):
         """
         Sends changes from the commit to the buildmaster.
         """
@@ -218,6 +222,18 @@ def setup_options():
                            "[default: %default]",
                       default="localhost:9989", dest="buildmaster")
 
+    parser.add_option("--auth",
+                      help="The username and password, separated by a colon, "
+                           "to use when connecting to buildbot over the "
+                           "perspective broker.",
+                      default=None, dest="auth")
+
+    parser.add_option("--secret",
+                      help="If provided then use the X-Hub-Signature header "
+                           "to verify that the request is coming from "
+                           "github. [default: %default]",
+                      default=None, dest="secret")
+
     parser.add_option("-l", "--log",
                       help="The absolute path, including filename, to save the "
                            "log to [default: %default].  This may also be "
@@ -242,13 +258,11 @@ def setup_options():
                            "file on start. The file is removed on clean "
                            "exit. [default: %default]",
                       default=None, dest="pidfile")
-    parser.add_option("--secret",
-                      help="If provided then use the X-Hub-Signature header "
-                           "to verify that the request is coming from "
-                           "github. [default: %default]",
-                      default=None, dest="secret")
 
     (options, _) = parser.parse_args()
+
+    if options.auth is not None and ":" not in options.auth:
+        parser.error("--auth did not contain ':'")
 
     if options.pidfile:
         with open(options.pidfile, 'w') as f:
@@ -272,6 +286,7 @@ def run_hook(options):
     github_bot.github = options.github
     github_bot.master = options.buildmaster
     github_bot.secret = options.secret
+    github_bot.auth = options.auth
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
