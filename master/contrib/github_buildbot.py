@@ -13,10 +13,13 @@ trigger this webhook.
 
 """
 
+import hmac
 import logging
 import os
 import sys
 import traceback
+from hashlib import sha1
+from httplib import BAD_REQUEST
 from optparse import OptionParser
 
 from twisted.cred import credentials
@@ -49,16 +52,56 @@ class GitHubBuildBot(resource.Resource):
             request
                 the http request object
         """
-        # Reject non-push events
         event_type = request.getHeader("X-GitHub-Event")
+
+        # Reject non-push events
         if event_type != "push":
             logging.info(
                 "Rejecting request.  Expected a push even got %r instead.",
                 event_type)
-            return
+            request.setResponseCode(BAD_REQUEST)
+            return json.dumps({"error": "bad request"})
+
+        content = request.content.read()
+
+        # Verify the message if a secret was provided
+        #
+        # NOTE: We always respond with '400 BAD REQUEST' if we can't
+        # validate the message.  This is done to prevent malicious
+        # requests from learning about why they failed to POST data
+        # to us.
+        if self.secret is not None:
+            signature = request.getHeader("X-Hub-Signature")
+
+            if signature is None:
+                logging.error("Rejecting request.  Signature is missing.")
+                request.setResponseCode(BAD_REQUEST)
+                return json.dumps({"error": "bad request"})
+
+            try:
+                hash_type, hexdigest = signature.split("=")
+
+            except ValueError:
+                logging.error("Rejecting request.  Bad signature format.")
+                request.setResponseCode(BAD_REQUEST)
+                return json.dumps({"error": "bad request"})
+
+            else:
+                # sha1 is hard coded into github's source code so it's
+                # unlikely this will ever change.
+                if hash_type != "sha1":
+                    logging.error("Rejecting request.  Unexpected hash type.")
+                    request.setResponseCode(BAD_REQUEST)
+                    return json.dumps({"error": "bad request"})
+
+                mac = hmac.new(self.secret, msg=content, digestmod=sha1)
+                if mac.hexdigest() != hexdigest:
+                    logging.error("Rejecting request.  Hash mismatch.")
+                    request.setResponseCode(BAD_REQUEST)
+                    return json.dumps({"error": "bad request"})
 
         try:
-            payload = json.loads(request.content.read())
+            payload = json.loads(content)
             user = payload['pusher']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
@@ -188,6 +231,11 @@ def setup_options():
                            "file on start. The file is removed on clean "
                            "exit. [default: %default]",
                       default=None, dest="pidfile")
+    parser.add_option("--secret",
+                      help="If provided then use the X-Hub-Signature header "
+                           "to verify that the request is coming from "
+                           "github. [default: %default]",
+                      default=None, dest="secret")
 
     (options, _) = parser.parse_args()
 
@@ -212,6 +260,7 @@ def run_hook(options):
     github_bot = GitHubBuildBot()
     github_bot.github = options.github
     github_bot.master = options.buildmaster
+    github_bot.secret = options.secret
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
