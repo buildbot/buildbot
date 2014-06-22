@@ -236,7 +236,7 @@ def setup_options():
                       help="The username and password, separated by a colon, "
                            "to use when connecting to buildbot over the "
                            "perspective broker.",
-                      default=None, dest="auth")
+                      default="change:changepw", dest="auth")
 
     parser.add_option("--secret",
                       help="If provided then use the X-Hub-Signature header "
