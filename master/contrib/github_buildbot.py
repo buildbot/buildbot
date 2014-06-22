@@ -18,14 +18,13 @@ import logging
 import os
 import sys
 from hashlib import sha1
-from httplib import BAD_REQUEST, INTERNAL_SERVER_ERROR
+from httplib import BAD_REQUEST, INTERNAL_SERVER_ERROR, ACCEPTED
 from optparse import OptionParser
 
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
-from twisted.web import resource
-from twisted.web import server
+from twisted.web import resource, server
 
 try:
     import json
@@ -59,7 +58,7 @@ class GitHubBuildBot(resource.Resource):
                 "Rejecting request.  Expected a push even got %r instead.",
                 event_type)
             request.setResponseCode(BAD_REQUEST)
-            return json.dumps({"error": "bad request"})
+            return json.dumps({"error": "Bad Request."})
 
         content = request.content.read()
 
@@ -75,7 +74,7 @@ class GitHubBuildBot(resource.Resource):
             if signature is None:
                 logging.error("Rejecting request.  Signature is missing.")
                 request.setResponseCode(BAD_REQUEST)
-                return json.dumps({"error": "bad request"})
+                return json.dumps({"error": "Bad Request."})
 
             try:
                 hash_type, hexdigest = signature.split("=")
@@ -83,7 +82,7 @@ class GitHubBuildBot(resource.Resource):
             except ValueError:
                 logging.error("Rejecting request.  Bad signature format.")
                 request.setResponseCode(BAD_REQUEST)
-                return json.dumps({"error": "bad request"})
+                return json.dumps({"error": "Bad Request."})
 
             else:
                 # sha1 is hard coded into github's source code so it's
@@ -91,13 +90,13 @@ class GitHubBuildBot(resource.Resource):
                 if hash_type != "sha1":
                     logging.error("Rejecting request.  Unexpected hash type.")
                     request.setResponseCode(BAD_REQUEST)
-                    return json.dumps({"error": "bad request"})
+                    return json.dumps({"error": "Bad Request."})
 
                 mac = hmac.new(self.secret, msg=content, digestmod=sha1)
                 if mac.hexdigest() != hexdigest:
                     logging.error("Rejecting request.  Hash mismatch.")
                     request.setResponseCode(BAD_REQUEST)
-                    return json.dumps({"error": "bad request"})
+                    return json.dumps({"error": "Bad Request."})
 
         try:
             payload = json.loads(content)
@@ -109,14 +108,15 @@ class GitHubBuildBot(resource.Resource):
             if project:
                 project = project[0]
             logging.debug("Payload: " + str(payload))
-            self.process_change(payload, user, repo, repo_url, project)
+            print self.process_change(payload, user, repo, repo_url, project, request)
+            return server.NOT_DONE_YET
 
         except Exception, e:
             logging.exception(e)
             request.setResponseCode(INTERNAL_SERVER_ERROR)
             return json.dumps({"error": e.message})
 
-    def process_change(self, payload, user, repo, repo_url, project):
+    def process_change(self, payload, user, repo, repo_url, project, request):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -152,15 +152,19 @@ class GitHubBuildBot(resource.Resource):
         deferred = factory.login(credentials.UsernamePassword("change",
                                                               "changepw"))
         reactor.connectTCP(host, port, factory)
-        deferred.addErrback(self.connectFailed)
-        deferred.addCallback(self.connected, changes)
+        deferred.addErrback(self.connectFailed, request)
+        deferred.addCallback(self.connected, changes, request)
 
-    def connectFailed(self, error):
+    def connectFailed(self, error, request=None):
         """
         If connection is failed.  Logs the error.
         """
         logging.error("Could not connect to master: %s",
                       error.getErrorMessage())
+        request.setResponseCode(INTERNAL_SERVER_ERROR)
+        request.write(
+            json.dumps({"error": "Failed to connect to buildbot master."}))
+        request.finish()
         return error
 
     def addChange(self, dummy, remote, changei, src='git'):
@@ -183,10 +187,17 @@ class GitHubBuildBot(resource.Resource):
         deferred.addCallback(self.addChange, remote, changei, src)
         return deferred
 
-    def connected(self, remote, changes):
+    def connected(self, remote, changes, request):
         """
         Responds to the connected event.
         """
+        # By this point we've connected to buildbot so
+        # we don't really need to keep github waiting any
+        # longer
+        request.setResponseCode(ACCEPTED)
+        request.write(json.dumps({"result": "Submitting changes."}))
+        request.finish()
+
         return self.addChange(None, remote, changes.__iter__())
 
 
