@@ -17,7 +17,6 @@ import hmac
 import logging
 import os
 import sys
-import traceback
 from hashlib import sha1
 from httplib import BAD_REQUEST, INTERNAL_SERVER_ERROR
 from optparse import OptionParser
