@@ -19,7 +19,7 @@ import os
 import sys
 import traceback
 from hashlib import sha1
-from httplib import BAD_REQUEST
+from httplib import BAD_REQUEST, INTERNAL_SERVER_ERROR
 from optparse import OptionParser
 
 from twisted.cred import credentials
@@ -111,10 +111,11 @@ class GitHubBuildBot(resource.Resource):
                 project = project[0]
             logging.debug("Payload: " + str(payload))
             self.process_change(payload, user, repo, repo_url, project)
-        except Exception:
-            logging.error("Encountered an exception:")
-            for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
+
+        except Exception, e:
+            logging.exception(e)
+            request.setResponseCode(INTERNAL_SERVER_ERROR)
+            return json.dumps({"error": e.message})
 
     def process_change(self, payload, user, repo, repo_url, project):
         """
