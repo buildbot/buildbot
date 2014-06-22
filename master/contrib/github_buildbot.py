@@ -169,7 +169,7 @@ class GitHubBuildBot(resource.Resource):
         deferred.addErrback(self.connectFailed, request)
         deferred.addCallback(self.connected, changes, request)
 
-    def connectFailed(self, error, request=None):
+    def connectFailed(self, error, request):
         """
         If connection is failed.  Logs the error.
         """
