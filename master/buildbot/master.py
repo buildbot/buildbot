@@ -634,11 +634,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # simultaneously.  Each particular poll method handles errors itself,
         # although catastrophic errors are handled here
         d = defer.gatherResults([
-            self.pollDatabaseChanges(),
-            self.pollDatabaseBuildRequests(),
+            self.pollDatabaseChanges().addErrback(log.err,
+                "while polling changes"),
+            self.pollDatabaseBuildRequests().addErrback(log.err,
+                "while polling build requests"),
             # also unclaim
         ])
-        d.addErrback(log.err, 'while polling database')
         return d
 
     _last_processed_change = None
