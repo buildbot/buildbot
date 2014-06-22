@@ -100,6 +100,7 @@ class GitHubBuildBot(resource.Resource):
 
         try:
             payload = json.loads(content)
+            logging.debug("Payload: %r", payload)
             user = payload['pusher']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
@@ -107,7 +108,6 @@ class GitHubBuildBot(resource.Resource):
             project = request.args.get('project', None)
             if project:
                 project = project[0]
-            logging.debug("Payload: " + str(payload))
             self.process_change(payload, user, repo, repo_url, project, request)
             return server.NOT_DONE_YET
 
@@ -129,7 +129,7 @@ class GitHubBuildBot(resource.Resource):
         branch = payload['ref'].split('/')[-1]
 
         if payload['deleted'] is True:
-            logging.info("Branch `%s' deleted, ignoring", branch)
+            logging.info("Branch %r deleted, ignoring", branch)
         else:
             changes = [{'revision': c['id'],
                         'revlink': c['url'],
@@ -175,7 +175,7 @@ class GitHubBuildBot(resource.Resource):
         """
         Sends changes from the commit to the buildmaster.
         """
-        logging.debug("addChange %s, %s", repr(remote), repr(changei))
+        logging.debug("addChange %r, %r", remote, changei)
         try:
             change = changei.next()
         except StopIteration:
