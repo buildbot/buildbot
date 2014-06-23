@@ -301,16 +301,15 @@ class BuilderStatus(styles.Versioned):
     def getSlaves(self):
         return [self.status.getSlave(name) for name in self.slavenames]
 
+    @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self):
         db = self.status.master.db
-        d = db.buildrequests.getBuildRequests(claimed=False,
-                                              buildername=self.name)
-        def make_statuses(brdicts):
-            return [BuildRequestStatus(self.name, brdict['brid'],
-                                       self.status)
-                    for brdict in brdicts]
-        d.addCallback(make_statuses)
-        return d
+
+        brdicts = yield db.buildrequests.getBuildRequests(claimed=False,
+                                             buildername=self.name)
+
+        result = [BuildRequestStatus(self.name, brdict['brid'],self.status) for brdict in brdicts]
+        defer.returnValue(result)
 
     def foundCodebasesInBuild(self, build, codebases):
         if len(codebases) > 0:
@@ -636,13 +635,19 @@ class BuilderStatus(styles.Versioned):
     def asDict_async(self, codebases={}, request=None, base_build_dict=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
         result = self.asDict(codebases, request, base_build_dict)
-        builds =  yield self.getPendingBuildRequestStatuses()
+        builds = yield self.getPendingBuildRequestStatuses()
 
         #Remove builds not within this codebase
         count = 0
+        defers = []
         if len(codebases) > 0:
             for b in builds:
-                in_codebase = yield self.foundCodebasesInBuildRequest(b, codebases)
+                de = self.foundCodebasesInBuildRequest(b, codebases)
+                defers.append(de)
+
+            #Allow the defers to run async
+            for d in defers:
+                in_codebase = yield d
                 if in_codebase:
                     count += 1
         else:

@@ -742,10 +742,15 @@ class SingleProjectJsonResource(JsonResource):
         encoding = getRequestCharset(request)
         branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
+        defers = []
         for name in self.children:
             child = self.getChildWithDefault(name, request)
-            d = yield child.asDict(request, codebases, branches, True)
-            result['builders'].append(d)
+            d = child.asDict(request, codebases, branches, True)
+            defers.append(d)
+
+        for d in defers:
+            r = yield d
+            result['builders'].append(r)
 
         defer.returnValue(result)
 
@@ -801,10 +806,16 @@ class QueueJsonResource(JsonResource):
 
         #Convert to dictionary
         output = []
+        defers = []
         for br_dict in unclaimed_brq:
             br = BuildRequestStatus(br_dict['buildername'], br_dict['brid'], self.status)
-            d = yield br.asDict_async()
-            output.append(d)
+            d = br.asDict_async()
+            defers.append(d)
+
+        #Call the yield after to run async calls
+        for d in defer:
+            r = yield d
+            output.append(r)
 
         defer.returnValue(output)
 
