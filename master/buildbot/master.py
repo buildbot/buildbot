@@ -40,7 +40,8 @@ from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.db import exceptions
-from buildbot.mq import connector as mqconnector
+# from buildbot.mq import connector as mqconnector
+from buildbot.mq import kombuMQ
 from buildbot.process import cache
 from buildbot.process import debug
 from buildbot.process import metrics
@@ -156,8 +157,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.db = dbconnector.DBConnector(self, self.basedir)
         self.db.setServiceParent(self)
 
-        self.mq = mqconnector.MQConnector(self)
-        self.mq.setServiceParent(self)
+        # self.mq = mqconnector.MQConnector(self)
+        # self.mq.setServiceParent(self)
+        self.mq = kombuMQ.KombuMQ()
 
         self.data = dataconnector.DataConnector(self)
         self.data.setServiceParent(self)
@@ -231,7 +233,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 _reactor.stop()
                 return
 
-            self.mq.setup()
+            # self.mq.setup()
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):

@@ -391,11 +391,12 @@ class MasterConfig(util.ComparableMixin):
             del self.db['db_poll_interval']
 
     def load_mq(self, filename, config_dict):
-        from buildbot.mq import connector  # avoid circular imports
+        # from buildbot.mq import connector  # avoid circular imports
+        from buildbot.mq import kombuMQ
         if 'mq' in config_dict:
             self.mq.update(config_dict['mq'])
 
-        classes = connector.MQConnector.classes
+        classes = kombuMQ.KombuMQ.classes
         typ = self.mq.get('type', 'simple')
         if typ not in classes:
             error("mq type '%s' is not known" % (typ,))
