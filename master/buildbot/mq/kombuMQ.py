@@ -17,23 +17,6 @@ import pprint
 import kombu
 import kombu.async
 import amqp.exceptions
-<<<<<<< HEAD
-import multiprocessing
-
-from buildbot import config
-from buildbot.mq import base
-from buildbot.util import datetime2epoch
-from datetime import datetime
-from kombu.transport.base import Message
-from twisted.python import log
-
-
-class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
-
-    def __init__(self, master, conn='librabbitmq://guest:guest@localhost//'):
-        # connection is a string and its default value:
-        base.MQBase.__init__(self, master)
-=======
 import threading
 import thread
 
@@ -136,7 +119,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         try:
             queue = self.queues[key]
         except:
-            thread.start_new_thread(self.regeristyQueue, (key,))
+            thread.start_new_thread(self.registerQueue, (key,))
             log.msg(str(self.queues.keys()))
             log.msg(key)
             try:
@@ -146,15 +129,16 @@ class KombuMQ(config.ReconfigurableServiceMixin):
 
         if key in self.consumers.keys():
             log.msg(
-                "WARNNING: Consumer's Routing Key %s has been used by, " % key +                "regeristy failed")
+                "WARNNING: Consumer's Routing Key %s has been used by, " % key +
+                "register failed")
             if callback in self.consumers[key].callbacks:
                 log.msg(
-                    "WARNNING: Consumer %s has been regeristy to callback %s "
+                    "WARNNING: Consumer %s has been register to callback %s "
                      % (key, callback))
             else:
                 self.consumers[key].register_callback(callback)
         else:
-            self.regeristyConsumer(key, callback)
+            self.registerConsumer(key, callback)
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's format
