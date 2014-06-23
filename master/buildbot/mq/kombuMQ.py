@@ -24,6 +24,8 @@ from buildbot import config
 from buildbot.mq import base
 from twisted.python import log
 from kombu.transport.base import Message
+from datetime import datetime
+
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
@@ -128,14 +130,15 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             if callback in self.consumers[key].callbacks:
                 log.msg(
                     "WARNNING: Consumer %s has been register to callback %s "
-                     % (key, callback))
+                    % (key, callback))
             else:
                 self.consumers[key].register_callback(callback)
         else:
             self.registerConsumer(key, callback)
 
     def formatKey(self, key):
-        # transform key from a tuple to a string with standard routing key's format
+        # transform key from a tuple to a string with standard routing key's
+        # format
         result = ""
         for item in key:
             if item == None:
@@ -145,6 +148,14 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
         return result[:-1]
 
+    def formatData(self, data):
+        from buildbot.util import datetime2epoch
+        for item in data:
+            if type(data[item]) == datetime:
+                data[item] = datetime2epoch(data[item])
+
+        return data
+
     def __exit__(self):
         self.message_hub.__exit__()
         for queue in self.queues:
@@ -152,7 +163,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         self.exchange.delete(nowait=True)
         self.conn.release()
 
+
 class KombuHub(threading.Thread):
+
     """Message hub to handle message asynchronously by start a another thread"""
 
     def __init__(self, conn):
