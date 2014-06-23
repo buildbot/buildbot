@@ -69,7 +69,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                                                  new_config)
 
-    def regeristyQueue(self, key, name=None, durable=False):
+    def registerQueue(self, key, name=None, durable=False):
         if name == None:
             name = key
         if self._checkKey(key) == True:
@@ -80,7 +80,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
             self.queues[name].declare()
         else:
             log.msg(
-                "ERROR: Routing Key %s has been used by, regeristy queue failed" % key)
+                "ERROR: Routing Key %s has been used by, register queue failed" % key)
             raise Exception("ERROR: Routing Key %s has been used" % key)
             # NOTE(damon) should raise an exception here?
 
@@ -99,7 +99,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         self.producer.publish(message.body, routing_key=key)
         # TODO(damon) default serializer is JSON, it doesn't support python's datetime
 
-    def regeristyConsumer(self, queues_name, callback, name=None, durable=False):
+    def registerConsumer(self, queues_name, callback, name=None, durable=False):
         # queues_name can be a list of queues' names or one queue's name
         # (list of strings or one string)
         if name == None:
@@ -127,7 +127,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         try:
             queue = self.queues[key]
         except:
-            thread.start_new_thread(self.regeristyQueue, (key,))
+            thread.start_new_thread(self.registerQueue, (key,))
             log.msg(str(self.queues.keys()))
             log.msg(key)
             try:
@@ -137,15 +137,16 @@ class KombuMQ(config.ReconfigurableServiceMixin):
 
         if key in self.consumers.keys():
             log.msg(
-                "WARNNING: Consumer's Routing Key %s has been used by, " % key +                "regeristy failed")
+                "WARNNING: Consumer's Routing Key %s has been used by, " % key +
+                "register failed")
             if callback in self.consumers[key].callbacks:
                 log.msg(
-                    "WARNNING: Consumer %s has been regeristy to callback %s "
+                    "WARNNING: Consumer %s has been register to callback %s "
                      % (key, callback))
             else:
                 self.consumers[key].register_callback(callback)
         else:
-            self.regeristyConsumer(key, callback)
+            self.registerConsumer(key, callback)
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's format
