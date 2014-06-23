@@ -53,7 +53,7 @@ def patch_bug4881():
 def patch_bug4520():
     # this bug was patched in twisted-11.1.0, and only affects py26 and up
     py_26 = (sys.version_info[0] > 2 or
-            (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
+             (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
     if twisted.version < versions.Version('twisted', 11, 1, 0) and py_26:
         from buildbot.monkeypatches import bug4520
         bug4520.patch()
@@ -138,6 +138,13 @@ def patch_decorators():
     decorators.patch()
 
 
+@onlyOnce
+def patch_LoopingCall_reset():
+    if twisted.version.major == 11 and twisted.version.minor == 0:
+        from buildbot.monkeypatches import loopingcall_reset
+        loopingcall_reset.patch()
+
+
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
@@ -153,3 +160,4 @@ def patch_all(for_tests=False):
     patch_sqlalchemy2189()
     patch_gatherResults()
     patch_python14653()
+    patch_LoopingCall_reset()
