@@ -1,66 +1,153 @@
-/*global define, requirejs*/
-define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements'], function ($, helpers, form, popups, Mustache, timeElements) {
+/*global define, requirejs, jQuery*/
+define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements', 'toastr'], function ($, helpers, form, popups, Mustache, timeElements, toastr) {
 
     "use strict";
+
+    var $body = $("body");
+
+    // Extend our jquery object with popup widget
+    (function ($) {
+
+        $.fn.popup = function (options) {
+            var $elem = $(this);
+            var opts = $.extend({}, $.fn.popup.defaults, options);
+            $elem.settings = opts;
+
+            var privateFunc = {
+                init: function () {
+                    privateFunc.clear();
+                    if (privateFunc.createHTML()) {
+                        opts.onCreate($elem);
+
+                        if (opts.autoShow) {
+                            $elem.ready(function () {
+                                privateFunc.showPopup();
+                            });
+                        }
+                    }
+                },
+                createHTML: function () {
+                    $elem.addClass("more-info-box more-info-box-js").
+                        append("<span class='close-btn'></span>").
+                        append(opts.title).
+                        attr("data-ui-popup", true);
+
+                    if (opts.url) {
+                        $.ajax(opts.url).
+                            done(function (data) {
+                                $elem.append(data);
+                                opts.onCreate($elem);
+                                privateFunc.showPopup();
+                            });
+
+                        return false;
+                    }
+
+                    $elem.append($("<div/>").html(opts.html));
+                    return true;
+                },
+                clear: function () {
+                    if ($elem.attr("data-ui-popup") === "true") {
+                        if (opts.destroyAfter) {
+                            $elem.remove();
+                        } else {
+                            $elem.empty();
+                        }
+                    }
+                },
+                showPopup: function () {
+                    if (opts.center) {
+                        setTimeout(function () {
+                            helpers.jCenter($elem);
+                            $(window).resize(function () {
+                                helpers.jCenter($elem);
+                            });
+                        }, 50);
+                    }
+
+                    if (opts.animate) {
+                        $elem.fadeIn(opts.showAnimation, function () {
+                            privateFunc.initCloseButton();
+                            opts.onShow($elem);
+                        });
+                    } else {
+                        $elem.show({
+                            complete: function () {
+                                opts.onShow($elem);
+                                privateFunc.initCloseButton();
+                            }
+                        });
+                    }
+                },
+                hidePopup: function () {
+                    if (opts.animate) {
+                        $elem.fadeOut(opts.hideAnimation, function () {
+                            privateFunc.clear();
+                            opts.onHide($elem);
+                        });
+                    } else {
+                        $elem.hide();
+                        privateFunc.clear();
+                        opts.onHide($elem);
+                    }
+                },
+                initCloseButton: function () {
+                    //Hide when clicking document or close button clicked
+                    $(document).bind("click touchstart", function (e) {
+                        if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
+                            privateFunc.hidePopup();
+                            $(this).unbind(e);
+                        }
+                    });
+                }
+            };
+
+            $elem.showPopup = function () {
+                privateFunc.showPopup();
+            };
+
+            $elem.hidePopup = function () {
+                privateFunc.hidePopup();
+            };
+
+            //Initialise the popup on this element
+            return $elem.each(function () {
+                privateFunc.init();
+                opts.initalized = true;
+            });
+        };
+
+        $.fn.popup.defaults = {
+            title: "<h3>Katana Popup</h3>",
+            html: undefined,
+            url: undefined,
+            destroyAfter: false,
+            autoShow: true,
+            center: true,
+            animate: true,
+            showAnimation: "fast",
+            hideAnimation: "fast",
+            onCreate: function ($elem) {
+                return undefined;
+            },
+            onShow: function ($elem) {
+                return undefined;
+            },
+            onHide: function ($elem) {
+                return undefined;
+            }
+        };
+    }(jQuery));
+
+
     var popup;
 
     popup = {
         init: function () {
-
-            //For non ajax boxes
-            var $tableSorterRt = $('#tablesorterRt');
-            popup.registerJSONPopup($tableSorterRt);
-
-            $('.popup-btn-js-2').click(function (e) {
-                e.preventDefault();
-                popup.nonAjaxPopup($(this));
-            });
-
-            $tableSorterRt.delegate('.popup-btn-js', 'click', function (e) {
-                e.preventDefault();
-                var currentUrl = document.URL;
-                var parser = document.createElement('a');
-                parser.href = currentUrl;
-                var builder_name = encodeURIComponent($(this).attr('data-builderName'));
-                var url = "{0}//{1}/json/pending/{2}/?".format(parser.protocol, parser.host, builder_name);
-                var urlParams = helpers.codebasesFromURL({});
-                var paramsString = helpers.urlParamsToString(urlParams);
-
-                popup.pendingJobs(url + paramsString);
-            });
-
             // Display the codebases form in a popup
-            $('#getBtn').click(function (e) {
-                e.preventDefault();
-                popup.codebasesBranches();
-            });
-
-            // popbox for ajaxcontent
-            $tableSorterRt.delegate('.ajaxbtn', 'click', function (e) {
-                e.preventDefault();
-                popup.externalContentPopup($(this));
-            });
-
-            $('.ajaxbtn').click(function (e) {
-                e.preventDefault();
-                popup.externalContentPopup($(this));
-            });
-
-        }, showjsonPopup: function (jsonObj) {
-            var mustacheTmpl = Mustache.render(popups, jsonObj);
-            var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true}, {partial: mustacheTmpl}));
-
-            $('body').append(mustacheTmplShell);
-
-            if (jsonObj.showRunningBuilds != undefined) {
-                helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));
-            }
-
-            helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                helpers.closePopup(mustacheTmplShell);
-            });
-
-        }, validateForm: function (formContainer) { // validate the forcebuildform
+            popup.initCodebaseBranchesPopup($("#codebasesBtn"));
+        },
+        validateForm: function (formContainer) { // validate the forcebuildform
             var formEl = $('.command_forcebuild', formContainer);
             var excludeFields = ':button, :hidden, :checkbox, :submit';
             $('.grey-btn', formEl).click(function (e) {
@@ -95,211 +182,250 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     e.preventDefault();
                 }
             });
-        }, nonAjaxPopup: function (thisEl) {
-            var clonedInfoBox = thisEl.next($('.more-info-box-js')).clone();
-            clonedInfoBox.appendTo($('body'));
-            helpers.jCenter(clonedInfoBox).fadeIn('fast', function () {
-                helpers.closePopup(clonedInfoBox);
-            });
-            $(window).resize(function () {
-                helpers.jCenter(clonedInfoBox);
-            });
-
         },
-        pendingJobs: function (url) {
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
+        initJSONPopup: function (jsonPopupElem, data) {
+            var $jsonPopupElem = $(jsonPopupElem);
 
-            $('body').append(preloader).show();
-
-            $.ajax({
-                url: url,
-                cache: false,
-                dataType: "json",
-
-                success: function (data) {
-                    preloader.remove();
-                    var mustacheTmpl = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelAllbuilderURL: data[0].builderURL});
-                    var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true}, {partial: mustacheTmpl}));
-                    var waitingtime = mustacheTmplShell.find('.waiting-time-js');
-                    waitingtime.each(function (i) {
-                        timeElements.addElapsedElem($(this), data[i].submittedAt);
-                        timeElements.updateTimeObjects();
-                    });
-
-                    mustacheTmplShell.find('form').ajaxForm({
-                        success: function (data, text, xhr, $form) {
-                            requirejs(['realtimePages'], function (realtimePages) {
-                                setTimeout(function () {
-                                    var name = "builders";
-                                    realtimePages.updateSingleRealTimeData(name, data);
-                                }, 300);
-                            });
-
-                            var cancelAll = $form.attr("id") === "cancelall";
-                            if (cancelAll) {
-                                $form.parent().remove();
-
-                            }
-
-                            if (cancelAll || mustacheTmplShell.find('li').length === 1) {
-                                mustacheTmplShell.remove();
-                            }
+            $jsonPopupElem.click(function (e) {
+                e.preventDefault();
+                var html = Mustache.render(popups, data);
+                $body.append($("<div/>").popup({
+                    title: "",
+                    html: html,
+                    onShow: function () {
+                        if (data.showRunningBuilds !== undefined) {
+                            helpers.delegateToProgressBar($('div.more-info-box-js div.percent-outer-js'));
                         }
-                    });
-
-                    mustacheTmplShell.appendTo('body');
-                    helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                        helpers.closePopup(mustacheTmplShell);
-                    });
-                }
+                        timeElements.updateTimeObjects();
+                    }
+                }));
             });
-        }, codebasesBranches: function () {
+        },
+        initCodebaseBranchesPopup: function (codebaseElem) {
+            var $codebaseElem = $(codebaseElem),
+                codebasesURL = $codebaseElem.attr("data-codebases-url");
 
-            var path = $('#pathToCodeBases').attr('href');
+            $codebaseElem.click(function (event) {
+                event.preventDefault();
 
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
+                //TODO: Remove this
+                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+                var preloader = $(mustacheTmpl);
+                $('body').append(preloader).show();
 
-            $('body').append(preloader).show();
-            var mib = popup.htmlModule('Select branches');
+                $.get(codebasesURL).
+                    done(function (html) {
+                        preloader.remove();
+                        requirejs(['selectors'], function (selectors) {
+                            var fw = $(html).find('#formWrapper');
+                            fw.children('#getForm').attr('action', window.location.href);
+                            fw.find('.blue-btn[type="submit"]').val('Update');
 
-            $(mib).appendTo('body');
 
+                            $body.append($("<div/>").popup({
+                                title: $('<h3 class="codebases-head" />').html("Select Branches"),
+                                html: fw,
+                                destroyAfter: true,
+                                onShow: function ($elem) {
+                                    selectors.init();
+                                    helpers.jCenter($elem);
+                                    $(window).resize(function () {
+                                        helpers.jCenter($elem);
+                                    });
+                                }
+                            }));
+                        });
+                    });
+            });
+        },
+        initPendingPopup: function (pendingElem) {
+            var $pendingElem = $(pendingElem),
+                builder_name = encodeURIComponent($pendingElem.attr('data-builderName')),
+                urlParams = helpers.codebasesFromURL({}),
+                paramsString = helpers.urlParamsToString(urlParams),
+                url = "/json/pending/{0}/?{1}".format(builder_name, paramsString);
 
-            $.get(path)
-                .done(function (data) {
-                    require(['selectors'], function (selectors) {
+            function openPopup() {
+                // TODO: Remove this
+                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+                var preloader = $(mustacheTmpl);
+                $('body').append(preloader).show();
 
-                        var formContainer = $('#content1');
+                $.ajax({
+                    url: url,
+                    cache: false,
+                    dataType: "json",
+                    success: function (data) {
                         preloader.remove();
 
-                        var fw = $(data).find('#formWrapper');
-                        fw.children('#getForm').attr('action', window.location.href);
-                        var blueBtn = fw.find('.blue-btn[type="submit"]').val('Update');
+                        var cancelURL = data[0].builderURL;
+                        var properties = "";
+                        if (cancelURL.indexOf("?") > -1) {
+                            var split = cancelURL.split("?");
+                            properties += split[1] + "&";
+                            cancelURL = split[0];
+                        }
 
+                        properties += "returnpage=builders_json";
+                        cancelURL = "{0}/cancelbuild?{1}".format(cancelURL, properties);
 
-                        fw.appendTo(formContainer);
+                        var html = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelURL: cancelURL});
 
-                        helpers.jCenter(mib).fadeIn('fast', function () {
-                            selectors.init();
-                            blueBtn.focus();
-                            helpers.closePopup(mib);
+                        $body.append($("<div/>").popup({
+                            html: html,
+                            destroyAfter: true,
+                            onCreate: function ($elem) {
+                                var waitingtime = $elem.find('.waiting-time-js');
+                                waitingtime.each(function (i) {
+                                    timeElements.addElapsedElem($(this), data[i].submittedAt);
+                                    timeElements.updateTimeObjects();
+                                });
 
-                        });
+                                $elem.find('form').ajaxForm({
+                                    success: function (data, text, xhr, $form) {
+                                        requirejs(['realtimePages'], function (realtimePages) {
+                                            setTimeout(function () {
+                                                var name = "builders";
+                                                realtimePages.updateSingleRealTimeData(name, data);
+                                            }, 300);
+                                        });
 
-                        $(window).resize(function () {
-                            helpers.jCenter(mib);
-                        });
+                                        var cancelAll = $form.attr("id") === "cancelall";
+                                        if (!cancelAll) {
+                                            $form.parent().remove();
+                                        }
 
-                    });
-                });
-        },
-        customTabs: function () { // tab list for custom build
-            $('.tabs-list li').click(function (i) {
-                var indexLi = $(this).index();
-                $(this).parent().find('li').removeClass('selected');
-                $(this).addClass('selected');
-                $('.content-blocks > div').each(function (i) {
-                    if ($(this).index() != indexLi) {
-                        $(this).hide();
-                    } else {
-                        $(this).show();
+                                        if (cancelAll || $elem.find('li').length === 1) {
+                                            $elem.hidePopup();
+                                        }
+                                    }
+                                });
+                            }
+                        }));
                     }
                 });
+            }
 
+            $pendingElem.click(function (event) {
+                event.preventDefault();
+                openPopup();
             });
-        }, externalContentPopup: function (thisEl) { // custom buildpopup on builder and builders
-            var popupTitle = '<h2 class="small-head">' + thisEl.attr('data-popuptitle') + '</h2>';
-            var datab = thisEl.attr('data-b');
-            var dataindexb = thisEl.attr('data-indexb');
-            var dataReturnPage = thisEl.attr('data-returnpage');
-            var rtUpdate = thisEl.attr('data-rt_update');
-            var contentType = thisEl.attr('data-contenttype');
-            var builder_name = thisEl.attr('data-b_name');
-            var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-            var preloader = $(mustacheTmpl);
+        },
+        initRunBuild: function (customBuildElem, instantBuildElem) {
+            var $customBuild = $(customBuildElem),
+                $instantBuild = $(instantBuildElem);
 
-            var mustacheTmplTxt = '<h2 class="small-head">Your build will show up soon</h2>';
-            var mustacheTmplShell = $(Mustache.render(popups, {MoreInfoBoxOuter: true, popUpClass: 'green'}, {partial: mustacheTmplTxt}));
+            if ($customBuild.length === 0) {
+                //Bailing early as we didn't find our elements
+                return;
+            }
 
-            var body = $('body');
-            body.append(preloader);
+            function openPopup(instantBuild) {
+                var builderURL = $customBuild.attr('data-builder-url'),
+                    dataReturnPage = $customBuild.attr('data-return-page'),
+                    builderName = $customBuild.attr('data-builder-name'),
+                    title = $customBuild.attr('data-popup-title'),
+                    url = location.protocol + "//" + location.host + "/forms/forceBuild",
+                    urlParams = helpers.codebasesFromURL({builder_url: builderURL, builder_name: builderName, return_page: dataReturnPage});
 
-            var mustacheTmplMib = $(Mustache.render(popups, {MoreInfoBoxOuter: true}, {partial: popupTitle}));
 
-            mustacheTmplMib.append($('<div id="content1"></div>')).appendTo(body);
+                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
+                var $preloader = $(mustacheTmpl); //TODO: Move elsewhere
+                $body.append($preloader);
+                $preloader.show();
 
-            //get all branches
-            var urlParams = {rt_update: rtUpdate, datab: datab, dataindexb: dataindexb, builder_name: builder_name, returnpage: dataReturnPage};
-            var sPageURL = window.location.search.substring(1);
-            var sURLVariables = sPageURL.split('&');
-            $.each(sURLVariables, function (index, val) {
-                var sParameterName = val.split('=');
-                if (sParameterName[0].indexOf("_branch") >= 0) {
-                    urlParams[sParameterName[0]] = sParameterName[1];
-                }
-            });
-
-            // get currentpage with url parameters
-            var url = location.protocol + "//" + location.host + "/forms/forceBuild";
-            $.get(url, urlParams).done(function (data) {
-                var exContent = $('#content1');
-                preloader.remove();
-                $(data).appendTo(exContent);
-
-                helpers.tooltip(exContent.find($('.tooltip')));
-                // Insert full name from cookie
-                if (contentType === 'form') {
-                    popup.validateForm(exContent);
-                }
-
-                helpers.jCenter(mustacheTmplMib).fadeIn('fast');
-                $(window).resize(function () {
-                    helpers.jCenter(mustacheTmplMib);
-                });
-                // popup.customTabs();
-                helpers.closePopup(mustacheTmplMib);
-
-                if (dataReturnPage !== undefined) {
-                    exContent.find('form').ajaxForm({
-                        beforeSubmit: function () {
-                            body.append(mustacheTmplShell);
-
-                            helpers.jCenter(mustacheTmplShell).fadeIn('fast', function () {
-                                helpers.closePopup($(this));
-                                $(this).delay(1500).fadeOut('fast', function () {
-                                    $(this).remove();
-                                });
-                            });
-
-                            exContent.closest('.more-info-box').find('.close-btn').click();
-                        },
-                        success: function (data) {
-                            requirejs(['realtimePages'], function (realtimePages) {
-                                mustacheTmplShell.remove();
-                                var name = dataReturnPage.replace("_json", "");
-                                realtimePages.updateSingleRealTimeData(name, data);
-                            });
-                        }
+                function errorCreatingBuild() {
+                    toastr.error('There was an error when creating your build please try again later', 'Error', {
+                        iconClass: 'failure'
                     });
                 }
+
+                $.get(url, urlParams)
+                    .done(function (html) {
+                        // Create popup
+                        var $popup = $("<div/>").popup({
+                            title: $('<h2 class="small-head" />').html(title),
+                            html: html,
+                            destroyAfter: true,
+                            autoShow: false,
+                            onCreate: function ($elem) {
+                                popup.validateForm($elem);
+
+                                //Setup AJAX form and instant builds
+                                var $form = $elem.find('form'),
+                                    formOptions = {
+                                        beforeSubmit: function () {
+                                            $elem.hidePopup();
+                                            $preloader.show();
+                                        },
+                                        success: function (data) {
+                                            requirejs(['realtimePages'], function (realtimePages) {
+                                                var name = dataReturnPage.replace("_json", "");
+                                                realtimePages.updateSingleRealTimeData(name, data);
+                                            });
+                                            $preloader.remove();
+
+                                            toastr.info('Your build will start shortly', 'Info', {
+                                                iconClass: 'info'
+                                            });
+                                        },
+                                        error: function () {
+                                            $preloader.remove();
+                                            errorCreatingBuild();
+                                        }
+                                    };
+
+                                $form.ajaxForm(formOptions);
+
+                                if (instantBuild) {
+                                    $form.ajaxSubmit(formOptions);
+                                }
+                            }
+                        });
+
+                        $body.append($popup);
+                        if (!instantBuild) {
+                            $popup.showPopup();
+                        }
+                    })
+                    .fail(function () {
+                        errorCreatingBuild();
+                    })
+                    .always(function () {
+                        $preloader.hide();
+                    });
+            }
+
+            $customBuild.click(function (event) {
+                event.preventDefault();
+                openPopup(false);
             });
 
-        }, htmlModule: function (headLine) { // html chunks
-            var mib =
-                $('<div class="more-info-box remove-js">' +
-                    '<span class="close-btn"></span>' +
-                    '<h3 class="codebases-head">' + headLine + '</h3>' +
-                    '<div id="content1"></div></div>');
-
-            return mib;
+            $instantBuild.click(function (event) {
+                event.preventDefault();
+                openPopup(true);
+            });
         },
-        registerJSONPopup: function ($parentElem) {
-            $parentElem.delegate('a.popup-btn-json-js', 'click', function (e) {
-                e.preventDefault();
-                popup.showjsonPopup($(this).data());
-                timeElements.updateTimeObjects();
+        initArtifacts: function (artifactList, artifactElem) {
+            var $artifactElem = $(artifactElem);
+
+            $artifactElem.click(function (event) {
+                event.preventDefault();
+
+                var html = "";
+                if (artifactList !== undefined) {
+                    $.each(artifactList, function (name, url) {
+                        html += '<li class="artifact-js"><a target="_blank" href="{1}">{0}</a></li>'.format(name, url);
+                    });
+                    html = $('<ul/>').addClass("builders-list").html(html);
+                    var $popup = $("<div/>").popup({
+                        title: "<h3>Artifacts</h3>",
+                        html: html,
+                        destroyAfter: true
+                    });
+
+                    $body.append($popup);
+                }
             });
         }
     };

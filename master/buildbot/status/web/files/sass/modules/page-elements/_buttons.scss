@@ -86,7 +86,7 @@ a.grey-btn,
     font-size: 9px;
     padding: 7px 8px;
     position: absolute;
-    right: 10px;
+    right: 0;
     top: 10px;
     z-index: 1;
 }
@@ -97,8 +97,10 @@ a.grey-btn,
     position: relative;
 }
 
+  
 
 .codebases .blue-btn {
+    margin:0 -10px 10px 0; 
     float: right;   
     &:focus {
         outline: none;   
@@ -113,25 +115,11 @@ a.grey-btn,
         padding: 5px 9px;
     }
 }
-
-/*
-@include breakpoint($bkpt-small) {
-    .grey-btn.var-2 {
-        position: absolute;
-        right: 0;
-        top: 0;
+@media (min-width:$screen-md-min) {
+    .codebases .blue-btn {
+        margin: auto;        
     }
 }
-
-
-    @include breakpoint($bkpt-medium) {
-        .grey-btn.var-2 {
-            position: relative;
-            right: 0;
-            top: 0;
-        }
-    }
-*/
 
 .delete-icon {
     display:block;
@@ -173,7 +161,7 @@ a.grey-btn,
     color: #2B6194;
     float:right;
     border:none;
-    margin-top: 7px;
+    margin-top: 9px;
     padding: 0;    
     &:hover{
         color: #A4A4A4;
@@ -204,14 +192,4 @@ a.grey-btn,
     content: "✖";
     font-size: 20px;
     text-shadow: 1px 1px 1px #FFFFFF;
-}
-
-@include breakpoint($bkpt-small) {
-    .grey-btn + .dataTables_wrapper {
-        margin-right: 0;
-    }
-
-    .codebases .blue-btn {
-        margin:0 -10px 10px 0; 
-    }
 }

@@ -267,8 +267,6 @@ class StatusResourceBuild(HtmlResource):
                 p['label'] = param.label
             ps.append(p)
 
-        
-        cxt['responsible_users'] = list(b.getResponsibleUsers())
 
         (start, end, raw_end_time) = b.getTimes(include_raw_build_time=True)
         cxt['start'] = time.ctime(start)

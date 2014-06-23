@@ -1,40 +1,39 @@
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable) {
+/*global define*/
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'popup','toastr'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup, toastr) {
     "use strict";
-    var rtBuilders;
-    var tbsorter = undefined;
+    var rtBuilders,
+        $tbsorter;
+
+
     rtBuilders = {
         init: function () {
-            tbsorter = rtBuilders.dataTableInit($('.builders-table'));
+            $tbsorter = rtBuilders.dataTableInit($('.builders-table'));
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
-            realtimeFunctions['builders'] = rtBuilders.realtimeFunctionsProcessBuilders;
+            realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
 
             // insert codebase and branch on the builders page
             var $dtWTop = $('.dataTables_wrapper .top');
-            if (window.location.search != '') {
+            if (window.location.search !== '') {
                 // Parse the url and insert current codebases and branches
                 helpers.codeBaseBranchOverview($dtWTop);
-            }            
+            }
         },
         realtimeFunctionsProcessBuilders: function (data) {
-            timeElements.clearTimeObjects(tbsorter);
-            tbsorter.fnClearTable();
-            try{
-                tbsorter.fnAddData(data.builders);
-                timeElements.updateTimeObjects();
-            }
-            catch(err) {
-            }
+            rtTable.table.rtfGenericTableProcess($tbsorter, data.builders);
         },
         dataTableInit: function ($tableElem) {
             var options = {};
 
             options.aoColumns = [
-                { "mData": null },
-                { "mData": null },
-                { "mData": null },
-                { "mData": null },
-                { "mData": null, 'bSortable': false }
+                { "mData": null, "sWidth": "20%" },
+                { "mData": null, "sWidth": "15%" },
+                { "mData": null, "sWidth": "10%" },
+                { "mData": null, "sWidth": "15%", "sType": "builder-status" },
+                { "mData": null, "sWidth": "5%", "bSortable": false  },
+                { "mData": null, "sWidth": "15%", "bSortable": false  },
+                { "mData": null, "sWidth": "10%", "sType": "natural" },
+                { "mData": null, "sWidth": "10%", "bSortable": false }
             ];
 
             options.aoColumnDefs = [
@@ -49,11 +48,11 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 {
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left last-build-js",
-                    "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showLatestBuild: true, latestBuild: type.latestBuild});
+                    "mRender": function (data, type, full) {
+                        return mustache.render(builders, {showLatestBuild: true, latestBuild: full.latestBuild});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        if (oData.latestBuild != undefined) {
+                        if (oData.latestBuild !== undefined) {
                             timeElements.addTimeAgoElem($(nTd).find('.last-run'), oData.latestBuild.times[1]);
                             var time = helpers.getTime(oData.latestBuild.times[0], oData.latestBuild.times[1]).trim();
                             $(nTd).find('.small-txt').html('(' + time + ')');
@@ -63,8 +62,12 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [ 3 ],
-                    "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showStatus: true, latestBuild: type.latestBuild});
+                    "sClass": "txt-align-left",
+                    "mRender": function (data, type, full) {
+                        if (type === 'sort') {
+                            return full;
+                        }
+                        return mustache.render(builders, {showStatus: true, latestBuild: full.latestBuild, data: full});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
@@ -72,11 +75,40 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                     }
                 },
                 {
-                    "aTargets": [ 4 ],
+                    "aTargets": [4],
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {customBuild: true, url:type.url, builderName: type.name});
+                        return mustache.render(builders, {showShortcuts: true, data: type});
+                    },
+                    "fnCreatedCell": function (nTd, sData, oData) {
+                        if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {
+                            popup.initArtifacts(oData.latestBuild.artifacts, $(nTd).find(".artifact-js"));
+                        }
+                    }
+                },
+                rtTable.cell.revision(5, function (data) {
+                    if (data.latestBuild !== undefined) {
+                        return data.latestBuild.sourceStamps;
+                    }
+                    return undefined;
+                }, helpers.urlHasCodebases()),
+                rtTable.cell.buildLength(6, function (data) {
+                    if (data.latestBuild !== undefined) {
+                        return data.latestBuild.times;
+                    }
+                    return undefined;
+                }),
+                {
+                    "aTargets": [ 7 ],
+                    "mRender": function (data, full, type) {
+                        return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
+                    },
+                    "fnCreatedCell": function (nTd) {
+                        var $nTd = $(nTd);
+                        var $instantBuildBtn = $nTd.find(".instant-build");
+                        popup.initRunBuild($nTd.find(".custom-build"), $instantBuildBtn);
                     }
                 }
+
             ];
 
             return dt.initTable($tableElem, options);

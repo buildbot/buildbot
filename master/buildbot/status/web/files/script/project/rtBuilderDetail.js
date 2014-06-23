@@ -14,7 +14,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
             init: function () {
                 $tbCurrentBuildsTable = rtBuilderDetail.currentBuildsTableInit($('#rtCurrentBuildsTable'));
                 $tbPendingBuildsTable = rtBuilderDetail.pendingBuildsTableInit($('#rtPendingBuildsTable'));
-                $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'));
+                $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'), false, helpers.urlHasCodebases());
                 $tbSlavesTable = rtBuilderDetail.slavesTableInit($('#rtSlavesTable'));
 
                 var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
@@ -23,11 +23,12 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 realtimeFunctions.builds = rtBuilderDetail.rtfProcessBuilds;
                 realtimeFunctions.slaves = rtBuilderDetail.rtfProcessSlaves;
 
-                popup.registerJSONPopup($tbSlavesTable);
-
                 realtimePages.initRealtime(realtimeFunctions);
 
                 helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
+
+                //Setup run build
+                popup.initRunBuild($(".custom-build"));
 
                 // insert codebase and branch
                 if (window.location.search !== '') {
@@ -76,7 +77,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 options.aoColumnDefs = [
                     rtTable.cell.buildID(0),
                     rtTable.cell.buildProgress(1, true),
-                    rtTable.cell.revision(2, "sourceStamps"),
+                    rtTable.cell.revision(2, "sourceStamps", helpers.urlHasCodebases()),
                     {
                         "aTargets": [ 3 ],
                         "sClass": "txt-align-left",
@@ -104,10 +105,10 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 };
 
                 options.aoColumns = [
-                    { "mData": null, "sWidth": "30%" },
-                    { "mData": null, "sWidth": "30%" },
-                    { "mData": null, "sWidth": "35%" },
-                    { "mData": null, "sWidth": "5%" }
+                    { "mData": null, "sWidth": "28%" },
+                    { "mData": null, "sWidth": "28%" },
+                    { "mData": null, "sWidth": "28%" },
+                    { "mData": null, "sWidth": "16%" }
                 ];
 
                 options.aoColumnDefs = [
@@ -128,7 +129,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                             timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                         }
                     },
-                    rtTable.cell.revision(2, "sources"),
+                    rtTable.cell.revision(2, "sources", helpers.urlHasCodebases()),
                     {
                         "aTargets": [ 3 ],
                         "sClass": "txt-align-right",

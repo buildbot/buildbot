@@ -11,35 +11,33 @@
 
 {% block content %}
 <div class="initjson">
-  <div class="column-1">
-    <div class="column span-7">
-      {% if authz.advertiseAction('gracefulShutdown', request) %}
-                
-        {% if slave.getGraceful() %}
-        <div class="graceful_shutdown">
-            Slave will shut down gracefully when it is idle.
-        </div>
-        {% else %}
-
-            {{ forms.graceful_shutdown(shutdown_url, authz) }}
-       
+  <div class="row">
+    <div class="rounded-container">
+        {% if authz.advertiseAction('gracefulShutdown', request) %}
+          {% if slave.getGraceful() %}
+          <div class="graceful_shutdown">
+              Slave will shut down gracefully when it is idle.
+          </div>
+          {% else %}
+              {{ forms.graceful_shutdown(shutdown_url, authz) }}
+          {% endif %}
         {% endif %}
-              
-      {% endif %}
-       <h2 class="head-2">
-        Recent builds
-      </h2>
 
-      <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-      </table>
+      <div class="col-md-12">
+            <h2 class="head-2 fl-left"> Current builds </h2>
+            <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
+            <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+            </table>
+      </div>
+      <div class="col-md-12">
+         <h2 class="head-2">
+          Recent builds
+        </h2>
+
+        <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+        </table>
+      </div>
     </div>
-    <div class="column span-6">
-          <h2 class="head-2 fl-left"> Current builds </h2>
-          <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Remove selected</button>
-          <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-          </table>
-    </div>
-    
   </div>
 </div>
 {% endblock %}

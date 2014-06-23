@@ -63,7 +63,7 @@
 {% if active_page != 'frontpage' and active_page != 'jsonhelp' %}
 	<nav class="sub-menu-container {{classPath}}">
 		
-			<div class="container-inner">
+			<div class="container">
 				<div class="wrap">
 				  <ul class="breadcrumbs-nav">
 					{% for href, id, caption in navigation_bar %}
@@ -71,7 +71,10 @@
 							<li>{{caption|e}}</li>
 						{% elif loop.index == 3 and pathNum >= 3 %}
 
-							<li class="dropdown"><a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a><a id="getBtn" class="more-info" href="#"></a></li>	
+							<li class="dropdown">
+                                <a id="pathToCodeBases" href="{{ codebasesPath }}">{{selectedProject}}</a>
+                                <a id="codebasesBtn" class="more-info" href="#" data-codebases-url="{{ codebasesPath }}"></a>
+                            </li>
 						{% elif loop.index <= pathNum %}
 							<li><a href="{{ href|e }}">{{ caption|e }} </a></li>
 						{% endif %}
@@ -102,7 +105,7 @@
 	] -%}
 
 	<nav class="sub-menu-container">
-		<div class="container-inner">
+		<div class="container">
 			<div class="wrap">
 				<ul class="breadcrumbs-nav ">
 				{% for href, id, caption in navigation_bar_slaves %}
@@ -127,7 +130,7 @@
 	] -%}	
 	
 	<nav class="sub-menu-container">
-	<div class="container-inner">
+	<div class="container">
 		<div class="wrap">
 			<ul class="breadcrumbs-nav ">
 			{% for href, id, caption in navigation_bar_buildqueue %}
@@ -152,7 +155,7 @@
 	] -%}	
 	
 	<nav class="sub-menu-container">
-	<div class="container-inner">
+	<div class="container">
 		<div class="wrap">
 			<ul class="breadcrumbs-nav ">
 			{% for href, id, caption in navigation_bar_buildqueue %}

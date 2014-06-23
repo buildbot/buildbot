@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder, buildstep, build
-from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT
+from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE
 from buildbot.status.results import EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
@@ -54,6 +54,7 @@ class IHTMLLog(Interface):
 css_classes = {SUCCESS: "success",
                WARNINGS: "warnings",
                FAILURE: "failure",
+               DEPENDENCY_FAILURE: "dependency_failure",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
                RETRY: "retry",
@@ -139,17 +140,28 @@ def path_to_buildqueue(request):
 def path_to_buildqueue_json(request):
     return path_to_root(request) + "json/buildqueue"
 
-def getCodebasesArg(request=None, codebases={}):
+def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     codebases_arg=''
+
+    def addURLParam(url, key, val):
+        if len(url) > 0:
+            url += "&"
+        else:
+            url += "?"
+
+        url += "%s=%s" % (key, ''.join(val))
+        return url
+
     if request is not None:
         for key, val in request.args.iteritems():
             if '_branch' in key:
                 codebases[key[0:key.find('_')]] = ''.join(val)
-                if len(codebases_arg) > 0:
-                    codebases_arg += "&"
-                else:
-                    codebases_arg += "?"
-                codebases_arg += "%s=%s" % (key, ''.join(val))
+                codebases_arg = addURLParam(codebases_arg, key, val)
+
+    if sourcestamps is not None:
+        for ss in sourcestamps:
+            if request is None or ss.codebase + "_branch" not in request.args:
+                codebases_arg = addURLParam(codebases_arg, ss.codebase + "_branch", ss.branch)
     return codebases_arg
 
 
@@ -341,7 +353,7 @@ class ContextMixin(AccessorMixin):
                     request = request,
                     alert_msg = request.args.get("alert_msg", [""])[0],
                     analytics_code = self.getAnalyticsCode(request),
-                    authenticated=authenticated,
+                    authenticated=authenticated
                     )
 
 
@@ -698,6 +710,7 @@ def emailfilter(value):
         replacing @ with <span style="display:none> reportedly works well against web-spiders
         and the next level is to use rot-13 (or something) and decode in javascript '''
 
+    value = value.decode("utf-8")
     user = jinja2.escape(value)
     obfuscator = jinja2.Markup('<span style="display:none">ohnoyoudont</span>@')
     output = user.replace('@', obfuscator)

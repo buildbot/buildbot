@@ -559,7 +559,7 @@ class PastBuildsJsonResource(JsonResource):
             for rb in self.status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
                 if rb.getSlavename() == slavename:
                     n += 1
-                    recent_builds.append(rb.asDict())
+                    recent_builds.append(rb.asDict(request=request))
                     if n > self.number:
                         return recent_builds
 
@@ -770,7 +770,7 @@ class SingleProjectBuilderJsonResource(JsonResource):
                                                      num_builds=1, max_search=200))
 
         if len(builds) > 0:
-            d['latestBuild'] = builds[0].asBaseDict(request)
+            d['latestBuild'] = builds[0].asBaseDict(request, include_artifacts=True, include_failure_url=True)
 
         defer.returnValue(d)
 
@@ -860,7 +860,7 @@ class SinglePendingBuildsJsonResource(JsonResource):
         #Convert to dictionary
         output = []
         for b in pending:
-            d = yield b.asDict_async()
+            d = yield b.asDict_async(request)
             output.append(d)
 
         defer.returnValue(output)

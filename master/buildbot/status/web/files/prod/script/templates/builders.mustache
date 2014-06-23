@@ -25,9 +25,9 @@
 	{{/latestBuild}}
 {{/showLatestBuild}}
 {{#customBuild}}
-	<a class="ajaxbtn more-info" title="Run custom build" href="#" data-contenttype="form" data-popuptitle="Run custom build" data-rt_update="extforms" data-b_name="{{builderName}}" data-b="{{url}}" data-returnpage="builders_json">
+	<a class="custom-build more-info" title="Run custom build" href="#" data-popup-title="Run custom build" data-builder-name="{{builderName}}" data-builder-url="{{url}}" data-return-page="builders_json">
 	</a>
-	<a class="run-build-js run-build" title="Run build with default values" href="#">
+	<a class="instant-build run-build" title="Run build with default values" href="#">
 	</a>
 {{/customBuild}}
 
@@ -42,3 +42,12 @@
 	</span>
 	{{/latestBuild}}
 {{/showStatus}}
+
+{{#showShortcuts}}
+    {{#data.latestBuild.artifacts}}
+        <a href="#" class="artifact-js more-info" title="Show artifacts"></a>
+    {{/data.latestBuild.artifacts}}
+    {{#data.latestBuild.failure_url}}
+        <a href="{{data.latestBuild.failure_url}}" class="point-of-failure" title="Show the point of failure"></a>
+    {{/data.latestBuild.failure_url}}
+{{/showShortcuts}}

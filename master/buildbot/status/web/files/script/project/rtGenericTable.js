@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment) {
+define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
 
     "use strict";
 
@@ -35,7 +35,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var cellFunc = {
-        revision: function (index, property) {
+        revision: function (index, property, hideBranch) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
@@ -45,7 +45,12 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     if (full.properties !== undefined) {
                         history_build = privFunc.buildIsHistoric(full.properties);
                     }
-                    return hbCells({revisionCell: true, 'sourceStamps': sourceStamps, 'history_build': history_build});
+                    return hbCells({
+                        revisionCell: true,
+                        sourceStamps: sourceStamps,
+                        history_build: history_build,
+                        hide_branch: hideBranch
+                    });
                 }
             };
         },
@@ -133,7 +138,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                             overtime = overtime > 0 ? overtime : false;
                         }
 
-                        $(nTd).addClass('building').find('a.popup-btn-json-js').data({showRunningBuilds: oData});
+                        var $jsonPopup = $(nTd).addClass('building').find('a.popup-btn-json-js');
+                        popup.initJSONPopup($jsonPopup, {showRunningBuilds: oData});
 
                         if (overtime) {
                             $(nTd).removeClass('building')
@@ -165,6 +171,8 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                         var obj = $(elem);
                         timeElements.addProgressBarElem(obj, obj.attr('data-starttime'), obj.attr('data-etatime'));
                     });
+
+                    popup.initPendingPopup($(nTd).find(".pending-popup"));
                 }
             };
         },
@@ -173,25 +181,43 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
+                    var stopURL = URI(type.url.path);
+                    stopURL = stopURL.path(stopURL.path() + "/stop");
+
                     return hbCells({
                         stopBuild: true,
-                        'data': type
+                        'data': type,
+                        stopURL: stopURL
                     });
                 }
             };
         },
-        buildLength: function (index) {
+        buildLength: function (index, timesProperty) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
-                "mRender": function (data, full, type) {
-                    var times = type.times;
+                "mRender": function (data, type, full) {
+                    var times = privFunc.getPropertyOnData(full, timesProperty);
                     if (times !== undefined) {
+                        if (type === 'sort') {
+                            if (times.length === 3) {
+                                return times[2] - times[0];
+                            }
+                            return times[1] - times[0];
+                        }
+
                         var d = moment.duration((times[1] - times[0]) * 1000);
                         if (times.length === 3) {
                             d = moment.duration((times[2] - times[0]) * 1000);
                         }
-                        return "{0}m {1}s ".format(d.minutes(), d.seconds());
+                        if (d.hours() > 0) {
+                            return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
+                        }
+                        return "{0}m {1}s".format(d.minutes(), d.seconds());
+                    }
+
+                    if (type === 'sort') {
+                        return 0;
                     }
                     return "N/A";
                 }
@@ -200,16 +226,16 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
     };
 
     var tableFunc = {
-        buildTableInit: function ($tableElem, showBuilderName) {
+        buildTableInit: function ($tableElem, showBuilderName, hideBranches) {
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#", "sWidth": "5%" },
-                { "mData": null, "sTitle": "Date", "sWidth": "10%" },
-                { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
-                { "mData": null, "sTitle": "Result", "sWidth": "32%", "sClass": ""},
+                { "mData": null, "sTitle": "#", "sWidth": "10%" },
+                { "mData": null, "sTitle": "Date", "sWidth": "15%" },
+                { "mData": null, "sTitle": "Revision", "sWidth": "20%" },
+                { "mData": null, "sTitle": "Result", "sWidth": "30%", "sClass": "txt-align-left"},
                 { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
-                { "mData": null, "sTitle": "Slave", "sWidth": "13%" }
+                { "mData": null, "sTitle": "Slave", "sWidth": "15%" }
             ];
 
             options.fnRowCallback = function (nRow, aData) {
@@ -223,9 +249,9 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
                 }),
-                cellFunc.revision(2, "sourceStamps"),
+                cellFunc.revision(2, "sourceStamps", hideBranches),
                 cellFunc.buildStatus(3),
-                cellFunc.buildLength(4),
+                cellFunc.buildLength(4, "times"),
                 cellFunc.slaveName(5, function (data) {
                     if (data.slave_friendly_name !== undefined) {
                         return data.slave_friendly_name;
@@ -238,8 +264,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                 options.aoColumns[1].sWidth = '10%';
                 options.aoColumns[2].sWidth = '25%';
                 options.aoColumns[3].sWidth = '30%';
-                options.aoColumns[5].sWidth = '30%';
+                options.aoColumns[4].sWidth = '10%';
+                options.aoColumns[5].sWidth = '20%';
                 options.aoColumns[5].sTitle = 'Builder';
+
                 options.aoColumnDefs.splice(5, 1);
                 options.aoColumnDefs.push(cellFunc.builderName(5));
             }

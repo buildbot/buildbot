@@ -24,6 +24,7 @@ from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
+from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED
 from buildbot.steps.artifact import AcquireBuildLocks
 from buildbot.steps.trigger import Trigger
 
@@ -45,6 +46,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     text = []
     results = None
     slavename = "???"
+    foi_url = None
+    artifacts = None
 
     set_runtime_properties = True
 
@@ -484,10 +487,61 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         return dict
 
-    def asBaseDict(self, request=None, include_current_step=False):
+    def get_failure_of_interest(self):
+        if self.foi_url is not None:
+            return self.foi_url
+
+        build_result = self.getResults()
+        if self.isFinished() and (build_result != SUCCESS and build_result != NOT_REBUILT):
+            for s in self.getSteps():
+                if s.isHidden():
+                    continue
+
+                r = s.getResults()[0]
+                if r != SUCCESS and r != SKIPPED:
+                    logs = s.getLogs()
+                    if len(logs) > 0:
+                        failure_log = next((l for l in logs if l.getName() == "TestReport.html"), None)
+                        if failure_log is not None and s.getStatistic('passed', 0) == 0:
+                            failure_log = None
+
+                        log_types = ["stdio", "interrupt", "err.text"]
+                        for t in log_types:
+                            if failure_log is not None:
+                                break
+                            failure_log = next((l for l in logs if l.getName() == t), None)
+
+                        if failure_log is not None:
+                            self.foi_url = self.master.status.getURLForThing(failure_log)
+                            return self.foi_url
+
+        return None
+
+    def get_artifacts(self):
+        if self.artifacts is not None:
+            return self.artifacts
+
+        artifacts = {}
+        for s in self.steps:
+            if len(s.urls) > 0:
+                for name, url in s.urls.iteritems():
+                    if isinstance(url, basestring):
+                        artifacts[name] = url
+
+        if len(artifacts) > 0:
+            # Only cache when we have completed the build and no futher artifacts
+            # can be found
+            if self.isFinished():
+                self.artifacts = artifacts
+            return self.artifacts
+
+    def asBaseDict(self, request=None, include_current_step=False, include_artifacts=False, include_failure_url=False):
         from buildbot.status.web.base import getCodebasesArg
 
         result = {}
+        sourcestamps = self.getSourceStamps()
+        status = self.master.status
+        args = getCodebasesArg(request, sourcestamps=sourcestamps)
 
         # Constant
         result['builderName'] = self.builder.name
@@ -495,22 +549,27 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['number'] = self.getNumber()
         result['reason'] = self.getReason()
         result['blame'] = self.getResponsibleUsers()
-        result['url'] = self.builder.status.getURLForThing(self)
-        result['builder_url'] = self.builder.status.getURLForThing(self.builder)
+        result['url'] = status.getURLForThing(self)
+        result['url']['path'] += args
+        result['builder_url'] = status.getURLForThing(self.builder) + args
 
-        if request is not None:
-            result['url']['path'] += getCodebasesArg(request)
-            result['builder_url'] += getCodebasesArg(request)
+        if include_failure_url:
+            result['failure_url'] = self.get_failure_of_interest()
+            if result['failure_url'] is not None:
+                result['failure_url'] += args
+
+        if include_artifacts:
+            result['artifacts'] = self.get_artifacts()
 
         # Transient
         result['times'] = self.getTimes(include_raw_build_time=True)
         result['text'] = self.getText()
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()
-        slave = self.master.status.getSlave(self.getSlavename())
+        slave = status.getSlave(self.getSlavename())
         if slave is not None:
             result['slave_friendly_name'] = slave.getFriendlyName()
-            result['slave_url'] = self.builder.status.getURLForThing(slave)
+            result['slave_url'] = status.getURLForThing(slave)
         result['eta'] = self.getETA()
 
         #Lazy importing here to avoid python import errors
@@ -520,15 +579,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if include_current_step:
             result = self.currentStepDict(result)
 
-        return result
-
-    def asDict(self, request=None):
-        from buildbot.status.web.base import getCodebasesArg
-        result = self.asBaseDict(request)
-
         # Constant
         project = None
-        for p, obj in self.builder.status.getProjects().iteritems():
+        for p, obj in status.getProjects().iteritems():
             if p == self.builder.project:
                 project = obj
                 break
@@ -538,8 +591,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 if c.values()[0]['repository'] == repo:
                     return c.values()[0]
 
-        sourcestamps = []
-        for ss in self.getSourceStamps():
+        stamp_array = []
+        for ss in sourcestamps:
             d = ss.asDict()
             c = getCodebaseObj(d['repository'])
             if c is not None and c.has_key("display_repository"):
@@ -547,23 +600,29 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             else:
                 d['display_repository'] = d['repository']
 
-            sourcestamps.append(d)
+            stamp_array.append(d)
 
-        result['sourceStamps'] = sourcestamps
+        result['sourceStamps'] = stamp_array
 
-        # Transient
-        result['properties'] = self.getProperties().asList()
+        return result
+
+    def asDict(self, request=None):
+        from buildbot.status.web.base import getCodebasesArg
+        result = self.asBaseDict(request)
 
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
         args = getCodebasesArg(request)
         result['logs'] = [[l.getName(),
-                           self.builder.status.getURLForThing(l) + args] for l in self.getLogs()]
+                           self.master.status.getURLForThing(l) + args] for l in self.getLogs()]
 
         result['isWaiting'] = False
 
         result['steps'] = [bss.asDict(request) for bss in self.steps]
         result = self.currentStepDict(result)
+
+        # Transient
+        result['properties'] = self.getProperties().asList()
 
         return result
 

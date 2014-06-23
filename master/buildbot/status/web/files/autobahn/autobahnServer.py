@@ -14,6 +14,9 @@ from twisted.web.static import File
 
 PORT = 8010
 POLL_INTERVAL = 5
+MAX_POLL_INTERVAL = 30
+POLL_INTERVAL_STEP = 5
+MAX_ERRORS = 5
 updateLock = Lock()
 
 #Server Messages
@@ -46,9 +49,33 @@ class CachedURL():
         self.clients = []
         self.lastChecked = 0
         self.errorCount = 0
+        self.pollInterval = POLL_INTERVAL
+        self.currentPollInterval = POLL_INTERVAL
+        self.locked = False
 
     def pollNeeded(self):
-        return (time.time() - self.lastChecked) > POLL_INTERVAL
+        return (time.time() - self.lastChecked) > self.currentPollInterval
+
+    def pollSuccess(self):
+        self.lastChecked = time.time()
+        self.locked = False
+        self.errorCount = 0
+
+        if self.currentPollInterval > self.pollInterval:
+            self.currentPollInterval -= POLL_INTERVAL_STEP
+
+        if self.currentPollInterval < self.pollInterval:
+            self.currentPollInterval = self.pollInterval
+
+    def pollFailure(self):
+        self.locked = False
+        self.lastChecked = time.time()
+        self.errorCount += 1
+
+        self.currentPollInterval += POLL_INTERVAL_STEP
+
+        if self.currentPollInterval > MAX_POLL_INTERVAL:
+            self.currentPollInterval = MAX_POLL_INTERVAL
 
 class BroadcastServerProtocol(WebSocketServerProtocol):
     def __init__(self):
@@ -76,14 +103,12 @@ class BroadcastServerFactory(WebSocketServerFactory):
         WebSocketServerFactory.__init__(self, url, debug=debug, debugCodePaths=debugCodePaths)
         self.urlCacheDict = {}
         self.clients = []
-        self.tickcount = 0
         self.clients_urls = {}
         self.tick()
 
     def tick(self):
-        self.tickcount += 1
         self.checkURLs()
-        reactor.callLater(1, self.tick)
+        reactor.callLater(0.1, self.tick)
 
     def sendClientCommand(self, clients, command, data):
         msg = {"cmd": command, "data": data}
@@ -106,45 +131,52 @@ class BroadcastServerFactory(WebSocketServerFactory):
         return False
 
     def checkURLs(self):
-        threads = []
         for urlCache in self.urlCacheDict.values():
             #Thread each of these
-            p = Thread(target=self.checkURL, args=(urlCache, ))
-            p.start()
-            threads.append(p)
+            try:
+                if urlCache.locked is False and urlCache.pollNeeded():
+                    urlCache.locked = True
 
-        for t in threads:
-            t.join()
+                    p = Thread(target=self.checkURL, args=(urlCache, ))
+                    p.start()
+            except Exception as e:
+                logging.error("{0}".format(e))
 
     def checkURL(self, urlCache):
         url = urlCache.url
-        if self.urlCacheDict[url].errorCount > 5:
+        cachedURL = self.urlCacheDict[url]
+        if cachedURL.errorCount > MAX_ERRORS:
             logging.info("Removing cached URL as it has too many errors {0}".format(url))
-            self.sendClientCommand(self.urlCacheDict[url].clients, KRT_URL_DROPPED, url)
+            self.sendClientCommand(cachedURL.clients, KRT_URL_DROPPED, url)
+            updateLock.acquire()
             del self.urlCacheDict[url]
+            updateLock.release()
             return
         if urlCache.pollNeeded():
-            updateLock.acquire()
             try:
                 #logging.info("Polling: {0}".format(url))
-                response = urllib2.urlopen(url, timeout=POLL_INTERVAL-1)
+                response = urllib2.urlopen(url, timeout=cachedURL.currentPollInterval-1)
+                updateLock.acquire()
+                cachedURL.pollSuccess()
                 jsonObj = json.load(response)
-                urlCache.lastChecked = time.time()
-                if self.jsonChanged(jsonObj, self.urlCacheDict[url].cachedJSON):
-                    self.urlCacheDict[url].cachedJSON = jsonObj
-                    clients = self.urlCacheDict[url].clients
+                if self.jsonChanged(jsonObj, cachedURL.cachedJSON):
+                    cachedURL.cachedJSON = jsonObj
+                    clients = cachedURL.clients
                     logging.info("JSON at {1} Changed, informing {0} client(s)".format(len(clients), url))
                     data = {"url": url, "data": jsonObj}
                     self.sendClientCommand(clients, KRT_JSON_DATA, data)
 
                 #Reset error count to reduce cutting of many users
                 #in busy times
-                self.urlCacheDict[url].errorCount = 0
+                cachedURL.errorCount = 0
             except Exception as e:
                 logging.error("{0}: {1}".format(e, url))
-                self.urlCacheDict[url].errorCount += 1
+                cachedURL.pollFailure()
             finally:
-                updateLock.release()
+                cachedURL.locked = False
+
+                if updateLock.locked():
+                    updateLock.release()
 
     def register(self, client):
         if not client in self.clients:

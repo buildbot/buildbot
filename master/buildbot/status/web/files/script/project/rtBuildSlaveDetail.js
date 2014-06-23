@@ -1,6 +1,6 @@
 /*global define, Handlebars*/
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'extend-moment',
-    'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'text!hbCells', 'timeElements', 'rtGenericTable', 'popup'],
+        'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'text!hbCells', 'timeElements', 'rtGenericTable', 'popup'],
     function ($, realtimePages, helpers, dt, hb, extendMoment, form, builderdetail, hbCellsText, timeElements, rtTable, popup) {
         "use strict";
 
@@ -17,13 +17,21 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 });
 
                 $("#cancelAllCurrentBuilds").click(function () {
-                    var urls = [];
                     var builds = $tbCurrentBuildsTable.find("[data-cancel-url]");
                     $.each(builds, function (index, val) {
                         var $input = $(val).parent().find("[name=cancelselected]");
                         if ($input.prop("checked")) {
                             $.ajax($(val).attr("data-cancel-url"));
                         }
+                    });
+                });
+
+                $("#selectAll").click(function () {
+                    var checked = $(this).prop("checked");
+                    var builds = $tbCurrentBuildsTable.find("[data-cancel-url]");
+                    $.each(builds, function (index, val) {
+                        var $input = $(val).parent().find("[name=cancelselected]");
+                        $input.prop("checked", checked);
                     });
                 });
             }
@@ -60,13 +68,13 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                     { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
                     { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
                     { "mData": null, "sTitle": "Author", "sWidth": "5%"},
-                    { "mData": null, "sTitle": hbCells({showInputField: true, text: '', inputId: 'selectAll'}), "sWidth": "5%", "sClass": "select-input", 'bSortable': false}
+                    { "mData": null, "sTitle": hbCells({showInputField: true, text: 'Select all', inputId: 'selectAll'}), "sWidth": "5%", "sClass": "select-input", 'bSortable': false}
                 ];
 
                 options.aoColumnDefs = [
                     rtTable.cell.builderName(0, 'txt-align-left'),
                     rtTable.cell.buildProgress(1, true),
-                    rtTable.cell.revision(2),
+                    rtTable.cell.revision(2, "sourceStamps"),
                     {
                         "aTargets": [ 3 ],
                         "sClass": "txt-align-left",

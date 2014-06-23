@@ -1,14 +1,14 @@
 @charset "UTF-8";
 // more info box 
-.more-info-box {
+.more-info-box {    
     position: absolute;
 	z-index:1;
   	border: 1px solid #FFFFFF;
     display: none;
     padding: 23px 20px 23px 20px;
-    text-align: left;
-    min-width:280px;
-    overflow-y: auto; 
+    text-align: left;    
+    width: 100%;
+    overflow: auto; 
 	z-index:200;
 	float:left;
 	color:#333;
@@ -71,9 +71,9 @@
     }
 
 }
-
-@include breakpoint($bkpt-small) {
+@media (min-width: $screen-sm-min) {
     .more-info-box {
-        min-width:auto;
+        width: auto;
+        max-width:750px;
     }
 }

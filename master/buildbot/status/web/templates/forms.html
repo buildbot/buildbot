@@ -79,7 +79,7 @@
 {% macro force_build_scheduler_parameter(f, authz, request, sch, default_props) %}
     {% if f and not f.hide and (f.fullName != "username" or not authz.authenticated(request)) %}
 
-    <div class="row{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
+    <div class="{% for subtype in f.type %} force-{{subtype}}{%endfor%}"{% if f.name %} id="force-{{sch.name}}-{{f.fullName}}"{% endif %}>
     {% if f.fullName and 'username' in f.fullName %}
       <span class="label">{{f.label}}</span>
        <input type='text' size='{{f.size}}' name="usernamedisabled" id="usernameDisabled" disabled />
@@ -172,7 +172,7 @@
   <div class="general">
     <p class="form-message">Fill out revision information for all codebases (or leave all revision information blank to use the latest revision on the selected branches) and click the 'Run' button.</p>
 
-    <div class="row force-text" id="force-{{ sch.name }}-slave">
+    <div class="force-text" id="force-{{ sch.name }}-slave">
     {% if slaves %}
         <span class="label">Specify Slave</span>
            <span title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases." class="tooltip question-icon">
@@ -345,11 +345,9 @@
      <p>To force a rebuild with the same source revisions and parameters used in this build,
         click the 'Rebuild' button.</p>
   {% endif %}
-   <div class="row">
      
      <input class="full-name-js" type='hidden' name='comments' />
      <input class="grey-btn" type="submit" value="Rebuild" />
-   </div>
    
  </form>
 {% endmacro %}

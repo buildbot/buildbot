@@ -39,7 +39,7 @@
 				<p class="txt-cont">Cancel all builds<br>
 					
 				</p>
-				<form id="cancelall" class="command cancelbuild" action="{{cancelAllbuilderURL}}/cancelbuild?returnpage=builders_json" name="cancel" method="post">
+				<form id="cancelall" class="command cancelbuild" action="{{cancelURL}}" name="cancel" method="post">
 			        <input type="hidden" value="all" name="id" />
 			    	<input type="submit" value="Cancel" class="grey-btn" />
 			  	</form>
@@ -49,7 +49,7 @@
 				<p class="txt-cont">Waiting <span class="waiting-time-js"></span><br>
 					{{reason}}                                                                                   	
 				</p>
-				<form class="command cancelbuild" action="{{builderURL}}/cancelbuild?returnpage=builders_json" name="cancel" method="post">
+				<form class="command cancelbuild" action="{{cancelURL}}" name="cancel" method="post">
 			        <input type="hidden" value="{{brid}}" name="id" />
 			    	<input type="submit" value="Cancel" class="grey-btn" />
 			  	</form>
@@ -132,7 +132,7 @@
 	</table>
 
 {{/showCodebases}}
-{{#showcompatibleSlaves}}
+{{#showCompatibleSlaves}}
 		<h3>Compatible slaves</h3>
 		<ul class="codebases-list">
 		{{#slaves}}	
@@ -145,7 +145,7 @@
 			{{/.}}
 		{{/slaves}}	
 		</ul>
-{{/showcompatibleSlaves}}
+{{/showCompatibleSlaves}}
 
 {{#showRunningBuilds}}
 		<h3>Running builds</h3>

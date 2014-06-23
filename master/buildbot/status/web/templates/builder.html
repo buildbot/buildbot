@@ -17,27 +17,28 @@
       
   </div>
 
-  <div class="column-1">
-
-    <div class="span-6 column">
+<div class="row">
+  <div class="rounded-container">
+<div class="col-md-5">
     
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
-        <a href="#" title="Run Custom Build" data-contenttype="form" data-popuptitle="Run Custom Build" data-rt_update="extforms" data-b_name="{{ builder_name }}" data-b="{{ builder_url }}" data-returnpage="pending_json" class="ajaxbtn more-info fl-right m-top4">Run build
+        <a href="#" class="custom-build more-info fl-right m-top4" title="Run Custom Build" data-popup-title="Run Custom Build" data-builder-name="{{ builder_name }}" data-builder-url="{{ builder_url }}" data-return-page="pending_json">Run build
         </a>
       {% endif %}          
      
       <h2 class="head-2">
-        Current builds
+        Current Builds
       </h2>
 
       <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
       </table>
+  
+      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
 
-      <h2 class="head-2 fl-left">
-        Pending builds requests
+      <h2 class="head-2">
+        Pending Build Requests
       </h2>
 
-      <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
       <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
         <thead>
           <tr>
@@ -55,7 +56,7 @@
       </table>
 
       <h2 class="head-2">
-        Build slaves
+        Build Slaves
       </h2>
       
       <table id="rtSlavesTable" class="table-1 tablesorter-js tablesorter first-child">
@@ -70,7 +71,7 @@
       </table>
 
     </div>
-    <div class="column span-7">    
+    <div class="col-md-7">    
       <h2 class="head-2">
         Recent Builds
       </h2>
@@ -87,6 +88,7 @@
 
     </div>
   </div>
+</div>
 </div>
 {% endblock %}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}

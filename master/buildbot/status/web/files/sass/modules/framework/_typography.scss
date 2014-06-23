@@ -14,6 +14,10 @@
 // Typography
 
 .user-settings {
+	display:none;
+	@media (min-width: 1200px) {
+		display:inline;
+	}	
 	&:after {
 		color: rgba(244, 249, 255, 0.84);
 		content: "";
@@ -39,9 +43,7 @@
 	form {
 		display: inline;
 	}
-	@include breakpoint($bkpt-medium) {
-		display: none;
-	}
+	
 }
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
@@ -85,25 +87,28 @@
 	text-transform: capitalize;
 	
 }
- 
+
+
+
 h1.logo a {
     color: #FFFFFF;
     float: left;
     font-family: 'Pacifico';
-    font-size: 29px;
+    
     font-weight: normal;
     letter-spacing: 0.8px;
     line-height: 0;
     margin-right: 35px;
     opacity: 0.76;
-    padding: 22px 0 0;
+    padding-top: 17px;
+	font-size: 19px;
     text-decoration: none;
-
+	
     transition: opacity 0.2s ease-in-out 0s;
 
 	span {
 		font-family:'leckerlione', cursive;
-		font-size: 27px;
+		font-size: 17px;		
 	}
 }
 
@@ -236,14 +241,24 @@ div.welcome-txt {
 	content: "▼";
 }
 
-@include breakpoint($bkpt-medium-1) {
+@media (min-width: $screen-md-min) {
 	h1.logo a {
-		padding-top: 17px;
-		font-size: 19px;
+		font-size: 29px;
+    	padding: 22px 0 0;
 		span {
-			font-size: 17px;
+			font-size: 27px;
 		}
 	}
+}
+
+.point-of-failure:after {
+    font-family: "katana_icons";
+    content: "";
+    display: inline-block;
+    padding: 0;
+    font-weight:normal;
+    font-size: 16px;
+    position: relative;
 }
 
 span.log-error {

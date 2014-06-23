@@ -2,7 +2,7 @@
  * grunt-contrib-requirejs
  * http://gruntjs.com/
  *
- * Copyright (c) 2012 Tyler Kellen, contributors
+ * Copyright (c) 2014 Tyler Kellen, contributors
  * Licensed under the MIT license.
  */
 
@@ -10,6 +10,7 @@ module.exports = function(grunt) {
   'use strict';
 
   var requirejs = require('requirejs');
+  var LOG_LEVEL_TRACE = 0, LOG_LEVEL_WARN = 2;
 
   // TODO: extend this to send build log to grunt.log.ok / grunt.log.error
   // by overriding the r.js logger (or submit issue to r.js to expand logging support)
@@ -28,13 +29,20 @@ module.exports = function(grunt) {
 
     var done = this.async();
     var options = this.options({
-      logLevel: 0,
+      logLevel: grunt.option('verbose') ? LOG_LEVEL_TRACE : LOG_LEVEL_WARN,
       done: function(done, response){
         done();
       }
     });
-    grunt.verbose.writeflags(options, 'Options');
+    // The following catches errors in the user-defined `done` function and outputs them.
+    var tryCatch = function(fn, done, output) {
+      try {
+        fn(done, output);
+      } catch(e) {
+        grunt.fail.warn('There was an error while processing your done function: "' + e + '"');
+      }
+    };
 
-    requirejs.optimize(options, options.done.bind(null, done));
+    requirejs.optimize(options, tryCatch.bind(null, options.done, done));
   });
 };

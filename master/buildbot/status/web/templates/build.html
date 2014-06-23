@@ -16,8 +16,9 @@
 <div class="top left"></div>
 <div class="clear"></div>
 
-<div class="column-1">
-<div class="column-2">
+<div class="row vertical-line">
+  <div class="rounded-container m-bottom20">
+<div class="col-md-6">
 <div id="buildResult">
 
 </div>
@@ -256,15 +257,12 @@ SourceStamps
 
 
 </div>
-<div class="column-2 last">
-
+<div class="col-md-6">
 
  <div class="clear"></div>
- <span id="noArtifactsJS" class="no-artifacts hide">
-    No artifacts
-  </span>
-  <a id="showArtifactsJS" class="popup-btn-js-2 more-info mod-1 hide" href="#"> 
-  </a>
+  <div id="artifacts-js">
+      No artifacts
+  </div>
   
 
   <div class="more-info-box more-info-box-js">
@@ -296,25 +294,12 @@ SourceStamps
 <ol id="stepList" class="step-list">
 
 </ol>
-
-<h2 class="head-2">Responsible Users</h2>
-
-{% if responsible_users %}
-  <ol>
-  {% for u in responsible_users %}
-     <li class="{{ loop.cycle('alt', '') }}">{{ u|user }}</li>
-  {% endfor %}
-  </ol>
-{% else %}
-  <p>no responsible users</p>
-{% endif %}
-
-
+</div>
 </div>
 </div>
   
 {% if has_changes %}
-  <div class="container-inner">
+  
       <h2 class="head-2">All Changes</h2>
         {% for ss in sourcestamps %}
             {% if ss.changes %}
@@ -341,7 +326,7 @@ SourceStamps
               {% endif %}
             
         {% endfor %}
-  </div>
+  
 {% endif %}
 
 {% endblock %}

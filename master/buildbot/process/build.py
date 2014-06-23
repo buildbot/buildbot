@@ -23,7 +23,7 @@ from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status, NOT_REBUILT
+  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -439,7 +439,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE
-        elif result in (EXCEPTION, RETRY):
+        elif result in (EXCEPTION, RETRY, DEPENDENCY_FAILURE):
             terminate = True
 
         # if we skipped this step, then don't adjust the build status
@@ -494,7 +494,7 @@ class Build(properties.PropertiesMixin):
             d.callback(None)
 
     def allStepsDone(self):
-        if self.result == FAILURE:
+        if self.result == FAILURE or self.result == DEPENDENCY_FAILURE:
             text = ["Build Failed"]
         elif self.result == WARNINGS:
             text = ["Build Finished with Warnings"]
@@ -517,7 +517,7 @@ class Build(properties.PropertiesMixin):
         # try to finish the build, but since we've already faced an exception,
         # this may not work well.
         try:
-            self.buildFinished(["Build Caught Exception"], EXCEPTION)
+            self.buildFinished(["Build Caught Exception"], DEPENDENCY_FAILURE)
         except:
             log.err(Failure(), 'while finishing a build with an exception')
 

@@ -550,7 +550,6 @@ class BuildersResource(HtmlResource):
 
         cxt['path_to_codebases'] = path_to_codebases(req, self.project.name)
         cxt['selectedproject'] = self.project.name
-        cxt['authz'] = self.getAuthz(req)
 
         project_json = SingleProjectJsonResource(status, self.project)
         project_dict = yield project_json.asDict(req)

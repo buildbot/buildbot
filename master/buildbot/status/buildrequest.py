@@ -146,7 +146,7 @@ class BuildRequestStatus:
         return result
 
     @defer.inlineCallbacks
-    def asDict_async(self):
+    def asDict_async(self, request=None):
         result = {}
 
         builder = self.status.getBuilder(self.getBuilderName())
@@ -161,6 +161,10 @@ class BuildRequestStatus:
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
         result['builderURL'] = self.status.getURLForThing(builder)
+
+        if request is not None:
+            from buildbot.status.web.base import getCodebasesArg
+            result['builderURL'] += getCodebasesArg(request)
 
         builds = yield self.getBuilds()
         result['builds'] = [ build.asDict() for build in builds ]

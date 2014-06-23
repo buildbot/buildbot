@@ -7,7 +7,9 @@
             <li>
         {{/if}}
         <a href="{{display_repository}}">{{codebase}}</a> /
-        {{branch}} /
+        {{#unless ../hide_branch}}
+            {{branch}} /
+        {{/unless}}
         {{#if revision_short}}
             <a href="{{display_repository}}/changeset/{{revision}}">{{revision_short}}</a>
         {{else}}
@@ -99,7 +101,7 @@
 
     {{#if showPending}}
         {{#if pendingBuilds}}
-            <a class="more-info popup-btn-js mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
+            <a class="more-info pending-popup mod-1" href="#" data-builderName="{{builderName}}"> {{pendingBuilds}} Pending jobs </a>
         {{/if}}
     {{/if}}
 {{/buildProgress}}
@@ -107,7 +109,7 @@
 {{#stopBuild}}
     <form>
 	    <input type="checkbox" name="cancelselected" />
-	    <a title="Remove this build" class="delete-icon" href="#" data-cancel-url="{{data.url.path}}/stop"></a>
+	    <a title="Remove this build" class="delete-icon" href="#" data-cancel-url="{{stopURL}}/stop"></a>
     </form>
 {{/stopBuild}}
 

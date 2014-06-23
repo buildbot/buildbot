@@ -1,38 +1,32 @@
 @charset "UTF-8";
 /**
 * Main project stylesheet combiner
-*
+* 
 * @section Setup
-* @author rkalms
+* @author sholm
 */
-// ---------------------------------------------------------------------------
-// Fonts
-
 
 // ---------------------------------------------------------------------------
 // Imports
 
 @import "compass";
-@import "breakpoint";
+@import "bootstrap/variables";
+@import "bootstrap/bootstrap";
+@import "modules/base";
 
 // ---------------------------------------------------------------------------
 // Framework
 
 @import "modules/framework/framework";
-@import "modules/framework/normalize";
-@import "modules/framework/animate";
-@import "modules/base"; 
-@import "modules/framework/grid";
+@import "modules/framework/animate"; 
 
 // ---------------------------------------------------------------------------
 // Default typography
 
 @import "modules/framework/typography"; // Must be imported after base
-@import "modules/global";
 
 // ---------------------------------------------------------------------------
 // Modules
-
 @import "modules/page-elements/navigation";
 @import "modules/page-elements/buttons";
 @import "modules/page-elements/tables";
@@ -41,5 +35,5 @@
 @import "modules/page-elements/lists";
 @import "modules/page-elements/popups";
 @import "modules/page-elements/main";
-
-// ---------------------------------------------------------------------------
+@import "modules/page-elements/toastr";
+@import "testreport";  

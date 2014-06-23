@@ -7,7 +7,7 @@
 */
  
 // Colors
-
+  
 // Generics
 $color-white: rgb(255,255,255); // white
 
@@ -26,8 +26,18 @@ $color-blind-warnings: #FFA100;
 $color-blind-skipped: #008EE6; 
 $color-blind-inconclusive: #0025EF; 
 $color-blind-ignored: #008EE6; 
+$color-blind-not-rebuild: #99FC00;
+$color-blind-dependency-failure: #FFB5ED;
 
 
+  
+$color-success:#DDE6D6;
+$color-failure:#EFCFCF;
+$color-exception:#DDD7DD;
+$color-warnings:#fa3;
+$color-skipped:#CBDCE6;
+$color-inconclusive:#CBDCE6;
+$color-ignored:#CBDCE6;
 
 // for not implemented content
 .notimpl {color:#838383 !important;}
@@ -61,23 +71,45 @@ $color-blind-ignored: #008EE6;
 		color: #fff;
 		a {color: #fff;} 
 	}
+	.not_rebuilt {
+		background-color: $color-blind-not-rebuild;
+	}
+    .dependency_failure {
+      background-color: $color-blind-dependency-failure;
+    }
 }
-
-.not_rebuilt {
-	background-color: #F8FCF2;
-}
- 
-.table-1 .success {
-	border-top:1px solid #fff;
+    
+.table-1 {
+	.success,
+	.failure,
+	.skipped,
+	.exception,
+	.retry,
+	.current-step,
+	.running,
+	.waiting,
+	.offline,
+	.idle,
+	.not_rebuilt
+	 {
+		border-top:1px solid #fff;
+	}
 }
 
 .table-1 tr .success:first-child {
 	border-top:none;
 }
 
+.not_rebuilt {
+	background-color: #F8FCF2;
+}
+
+.dependency_failure {
+  background-color: #FCF2F2;
+}
+
 .failure {
 	background-color: #EFCFCF;
-	border-top:1px solid #fff;
 }
 
 .warnings {
@@ -88,12 +120,10 @@ $color-blind-ignored: #008EE6;
 
 .skipped {
 	background: #CBDCE6;
-	border-top: 1px solid #FFFFFF;
 }
 
 .exception,.retry {
 	background-color: #DDD7DD;
-	border-top: 1px solid #FFFFFF;
 }
 
 .start {
@@ -103,8 +133,7 @@ $color-blind-ignored: #008EE6;
 }
 
 .running,.waiting,td.building, .current-step {
-	background-color: #FCFACB;
-	border-top:1px solid #fff;
+	background-color: #FCFACB;	
 }
 
 .overtime {
@@ -120,9 +149,3 @@ $color-blind-ignored: #008EE6;
     background-color: #F5F5F5;
     @include text-shadow(0 1px 0 #fff);
 }
- 
-.table-1 .offline,
-.table-1 .idle, 
-.table-1 .not_rebuilt {
-	border-top: 1px solid #FFFFFF;
-} 

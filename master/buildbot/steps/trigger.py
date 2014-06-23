@@ -19,6 +19,8 @@ from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
+from buildbot.status.results import DEPENDENCY_FAILURE
+
 
 class Trigger(LoggingBuildStep):
     name = "Trigger"
@@ -189,12 +191,8 @@ class Trigger(LoggingBuildStep):
             if results == FAILURE:
                 was_failure = True
 
-        if was_exception:
-            result = EXCEPTION
-            self.step_status.setText(["Dependency failed to build."])
-            self.step_status.setText2(["(dependency failed to build)"])
-        elif was_failure:
-            result = FAILURE
+        if was_exception or was_failure:
+            result = DEPENDENCY_FAILURE
             self.step_status.setText(["Dependency failed to build."])
             self.step_status.setText2(["(dependency failed to build)"])
         else:
@@ -203,7 +201,7 @@ class Trigger(LoggingBuildStep):
         if brids:
             master = self.build.builder.botmaster.parent
 
-            def  getBuildResults(build):
+            def getBuildResults(build):
                 if 'results' in build:
                     return (build['results'],)
                 return ()
@@ -242,7 +240,7 @@ class Trigger(LoggingBuildStep):
                             self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]
-            res_builds = yield defer.DeferredList(builddicts, consumeErrors=1)
+            res_builds = yield defer.DeferredList(builddicts, consumeErrors=True)
             if master.config.multiMaster:
                 yield add_links_multimaster(res_builds)
             else:

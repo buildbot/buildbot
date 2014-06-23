@@ -1,5 +1,5 @@
 /*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements', 'rtGenericTable', 'moment'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements, rtTable, moment) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements', 'rtGenericTable', 'moment', 'popup'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements, rtTable, moment, popup) {
     "use strict";
     var rtBuildSlaves,
         $tbSlaves;
@@ -35,7 +35,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!te
                         return mustache.render(buildslaves, {buildersPopup: true});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
-                        $(nTd).find('a.popup-btn-json-js').data({showBuilders: oData});
+                        var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
+                        popup.initJSONPopup($jsonPopup, {showBuilders: oData});
                     }
                 },
                 {

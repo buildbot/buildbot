@@ -13,8 +13,6 @@
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
     <title>{{ pageTitle|e }}</title>
-  
-    <script src="/prod/script/libs/jQuery-2-0-3.js"></script>
     
     <script type="text/javascript">
       var require = {
@@ -23,6 +21,9 @@
           deps : ['main']
       };
     </script>
+
+    {% block extra_script %}
+    {% endblock extra_script %}
         
     {% if instant_json %}
     <script id="instant-json" type="application/javascript">
@@ -45,6 +46,7 @@
     <script src="/prod/script/require.js?cachebust={{version}}"></script>
 
     <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
+  
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% block extra_header %}{% endblock %}
@@ -71,7 +73,7 @@
  
     <header class="header">          
         <nav class="top-menu-container">
-          <div class="container-inner">
+          <div class="container">
             
           <h1 class="logo">
             <a href="/">
@@ -114,20 +116,6 @@
           <li>
             <a id="home" href="{{ path_to_root or '.' }}">Home</a>
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}waterfall">Waterfall</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}grid">Grid</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}tgrid">T-Grid</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}console">Console</a>
-          </li>
-          -->
           <li class="project-dropdown">
             <a id="projects" href="{{ path_to_root }}projects">Projects</a>            
             <span id="projectDropdown" class="arrow-down-btn"></span>            
@@ -137,11 +125,6 @@
             <a id="buildqueue" href="{{ path_to_root }}buildqueue">              
                Build queue</a>            
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
-          </li>
-          -->
           <li>
             <a id="buildslaves"  href="{{ path_to_root }}buildslaves">
               <span id="verticalProgressBar" class="outer-bar tooltip responsive-tooltip">
@@ -157,29 +140,6 @@
           <li>
             <a id="json" href="{{ path_to_root }}json/help">JSON API</a>
           </li>
-          <!--
-          <li>
-            <a href="{{ path_to_root }}changes">Changesources</a>
-          <li>
-          -->
-          {#
-            {% if authz.advertiseAction('showUsersPage', request) %}
-           {% endif %}
-         #}
-          
-         <!--
-         <li>
-            <a href="{{ path_to_root }}json/help">JSON API</a>
-          </li>
-          <li>
-            <a href="{{ path_to_root }}users">Users</a>
-          </li>
-          
-          
-          <li>
-            <a href="{{ path_to_root }}about">About</a>
-          </li>
-          -->
         </ul>
         
         <div title="This is an indicator of how loaded Katana is.  It can be used for you to determine if it is a good
@@ -188,11 +148,6 @@
         under moderate load and we ask that you avoid scheduling new builds when the system is heavily loaded" id="buildLoad" class="info-box green tooltip responsive-tooltip">
             <h4>Build Load</h4>
             <span>0</span>
-        </div>
-        
-        <div id="attentionBox" class="info-box red">
-          <h4>Attention</h4>
-          <span>Not every element on this page is realtime yet!</span>
         </div>
       </div>
          </nav>
@@ -214,7 +169,7 @@
     {% block submenu -%}
     {%- endblock -%}
 
-    <div class="content container-inner">
+    <div class="content container">
       {%- block content -%}     
       {%- endblock -%}
     </div>
@@ -222,7 +177,7 @@
 
     {%- block footer -%} 
     <footer class="footer" style="clear:both">
-      <div class="container-inner">
+      <div class="container">
         <h3 class="buildbot-version">
           <a href="https://github.com/Unity-Technologies/buildbot/tree/katana">Katana</a> - a fork of <a href="http://buildbot.net/">BuildBot</a>
           <span>
