@@ -19,7 +19,7 @@ angular.module('buildbot.common').factory 'recentStorage',
                 deferred = $q.defer()
                 indexedDB = $window.indexedDB
 
-                openRequest = indexedDB.open('Recent', 1)
+                openRequest = indexedDB.open('Recent', 5)
                 openRequest.onupgradeneeded = (e) ->
                     thisDB = e.target.result
 

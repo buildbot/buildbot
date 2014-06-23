@@ -1,4 +1,4 @@
-angular.module('buildbot.builders').directive 'buildrequestsummary',
+angular.module('buildbot.common').directive 'buildrequestsummary',
 ['$log', 'RecursionHelper',
     ($log, RecursionHelper) ->
         replace: true
@@ -9,7 +9,7 @@ angular.module('buildbot.builders').directive 'buildrequestsummary',
         controller: 'buildrequestsummaryController'
 ]
 
-angular.module('buildbot.builders').controller 'buildrequestsummaryController',
+angular.module('buildbot.common').controller 'buildrequestsummaryController',
     ['$scope', 'buildbotService', 'findBuilds',
         ($scope, buildbotService, findBuilds) ->
 

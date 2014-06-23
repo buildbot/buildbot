@@ -4,7 +4,7 @@ Changes
 .. bb:rtype:: change
 
     :attr integer changeid: the ID of this change
-    :attr string author: the author of the change
+    :attr string author: the author of the change in "name", "name <email>" or just "email" (with @) format
     :attr files: source-code filenames changed
     :type files: list of strings
     :attr string comments: user comments
