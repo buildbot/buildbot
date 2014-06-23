@@ -49,7 +49,6 @@
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     {% block extra_header %}{% endblock %}
     <link rel="stylesheet" href="/prod/css/default.css?cachebust={{version}}" type="text/css" />
-    <script src="/prod/script/require.js?cachebust={{version}}"></script>
     {% endblock %} 
 
   </head>
@@ -206,6 +205,6 @@
     {% endblock -%}
 
     
- 
+    <script src="/prod/script/require.js?cachebust={{version}}"></script>
   </body>
 </html>
