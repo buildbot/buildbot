@@ -25,24 +25,11 @@ from buildbot.mq import base
 from twisted.python import log
 from kombu.transport.base import Message
 
-# class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
-class KombuMQ(config.ReconfigurableServiceMixin):
+class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
-    classes = {
-        'simple': {
-            'class': "buildbot.mq.simple.SimpleMQ",
-            'keys': set(['debug']),
-        },
-        'kombuMQ': {
-            'class': "buildbot.mq.kombuMQ.KombuMQ",
-            'keys': set(['debug']),
-        },
-    }
-    # to make it run.
-
-    def __init__(self, master, conn='amqp://guest:guest@localhost//'):
+    def __init__(self, master, conn='librabbitmq://guest:guest@localhost//'):
         # connection is a string and its default value:
-        # base.MQBase.__init__(self, master)
+        base.MQBase.__init__(self, master)
         self.debug = False
         self.conn = kombu.Connection(conn)
         self.channel = self.conn.channel()
@@ -54,9 +41,6 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         self.consumers = {}
         self.message_hub = KombuHub(self.conn)
         self.message_hub.start()
-
-    def setServiceParent(self, parrent):
-        pass
 
     def setupExchange(self):
         self.exchange = kombu.Exchange(
@@ -131,9 +115,7 @@ class KombuMQ(config.ReconfigurableServiceMixin):
         try:
             queue = self.queues[key]
         except:
-            thread.start_new_thread(self.registerQueue, (key,))
-            log.msg(str(self.queues.keys()))
-            log.msg(key)
+            self.registerQueue(key)
             try:
                 queue = self.queues.get(key)
             except:
