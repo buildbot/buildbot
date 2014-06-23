@@ -686,7 +686,6 @@ class PendingBuildsCache():
     @defer.inlineCallbacks
     def cache_now(self):
         if hasattr(self.builder, "status"):
-            print "Caching now"
             self.cache = yield self.builder.getPendingBuildRequestStatuses()
             defer.returnValue(self.cache)
 
