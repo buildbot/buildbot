@@ -417,7 +417,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated
-        builder_status.status = self
+        builder_status.setStatus(self)
         builder_status.friendly_name = friendly_name
 
         if not os.path.isdir(builder_status.basedir):
