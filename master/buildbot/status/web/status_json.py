@@ -813,7 +813,7 @@ class QueueJsonResource(JsonResource):
             defers.append(d)
 
         #Call the yield after to run async calls
-        for d in defer:
+        for d in defers:
             r = yield d
             output.append(r)
 
