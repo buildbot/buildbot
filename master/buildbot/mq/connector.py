@@ -25,6 +25,10 @@ class MQConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             'class': "buildbot.mq.simple.SimpleMQ",
             'keys': set(['debug']),
         },
+        'kombuMQ': {
+            'class': "buildbot.mq.kombuMQ.KombuMQ",
+            'keys': set(['debug']),
+        },
     }
 
     def __init__(self, master):
