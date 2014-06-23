@@ -28,6 +28,18 @@ from kombu.transport.base import Message
 # class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 class KombuMQ(config.ReconfigurableServiceMixin):
 
+    classes = {
+        'simple': {
+            'class': "buildbot.mq.simple.SimpleMQ",
+            'keys': set(['debug']),
+        },
+        'kombuMQ': {
+            'class': "buildbot.mq.kombuMQ.KombuMQ",
+            'keys': set(['debug']),
+        },
+    }
+    # to make it run.
+
     def __init__(self, master, conn='amqp://guest:guest@localhost//'):
         # connection is a string and its default value:
         # base.MQBase.__init__(self, master)
