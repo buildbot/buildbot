@@ -88,6 +88,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         return True
 
     def produce(self, routingKey, data):
+        self.debug = True
         if self.debug:
             log.msg("MSG: %s\n%s" % (routingKey, pprint.pformat(data)))
         key = self.formatKey(routingKey)
