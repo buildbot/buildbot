@@ -17,6 +17,7 @@ import pprint
 import kombu
 import kombu.async
 import amqp.exceptions
+<<<<<<< HEAD
 import multiprocessing
 
 from buildbot import config
@@ -32,6 +33,21 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def __init__(self, master, conn='librabbitmq://guest:guest@localhost//'):
         # connection is a string and its default value:
         base.MQBase.__init__(self, master)
+=======
+import threading
+import thread
+
+from buildbot import config
+from buildbot.mq import base
+from twisted.python import log
+from kombu.transport.base import Message
+
+# class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
+class KombuMQ(config.ReconfigurableServiceMixin):
+
+    def __init__(self, master, conn='amqp://guest:guest@localhost//'):
+        # connection is a string and its default value:
+        # base.MQBase.__init__(self, master)
         self.debug = False
         self.conn = kombu.Connection(conn)
         self.channel = self.conn.channel()
@@ -43,6 +59,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         self.consumers = {}
         self.message_hub = KombuHub(self.conn)
         self.message_hub.start()
+
+    def setServiceParent(self, parrent):
+        pass
 
     def setupExchange(self):
         self.exchange = kombu.Exchange(
@@ -113,31 +132,32 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def startConsuming(self, callback, routingKey, persistent_name=None):
         key = self.formatKey(routingKey)
 
-        if key not in self.queues:
-            ensureRegister = self.conn.ensure(None,
-                                              self.registerQueue,
-                                              max_retries=5)
-            ensureRegister(key)
-        queue = self.queues.get(key)
+        log.msg(str(key) + str(self.queues))
+        try:
+            queue = self.queues[key]
+        except:
+            thread.start_new_thread(self.regeristyQueue, (key,))
+            log.msg(str(self.queues.keys()))
+            log.msg(key)
+            try:
+                queue = self.queues.get(key)
+            except:
+                raise
 
         if key in self.consumers.keys():
             log.msg(
-                "WARNNING: Consumer's Routing Key %s has been used by, " % key +
-                "register failed")
+                "WARNNING: Consumer's Routing Key %s has been used by, " % key +                "regeristy failed")
             if callback in self.consumers[key].callbacks:
                 log.msg(
-                    "WARNNING: Consumer %s has been register to callback %s "
-                    % (key, callback))
+                    "WARNNING: Consumer %s has been regeristy to callback %s "
+                     % (key, callback))
             else:
                 self.consumers[key].register_callback(callback)
         else:
-            self.registerConsumer(key, callback)
-
-        return DeferConsumer(self.consumers[key])
+            self.regeristyConsumer(key, callback)
 
     def formatKey(self, key):
-        # transform key from a tuple to a string with standard routing key's
-        # format
+        # transform key from a tuple to a string with standard routing key's format
         result = ""
         for item in key:
             if item == None:
@@ -147,62 +167,25 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
         return result[:-1]
 
-    def formatData(self, data):
-        if isinstance(data, dict):
-            for key in data:
-                if isinstance(data[key], datetime):
-                    data[key] = datetime2epoch(data[key])
-                elif isinstance(data[index], (dict, list, tuple)):
-                    data[key] = self.formatData(data[key])
-        elif type(data) in (list, tuple):
-            for index in range(len(data)):
-                if isinstance(data[index], datetime):
-                    data[index] = datetime2epoch(data[index])
-                elif isinstance(data[index], (dict, list, tuple)):
-                    data[index] = self.formatData(data[index])
+    def __exit__(self):
+        self.message_hub.__exit__()
+        for queue in self.queues:
+            queue.delete(nowait=True)
+        self.exchange.delete(nowait=True)
+        self.conn.release()
 
-        return data
-
-
-class KombuHub(multiprocessing.Process):
-
-    """Message hub to handle message asynchronously by start a another process"""
+class KombuHub(threading.Thread):
+    """Message hub to handle message asynchronously by start a another thread"""
 
     def __init__(self, conn):
-        multiprocessing.Process.__init__(self)
+        threading.Thread.__init__(self)
         self.conn = conn
         self.hub = kombu.async.Hub()
-        self.lock = multiprocessing.Lock()
 
         self.conn.register_with_event_loop(self.hub)
-        self.attempts = 5
 
     def run(self):
-        if self.attempts == 0:
-            raise "Attempts run kombu hub 5 times and all fail"
-        try:
-            self.hub.run_forever()
-        except:
-            self.attempts = self.attempts - 1
-            self.run()
+        self.hub.run_forever()
 
     def __exit__(self):
         self.hub.stop()
-
-
-class DeferConsumer(object):
-
-    "Use for simulating defer's addCallback"
-
-    def __init__(self, consumer):
-        self.consumer = consumer
-
-    def addCallback(self, callback):
-        self.consumer.register_callback(callback)
-
-    def addErrback(self, callback, msg):
-        self.consumer.register_callback(callback)
-        log.msg(msg)
-
-    def stopConsuming(self):
-        pass
