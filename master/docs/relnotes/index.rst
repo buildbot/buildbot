@@ -66,6 +66,10 @@ Fixes
 
 * The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
 
+* With Git(), force the updating submodules to ensure local changes by the
+  build are overwitten. This both ensures more consistent builds and avoids
+  errors when updating submodules.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

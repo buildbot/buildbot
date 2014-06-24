@@ -530,7 +530,7 @@ class Git(Source):
     def _updateSubmodule(self, _=None):
         if self.submodules:
             return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive'])
+                                  '--init', '--recursive', '--force'])
         else:
             return defer.succeed(0)
 
