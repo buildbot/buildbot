@@ -87,6 +87,8 @@ Fixes
 * GitHub change hook now correctly responds to ping events.
 * ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
 * :bb:step:`MasterShellCommand` now correctly logs the working directory where it was run.
+* With Git(), force the updating submodules to ensure local changes by the build are overwitten.
+  This both ensures more consistent builds and avoids errors when updating submodules.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
