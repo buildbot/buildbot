@@ -57,6 +57,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._build_request_sub = \
             self.master.subscribeToBuildRequests(
                 self._buildRequestCallback)
+        self._cancelled_build_request_sub = \
+            self.master.subscribeToCancelledBuildRequests(
+                self._cancelledBuildRequestCallback)
         self._change_sub = \
             self.master.subscribeToChanges(
                 self.changeAdded)
@@ -520,4 +523,13 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                                                 notif['brid'], self)
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestSubmitted'):
+                    eventually(observer.requestSubmitted, brs)
+
+    def _cancelledBuildRequestCallback(self, notif):
+        buildername = notif['buildername']
+        if buildername in self._builder_observers:
+            brs = buildrequest.BuildRequestStatus(buildername,
+                                                notif['brid'], self)
+            for observer in self._builder_observers[buildername]:
+                if hasattr(observer, 'requestCancelled'):
                     eventually(observer.requestSubmitted, brs)

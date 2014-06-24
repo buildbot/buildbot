@@ -234,6 +234,10 @@ class BuildRequest(object):
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)
 
+        # now let the master know it should inform its subscribers that the build
+        # was cancelled
+        self.master.buildRequestRemoved(self.bsid, self.id, self.buildername)
+
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)
 
