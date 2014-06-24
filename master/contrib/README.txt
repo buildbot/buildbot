@@ -55,3 +55,9 @@ bash/buildslave: bash tab-completion file for 'buildbot' command. Source this
 
 SimpleConfig.py: an example of how to configure buildbot using a declarative
                  json file plus one buildshim script per project
+
+api_proxy.py: a simple flask application to help web ui development
+              it will proxy the api request to a production buildbot instance
+              This helps the ui developer to test dashboards with real data 
+              please pip install flask requests on top of the usual buildbot
+              virtualenv to make it work
