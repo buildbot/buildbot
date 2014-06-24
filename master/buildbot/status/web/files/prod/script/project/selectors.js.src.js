@@ -1,4 +1,5 @@
-define(['select2'], function () {
+/*global define*/
+define(['jquery', 'select2'], function ($) {
 
     
     var selectors;
@@ -7,43 +8,43 @@ define(['select2'], function () {
 
         //Set the highest with on both selectors
         init: function () {
-            var selectBranches = $(".select-tools-js");
-            var commonbranchSelect = $("#commonBranch_select");
+            var $selectBranches = $(".select-tools-js");
+            var $commonBranchSelect = $("#commonBranch_select");
 
-            selectBranches.select2({
-                width: selectors.getMaxChildWidth(selectBranches),
+            $selectBranches.removeClass("hide");
+            $selectBranches.select2({
+                width: selectors.getMaxChildWidth($selectBranches),
                 minimumResultsForSearch: 10
             });
 
             // invoke the sortingfunctionality when the selector
-            selectBranches.add(commonbranchSelect).on("select2-open", function () {
+            $selectBranches.add($commonBranchSelect).on("select2-open", function () {
                 selectors.clickSort();
             });
 
             // fill the options in the combobox with common options
-            selectors.comboBox(selectBranches, commonbranchSelect);
+            selectors.comboBox($selectBranches, $commonBranchSelect);
 
             //Invoke select2 for the common selector
-            commonbranchSelect.select2({
-                width: selectors.getMaxChildWidth(commonbranchSelect),
+            $commonBranchSelect.select2({
+                width: selectors.getMaxChildWidth($commonBranchSelect),
                 placeholder: "Select a branch"
             });
 
             // unbind the click event on close for the sorting functionality
-            commonbranchSelect.add(selectBranches).on("select2-close", function () {
+            $commonBranchSelect.add($selectBranches).on("select2-close", function () {
                 $('.sort-name').unbind('click');
                 $('.select2-container').removeClass('select2-container-active');
             });
 
-            selectBranches.on("select2-selecting", function () {
-                commonbranchSelect.select2("val", "");
+            $selectBranches.on("select2-selecting", function () {
+                $commonBranchSelect.select2("val", "");
             });
-
-
-        }, getMaxChildWidth: function (sel) {
+        },
+        getMaxChildWidth: function ($elems) {
             var max = 80;
 
-            sel.each(function () {
+            $elems.each(function () {
                 var c_width = $(this).width();
 
                 if (c_width > max) {
@@ -58,14 +59,14 @@ define(['select2'], function () {
 
             // Find common options
             $('option', selector).each(function () {
-                $(this).clone().prop('selected', false).appendTo(commonbranchSelect)
+                $(this).clone().prop('selected', false).appendTo(commonbranchSelect);
             });
 
             // remove the duplicates
             var removedDuplicatesOptions = {};
             $('option', commonbranchSelect).each(function () {
                 var value = $(this).text();
-                if (removedDuplicatesOptions[value] == null) {
+                if (removedDuplicatesOptions[value] === undefined) {
                     removedDuplicatesOptions[value] = true;
                 } else {
                     $(this).remove();
@@ -75,7 +76,7 @@ define(['select2'], function () {
             var defaults = [];
             $(selector).each(function (i, obj) {
                 var opt = $('option[selected]', obj);
-                defaults.push(opt.html().trim())
+                defaults.push(opt.html().trim());
             });
 
             commonbranchSelect.on("change", function () {
@@ -113,9 +114,9 @@ define(['select2'], function () {
                     var upB = $(b).text().toUpperCase();
                     if (!sortLink.hasClass('direction-up')) {
                         return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
-                    } else {
-                        return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
                     }
+
+                    return (upA > upB) ? -1 : (upA < upB) ? 1 : 0;
                 }).appendTo(selectResults);
                 selectResults.prop({ scrollTop: 0 });
             });
