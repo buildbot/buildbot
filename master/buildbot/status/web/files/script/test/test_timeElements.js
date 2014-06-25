@@ -401,7 +401,7 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
                 expect($spinner.css("background-position")).toEqual("-13px 0px");
                 $spinner.remove();
                 done();
-            }, 80 * 1.5);
+            }, 80 * 2);
         });
     });
 
