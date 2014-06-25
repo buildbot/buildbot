@@ -25,6 +25,7 @@ from buildbot.mq import base
 from twisted.python import log
 from kombu.transport.base import Message
 from datetime import datetime
+from twisted.internet import defer
 
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
@@ -147,10 +148,11 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         else:
             self.registerConsumer(key, callback)
 
-        self.consumers[key].addCallback = self.consumers[key].register_callback
-        self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
+        # self.consumers[key].addCallback = self.consumers[key].register_callback
+        # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
+        self.consumers[key].stopConsuming = lambda : pass
 
-        return self.consumers[key]
+        return defer.succeed(self.consumers[key])
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
