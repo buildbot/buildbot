@@ -78,7 +78,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             self.queues[name].declare()
         else:
             log.msg(
-                "ERROR: Routing Key %s has been used by, register queue failed" % key)
+                "ERR: Routing Key %s has been used by, register queue failed" % key)
             raise Exception("ERROR: Routing Key %s has been used" % key)
             # NOTE(damon) should raise an exception here?
 
@@ -148,6 +148,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             self.registerConsumer(key, callback)
 
         self.consumers[key].addCallback = self.consumers[key].register_callback
+        self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
 
         return self.consumers[key]
 
