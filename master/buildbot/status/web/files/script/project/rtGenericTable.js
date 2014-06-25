@@ -113,7 +113,7 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                         isRunning = false;
                     if (type.connected === undefined || type.connected === false) {
                         statusTxt = 'Offline';
-                    } else if (type.connected === true && type.runningBuilds === undefined) {
+                    } else if (type.connected === true && (type.runningBuilds === undefined || type.runningBuilds.length === 0)) {
                         statusTxt = 'Idle';
                     } else if (type.connected === true && type.runningBuilds.length > 0) {
                         statusTxt = type.runningBuilds.length + ' build(s) ';
@@ -127,15 +127,14 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
                     } else if (oData.connected === true && oData.runningBuilds === undefined) {
                         $(nTd).addClass('idle');
                     } else if (oData.connected === true && oData.runningBuilds.length > 0) {
-                        var overtime = 0;
+                        var overtime = false;
                         if (oData.runningBuilds !== undefined) {
 
                             $.each(oData.runningBuilds, function (key, value) {
                                 if (value.eta !== undefined && value.eta < 0) {
-                                    overtime += 1;
+                                    overtime = true;
                                 }
                             });
-                            overtime = overtime > 0 ? overtime : false;
                         }
 
                         var $jsonPopup = $(nTd).addClass('building').find('a.popup-btn-json-js');
