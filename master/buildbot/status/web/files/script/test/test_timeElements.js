@@ -49,8 +49,8 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
 
     describe("A formatted date", function () {
         it("returns correctly", function () {
-            var time = moment(0);
-            expect(extend_moment.getDateFormatted(time)).toEqual("January 01, 1:00:00");
+            var time = moment(1403693931);
+            expect(extend_moment.getDateFormatted(time)).toEqual("June 25, 12:58:51");
         });
     });
 
