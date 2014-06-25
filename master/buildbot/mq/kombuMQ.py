@@ -164,9 +164,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         return result[:-1]
 
     def formatData(self, data):
-        from buildbot.util import datetime2epoch
+        from buildbot.www.rest import _toJson
         for item in data:
-            data[item] = datetime2epoch(data[item])
+            data[item] = _toJson(data[item])
 
         return data
 
