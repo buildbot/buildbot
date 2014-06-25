@@ -156,7 +156,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         from buildbot.util import datetime2epoch
         for item in data:
             if isinstance(data[item], datetime):
-                data[item] = atetime2epoch(data[item])
+                data[item] = datetime2epoch(data[item])
 
         return data
 
