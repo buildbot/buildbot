@@ -147,6 +147,10 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         else:
             self.registerConsumer(key, callback)
 
+        self.consumers[key].addCallback = self.consumers[key].register_callback
+
+        return self.consumers[key]
+
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
         # format
@@ -162,8 +166,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def formatData(self, data):
         from buildbot.util import datetime2epoch
         for item in data:
-            if type(data[item]) == datetime:
-                data[item] = datetime2epoch(data[item])
+            data[item] = datetime2epoch(data[item])
 
         return data
 
