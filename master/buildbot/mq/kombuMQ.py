@@ -21,9 +21,10 @@ import multiprocessing
 
 from buildbot import config
 from buildbot.mq import base
-from twisted.python import log
-from kombu.transport.base import Message
+from buildbot.util import datetime2epoch
 from datetime import datetime
+from kombu.transport.base import Message
+from twisted.python import log
 
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
@@ -164,12 +165,21 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         return result[:-1]
 
     def formatData(self, data):
-        from buildbot.util import datetime2epoch
-        for item in data:
-            if isinstance(data[item], datetime):
-                data[item] = datetime2epoch(data[item])
+        if isinstance(data, dict):
+            for key in data:
+                if isinstance(data[key], datetime):
+                    data[key] = datetime2epoch(data[key])
+                elif type(data[key]) in (dict, list, tuple):
+                    data[key] = formatData(data[key])
+        elif type(data) in (list, tuple):
+            for index in range(len(data)):
+                if isinstance(data[index], datetime):
+                    data[index] = datetime2epoch(data[index])
+                elif type(data[index]) in (dict, list, tuple):
+                    data[index] = formatData(data[index])
 
         return data
+
 
     def __exit__(self):
         self.message_hub.__exit__()
