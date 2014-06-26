@@ -226,6 +226,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 title: $('<h3 class="codebases-head" />').html("Select Branches"),
                                 html: fw,
                                 destroyAfter: true,
+                                onCreate: function ($elem) {
+                                    $elem.css("max-width", "80%");
+                                },
                                 onShow: function ($elem) {
                                     selectors.init();
                                     helpers.jCenter($elem);
