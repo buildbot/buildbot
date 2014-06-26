@@ -504,7 +504,7 @@ class HtmlResource(resource.Resource, ContextMixin):
         defer.returnValue({
             "global": {
                 "url": path_to_json_global_status(status, request),
-                "data": json.dumps(global_json)
+                "data": json.dumps(global_json, separators=(',', ':'))
             }
         })
 

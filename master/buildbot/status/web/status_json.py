@@ -197,8 +197,6 @@ class JsonResource(resource.Resource):
                 request.setHeader("content-type", 'text/plain')
             else:
                 request.setHeader("content-type", self.contentType)
-                request.setHeader("content-disposition",
-                                  "attachment; filename=\"%s.json\"" % request.path)
                 # Make sure we get fresh pages.
             if self.cache_seconds:
                 now = datetime.datetime.utcnow()
@@ -277,7 +275,7 @@ class JsonResource(resource.Resource):
         if filter_out:
             data = FilterOut(data)
         if compact:
-            data = json.dumps(data, sort_keys=True, separators=(',', ':'))
+            data = json.dumps(data, separators=(',', ':'))
         else:
             data = json.dumps(data, sort_keys=True, indent=2)
         if callback:

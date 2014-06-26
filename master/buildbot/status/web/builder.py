@@ -304,26 +304,26 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         project_dict = yield project_json.asDict(req)
         url = self.status.getBuildbotURL() + path_to_json_project_builder(req, project, self.builder_status.name)
         cxt['instant_json']['project'] = {"url": url,
-                                          "data": json.dumps(project_dict)}
+                                          "data": json.dumps(project_dict, separators=(',', ':'))}
 
         pending_json = SinglePendingBuildsJsonResource(self.status, self.builder_status)
         pending_dict = yield pending_json.asDict(req)
         pending_url = self.status.getBuildbotURL() + path_to_json_pending(req, self.builder_status.name)
         cxt['instant_json']['pending_builds'] = {"url": pending_url,
-                                                 "data": json.dumps(pending_dict)}
+                                                 "data": json.dumps(pending_dict, separators=(',', ':'))}
 
         number_of_builds = 15
         builds_json = PastBuildsJsonResource(self.status, number_of_builds,  builder_status=self.builder_status)
         builds_dict = yield builds_json.asDict(req)
         builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, number_of_builds)
         cxt['instant_json']['builds'] = {"url": builds_url,
-                                         "data": json.dumps(builds_dict)}
+                                         "data": json.dumps(builds_dict, separators=(',', ':'))}
 
         slaves = BuilderSlavesJsonResources(self.status, self.builder_status)
         slaves_dict = yield slaves.asDict(req)
         slaves_dict = FilterOut(slaves_dict)
         url = self.status.getBuildbotURL() + path_to_json_builder_slaves(self.builder_status.getName()) + "?filter=1"
-        cxt['instant_json']["slaves"] = {"url": url, "data": json.dumps(slaves_dict)}
+        cxt['instant_json']["slaves"] = {"url": url, "data": json.dumps(slaves_dict, separators=(',', ':'))}
 
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
@@ -555,7 +555,7 @@ class BuildersResource(HtmlResource):
         project_dict = yield project_json.asDict(req)
         url = status.getBuildbotURL() + path_to_json_builders(req, self.project.name)
         cxt['instant_json']['builders'] = {"url": url,
-                                           "data": json.dumps(project_dict)}
+                                           "data": json.dumps(project_dict, separators=(',', ':'))}
 
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
