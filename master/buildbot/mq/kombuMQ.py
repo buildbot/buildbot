@@ -137,7 +137,6 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
         # self.consumers[key].addCallback = self.consumers[key].register_callback
         # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
-        self.consumers[key].stopConsuming = lambda : pass
 
         return self.consumers[key]
 
