@@ -513,7 +513,10 @@ class WebStatus(service.MultiService):
         if "json" in self.provide_feeds:
             root.putChild("json", JsonStatusResource(status))
 
-        self.site.resource = wrapper(root)
+        if self.master.config.gzip:
+            self.site.resource = wrapper(root)
+        else:
+            self.site.resource = root
 
     def putChild(self, name, child_resource):
         """This behaves a lot like root.putChild() . """
