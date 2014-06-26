@@ -29,7 +29,7 @@ from twisted.python import log
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
-    def __init__(self, master, conn='librabbitmq://guest:guest@localhost//'):
+    def __init__(self, master, conn='amqp://guest:guest@localhost//'):
         # connection is a string and its default value:
         base.MQBase.__init__(self, master)
         self.debug = False
