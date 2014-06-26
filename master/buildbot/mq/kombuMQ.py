@@ -176,11 +176,14 @@ class KombuHub(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         self.conn = conn
         self.hub = kombu.async.Hub()
+        self.lock = multiprocessing.Lock()
 
         self.conn.register_with_event_loop(self.hub)
 
     def run(self):
+        self.lock.acquire()
         self.hub.run_forever()
 
     def __exit__(self):
         self.hub.stop()
+        self.lock.release()
