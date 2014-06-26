@@ -17,15 +17,13 @@ import pprint
 import kombu
 import kombu.async
 import amqp.exceptions
-import threading
-import thread
+import multiprocessing
 
 from buildbot import config
 from buildbot.mq import base
 from twisted.python import log
 from kombu.transport.base import Message
 from datetime import datetime
-from twisted.internet import defer
 
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
@@ -141,7 +139,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
         self.consumers[key].stopConsuming = lambda : pass
 
-        return defer.succeed(self.consumers[key])
+        return self.consumers[key]
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
@@ -171,12 +169,12 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         self.conn.release()
 
 
-class KombuHub(threading.Thread):
+class KombuHub(multiprocessing.Process):
 
-    """Message hub to handle message asynchronously by start a another thread"""
+    """Message hub to handle message asynchronously by start a another process"""
 
     def __init__(self, conn):
-        threading.Thread.__init__(self)
+        multiprocessing.Process.__init__(self)
         self.conn = conn
         self.hub = kombu.async.Hub()
 
