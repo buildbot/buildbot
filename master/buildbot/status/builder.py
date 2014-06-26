@@ -18,6 +18,7 @@ from __future__ import with_statement
 
 import os, re, itertools
 from cPickle import load, dump
+from buildbot.interfaces import IStatusReceiver
 from twisted.internet import defer
 
 from zope.interface import implements
@@ -63,6 +64,8 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
     unavailable_build_numbers = set()
+    pendingBuildsCache = None
+    status = None
 
     def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
@@ -85,7 +88,12 @@ class BuilderStatus(styles.Versioned):
         self.reason = None
         self.unavailable_build_numbers = set()
 
+
     # persistence
+
+    def setStatus(self, status):
+        self.status = status
+        self.pendingBuildCache = PendingBuildsCache(self)
 
     def __getstate__(self):
         # when saving, don't record transient stuff like what builds are
@@ -301,16 +309,15 @@ class BuilderStatus(styles.Versioned):
     def getSlaves(self):
         return [self.status.getSlave(name) for name in self.slavenames]
 
+    @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self):
         db = self.status.master.db
-        d = db.buildrequests.getBuildRequests(claimed=False,
-                                              buildername=self.name)
-        def make_statuses(brdicts):
-            return [BuildRequestStatus(self.name, brdict['brid'],
-                                       self.status)
-                    for brdict in brdicts]
-        d.addCallback(make_statuses)
-        return d
+
+        brdicts = yield db.buildrequests.getBuildRequests(claimed=False,
+                                             buildername=self.name)
+
+        result = [BuildRequestStatus(self.name, brdict['brid'],self.status) for brdict in brdicts]
+        defer.returnValue(result)
 
     def foundCodebasesInBuild(self, build, codebases):
         if len(codebases) > 0:
@@ -636,13 +643,19 @@ class BuilderStatus(styles.Versioned):
     def asDict_async(self, codebases={}, request=None, base_build_dict=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
         result = self.asDict(codebases, request, base_build_dict)
-        builds =  yield self.getPendingBuildRequestStatuses()
+        builds = self.pendingBuildCache.getPendingBuilds()
 
         #Remove builds not within this codebase
         count = 0
+        defers = []
         if len(codebases) > 0:
             for b in builds:
-                in_codebase = yield self.foundCodebasesInBuildRequest(b, codebases)
+                de = self.foundCodebasesInBuildRequest(b, codebases)
+                defers.append(de)
+
+            #Allow the defers to run async
+            for d in defers:
+                in_codebase = yield d
                 if in_codebase:
                     count += 1
         else:
@@ -655,3 +668,46 @@ class BuilderStatus(styles.Versioned):
         return self.botmaster.parent.metrics
 
 # vim: set ts=4 sts=4 sw=4 et:
+
+class PendingBuildsCache():
+    implements(IStatusReceiver)
+
+    """
+    A class which caches the pending builds for a builder
+    it will clear the cache and request them again when
+    a build is requested or started
+    """
+    def __init__(self, builder):
+        self.builder = builder
+        self.cache = None
+        self.cache_now()
+        self.builder.subscribe(self)
+
+    @defer.inlineCallbacks
+    def cache_now(self):
+        if hasattr(self.builder, "status"):
+            self.cache = yield self.builder.getPendingBuildRequestStatuses()
+            defer.returnValue(self.cache)
+
+    def getPendingBuilds(self):
+        return self.cache
+
+    def buildStarted(self, builderName, state):
+        self.cache_now()
+
+    def buildFinished(self, builderName, state, results):
+        self.cache_now()
+        
+    def requestSubmitted(self, req):
+        self.cache_now()
+
+    def requestCancelled(self, req):
+        self.cache_now()
+
+    def builderChangedState(self, builderName, state):
+        """
+        Do nothing
+        """
+
+
+

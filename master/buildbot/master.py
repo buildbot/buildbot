@@ -101,6 +101,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                 subscription.SubscriptionPoint("changes")
         self._new_buildrequest_subs = \
                 subscription.SubscriptionPoint("buildrequest_additions")
+        self._cancelled_buildrequest_subs = \
+                subscription.SubscriptionPoint("buildrequest_cancelled")
         self._new_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
@@ -612,6 +614,20 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self._new_buildrequest_subs.deliver(
                 dict(bsid=bsid, brid=brid, buildername=buildername))
 
+    def buildRequestRemoved(self, bsid, brid, buildername):
+        """
+        Notifies the master that a build request is available to be claimed;
+        this may be a brand new build request, or a build request that was
+        previously claimed and unclaimed through a timeout or other calamity.
+
+        @param bsid: containing buildset id
+        @param brid: buildrequest ID
+        @param buildername: builder named by the build request
+        """
+        self._cancelled_buildrequest_subs.deliver(
+                dict(bsid=bsid, brid=brid, buildername=buildername))
+
+
     def subscribeToBuildRequests(self, callback):
         """
         Request that C{callback} be invoked with a dictionary with keys C{brid}
@@ -624,6 +640,14 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         return self._new_buildrequest_subs.subscribe(callback)
 
+    def subscribeToCancelledBuildRequests(self, callback):
+        """
+        Request that C{callback} be invoked with a dictionary with keys C{brid}
+        (the build request id), C{bsid} (buildset id) and C{buildername}
+        whenever a build request is cancelled.
+        """
+        return self._cancelled_buildrequest_subs.subscribe(callback)
+
 
     ## database polling
 
@@ -634,11 +658,12 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # simultaneously.  Each particular poll method handles errors itself,
         # although catastrophic errors are handled here
         d = defer.gatherResults([
-            self.pollDatabaseChanges(),
-            self.pollDatabaseBuildRequests(),
+            self.pollDatabaseChanges().addErrback(log.err,
+                "while polling changes"),
+            self.pollDatabaseBuildRequests().addErrback(log.err,
+                "while polling build requests"),
             # also unclaim
         ])
-        d.addErrback(log.err, 'while polling database')
         return d
 
     _last_processed_change = None

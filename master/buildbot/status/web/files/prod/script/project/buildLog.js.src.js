@@ -18,6 +18,8 @@ define(["main"], function () {
                 $scrollOpt = $("#scrollOpt"),
                 hasPressed = false;
 
+            $iFrame.attr("src", $iFrame.attr("data-src"));
+
             //Start auto resizer
             $iFrame.iFrameResize({
                 "autoResize": true,

@@ -725,7 +725,8 @@ class Builder(config.ReconfigurableServiceMixin,
         # nextBuild expects BuildRequest objects, so instantiate them here
         # and cache them in the dictionaries
         d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                  for brdict in buildrequests ])
+                                  for brdict in buildrequests ],
+                                consumeErrors=True)
         d.addCallback(lambda requestobjects :
         self.config.nextBuild(self, requestobjects))
         def to_brdict(brobj):

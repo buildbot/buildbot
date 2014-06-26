@@ -155,7 +155,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # then turn those into changes, using the cache
         def get_changes(changeids):
             return defer.gatherResults([ self.getChange(changeid)
-                                         for changeid in changeids ])
+                                         for changeid in changeids ],
+                                       consumeErrors=True)
         d.addCallback(get_changes)
         return d
 

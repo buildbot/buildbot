@@ -15,11 +15,12 @@
 
 
 import os, weakref
+import zlib
 
 from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
-from twisted.web import server, distrib, static
+from twisted.web import server, distrib, static, resource
 from twisted.spread import pb
 from twisted.web.util import Redirect
 from buildbot import config
@@ -46,6 +47,29 @@ from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginRe
 from buildbot.status.web.root import RootPage
 from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
+
+class SafeGzipEncoderFactory(server.GzipEncoderFactory):
+    """
+    Overwrite the default gzip encoder factory as some larger files
+    fail to compress on the default settings
+    """
+    def encoderForRequest(self, request):
+        compressor = server.GzipEncoderFactory.encoderForRequest(self, request)
+        if compressor is not None:
+            compressor._zlibCompressor = zlib.compressobj(self.compressLevel,
+                                                          zlib.DEFLATED, 16 + zlib.MAX_WBITS, 7)
+
+        return compressor
+
+if hasattr(server, 'GzipEncoderFactory'):
+    class wrapper(resource.EncodingResourceWrapper):
+        isLeaf=True
+        def __init__(self, original):
+            resource.EncodingResourceWrapper.__init__(self, original, [SafeGzipEncoderFactory()])
+        def render(self, req):
+            return resource.getChildForRequest(self.original, req).render(req)
+else:
+    wrapper = lambda x: x
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
@@ -489,7 +513,7 @@ class WebStatus(service.MultiService):
         if "json" in self.provide_feeds:
             root.putChild("json", JsonStatusResource(status))
 
-        self.site.resource = root
+        self.site.resource = wrapper(root)
 
     def putChild(self, name, child_resource):
         """This behaves a lot like root.putChild() . """

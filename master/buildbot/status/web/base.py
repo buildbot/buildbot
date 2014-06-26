@@ -549,6 +549,28 @@ class StaticFile(static.File):
     """This class adds support for templated directory
     views."""
 
+    def cache(self, request, expires=30, public=True):
+        #set expires header
+        from wsgiref.handlers import format_date_time as format_date
+        from datetime import date, timedelta
+        from time import mktime
+        
+        expiry = (date.today() + timedelta(expires)).timetuple()
+        request.setHeader("expires" , format_date(mktime(expiry)))
+
+        cache_control = "max-age=" + str(60*60*24*expires)
+        if public:
+            cache_control += ", public"
+        else:
+            cache_control += ", private"
+        request.setHeader("cache-control", cache_control)
+
+        return request
+
+    def render_GET(self, request):
+        self.cache(request)
+        return static.File.render_GET(self, request)
+
     def directoryListing(self):
         return DirectoryLister(self.path,
                                 self.listNames(),
