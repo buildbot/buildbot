@@ -170,13 +170,13 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
                 if isinstance(data[key], datetime):
                     data[key] = datetime2epoch(data[key])
                 elif type(data[key]) in (dict, list, tuple):
-                    data[key] = formatData(data[key])
+                    data[key] = self.formatData(data[key])
         elif type(data) in (list, tuple):
             for index in range(len(data)):
                 if isinstance(data[index], datetime):
                     data[index] = datetime2epoch(data[index])
                 elif type(data[index]) in (dict, list, tuple):
-                    data[index] = formatData(data[index])
+                    data[index] = self.formatData(data[index])
 
         return data
 
