@@ -2,6 +2,7 @@ name = 'buildbot.about'
 dependencies = [
     'ui.router'
     'buildbot.common'
+    'bowerconfigs'
 ]
 
 # Register new module
