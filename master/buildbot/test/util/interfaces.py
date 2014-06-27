@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 import inspect
+import pkg_resources
+
+from twisted.trial import unittest
 
 
 class InterfaceTests(object):
@@ -81,6 +84,13 @@ class InterfaceTests(object):
 
     def assertInterfacesImplemented(self, cls):
         "Given a class, assert that the zope.interface.Interfaces are implemented to specification."
+
+        # see if this version of zope.interface is too old to run these tests
+        zi_vers = pkg_resources.working_set.find(
+            pkg_resources.Requirement.parse('zope.interface')).version
+        if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version('4.1.1'):
+            raise unittest.SkipTest("zope.interfaces is too old to run this test")
+
         import zope.interface.interface
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
