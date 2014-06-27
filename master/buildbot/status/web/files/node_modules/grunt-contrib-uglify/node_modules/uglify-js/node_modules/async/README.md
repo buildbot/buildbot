@@ -104,20 +104,30 @@ So far it's been tested in IE6, IE7, IE8, FF3.6 and Chrome 5. Usage:
 ### Collections
 
 * [each](#each)
+* [eachSeries](#eachSeries)
+* [eachLimit](#eachLimit)
 * [map](#map)
+* [mapSeries](#mapSeries)
+* [mapLimit](#mapLimit)
 * [filter](#filter)
+* [filterSeries](#filterSeries)
 * [reject](#reject)
+* [rejectSeries](#rejectSeries)
 * [reduce](#reduce)
+* [reduceRight](#reduceRight)
 * [detect](#detect)
+* [detectSeries](#detectSeries)
 * [sortBy](#sortBy)
 * [some](#some)
 * [every](#every)
 * [concat](#concat)
+* [concatSeries](#concatSeries)
 
 ### Control Flow
 
 * [series](#series)
 * [parallel](#parallel)
+* [parallelLimit](#parallellimittasks-limit-callback)
 * [whilst](#whilst)
 * [doWhilst](#doWhilst)
 * [until](#until)
@@ -126,6 +136,7 @@ So far it's been tested in IE6, IE7, IE8, FF3.6 and Chrome 5. Usage:
 * [waterfall](#waterfall)
 * [compose](#compose)
 * [applyEach](#applyEach)
+* [applyEachSeries](#applyEachSeries)
 * [queue](#queue)
 * [cargo](#cargo)
 * [auto](#auto)
@@ -295,7 +306,7 @@ __Arguments__
 __Example__
 
 ```js
-async.map(['file1','file2','file3'], 1, fs.stat, function(err, results){
+async.mapLimit(['file1','file2','file3'], 1, fs.stat, function(err, results){
     // results is now an array of stats for each file
 });
 ```
@@ -1062,7 +1073,7 @@ extra argument. For example, this snippet of code:
 
 ```js
 async.auto({
-  readData: async.apply(fs.readFile, 'data.txt', 'utf-8');
+  readData: async.apply(fs.readFile, 'data.txt', 'utf-8')
 }, callback);
 ```
 

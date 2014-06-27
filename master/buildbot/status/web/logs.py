@@ -208,7 +208,7 @@ class LogsResource(HtmlResource):
         for log in self.step_status.getLogs():
             if path == log.getName():
                 if log.hasContents():
-                    if hasattr(log, 'html') and 'xml-stylesheet' in log.html:
+                    if hasattr(log, 'html') and ('xml-stylesheet' in log.html or 'nosetests' in log.html):
                         return XMLTestResource(log, self.step_status)
                     else:
                         return IHTMLLog(interfaces.IStatusLog(log))

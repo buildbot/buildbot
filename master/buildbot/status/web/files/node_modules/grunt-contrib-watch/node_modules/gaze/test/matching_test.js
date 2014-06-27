@@ -86,7 +86,10 @@ exports.matching = {
       setTimeout(function() {
         grunt.file.write(path.join(fixtures, 'newfolder', 'added.js'), 'var added = true;');
       }, 1000);
-      watcher.on('end', test.done);
+      watcher.on('end', function() {
+        // TODO: Figure out why this test is finicky leaking it's newfolder into the other tests
+        setTimeout(test.done, 2000);
+      });
     });
   },
 };

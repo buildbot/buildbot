@@ -146,7 +146,9 @@ module.exports = function(grunt) {
 
           // Add changed files to the target
           if (taskrun.targets[target.name]) {
-            taskrun.targets[target.name].changedFiles = Object.create(null);
+            if (!taskrun.targets[target.name].changedFiles) {
+              taskrun.targets[target.name].changedFiles = Object.create(null);
+            }
             taskrun.targets[target.name].changedFiles[filepath] = status;
           }
 

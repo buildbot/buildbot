@@ -2,7 +2,7 @@
  * grunt
  * http://gruntjs.com/
  *
- * Copyright (c) 2013 "Cowboy" Ben Alman
+ * Copyright (c) 2014 "Cowboy" Ben Alman
  * Licensed under the MIT license.
  * https://github.com/gruntjs/grunt/blob/master/LICENSE-MIT
  */
@@ -79,6 +79,12 @@ config.process = function(raw) {
 // Set config data.
 config.set = function(prop, value) {
   return grunt.util.namespace.set(config.data, config.getPropString(prop), value);
+};
+
+// Deep merge config data.
+config.merge = function(obj) {
+  grunt.util._.merge(config.data, obj);
+  return config.data;
 };
 
 // Initialize config data.

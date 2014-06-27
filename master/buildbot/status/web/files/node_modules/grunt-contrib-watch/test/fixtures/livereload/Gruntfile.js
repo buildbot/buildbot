@@ -21,6 +21,15 @@ module.exports = function(grunt) {
           },
         },
       },
+      multiplefiles: {
+        files: ['lib/*.js'],
+        tasks: ['before'],
+        options: {
+          livereload: {
+            port: 9876,
+          },
+        },
+      },
       nospawn: {
         files: ['lib/*.js'],
         tasks: ['before'],

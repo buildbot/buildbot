@@ -1,3 +1,7 @@
+v0.5.3:
+  date: 2013-08-25
+  changes:
+    - Fixed for live reload missing files.
 v0.5.2:
   date: 2013-08-16
   changes:
