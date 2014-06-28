@@ -76,9 +76,10 @@ class Git(Source):
                        a build specifies a different branch, it will
                        be used instead of this.
 
-        @type  submodules: boolean
+        @type  submodules: boolean or list of strings
         @param submodules: Whether or not to update (and initialize)
-                       git submodules.
+                       git submodules, and in case of list of strings,
+                       which ones.
 
         @type  mode: string
         @param mode: Type of checkout. Described in docs.
@@ -481,9 +482,16 @@ class Git(Source):
         # init and update submodules, recurisively. If there's not recursion
         # it will not do it.
         if self.submodules:
-            res = yield self._dovccmd(['submodule', 'update',
-                                       '--init', '--recursive'],
-                                      shallowClone)
+            try:
+                submodules = list(self.submodules)
+            except TypeError:
+                res = yield self._dovccmd(['submodule', 'update',
+                                           '--init', '--recursive'],
+                                          shallowClone)
+            else:
+                res = yield self._dovccmd(['submodule', 'update',
+                                           '--init'] + submodules,
+                                          shallowClone)
 
         defer.returnValue(res)
 
@@ -526,11 +534,17 @@ class Git(Source):
         return changes[-1].revision
 
     def _updateSubmodule(self, _=None):
-        if self.submodules:
-            return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive'])
+        try:
+            submodules = list(self.submodules)
+        except TypeError:
+            if self.submodules:
+                return self._dovccmd(['submodule', 'update',
+                                      '--init', '--recursive'])
+            else:
+                return defer.succeed(0)
         else:
-            return defer.succeed(0)
+            return self._dovccmd(['submodule', 'update',
+                                  '--init'] + submodules)
 
     def _cleanSubmodule(self, _=None):
         if self.submodules:
