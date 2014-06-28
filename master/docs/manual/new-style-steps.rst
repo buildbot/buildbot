@@ -8,7 +8,7 @@ As a result, custom build steps which call these methods will need to be rewritt
 
 Buildbot-0.8.9 supports old-style steps natively, while new-style steps are emulated.
 Buildbot-0.9.0 supports new-style steps natively, while old-style steps are emulated.
-Later versions of Buildbot wil not support old-style steps at all.
+Later versions of Buildbot will not support old-style steps at all.
 All custom steps should be rewritten in the new style as soon as possible.
 
 Buildbot distinguishes new-style from old-style steps by the presence of a :py:meth:`~buildbot.process.buildstep.BuildStep.run` method.
@@ -24,7 +24,7 @@ Summary of Changes
    However, it does not support log-reading methods such as ``getText``.
    It was never advisable to handle logs as enormous strings.
    New-style steps should, instead, use a LogObserver or (in Buildbot-0.9.0) fetch log lines bit by bit using the data API.
- * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be uesd in new-style steps.
+ * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be used in new-style steps.
    Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
 
 Backward Compatibility
