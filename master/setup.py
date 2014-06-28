@@ -195,10 +195,15 @@ except ImportError:
     pass
 else:
     # dependencies
+    if sys.version_info[0] == 2 and sys.version_info[1] <= 5:
+        zi = 'zope.interface >= 3.6.1'  # the newest that works on Python 2.5
+    else:
+        zi = 'zope.interface >= 4.1.1'  # required for tests, but Twisted requires this anyway
+
     setup_args['install_requires'] = [
         'twisted >= 11.0.0',
-        'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'Jinja2 >= 2.1',
+        zi,
     ]
 
     setup_args['install_requires'] += [
