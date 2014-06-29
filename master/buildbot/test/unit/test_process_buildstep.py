@@ -418,9 +418,11 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
+    @defer.inlineCallbacks
     def test_updateSummary_old_style(self):
-        step = self.setupStep(OldStyleStep())
-        step.start = lambda: self.updateSummary()
+        self.setupStep(OldStyleStep())
+        self.step.start = lambda: self.step.updateSummary()
+        self.expectOutcome(result=EXCEPTION, status_text=['generic'])
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
