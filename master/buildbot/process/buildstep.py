@@ -382,8 +382,8 @@ class BuildStep(results.ResultComputingConfigMixin,
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, unicode):
                 raise TypeError("build result must be unicode")
-            self.step_status.setText([stepResult])
-            self.step_status.setText2([buildResult] if buildResult else [])
+            self.step_status.old_setText([stepResult])
+            self.step_status.old_setText2([buildResult] if buildResult else [])
 
     @defer.inlineCallbacks
     def startStep(self, remote):

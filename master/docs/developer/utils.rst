@@ -410,6 +410,7 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
 
         Stop the debouncer.
         While the debouncer is stopped, calls to the decorated method will be ignored.
+        If a call is pending when ``stop`` is called, that call will occur immediately.
         When the Deferred that ``stop`` returns fires, the underlying method is not executing.
 
     .. py:method:: start()
