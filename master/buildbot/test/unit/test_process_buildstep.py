@@ -396,8 +396,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'CS'])
-        step.step_status.setText.assert_called_with([u'CS'])
-        step.step_status.setText2.assert_called_with([u'CB'])
+        step.step_status.old_setText.assert_called_with([u'CS'])
+        step.step_status.old_setText2.assert_called_with([u'CB'])
 
     def test_updateSummary_finished_empty_dict(self):
         step = self.setup_summary_test()
@@ -407,8 +407,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateStrings[13],
                          [u'finished'])
-        step.step_status.setText.assert_called_with([u'finished'])
-        step.step_status.setText2.assert_called_with([])
+        step.step_status.old_setText.assert_called_with([u'finished'])
+        step.step_status.old_setText2.assert_called_with([])
 
     def test_updateSummary_finished_not_dict(self):
         step = self.setup_summary_test()
@@ -419,10 +419,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors(TypeError)), 1)
 
     def test_updateSummary_old_style(self):
-        step = OldStyleStep()
-        step.updateSummary._reactor = clock = task.Clock()
-        step.updateSummary()
-        clock.advance(1)
+        step = self.setupStep(OldStyleStep())
+        step.start = lambda: self.updateSummary()
+        yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
 

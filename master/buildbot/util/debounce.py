@@ -47,7 +47,6 @@ class Debouncer(object):
         self._reactor = reactor
 
     def __call__(self):
-        log.msg('invoked, stop=' + str(self.stopped))
         if self.stopped:
             return
         phase = self.phase
@@ -59,8 +58,11 @@ class Debouncer(object):
         else:  # phase == PH_WAITING or phase == PH_RUNNING_QUEUED:
             pass
 
+    def __repr__(self):
+        return "<debounced %r, wait=%r, phase=%d>" % (self.function,
+                                                      self.wait, self.phase)
+
     def invoke(self):
-        log.msg('invoke')
         self.phase = PH_RUNNING
         self.completeDeferreds = []
         d = defer.maybeDeferred(self.function)
@@ -82,8 +84,9 @@ class Debouncer(object):
         self.stopped = True
         if self.phase == PH_WAITING:
             self.timer.cancel()
-            self.phase = PH_IDLE
-        elif self.phase in (PH_RUNNING, PH_RUNNING_QUEUED):
+            self.invoke()
+            # fall through with PH_RUNNING
+        if self.phase in (PH_RUNNING, PH_RUNNING_QUEUED):
             d = defer.Deferred()
             self.completeDeferreds.append(d)
             return d

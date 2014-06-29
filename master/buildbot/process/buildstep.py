@@ -362,7 +362,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
-        assert self.isNewStyle(), "updateSummary is a new-style step method"
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
@@ -382,8 +381,12 @@ class BuildStep(results.ResultComputingConfigMixin,
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, unicode):
                 raise TypeError("build result must be unicode")
-            self.step_status.setText([stepResult])
-            self.step_status.setText2([buildResult] if buildResult else [])
+            self.step_status.old_setText([stepResult])
+            self.step_status.old_setText2([buildResult] if buildResult else [])
+
+    # updateSummary gets patched out for old-style steps, so keep a copy we can
+    # call internally for such steps
+    realUpdateSummary = updateSummary
 
     @defer.inlineCallbacks
     def startStep(self, remote):
@@ -445,7 +448,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             yield defer.gatherResults(dl)
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
-            self.updateSummary()
+            self.realUpdateSummary()
 
             # run -- or skip -- the step
             if doStep:
@@ -487,8 +490,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
-        self.updateSummary()
-        yield self.updateSummary.stop()
+        self.realUpdateSummary()
+        yield self.realUpdateSummary.stop()
 
         if self.progress:
             self.progress.finish()
@@ -560,6 +563,11 @@ class BuildStep(results.ResultComputingConfigMixin,
             # LogObservers installed by addLog_oldStyle
             self.getLog = self.getLog_oldStyle
 
+            # old-style steps shouldn't be calling updateSummary
+            def updateSummary():
+                assert 0, 'updateSummary is only valid on new-style steps'
+            self.updateSummary = updateSummary
+
             results = yield self.start()
             if results == SKIPPED:
                 self.step_status.setSkipped(True)
@@ -569,7 +577,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             self._start_deferred = None
             unhandled = self._start_unhandled_deferreds
             self._start_unhandled_deferreds = None
-            self.updateSummary()
+            self.realUpdateSummary()
 
         # Wait for any possibly-unhandled deferreds.  If any fail, change the
         # result to EXCEPTION and log.
