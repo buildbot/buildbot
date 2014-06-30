@@ -1,11 +1,12 @@
-import flask
 import argparse
-from flask import request
-from flask import Response
-from flask import stream_with_context
+import flask
 import os
 import requests
+
 from buildbot.www.service import WWWService
+from flask import Response
+from flask import request
+from flask import stream_with_context
 
 master_service = WWWService(None)
 

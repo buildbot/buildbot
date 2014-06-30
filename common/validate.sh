@@ -95,7 +95,7 @@ fi
 
 # get a list of changed files, used below; this uses a tempfile to work around
 # shell behavior when piping to 'while'
-tempfile=$(mktemp)
+tempfile=$(mktemp -t tmp.XXXXXX)
 trap "rm -f ${tempfile}; exit 1" 1 2 3 15
 git diff --name-only $REVRANGE | grep '\.py$' | grep -v '\(^master/docs\|/setup\.py\)' > ${tempfile}
 py_files=()
@@ -109,12 +109,15 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if $slow; then
-    status "running 'setup.py develop' for www"
-    (cd www; python setup.py develop 2>&1 >/dev/null    ) || not_ok "www/setup.py failed"
-    status "running 'grunt ci' for www"
-    LOG=/dev/null
-    if [[ `uname` == "Darwin" ]] ;then LOG=/dev/stdout; fi  # grunt >/dev/null hangs on osx ?!
-    (cd www; node_modules/.bin/grunt --no-color ci 2>&1  >$LOG ) || warning "grunt ci failed (warning until #2700 is resolved)"
+    for module in www www/console_view;
+    do
+        status "running 'setup.py develop' for $module"
+        (cd $module; python setup.py develop 2>&1 >/dev/null    ) || not_ok "$module/setup.py failed"
+        status "running 'grunt ci' for $module"
+        LOG=/dev/null
+        if [[ `uname` == "Darwin" ]] ;then LOG=/dev/stdout; fi  # grunt >/dev/null hangs on osx ?!
+        (cd $module; node_modules/.bin/grunt --no-color ci 2>&1  >$LOG ) || warning "grunt ci on $module failed (warning until #2700 is resolved)"
+    done
 fi
 if $slow; then
     status "running tests"
