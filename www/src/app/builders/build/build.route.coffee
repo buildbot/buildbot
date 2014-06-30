@@ -33,7 +33,7 @@ angular.module('buildbot.builders').controller 'buildController',
                 buildset.bind($scope)
                 buildset.one("properties").bind($scope, dest_key:'properties')
                 recentStorage.addBuild
-                    link: '#/builders/' + $scope.builder.builderid + '/build/' + $scope.build.buildid
-                    caption: $scope.builder.name + ' / ' + $scope.build.buildid
+                    link: "#/builders/#{$scope.builder.builderid}/build/#{$scope.build.number}"
+                    caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
 ]

@@ -27,7 +27,7 @@ angular.module('buildbot.builders').controller 'builderController',
         builder = buildbotService.one('builders', $stateParams.builder)
         builder.bind($scope).then ->
             recentStorage.addBuilder
-                link: '#/builders/' + $scope.builder.builderid
+                link: "#/builders/#{$scope.builder.builderid}"
                 caption: $scope.builder.name
         builder.all('forceschedulers').bind($scope)
         builder.some('builds', {limit:20, order:"-number"}).bind($scope)

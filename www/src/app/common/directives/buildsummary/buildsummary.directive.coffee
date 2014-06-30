@@ -49,14 +49,17 @@ angular.module('buildbot.builders').controller 'buildsummaryController',
                 return buildURLMatcher.exec(url) != null
 
 
-            buildbotService.one('builds', $scope.buildid)
-            .bind($scope).then (build) ->
-                buildbotService.one('builders', build.builderid).bind($scope)
-                build.all('steps').bind $scope,
-                    onchild: (step) ->
-                        $scope.$watch (-> step.complete), ->
-                            step.fulldisplay = step.complete == 0 || step.results > 0
-                        logs = buildbotService.one("steps", step.stepid).all("logs")
-                        logs.bind $scope,
-                            dest: step,
+            $scope.$watch 'buildid', (buildid) ->
+                $scope.buldid = buildid
+
+                buildbotService.one('builds', $scope.buildid)
+                .bind($scope).then (build) ->
+                    buildbotService.one('builders', build.builderid).bind($scope)
+                    build.all('steps').bind $scope,
+                        onchild: (step) ->
+                            $scope.$watch (-> step.complete), ->
+                                step.fulldisplay = step.complete == 0 || step.results > 0
+                            logs = buildbotService.one("steps", step.stepid).all("logs")
+                            logs.bind $scope,
+                                dest: step,
     ]
