@@ -197,8 +197,6 @@ class JsonResource(resource.Resource):
                 request.setHeader("content-type", 'text/plain')
             else:
                 request.setHeader("content-type", self.contentType)
-                request.setHeader("content-disposition",
-                                  "attachment; filename=\"%s.json\"" % request.path)
                 # Make sure we get fresh pages.
             if self.cache_seconds:
                 now = datetime.datetime.utcnow()
@@ -277,7 +275,7 @@ class JsonResource(resource.Resource):
         if filter_out:
             data = FilterOut(data)
         if compact:
-            data = json.dumps(data, sort_keys=True, separators=(',', ':'))
+            data = json.dumps(data, separators=(',', ':'))
         else:
             data = json.dumps(data, sort_keys=True, indent=2)
         if callback:
@@ -936,28 +934,16 @@ class SlaveJsonResource(JsonResource):
             self.builders = []
             for builderName in self.status.getBuilderNames():
                 if self.name in self.status.getBuilder(builderName).slavenames:
-                    self.builders.append(builderName)
+                    builder_status = self.status.getBuilder(builderName)
+                    builderDict = {'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
+                           'url': self.status.getURLForThing(builder_status)}
+                    self.builders.append(builderDict)
         return self.builders
 
     def asDict(self, request):
         results = self.slave_status.asDict()
-        # Enhance it by adding more informations.
-        results['builders'] = []
-        for builderName in self.getBuilders():
-            builds = []
-            builder_status = self.status.getBuilder(builderName)
-            cache_size = builder_status.master.config.caches['Builds']
-            numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
-            for i in range(1, numbuilds):
-                build_status = builder_status.getBuild(-i)
-                if not build_status or not build_status.isFinished():
-                    # If not finished, it will appear in runningBuilds.
-                    break
-                if build_status.getSlavename() == self.name:
-                    builds.append(build_status.getNumber())
-            builderDict = {'builds': builds, 'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
-                           'url': self.status.getURLForThing(builder_status)}
-            results['builders'].append(builderDict)
+        #Add builder information
+        results['builders'] = self.getBuilders()
         return results
 
 

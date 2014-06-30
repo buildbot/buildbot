@@ -30,7 +30,7 @@ define(function (require, exports, module) {
     //      element which is less than the one we are searching for, so we
     //      return null.
     var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-    var cmp = aCompare(aNeedle, aHaystack[mid]);
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
     if (cmp === 0) {
       // Found the element we are looking for.
       return aHaystack[mid];

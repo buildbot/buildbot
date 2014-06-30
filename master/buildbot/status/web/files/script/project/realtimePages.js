@@ -1,3 +1,4 @@
+/*global define*/
 define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal, helpers, timeElements) {
     "use strict";
     var sock = null;
@@ -17,21 +18,21 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
 
     var realtimePages = {
         createWebSocket: function (wsURI) {
-            if (sock == null) {
+            if (sock === null) {
 
-                if ("WebSocket" in window) {
-                    sock = new WebSocket(wsURI);
-                } else if ("MozWebSocket" in window) {
-                    sock = new MozWebSocket(wsURI);
+                if (window.WebSocket !== undefined) {
+                    sock = new window.WebSocket(wsURI);
+                } else if (window.MozWebSocket !== undefined) {
+                    sock = new window.MozWebSocket(wsURI);
                 } else {
-                    log("Browser does not support WebSocket!");
-                    window.location = "http://autobahn.ws/unsupportedbrowser";
+                    console.log("Realtime is not supported on this browser.");
+                    return;
                 }
 
                 // if the socket connection is success
                 if (sock) {
                     sock.onopen = function () {
-                        $('#bowlG').remove();                        
+                        $('#bowlG').remove();
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
                             realtimePages.sendCommand(KRT_REGISTER_URL, url);
@@ -43,7 +44,7 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                         sock = null;
                         console.log("We lost our connection, retrying in {0} seconds...".format(iServerDisconnectTimeout / 1000));
                         setTimeout(function () {
-                            realtimePages.createWebSocket(wsURI)
+                            realtimePages.createWebSocket(wsURI);
                         }, iServerDisconnectTimeout);
                     };
 
@@ -54,7 +55,7 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                             data = JSON.parse(data);
                         }
                         realtimePages.parseRealtimeCommand(data);
-                    }
+                    };
                 }
             }
 
@@ -72,49 +73,50 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
 
             // Creating a new websocket
             var wsURI = $('body').attr('data-realTimeServer');
-            if (wsURI !== undefined && wsURI != "") {
+            if (wsURI !== undefined && wsURI !== "") {
                 console.log(wsURI);
                 realtimePages.createWebSocket(wsURI);
+                return sock;
             }
-            else {
-                console.log("Realtime server not found, disabling realtime.");
-            }
+
+            console.log("Realtime server not found, disabling realtime.");
+
+            return undefined;
         },
         sendCommand: function (cmd, data) {
             if (sock) {
-                var msg = JSON.stringify({"cmd": cmd, "data": data});
+                var msg = JSON.stringify({cmd: cmd, data: data});
                 sock.send(msg);
             }
         },
         parseRealtimeCommand: function (data) {
-            if (data["cmd"] === KRT_JSON_DATA) {
-                realtimePages.updateRealTimeData(data["data"], false);
+            if (data.cmd === KRT_JSON_DATA) {
+                realtimePages.updateRealTimeData(data.data, false);
             }
-            if (data["cmd"] === KRT_URL_DROPPED) {
-                console.log("URL Dropped by server will retry in {0} seconds... ({1})".format((iURLDroppedTimeout / 1000), data["data"]));
+            if (data.cmd === KRT_URL_DROPPED) {
+                console.log("URL Dropped by server will retry in {0} seconds... ({1})".format((iURLDroppedTimeout / 1000), data.data));
                 setTimeout(function () {
-                    realtimePages.sendCommand(KRT_REGISTER_URL, data["data"]);
+                    realtimePages.sendCommand(KRT_REGISTER_URL, data.data);
                 }, iURLDroppedTimeout);
             }
         },
         updateRealTimeData: function (json, instantJSON) {
             if (instantJSON === true) {
                 $.each(json, function (name, jObj) {
-                    var data = jObj["data"];
+                    var data = jObj.data;
                     if (typeof data === "string") {
                         data = JSON.parse(data);
-                        realtimeURLs[name] = jObj['url'];
+                        realtimeURLs[name] = jObj.url;
                     }
                     realtimePages.updateSingleRealTimeData(name, data);
                 });
-            }
-            else {
-                var name = realtimePages.getRealtimeNameFromURL(json['url']);
-                realtimePages.updateSingleRealTimeData(name, json['data'])
+            } else {
+                var name = realtimePages.getRealtimeNameFromURL(json.url);
+                realtimePages.updateSingleRealTimeData(name, json.data);
             }
         },
         getRealtimeNameFromURL: function (url) {
-            var name = undefined;
+            var name;
             $.each(realtimeURLs, function (n, u) {
                 if (u === url) {
                     name = n;
@@ -144,9 +146,9 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
             // remove prelaoder
             $('#bowlG').remove();
             $('.initjson').show();
-            if (script.length) {
+            if (script.length && window.instantJSON !== undefined) {
                 script.remove();
-                return instantJSON;
+                return window.instantJSON;
             }
             return undefined;
         },
@@ -154,8 +156,11 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
             return {
                 "global": rtGlobal.processGlobalInfo
             };
+        },
+        setReloadCooldown: function (miliseconds) {
+            KRT_RELOAD_CD = miliseconds;
         }
     };
 
-    return realtimePages
+    return realtimePages;
 });

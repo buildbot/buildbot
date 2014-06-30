@@ -36,9 +36,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 lastBeat = now;
             }
 
-            if (interval !== undefined) {
-                privateFunc.heartbeatInterval();
-            }
+            privateFunc.heartbeatInterval();
         },
         addElem: function (el, obj, array) {
             if (el.length) {
@@ -77,19 +75,20 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         },
         processProgressBars: function ($el, startTime, etaTime) {
             var serverOffset = extendMoment.getServerOffset(),
-                start = moment.unix(startTime),
+                start = moment.unix(startTime).startOf('second'),
+                startUnix = (start.unix() * 1000.0).toFixed(2),
                 percentInner = $el.children('.percent-inner-js'),
                 timeTxt = $el.children('.time-txt-js'),
                 hasETA = etaTime !== 0,
                 percent = 100;
 
             if (hasETA) {
-                var now = moment() + serverOffset,
-                    etaEpoch = now + (etaTime * 1000.0),
+                var now = (moment().startOf('second') + serverOffset).toFixed(2),
+                    etaEpoch = start + (etaTime * 1000.0),
                     overtime = etaTime < 0,
-                    then = moment().add('s', etaTime) + serverOffset;
+                    then = (moment().startOf('second').add('s', etaTime) + serverOffset).toFixed(2);
 
-                percent = 100 - (then - now) / (then - start) * 100;
+                percent = Math.round(100 - (then - now) / (then - startUnix) * 100);
                 percent = percent.clamp(0, 100);
 
                 moment.lang('progress-bar-en');
@@ -101,7 +100,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
 
             } else {
                 moment.lang('progress-bar-no-eta-en');
-                timeTxt.html(moment(parseInt(startTime * 1000, 10)).fromServerNow());
+                timeTxt.html(moment(parseFloat(startTime) * 1000).fromServerNow());
             }
 
             //Reset language to original
@@ -114,6 +113,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         init: function () {
             if (interval === undefined) {
                 privateFunc.heartbeatInterval();
+                extendMoment.init();
             }
             setInterval(privateFunc.spinIconAnimation, ANIM_INTERVAL);
         },
@@ -147,7 +147,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         },
         clearTimeObjects: function (parentElem) {
             if (parentElem !== undefined) {
-                var childElems = $(parentElem).find("[data-timeElem]");
+                var childElems = $(parentElem).find("[data-timeelem]");
 
                 //Find elements that are in the given parentElem and remove them
                 $.each(timeObjects, function (i, arr) {
@@ -180,6 +180,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         setHeartbeat: function (interval) {
             HEARTBEAT = interval;
             privateFunc.heartbeatInterval();
-        }
+        },
+        _timeObjects: timeObjects
     };
 });

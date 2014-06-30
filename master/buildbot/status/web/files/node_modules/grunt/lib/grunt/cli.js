@@ -2,7 +2,7 @@
  * grunt
  * http://gruntjs.com/
  *
- * Copyright (c) 2013 "Cowboy" Ben Alman
+ * Copyright (c) 2014 "Cowboy" Ben Alman
  * Licensed under the MIT license.
  * https://github.com/gruntjs/grunt/blob/master/LICENSE-MIT
  */
@@ -21,7 +21,7 @@ var nopt = require('nopt');
 var cli = module.exports = function(options, done) {
   // CLI-parsed options override any passed-in "default" options.
   if (options) {
-    // For each defult option...
+    // For each default option...
     Object.keys(options).forEach(function(key) {
       if (!(key in cli.options)) {
         // If this option doesn't exist in the parsed cli.options, add it in.
@@ -61,7 +61,7 @@ var optlist = cli.optlist = {
   debug: {
     short: 'd',
     info: 'Enable debugging mode for tasks that support it.',
-    type: Number
+    type: [Number, Boolean]
   },
   stack: {
     info: 'Print a stack trace when exiting with a warning or fatal error.',

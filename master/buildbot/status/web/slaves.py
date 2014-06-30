@@ -78,13 +78,13 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         recent_builds_dict = recent_builds_json.asDict(request)
         recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
         ctx['instant_json']['recent_builds'] = {"url": recent_builds_url,
-                                                "data": json.dumps(recent_builds_dict)}
+                                                "data": json.dumps(recent_builds_dict, separators=(',', ':'))}
 
         curr_builds_json = SlaveBuildsJsonResource(s, slave_status)
         curr_builds_dict = curr_builds_json.asDict(request)
         curr_builds_url = bbURL + path_to_json_slave_builds(request, self.slavename)
         ctx['instant_json']['current_builds'] = {"url": curr_builds_url,
-                                                 "data": json.dumps(curr_builds_dict)}
+                                                 "data": json.dumps(curr_builds_dict, separators=(',', ':'))}
 
 
 
@@ -122,7 +122,7 @@ class BuildSlavesResource(HtmlResource):
         slaves_dict = FilterOut(slaves_dict)
 
         cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
-                                         "data": json.dumps(slaves_dict)}
+                                         "data": json.dumps(slaves_dict, separators=(',', ':'))}
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
         defer.returnValue(template.render(**cxt))

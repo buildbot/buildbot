@@ -77,6 +77,7 @@ class MasterConfig(object):
         self.manhole = None
         self.realTimeServer = ''
         self.analytics_code = None
+        self.gzip = True
 
         self.ldap = dict(
             ldap_server = 'my_ldap_server',
@@ -115,7 +116,7 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip"
     ])
 
     @classmethod
@@ -306,6 +307,9 @@ class MasterConfig(object):
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
+
+        if 'gzip' in config_dict:
+            self.gzip = config_dict["gzip"]
 
         copy_str_param('debugPassword')
 

@@ -290,7 +290,7 @@ class StatusResourceBuild(HtmlResource):
         build_json = BuildJsonResource(status, b)
         build_dict = yield build_json.asDict(req)
         cxt['instant_json']['build'] = {"url": path_to_json_build(status, req, builder.name, b.getNumber()),
-                                        "data": json.dumps(build_dict)}
+                                        "data": json.dumps(build_dict, separators=(',', ':'))}
 
         template = req.site.buildbot_service.templates.get_template("build.html")
         defer.returnValue(template.render(**cxt))
