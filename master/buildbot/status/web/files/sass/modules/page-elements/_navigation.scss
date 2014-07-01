@@ -95,8 +95,8 @@ border: 1px solid #9F9B41;
 
 ul.top-menu > .project-dropdown {
 		position:relative;
-		padding-right: 0;		
-		.arrow-down-btn {
+		padding-right: 0;
+         .arrow-down-btn {
 			cursor: pointer;
 			&:after {
 			    @include bgimage (linear-gradient(top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
@@ -118,7 +118,8 @@ ul.top-menu > .project-dropdown {
 				//border:1px solid rgba(196, 196, 196, 0.30);
 			}
 		}
-		.more-info-box { 
+		.more-info-box {
+          cursor: auto;
 		    left: 80px;
     		position: absolute;
     		top: 39px;
