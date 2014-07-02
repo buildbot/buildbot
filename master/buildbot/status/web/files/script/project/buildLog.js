@@ -12,41 +12,38 @@ define(["main"], function () {
             }
         }
 
-        $(document).ready(function () {
+        var $iFrame = $("#logIFrame"),
+            $scrollOpt = $("#scrollOpt"),
+            hasPressed = false;
 
-            var $iFrame = $("#logIFrame"),
-                $scrollOpt = $("#scrollOpt"),
-                hasPressed = false;
-
-            $iFrame.attr("src", $iFrame.attr("data-src"));
-
-            //Start auto resizer
-            $iFrame.iFrameResize({
-                "autoResize": true,
-                "sizeWidth": false,
-                "resizedCallback": function () {
-                    maybeScroll($scrollOpt.prop("checked"));
-                }
-            });
-
-            $scrollOpt.click(function () {
-                window.scrollTo(0, document.body.scrollHeight);
-            });
-
-            $(document).keyup(function (event) {
-                if (event.which === 83) {
-                    if (hasPressed === false) {
-                        var checked = !$scrollOpt.prop("checked");
-                        hasPressed = true;
-                        $scrollOpt.prop("checked", checked);
-                        maybeScroll(checked);
-                        setTimeout(function () {
-                            hasPressed = false;
-                        }, 300);
-                    }
-                }
-            });
+        //Start auto resizer
+        $iFrame.iFrameResize({
+            "autoResize": true,
+            "sizeWidth": false,
+            "resizedCallback": function () {
+                maybeScroll($scrollOpt.prop("checked"));
+            }
         });
 
+        //Show body
+        $("body").show();
+
+        $scrollOpt.click(function () {
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        $(document).keyup(function (event) {
+            if (event.which === 83) {
+                if (hasPressed === false) {
+                    var checked = !$scrollOpt.prop("checked");
+                    hasPressed = true;
+                    $scrollOpt.prop("checked", checked);
+                    maybeScroll(checked);
+                    setTimeout(function () {
+                        hasPressed = false;
+                    }, 300);
+                }
+            }
+        });
     });
 });
