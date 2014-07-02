@@ -5,8 +5,8 @@ $bootstrap-sass-asset-helper: (twbs-font-path("") != unquote('twbs-font-path("")
 //
 // Variables
 // --------------------------------------------------
-
  
+
 //== Colors
 //
 //## Gray and brand colors for use across Bootstrap.
@@ -17,7 +17,7 @@ $gray:                   lighten(#000, 33.5%) !default; // #555
 $gray-light:             lighten(#000, 60%) !default;   // #999
 $gray-lighter:           lighten(#000, 93.5%) !default; // #eee
 $grey1:				    #ccc;
-$brand-primary:         #2B6194 !default;
+$brand-primary:         #224a6b !default;
 $brand-success:         #5cb85c !default;
 $brand-info:            #5bc0de !default;
 $brand-warning:         #f0ad4e !default;
@@ -34,7 +34,7 @@ $body-bg:               #EBEEF1 !default;
 $text-color:            $gray-dark !default;
 
 //** Global textual link color.
-$link-color:            $brand-primary !default;
+$link-color:            lighten($brand-primary, 10%) !default;
 //** Link hover color set via `darken()` function.
 $link-hover-color:      lighten($link-color, 40%) !default;
 
@@ -68,7 +68,7 @@ $line-height-computed:    floor(($font-size-base * $line-height-base)) !default;
 
 //** By default, this inherits from the `<body>`.
 $headings-font-family:    inherit !default;
-$headings-font-weight:    500 !default;
+$headings-font-weight:    bold !default;
 $headings-line-height:    1.1 !default;
 $headings-color:          inherit !default;
 $letter-spacing-base:0.4px;

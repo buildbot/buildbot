@@ -24,7 +24,6 @@
 
 .step-list {
 	@include pie-clearfix;
-	//counter-reset: li; /* Initiate a counter */
 	list-style: none outside none;
 	margin: 0;
     padding: 0;
@@ -38,63 +37,7 @@
 	    min-width: 32px;
 	    text-align: right;
     }
-	.not_started {
-		background-color:#eee;
-		&:after {
-			content:"Not started";
-			color: #999;
-		}
-	}
-	.retry:before {
-		content:"Retry";	
-	} 
-	.success:before {
-		content:"Success";	
-	}
-	.running {
-		&:after {
-			content:"Running";
-			padding-left: 5px;		
-		}
-		/*
-		&:before {
-			font-size: 11px;
-			font-family: katana_icons;
-			content: "";
-			-moz-animation: spin 2s infinite linear;
-			-o-animation: spin 2s infinite linear;
-			-webkit-animation: spin 2s infinite linear;
-			animation: spin 2s infinite linear;  
-			display: inline-block;
-		}
-		*/
-	}
-	.waiting {
-		&:before {
-			content:"Waiting for build slave";		
-		}
-	}
-	.failure {
-		&:before {
-			content:"Failed";				
-		}
-	}
-	.skipped {
-		&:before {
-			content:"Skipped";				
-		}	
-	}
-	.exception {
-		&:before {
-			content:"Exception";				
-		}	
-	}
-	.dependency_failure:before {
-		content:"Dependency failure";
-	}
-	.log-list-not_rebuilt:before {
-		content:"Not rebuilt";
-	}
+
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
@@ -190,10 +133,8 @@ a.no-artifacts {
 	padding:0;
 	margin:0;
 	@include pie-clearfix;
-	span {
-	    color: #999999;
-	    display: block;
-	    margin-top: -2px;
+	span {	    
+	    display: block;	    
 	}
 	li {
 		list-style:none;
@@ -203,107 +144,44 @@ a.no-artifacts {
     	line-height: 16px;
 	}
 	.urls-mod {margin:5px 0;}
-	.log-list-success a:before {
-	    background-color: #DDE6D6;
-	    color: #444;
-	    content: "";
-        margin-right:4px;
-    	padding: 0 7px;
-        border: 1px solid #B4B7B0;
+	.dependency-list span{			
+		display: block;
+		float: left;
+		height: 14px;
+		margin-right: 4px;		
+		width: 14px;	    	
+		//border: 1px solid #B4B7B0;
+		&.not_rebuilt {
+			border: 1px solid #B4B7B0;
+		}
+
 	}
-	.log-list-not_rebuilt a:before {
-	    background-color: #F8FCF2;
-	    color: #444;
-	    content: "";
-        margin-right:4px;
-    	padding: 0 7px;
-    	border: 1px solid #B4B7B0;
-	}
-	.log-list-dependency_failure a:before {
-	    background-color: #FCF2F2;
-	    color: #444;
-	    content: "";
-        margin-right:4px;
-    	padding: 0 7px;
-    	border: 1px solid #B4B7B0;
-	}
-	.log-list-failure a:before {
-		color: #444;
-	    content: "";
-        margin-right: 4px;
-    	padding: 0 7px;
-		background-color:#EFCFCF;
-        border: 1px solid #B4B7B0;
-	}
-	.log-list-skipped a:before {
-		color: #444;
-	    content: "";
-        margin-right: 4px;
-    	padding: 0 7px;
-		background-color:#CBDCE6;
-        border: 1px solid #B4B7B0;
-	}
-	.log-list-warnings a:before {
-		color: #444;
-	    content: "";
-        margin-right: 4px;
-    	padding: 0 7px;
-		background-color:#FFAA33;
-        border: 1px solid #B4B7B0;
-	}
+	
+	.log-list-success a:before,
+	.log-list-not_rebuilt a:before, 
+	.log-list-dependency_failure a:before,
+	.log-list-failure a:before,
+	.log-list-skipped a:before,
+	.log-list-warnings a:before,
 	.log-list-exception a:before,
-	.log-list-retry a:before {
+	.log-list-retry a:before  {
 		color: #444;
 	    content: "";
-        margin-right: 4px;
+        margin-right:4px;
     	padding: 0 7px;
-		background-color:#DDD7DD;
+        border: 1px solid #B4B7B0;
 	}
 }
 
-.color-blind-mode {
-	.log-list-failure {		
-		a:before {
-			color: #fff;
-			content: "Failure";
-			background-color: $color-blind-failure;			
-		}
-	}
-	.log-list-success a:before {
-		content: "Success";
-		background-color: $color-blind-success;			
-	}
-	.log-list-exception {		
-		a:before {
-			color: #fff;
-			content: "Exception";
-			background-color: $color-blind-exception;				
-		}
-	}
-	.log-list-warnings {		
-		a:before {
-			color: #fff;
-			content: "Warnings";
-			background-color: $color-blind-warnings;				
-		}
-	}
-	.log-list-skipped {		
-		a:before {
-			color: #fff;
-			content: "Skipped";
-			background-color: $color-blind-skipped;				
-		}
-	}
-	.log-list-not_rebuilt {
-		a:before {
-			color: #fff;
-			content: "Not rebuilt";
-			background-color: $color-blind-not-rebuilt;			
-		}	
+.color-blind-mode .dependency-list {	
+	span {			
+		height:auto;
+		width: auto;
+    	padding: 1px 7px;
+    	font-size: 10px;        
+    	text-transform: uppercase;
 	}
 }
-
-
 
 .force-list,
 .force-bool {
@@ -345,6 +223,9 @@ div.force-text {
 		font-weight:bold;
 		color: #333;
 		margin:6px 10px 8px 0;		  
+		padding: 0;
+		font-size: inherit;
+		line-height: inherit;
 	}	
 }
 
@@ -471,6 +352,8 @@ div.force-text {
 	li {
 		margin-bottom:3px;
 	}
+	@extend .list-unstyled;
+	@extend .reset;
 }
 
 ul.revision li:not(:last-child) {

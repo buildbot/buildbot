@@ -23,6 +23,7 @@
 		float: left;		
 		margin: 0;
 		padding: 0;
+		font-size: inherit;
 	}
 	span {
 		display: block;
@@ -203,6 +204,7 @@ ul.top-menu > .project-dropdown {
 .breadcrumbs-nav {
 		display:inline-block;
 		padding:11px 0 10px;
+		margin: 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.52);
 		font-size: 11px;
