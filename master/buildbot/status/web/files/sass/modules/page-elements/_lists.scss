@@ -89,6 +89,12 @@
 			content:"Exception";				
 		}	
 	}
+	.dependency_failure:before {
+		content:"Dependency failure";
+	}
+	.log-list-not_rebuilt:before {
+		content:"Not rebuilt";
+	}
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
@@ -287,6 +293,13 @@ a.no-artifacts {
 			content: "Skipped";
 			background-color: $color-blind-skipped;				
 		}
+	}
+	.log-list-not_rebuilt {
+		a:before {
+			color: #fff;
+			content: "Not rebuilt";
+			background-color: $color-blind-not-rebuilt;			
+		}	
 	}
 }
 

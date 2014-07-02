@@ -26,7 +26,7 @@ $color-blind-warnings: #FFA100;
 $color-blind-skipped: #008EE6; 
 $color-blind-inconclusive: #0025EF; 
 $color-blind-ignored: #008EE6; 
-$color-blind-not-rebuild: #99FC00;
+$color-blind-not-rebuilt: #99FC00;
 $color-blind-dependency-failure: #FFB5ED;
 
 
@@ -72,7 +72,7 @@ $color-ignored:#CBDCE6;
 		a {color: #fff;} 
 	}
 	.not_rebuilt {
-		background-color: $color-blind-not-rebuild;
+		background-color: $color-blind-not-rebuilt;
 	}
     .dependency_failure {
       background-color: $color-blind-dependency-failure;
