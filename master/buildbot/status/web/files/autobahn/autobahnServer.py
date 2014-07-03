@@ -254,12 +254,14 @@ class BroadcastServerFactory(WebSocketServerFactory):
             if len(urlCache.pushFilters) == 0:
                 return True
 
+            foundMatchingEvent = False
             for event in events:
                 if "event" in event and event["event"] in urlCache.pushFilters:
+                    foundMatchingEvent = True
                     event_name = event["event"]
                     filter_dict = urlCache.pushFilters[event_name]
                     if len(filter_dict) == 0:
-                        return True
+                        continue
 
                     payload = event["payload"]
 
@@ -269,9 +271,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
                             if (isinstance(f, dict) and not filter_dict_compare(f, v)) or \
                                     (not isinstance(f, dict) and f != v):
                                 return False
-                else:
-                    return False
-            return True
+            return foundMatchingEvent
 
         events = data["data"]
         event_str = ""
