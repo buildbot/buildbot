@@ -14,7 +14,11 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
-from autobahn.twisted.websocket import WebSocketClientFactory, WebSocketClientProtocol
+try:
+    from autobahn.twisted.websocket import WebSocketClientFactory, WebSocketClientProtocol
+    assert WebSocketClientFactory
+except ImportError:
+    print "Unable to load Autobahn"
 
 
 """Push events to an abstract receiver.
