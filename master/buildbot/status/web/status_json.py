@@ -561,6 +561,8 @@ class PastBuildsJsonResource(JsonResource):
                     if n > self.number:
                         return recent_builds
 
+            return recent_builds
+
 
 class BuildsJsonResource(AllBuildsJsonResource):
     help = """Builds that were run on a builder.

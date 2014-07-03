@@ -6,7 +6,6 @@
 {% block extra_script %}
     <script type="text/javascript">
     require.deps.push('project/buildLog');
-    src="{{ iframe_url }}"
     </script>
 {% endblock %}
 
@@ -33,5 +32,5 @@
             <input type="checkbox" id="scrollOpt">
         </div>
     </div>
-    <iframe id="logIFrame" class="log-iframe" seamless scrolling="no" allowtransparency="true" data-src="{{ iframe_url }}""></iframe>
+    <iframe id="logIFrame" class="log-iframe" seamless scrolling="no" allowtransparency="true" src="{{ iframe_url }}""></iframe>
 {% endblock content %}

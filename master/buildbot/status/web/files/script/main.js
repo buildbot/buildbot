@@ -1,7 +1,7 @@
 /*global require, define, jQuery*/
 require.config({
     paths: {
-        'jquery': 'libs/jquery',
+        'jquery-internal': 'libs/jquery',
         'selectors': 'project/selectors',
         'select2': 'plugins/select2',
         'datatables-plugin': 'plugins/jquery-datatables',
@@ -27,7 +27,6 @@ require.config({
         'mustache': "libs/mustache-wrap",
         'handlebars': "libs/handlebars",
         'livestamp': "plugins/livestamp",
-        //'noise': "plugins/jquery.noisy",
         'timeElements': "project/timeElements",
         'iFrameResize': "libs/iframeResizer.min",
         'rtGenericTable': "project/rtGenericTable",
@@ -41,6 +40,11 @@ require.config({
             deps: ['jquery']
         }
     }
+});
+
+define('jquery', ['jquery-internal'], function () {
+    "use strict";
+    return jQuery;
 });
 
 define(['jquery', 'helpers', 'dataTables', 'popup', 'screensize', 'projectdropdown', 'extend-moment',
