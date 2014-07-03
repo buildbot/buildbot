@@ -268,7 +268,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         codebases = {}
         getCodebasesArg(request=req, codebases=codebases)
 
-        numbuilds = int(req.args.get('numbuilds', ['15'])[0])
+        num_builds = int(req.args.get('numbuilds', ['15'])[0])
 
         cxt['builder_url'] = path_to_builder(req, b, codebases=True)
         cxt['path_to_codebases'] = path_to_codebases(req, project)
@@ -308,10 +308,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                                      "requestCancelled": filters,
                                                  }}
 
-        number_of_builds = numbuilds
-        builds_json = PastBuildsJsonResource(self.status, number_of_builds,  builder_status=self.builder_status)
+        builds_json = PastBuildsJsonResource(self.status, num_builds,  builder_status=self.builder_status)
         builds_dict = yield builds_json.asDict(req)
-        builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, number_of_builds)
+        builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, num_builds)
         cxt['instant_json']['builds'] = {"url": builds_url,
                                          "data": json.dumps(builds_dict, separators=(',', ':')),
                                          "waitForPush": "true",
