@@ -18,8 +18,12 @@ try:
     from autobahn.twisted.websocket import WebSocketClientFactory, WebSocketClientProtocol
     assert WebSocketClientFactory
 except ImportError:
-    print "Unable to load Autobahn"
-
+    class WebSocketClientProtocol:
+        def __init__(self):
+            return
+    class WebSocketClientFactory:
+        def __init__(self):
+            return
 
 """Push events to an abstract receiver.
 
