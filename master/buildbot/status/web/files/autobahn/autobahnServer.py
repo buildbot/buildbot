@@ -263,15 +263,15 @@ class BroadcastServerFactory(WebSocketServerFactory):
                         return True
 
                     payload = event["payload"]
+
                     for filterName, f in filter_dict.iteritems():
                         if filterName in payload:
                             v = payload[filterName]
-                            if isinstance(f, dict):
-                                return filter_dict_compare(f, v)
-                            else:
-                                return f == v
+                            if (isinstance(f, dict) and not filter_dict_compare(f, v)) or \
+                                    (not isinstance(f, dict) and f != v):
+                                return False
 
-            return False
+            return True
 
         events = data["data"]
         for url, obj in self.urlCacheDict.iteritems():
