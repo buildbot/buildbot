@@ -264,35 +264,13 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['friendly_name'] = b.getFriendlyName()
 
         req.setHeader('Cache-Control', 'no-cache')
-        slaves = b.getSlaves()
-        connected_slaves = [s for s in slaves if s.isConnected()]
 
         codebases = {}
-        codebases_arg = getCodebasesArg(request=req, codebases=codebases)
+        getCodebasesArg(request=req, codebases=codebases)
 
         numbuilds = int(req.args.get('numbuilds', ['15'])[0])
-        recent = cxt['recent'] = []
 
-        for build in b.generateFinishedBuilds(codebases=codebases, num_builds=int(numbuilds)):
-            recent.append(self.get_line_values(req, build, False))
-
-        sl = cxt['slaves'] = []
-        connected_slaves = 0
-        for slave in slaves:
-            s = {}
-            sl.append(s)
-            s['link'] = path_to_slave(req, slave)
-            s['name'] = slave.getName()
-            s['friendly_name'] = slave.getFriendlyName()
-            c = s['connected'] = slave.isConnected()
-            if c:
-                s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
-                connected_slaves += 1
-        cxt['connected_slaves'] = connected_slaves
-
-        cxt['authz'] = self.getAuthz(req)
         cxt['builder_url'] = path_to_builder(req, b, codebases=True)
-        cxt['codebases_arg'] = codebases_arg
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_builders'] = path_to_builders(req, project)
         cxt['builder_name'] = b.getName()
@@ -330,7 +308,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                                      "requestCancelled": filters,
                                                  }}
 
-        number_of_builds = 15
+        number_of_builds = numbuilds
         builds_json = PastBuildsJsonResource(self.status, number_of_builds,  builder_status=self.builder_status)
         builds_dict = yield builds_json.asDict(req)
         builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, number_of_builds)
