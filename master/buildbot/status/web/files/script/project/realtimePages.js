@@ -52,7 +52,7 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                         sock = null;
                         console.log("We lost our connection, retrying in {0} seconds...".format(iServerDisconnectTimeout / 1000));
                         setTimeout(function () {
-                            realtimePages.createWebSocket(wsURI);
+                            realtimePages.createWebSocket(wsURI, json);
                         }, iServerDisconnectTimeout);
                     };
 

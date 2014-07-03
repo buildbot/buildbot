@@ -244,9 +244,6 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
     def update_push_urls(self, data):
 
-        def str_compare(f, v):
-            return f == v
-
         def filter_dict_compare(f_dict, v_dict):
             for n, f in f_dict.iteritems():
                 if n in v_dict and v_dict[n] != f:
@@ -269,10 +266,10 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     for filterName, f in filter_dict.iteritems():
                         if filterName in payload:
                             v = payload[filterName]
-                            if isinstance(f, basestring):
-                                return str_compare(f, v)
-                            elif isinstance(f, dict):
+                            if isinstance(f, dict):
                                 return filter_dict_compare(f, v)
+                            else:
+                                return f == v
 
             return False
 
