@@ -252,26 +252,36 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
         def matches_filter(urlCache, events):
             if len(urlCache.pushFilters) == 0:
+                # We don't have any filters so it matches
                 return True
 
-            foundMatchingEvent = False
             for event in events:
                 if "event" in event and event["event"] in urlCache.pushFilters:
-                    foundMatchingEvent = True
                     event_name = event["event"]
                     filter_dict = urlCache.pushFilters[event_name]
                     if len(filter_dict) == 0:
-                        continue
+                        # Exit because we found an event and there were no filters
+                        # to check
+                        return True
 
                     payload = event["payload"]
 
+                    all_filters_matched = True
                     for filterName, f in filter_dict.iteritems():
                         if filterName in payload:
                             v = payload[filterName]
                             if (isinstance(f, dict) and not filter_dict_compare(f, v)) or \
                                     (not isinstance(f, dict) and f != v):
-                                return False
-            return foundMatchingEvent
+                                # This event doesn't match the filters
+                                all_filters_matched = False
+                                break
+
+                    # Exit because we found one matching event
+                    if all_filters_matched:
+                        return True
+
+            # We didn't find a matching event or an event that had matching filters
+            return False
 
         events = data["data"]
         event_str = ""
