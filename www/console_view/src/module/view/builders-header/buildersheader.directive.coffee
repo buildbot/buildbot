@@ -4,15 +4,15 @@ angular.module('buildbot.console_view').directive 'buildersHeader',
         restrict: 'EA' # E: Element, A: Attribute
         scope: {
             width: '='
+            cellWidth: '='
             builders: '='
             bigHeader: '='
         }
         templateUrl: 'console_view/views/buildersheader.html'
         controller: ['$scope', class
             constructor: ($scope) ->
-                @bigHeader = true
-
                 $scope.$watch 'width', (@width) =>
+                $scope.$watch 'cellWidth', (@cellWidth) =>
                 $scope.$watchCollection 'builders', (@builders) =>
                 $scope.$watch 'bigHeader', (@bigHeader) =>
         ]

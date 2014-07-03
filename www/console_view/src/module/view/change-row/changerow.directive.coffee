@@ -1,9 +1,10 @@
 angular.module('buildbot.console_view').directive 'changeRow',
     [ ->
         replace: false
-        restrict: 'EA'
+        restrict: 'EA' # E: Element, A: Attribute
         scope: {
             width: '='
+            cellWidth: '='
             change: '='
         }
         templateUrl: 'console_view/views/changerow.html'
@@ -15,6 +16,7 @@ angular.module('buildbot.console_view').directive 'changeRow',
                     @infoIsCollapsed = value
 
                 $scope.$watch 'width', (@width) =>
+                $scope.$watch 'cellWidth', (@cellWidth) =>
                 $scope.$watch 'change', (@change) =>
                     if @change
                         if angular.isString(@change.author)
