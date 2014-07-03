@@ -234,7 +234,6 @@ class BroadcastServerFactory(WebSocketServerFactory):
                             self.urlCacheDict[url].pushFilters = filters
                     logging.info("URL {0} is waiting for push data with these filters {1}".format(url, self.urlCacheDict[url].pushFilters))
             elif data["cmd"] == KRT_PUSH_DATA:
-                logging.info("Data pushed from server {0}".format(data["server"]))
                 self.update_push_urls(data)
 
         except AttributeError as e:
@@ -270,10 +269,16 @@ class BroadcastServerFactory(WebSocketServerFactory):
                             if (isinstance(f, dict) and not filter_dict_compare(f, v)) or \
                                     (not isinstance(f, dict) and f != v):
                                 return False
-
+                else:
+                    return False
             return True
 
         events = data["data"]
+        event_str = ""
+        for e in events:
+            event_str += "{0}, ".format(e["event"])
+        logging.info("Data pushed from server {0} with events {1}".format(data["server"], event_str))
+
         for url, obj in self.urlCacheDict.iteritems():
             if obj.waitForPush:
                 if "server" in data and data["server"] in url:
