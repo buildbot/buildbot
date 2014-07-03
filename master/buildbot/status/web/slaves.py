@@ -73,18 +73,34 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         except:
             max_builds = 15
 
+        filters = {
+            "slave": self.slavename
+        }
+
         bbURL = s.getBuildbotURL()
         recent_builds_json = PastBuildsJsonResource(s, max_builds, slave_status=slave_status)
         recent_builds_dict = recent_builds_json.asDict(request)
         recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
         ctx['instant_json']['recent_builds'] = {"url": recent_builds_url,
-                                                "data": json.dumps(recent_builds_dict, separators=(',', ':'))}
+                                                "data": json.dumps(recent_builds_dict, separators=(',', ':')),
+                                                "waitForPush": "true",
+                                                "pushFilters": {
+                                                    "buildStarted": filters,
+                                                    "buildFinished": filters,
+                                                }}
 
         curr_builds_json = SlaveBuildsJsonResource(s, slave_status)
         curr_builds_dict = curr_builds_json.asDict(request)
         curr_builds_url = bbURL + path_to_json_slave_builds(request, self.slavename)
         ctx['instant_json']['current_builds'] = {"url": curr_builds_url,
-                                                 "data": json.dumps(curr_builds_dict, separators=(',', ':'))}
+                                                 "data": json.dumps(curr_builds_dict, separators=(',', ':')),
+                                                 "waitForPush": "true",
+                                                 "pushFilters": {
+                                                     "buildStarted": filters,
+                                                     "buildFinished": filters,
+                                                     "stepStarted": filters,
+                                                     "stepFinished": filters,
+                                                 }}
 
 
 
@@ -122,7 +138,16 @@ class BuildSlavesResource(HtmlResource):
         slaves_dict = FilterOut(slaves_dict)
 
         cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
-                                         "data": json.dumps(slaves_dict, separators=(',', ':'))}
+                                         "data": json.dumps(slaves_dict, separators=(',', ':')),
+                                         "waitForPush": "true",
+                                         "pushFilters": {
+                                             "buildStarted": {},
+                                             "buildFinished": {},
+                                             "stepStarted": {},
+                                             "stepFinished": {},
+                                             "slaveConnected": {},
+                                             "slaveDisconnected": {},
+                                         }}
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
         defer.returnValue(template.render(**cxt))

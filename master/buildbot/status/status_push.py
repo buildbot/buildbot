@@ -598,7 +598,8 @@ class AutobahnStatusPush(StatusPush):
                   number=build.number,
                   builderName=build.builder.name,
                   sources=self.sources_from_build(build),
-                  project=build.builder.project)
+                  project=build.builder.project,
+                  slave=build.slavename)
         return self
 
     def buildFinished(self, builderName, build, results):
@@ -606,7 +607,8 @@ class AutobahnStatusPush(StatusPush):
                   number=build.number,
                   builderName=build.builder.name,
                   sources=self.sources_from_build(build),
-                  project=build.builder.project)
+                  project=build.builder.project,
+                  slave=build.slavename)
 
     def buildETAUpdate(self, build, ETA):
         self.push('buildETAUpdate',
@@ -620,14 +622,16 @@ class AutobahnStatusPush(StatusPush):
                   number=build.number,
                   builderName=build.builder.name,
                   sources=self.sources_from_build(build),
-                  project=build.builder.project)
+                  project=build.builder.project,
+                  slave=build.slavename)
 
     def stepFinished(self, build, step, results):
         self.push('stepFinished',
                   number=build.number,
                   builderName=build.builder.name,
                   sources=self.sources_from_build(build),
-                  project=build.builder.project)
+                  project=build.builder.project,
+                  slave=build.slavename)
 
     def slaveConnected(self, slavename):
         self.push('slaveConnected', name=slavename)
