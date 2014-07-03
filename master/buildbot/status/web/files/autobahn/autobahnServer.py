@@ -23,7 +23,7 @@ updateLock = Lock()
 KRT_JSON_DATA = "krtJSONData"
 KRT_URL_DROPPED = "krtURLDropped"
 KRT_REGISTER_URL = "krtRegisterURL"
-
+KRT_PUSH_DATA = "krtPushData"
 
 agent = Agent(reactor)
 
@@ -52,14 +52,24 @@ class CachedURL():
         self.pollInterval = POLL_INTERVAL
         self.currentPollInterval = POLL_INTERVAL
         self.locked = False
+        self.waitForPush = False
+        self.pushFilters = {}
+        self.newData = False
 
     def pollNeeded(self):
-        return (time.time() - self.lastChecked) > self.currentPollInterval
+        past_interval = (time.time() - self.lastChecked) > self.currentPollInterval
+        if self.waitForPush:
+            if self.newData:
+                return past_interval
+            return False
+
+        return past_interval
 
     def pollSuccess(self):
         self.lastChecked = time.time()
         self.locked = False
         self.errorCount = 0
+        self.newData = False
 
         if self.currentPollInterval > self.pollInterval:
             self.currentPollInterval -= POLL_INTERVAL_STEP
@@ -202,7 +212,10 @@ class BroadcastServerFactory(WebSocketServerFactory):
         try:
             data = json.loads(msg)
             if data["cmd"] == KRT_REGISTER_URL:
-                url = data["data"]
+                if isinstance(data["data"], basestring):
+                    url = data["data"]
+                else:
+                    url = data["data"]["url"]
                 if not url in self.urlCacheDict:
                     logging.info("Created new url {0} for {1}".format(url, client.peer))
                     self.urlCacheDict[url] = CachedURL(url)
@@ -210,11 +223,65 @@ class BroadcastServerFactory(WebSocketServerFactory):
                 else:
                     logging.info("Added {1} to url {0}".format(url, client.peer))
                     self.urlCacheDict[url].clients.append(client)
+
+                if not isinstance(data["data"], basestring) and "waitForPush" in data["data"] and data["data"]["waitForPush"]:
+                    self.urlCacheDict[url].waitForPush = True
+                    if "pushFilters" in data["data"]:
+                        filters = data["data"]["pushFilters"]
+                        if isinstance(filters, basestring):
+                            self.urlCacheDict[url].pushFilters = json.loads(filters)
+                        else:
+                            self.urlCacheDict[url].pushFilters = filters
+                    logging.info("URL {0} is waiting for push data with these filters {1}".format(url, self.urlCacheDict[url].pushFilters))
+            elif data["cmd"] == KRT_PUSH_DATA:
+                logging.info("Data pushed from server {0}".format(data["server"]))
+                self.update_push_urls(data)
+
         except AttributeError as e:
             pass
         except ValueError as e:
             pass
 
+    def update_push_urls(self, data):
+
+        def str_compare(f, v):
+            return f == v
+
+        def filter_dict_compare(f_dict, v_dict):
+            for n, f in f_dict.iteritems():
+                if n in v_dict and v_dict[n] != f:
+                    return False
+
+            return True
+
+        def matches_filter(urlCache, events):
+            if len(urlCache.pushFilters) == 0:
+                return True
+
+            for event in events:
+                if "event" in event and event["event"] in urlCache.pushFilters:
+                    event_name = event["event"]
+                    filter_dict = urlCache.pushFilters[event_name]
+                    if len(filter_dict) == 0:
+                        return True
+
+                    payload = event["payload"]
+                    for filterName, f in filter_dict.iteritems():
+                        if filterName in payload:
+                            v = payload[filterName]
+                            if isinstance(f, basestring):
+                                return str_compare(f, v)
+                            elif isinstance(f, dict):
+                                return filter_dict_compare(f, v)
+
+            return False
+
+        events = data["data"]
+        for url, obj in self.urlCacheDict.iteritems():
+            if obj.waitForPush:
+                if "server" in data and data["server"] in url:
+                    if matches_filter(obj, events):
+                        obj.newData = True
 
 def createDeamon():
     import os, sys

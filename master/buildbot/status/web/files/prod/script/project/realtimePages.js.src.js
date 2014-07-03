@@ -14,10 +14,10 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
     //Timeouts
     var iURLDroppedTimeout = 30000;
     var iServerDisconnectTimeout = 30000;
-    var KRT_RELOAD_CD = 5000; //Amount of time before we can reload data
+    var KRT_RELOAD_CD = 500; //Amount of time before we can reload data
 
     var realtimePages = {
-        createWebSocket: function (wsURI) {
+        createWebSocket: function (wsURI, json) {
             if (sock === null) {
 
                 if (window.WebSocket !== undefined) {
@@ -35,7 +35,15 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                         $('#bowlG').remove();
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
-                            realtimePages.sendCommand(KRT_REGISTER_URL, url);
+                            var data = {
+                                url: url
+                            };
+
+                            if (json !== undefined) {
+                                data.waitForPush = json[name].waitForPush;
+                                data.pushFilters = json[name].pushFilters;
+                            }
+                            realtimePages.sendCommand(KRT_REGISTER_URL, data);
                         });
                     };
 
@@ -75,7 +83,7 @@ define(['jquery', 'rtglobal', 'helpers', 'timeElements'], function ($, rtGlobal,
             var wsURI = $('body').attr('data-realTimeServer');
             if (wsURI !== undefined && wsURI !== "") {
                 console.log(wsURI);
-                realtimePages.createWebSocket(wsURI);
+                realtimePages.createWebSocket(wsURI, json);
                 return sock;
             }
 

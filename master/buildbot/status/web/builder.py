@@ -551,11 +551,26 @@ class BuildersResource(HtmlResource):
         cxt['path_to_codebases'] = path_to_codebases(req, self.project.name)
         cxt['selectedproject'] = self.project.name
 
+        codebases = {}
+        getCodebasesArg(req, codebases)
         project_json = SingleProjectJsonResource(status, self.project)
         project_dict = yield project_json.asDict(req)
         url = status.getBuildbotURL() + path_to_json_builders(req, self.project.name)
+        filter = {
+            "project": self.project.name,
+            "sources": codebases
+        }
         cxt['instant_json']['builders'] = {"url": url,
-                                           "data": json.dumps(project_dict, separators=(',', ':'))}
+                                           "data": json.dumps(project_dict, separators=(',', ':')),
+                                           "waitForPush": "true",
+                                           "pushFilters": {
+                                               "buildStarted": filter,
+                                               "buildFinished": filter,
+                                               "requestSubmitted": filter,
+                                               "requestCancelled": filter,
+                                               "stepStarted": filter,
+                                               "stepFinished": filter,
+                                           }}
 
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
