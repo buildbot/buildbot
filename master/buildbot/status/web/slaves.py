@@ -83,7 +83,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
         ctx['instant_json']['recent_builds'] = {"url": recent_builds_url,
                                                 "data": json.dumps(recent_builds_dict, separators=(',', ':')),
-                                                "waitForPush": "true",
+                                                "waitForPush": s.master.config.autobahn_push,
                                                 "pushFilters": {
                                                     "buildStarted": filters,
                                                     "buildFinished": filters,
@@ -94,7 +94,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         curr_builds_url = bbURL + path_to_json_slave_builds(request, self.slavename)
         ctx['instant_json']['current_builds'] = {"url": curr_builds_url,
                                                  "data": json.dumps(curr_builds_dict, separators=(',', ':')),
-                                                 "waitForPush": "true",
+                                                 "waitForPush": s.master.config.autobahn_push,
                                                  "pushFilters": {
                                                      "buildStarted": filters,
                                                      "buildFinished": filters,
@@ -139,7 +139,7 @@ class BuildSlavesResource(HtmlResource):
 
         cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
                                          "data": json.dumps(slaves_dict, separators=(',', ':')),
-                                         "waitForPush": "true",
+                                         "waitForPush": s.master.config.autobahn_push,
                                          "pushFilters": {
                                              "buildStarted": {},
                                              "buildFinished": {},

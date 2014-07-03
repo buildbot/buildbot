@@ -505,7 +505,7 @@ class HtmlResource(resource.Resource, ContextMixin):
             "global": {
                 "url": path_to_json_global_status(status, request),
                 "data": json.dumps(global_json),
-                "waitForPush": "true",
+                "waitForPush": status.master.config.autobahn_push,
                 "pushFilters": json.dumps(
                     {"buildStarted": {},
                      "buildFinished": {},

@@ -288,7 +288,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         url = self.status.getBuildbotURL() + path_to_json_project_builder(req, project, self.builder_status.name)
         cxt['instant_json']['project'] = {"url": url,
                                           "data": json.dumps(project_dict, separators=(',', ':')),
-                                          "waitForPush": "true",
+                                          "waitForPush": self.status.master.config.autobahn_push,
                                           "pushFilters": {
                                               "buildStarted": filters,
                                               "buildFinished": filters,
@@ -301,7 +301,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         pending_url = self.status.getBuildbotURL() + path_to_json_pending(req, self.builder_status.name)
         cxt['instant_json']['pending_builds'] = {"url": pending_url,
                                                  "data": json.dumps(pending_dict, separators=(',', ':')),
-                                                 "waitForPush": "true",
+                                                 "waitForPush": self.status.master.config.autobahn_push,
                                                  "pushFilters": {
                                                      "buildStarted": filters,
                                                      "requestSubmitted": filters,
@@ -313,7 +313,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, num_builds)
         cxt['instant_json']['builds'] = {"url": builds_url,
                                          "data": json.dumps(builds_dict, separators=(',', ':')),
-                                         "waitForPush": "true",
+                                         "waitForPush": self.status.master.config.autobahn_push,
                                          "pushFilters": {
                                              "buildFinished": filters
                                          }}
@@ -326,7 +326,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         del filters["sources"]
 
         cxt['instant_json']["slaves"] = {"url": url, "data": json.dumps(slaves_dict, separators=(',', ':')),
-                                         "waitForPush": "true",
+                                         "waitForPush": self.status.master.config.autobahn_push,
                                          "pushFilters": {
                                              "buildStarted": filters,
                                              "buildFinished": filters,
@@ -573,7 +573,7 @@ class BuildersResource(HtmlResource):
         }
         cxt['instant_json']['builders'] = {"url": url,
                                            "data": json.dumps(project_dict, separators=(',', ':')),
-                                           "waitForPush": "true",
+                                           "waitForPush": status.master.config.autobahn_push,
                                            "pushFilters": {
                                                "buildStarted": filters,
                                                "buildFinished": filters,

@@ -295,7 +295,7 @@ class StatusResourceBuild(HtmlResource):
         build_dict = yield build_json.asDict(req)
         cxt['instant_json']['build'] = {"url": path_to_json_build(status, req, builder.name, b.getNumber()),
                                         "data": json.dumps(build_dict, separators=(',', ':')),
-                                        "waitForPush": "true",
+                                        "waitForPush": status.master.config.autobahn_push,
                                         "pushFilters": {
                                             "buildStarted": filters,
                                             "buildFinished": filters,

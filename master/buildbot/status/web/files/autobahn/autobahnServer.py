@@ -224,7 +224,8 @@ class BroadcastServerFactory(WebSocketServerFactory):
                     logging.info("Added {1} to url {0}".format(url, client.peer))
                     self.urlCacheDict[url].clients.append(client)
 
-                if not isinstance(data["data"], basestring) and "waitForPush" in data["data"] and data["data"]["waitForPush"]:
+                if not isinstance(data["data"], basestring) and "waitForPush" in data["data"] \
+                        and data["data"]["waitForPush"] == "true":
                     self.urlCacheDict[url].waitForPush = True
                     if "pushFilters" in data["data"]:
                         filters = data["data"]["pushFilters"]
