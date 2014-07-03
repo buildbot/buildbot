@@ -65,7 +65,6 @@ m.controller 'consoleController',
                     $scope.$apply()
 
         loading: true
-        bigHeader: true
 
         _matchBuildWithChange: (build) =>
             buildrequest = @buildrequests[build.buildrequestid - 1]
@@ -77,17 +76,15 @@ m.controller 'consoleController',
                             change.builds[build.builderid - 1] = build
 
         _setWidth: (width) ->
-            if (10/12 * width) / @builders.length > 40
-                @width = "#{100 / @builders.length}%"
+            @cellWidth = "#{100 / @builders.length}%"
+            if (0.85 * width) / @builders.length > 40
+                @width = '100%'
             else
-                @width = '40px'
+                @width = "#{@builders.length * 40 / 0.85}px"
 
         openAll: ->
             @$scope.$broadcast('showAllInfo', false)
 
         closeAll: ->
             @$scope.$broadcast('showAllInfo', true)
-
-        showBuilderNames: ->
-            @bigHeader = !@bigHeader
     ]

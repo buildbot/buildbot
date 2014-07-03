@@ -1,6 +1,5 @@
-.builders-header(ng-class="{'big-header': bh.bigHeader}")
+.builders
     a.builder(ng-repeat="builder in bh.builders | orderBy: 'builderid' track by builder.builderid"
-              ng-style='{width: bh.width}'
+              ng-style='{width: bh.cellWidth}'
               ng-href='#/builders/{{ builder.builderid }}'
-              tooltip-placement='left' tooltip='{{ bh.bigHeader ? builder.id : builder.name }}'
-              ng-bind='bh.bigHeader ? builder.name : builder.builderid')
+              ng-bind='builder.name')
