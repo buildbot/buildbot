@@ -598,7 +598,7 @@ class AutobahnStatusPush(StatusPush):
                   number=build.number,
                   builderName=build.builder.name,
                   sources=self.sources_from_build(build),
-                  project=build.builder.name)
+                  project=build.builder.project)
         return self
 
     def buildFinished(self, builderName, build, results):
