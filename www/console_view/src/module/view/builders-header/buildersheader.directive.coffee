@@ -6,7 +6,6 @@ angular.module('buildbot.console_view').directive 'buildersHeader',
             width: '='
             cellWidth: '='
             builders: '='
-            bigHeader: '='
         }
         templateUrl: 'console_view/views/buildersheader.html'
         controller: ['$scope', class
@@ -14,7 +13,6 @@ angular.module('buildbot.console_view').directive 'buildersHeader',
                 $scope.$watch 'width', (@width) =>
                 $scope.$watch 'cellWidth', (@cellWidth) =>
                 $scope.$watchCollection 'builders', (@builders) =>
-                $scope.$watch 'bigHeader', (@bigHeader) =>
         ]
         controllerAs: 'bh'
     ]

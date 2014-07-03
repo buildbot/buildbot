@@ -65,7 +65,6 @@ m.controller 'consoleController',
                     $scope.$apply()
 
         loading: true
-        bigHeader: true
 
         _matchBuildWithChange: (build) =>
             buildrequest = @buildrequests[build.buildrequestid - 1]
@@ -88,7 +87,4 @@ m.controller 'consoleController',
 
         closeAll: ->
             @$scope.$broadcast('showAllInfo', true)
-
-        showBuilderNames: ->
-            @bigHeader = !@bigHeader
     ]
