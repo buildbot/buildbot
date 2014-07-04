@@ -536,7 +536,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: pathExists(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: Boolean via Deferred
 
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
@@ -544,7 +544,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: glob(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: list of filenames
 
         Get the list of files matching the given path pattern on the slave.
@@ -565,26 +565,26 @@ This class can only be used in new-style steps.
     This mixin manages the following step configuration parameters, the contents of which are documented in the manual.
     Naturally, all of these are renderable.
 
-    ..py:attribute:: command
-    ..py:attribute:: workdir
-    ..py:attribute:: env
-    ..py:attribute:: want_stdout
-    ..py:attribute:: want_stderr
-    ..py:attribute:: usePTY
-    ..py:attribute:: logfiles
-    ..py:attribute:: lazylogfiles
-    ..py:attribute:: timeout
-    ..py:attribute:: maxTime
-    ..py:attribute:: logEnviron
-    ..py:attribute:: interruptSignal
-    ..py:attribute:: sigtermTime
-    ..py:attribute:: initialStdin
-    ..py:attribute:: decodeRC
+    .. py:attribute:: command
+    .. py:attribute:: workdir
+    .. py:attribute:: env
+    .. py:attribute:: want_stdout
+    .. py:attribute:: want_stderr
+    .. py:attribute:: usePTY
+    .. py:attribute:: logfiles
+    .. py:attribute:: lazylogfiles
+    .. py:attribute:: timeout
+    .. py:attribute:: maxTime
+    .. py:attribute:: logEnviron
+    .. py:attribute:: interruptSignal
+    .. py:attribute:: sigtermTime
+    .. py:attribute:: initialStdin
+    .. py:attribute:: decodeRC
 
-    ..py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
+    .. py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
 
-        :param dict constructorArgs constructor keyword arguments
-        :param list prohibitArgs list of recognized arguments to reject
+        :param dict constructorArgs: constructor keyword arguments
+        :param list prohibitArgs: list of recognized arguments to reject
         :returns: keyword arguments destined for :py:class:`BuildStep`
 
         This method is intended to be called from the shell constructor, passed any keyword arguments not otherwise used by the step.
@@ -593,7 +593,7 @@ This class can only be used in new-style steps.
 
         The return value should be passed to the :py:class:`BuildStep` constructor.
 
-    ..py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
+    .. py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
 
         :param collectStdout: if true, the command's stdout wil be available in ``cmd.stdout`` on completion
         :param collectStderr: if true, the command's stderr wil be available in ``cmd.stderr`` on completion

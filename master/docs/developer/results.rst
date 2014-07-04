@@ -64,12 +64,12 @@ external tools, so the values are fixed.
     This simple mixin is intended to help implement classes that will use :py:meth:`computeResultAndTermination`.
     The class has, as class attributes, the result computing configuration parameters with default values:
 
-    ..py:attribute:: haltOnFailure
-    ..py:attribute:: flunkOnWarnings
-    ..py:attribute:: flunkOnFailure
-    ..py:attribute:: warnOnWarnings
-    ..py:attribute:: warnOnFailure
+    .. py:attribute:: haltOnFailure
+    .. py:attribute:: flunkOnWarnings
+    .. py:attribute:: flunkOnFailure
+    .. py:attribute:: warnOnWarnings
+    .. py:attribute:: warnOnFailure
 
     The names of these attributes are available in the following attribute:
 
-    ..py:attribute:: resultConfig
+    .. py:attribute:: resultConfig

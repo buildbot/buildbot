@@ -1010,7 +1010,7 @@ Darcs
 
 .. py:class:: buildbot.steps.source.darcs.Darcs
 
-The :bb:step`Darcs` build step performs a `Darcs <http://darcs.net/>`_
+The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_
 checkout or update. ::
 
     from buildbot.steps.source.darcs import Darcs
@@ -2006,20 +2006,20 @@ The two :bb:step:`ShellSequence` methods below tune the behavior of how the list
 
 .. py:class:: buildbot.steps.shellsequence.ShellSequence
 
-    ..py:method:: shouldRunTheCommand(oneCmd)
+    .. py:method:: shouldRunTheCommand(oneCmd)
 
-        :param oneCommand: a string or lis of strings, as rendered from a :py:class:`~buildbot.steps.shellsequence.ShellArg` instance's ``command`` argument.
+        :param oneCmd: a string or a list of strings, as rendered from a :py:class:`~buildbot.steps.shellsequence.ShellArg` instance's ``command`` argument.
 
         Determine whether the command ``oneCmd`` should be executed.
-        If ``shouldRunTheCommand`` returns False, the result of the command will be recorded as SKIPPED.
+        If ``shouldRunTheCommand`` returns ``False``, the result of the command will be recorded as SKIPPED.
         The default methods skips all empty strings and empty lists.
 
-    ..py:method:: getFinalState()
+    .. py:method:: getFinalState()
 
         Return the status text of the step in the end.
         The default value is to set the text describing the execution of the last shell command.
 
-    ..py:method:: runShellSequence(commands):
+    .. py:method:: runShellSequence(commands):
 
         :param commands: list of shell args
 
