@@ -86,7 +86,9 @@ The old, clunky WebStatus has been removed.
 You will like the new interface!
 RIP WebStatus, you were a good friend.
 
-If you have code like this in your configuration (and you probably do!) ::
+If you have code like this in your configuration (and you probably do!)
+
+.. code-block:: python
 
     from buildbot.status import html
     c['status'].append(html.WebStatus(http_port=8010, allowForce=True)
