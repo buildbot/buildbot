@@ -4,6 +4,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
 
     var HEARTBEAT = 5000,
         ANIM_INTERVAL = 80,
+        lastAnim = 0,
         lastBeat,
         timeObjects = {"timeAgo": [], "elapsed": [], "progressBars": []},
         interval,
@@ -46,8 +47,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 }
             }
         },
-        spinIconAnimation: function () {
-
+        spinIconAnimation: function (ts) {
             var frames = 10;
             var frameWidth = 13;
             $.each($('.animate-spin'), function (i, obj) {
@@ -59,8 +59,13 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 var offset = animPos * -frameWidth;
                 $obj.css("background-position", offset + "px 0px");
             });
-            animPos += 1;
 
+            if ((ts - lastAnim) > ANIM_INTERVAL) {
+                animPos += 1;
+                lastAnim = ts;
+            }
+
+            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         processTimeAgo: function ($el, startTimestamp) {
             $el.html(moment.unix(startTimestamp).fromServerNow());
@@ -76,19 +81,19 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         processProgressBars: function ($el, startTime, etaTime) {
             var serverOffset = extendMoment.getServerOffset(),
                 start = moment.unix(startTime).startOf('second'),
-                startUnix = (start.unix() * 1000.0).toFixed(2),
+                startUnix = start.unix().toFixed(2),
                 percentInner = $el.children('.percent-inner-js'),
                 timeTxt = $el.children('.time-txt-js'),
                 hasETA = etaTime !== 0,
                 percent = 100;
 
             if (hasETA) {
-                var now = (moment().startOf('second') + serverOffset).toFixed(2),
-                    etaEpoch = start + (etaTime * 1000.0),
-                    overtime = etaTime < 0,
-                    then = (moment().startOf('second').add('s', etaTime) + serverOffset).toFixed(2);
+                var now = moment().add('ms', serverOffset).startOf('second').unix().toFixed(2),
+                    etaEpoch = moment().add('s', etaTime).add('ms', serverOffset).startOf('second'),
+                    then = etaEpoch.unix().toFixed(2),
+                    overtime = moment(etaEpoch).diff() < 0;
 
-                percent = Math.round(100 - (then - now) / (then - startUnix) * 100);
+                percent = Math.floor(100 - (then - now) / (then - startUnix) * 100);
                 percent = percent.clamp(0, 100);
 
                 moment.lang('progress-bar-en');
@@ -100,7 +105,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
 
             } else {
                 moment.lang('progress-bar-no-eta-en');
-                timeTxt.html(moment(parseFloat(startTime) * 1000).fromServerNow());
+                timeTxt.html(start.fromServerNow());
             }
 
             //Reset language to original
@@ -115,7 +120,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 privateFunc.heartbeatInterval();
                 extendMoment.init();
             }
-            setInterval(privateFunc.spinIconAnimation, ANIM_INTERVAL);
+            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         addTimeAgoElem: function (el, startTimestamp) {
             var $el = $(el);

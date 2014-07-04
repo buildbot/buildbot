@@ -76,19 +76,19 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
         processProgressBars: function ($el, startTime, etaTime) {
             var serverOffset = extendMoment.getServerOffset(),
                 start = moment.unix(startTime).startOf('second'),
-                startUnix = (start.unix() * 1000.0).toFixed(2),
+                startUnix = start.unix().toFixed(2),
                 percentInner = $el.children('.percent-inner-js'),
                 timeTxt = $el.children('.time-txt-js'),
                 hasETA = etaTime !== 0,
                 percent = 100;
 
             if (hasETA) {
-                var now = (moment().startOf('second') + serverOffset).toFixed(2),
-                    etaEpoch = start + (etaTime * 1000.0),
-                    overtime = etaTime < 0,
-                    then = (moment().startOf('second').add('s', etaTime) + serverOffset).toFixed(2);
+                var now = moment().add('ms', serverOffset).startOf('second').unix().toFixed(2),
+                    etaEpoch = moment().add('s', etaTime).add('ms', serverOffset).startOf('second'),
+                    then = etaEpoch.unix().toFixed(2),
+                    overtime = moment(etaEpoch).diff() < 0;
 
-                percent = Math.round(100 - (then - now) / (then - startUnix) * 100);
+                percent = Math.floor(100 - (then - now) / (then - startUnix) * 100);
                 percent = percent.clamp(0, 100);
 
                 moment.lang('progress-bar-en');
@@ -100,7 +100,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
 
             } else {
                 moment.lang('progress-bar-no-eta-en');
-                timeTxt.html(moment(parseFloat(startTime) * 1000).fromServerNow());
+                timeTxt.html(start.fromServerNow());
             }
 
             //Reset language to original

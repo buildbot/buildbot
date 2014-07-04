@@ -34,13 +34,17 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
 
         var old_lang = moment.lang();
         moment.lang(languageType);
-        var etaEpoch = (moment.unix(time).startOf('second')) + (eta * 1000.0);
-        expect($elem.text()).toEqual(moment(etaEpoch).startOf("second").fromServerNow());
 
         if (eta > 0 && percent !== undefined) {
             expect($inner.css("width")).toEqual(percent + "%");
         } else {
             expect($inner.css("width")).toEqual("100%");
+        }
+
+        if (eta > 0) {
+            expect($elem.text()).toContain("ETA:");
+        } else if (eta < 0) {
+            expect($elem.text()).toContain("Overtime:");
         }
 
         moment.lang(old_lang);
@@ -219,17 +223,17 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
         });
 
         it("shows the correct time for 30 seconds without eta", function () {
-            var time = serverTimeOffset.subtract("seconds", 30).unix();
+            var time = serverTimeOffset.subtract("seconds", 30).startOf('second').unix();
             testProgressBar(time, 0, "progress-bar-no-eta-en");
         });
 
-        it("shows the correct time for 90 seconds with eta of 180 seconds", function () {
-            var time = serverTimeOffset.subtract("seconds", 90).unix();
-            testProgressBar(time, 90, "progress-bar-en", 50);
+        it("shows the correct time of 30 seconds with eta of 60 seconds", function () {
+            var time = serverTimeOffset.subtract("seconds", 30).startOf('second').unix();
+            testProgressBar(time, 30, "progress-bar-en", 50);
         });
 
         it("shows the overtime for 30 seconds with eta of 30 seconds", function () {
-            var time = serverTimeOffset.subtract("seconds", 60).unix();
+            var time = serverTimeOffset.subtract("seconds", 60).startOf('second').unix();
             testProgressBar(time, -1, "progress-bar-en", 100);
         });
     });
