@@ -1,28 +1,22 @@
 /*global define, moment*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'popup', 'rtGenericTable'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup, rtTable) {
     
-    var tbsorter,
+    var $tbsorter,
         rtBuildQueue;
 
     rtBuildQueue = {
         init: function () {
-            tbsorter = rtBuildQueue.dataTableInit();
+            $tbsorter = rtBuildQueue.dataTableInit();
 
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.queue = rtBuildQueue.processBuildQueue;
             realtimePages.initRealtime(realtimeFunctions);
             // check all in tables and remove builds
-            helpers.selectBuildsAction(tbsorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
+            helpers.selectBuildsAction($tbsorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
 
         },
         processBuildQueue: function (data) {
-            timeElements.clearTimeObjects(tbsorter);
-            tbsorter.fnClearTable();
-            try {
-                tbsorter.fnAddData(data);
-                timeElements.updateTimeObjects();
-            } catch (err) {
-            }
+            rtTable.table.rtfGenericTableProcess($tbsorter, data);
         },
         dataTableInit: function () {
             var options = {};

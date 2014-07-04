@@ -571,6 +571,15 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
 
             return result;
         },
+        /**
+         * Clear all events and binding on the child elements,
+         * this is super useful to make sure we don't have memory leaks
+         * when DOM elements are removed from the DOM
+         * @param $elem
+         */
+        clearChildEvents: function ($elem) {
+            $elem.find("*").addBack().off();
+        },
         cssClassesEnum : css_class_enum
     };
 

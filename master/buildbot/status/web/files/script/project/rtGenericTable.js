@@ -275,12 +275,13 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         },
         rtfGenericTableProcess: function ($table, data) {
             timeElements.clearTimeObjects($table);
+            helpers.clearChildEvents($table);
             $table.fnClearTable();
 
             try {
                 $table.fnAddData(data);
                 timeElements.updateTimeObjects();
-            } catch (err) {
+            } catch (ignore) {
             }
         }
 

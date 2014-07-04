@@ -4,6 +4,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
 
     var HEARTBEAT = 5000,
         ANIM_INTERVAL = 80,
+        lastAnim = 0,
         lastBeat,
         timeObjects = {"timeAgo": [], "elapsed": [], "progressBars": []},
         interval,
@@ -46,8 +47,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 }
             }
         },
-        spinIconAnimation: function () {
-
+        spinIconAnimation: function (ts) {
             var frames = 10;
             var frameWidth = 13;
             $.each($('.animate-spin'), function (i, obj) {
@@ -59,8 +59,13 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 var offset = animPos * -frameWidth;
                 $obj.css("background-position", offset + "px 0px");
             });
-            animPos += 1;
 
+            if ((ts - lastAnim) > ANIM_INTERVAL) {
+                animPos += 1;
+                lastAnim = ts;
+            }
+
+            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         processTimeAgo: function ($el, startTimestamp) {
             $el.html(moment.unix(startTimestamp).fromServerNow());
@@ -115,7 +120,7 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 privateFunc.heartbeatInterval();
                 extendMoment.init();
             }
-            setInterval(privateFunc.spinIconAnimation, ANIM_INTERVAL);
+            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         addTimeAgoElem: function (el, startTimestamp) {
             var $el = $(el);
