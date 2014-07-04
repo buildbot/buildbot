@@ -536,7 +536,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: pathExists(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: Boolean via Deferred
 
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
@@ -544,7 +544,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: glob(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: list of filenames
 
         Get the list of files matching the given path pattern on the slave.
@@ -583,8 +583,8 @@ This class can only be used in new-style steps.
 
     .. py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
 
-        :param dict constructorArgs constructor keyword arguments
-        :param list prohibitArgs list of recognized arguments to reject
+        :param dict constructorArgs: constructor keyword arguments
+        :param list prohibitArgs: list of recognized arguments to reject
         :returns: keyword arguments destined for :py:class:`BuildStep`
 
         This method is intended to be called from the shell constructor, passed any keyword arguments not otherwise used by the step.
