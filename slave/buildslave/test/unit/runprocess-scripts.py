@@ -41,10 +41,10 @@ def sleep_forever():
         time.sleep(10)
 
 
-def wait_for_parent_death():
+def wait_for_parent_death(orig_parent_pid):
     while True:
         ppid = os.getppid()
-        if ppid == 1:
+        if ppid != orig_parent_pid:
             return
         # on some systems, getppid will keep returning
         # a dead pid, so check it for liveness
@@ -86,8 +86,10 @@ def double_fork():
     # parent process exits, so ignore that.
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     parent_pidfile, child_pidfile = sys.argv[2:]
+    parent_pid = os.getpid()
+
     if os.fork() == 0:
-        wait_for_parent_death()
+        wait_for_parent_death(parent_pid)
         write_pidfile(child_pidfile)
         sleep_forever()
     else:
