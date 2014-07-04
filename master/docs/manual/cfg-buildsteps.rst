@@ -1010,7 +1010,7 @@ Darcs
 
 .. py:class:: buildbot.steps.source.darcs.Darcs
 
-The :bb:step`Darcs` build step performs a `Darcs <http://darcs.net/>`_
+The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_
 checkout or update. ::
 
     from buildbot.steps.source.darcs import Darcs
