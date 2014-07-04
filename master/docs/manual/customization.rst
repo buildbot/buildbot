@@ -855,7 +855,7 @@ Statistics can be generated for each step, and then summarized across all steps 
 For example, a test step might set its ``warnings`` statistic to the number of warnings observed.
 The build could then sum the ``warnings`` on all steps to get a total number of warnings.
 
-Statistics are set and retrieved with the :py:meth:`~buildbot.process.buildstep.BuildStep.setStatistic` and:py:meth:`~buildbot.process.buildstep.BuildStep.getStatistic` methods.
+Statistics are set and retrieved with the :py:meth:`~buildbot.process.buildstep.BuildStep.setStatistic` and :py:meth:`~buildbot.process.buildstep.BuildStep.getStatistic` methods.
 The :py:meth:`~buildbot.process.buildstep.BuildStep.hasStatistic` method determines whether a statistic exists.
 
 The Build method :py:meth:`~buildbot.process.build.Build.getSummaryStatistic` can be used to aggregate over all steps in a Build.
