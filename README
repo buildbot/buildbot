@@ -1,13 +1,13 @@
-Katana is a fork of the open-source project, Buildbot.  Find more information at the
-Buildbot project website http://buildbot.net/
+Katana is a fork of the open-source project, Buildbot.  Find more information
+at the Buildbot project website http://buildbot.net/
 
-Unity Technologies sincerely thanks the Buildbot project for creating such a fantastic
-continuous integration framework and for making it Open Source.  Without their work,
-Katana -- which powers the R&D team making the Unity game engine and content creation
-tool -- would not exist.
+Unity Technologies sincerely thanks the Buildbot project for creating such a
+fantastic continuous integration framework and for making it Open Source.
+Without their work, Katana -- which powers the R&D team making the Unity game
+engine and content creation tool -- would not exist.
 
-Katana can be set up much like a normal Buildbot instance, but more detailed instructions
-and examples are in-progress.
+Katana can be set up much like a normal Buildbot instance, but more detailed
+instructions and examples are in-progress.
 
 Katana Maintainers List w/ Contact Info:
 
@@ -26,8 +26,8 @@ Katana Maintainers List w/ Contact Info:
     Personal Website: http://natoshabard.com
     Twitter: https://twitter.com/natosha_bard
 
-Special thanks to Simon Holm (http://www.simon-holm.com/) for all of his contributions to
-Katana.
+Special thanks to Simon Holm (http://www.simon-holm.com/) for all of his
+contributions to Katana.
 
-Like Buildbot, Katana consists of two separate components: the master and the slave.  See
-master/README and slave/README for more information.
+Like Buildbot, Katana consists of two separate components: the master and the
+slave.  See master/README and slave/README for more information.
