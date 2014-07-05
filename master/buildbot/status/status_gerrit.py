@@ -232,8 +232,8 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
         if self.reviewCB:
-            message, verified, reviewed = self.reviewCB(builderName, build, result, self.master_status, self.reviewArg)
-            self.sendCodeReviews(build, message, verified, reviewed)
+            message, verified, reviewed, label = self.reviewCB(builderName, build, result, self.master_status, self.reviewArg)
+            self.sendCodeReviews(build, message, verified, reviewed, label)
 
     def sendBuildSetSummary(self, buildset, builds):
         if self.summaryCB:
@@ -254,10 +254,10 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
-            message, verified, reviewed = self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg)
-            self.sendCodeReviews(builds[0], message, verified, reviewed)
+            message, verified, reviewed, label = self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg)
+            self.sendCodeReviews(builds[0], message, verified, reviewed, label)
 
-    def sendCodeReviews(self, build, message, verified=0, reviewed=0):
+    def sendCodeReviews(self, build, message, verified=0, reviewed=0, label=None):
         if message is None:
             return
 
@@ -275,7 +275,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                     change2 = downloaded[2 * i]
                     revision = downloaded[2 * i + 1]
                     if change1 == change2:
-                        self.sendCodeReview(project, revision, message, verified, reviewed)
+                        self.sendCodeReview(project, revision, message, verified, reviewed, label)
                     else:
                         return  # something is wrong, abort
             return
@@ -291,13 +291,13 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                 revision = None
 
             if project is not None and revision is not None:
-                self.sendCodeReview(project, revision, message, verified, reviewed)
+                self.sendCodeReview(project, revision, message, verified, reviewed, label)
                 return
 
-    def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
+    def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0, label=None):
         gerrit_version = self.getCachedVersion()
         if (verified or reviewed) and gerrit_version is None:
-            self.callWithVersion(lambda: self.sendCodeReview(project, revision, message, verified, reviewed))
+            self.callWithVersion(lambda: self.sendCodeReview(project, revision, message, verified, reviewed, label))
             return
 
         command = self._gerritCmd("review", "--project %s" % str(project))
@@ -317,6 +317,9 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                 command.extend(["--code-review %d" % int(reviewed)])
             else:
                 command.extend(["--label Code-Review=%d" % int(reviewed)])
+
+        if label:
+            command.append("--label %s" % label.replace("'", "\""))
 
         command.append(str(revision))
         print command
