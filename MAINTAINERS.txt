@@ -1,3 +1,11 @@
+The MAINTAINERS list below is up-to-date for upstream Buildbot, at version
+0.8.7p1, from which Buildbot was forked off to create Katana.  It is left here
+for historical reasons, and to pay homage to the incredible team who made
+Katana possible, but may not be up-to-date at the time of reading.  See the
+README file for Katana maintainers' contact information.
+
+===============================================================================
+
 Buildbot is too complex for any one person to understand all of it.  This file
 lists who's responsible for which parts of Buildbot.  Some of these are easily
 separated into a few source files, while others are general projects that
