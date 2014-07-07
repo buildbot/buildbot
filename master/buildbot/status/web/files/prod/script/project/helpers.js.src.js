@@ -139,15 +139,17 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
                     toolTipCont.remove();
                 });
 
-                if (screenSize.isMediumScreen() && thisEl.hasClass('responsive-tooltip')) {
-                    toolTipCont.html(this.t)
-                        .appendTo('body')
-                        .css({'top': cursorPosTop, 'right': 28 })
-                        .fadeIn('fast');
-                } else {
+                if (screenSize.isMediumScreen() || !thisEl.hasClass('responsive-tooltip')) {
+                    
                     toolTipCont.html(this.t)
                         .appendTo('body')
                         .css({'top': cursorPosTop, 'left': cursorPosLeft})
+                        .fadeIn('fast');
+                } else if (thisEl.hasClass('responsive-tooltip')) {
+
+                    toolTipCont.html(this.t)
+                        .appendTo('body')
+                        .css({'top': cursorPosTop, 'right': 28 })
                         .fadeIn('fast');
                 }
 
@@ -362,14 +364,14 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 
-            if (isMediumScreen) {
+            if (isMediumScreen) {                
+                $('.breadcrumbs-nav').width('');
+            } else {
                 var wEl = 0;
                 $('.breadcrumbs-nav li').each(function () {
                     wEl += $(this).outerWidth();
                 });
                 $('.breadcrumbs-nav').width(wEl + 100);
-            } else {
-                $('.breadcrumbs-nav').width('');
             }
 
         },
