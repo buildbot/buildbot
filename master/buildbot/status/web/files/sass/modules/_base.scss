@@ -9,135 +9,39 @@
 // Colors
   
 // Generics
-$color-white: rgb(255,255,255); // white
+$color-white: #fff; // white
 
-// UI colors
-$color-ui-a: rgb(255,255,255); 
+// status colors and text
+$state-colors: 
+success #DDE6D6 false "Success", 
+failure #EFCFCF $color-white "Failure", 
+exception #DDD7DD false "Exception", 
+warnings #fa3 $color-white "Warnings", 
+skipped #CBDCE6 $color-white "Skipped", 
+inconclusive #CBDCE6 false "Inconclusive", 
+ignored #CBDCE6 false "Ignored",
+dependency_failure #FCF2F2 false "Dependency failure",
+not_rebuilt #F8FCF2 false "Not rebuilt",
+start #ccc false "Start",
+idle #F5F5F5 false "Idle",
+running #FCFACB false "Running",
+overtime #FCCBCB false "Overtime",
+offline #E7E7E7 false "Offline",
+waiting #E7E7E7 false "Waiting for buildslave",
+retry #DDD7DD false "Retry";
 
-// Button colors
+// Create colorblind version of colors
 
-// Font colors
-$color-font-grey: #666; // grey
-
-$color-blind-success: #00FF00;
-$color-blind-failure: #FF0000;
-$color-blind-exception: #DD00DC; 
-$color-blind-warnings: #FFA100; 
-$color-blind-skipped: #008EE6; 
-$color-blind-inconclusive: #0025EF; 
-$color-blind-ignored: #008EE6; 
-$color-blind-not-rebuild: #99FC00;
-$color-blind-dependency-failure: #FFB5ED;
-
-
-  
-$color-success:#DDE6D6;
-$color-failure:#EFCFCF;
-$color-exception:#DDD7DD;
-$color-warnings:#fa3;
-$color-skipped:#CBDCE6;
-$color-inconclusive:#CBDCE6;
-$color-ignored:#CBDCE6;
-
-// for not implemented content
-.notimpl {color:#838383 !important;}
-
-// status colors
-.success {
-	background-color: #DDE6D6;
-}
-
-.color-blind-mode {
-	.success {
-		background-color: $color-blind-success;		
-	}
-	.failure {
-		background-color: $color-blind-failure;	
-		color: #fff;
-		a {color: #fff;} 
-	}
-	.exception {
-		background-color:$color-blind-exception;
-		color: #fff;
-		a {color: #fff;} 
-	}
-	.warnings {
-		background-color:$color-blind-warnings;
-		color: #fff;
-		a {color: #fff;} 
-	}
-	.skipped {
-		background-color:$color-blind-skipped;
-		color: #fff;
-		a {color: #fff;} 
-	}
-	.not_rebuilt {
-		background-color: $color-blind-not-rebuild;
-	}
-    .dependency_failure {
-      background-color: $color-blind-dependency-failure;
-    }
-}
-    
-.table-1 {
-	.success,
-	.failure,
-	.skipped,
-	.exception,
-	.retry,
-	.current-step,
-	.running,
-	.waiting,
-	.offline,
-	.idle,
-	.not_rebuilt
-	 {
-		border-top:1px solid #fff;
-	}
+@each $colorvar in $state-colors {
+	@include colorBlindBackground (nth($colorvar, 1), nth($colorvar, 2), nth($colorvar, 3),nth($colorvar, 4));
 }
 
 .table-1 tr .success:first-child {
 	border-top:none;
 }
 
-.not_rebuilt {
-	background-color: #F8FCF2;
-}
-
-.dependency_failure {
-  background-color: #FCF2F2;
-}
-
-.failure {
-	background-color: #EFCFCF;
-}
-
-.warnings {
-	color: #FFFFFF;
-	background-color: #fa3;
-	border-color: #C29D46;
-}
-
-.skipped {
-	background: #CBDCE6;
-}
-
-.exception,.retry {
-	background-color: #DDD7DD;
-}
-
-.start {
-	color: #000;
-	background-color: #ccc;
-	border-color: #ccc;
-}
-
-.running,.waiting,td.building, .current-step {
+.waiting,td.building, .current-step {
 	background-color: #FCFACB;	
-}
-
-.overtime {
-	background-color: #FCCBCB;
 }
 
 .offline,td.offline {
@@ -146,6 +50,8 @@ $color-ignored:#CBDCE6;
 }
 
 .idle,td.idle {
-    background-color: #F5F5F5;
     @include text-shadow(0 1px 0 #fff);
 }
+
+// for not implemented content
+.notimpl {color:#838383 !important;}

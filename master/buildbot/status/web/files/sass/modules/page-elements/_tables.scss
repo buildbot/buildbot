@@ -95,6 +95,7 @@ ul.building {
 		text-align:right;
 	}
 	th {
+		text-align: center;
 		padding:15px 10px;
 		//background-color:#EEF0F5;
 		background-color:#DDE3EA;
@@ -463,7 +464,7 @@ table.codebase-branch-table {
             content: "";
             left: 12px;
             position: absolute;
-            top: 0;
+            top: 9px;
             line-height: 12px;
         }
     }
@@ -541,6 +542,11 @@ table.codebase-branch-table {
 	    
 }
 
+.last-run {
+	font-weight:bold;
+	display:block;
+}
+
 // datatables info
 .dataTables_info {
 	display:block;
@@ -554,7 +560,9 @@ table.codebase-branch-table {
 	    margin-top: 18px;
 	}
 }
-
+.dataTables_wrapper .top label {
+	margin-bottom:0;
+}
 .dataTables_length {
 	display:block;
     float:left;
@@ -585,25 +593,25 @@ table.codebase-branch-table {
         
     }
     label {
-        position:relative;
-        
+        position:relative;        
         &:before {
             content:'';
-            right:6px; 
-            top:-3px;
+            right: 1px;
+    		top: 1px;
             width:21px; 
-            height:17px;
+            height:23px;
             @include bgimage (linear-gradient(top, #ffffff 20%, #f6f6f6 50%, #eeeeee 52%, #f4f4f4 100%));            
             position:absolute;
             pointer-events:none;
             display:block;
+            @include border-radius (4px);	
         }
         &:after {
             content: "▾";
             font-family: tahoma;
             color:#747474;
             right: 8px;
-            top: -6px;
+            top: 0;
             padding:0 0 2px;
             font-size: 16px;
             position:absolute;
