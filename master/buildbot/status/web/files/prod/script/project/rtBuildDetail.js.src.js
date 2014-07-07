@@ -53,7 +53,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                     html += '<li class="s-logs-js"><a href="{0}">{1}</a></li>'.format(name, url);
                 });
 
-                html = $("<ul/>").addClass("tests-summary-list").html(html);
+                html = $("<ul/>").addClass("tests-summary-list list-unstyled").html(html);
 
                 $artifactsJSElem.append(html);
             }

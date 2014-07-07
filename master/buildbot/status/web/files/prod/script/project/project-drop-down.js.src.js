@@ -187,7 +187,7 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
 
 
                         var fw = $(response).find('.scLink');
-                        mobileHTML = $('<ul/>').addClass('submenu');
+                        mobileHTML = $('<ul/>').addClass('submenu list-unstyled');
                         $(fw).each(function () {
                             var scLink = $(this).attr('data-sc');
                             $(this).attr('href', scLink);
