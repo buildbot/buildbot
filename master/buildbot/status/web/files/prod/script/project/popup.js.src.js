@@ -137,7 +137,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
         };
 
         $.fn.popup.defaults = {
-            title: "<h3>Katana Popup</h3>",
+            title: "",
             html: undefined,
             url: undefined,
             destroyAfter: false,

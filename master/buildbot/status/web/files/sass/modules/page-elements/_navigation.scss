@@ -294,11 +294,13 @@ ul.top-menu > .project-dropdown {
 	    color: #000000;
 	    display: block;
 	    float: right;
+	    height: 18px;
 	    font-size: 10px;
+	    line-height: 13px;
 	    font-weight: normal;
 	    letter-spacing: 1px;
 	    margin: -2px 0 0 13px;
-	    padding: 2px 7px 3px 8px;
+	    padding: 3px 7px 3px 8px;
 	    @include text-shadow (0 1px 0 #FFFFFF);
 	}
 	&> li {

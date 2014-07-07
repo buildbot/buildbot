@@ -199,7 +199,7 @@ ul.building {
 	}
 }
 
-
+ 
  
 .th1 {width:25%;}
 .th2 {width:15%;}
@@ -473,12 +473,13 @@ table.codebase-branch-table {
     }
 }
 
+.row .table-1 {
+	margin-bottom: 20px;
+}
 
 @media (min-width: $screen-sm-min) {		
 	
-    .row .table-1 {
-		margin-bottom: 20px;
-    }
+  
 
     .more-info-box {
 	 min-width:inherit;		 
