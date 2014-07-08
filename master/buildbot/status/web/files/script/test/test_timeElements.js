@@ -402,7 +402,7 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
             expect($spinner.css("background-position")).toEqual("0% 0%");
 
             setTimeout(function () {
-                expect($spinner.css("background-position")).toEqual("-13px 0px");
+                expect($spinner.css("background-position")).not.toEqual("0px 0px");
                 $spinner.remove();
                 done();
             }, 80 * 2);
