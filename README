@@ -1,7 +1,33 @@
-BuildBot: build/test automation
-  http://buildbot.net
-  Brian Warner <warner-buildbot @ lothar . com>
-  Dustin J. Mitchell <dustin@v.igoro.us >
+Katana is a fork of the open-source project, Buildbot.  Find more information
+at the Buildbot project website http://buildbot.net/
 
-Buildbot consists of two separate components: the master and the slave.  See
-master/README and slave/README for more information.
+Unity Technologies sincerely thanks the Buildbot project for creating such a
+fantastic continuous integration framework and for making it Open Source.
+Without their work, Katana -- which powers the R&D team making the Unity game
+engine and content creation tool -- would not exist.
+
+Katana can be set up much like a normal Buildbot instance, but more detailed
+instructions and examples are in-progress.
+
+Katana Maintainers List w/ Contact Info:
+
+    Maria Marcano
+    GitHub: https://github.com/mariangemarcano
+    Personal Website: http://mariangemarcano.blogspot.dk/
+    Twitter: https://twitter.com/MariangeMarcano
+    
+    Daniel Hobley
+    GitHub: https://github.com/opdude
+    Twitter: https://twitter.com/Opdude
+    
+    Na'Tosha Bard
+    GitHub: https://github.com/natosha
+    ButBucket: https://bitbucket.org/natosha
+    Personal Website: http://natoshabard.com
+    Twitter: https://twitter.com/natosha_bard
+
+Special thanks to Simon Holm (http://www.simon-holm.com/) for all of his
+contributions to Katana.
+
+Like Buildbot, Katana consists of two separate components: the master and the
+slave.  See master/README and slave/README for more information.
