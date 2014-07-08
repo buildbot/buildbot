@@ -18,38 +18,41 @@
 //    `:before` to contain the top-margins of child elements.
 
 // Create colorblind version of colors
-@mixin colorBlindBackground($classname, $color, $text-color:false, $state-text:false) {
+@mixin colorBlindBackground($classname, $color, $text-color: false, $state-text: false) {
   .#{$classname} {
-    background-color:$color;
+    background-color: $color;
   }
   .color-blind-mode {
     .#{$classname} {
-      background-color:change-color($color, $saturation: 100%, $lightness: 50%);    
+      background-color: change-color($color, $saturation: 100%, $lightness: 50%);
     }
     @if $text-color {
       .#{$classname} {
         color: #fff;
         a {
           color: #fff;
-        } 
+        }
       }
     }
-   .dependency-list .#{$classname}:before { 
-        content: $state-text;
-   }
+    .dependency-list .#{$classname}:before {
+      content: $state-text;
+    }
+    .log-list-#{$classname} > a:before {
+      background-color: change-color($color, $saturation: 100%, $lightness: 50%);
+    }
   }
-  
-   .state-text.#{$classname}:before { 
-        content: $state-text;
-   }
-  
+
+  .state-text.#{$classname}:before {
+    content: $state-text;
+  }
+
   .table-1 {
     .#{$classname} {
-      border-top:1px solid #fff;
+      border-top: 1px solid #fff;
     }
   }
   .log-list-#{$classname} > a:before {
-    background-color:$color;
+    background-color: $color;
   }
 }
 
