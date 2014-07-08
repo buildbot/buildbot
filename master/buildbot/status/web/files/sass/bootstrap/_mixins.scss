@@ -48,6 +48,9 @@
       border-top:1px solid #fff;
     }
   }
+  .log-list-#{$classname} > a:before {
+    background-color:$color;
+  }
 }
 
 @mixin clearfix() {
