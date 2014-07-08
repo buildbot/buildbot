@@ -165,7 +165,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
         if urlCache.pollNeeded():
             try:
                 #logging.info("Polling: {0}".format(url))
-                response = urllib2.urlopen(url, timeout=cachedURL.currentPollInterval-1)
+                response = urllib2.urlopen(url, timeout=MAX_POLL_INTERVAL)
                 updateLock.acquire()
                 cachedURL.pollSuccess()
                 jsonObj = json.load(response)
