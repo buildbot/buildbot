@@ -287,10 +287,21 @@ class StatusResourceBuild(HtmlResource):
         cxt['has_changes'] = has_changes
         cxt['authz'] = self.getAuthz(req)
 
+        filters = {
+            "number": b.getNumber()
+        }
+
         build_json = BuildJsonResource(status, b)
         build_dict = yield build_json.asDict(req)
         cxt['instant_json']['build'] = {"url": path_to_json_build(status, req, builder.name, b.getNumber()),
-                                        "data": json.dumps(build_dict, separators=(',', ':'))}
+                                        "data": json.dumps(build_dict, separators=(',', ':')),
+                                        "waitForPush": status.master.config.autobahn_push,
+                                        "pushFilters": {
+                                            "buildStarted": filters,
+                                            "buildFinished": filters,
+                                            "stepStarted": filters,
+                                            "stepFinished": filters,
+                                        }}
 
         template = req.site.buildbot_service.templates.get_template("build.html")
         defer.returnValue(template.render(**cxt))

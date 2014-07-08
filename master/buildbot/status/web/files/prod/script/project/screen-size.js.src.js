@@ -1,20 +1,33 @@
 /*global define*/
-define(['jquery'], function ($) {
+define(['jquery', 'helpers'], function ($) {
 
     
 
-    return {
+    var viewportSizes = {
+            EXTRA_SMALL: 480,
+            SMALL: 768,
+            MEDIUM: 992,
+            LARGE: 1520
+        };
+
+    var publicFunc = {
+        isExtraSmallScreen: function () {
+            return publicFunc.getViewportMediaQuery(viewportSizes.EXTRA_SMALL).matches;
+        },
         isSmallScreen: function () {
-            var smallScreen = $(window).width() <= 768;
-            return smallScreen;
+            return publicFunc.getViewportMediaQuery(viewportSizes.SMALL).matches;
         },
         isMediumScreen: function () {
-            var mediumScreen = $(window).width() <= 992;
-            return mediumScreen;
+            return publicFunc.getViewportMediaQuery(viewportSizes.MEDIUM).matches;
         },
         isLargeScreen: function () {
-            var largeScreen = $(window).width() >= 1200;
-            return largeScreen;
-        }
+            return publicFunc.getViewportMediaQuery(viewportSizes.LARGE).matches;
+        },
+        getViewportMediaQuery: function (size) {
+            return window.matchMedia("(min-width: {0}px".format(size));
+        },
+        viewportSizes: viewportSizes
     };
+
+    return publicFunc;
 });

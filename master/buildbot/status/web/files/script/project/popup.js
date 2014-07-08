@@ -10,7 +10,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
         $.fn.popup = function (options) {
             var $elem = $(this);
-            var opts = $.extend({}, $.fn.popup.defaults, options);
+            var opts = $.extend({}, $.fn.popup.defaults, options),
+                clickHandler;
             $elem.settings = opts;
 
             var privateFunc = {
@@ -93,13 +94,24 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         privateFunc.clear();
                         opts.onHide($elem);
                     }
+                    if (clickHandler !== undefined) {
+                        $(this).unbind(clickHandler);
+                        clickHandler = undefined;
+                    }
                 },
                 initCloseButton: function () {
                     //Hide when clicking document or close button clicked
+                    if (clickHandler !== undefined) {
+                        $(this).unbind(clickHandler);
+                        clickHandler = undefined;
+                    }
                     $(document).bind("click touchstart", function (e) {
                         if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
-                            privateFunc.hidePopup();
-                            $(this).unbind(e);
+                            if ($elem.is(":visible")) {
+                                privateFunc.hidePopup();
+                                $(this).unbind(e);
+                                clickHandler = e;
+                            }
                         }
                     });
                 }
@@ -125,7 +137,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
         };
 
         $.fn.popup.defaults = {
-            title: "<h3>Katana Popup</h3>",
+            title: "",
             html: undefined,
             url: undefined,
             destroyAfter: false,

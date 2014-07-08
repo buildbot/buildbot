@@ -23,6 +23,7 @@
 		float: left;		
 		margin: 0;
 		padding: 0;
+		font-size: inherit;
 	}
 	span {
 		display: block;
@@ -95,8 +96,8 @@ border: 1px solid #9F9B41;
 
 ul.top-menu > .project-dropdown {
 		position:relative;
-		padding-right: 0;		
-		.arrow-down-btn {
+		padding-right: 0;
+         .arrow-down-btn {
 			cursor: pointer;
 			&:after {
 			    @include bgimage (linear-gradient(top , rgba(223, 226, 234, 0.92) 0%, rgba(238, 240, 245, 0.88) 100%));
@@ -118,7 +119,8 @@ ul.top-menu > .project-dropdown {
 				//border:1px solid rgba(196, 196, 196, 0.30);
 			}
 		}
-		.more-info-box { 
+		.more-info-box {
+          cursor: auto;
 		    left: 80px;
     		position: absolute;
     		top: 39px;
@@ -202,6 +204,7 @@ ul.top-menu > .project-dropdown {
 .breadcrumbs-nav {
 		display:inline-block;
 		padding:11px 0 10px;
+		margin: 0;
 		& > li {
 		color: rgba(255, 255, 255, 0.52);
 		font-size: 11px;
@@ -291,11 +294,13 @@ ul.top-menu > .project-dropdown {
 	    color: #000000;
 	    display: block;
 	    float: right;
+	    height: 18px;
 	    font-size: 10px;
+	    line-height: 13px;
 	    font-weight: normal;
 	    letter-spacing: 1px;
 	    margin: -2px 0 0 13px;
-	    padding: 2px 7px 3px 8px;
+	    padding: 3px 7px 3px 8px;
 	    @include text-shadow (0 1px 0 #FFFFFF);
 	}
 	&> li {

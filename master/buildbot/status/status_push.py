@@ -14,7 +14,16 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
-
+try:
+    from autobahn.twisted.websocket import WebSocketClientFactory, WebSocketClientProtocol
+    assert WebSocketClientFactory
+except ImportError:
+    class WebSocketClientProtocol:
+        def __init__(self):
+            return
+    class WebSocketClientFactory:
+        def __init__(self):
+            return
 
 """Push events to an abstract receiver.
 
@@ -254,7 +263,7 @@ class StatusPush(StatusReceiverMultiService):
     def buildsetSubmitted(self, buildset):
         self.push('buildsetSubmitted', buildset=buildset)
 
-    def builderAdded(self, builderName, builder):
+    def builderAdded(self, builderName, builder, friendly_name):
         self.push('builderAdded', builderName=builderName, builder=builder)
         return self
 
@@ -432,5 +441,250 @@ class HttpStatusPush(StatusPush):
                                     agent='buildbot')
         connection.addCallbacks(Success, Failure)
         return connection
+
+
+class AutobahnProtocol(WebSocketClientProtocol):
+    def onConnect(self, response):
+        print("Connected to autobahn server: {0}".format(response.peer))
+
+    def onOpen(self):
+        return
+
+    def onMessage(self, payload, isBinary):
+        return
+
+    def onClose(self, wasClean, code, reason):
+        print("Connection to autobahn server closed: {0}".format(reason))
+
+
+class AutobahnFactory(WebSocketClientFactory):
+    def __init__(self, autobahn_status_push, *args, **kwargs):
+        WebSocketClientFactory.__init__(self, *args, **kwargs)
+        self.autobahn_status_push = autobahn_status_push
+
+    def buildProtocol(self, addr):
+        p = WebSocketClientFactory.buildProtocol(self, addr)
+        self.autobahn_status_push.setProtocolInstance(p)
+        return p
+
+    def clientConnectionFailed(self, connector, reason):
+        reactor.callLater(5, self.reconnect, connector)
+
+    def clientConnectionLost(self, connector, reason):
+        reactor.callLater(5, self.reconnect, connector)
+
+    def reconnect(self, connector):
+        connector.connect()
+
+
+class AutobahnStatusPush(StatusPush):
+    """Event streamer to a Autobahn server."""
+
+    def __init__(self, serverIP, serverPort, debug=None, maxMemoryItems=None,
+                 maxDiskItems=None, chunkSize=200, **kwargs):
+        """
+        @serverIP: IP of the autobahn server
+        @serverPort: Port of the autobahn server
+        @debug: Save the json with nice formatting.
+        @maxMemoryItems: Maximum number of items to keep queued in memory.
+        @maxDiskItems: Maximum number of items to buffer to disk, if 0, doesn't
+        use disk at all.
+        @chunkSize: maximum number of items to send in each at each PUSH.
+        """
+        if not serverIP and not serverPort:
+            raise config.ConfigErrors(['AutobahnStatusPush requires a serverIP and serverPort'])
+
+        # Parameters.
+        self.serverIP = serverIP
+        self.serverPort = serverPort
+        self.serverUrl = "ws://{0}:{1}/ws".format(serverIP, serverPort)
+        self.debug = debug
+        self.chunkSize = chunkSize
+        self.lastPushWasSuccessful = True
+        self.protocol = None
+        self.factory = None
+        if maxDiskItems != 0:
+            # The queue directory is determined by the server url.
+            path = ('events_' +
+                    urlparse.urlparse(self.serverUrl)[1].split(':')[0])
+            queue = PersistentQueue(
+                        primaryQueue=MemoryQueue(maxItems=maxMemoryItems),
+                        secondaryQueue=DiskQueue(path, maxItems=maxDiskItems))
+        else:
+            path = None
+            queue = MemoryQueue(maxItems=maxMemoryItems)
+
+        self.connectToAutobahn()
+
+        # Use the unbounded method.
+        StatusPush.__init__(self, serverPushCb=AutobahnStatusPush.pushHttp,
+                            queue=queue, path=path, **kwargs)
+
+    def connectToAutobahn(self):
+        factory = AutobahnFactory(self, self.serverUrl, debug=self.debug)
+        factory.protocol = AutobahnProtocol
+        reactor.connectTCP(self.serverIP, self.serverPort, factory)
+        self.factory = factory
+
+    def setProtocolInstance(self, protocol_instance):
+        self.protocol = protocol_instance
+
+    def wasLastPushSuccessful(self):
+        return self.lastPushWasSuccessful
+
+    def popChunk(self):
+        """Pops items from the pending list.
+
+        They must be queued back on failure."""
+        if self.wasLastPushSuccessful():
+            chunkSize = self.chunkSize
+        else:
+            chunkSize = 1
+
+        while True:
+            items = self.queue.popChunk(chunkSize)
+            item_data = {"cmd": "krtPushData", "data": items, "server": self.status.getBuildbotURL()}
+
+            if self.debug:
+                packets = json.dumps(item_data, indent=2, sort_keys=True)
+            else:
+                packets = json.dumps(item_data, separators=(',',':'))
+            return packets, items
+
+    def pushHttp(self):
+        """Do the HTTP POST to the server."""
+        (encoded_packets, items) = self.popChunk()
+
+        if self.protocol is not None and self.protocol.connected:
+            self.protocol.sendMessage(encoded_packets)
+            self.lastPushWasSuccessful = True
+            return self.queueNextServerPush()
+        else:
+            self.queue.insertBackChunk(items)
+            if self.stopped:
+                # Bad timing, was being called on shutdown and the server died
+                # on us. Make sure the queue is saved since we just queued back
+                # items.
+                self.queue.save()
+            self.lastPushWasSuccessful = False
+            return self.queueNextServerPush()
+
+    @staticmethod
+    def source_stamps_to_dict(ss):
+        sources = {}
+        for s in ss.values():
+            sources[s.codebase] = s.branch
+        return sources
+
+    @staticmethod
+    def sources_from_build(build):
+        sources = {}
+        for s in build.sources:
+            sources[s.codebase] = s.branch
+        return sources
+
+    @defer.inlineCallbacks
+    def requestSubmitted(self, request):
+        stamps = yield request.getSourceStamps()
+        builder = self.status.getBuilder(request.buildername)
+
+        self.push('requestSubmitted',
+                  builderName=request.buildername,
+                  sources=self.source_stamps_to_dict(stamps),
+                  project=builder.project)
+
+    @defer.inlineCallbacks
+    def requestCancelled(self, builder, request):
+        stamps = yield request.getSourceStamps()
+        self.push('requestCancelled',
+                  builderName=request.buildername,
+                  sources=self.source_stamps_to_dict(stamps),
+                  project=builder.project)
+
+    def buildStarted(self, builderName, build):
+        self.push('buildStarted',
+                  number=build.number,
+                  builderName=build.builder.name,
+                  sources=self.sources_from_build(build),
+                  project=build.builder.project,
+                  slave=build.slavename)
+        return self
+
+    def buildFinished(self, builderName, build, results):
+        self.push('buildFinished',
+                  number=build.number,
+                  builderName=build.builder.name,
+                  sources=self.sources_from_build(build),
+                  project=build.builder.project,
+                  slave=build.slavename)
+
+    def buildETAUpdate(self, build, ETA):
+        self.push('buildETAUpdate',
+                  number=build.number,
+                  builderName=build.builder.name,
+                  sources=self.sources_from_build(build),
+                  project=build.builder.project)
+
+    def stepStarted(self, build, step):
+        self.push('stepStarted',
+                  number=build.number,
+                  builderName=build.builder.name,
+                  sources=self.sources_from_build(build),
+                  project=build.builder.project,
+                  slave=build.slavename)
+
+    def stepFinished(self, build, step, results):
+        self.push('stepFinished',
+                  number=build.number,
+                  builderName=build.builder.name,
+                  sources=self.sources_from_build(build),
+                  project=build.builder.project,
+                  slave=build.slavename)
+
+    def slaveConnected(self, slavename):
+        self.push('slaveConnected', name=slavename)
+
+    def slaveDisconnected(self, slavename):
+        self.push('slaveDisconnected', slavename=slavename)
+
+    def logStarted(self, build, step, log):
+        #We don't need this event yet
+        return
+
+    def logFinished(self, build, step, log):
+        #We don't need this event yet
+        return
+
+    def buildsetSubmitted(self, buildset):
+        #We don't need this event yet
+        return
+
+    def builderAdded(self, builderName, builder, friendly_name):
+        #We don't need this event yet
+        return self
+
+    def builderChangedState(self, builderName, state):
+        #We don't need this event yet
+        return
+
+    def stepTextChanged(self, build, step, text):
+        #We don't need this event yet
+        return
+
+    def stepText2Changed(self, build, step, text2):
+        #We don't need this event yet
+        return
+
+    def stepETAUpdate(self, build, step, ETA, expectations):
+        #We don't need this event yet
+        return
+
+    def builderRemoved(self, builderName):
+        #We don't need this event yet
+        return
+
+    def changeAdded(self, change):
+        #We don't need this event yet
+        return
 
 # vim: set ts=4 sts=4 sw=4 et:

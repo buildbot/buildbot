@@ -2,7 +2,7 @@
 // Scaffolding
 // --------------------------------------------------
 
-
+ 
 // Reset the box-sizing
 //
 // Heads up! This reset may cause conflicts with some third-party widgets.
@@ -83,7 +83,7 @@ img {
 .img-responsive {
   @include img-responsive();
 }
-
+ 
 // Rounded corners
 .img-rounded {
   border-radius: $border-radius-large;
@@ -133,15 +133,4 @@ hr {
   overflow: hidden;
   clip: rect(0,0,0,0);
   border: 0;
-}
-
-ul {
-  padding: 0;
-  margin:0; 
-
-}
-li {
-  padding: 0;
-  margin:0;
-  list-style:none;
 }

@@ -62,7 +62,6 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jq
                 },
                 {
                     "aTargets": [ 3 ],
-                    "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         if (type === 'sort') {
                             return full;

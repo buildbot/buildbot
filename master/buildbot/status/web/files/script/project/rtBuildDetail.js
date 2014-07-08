@@ -1,5 +1,5 @@
 /*global define, Handlebars */
-define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, popup, hb, mustache, build, builders, timeElements, popups) {
+define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, hb, mustache, build, builders, timeElements, popups) {
     "use strict";
     var rtBuildDetail,
         buildHandle = Handlebars.compile(build),
@@ -53,7 +53,7 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                     html += '<li class="s-logs-js"><a href="{0}">{1}</a></li>'.format(name, url);
                 });
 
-                html = $("<ul/>").addClass("tests-summary-list").html(html);
+                html = $("<ul/>").addClass("tests-summary-list list-unstyled").html(html);
 
                 $artifactsJSElem.append(html);
             }
@@ -73,6 +73,21 @@ define(['jquery', 'realtimePages', 'helpers', 'popup', 'handlebars', 'mustache',
                 var $dtWTop = $('.top');
                 helpers.codeBaseBranchOverview($dtWTop);
             }
+
+            //Allow for popups
+            $(".popup-btn-js-2").click(function (e) {
+                e.preventDefault();
+                var $elem = $(e.target);
+                var html = $elem.next(".more-info-box-js").html(),
+                    $body = $("body"),
+                    $popup = $("<div/>").popup({
+                        title: "",
+                        html: html,
+                        destroyAfter: true
+                    });
+
+                $body.append($popup);
+            });
         },
         processBuildDetailPage: function (data) {
             //We get slighlty different data objects from autobahn

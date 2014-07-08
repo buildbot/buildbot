@@ -343,10 +343,14 @@ body.log.interface {
 	background: none repeat scroll 0 0 #FFFFFF;
     border-top: 2px solid #E3E3E3;
     color: #B7B7B7;
-    font-size: 9px;
+    font-size: 11px;
     padding: 20px 0;
     text-align: center;
     margin-top: 35px;
+    h3,h4 {
+    	margin: 10px;
+    	font-size: inherit;
+    }
 }
 
 .auth-user {
@@ -455,4 +459,9 @@ pre.code {
 	padding: 0; 
 	overflow: hidden;	
 	width:100%;
+}
+
+.reset {
+  margin:0 !important;
+  padding:0 !important;
 }

@@ -78,6 +78,7 @@ class MasterConfig(object):
         self.realTimeServer = ''
         self.analytics_code = None
         self.gzip = True
+        self.autobahn_push = "false"
 
         self.ldap = dict(
             ldap_server = 'my_ldap_server',
@@ -116,7 +117,7 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip", "autobahn_push"
     ])
 
     @classmethod
@@ -310,6 +311,9 @@ class MasterConfig(object):
 
         if 'gzip' in config_dict:
             self.gzip = config_dict["gzip"]
+
+        if 'autobahn_push' in config_dict:
+            self.autobahn_push = "true" if config_dict["autobahn_push"] else "false"
 
         copy_str_param('debugPassword')
 

@@ -5,7 +5,7 @@
 
 // Headings
 // -------------------------
-
+ 
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
   font-family: $headings-font-family;
@@ -129,7 +129,6 @@ cite    { font-style: normal; }
   margin: ($line-height-computed * 2) 0 $line-height-computed;
   border-bottom: 1px solid $page-header-border-color;
 }
-
 
 // Lists
 // --------------------------------------------------
@@ -282,3 +281,4 @@ address {
   font-style: normal;
   line-height: $line-height-base;
 }
+ 

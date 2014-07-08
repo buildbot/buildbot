@@ -213,6 +213,11 @@ span.ignored {background: #ffff00;}
 	horizontal-align: center;
 }
 
+$color-blind-success: #00FF00; 
+$color-blind-skipped: #008EE6; 
+$color-blind-inconclusive: #0025EF; 
+$color-blind-ignored: #008EE6; 
+
 .color-blind-mode {
 	.Ignored {
 		background-color: $color-blind-ignored;
@@ -229,7 +234,6 @@ span.ignored {background: #ffff00;}
  	 	background-color: $color-blind-inconclusive;
  	 	color: #fff;
 	}
-
 }
 
 a.summarie {

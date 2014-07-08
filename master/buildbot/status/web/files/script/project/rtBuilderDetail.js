@@ -1,6 +1,6 @@
 /*global define, Handlebars*/
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'extend-moment',
-    'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable', 'popup'],
+        'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable', 'popup'],
     function ($, realtimePages, helpers, dt, hb, extendMoment, form, builderdetail, timeElements, rtTable, popup) {
         "use strict";
         var rtBuilderDetail,
@@ -25,7 +25,7 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
 
                 realtimePages.initRealtime(realtimeFunctions);
 
-                helpers.selectBuildsAction($tbPendingBuildsTable,'','/buildqueue/_selected/cancelselected', 'cancelselected=');
+                helpers.selectBuildsAction($tbPendingBuildsTable, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
 
                 //Setup run build
                 popup.initRunBuild($(".custom-build"));
@@ -37,17 +37,8 @@ define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'exten
                 }
             },
             rtfProcessCurrentBuilds: function (data) {
-                timeElements.clearTimeObjects($tbCurrentBuildsTable);
-                $tbCurrentBuildsTable.fnClearTable();
-
-                try {
-                    if (data.currentBuilds !== undefined) {
-                        $tbCurrentBuildsTable.fnAddData(data.currentBuilds);
-                        timeElements.updateTimeObjects();
-                    }
-
-                    timeElements.updateTimeObjects();
-                } catch (err) {
+                if (data.currentBuilds !== undefined) {
+                    rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data.currentBuilds);
                 }
             },
             rtfProcessPendingBuilds: function (data) {

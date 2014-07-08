@@ -16,6 +16,40 @@
 //    that are clearfixed.
 // 2. The use of `table` rather than `block` is only necessary if using
 //    `:before` to contain the top-margins of child elements.
+
+// Create colorblind version of colors
+@mixin colorBlindBackground($classname, $color, $text-color:false, $state-text:false) {
+  .#{$classname} {
+    background-color:$color;
+  }
+  .color-blind-mode {
+    .#{$classname} {
+      background-color:change-color($color, $saturation: 100%, $lightness: 50%);    
+    }
+    @if $text-color {
+      .#{$classname} {
+        color: #fff;
+        a {
+          color: #fff;
+        } 
+      }
+    }
+   .dependency-list .#{$classname}:before { 
+        content: $state-text;
+   }
+  }
+  
+   .state-text.#{$classname}:before { 
+        content: $state-text;
+   }
+  
+  .table-1 {
+    .#{$classname} {
+      border-top:1px solid #fff;
+    }
+  }
+}
+
 @mixin clearfix() {
   &:before,
   &:after {
