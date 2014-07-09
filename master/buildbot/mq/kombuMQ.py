@@ -208,3 +208,13 @@ class KombuHub(multiprocessing.Process):
     def __exit__(self):
         self.hub.stop()
         self.lock.release()
+
+class DeferConsumer(object):
+
+    "Use for simulating defer's addCallback"
+
+    def __init__(self, consumer):
+        self.consumer = consumer
+
+    def addCallback(self, callback):
+        self.consumer.register_callback(callback)
