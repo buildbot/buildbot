@@ -126,6 +126,7 @@ a.no-artifacts {
 .logs-txt {
 	display:block;
 	margin-bottom:3px;
+	margin-top:10px;
 }
 
 .log-list {
@@ -156,31 +157,27 @@ a.no-artifacts {
 		}
 
 	}
-	
-	.log-list-success a:before,
-	.log-list-not_rebuilt a:before, 
-	.log-list-dependency_failure a:before,
-	.log-list-failure a:before,
-	.log-list-skipped a:before,
-	.log-list-warnings a:before,
-	.log-list-exception a:before,
-	.log-list-retry a:before  {
-		color: #444;
-	    content: "";
-        margin-right:4px;
-    	padding: 0 7px;
-        border: 1px solid #B4B7B0;
-	}
+
 }
 
-.color-blind-mode .dependency-list {	
-	span {			
-		height:auto;
-		width: auto;
-    	padding: 1px 7px;
-    	font-size: 10px;        
-    	text-transform: uppercase;
-	}
+.dependency-list span {
+	display: block;
+	float: left;
+	height: 14px;			
+	width: 14px;	    		
+	padding: 1px 7px;
+	font-size: 10px;        
+	text-transform: uppercase;
+	margin-right: 5px;
+	display: inline-block;
+	border: 1px solid #B4B7B0;
+}
+
+.color-blind-mode .dependency-list span {		 
+	height:auto;
+	width: auto;
+	margin-bottom: 3px;
+	margin-top: -2px;    	    
 }
 
 .force-list,

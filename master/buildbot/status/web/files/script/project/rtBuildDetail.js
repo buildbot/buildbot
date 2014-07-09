@@ -141,6 +141,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
             helpers.delegateToProgressBar($progressBar);
         },
         processSteps: function (data) {
+            console.log(data)
             var html = "";
             var $stepList = $('#stepList');
             var count = 1;
@@ -159,6 +160,17 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
                 } else if (started && !finished) {
                     status = helpers.cssClassesEnum.RUNNING;
                 }
+                
+                $.each(stepData.urls, function (i, url) {
+                    if (url.url !== undefined) {
+                        stepData.hasDependency = true;
+                    }
+                    $.each(this, function (i, thisUrl) {                        
+                        if (thisUrl === 0 && thisUrl != undefined) {                                                        
+                            stepData.hasZero = true;
+                        }                                                
+                    });                    
+                });
 
                 var cssClass = helpers.getCssClassFromStatus(status);
                 var startTime = stepData.times[0];
