@@ -24,6 +24,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from mock import Mock
 from twisted.trial import unittest
+from twisted.internet import defer
 
 
 def legacyTestReviewCB(builderName, build, result, status, arg):
@@ -51,6 +52,22 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     return (str(buildInfoList), verified, 0)
 
 
+def _get_prepared_gsp(*args, **kwargs):
+    """
+    get an instance of GerritStatusPush prepared for testing
+
+    Hostname and username are "hardcoded", the rest is taken from the provided
+    parameters.
+    """
+    gsp = GerritStatusPush('host.example.com', 'username', *args, **kwargs)
+
+    gsp.master = fakemaster.make_master()
+    gsp.master_status = gsp.master.status
+
+    gsp.sendCodeReview = Mock()
+
+    return gsp
+
 class TestGerritStatusPush(unittest.TestCase):
 
     TEST_PROJECT = 'testProject'
@@ -62,13 +79,7 @@ class TestGerritStatusPush(unittest.TestCase):
     }
     THING_URL = 'http://thing.example.com'
 
-    def run_prepare_gsp(self, gsp):
-        gsp.master = fakemaster.make_master()
-        gsp.master_status = gsp.master.status
-
-    def run_fake_summary_build_legacy(self, buildResults, finalResult, resultText, verifiedScore):
-        gsp = GerritStatusPush('host.example.com', 'username', summaryCB=legacyTestSummaryCB)
-
+    def run_fake_summary_build(self, gsp, buildResults, finalResult, resultText):
         buildpairs = []
         i = 0
         for i in xrange(len(buildResults)):
@@ -87,7 +98,7 @@ class TestGerritStatusPush(unittest.TestCase):
             build.getBuilder.return_value = builder
             build.getResults.return_value = build.results
             build.getText.return_value = ['buildText']
-            build.getProperty = lambda prop: self.TEST_PROPS.get(prop)
+            build.getProperty = self.TEST_PROPS.get
 
             buildpairs.append((builder, build))
 
@@ -95,7 +106,6 @@ class TestGerritStatusPush(unittest.TestCase):
             # e.g. Builder-5 will be buildpairs[5][0]
             return buildpairs[int(buildername.split("-")[1])][0]
 
-        self.run_prepare_gsp(gsp)
         gsp.master_status.getBuilder = fakeGetBuilder
         gsp.master_status.getURLForThing = Mock()
         gsp.master_status.getURLForThing.return_value = self.THING_URL
@@ -118,9 +128,6 @@ class TestGerritStatusPush(unittest.TestCase):
 
         gsp.master.db.insertTestData(fakedata)
 
-        fakeSCR = Mock()
-        gsp.sendCodeReview = fakeSCR
-
         d = gsp._buildsetComplete('buildset.99.complete',
                                   dict(bsid=99, result=SUCCESS))
 
@@ -131,48 +138,72 @@ class TestGerritStatusPush(unittest.TestCase):
                 info.append({'name': "Builder-%d" % i, 'result': buildResults[i],
                              'resultText': resultText[i], 'text': 'buildText',
                              'url': self.THING_URL})
-            fakeSCR.assert_called_once_with(self.TEST_PROJECT, self.TEST_REVISION,
-                                            makeReviewResult(str(info),
-                                                             (GERRIT_LABEL_VERIFIED, verifiedScore),
-                                                             (GERRIT_LABEL_REVIEWED, 0)))
+            return str(info)
+        return d
+
+    def check_summary_build_legacy(self, buildResults, finalResult, resultText,
+                                   verifiedScore):
+        gsp = _get_prepared_gsp(summaryCB=legacyTestSummaryCB)
+
+        d = self.run_fake_summary_build(gsp, buildResults, finalResult,
+                                        resultText)
+
+        @d.addCallback
+        def check(msg):
+            result = makeReviewResult(msg,
+                                      (GERRIT_LABEL_VERIFIED, verifiedScore),
+                                      (GERRIT_LABEL_REVIEWED, 0))
+            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
+                                                       self.TEST_REVISION,
+                                                       result)
         return d
 
     def test_buildsetComplete_success_sends_summary_review_legacy(self):
-        d = self.run_fake_summary_build_legacy(buildResults=[SUCCESS, SUCCESS], finalResult=SUCCESS,
-                                        resultText=["succeeded", "succeeded"], verifiedScore=1)
+        d = self.check_summary_build_legacy(buildResults=[SUCCESS, SUCCESS],
+                                            finalResult=SUCCESS,
+                                            resultText=["succeeded", "succeeded"],
+                                            verifiedScore=1)
         return d
 
     def test_buildsetComplete_failure_sends_summary_review_legacy(self):
-        d = self.run_fake_summary_build_legacy(buildResults=[FAILURE, FAILURE], finalResult=FAILURE,
-                                        resultText=["failed", "failed"], verifiedScore=-1)
+        d = self.check_summary_build_legacy(buildResults=[FAILURE, FAILURE],
+                                            finalResult=FAILURE,
+                                            resultText=["failed", "failed"],
+                                            verifiedScore=-1)
         return d
 
     def test_buildsetComplete_mixed_sends_summary_review_legacy(self):
-        d = self.run_fake_summary_build_legacy(buildResults=[SUCCESS, FAILURE],
-                                               finalResult=FAILURE,
-                                               resultText=["succeeded", "failed"],
-                                               verifiedScore=-1)
+        d = self.check_summary_build_legacy(buildResults=[SUCCESS, FAILURE],
+                                            finalResult=FAILURE,
+                                            resultText=["succeeded", "failed"],
+                                            verifiedScore=-1)
         return d
 
-    def run_fake_single_build_legacy(self, buildResult, verifiedScore):
-        gsp = GerritStatusPush('host.example.com', 'username', reviewCB=legacyTestReviewCB)
-        self.run_prepare_gsp(gsp)
-
-        fakeSCR = Mock()
-        gsp.sendCodeReview = fakeSCR
-
+    def run_fake_single_build(self, gsp, buildResult):
         build = FakeBuildStatus(name="build")
-        build.getProperty = lambda prop: self.TEST_PROPS.get(prop)
+        build.getProperty = self.TEST_PROPS.get
 
         gsp.buildFinished('dummyBuilder', build, buildResult)
 
-        fakeSCR.assert_called_once_with(self.TEST_PROJECT, self.TEST_REVISION,
-                                        makeReviewResult(str({'name': 'dummyBuilder', 'result': buildResult}),
-                                                         (GERRIT_LABEL_VERIFIED, verifiedScore),
-                                                         (GERRIT_LABEL_REVIEWED, 0)))
+        return defer.succeed(str({'name': 'dummyBuilder', 'result': buildResult}))
+
+    def check_single_build_legacy(self, buildResult, verifiedScore):
+        gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB)
+
+        d = self.run_fake_single_build(gsp, buildResult)
+
+        @d.addCallback
+        def check(msg):
+            result = makeReviewResult(msg,
+                                      (GERRIT_LABEL_VERIFIED, verifiedScore),
+                                      (GERRIT_LABEL_REVIEWED, 0))
+            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
+                                                       self.TEST_REVISION,
+                                                       result)
+        return d
 
     def test_buildsetComplete_success_sends_review_legacy(self):
-        self.run_fake_single_build_legacy(SUCCESS, 1)
+        self.check_single_build_legacy(SUCCESS, 1)
 
     def test_buildsetComplete_failure_sends_review_legacy(self):
-        self.run_fake_single_build_legacy(FAILURE, -1)
+        self.check_single_build_legacy(FAILURE, -1)
