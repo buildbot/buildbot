@@ -149,7 +149,9 @@ Fink
 
 FreeBSD
     S: Maintained
-    U: http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/buildbot/
+    M: Kubilay Kocak <irc://chat.freenode.net/koobs,isnick>
+    U: http://www.freshports.org/devel/buildbot
+    U: http://www.freshports.org/devel/buildbot-slave
 
 OpenBSD
     S: Maintained
@@ -202,7 +204,7 @@ Metabuildbot Slave Donors
     M: Mozilla <dustin@mozilla.com>
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
-    M: Kubilay Kocak <koobs.freebsd@gmail.com> (irc: koobs)
+    M: Kubilay Kocak  <irc://chat.freenode.net/koobs,isnick> 
     M: STE||AR Group, Center for Computation and Science, LSU / Bryce Lelbach <blelbach@cct.lsu.edu> (irc:wash)
     U: http://buildbot.buildbot.net
 
