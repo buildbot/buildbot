@@ -95,6 +95,7 @@ def _get_prepared_gsp(*args, **kwargs):
 
     return gsp
 
+
 class TestGerritStatusPush(unittest.TestCase):
 
     TEST_PROJECT = 'testProject'
