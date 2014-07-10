@@ -27,6 +27,33 @@ from twisted.trial import unittest
 from twisted.internet import defer
 
 
+def testReviewCB(builderName, build, result, status, arg):
+    verified = 1 if result == SUCCESS else -1
+    return makeReviewResult(str({'name': builderName, 'result': result}),
+                            (GERRIT_LABEL_VERIFIED, verified))
+
+
+def testSummaryCB(buildInfoList, results, status, arg):
+    success = False
+    failure = False
+
+    for buildInfo in buildInfoList:
+        if buildInfo['result'] == SUCCESS:
+            success = True
+        else:
+            failure = True
+
+    if failure:
+        verified = -1
+    elif success:
+        verified = 1
+    else:
+        verified = 0
+
+    return makeReviewResult(str(buildInfoList),
+                            (GERRIT_LABEL_VERIFIED, verified))
+
+
 def legacyTestReviewCB(builderName, build, result, status, arg):
     msg = str({'name': builderName, 'result': result})
     return (msg, 1 if result == SUCCESS else -1, 0)
@@ -141,6 +168,26 @@ class TestGerritStatusPush(unittest.TestCase):
             return str(info)
         return d
 
+    # check_summary_build and check_summary_build_legacy differ in two things:
+    #   * the callback used
+    #   * the expected result
+
+    def check_summary_build(self, buildResults, finalResult, resultText,
+                            verifiedScore):
+        gsp = _get_prepared_gsp(summaryCB=testSummaryCB)
+
+        d = self.run_fake_summary_build(gsp, buildResults, finalResult,
+                                        resultText)
+
+        @d.addCallback
+        def check(msg):
+            result = makeReviewResult(msg,
+                                      (GERRIT_LABEL_VERIFIED, verifiedScore))
+            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
+                                                       self.TEST_REVISION,
+                                                       result)
+        return d
+
     def check_summary_build_legacy(self, buildResults, finalResult, resultText,
                                    verifiedScore):
         gsp = _get_prepared_gsp(summaryCB=legacyTestSummaryCB)
@@ -156,6 +203,27 @@ class TestGerritStatusPush(unittest.TestCase):
             gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
                                                        self.TEST_REVISION,
                                                        result)
+        return d
+
+    def test_buildsetComplete_success_sends_summary_review(self):
+        d = self.check_summary_build(buildResults=[SUCCESS, SUCCESS],
+                                     finalResult=SUCCESS,
+                                     resultText=["succeeded", "succeeded"],
+                                     verifiedScore=1)
+        return d
+
+    def test_buildsetComplete_failure_sends_summary_review(self):
+        d = self.check_summary_build(buildResults=[FAILURE, FAILURE],
+                                     finalResult=FAILURE,
+                                     resultText=["failed", "failed"],
+                                     verifiedScore=-1)
+        return d
+
+    def test_buildsetComplete_mixed_sends_summary_review(self):
+        d = self.check_summary_build(buildResults=[SUCCESS, FAILURE],
+                                     finalResult=FAILURE,
+                                     resultText=["succeeded", "failed"],
+                                     verifiedScore=-1)
         return d
 
     def test_buildsetComplete_success_sends_summary_review_legacy(self):
@@ -187,6 +255,22 @@ class TestGerritStatusPush(unittest.TestCase):
 
         return defer.succeed(str({'name': 'dummyBuilder', 'result': buildResult}))
 
+    # same goes for check_single_build and check_single_build_legacy
+
+    def check_single_build(self, buildResult, verifiedScore):
+        gsp = _get_prepared_gsp(reviewCB=testReviewCB)
+
+        d = self.run_fake_single_build(gsp, buildResult)
+
+        @d.addCallback
+        def check(msg):
+            result = makeReviewResult(msg,
+                                      (GERRIT_LABEL_VERIFIED, verifiedScore))
+            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
+                                                       self.TEST_REVISION,
+                                                       result)
+        return d
+
     def check_single_build_legacy(self, buildResult, verifiedScore):
         gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB)
 
@@ -201,6 +285,12 @@ class TestGerritStatusPush(unittest.TestCase):
                                                        self.TEST_REVISION,
                                                        result)
         return d
+
+    def test_buildsetComplete_success_sends_review(self):
+        self.check_single_build(SUCCESS, 1)
+
+    def test_buildsetComplete_failure_sends_review(self):
+        self.check_single_build(FAILURE, -1)
 
     def test_buildsetComplete_success_sends_review_legacy(self):
         self.check_single_build_legacy(SUCCESS, 1)
