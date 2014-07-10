@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import mock
+import re
 
 from buildbot.status import words
 from buildbot.status.results import SUCCESS
@@ -370,13 +371,18 @@ class TestIrcContactChannel(unittest.TestCase):
     def test_command_status_bogus(self):
         yield self.do_test_command('status', args='bogus_builder', exp_UsageError=True)
 
+    def sub_seconds(self, strings):
+        # sometimes timing works out wrong, so just call it "n seconds"
+        return [re.sub(r'\d seconds', 'N seconds', s) for s in strings]
+
     @defer.inlineCallbacks
     def test_command_last(self):
         self.setupSomeBuilds()
         yield self.do_test_command('last')
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('last build [builder1]: last build 0 seconds ago: test', self.sent)
-        self.assertIn('last build [builder2]: (no builds run since last restart)', self.sent)
+        sent = self.sub_seconds(self.sent)
+        self.assertIn('last build [builder1]: last build N seconds ago: test', sent)
+        self.assertIn('last build [builder2]: (no builds run since last restart)', sent)
 
     @defer.inlineCallbacks
     def test_command_last_builder_bogus(self):
@@ -387,7 +393,8 @@ class TestIrcContactChannel(unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('last', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('last build [builder1]: last build 0 seconds ago: test', self.sent)
+        sent = self.sub_seconds(self.sent)
+        self.assertIn('last build [builder1]: last build N seconds ago: test', sent)
 
     @defer.inlineCallbacks
     def test_command_last_builder1(self):
