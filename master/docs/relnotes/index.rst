@@ -70,6 +70,41 @@ Fixes
   build are overwitten. This both ensures more consistent builds and avoids
   errors when updating submodules.
 
+* Buildbot is now compatible with Gerrit v2.6 and higher.
+
+  To make this happen, the return result of ``reviewCB`` and ``summaryCB``
+  callback has changed from
+
+  .. code-block:: python
+
+     (message, verified, review)
+
+  to
+
+  .. code-block:: python
+
+     {'message': message,
+      'labels': {'label-name': value,
+                ...
+                }
+     }
+
+  The implications are:
+
+  * there are some differences in behaviour: only those labels that were
+    provided will be updated
+  * Gerrit server must be able to provide a version, if it can't the
+    :bb:status:`GerritStatusPush` will not work
+
+  .. note::
+
+     If you have an old style ``reviewCB`` and/or ``summaryCB`` implemented,
+     these will still work, however there could be more labels updated than
+     anticipated.
+
+  More detailed information is available in :bb:status:`GerritStatusPush`
+  section.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
