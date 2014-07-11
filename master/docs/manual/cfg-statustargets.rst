@@ -970,6 +970,24 @@ GerritStatusPush
 
 .. py:class:: buildbot.status.status_gerrit.GerritStatusPush
 
+:class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server,
+optionally also sending a message when a build is started. GerritStatusPush
+can send a separate review for each build that completes, or a single review
+summarizing the results for all of the builds. By default, a single summary
+review is sent; that is, a default summaryCB is provided, but no reviewCB or
+startCB.
+
+``reviewCB``, if specified, determines the message and score to give when
+sending a review for each separate build. It should return a tuple of
+(message, verified, reviewed).
+
+If ``startCB`` is specified, it should return a message. This message will be
+sent to the Gerrit server when each build is started.
+
+``summaryCB``, if specified, determines the message and score to give when
+sending a single review summarizing all of the builds. It should return a
+tuple of (message, verified, reviewed).
+
 ::
 
     from buildbot.status.status_gerrit import GerritStatusPush
@@ -1034,24 +1052,6 @@ GerritStatusPush
                                         startArg=c['buildbotURL'],
                                         summaryCB=gerritSummaryCB,
                                         summaryArg=c['buildbotURL']))
-
-GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
-optionally also sending a message when a build is started. GerritStatusPush
-can send a separate review for each build that completes, or a single review
-summarizing the results for all of the builds. By default, a single summary
-review is sent; that is, a default summaryCB is provided, but no reviewCB or
-startCB.
-
-``reviewCB``, if specified, determines the message and score to give when
-sending a review for each separate build. It should return a tuple of
-(message, verified, reviewed).
-
-If ``startCB`` is specified, it should return a message. This message will be
-sent to the Gerrit server when each build is started.
-
-``summaryCB``, if specified, determines the message and score to give when
-sending a single review summarizing all of the builds. It should return a
-tuple of (message, verified, reviewed).
 
 .. bb:status:: GitHubStatus
 
