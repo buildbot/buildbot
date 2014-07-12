@@ -139,6 +139,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                      if i.state != "terminated"]
         self.assertTrue(bs.spot_instance)
         self.assertEqual(bs.retry, 1)
+        self.assertEqual(bs.product_description, product_description)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].tags, {})
@@ -164,3 +165,14 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.attempt, 1)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
+
+    @mock_ec2
+    def test_start_spot_instance_retry_low_price(self):
+        '''
+        This test should attempt to start an instance that will be rejected with
+        price-too-low. At this point, the ec2 buildslave code should increment
+        bs.attempt and multiply the price by bs.retry_price_adjustment. This
+        should continue for bs.retry iterations or until the spot request is
+        accepted.
+        '''
+        raise unittest.SkipTest("Requires un-released functionality in moto.")
