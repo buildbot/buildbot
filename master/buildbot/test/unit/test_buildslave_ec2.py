@@ -134,12 +134,14 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                                      max_spot_price=1.5,
                                      product_description=product_description
                                      )
-        id, _, _ = bs._start_instance()
+        instance_id, _, _ = bs._start_instance()
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(bs.retry, 1)
         self.assertEqual(len(instances), 1)
-        self.assertEqual(instances[0].id, id)
-        self.assertEqual(instances[0].product_description, product_description)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].tags, {})
 
     @mock_ec2
     def test_start_spot_instance_retry(self):
@@ -157,6 +159,8 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         id, _, _ = bs._start_instance()
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(bs.retry, 3)
+        self.assertEqual(bs.attempt, 1)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
-        self.assertEqual(instances[0].retry, retry)
