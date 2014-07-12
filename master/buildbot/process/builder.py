@@ -328,7 +328,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(lambda: slavebuilder.slave.releaseLocks())
+        cleanups.append(slavebuilder.slave.releaseLocks)
 
         if len(self.config.env) > 0:
             build.setSlaveEnvironment(self.config.env)

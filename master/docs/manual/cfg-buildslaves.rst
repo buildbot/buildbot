@@ -397,14 +397,42 @@ in order to limit your builds' budget consumption. ::
                                        elastic_ip='208.77.188.166',
                                        placement='b', spot_instance=True,
                                        max_spot_price=0.09,
-                                       price_multiplier=1.15
+                                       price_multiplier=1.15,
+                                       product_description='Linux/UNIX'
                                        )]
 
 This example would attempt to create a m1.large spot instance in the us-west-2b region 
-costing no more than $0.09/hour. The spot prices for that region in the last 24 hours 
-will be averaged and multiplied by the ``price_multiplier`` parameter, then a spot request
-will be sent to Amazon with the above details. If the spot request is rejected, an error
-message will be logged with the final status.
+costing no more than $0.09/hour. The spot prices for 'Linux/UNIX' spot instances in that 
+region over the last 24 hours will be averaged and multiplied by the ``price_multiplier``
+parameter, then a spot request will be sent to Amazon with the above details.
+
+When a spot request fails
+#########################
+
+In some cases Amazon may reject a spot request because the spot price, determined by taking
+the 24-hour average of that availability zone's spot prices for the given product description,
+is lower than the current price. The optional parameters ``retry`` and ``retry_price_adjustment``
+allow for resubmitting the spot request with an adjusted price. If the spot request continues to
+fail, and the number of attempts exceeds the value of the ``retry`` parameter, an error message
+will be logged. ::
+
+    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                       'ami-12345', region='us-west-2',
+                                       identifier='publickey',
+                                       secret_identifier='privatekey',
+                                       elastic_ip='208.77.188.166',
+                                       placement='b', spot_instance=True,
+                                       max_spot_price=0.09,
+                                       price_multiplier=1.15,
+                                       retry=3,
+                                       retry_price_adjustment=1.1
+                                       )]
+
+In this example, a spot request will be sent with a bid price of 15% above the 24-hour average.
+If the request fails with the status **price-too-low**, the request will be resubmitted up to twice,
+each time with a 10% increase in the bid price. If the request succeeds, the buildslave will substantiate
+as normal and run any pending builds.
 
 .. index::
    libvirt

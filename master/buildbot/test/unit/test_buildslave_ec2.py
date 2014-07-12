@@ -121,3 +121,58 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
         self.assertEqual(instances[0].tags, tags)
+
+    @mock_ec2
+    def test_start_spot_instance(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        product_description = 'Linux/Unix'
+        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     ami=amis[0].id, spot_instance=True,
+                                     max_spot_price=1.5,
+                                     product_description=product_description
+                                     )
+        instance_id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(bs.retry, 1)
+        self.assertEqual(bs.product_description, product_description)
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].tags, {})
+
+    @mock_ec2
+    def test_start_spot_instance_retry(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        product_description = 'Linux/Unix'
+        retry = 3
+        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     ami=amis[0].id, retry=retry,
+                                     spot_instance=True, max_spot_price=1.5,
+                                     product_description=product_description
+                                     )
+        id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(bs.retry, 3)
+        self.assertEqual(bs.attempt, 1)
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, id)
+
+    @mock_ec2
+    def test_start_spot_instance_retry_low_price(self):
+        '''
+        This test should attempt to start an instance that will be rejected with
+        price-too-low. At this point, the ec2 buildslave code should increment
+        bs.attempt and multiply the price by bs.retry_price_adjustment. This
+        should continue for bs.retry iterations or until the spot request is
+        accepted.
+        '''
+        raise unittest.SkipTest("Requires un-released functionality in moto.")
