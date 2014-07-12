@@ -24,6 +24,7 @@ from twisted.python import log
 from buildbot.config import ConfigErrors
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
+from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.base import Source
 from buildbot.steps.transfer import _FileReader
@@ -99,10 +100,10 @@ class Darcs(Source):
         return d
 
     def checkDarcs(self):
-        cmd = buildstep.RemoteShellCommand(self.workdir, ['darcs', '--version'],
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout)
+        cmd = remotecommand.RemoteShellCommand(self.workdir, ['darcs', '--version'],
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -132,9 +133,9 @@ class Darcs(Source):
             yield self._dovccmd(command)
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
+                                                    'logEnviron': self.logEnviron,
+                                                    'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -142,11 +143,11 @@ class Darcs(Source):
         d.addCallback(lambda _: self.incremental())
 
         def copy(_):
-            cmd = buildstep.RemoteCommand('cpdir',
-                                          {'fromdir': 'source',
-                                           'todir': 'build',
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
+            cmd = remotecommand.RemoteCommand('cpdir',
+                                              {'fromdir': 'source',
+                                               'todir': 'build',
+                                               'logEnviron': self.logEnviron,
+                                               'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
@@ -229,13 +230,13 @@ class Darcs(Source):
         if not command:
             raise ValueError("No command specified")
         workdir = wkdir or self.workdir
-        cmd = buildstep.RemoteShellCommand(workdir, command,
-                                           env=self.env,
-                                           logEnviron=self.logEnviron,
-                                           timeout=self.timeout,
-                                           collectStdout=collectStdout,
-                                           initialStdin=initialStdin,
-                                           decodeRC=decodeRC)
+        cmd = remotecommand.RemoteShellCommand(workdir, command,
+                                               env=self.env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin,
+                                               decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -263,7 +264,7 @@ class Darcs(Source):
             'workdir': self.workdir,
             'mode': None
         }
-        cmd = buildstep.RemoteCommand('downloadFile', args)
+        cmd = remotecommand.RemoteCommand('downloadFile', args)
         cmd.useLog(self.stdio_log, False)
         log.msg("Downloading file: %s" % (filename))
         d = self.runCommand(cmd)

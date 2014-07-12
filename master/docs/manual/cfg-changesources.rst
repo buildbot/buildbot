@@ -987,9 +987,12 @@ ones.
 
 The :bb:chsrc:`HgPoller` accepts the following arguments:
 
+``name``
+    the name of the poller.
+    This must be unique, and defaults to the ``repourl``.
+
 ``repourl``
-    the url that describes the remote repository, e.g.
-    ``http://hg.example.com/projects/myrepo``.
+    the url that describes the remote repository, e.g.  ``http://hg.example.com/projects/myrepo``.
     Any url suitable for ``hg pull`` can be specified.
 
 ``branch``

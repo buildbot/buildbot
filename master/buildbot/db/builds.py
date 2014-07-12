@@ -13,69 +13,124 @@
 #
 # Copyright Buildbot Team Members
 
+import sqlalchemy as sa
+
+from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util import json
 from twisted.internet import reactor
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/database.rst
+    # Documentation is in developer/db.rst
 
-    def getBuild(self, bid):
+    def _getBuild(self, whereclause):
         def thd(conn):
-            tbl = self.db.model.builds
-            res = conn.execute(tbl.select(whereclause=(tbl.c.id == bid)))
+            q = self.db.model.builds.select(whereclause=whereclause)
+            res = conn.execute(q)
             row = res.fetchone()
 
             rv = None
             if row:
-                rv = self._bdictFromRow(row)
+                rv = self._builddictFromRow(row)
             res.close()
             return rv
         return self.db.pool.do(thd)
 
-    def getBuildsForRequest(self, brid):
+    def getBuild(self, buildid):
+        return self._getBuild(self.db.model.builds.c.id == buildid)
+
+    def getBuildByNumber(self, builderid, number):
+        return self._getBuild(
+            (self.db.model.builds.c.builderid == builderid)
+            & (self.db.model.builds.c.number == number))
+
+    def getBuilds(self, builderid=None, buildrequestid=None):
         def thd(conn):
             tbl = self.db.model.builds
-            q = tbl.select(whereclause=(tbl.c.brid == brid))
+            q = tbl.select()
+            if builderid:
+                q = q.where(tbl.c.builderid == builderid)
+            if buildrequestid:
+                q = q.where(tbl.c.buildrequestid == buildrequestid)
             res = conn.execute(q)
-            return [self._bdictFromRow(row) for row in res.fetchall()]
+            return [self._builddictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
-    def addBuild(self, brid, number, _reactor=reactor):
-        def thd(conn):
-            start_time = _reactor.seconds()
-            r = conn.execute(self.db.model.builds.insert(),
-                             dict(number=number, brid=brid, start_time=start_time,
-                                  finish_time=None))
-            return r.inserted_primary_key[0]
-        return self.db.pool.do(thd)
+    def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
+                 state_strings, _reactor=reactor, _race_hook=None):
+        started_at = _reactor.seconds()
+        state_strings_json = json.dumps(state_strings)
 
-    def finishBuilds(self, bids, _reactor=reactor):
         def thd(conn):
-            transaction = conn.begin()
             tbl = self.db.model.builds
-            now = _reactor.seconds()
+            # get the highest current number
+            r = conn.execute(sa.select([sa.func.max(tbl.c.number)],
+                                       whereclause=(tbl.c.builderid == builderid)))
+            number = r.scalar()
+            new_number = 1 if number is None else number + 1
 
-            # split the bids into batches, so as not to overflow the parameter
-            # lists of the database interface
-            remaining = bids
-            while remaining:
-                batch, remaining = remaining[:100], remaining[100:]
-                q = tbl.update(whereclause=(tbl.c.id.in_(batch)))
-                conn.execute(q, finish_time=now)
+            # insert until we are succesful..
+            while True:
+                if _race_hook:
+                    _race_hook(conn)
 
-            transaction.commit()
+                try:
+                    r = conn.execute(self.db.model.builds.insert(),
+                                     dict(number=new_number, builderid=builderid,
+                                          buildrequestid=buildrequestid,
+                                          buildslaveid=buildslaveid, masterid=masterid,
+                                          started_at=started_at, complete_at=None,
+                                          state_strings_json=state_strings_json))
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    new_number += 1
+                    continue
+                return r.inserted_primary_key[0], new_number
         return self.db.pool.do(thd)
 
-    def _bdictFromRow(self, row):
+    def setBuildStateStrings(self, buildid, state_strings):
+        def thd(conn):
+            tbl = self.db.model.builds
+
+            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            conn.execute(q, state_strings_json=json.dumps(state_strings))
+        return self.db.pool.do(thd)
+
+    def finishBuild(self, buildid, results, _reactor=reactor):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = tbl.update(whereclause=(tbl.c.id == buildid))
+            conn.execute(q,
+                         complete_at=_reactor.seconds(),
+                         results=results)
+        return self.db.pool.do(thd)
+
+    def finishBuildsFromMaster(self, masterid, results, _reactor=reactor):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = tbl.update()
+            q = q.where(tbl.c.masterid == masterid)
+            q = q.where(tbl.c.results == NULL)
+
+            conn.execute(q,
+                         complete_at=_reactor.seconds(),
+                         results=results)
+        return self.db.pool.do(thd)
+
+    def _builddictFromRow(self, row):
         def mkdt(epoch):
             if epoch:
                 return epoch2datetime(epoch)
 
         return dict(
-            bid=row.id,
-            brid=row.brid,
+            id=row.id,
             number=row.number,
-            start_time=mkdt(row.start_time),
-            finish_time=mkdt(row.finish_time))
+            builderid=row.builderid,
+            buildrequestid=row.buildrequestid,
+            buildslaveid=row.buildslaveid,
+            masterid=row.masterid,
+            started_at=mkdt(row.started_at),
+            complete_at=mkdt(row.complete_at),
+            state_strings=json.loads(row.state_strings_json),
+            results=row.results)

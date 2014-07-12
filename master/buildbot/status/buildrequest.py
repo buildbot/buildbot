@@ -84,10 +84,9 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.properties)
 
-    @defer.inlineCallbacks
     def getSourceStamp(self):
-        br = yield self._getBuildRequest()
-        defer.returnValue(br.source)
+        # TODO..
+        return defer.succeed(None)
 
     def getBuilderName(self):
         return self.buildername
@@ -97,7 +96,7 @@ class BuildRequestStatus:
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
 
-        bdicts = yield self.master.db.builds.getBuildsForRequest(self.brid)
+        bdicts = yield self.master.db.builds.getBuilds(buildrequestid=self.brid)
 
         buildnums = sorted([bdict['number'] for bdict in bdicts])
 

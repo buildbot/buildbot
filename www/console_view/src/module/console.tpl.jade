@@ -1,0 +1,21 @@
+.console
+    .load-indicator(ng-show='c.loading')
+        .spinner
+            i.fa.fa-circle-o-notch.fa-spin.fa-2x
+            p loading
+    .header
+        .header-content(ng-style='{width: c.width}')
+            .col-15
+                .buttons
+                    i.fa.fa-plus-circle(ng-click='c.openAll()' tooltip='Open information for all changes' tooltip-placement='right')
+                    i.fa.fa-minus-circle(ng-click='c.closeAll()' tooltip='Close information for all changes' tooltip-placement='right')
+                .search-field
+                    input(type='text' name='search' ng-model='search' placeholder='search')
+            .col-85
+                builders-header(builders='c.builders' width='c.width' cell-width='c.cellWidth')
+    .content
+        .change-rows(ng-style='{width: c.width}')
+            change-row(ng-repeat="change in c.changes | filter: search | orderBy: 'changeid':true track by change.changeid"
+                       change='change'
+                       width='c.width'
+                       cell-width='c.cellWidth')

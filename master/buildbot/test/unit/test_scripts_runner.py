@@ -267,146 +267,6 @@ class TestReconfigOptions(BaseTestSimpleOptions, unittest.TestCase):
     optionsClass = runner.ReconfigOptions
 
 
-class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.DebugClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_synopsis(self):
-        opts = runner.DebugClientOptions()
-        self.assertIn('buildbot debugclient', opts.getSynopsis())
-
-    def test_defaults(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
-
-    def test_args_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('-m', 'mm'))
-
-    def test_options_long(self):
-        opts = self.parse('--master', 'mm:9989', '--passwd', 'pp')
-        exp = dict(master='mm:9989', passwd='pp')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master_passwd(self):
-        opts = self.parse('foo:9989', 'pass')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('-p', 'pass', 'foo:9989')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_args_master_passwd(self):
-        opts = self.parse('foo:9989', 'pass')
-        exp = dict(master='foo:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_missing_both(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
-
-    def test_missing_passwd(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('master'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('-p', 'pass'))
-
-    def test_invalid_master(self):
-        self.assertRaises(usage.UsageError, self.parse,
-                          "-m", "foo", "-p", "pass")
-
-    def test_options_extra_positional(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('mm', 'pp', '??'))
-
-    def test_options_master(self):
-        self.options_file['master'] = 'opt:9989'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-    def test_options_debugMaster(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['debugMaster'] = 'opt:9989'
-        opts = self.parse('-p', 'pass')
-        exp = dict(master='opt:9989', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
-class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
-
-    def setUp(self):
-        self.setUpOptions()
-
-    def parse(self, *args):
-        self.opts = runner.BaseStatusClientOptions()
-        self.opts.parseOptions(args)
-        return self.opts
-
-    def test_defaults(self):
-        opts = self.parse('--master', 'm:20')
-        exp = dict(master='m:20', username='statusClient', passwd='clientpw')
-        self.assertOptions(opts, exp)
-
-    def test_short(self):
-        opts = self.parse('-m', 'm:20', '-u', 'u', '-p', 'p')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_long(self):
-        opts = self.parse('--master', 'm:20',
-                          '--username', 'u', '--passwd', 'p')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_master(self):
-        opts = self.parse('--username', 'u', '--passwd', 'p', 'm:20')
-        exp = dict(master='m:20', username='u', passwd='p')
-        self.assertOptions(opts, exp)
-
-    def test_positional_extra(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--username', 'u', '--passwd', 'p', 'm', '2'))
-
-    def test_missing_master(self):
-        self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--username', 'u', '--passwd', 'p'))
-
-    def test_invalid_master(self):
-        self.assertRaises(usage.UsageError, self.parse, "-m foo")
-
-    def test_options_masterstatus(self):
-        self.options_file['master'] = 'not_seen:2'
-        self.options_file['masterstatus'] = 'opt:3'
-        opts = self.parse('-p', 'pass', '-u', 'user')
-        exp = dict(master='opt:3', username='user', passwd='pass')
-        self.assertOptions(opts, exp)
-
-
-class TestStatusLogOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusLogOptions()
-        self.assertIn('buildbot statuslog', opts.getSynopsis())
-
-
-class TestStatusGuiOptions(unittest.TestCase):
-
-    def test_synopsis(self):
-        opts = runner.StatusGuiOptions()
-        self.assertIn('buildbot statusgui', opts.getSynopsis())
-
-
 class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def setUp(self):
@@ -503,7 +363,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_options_long(self):
         opts = self.parse(
-                *"""--wait --dryrun --get-builder-names --quiet --connect=pb
+            *"""--wait --dryrun --get-builder-names --quiet --connect=pb
                 --host=h --jobdir=j --username=u --master=m:1234 --passwd=p
                 --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
                 --vc=cvs --branch=br --repository=rep --builder=bl
@@ -795,7 +655,8 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
     def test_info_with_id(self):
         opts = self.parse("--info", "tdurden:svn=marla",
                           '--op', 'update', *self.extra_args)
-        self.assertEqual(opts['info'], [dict(identifier='tdurden', svn='marla')])
+        self.assertEqual(
+            opts['info'], [dict(identifier='tdurden', svn='marla')])
 
     def test_info_multiple(self):
         opts = self.parse("--info", "git=Tyler Durden <tyler@mayhem.net>",
@@ -810,7 +671,8 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
         self.options_file['user_username'] = 'un'
         self.options_file['user_passwd'] = 'pw'
         opts = self.parse('--op', 'get', '--ids', 'x')
-        self.assertOptions(opts, dict(master='mm:99', username='un', passwd='pw'))
+        self.assertOptions(
+            opts, dict(master='mm:99', username='un', passwd='pw'))
 
     def test_config_master(self):
         self.options_file['master'] = 'mm:99'

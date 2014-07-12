@@ -27,3 +27,4 @@ describes this approach, with frequent references into the
     cfg-buildsteps
     cfg-interlocks
     cfg-statustargets
+    cfg-www

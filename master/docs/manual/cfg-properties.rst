@@ -24,8 +24,7 @@ sources for properties are:
 * :ref:`changes <Change-Sources>` -- A change can have properties attached to
   it, supplying extra information gathered by the change source.  This is most
   commonly used with the :bb:cmdline:`sendchange` command.
-* :bb:status:`forced builds <WebStatus>` -- The "Force Build" form allows users
-  to specify properties
+* forced builds -- The "Force Build" form allows users to specify properties
 * :bb:cfg:`buildslaves <slaves>` -- A buildslave can pass properties on to
   the builds it performs.
 * :ref:`builds <Common-Build-Properties>` -- A build automatically sets a
@@ -124,7 +123,7 @@ Using Properties in Steps
 
 For the most part, properties are used to alter the behavior of build steps
 during a build.  This is done by annotating the step definition in
-``master.cfg`` with placeholders.  When the step is executed, these
+``master.cfg`` with placeholders.  When the step is started, these
 placeholders will be replaced using the current values of the build properties.
 
 .. note::
@@ -213,10 +212,6 @@ The following selectors are supported.
 
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
-
-``slave``
-    The key to the per-buildslave "info" dictionary (e.g., the "Slave information" properties shown
-    in the buildslave web page for each buildslave)
 
 The following ways of interpreting the value are available.
 
@@ -361,13 +356,13 @@ syntaxes in the parentheses.
 ``propname:~replacement``
     Like ``propname:-replacement``, but only substitutes the value
     of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be 
+    Python considers ``None``, 0, empty lists, and the empty string to be
     false, so such values will be replaced by ``replacement``.
 
 ``propname:+replacement``
     If ``propname`` exists, substitute ``replacement``; otherwise,
     substitute an empty string.
-    
+
 Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
 above cannot contain more substitutions.

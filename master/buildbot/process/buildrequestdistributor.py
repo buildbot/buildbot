@@ -14,14 +14,16 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.application import service
-from twisted.internet import defer
-from twisted.python import log
-from twisted.python.failure import Failure
-
-from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.data import resultspec
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
+from buildbot.util import ascii2unicode
+from buildbot.util import epoch2datetime
+from buildbot.util import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.python.failure import Failure
 
 import random
 
@@ -62,7 +64,7 @@ class BuildChooserBase(object):
 
         breqs = yield self.mergeRequests(breq)
         for b in breqs:
-                self._removeBuildRequest(b)
+            self._removeBuildRequest(b)
 
         defer.returnValue((slave, breqs))
 
@@ -88,8 +90,13 @@ class BuildChooserBase(object):
         # the self.unclaimedBrdicts to None before calling."""
 
         if self.unclaimedBrdicts is None:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.bldr.name, claimed=False)
+            # TODO: use order of the DATA API
+            brdicts = yield self.master.data.get(('builders',
+                                                  self.bldr.name,
+                                                  'buildrequests'),
+                                                 [resultspec.Filter('claimed',
+                                                                    'eq',
+                                                                    [False])])
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd: brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
@@ -100,11 +107,11 @@ class BuildChooserBase(object):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
-        breq = self.breqCache.get(brdict['brid'])
+        breq = self.breqCache.get(brdict['buildrequestid'])
         if not breq:
             breq = yield BuildRequest.fromBrdict(self.master, brdict)
             if breq:
-                self.breqCache[brdict['brid']] = breq
+                self.breqCache[brdict['buildrequestid']] = breq
         defer.returnValue(breq)
 
     def _getBrdictForBuildRequest(self, breq):
@@ -116,7 +123,7 @@ class BuildChooserBase(object):
 
         brid = breq.id
         for brdict in self.unclaimedBrdicts:
-            if brid == brdict['brid']:
+            if brid == brdict['buildrequestid']:
                 return brdict
         return None
 
@@ -169,7 +176,8 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
-            self.nextSlave = lambda _, slaves: random.choice(slaves) if slaves else None
+            self.nextSlave = lambda _, slaves: random.choice(
+                slaves) if slaves else None
 
         self.slavepool = self.bldr.getAvailableSlaves()
 
@@ -224,25 +232,9 @@ class BasicBuildChooser(BuildChooserBase):
 
         defer.returnValue(nextBuild)
 
-    @defer.inlineCallbacks
     def mergeRequests(self, breq):
-        mergedRequests = [breq]
-
-        # short circuit if there is no merging to do
-        if not self.mergeRequestsFn or not self.unclaimedBrdicts:
-            defer.returnValue(mergedRequests)
-            return
-
-        # we'll need BuildRequest objects, so get those first
-        unclaimedBreqs = yield self._getUnclaimedBuildRequests()
-
-        # gather the mergeable requests
-        for req in unclaimedBreqs:
-            canMerge = yield self.mergeRequestsFn(self.bldr, breq, req)
-            if canMerge:
-                mergedRequests.append(req)
-
-        defer.returnValue(mergedRequests)
+        # TODO: merging is not supported in nine for the moment
+        return defer.succeed([breq])
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
@@ -315,7 +307,7 @@ class BasicBuildChooser(BuildChooserBase):
         return self.bldr.canStartBuild(slave, breq)
 
 
-class BuildRequestDistributor(service.Service):
+class BuildRequestDistributor(service.AsyncService):
 
     """
     Special-purpose class to handle distributing build requests to builders by
@@ -351,11 +343,12 @@ class BuildRequestDistributor(service.Service):
         # quiesce.  First, let the parent stopService succeed between
         # activities; then the loop will stop calling itself, since
         # self.running is false.
-        yield self.activity_lock.run(service.Service.stopService, self)
+        yield self.activity_lock.run(service.AsyncService.stopService, self)
 
         # now let any outstanding calls to maybeStartBuildsOn to finish, so
         # they don't get interrupted in mid-stride.  This tends to be
         # particularly painful because it can occur when a generator is gc'd.
+        # TEST-TODO: this behavior is not asserted in any way.
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
@@ -511,7 +504,7 @@ class BuildRequestDistributor(service.Service):
         self._quiet()
 
     @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr):
+    def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
@@ -524,17 +517,47 @@ class BuildRequestDistributor(service.Service):
 
             # claim brid's
             brids = [br.id for br in breqs]
-            try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
-            except AlreadyClaimedError:
+            claimed_at_epoch = _reactor.seconds()
+            claimed_at = epoch2datetime(claimed_at_epoch)
+            if not (yield self.master.data.updates.claimBuildRequests(
+                    brids, claimed_at=claimed_at)):
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
+            # the claim was successful, so publish a message for each brid
+            for brid in brids:
+                # TODO: inefficient..
+                brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+                key = ('buildsets', str(brdict['buildsetid']),
+                       'builders', str(-1),
+                       'buildrequests', str(brdict['buildrequestid']), 'claimed')
+                msg = dict(
+                    bsid=brdict['buildsetid'],
+                    brid=brdict['buildrequestid'],
+                    buildername=brdict['buildername'],
+                    builderid=-1,
+                    # TODO:
+                    # claimed_at=claimed_at_epoch,
+                    # masterid=masterid)
+                )
+                self.master.mq.produce(key, msg)
+
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
 
             if not buildStarted:
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+                yield self.master.data.updates.unclaimBuildRequests(brids)
+
+                for breq in breqs:
+                    bsid = breq.bsid
+                    buildername = ascii2unicode(breq.buildername)
+                    brid = breq.id
+                    key = ('buildsets', str(brdict['buildsetid']),
+                           'builders', str(-1),
+                           'buildrequests', str(brdict['buildrequestid']), 'unclaimed')
+                    msg = dict(brid=brid, bsid=bsid, buildername=buildername,
+                               builderid=-1)
+                    self.master.mq.produce(key, msg)
 
                 # and try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests

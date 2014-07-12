@@ -50,24 +50,26 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             return {"Builder0": builders[0], "Builder1": builders[1], "Builder2": builders[2]}[buildername]
 
         notifier.master_status.getBuilder = fakeGetBuilder
-        notifier.master.db = fakedb.FakeDBConnector(self)
+        notifier.master.db = fakedb.FakeDBConnector(notifier.master, self)
 
         notifier.master.db.insertTestData([
-            fakedb.SourceStampSet(id=127),
-            fakedb.Buildset(id=99, sourcestampsetid=127, results=SUCCESS, reason="testReason"),
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.BuildRequest(id=10, buildsetid=99, buildername="Builder0"),
-            fakedb.Build(number=0, brid=10),
+            fakedb.Build(number=0, buildrequestid=10, masterid=92, buildslaveid=13),
             fakedb.BuildRequest(id=11, buildsetid=99, buildername="Builder1"),
-            fakedb.Build(number=0, brid=11),
+            fakedb.Build(number=0, buildrequestid=11, masterid=92, buildslaveid=13),
             fakedb.BuildRequest(id=12, buildsetid=99, buildername="Builder2"),
-            fakedb.Build(number=0, brid=12)
+            fakedb.Build(number=0, buildrequestid=12, masterid=92, buildslaveid=13)
         ])
 
         if info is not None:
             info['bsid'] = 99
             info['builds'] = builds
 
-        d = notifier._buildsetComplete(99, SUCCESS)
+        d = notifier._buildsetComplete('buildset.99.complete',
+                                       {'bsid': 99, 'result': SUCCESS})
         return d
 
     def test_buildsetComplete_raises_notimplementederror(self):

@@ -258,10 +258,9 @@ if DEFINE_POLLER:
                 # we'll try again next poll.  Meanwhile, let's report.
                 twisted.python.log.err()
             else:
-                for change in changes:
-                    yield self.addChange(
-                        buildbot.changes.changes.Change(**change))
-                    self.last_revision = change['revision']
+                for change_kwargs in changes:
+                    yield self.addChange(change_kwargs)
+                    self.last_revision = change_kwargs['revision']
 
         def getRawChanges(self):
             branch = bzrlib.branch.Branch.open_containing(self.url)[0]
@@ -289,12 +288,13 @@ if DEFINE_POLLER:
             changes.reverse()
             return changes
 
-        def addChange(self, change):
+        def addChange(self, change_kwargs):
             d = defer.Deferred()
 
             def _add_change():
                 d.callback(
-                    self.parent.addChange(change, src='bzr'))
+                    self.master.data.updates.addChange(src='bzr',
+                                                       **change_kwargs))
             twisted.internet.reactor.callLater(0, _add_change)
             return d
 

@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.application import service
+from buildbot.util import service
 
 
-class FakeBotMaster(service.MultiService):
+class FakeBotMaster(service.AsyncMultiService):
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName("fake-botmaster")
         self.master = master
         self.locks = {}

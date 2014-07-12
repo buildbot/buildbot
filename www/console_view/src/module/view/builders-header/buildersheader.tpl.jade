@@ -1,0 +1,5 @@
+.builders
+    a.builder(ng-repeat="builder in bh.builders | orderBy: 'builderid' track by builder.builderid"
+              ng-style='{width: bh.cellWidth}'
+              ng-href='#/builders/{{ builder.builderid }}'
+              ng-bind='builder.name')

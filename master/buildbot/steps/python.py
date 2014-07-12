@@ -17,16 +17,11 @@
 import re
 
 from buildbot import config
+from buildbot.process import logobserver
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
-
-try:
-    import cStringIO
-    StringIO = cStringIO.StringIO
-except ImportError:
-    from StringIO import StringIO
 
 
 class BuildEPYDoc(ShellCommand):
@@ -35,30 +30,33 @@ class BuildEPYDoc(ShellCommand):
     description = ["building", "epydocs"]
     descriptionDone = ["epydoc"]
 
-    def createSummary(self, log):
-        import_errors = 0
-        warnings = 0
-        errors = 0
+    def __init__(self, **kwargs):
+        ShellCommand.__init__(self, **kwargs)
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-        for line in StringIO(log.getText()):
+    def logConsumer(self):
+        self.import_errors = 0
+        self.warnings = 0
+        self.errors = 0
+
+        while True:
+            stream, line = yield
             if line.startswith("Error importing "):
-                import_errors += 1
+                self.import_errors += 1
             if line.find("Warning: ") != -1:
-                warnings += 1
+                self.warnings += 1
             if line.find("Error: ") != -1:
-                errors += 1
+                self.errors += 1
 
+    def createSummary(self, log):
         self.descriptionDone = self.descriptionDone[:]
-        if import_errors:
-            self.descriptionDone.append("ierr=%d" % import_errors)
-        if warnings:
-            self.descriptionDone.append("warn=%d" % warnings)
-        if errors:
-            self.descriptionDone.append("err=%d" % errors)
-
-        self.import_errors = import_errors
-        self.warnings = warnings
-        self.errors = errors
+        if self.import_errors:
+            self.descriptionDone.append("ierr=%d" % self.import_errors)
+        if self.warnings:
+            self.descriptionDone.append("warn=%d" % self.warnings)
+        if self.errors:
+            self.descriptionDone.append("err=%d" % self.errors)
 
     def evaluateCommand(self, cmd):
         if cmd.didFail():
@@ -87,16 +85,21 @@ class PyFlakes(ShellCommand):
         # evaluateCommand below can inspect the results more closely.
         kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
         ShellCommand.__init__(self, *args, **kwargs)
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def createSummary(self, log):
-        counts = {}
-        summaries = {}
+        counts = self.counts = {}
+        summaries = self.summaries = {}
         for m in self.MESSAGES:
             counts[m] = 0
             summaries[m] = []
 
+    def logConsumer(self):
+        counts = self.counts
+        summaries = self.summaries
         first = True
-        for line in StringIO(log.getText()).readlines():
+        while True:
+            stream, line = yield
             # the first few lines might contain echoed commands from a 'make
             # pyflakes' step, so don't count these as warnings. Stop ignoring
             # the initial lines as soon as we see one with a colon.
@@ -126,6 +129,8 @@ class PyFlakes(ShellCommand):
             summaries[m].append(line)
             counts[m] += 1
 
+    def createSummary(self, log):
+        counts, summaries = self.counts, self.summaries
         self.descriptionDone = self.descriptionDone[:]
 
         # we log 'misc' as syntax-error
@@ -191,19 +196,28 @@ class PyLint(ShellCommand):
     flunkingIssues = ["F", "E"]  # msg categories that cause FAILURE
 
     _re_groupname = 'errtype'
-    _msgtypes_re_str = '(?P<%s>[%s])' % (_re_groupname, ''.join(MESSAGES.keys()))
-    _default_line_re = re.compile(r'^%s(\d{4})?: *\d+(,\d+)?:.+' % _msgtypes_re_str)
-    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s(\d{4})?[,\]] .+' % _msgtypes_re_str)
+    _msgtypes_re_str = '(?P<%s>[%s])' % (
+        _re_groupname, ''.join(MESSAGES.keys()))
+    _default_line_re = re.compile(
+        r'^%s(\d{4})?: *\d+(,\d+)?:.+' % _msgtypes_re_str)
+    _parseable_line_re = re.compile(
+        r'[^:]+:\d+: \[%s(\d{4})?[,\]] .+' % _msgtypes_re_str)
 
-    def createSummary(self, log):
-        counts = {}
-        summaries = {}
+    def __init__(self, **kwargs):
+        ShellCommand.__init__(self, **kwargs)
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
+    def logConsumer(self):
+        self.counts = {}
+        self.summaries = {}
         for m in self.MESSAGES:
-            counts[m] = 0
-            summaries[m] = []
+            self.counts[m] = 0
+            self.summaries[m] = []
 
         line_re = None  # decide after first match
-        for line in StringIO(log.getText()).readlines():
+        while True:
+            stream, line = yield
             if not line_re:
                 # need to test both and then decide on one
                 if self._parseable_line_re.match(line):
@@ -216,9 +230,11 @@ class PyLint(ShellCommand):
             if mo:
                 msgtype = mo.group(self._re_groupname)
                 assert msgtype in self.MESSAGES
-            summaries[msgtype].append(line)
-            counts[msgtype] += 1
+            self.summaries[msgtype].append(line)
+            self.counts[msgtype] += 1
 
+    def createSummary(self, log):
+        counts, summaries = self.counts, self.summaries
         self.descriptionDone = self.descriptionDone[:]
         for msg, fullmsg in self.MESSAGES.items():
             if counts[msg]:
@@ -260,7 +276,6 @@ class Sphinx(ShellCommand):
             config.error("Sphinx argument mode has to be 'incremental' or" +
                          "'full' is required")
 
-        self.warnings = 0
         self.success = False
         ShellCommand.__init__(self, **kwargs)
 
@@ -277,7 +292,7 @@ class Sphinx(ShellCommand):
                 command.extend(['-D', key])
             elif isinstance(defines[key], bool):
                 command.extend(['-D',
-                               '%s=%d' % (key, defines[key] and 1 or 0)])
+                                '%s=%d' % (key, defines[key] and 1 or 0)])
             else:
                 command.extend(['-D', '%s=%s' % (key, defines[key])])
 
@@ -287,28 +302,32 @@ class Sphinx(ShellCommand):
         command.extend([sphinx_sourcedir, sphinx_builddir])
         self.setCommand(command)
 
-    def createSummary(self, log):
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-        msgs = ['WARNING', 'ERROR', 'SEVERE']
+    msgs = ['WARNING', 'ERROR', 'SEVERE']
 
-        warnings = []
-        for line in log.getText().split('\n'):
+    def logConsumer(self):
+        self.warnings = []
+        while True:
+            stream, line = yield
             if (line.startswith('build succeeded')
                     or line.startswith('no targets are out of date.')):
                 self.success = True
             else:
-                for msg in msgs:
+                for msg in self.msgs:
                     if msg in line:
-                        warnings.append(line)
-                        self.warnings += 1
-        if self.warnings > 0:
-            self.addCompleteLog('warnings', "\n".join(warnings))
+                        self.warnings.append(line)
 
-        self.step_status.setStatistic('warnings', self.warnings)
+    def createSummary(self, log):
+        if len(self.warnings) > 0:
+            self.addCompleteLog('warnings', "\n".join(self.warnings))
+
+        self.step_status.setStatistic('warnings', len(self.warnings))
 
     def evaluateCommand(self, cmd):
         if self.success:
-            if self.warnings == 0:
+            if not self.warnings:
                 return SUCCESS
             else:
                 return WARNINGS
@@ -320,5 +339,5 @@ class Sphinx(ShellCommand):
             return ["building"]
 
         description = [self.name]
-        description.append('%d warnings' % self.warnings)
+        description.append('%d warnings' % len(self.warnings))
         return description

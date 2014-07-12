@@ -31,6 +31,7 @@ Indices and Tables
 * :bb:index:`step`
 * :bb:index:`status`
 * :bb:index:`cmdline`
+* :bb:index:`msg`
 * :ref:`modindex`
 * :ref:`search`
 

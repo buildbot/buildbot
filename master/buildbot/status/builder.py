@@ -20,14 +20,12 @@ import itertools
 import os
 import re
 
-from cPickle import dump
-from cPickle import load
-
 from buildbot import interfaces
 from buildbot import util
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.event import Event
+from buildbot.util import pickle
 from buildbot.util.lru import LRUCache
 from twisted.persisted import styles
 from twisted.python import log
@@ -35,6 +33,7 @@ from twisted.python import runtime
 from zope.interface import implements
 
 # user modules expect these symbols to be present here
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
@@ -44,7 +43,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
-                  EXCEPTION, RETRY, Results, worst_status]
+                  EXCEPTION, RETRY, CANCELLED, Results, worst_status]
 
 
 class BuilderStatus(styles.Versioned):
@@ -62,23 +61,23 @@ class BuilderStatus(styles.Versioned):
     I live in the buildbot.process.build.Builder object, in the
     .builder_status attribute.
 
-    @type  category: string
-    @ivar  category: user-defined category this builder belongs to; can be
+    @type  tags: None or list of strings
+    @ivar  tags: user-defined "tag" this builder has; can be
                      used to filter on in status clients
     """
 
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
-    persistenceVersion = 1
+    persistenceVersion = 2
     persistenceForgets = ('wasUpgraded', )
 
-    category = None
+    tags = None
     currentBigState = "offline"  # or idle/waiting/interlocked/building
     basedir = None  # filled in by our parent
 
-    def __init__(self, buildername, category, master, description):
+    def __init__(self, buildername, tags, master, description):
         self.name = buildername
-        self.category = category
+        self.tags = tags
         self.description = description
         self.master = master
 
@@ -87,8 +86,6 @@ class BuilderStatus(styles.Versioned):
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
         self.lastBuildStatus = None
-        # self.currentBig = None
-        # self.currentSmall = None
         self.currentBuilds = []
         self.nextBuild = None
         self.watchers = []
@@ -136,6 +133,12 @@ class BuilderStatus(styles.Versioned):
             del self.nextBuildNumber  # determineNextBuildNumber chooses this
         self.wasUpgraded = True
 
+    def upgradeToVersion2(self):
+        if hasattr(self, 'category'):
+            self.tags = self.category and [self.category] or None
+            del self.category
+        self.wasUpgraded = True
+
     def determineNextBuildNumber(self):
         """Scan our directory of saved BuildStatus instances to determine
         what our self.nextBuildNumber should be. Set it one larger than the
@@ -160,7 +163,7 @@ class BuilderStatus(styles.Versioned):
         tmpfilename = filename + ".tmp"
         try:
             with open(tmpfilename, "wb") as f:
-                dump(self, f, -1)
+                pickle.dump(self, f, -1)
             if runtime.platformType == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
@@ -187,7 +190,7 @@ class BuilderStatus(styles.Versioned):
             log.msg("Loading builder %s's build %d from on-disk pickle"
                     % (self.name, number))
             with open(filename, "rb") as f:
-                build = load(f)
+                build = pickle.load(f)
             build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -322,12 +325,15 @@ class BuilderStatus(styles.Versioned):
             b = self.getBuild(-2)
         return b
 
-    def setCategory(self, category):
-        # used during reconfig
-        self.category = category
+    def getTags(self):
+        return self.tags
 
-    def getCategory(self):
-        return self.category
+    def setTags(self, tags):
+        # used during reconfig
+        self.tags = tags
+
+    def matchesAnyTag(self, tags):
+        return self.tags and any(tag for tag in self.tags if tag in tags)
 
     def getBuildByRevision(self, rev):
         number = self.nextBuildNumber - 1
@@ -438,7 +444,7 @@ class BuilderStatus(styles.Versioned):
             # sourcestamps match, skip this build
             if branches and not branches & self._getBuildBranches(b):
                 continue
-            if categories and not b.getBuilder().getCategory() in categories:
+            if categories and not b.getBuilder().matchesAnyTag(tags=categories):
                 continue
             if committers and not [True for c in b.getChanges() if c.who in committers]:
                 continue
@@ -583,12 +589,11 @@ class BuilderStatus(styles.Versioned):
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['basedir'] = os.path.basename(self.basedir)
-        result['category'] = self.category
+        result['tags'] = self.getTags()
         result['slaves'] = self.slavenames
         result['schedulers'] = [s.name
                                 for s in self.status.master.allSchedulers()
                                 if self.name in s.builderNames]
-        # result['url'] = self.parent.getURLForThing(self)
         # TODO(maruel): Add cache settings? Do we care?
 
         # Transient

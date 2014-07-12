@@ -21,11 +21,13 @@ from buildbot.config import ConfigErrors
 from buildbot.process import properties
 from buildbot.status import mail
 from buildbot.status.mail import MailNotifier
+from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util.config import ConfigErrorsMixin
 from mock import Mock
@@ -70,6 +72,10 @@ class FakeSource:
 
 
 class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantData=True, wantDb=True, wantMq=True)
 
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         builds = [FakeBuildStatus(name='build')]
@@ -176,20 +182,37 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             self.assertIn('application/octet-stream', txt)
         return d
 
+    def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
+        self.assertRaises(config.ConfigErrors,
+                          MailNotifier, 'from@example.org',
+                          tags=['fast', 'slow'], builders=['a', 'b'])
+
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
+        # categories are deprecated, but allow them until they're removed.
         self.assertRaises(config.ConfigErrors,
                           MailNotifier, 'from@example.org',
                           categories=['fast', 'slow'], builders=['a', 'b'])
 
     def test_init_warns_notifier_mode_all_in_iter(self):
-        self.assertRaisesConfigError("mode 'all' is not valid in an iterator and must be passed in as a separate string",
-                                     lambda: MailNotifier('from@example.org', mode=['all']))
+        self.assertRaisesConfigError(
+            "mode 'all' is not valid in an iterator and must be passed in as a separate string",
+            lambda: MailNotifier('from@example.org', mode=['all']))
+
+    def test_builderAdded_ignores_unspecified_tags(self):
+        mn = MailNotifier('from@example.org', tags=['fast'])
+
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
+
+        self.assertEqual(None, mn.builderAdded('dummyBuilder', builder))
+        self.assert_(builder not in mn.watched)
 
     def test_builderAdded_ignores_unspecified_categories(self):
+        # categories are deprecated, but leave a test for it until we remove it
         mn = MailNotifier('from@example.org', categories=['fast'])
 
-        builder = Mock()
-        builder.category = 'slow'
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
 
         self.assertEqual(None, mn.builderAdded('dummyBuilder', builder))
         self.assert_(builder not in mn.watched)
@@ -197,10 +220,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
     def test_builderAdded_subscribes_to_all_builders_by_default(self):
         mn = MailNotifier('from@example.org')
 
-        builder = Mock()
-        builder.category = 'slow'
-        builder2 = Mock()
-        builder2.category = None
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
+
+        builder2 = fakemaster.FakeBuilderStatus(self.master)
+        # No tags set.
 
         self.assertEqual(mn, mn.builderAdded('dummyBuilder', builder))
         self.assertEqual(mn, mn.builderAdded('dummyBuilder2', builder2))
@@ -213,7 +237,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build = FakeBuildStatus()
         build.builder = Mock()
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildsetComplete_sends_email(self):
         fakeBuildMessage = Mock()
@@ -249,19 +274,19 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         def fakeGetBuilder(buildername):
             return {"Builder1": builder1, "Builder2": builder2}[buildername]
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder1'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.BuildRequest(id=12, buildsetid=99,
-                                                    buildername='Builder2'),
-                                fakedb.Build(number=0, brid=12),
-                                ])
-        mn.master = self  # FIXME: Should be FakeMaster
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder1'),
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
+                         masterid=92),
+            fakedb.BuildRequest(id=12, buildsetid=99, buildername='Builder2'),
+            fakedb.Build(number=0, buildrequestid=12, buildslaveid=13,
+                         masterid=92),
+        ])
+        mn.master = self.master
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -270,9 +295,15 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
-        mn._buildsetComplete(99, FAILURE)
-        fakeBuildMessage.assert_called_with("(whole buildset)",
-                                            [build1, build2], SUCCESS)
+        d = mn._buildsetComplete('buildset.99.complete',
+                                 dict(bsid=99, result=FAILURE))
+
+        @d.addCallback
+        def check(_):
+            fakeBuildMessage.assert_called_with(
+                "(whole buildset)",
+                [build1, build2], SUCCESS)
+        return d
 
     def test_buildsetComplete_doesnt_send_email(self):
         fakeBuildMessage = Mock()
@@ -304,16 +335,16 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.getBuilder.return_value = builder
         build.getResults.return_value = build.results
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
-        mn.master = self
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
+                         masterid=92),
+        ])
+        mn.master = self.master
 
         self.status = Mock()
         mn.master_status = Mock()
@@ -322,8 +353,13 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
-        mn._buildsetComplete(99, FAILURE)
-        self.assertFalse(fakeBuildMessage.called)
+        d = mn._buildsetComplete('buildset.99.complete',
+                                 dict(bsid=99, result=FAILURE))
+
+        @d.addCallback
+        def check(_):
+            self.assertFalse(fakeBuildMessage.called)
+        return d
 
     def test_getCustomMesgData_multiple_sourcestamps(self):
         self.passedAttrs = {}
@@ -356,16 +392,16 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername": "Builder", "brid": 1}])
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
-        mn.master = self
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
+                         masterid=92),
+        ])
+        mn.master = self.master
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -387,12 +423,19 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ss2 = FakeSource(revision='222333', codebase='testlib2')
         build.getSourceStamps.return_value = [ss1, ss2]
 
-        mn._buildsetComplete(99, FAILURE)
+        d = mn._buildsetComplete('buildset.99.complete',
+                                 dict(bsid=99, result=FAILURE))
 
-        self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
-        self.assertTrue(isinstance(self.passedAttrs['revision'], dict))
-        self.assertEqual(self.passedAttrs['revision']['testlib1'], '111222')
-        self.assertEqual(self.passedAttrs['revision']['testlib2'], '222333')
+        @d.addCallback
+        def check(_):
+            self.assertTrue('revision' in self.passedAttrs,
+                            "No revision entry found in attrs")
+            self.assertTrue(isinstance(self.passedAttrs['revision'], dict))
+            self.assertEqual(
+                self.passedAttrs['revision']['testlib1'], '111222')
+            self.assertEqual(
+                self.passedAttrs['revision']['testlib2'], '222333')
+        return d
 
     def test_getCustomMesgData_single_sourcestamp(self):
         self.passedAttrs = {}
@@ -425,16 +468,16 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         def fakeGetBuildRequests(self, bsid):
             return defer.succeed([{"buildername": "Builder", "brid": 1}])
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=127),
-                                fakedb.Buildset(id=99, sourcestampsetid=127,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                ])
-        mn.master = self
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=22),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
+                         masterid=22),
+        ])
+        mn.master = self.master
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -455,22 +498,42 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ss1 = FakeSource(revision='111222', codebase='testlib1')
         build.getSourceStamps.return_value = [ss1]
 
-        mn._buildsetComplete(99, FAILURE)
+        d = mn._buildsetComplete('buildset.99.complete',
+                                 dict(bsid=99, result=FAILURE))
 
-        self.assertTrue('builderName' in self.passedAttrs, "No builderName entry found in attrs")
-        self.assertEqual(self.passedAttrs['builderName'], 'Builder')
-        self.assertTrue('revision' in self.passedAttrs, "No revision entry found in attrs")
-        self.assertTrue(isinstance(self.passedAttrs['revision'], str))
-        self.assertEqual(self.passedAttrs['revision'], '111222')
+        @d.addCallback
+        def check(_):
+            self.assertTrue('builderName' in self.passedAttrs,
+                            "No builderName entry found in attrs")
+            self.assertEqual(self.passedAttrs['builderName'], 'Builder')
+            self.assertTrue('revision' in self.passedAttrs,
+                            "No revision entry found in attrs")
+            self.assertTrue(isinstance(self.passedAttrs['revision'], str))
+            self.assertEqual(self.passedAttrs['revision'], '111222')
+        return d
+
+    def test_buildFinished_ignores_unspecified_tags(self):
+        mn = MailNotifier('from@example.org', tags=['fast'])
+
+        build = FakeBuildStatus(name="build")
+        build.builder = fakemaster.FakeBuilderStatus(self.master)
+        build.builder.setTags(['slow'])
+        build.getBuilder = lambda: build.builder
+
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_ignores_unspecified_categories(self):
+        # categories are deprecated, but test them until they're removed
         mn = MailNotifier('from@example.org', categories=['fast'])
 
         build = FakeBuildStatus(name="build")
-        build.builder = Mock()
-        build.builder.category = 'slow'
+        build.builder = fakemaster.FakeBuilderStatus(self.master)
+        build.builder.setTags(['slow'])
+        build.getBuilder = lambda: build.builder
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def run_simple_test_sends_email_for_mode(self, mode, result):
         mock_method = Mock()
@@ -557,21 +620,24 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         build = FakeBuildStatus(name="build")
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_passing_ignores_failed_build(self):
         mn = MailNotifier('from@example.org', mode=("passing",))
 
         build = FakeBuildStatus(name="build")
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, FAILURE))
 
     def test_buildFinished_mode_problem_ignores_successful_build(self):
         mn = MailNotifier('from@example.org', mode=("problem",))
 
         build = FakeBuildStatus(name="build")
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_problem_ignores_two_failed_builds_in_sequence(self):
         mn = MailNotifier('from@example.org', mode=("problem",))
@@ -581,7 +647,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.getPreviousBuild.return_value = old_build
         old_build.getResults.return_value = FAILURE
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, FAILURE))
 
     def test_buildFinished_mode_change_ignores_first_build(self):
         mn = MailNotifier('from@example.org', mode=("change",))
@@ -589,8 +656,10 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build = FakeBuildStatus(name="build")
         build.getPreviousBuild.return_value = None
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, FAILURE))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
     def test_buildFinished_mode_change_ignores_same_result_in_sequence(self):
         mn = MailNotifier('from@example.org', mode=("change",))
@@ -605,8 +674,10 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build2.getPreviousBuild.return_value = old_build2
         old_build2.getResults.return_value = SUCCESS
 
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, FAILURE))
-        self.assertEqual(None, mn.buildFinished('dummyBuilder', build2, SUCCESS))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build, FAILURE))
+        self.assertEqual(
+            None, mn.buildFinished('dummyBuilder', build2, SUCCESS))
 
     def test_buildMessage_addLogs(self):
         mn = MailNotifier('from@example.org', mode=("change",), addLogs=True)
@@ -685,22 +756,21 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
-                                fakedb.Buildset(id=99, sourcestampsetid=1099,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.Change(changeid=9123),
-                                fakedb.ChangeUser(changeid=9123, uid=1),
-                                fakedb.User(uid=1, identifier="tdurden"),
-                                fakedb.UserInfo(uid=1, attr_type='svn',
-                                                attr_data="tdurden"),
-                                fakedb.UserInfo(uid=1, attr_type='email',
-                                                attr_data="tyler@mayhem.net")
-                                ])
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, buildrequestid=11, masterid=92,
+                         buildslaveid=13),
+            fakedb.Change(changeid=9123),
+            fakedb.ChangeUser(changeid=9123, uid=1),
+            fakedb.User(uid=1, identifier="tdurden"),
+            fakedb.UserInfo(uid=1, attr_type='svn', attr_data="tdurden"),
+            fakedb.UserInfo(uid=1, attr_type='email',
+                            attr_data="tyler@mayhem.net")
+        ])
 
         # fake sourcestamp with relevant user bits
         ss = Mock(name="sourcestamp")
@@ -722,7 +792,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             return ["Big Bob <bob@mayhem.net>"]
         build.getResponsibleUsers = _getResponsibleUsers
 
-        mn.master = self  # FIXME: Should be FakeMaster
+        mn.master = self.master
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
@@ -797,26 +867,27 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             return defer.succeed(m)
         mn.createEmail = fakeCreateEmail
 
-        self.db = fakedb.FakeDBConnector(self)
-        self.db.insertTestData([fakedb.SourceStampSet(id=1099),
-                                fakedb.Buildset(id=99, sourcestampsetid=1099,
-                                                results=SUCCESS,
-                                                reason="testReason"),
-                                fakedb.BuildRequest(id=11, buildsetid=99,
-                                                    buildername='Builder'),
-                                fakedb.Build(number=0, brid=11),
-                                fakedb.Build(number=1, brid=11),
-                                fakedb.Change(changeid=9123),
-                                fakedb.Change(changeid=9124),
-                                fakedb.ChangeUser(changeid=9123, uid=1),
-                                fakedb.ChangeUser(changeid=9124, uid=2),
-                                fakedb.User(uid=1, identifier="tdurden"),
-                                fakedb.User(uid=2, identifier="user2"),
-                                fakedb.UserInfo(uid=1, attr_type='email',
-                                                attr_data="tyler@mayhem.net"),
-                                fakedb.UserInfo(uid=2, attr_type='email',
-                                                attr_data="user2@example.net")
-                                ])
+        self.db = self.master.db
+        self.db.insertTestData([
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
+            fakedb.BuildRequest(id=11, buildsetid=99, buildername='Builder'),
+            fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
+                         masterid=92),
+            fakedb.Build(number=1, buildrequestid=11, buildslaveid=13,
+                         masterid=92),
+            fakedb.Change(changeid=9123),
+            fakedb.Change(changeid=9124),
+            fakedb.ChangeUser(changeid=9123, uid=1),
+            fakedb.ChangeUser(changeid=9124, uid=2),
+            fakedb.User(uid=1, identifier="tdurden"),
+            fakedb.User(uid=2, identifier="user2"),
+            fakedb.UserInfo(uid=1, attr_type='email',
+                            attr_data="tyler@mayhem.net"),
+            fakedb.UserInfo(uid=2, attr_type='email',
+                            attr_data="user2@example.net")
+        ])
 
         def _getInterestedUsers():
             # 'narrator' in this case is the owner, which tests the lookup
@@ -847,7 +918,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build1.getSourceStamps = fakeGetSSlist(ss1)
         build2.getSourceStamps = fakeGetSSlist(ss2)
 
-        mn.master = self  # FIXME: Should be FakeMaster
+        mn.master = self.master
         self.status = mn.master_status = mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
@@ -871,7 +942,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
     def test_invalid_email(self):
         for invalid in ['@', 'foo', 'foo@', '@example.com', 'foo@invalid',
                         'foobar@ex+ample.com',        # + in domain part
-                        'foo bar@example.net',        # whitespace in local part
+                        # whitespace in local part
+                        'foo bar@example.net',
                         'Foo\nBar <foo@example.org>',  # newline in name
                         'test@example..invalid']:     # empty label (..)
             self.assertRaises(
@@ -952,6 +1024,11 @@ class TestDefaultMessageIntro(unittest.TestCase):
         self.assertEqual("The Buildbot has detected a build exception",
                          mail._defaultMessageIntro("all", EXCEPTION, build))
 
+    def testCancelled(self):
+        build = self.setUpBuild()
+        self.assertEqual("The Build was cancelled by the user",
+                         mail._defaultMessageIntro("all", CANCELLED, build))
+
 
 # Test buildbot.status.mail._defaultMessageProjects() function
 class TestDefaultMessageProjects(unittest.TestCase):
@@ -990,8 +1067,8 @@ class TestDefaultMessageProjects(unittest.TestCase):
 
         self.assertEqual("title-a, title-b",
                          mail._defaultMessageProjects([source_stamp1,
-                                                      source_stamp2,
-                                                      source_stamp3],
+                                                       source_stamp2,
+                                                       source_stamp3],
                                                       Mock()))
 
 
@@ -1040,6 +1117,7 @@ class TestDefaultMessageURLs(unittest.TestCase):
 class TestDefaultMessageSourceStamps(unittest.TestCase):
 
     # utility function to create mocked source stamp object
+
     def setUpSourceStamp(self, branch=None, revision=None, patch=None,
                          codebase=""):
 
@@ -1094,6 +1172,11 @@ class TestDefaultMessageSummary(unittest.TestCase):
         self.assertEqual("BUILD FAILED\n",
                          mail._defaultMessageSummary(self.build, EXCEPTION))
 
+    def testCancelled(self):
+        self.build.getResponsibleUsers = Mock(return_value="Joe Bloggs")
+        self.assertEqual("Build was cancelled by Joe Bloggs\n",
+                         mail._defaultMessageSummary(self.build, CANCELLED))
+
     def testFailure(self):
         self.assertEqual("BUILD FAILED\n",
                          mail._defaultMessageSummary(self.build, FAILURE))
@@ -1112,10 +1195,13 @@ class TestDefaultMessage(unittest.TestCase):
 
         # patch private functions
         self.patch(mail, "_defaultMessageIntro", Mock(return_value="intro"))
-        self.patch(mail, "_defaultMessageProjects", Mock(return_value="project"))
+        self.patch(mail, "_defaultMessageProjects",
+                   Mock(return_value="project"))
         self.patch(mail, "_defaultMessageURLs", Mock(return_value="\nurl\n"))
-        self.patch(mail, "_defaultMessageSourceStamps", Mock(return_value="source-stamp"))
-        self.patch(mail, "_defaultMessageSummary", Mock(return_value="summary"))
+        self.patch(mail, "_defaultMessageSourceStamps",
+                   Mock(return_value="source-stamp"))
+        self.patch(mail, "_defaultMessageSummary",
+                   Mock(return_value="summary"))
 
         # set-up mock build
         build = Mock()

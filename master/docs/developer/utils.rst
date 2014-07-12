@@ -25,21 +25,32 @@ package.
 
 .. py:class:: ComparableMixin
 
-    This mixin class adds comparability to a subclass.  Use it like this::
+    This mixin class adds comparability to a subclass.
+    Use it like this::
 
         class Widget(FactoryProduct, ComparableMixin):
             compare_attrs = [ 'radius', 'thickness' ]
             # ...
 
-    Any attributes not in ``compare_attrs`` will not be considered when
-    comparing objects.  This is particularly useful in implementing buildbot's
-    reconfig logic, where a simple comparison between the new and existing objects
-    can determine whether the new object should replace the existing object.
+    Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
+    This is used to implement buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
+    If the comparison shows the objects to be equivalent, then the old object is left in place.
+    If they differ, the old object is removed from the buildmaster and the new object added.
+
+    For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
+    Be sure to also include the superclass's list, e.g.::
+
+        class MyScheduler(base.BaseScheduler):
+            compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
+
 
     A point to note is that the compare_attrs list is cumulative; that is,
     when a subclass also has a compare_attrs and the parent class has a
     compare_attrs, the subclass' compare_attrs also includes the parent
     class' compare_attrs.
+
+    This class also implements the :py:class:`buildbot.interfaces.IConfigured` interface.
+    The configuration is automatically generated, beeing the dict of all ``compare_attrs``.
 
 .. py:function:: safeTranslate(str)
 
@@ -126,6 +137,25 @@ package.
     :returns: string or ``None``
 
     If ``obj`` is not None, return its string representation.
+
+.. py:function:: ascii2unicode(str):
+
+    :param str: string
+    :returns: string as unicode, assuming ascii
+
+    This function is intended to implement automatic conversions for user convenience.
+    If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
+    If given a unicode string, it returns it directly.
+
+.. py:function:: string2boolean(str):
+
+    :param str: string
+    :raises KeyError:
+    :returns: boolean
+
+    This function converts a string to a boolean.
+    It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
+    It raises :py:exc:`KeyError` if the value is not recognized.
 
 .. py:data:: NotABranch
 
@@ -349,8 +379,9 @@ buildbot.util.debounce
 
 .. py:module:: buildbot.util.debounce
 
-Often, a method must be called exactly once at a time, but many events may trigger a call to the method.
-A simple example is the step method :py:meth:`~buildbot.process.buildstep.BuildStep.updateSummary`.
+It's often necessary to perform some action in response to a particular type of event.
+For example, steps need to update their status after updates arrive from the slave.
+However, when many events arrive in quick succession, it's more efficient to only perform the action once, after the last event has occurred.
 
 The ``debounce.method(wait)`` decorator is the tool for the job.
 
@@ -361,8 +392,12 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
     Returns a decorator that debounces the underlying method.
     The underlying method must take no arguments (except ``self``).
 
-    For each call to the decorated method, the underlying method will be invocation at least once within *wait* seconds (plus the time the method takes to execute).
-    Calls are "debounced" during that time, meaning that multiple calls to the decorated method may result in a single invocation.
+    For each call to the decorated method, the underlying method will be invoked at least once within *wait* seconds (plus the time the method takes to execute).
+    Calls are "debounced" during that time, meaning that multiple calls to the decorated method will result in a single invocation.
+
+    .. note::
+
+        This functionality is similar to Underscore's ``debounce``, except that the Underscore method resets its timer on every call.
 
     The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
     This is useful when the method is a part of a Buidbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
@@ -375,6 +410,7 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
 
         Stop the debouncer.
         While the debouncer is stopped, calls to the decorated method will be ignored.
+        If a call is pending when ``stop`` is called, that call will occur immediately.
         When the Deferred that ``stop`` returns fires, the underlying method is not executing.
 
     .. py:method:: start()
@@ -383,6 +419,64 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
         This reverses the effects of ``stop``.
         This method can be called on a started debouncer without issues.
 
+
+buildbot.util.poll
+~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.poll
+
+Many Buildbot services perform some periodic, asynchronous operation.
+Change sources, for example, contact the repositories they monitor on a regular basis.
+The tricky bit is, the periodic operation must complete before the service stops.
+
+The ``@poll.method`` decorator makes this behavior easy and reliable.
+
+.. py:function:: method
+
+    This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
+    The poller is initially stopped, so peroidic calls will not begin until its ``start`` method is called.
+    The start polling interval is specified when the poller is started.
+
+    If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.
+
+    If a previous invocation of the method has not completed when the interval expires, then the next invocation is skipped and the interval timer starts again.
+
+    A common idiom is to call ``start`` and ``stop`` from ``startService`` and ``stopService``::
+
+        class WatchThings(object):
+
+            @poll.method
+            def watch(self):
+                d = self.beginCheckingSomething()
+                return d
+
+            def startService(self):
+                self.watch.start(interval=self.pollingInterval, now=False)
+
+            def stopService(self):
+                return self.watch.stop()
+
+
+.. py:class:: Poller
+
+    .. py:method:: start(interval=N, now=False)
+
+        :param interval: time, in seconds, between invocations
+        :param now: if true, call the decorated method immediately on startup.
+
+        Start the poller.
+
+    .. py:method:: stop()
+
+        :returns: Deferred
+
+        Stop the poller.
+        The returned Deferred fires when the decorated method is complete.
+
+    .. py:method:: __call__()
+
+        Force a call to the decorated method now.
+        If the decorated method is currently running, another call will begin as soon as it completes.
 
 buildbot.util.json
 ~~~~~~~~~~~~~~~~~~
@@ -477,24 +571,14 @@ buildbot.util.misc
             # ..
             return d
 
-.. py:class:: SerializedInvocation(method)
+.. py:function:: cancelAfter(seconds, deferred)
 
-    This is a method wrapper that will serialize calls to an asynchronous
-    method.  If a second call occurs while the first call is still executing,
-    it will not begin until the first call has finished.  If multiple calls
-    queue up, they will be collapsed into a single call.  The effect is that
-    the underlying method is guaranteed to be called at least once after every
-    call to the wrapper.
+    :param seconds: timeout in seconds
+    :param deferred: deferred to cancel after timeout expires
+    :returns: the deferred passed to the function
 
-    Note that if this class is used as a decorator on a method, it will
-    serialize invocations across all class instances.  For synchronization
-    specific to each instance, wrap the method in the constructor::
-
-        def __init__(self):
-            self.someMethod = SerializedInovcation(self.someMethod)
-
-    Tests can monkey-patch the ``_quiet`` method of the class to be notified
-    when all planned invocations are complete.
+    Cancel the given deferred after the given time has elapsed, if it has not already been fired.
+    Whent his occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
 
 buildbot.util.netstrings
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -560,6 +644,56 @@ This module contains a few utilities that are not included with SQLAlchemy.
     versions that did not have a ``__version__`` attribute are represented by
     ``(0,0,0)``.
 
+buildbot.util.pathmatch
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pathmatch
+
+.. py:class:: Matcher
+
+    This class implements the path-matching algorithm used by the data API.
+
+    Patterns are tuples of strings, with strings beginning with a colon (``:``) denoting variables.
+    A character can precede the colon to indicate the variable type:
+
+        * ``i`` specifies an identifier (:ref:`identifier <type-identifier>`).
+        * ``n`` specifies a number (parseable by ``int``).
+
+    A tuple of strings matches a pattern if the lengths are identical, every variable matches and has the correct type, and every non-variable pattern element matches exactly.
+
+    A matcher object takes patterns using dictionary-assignment syntax::
+
+        ep = ChangeEndpoint()
+        matcher[('change', 'n:changeid')] = ep
+
+    and performs matching using the dictionary-lookup syntax::
+
+        changeEndpoint, kwargs = matcher[('change', '13')]
+        # -> (ep, {'changeid': 13})
+
+    where the result is a tuple of the original assigned object (the ``Change`` instance in this case) and the values of any variables in the path.
+
+    .. py:method:: iterPatterns()
+
+        Returns an iterator which yields all patterns in the matcher as tuples of (pattern, endpoint).
+
+buildbot.util.topicmatch
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.topicmatch
+
+.. py:class:: TopicMatcher(topics)
+
+    :param list topics: topics to match
+
+    This class implements the AMQP-defined syntax: routing keys are treated as dot-separated sequences of words and matched against topics.
+    A star (``*``) in the topic will match any single word, while an octothorpe (``#``) will match zero or more words.
+
+    .. py:method:: matches(routingKey)
+
+        :param string routingKey: routing key to examine
+        :returns: True if the routing key matches a topic
+
 buildbot.util.subscription
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -612,6 +746,15 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
 
+buildbot.util.pickle
+~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.pickle
+
+This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` modules.
+It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
+It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.
+
 buildbot.util.identifiers
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -625,7 +768,7 @@ This module makes it easy to manipulate identifiers.
     :param object: object to test for identifier-ness
     :returns: boolean
 
-    Is object an identifier?
+    Is object a :ref:`identifier <type-identifier>`?
 
 .. py:function:: forceIdentifier(maxLength, str)
 
@@ -646,3 +789,120 @@ This module makes it easy to manipulate identifiers.
     "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.
     This is useful when selecting a unique identifier for an object.
     Maximum-length identifiers like ``_999999`` cannot be incremented and will raise :py:exc:`ValueError`.
+
+buildbot.util.lineboundaries
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.lineboundaries
+
+.. py:class:: LineBoundaryFinder
+
+    This class accepts a sequence of arbitrary strings and invokes a callback only with complete (newline-terminated) substrings.
+    It buffers any partial lines until a subsequent newline is seen.
+
+    :param callback: asynchronous function to call with newline-terminated strings
+
+    .. py:method:: append(text)
+
+        :param text: text to append to the boundary finder
+        :returns: Deferred
+
+        Add additional text to the boundary finder.
+        If the addition of this text completes at least one line, the callback will be invoked with as many complete lines as possible.
+
+    .. py:method:: flush()
+
+        :returns: Deferred
+
+        Flush any remaining partial line by adding a newline and invoking the callback.
+
+buildbot.util.service
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:module:: buildbot.util.service
+
+This module implements some useful subclasses of Twisted services.
+
+The first two classes are more robust implementations of two Twisted classes, and should be used universally in Buildbot code.
+
+.. class:: AsyncMultiService
+
+    This class is similar to :py:class:`twisted.application.service.MultiService`, except that it handles Deferreds returned from child services` ``startService`` and ``stopService`` methods.
+
+    Twisted's service implementation does not support asynchronous ``startService`` methods.
+    The reasoning is that all services should start at process startup, with no need to coordinate between them.
+    For Buildbot, this is not sufficient.
+    The framework needs to know when startup has completed, so it can begin scheduling builds.
+    This class implements the desired functionality, with a parent service's ``startService`` returning a Deferred which will only fire when all child services ``startService`` methods have completed.
+
+    This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores failures in the ``stopService`` process.
+    With :py:class:`AsyncMultiService`, any errors in a child's ``stopService`` will be propagated to the parent's ``stopService`` method.
+
+.. class:: AsyncService
+
+    This class is similar to :py:class:`twisted.application.service.Service`, except that its ``setServiceParent`` method will return a Deferred.
+    That Deferred will fire after the ``startService`` method has completed, if the service was started because the new parent was already running.
+
+.. index:: Service utilities; ClusteredService
+
+Some services in buildbot must have only one "active" instance at any given time.
+In a single-master configuration, this requirement is trivial to maintain.
+In a multiple-master configuration, some arbitration is required to ensure that the service is always active on exactly one master in the cluster.
+
+For example, a particular daily scheduler could be configured on multiple masters, but only one of them should actually trigger the required builds.
+
+.. class:: ClusteredService
+
+    A base class for a service that must have only one "active" instance in a buildbot configuration.
+
+    Each instance of the service is started and stopped via the usual twisted ``startService`` and ``stopService``
+    methods. This utility class hooks into those methods in order to run an arbitration strategy to pick the
+    one instance that should actually be "active".
+
+    The arbitration strategy is implemented via a polling loop. When each service instance starts, it
+    immediately offers to take over as the active instance (via ``_claimService``).
+
+    If successful, the ``activate`` method is called. Once active, the instance remains active until it is explicitly stopped (eg, via ``stopService``) or otherwise fails. When this happens, the ``deactivate`` method is invoked
+    and the "active" status is given back to the cluster (via ``_unclaimService``).
+
+    If another instance is already active, this offer fails, and the instance will poll periodically
+    to try again. The polling strategy helps guard against active instances that might silently disappear and
+    leave the service without any active instance running.
+
+    Subclasses should use these methods to hook into this activation scheme:
+
+    .. method:: activate()
+
+        When a particular instance of the service is chosen to be the one "active" instance, this method
+        is invoked. It is the corollary to twisted's ``startService``.
+
+    .. method:: deactivate()
+
+        When the one "active" instance must be deactivated, this method is invoked. It is the corollary to
+        twisted's ``stopService``.
+
+    .. method:: isActive()
+
+        Returns whether this particular instance is the active one.
+
+    The arbitration strategy is implemented via the following required methods:
+
+    .. method:: _getServiceId()
+
+        The "service id" uniquely represents this service in the cluster. Each instance of this service must
+        have this same id, which will be used in the arbitration to identify candidates for activation. This
+        method may return a Deferred.
+
+    .. method:: _claimService()
+
+        An instance is attempting to become the one active instance in the cluster. This method must
+        return `True` or `False` (optionally via a Deferred) to represent whether this instance's offer
+        to be the active one was accepted. If this returns `True`, the ``activate`` method will be called
+        for this instance.
+
+    .. method:: _unclaimService()
+
+        Surrender the "active" status back to the cluster and make it available for another instance.
+        This will only be called on an instance that successfully claimed the service and has been activated
+        and after its ``deactivate`` has been called. Therefore, in this method it is safe to reassign
+        the "active" status to another instance. This method may return a Deferred.

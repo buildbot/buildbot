@@ -23,6 +23,7 @@ import os
 from buildbot import config
 from buildbot.status import logfile
 from buildbot.test.util import dirs
+from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -72,8 +73,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.tearDownDirs()
 
     def pickle_and_restore(self):
-        pkl = cPickle.dumps(self.logfile)
-        self.logfile = cPickle.loads(pkl)
+        pkl = pickle.dumps(self.logfile)
+        self.logfile = pickle.loads(pkl)
         step = self.build_step_status
         self.logfile.step = step
         self.logfile.master = self.master
@@ -93,37 +94,8 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         self.assertEqual(self.logfile.getFilename(),
                          os.path.abspath(os.path.join('basedir', '123-stdio')))
 
-    def test_hasContents_yes(self):
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_no(self):
-        self.delete_logfile()
-        self.assertFalse(self.logfile.hasContents())
-
-    def test_hasContents_gz(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
-            f.write("hi")
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_gz_pickled(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.gz'), "w") as f:
-            f.write("hi")
-        self.pickle_and_restore()
-        self.assertTrue(self.logfile.hasContents())
-
-    def test_hasContents_bz2(self):
-        self.delete_logfile()
-        with open(os.path.join(self.basedir, '123-stdio.bz2'), "w") as f:
-            f.write("hi")
-        self.assertTrue(self.logfile.hasContents())
-
     def test_getName(self):
         self.assertEqual(self.logfile.getName(), 'testlf')
-
-    def test_getStep(self):
-        self.assertEqual(self.logfile.getStep(), self.build_step_status)
 
     def test_isFinished_no(self):
         self.assertFalse(self.logfile.isFinished())
@@ -407,16 +379,16 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         step.build.builder.basedir = self.basedir
 
         self.assertEqual(self.logfile.getName(), 'error.html')
-        self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
+        self.assertEqual(self.logfile.old_getText(), '<span>You lost the game</span>')
 
     def test_hasContents(self):
-        self.assertTrue(self.logfile.hasContents())
+        self.assertTrue(self.logfile.old_hasContents())
 
     def test_getName(self):
         self.assertEqual(self.logfile.getName(), 'error.html')
 
     def test_getStep(self):
-        self.assertEqual(self.logfile.getStep(), self.build_step_status)
+        self.assertEqual(self.logfile.old_getStep(), self.build_step_status)
 
     def test_isFinished(self):
         self.assertTrue(self.logfile.isFinished())
@@ -426,10 +398,7 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         return d
 
     def test_getText(self):
-        self.assertEqual(self.logfile.getText(), '<span>You lost the game</span>')
-
-    def test_getTextWithHeaders(self):
-        self.assertEqual(self.logfile.getTextWithHeaders(), '<span>You lost the game</span>')
+        self.assertEqual(self.logfile.old_getText(), '<span>You lost the game</span>')
 
     def test_getFile(self):
         fp = self.logfile.getFile()

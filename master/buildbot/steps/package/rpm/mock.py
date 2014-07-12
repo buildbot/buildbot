@@ -20,11 +20,12 @@ Steps and objects related to mock building.
 import re
 
 from buildbot import config
-from buildbot.process import buildstep
+from buildbot.process import logobserver
+from buildbot.process import remotecommand
 from buildbot.steps.shell import ShellCommand
 
 
-class MockStateObserver(buildstep.LogLineObserver):
+class MockStateObserver(logobserver.LogLineObserver):
     _line_re = re.compile(r'^.*State Changed: (.*)$')
 
     def outLineReceived(self, line):
@@ -93,9 +94,9 @@ class Mock(ShellCommand):
                 self.logfiles[lname] = lname
         self.addLogObserver('state.log', MockStateObserver())
 
-        cmd = buildstep.RemoteCommand('rmdir', {'dir':
-                                                map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
-                                                    self.mock_logfiles)})
+        cmd = remotecommand.RemoteCommand('rmdir', {'dir':
+                                                    map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
+                                                        self.mock_logfiles)})
         d = self.runCommand(cmd)
 
         def removeDone(cmd):
@@ -143,12 +144,16 @@ class MockBuildSRPM(Mock):
 
         self.command += ['--buildsrpm', '--spec', self.spec,
                          '--sources', self.sources]
+        self.addLogObserver(
+            'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    def commandComplete(self, cmd):
-        out = cmd.logs['build.log'].getText()
-        m = re.search(r"Wrote: .*/([^/]*.src.rpm)", out)
-        if m:
-            self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
+    def logConsumer(self):
+        r = re.compile(r"Wrote: .*/([^/]*.src.rpm)")
+        while True:
+            stream, line = yield
+            m = r.search(line)
+            if m:
+                self.setProperty("srpm", m.group(1), 'MockBuildSRPM')
 
 
 class MockRebuild(Mock):

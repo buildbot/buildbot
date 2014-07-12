@@ -82,8 +82,9 @@ b1 = {'name': "buildbot-full",
       }
 c['builders'] = [b1]
 c['status'] = []
-from buildbot.status import html
-c['status'].append(html.WebStatus(http_port=8010))
+# WebStatus is dead.
+#from buildbot.status import html
+#c['status'].append(html.WebStatus(http_port=8010))
 c['projectName'] = "Buildbot"
 c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
@@ -119,8 +120,9 @@ b1 = {'name': "buildbot-full",
       }
 c['builders'] = [b1]
 c['status'] = []
-from buildbot.status import html
-c['status'].append(html.WebStatus(http_port=8010))
+# WebStatus is dead.
+#from buildbot.status import html
+#c['status'].append(html.WebStatus(http_port=8010))
 c['projectName'] = "Buildbot"
 c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"

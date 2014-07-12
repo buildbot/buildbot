@@ -55,6 +55,8 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.upgrade_master.upgradeMaster"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["replace", "r", "Replace any modified files without confirmation."],
     ]
     optParameters = [
@@ -97,6 +99,8 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["develop", "d", "link to buildbot dir rather than copy, with no "
+                         "JS optimization (UNIX only)"],
         ["no-logrotate", "n",
          "Do not permit buildmaster rotate logs by itself"]
     ]
@@ -208,79 +212,6 @@ class ReconfigOptions(base.BasedirMixin, base.SubcommandOptions):
         return "Usage:    buildbot reconfig [<basedir>]"
 
 
-class DebugClientOptions(base.SubcommandOptions):
-    subcommandFunction = "buildbot.scripts.debugclient.debugclient"
-    optParameters = [
-        ["master", "m", None,
-         "Location of the buildmaster's slaveport (host:port)"],
-        ["passwd", "p", None, "Debug password to use"],
-    ]
-    buildbotOptions = [
-        ['master', 'master'],
-        ['debugMaster', 'master'],
-        ['username', 'username'],
-        ['password', 'passwd'],
-    ]
-    requiredOptions = ['master', 'passwd']
-
-    def getSynopsis(self):
-        return "Usage:    buildbot debugclient [options]"
-
-    def parseArgs(self, *args):
-        if len(args) > 0:
-            self['master'] = args[0]
-        if len(args) > 1:
-            self['passwd'] = args[1]
-        if len(args) > 2:
-            raise usage.UsageError("I wasn't expecting so many arguments")
-
-    def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
-        validateMasterOption(self.get('master'))
-
-
-class BaseStatusClientOptions(base.SubcommandOptions):
-    optFlags = [
-        ['help', 'h', "Display this message"],
-    ]
-    optParameters = [
-        ["master", "m", None,
-         "Location of the buildmaster's status port (host:port)"],
-        ["username", "u", "statusClient",
-         "Username performing the trial build"],
-        ["passwd", 'p', "clientpw", "password for PB authentication"],
-    ]
-    buildbotOptions = [
-        ['master', 'master'],
-        ['masterstatus', 'master'],
-    ]
-    requiredOptions = ['master']
-
-    def parseArgs(self, *args):
-        if len(args) > 0:
-            self['master'] = args[0]
-        if len(args) > 1:
-            raise usage.UsageError("I wasn't expecting so many arguments")
-
-    def postOptions(self):
-        base.SubcommandOptions.postOptions(self)
-        validateMasterOption(self.get('master'))
-
-
-class StatusLogOptions(BaseStatusClientOptions):
-    subcommandFunction = "buildbot.scripts.statuslog.statuslog"
-
-    def getSynopsis(self):
-        return "Usage:    buildbot statuslog [options]"
-
-
-class StatusGuiOptions(BaseStatusClientOptions):
-    subcommandFunction = "buildbot.scripts.statusgui.statusgui"
-
-    def getSynopsis(self):
-        return "Usage:    buildbot statusgui [options]"
-
-
 class SendChangeOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.sendchange.sendchange"
 
@@ -290,7 +221,7 @@ class SendChangeOptions(base.SubcommandOptions):
 
     optParameters = [
         ("master", "m", None,
-         "Location of the buildmaster's PBListener (host:port)"),
+         "Location of the buildmaster's PBChangeSource (host:port)"),
         # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
         ("auth", "a", 'change:changepw',
          "Authentication token - username:password, or prompt for password"),
@@ -390,7 +321,7 @@ class TryOptions(base.SubcommandOptions):
          "Username performing the try build"],
         # for PB, use --master, --username, and --passwd
         ["master", "m", None,
-         "Location of the buildmaster's PBListener (host:port)"],
+         "Location of the buildmaster's Try server (host:port)"],
         ["passwd", None, None,
          "Password for PB authentication"],
         ["who", "w", None,
@@ -565,7 +496,7 @@ class UserOptions(base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.user.user"
     optParameters = [
         ["master", "m", None,
-         "Location of the buildmaster's PBListener (host:port)"],
+         "Location of the buildmaster's user service (host:port)"],
         ["username", "u", None,
          "Username for PB authentication"],
         ["passwd", "p", None,
@@ -697,6 +628,17 @@ class UserOptions(base.SubcommandOptions):
                                        "or 'get'")
 
 
+class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.dataspec.dataspec"
+    optParameters = [
+        ['out', 'o', "dataspec.json", "output to specified path"],
+        ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
+    ]
+
+    def getSynopsis(self):
+        return "Usage:   buildbot dataspec [options]"
+
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -717,12 +659,6 @@ class Options(usage.Options):
          "SIGHUP a buildmaster to make it re-read the config file"],
         ['sendchange', None, SendChangeOptions,
          "Send a change to the buildmaster"],
-        ['debugclient', None, DebugClientOptions,
-         "Launch a small debug panel GUI"],
-        ['statuslog', None, StatusLogOptions,
-         "Emit current builder status to stdout"],
-        ['statusgui', None, StatusGuiOptions,
-         "Display a small window showing current builder status"],
         ['try', None, TryOptions,
          "Run a build with your local changes"],
         ['tryserver', None, TryServerOptions,
@@ -730,7 +666,9 @@ class Options(usage.Options):
         ['checkconfig', None, CheckConfigOptions,
          "test the validity of a master.cfg config file"],
         ['user', None, UserOptions,
-         "Manage users in buildbot's database"]
+         "Manage users in buildbot's database"],
+        ['dataspec', None, DataSpecOption,
+         "Output data api spec"]
     ]
 
     def opt_version(self):

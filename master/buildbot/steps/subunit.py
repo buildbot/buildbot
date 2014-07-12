@@ -14,9 +14,103 @@
 # Copyright Buildbot Team Members
 
 
+from StringIO import StringIO
+from buildbot.process import logobserver
 from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
+from buildbot.status.testresult import TestResult as aTestResult
 from buildbot.steps.shell import ShellCommand
+from unittest import TestResult
+
+
+class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
+
+    """Observe a log that may contain subunit output.
+
+    This class extends TestResult to receive the callbacks from the subunit
+    parser in the most direct fashion.
+    """
+
+    def __init__(self):
+        logobserver.LogLineObserver.__init__(self)
+        TestResult.__init__(self)
+        try:
+            from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET
+            from subunit import PROGRESS_PUSH, PROGRESS_POP
+        except ImportError:
+            raise ImportError("subunit is not importable, but is required for "
+                              "SubunitLogObserver support.")
+        self.PROGRESS_CUR = PROGRESS_CUR
+        self.PROGRESS_SET = PROGRESS_SET
+        self.PROGRESS_PUSH = PROGRESS_PUSH
+        self.PROGRESS_POP = PROGRESS_POP
+        self.warningio = StringIO()
+        self.protocol = TestProtocolServer(self, self.warningio)
+        self.skips = []
+        self.seen_tags = set()  # don't yet know what tags does in subunit
+
+    def outLineReceived(self, line):
+        """Process a received stdout line."""
+        # Impedance mismatch: subunit wants lines, observers get lines-no\n
+        self.protocol.lineReceived(line + '\n')
+
+    def errLineReceived(self, line):
+        """same for stderr line."""
+        self.protocol.lineReceived(line + '\n')
+
+    def stopTest(self, test):
+        TestResult.stopTest(self, test)
+        self.step.setProgress('tests', self.testsRun)
+
+    def addSuccess(self, test):
+        TestResult.addSuccess(self, test)
+        self.addAResult(test, SUCCESS, 'SUCCESS')
+
+    def addSkip(self, test, detail):
+        if hasattr(TestResult, 'addSkip'):
+            TestResult.addSkip(self, test, detail)
+        else:
+            self.skips.append((test, detail))
+        self.addAResult(test, SKIPPED, 'SKIPPED', detail)
+
+    def addError(self, test, err):
+        TestResult.addError(self, test, err)
+        self.issue(test, err)
+
+    def addFailure(self, test, err):
+        TestResult.addFailure(self, test, err)
+        self.issue(test, err)
+
+    def addAResult(self, test, result, text, log=""):
+        tr = aTestResult(tuple(test.id().split('.')), result, text, log)
+        self.step.build.build_status.addTestResult(tr)
+
+    def issue(self, test, err):
+        """An issue - failing, erroring etc test."""
+        self.addAResult(test, FAILURE, 'FAILURE', err)
+        self.step.setProgress('tests failed', len(self.failures) +
+                              len(self.errors))
+
+    expectedTests = 0
+    contextLevel = 0
+
+    def progress(self, offset, whence):
+        if not self.contextLevel:
+            if whence == self.PROGRESS_CUR:
+                self.expectedTests += offset
+            elif whence == self.PROGRESS_SET:
+                self.expectedTests = offset
+            self.step.progress.setExpectations({'tests': self.expectedTests})
+        # TODO: properly support PUSH/POP
+        if whence == self.PROGRESS_PUSH:
+            self.contextLevel += 1
+        elif whence == self.PROGRESS_POP:
+            self.contextLevel -= 1
+
+    def tags(self, new_tags, gone_tags):
+        """Accumulate the seen tags."""
+        self.seen_tags.update(new_tags)
 
 
 class SubunitShellCommand(ShellCommand):
@@ -28,16 +122,13 @@ class SubunitShellCommand(ShellCommand):
         ShellCommand.__init__(self, *args, **kwargs)
         self.failureOnNoTests = failureOnNoTests
 
-        # importing here gets around an import loop
-        from buildbot.process import subunitlogobserver
-
-        self.ioObverser = subunitlogobserver.SubunitLogObserver()
-        self.addLogObserver('stdio', self.ioObverser)
+        self.ioObserver = SubunitLogObserver()
+        self.addLogObserver('stdio', self.ioObserver)
         self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
 
     def commandComplete(self, cmd):
         # figure out all statistics about the run
-        ob = self.ioObverser
+        ob = self.ioObserver
         failures = len(ob.failures)
         errors = len(ob.errors)
         skips = len(ob.skips)
@@ -88,7 +179,7 @@ class SubunitShellCommand(ShellCommand):
         return self.results
 
     def createSummary(self, loog):
-        ob = self.ioObverser
+        ob = self.ioObserver
         problems = ""
         for test, err in ob.errors + ob.failures:
             problems += "%s\n%s" % (test.id(), err)

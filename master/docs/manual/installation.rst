@@ -31,8 +31,8 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires Python-2.5 or later on the master, although Python-2.7 is
-  recommended.  The slave run on Python-2.4.
+  Buildbot requires Python-2.6 or later on the master, although Python-2.7 is
+  recommended.  The slave runs on Python-2.4.
 
 Twisted: http://twistedmatrix.com
 
@@ -910,7 +910,7 @@ instance. This behaviour is useful when writing scripts that stop, start
 and restart Buildbot.
 
 A buildslave may also be gracefully shutdown from the
-:bb:status:`WebStatus` status plugin. This is useful to shutdown a
+web UI. This is useful to shutdown a
 buildslave without interrupting any current builds. The buildmaster
 will wait until the buildslave is finished all its current builds, and
 will then tell the buildslave to shutdown.

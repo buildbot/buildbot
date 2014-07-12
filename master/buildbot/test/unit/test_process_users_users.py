@@ -13,19 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from twisted.trial import unittest
 
 from buildbot.process.users import users
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 
 
 class UsersTests(unittest.TestCase):
 
     def setUp(self):
-        self.master = mock.Mock()
-        self.master.db = self.db = fakedb.FakeDBConnector(self)
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
+        self.db = self.master.db
         self.test_sha = users.encrypt("cancer")
 
     def test_createUserObject_no_src(self):
@@ -53,7 +52,7 @@ class UsersTests(unittest.TestCase):
         def check(_):
             self.assertEqual(self.db.users.users,
                              {1: dict(identifier='Tyler Durden <tyler@mayhem.net>',
-                              bb_username=None, bb_password=None)})
+                                      bb_username=None, bb_password=None)})
             self.assertEqual(self.db.users.users_info,
                              {1: [dict(attr_type="git",
                                        attr_data="Tyler Durden <tyler@mayhem.net>")]})
@@ -80,7 +79,7 @@ class UsersTests(unittest.TestCase):
         def check(_):
             self.assertEqual(self.db.users.users,
                              {1: dict(identifier='Tyler Durden <tyler@mayhem.net>',
-                              bb_username=None, bb_password=None)})
+                                      bb_username=None, bb_password=None)})
             self.assertEqual(self.db.users.users_info,
                              {1: [dict(attr_type="hg",
                                        attr_data="Tyler Durden <tyler@mayhem.net>")]})
@@ -106,7 +105,7 @@ class UsersTests(unittest.TestCase):
         def check(_):
             self.assertEqual(self.db.users.users,
                              {1: dict(identifier='tyler@mayhem.net',
-                              bb_username=None, bb_password=None)})
+                                      bb_username=None, bb_password=None)})
             self.assertEqual(self.db.users.users_info,
                              {1: [dict(attr_type="darcs",
                                        attr_data="tyler@mayhem.net")]})
@@ -119,7 +118,7 @@ class UsersTests(unittest.TestCase):
         def check(_):
             self.assertEqual(self.db.users.users,
                              {1: dict(identifier='Tyler Durden',
-                              bb_username=None, bb_password=None)})
+                                      bb_username=None, bb_password=None)})
             self.assertEqual(self.db.users.users_info,
                              {1: [dict(attr_type="bzr",
                                        attr_data="Tyler Durden")]})

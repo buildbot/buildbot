@@ -61,18 +61,19 @@ class Timed(base.BaseScheduler):
         self.actuateAt = None
         self.actuateAtTimer = None
 
-        self.reason = reason % {'name': name}
+        self.reason = util.ascii2unicode(reason % {'name': name})
 
         self._reactor = reactor  # patched by tests
 
-    def startService(self):
-        base.BaseScheduler.startService(self)
+    def activate(self):
+        d = base.BaseScheduler.activate(self)
 
         # no need to lock this; nothing else can run before the service is started
         self.actuateOk = True
 
         # get the scheduler's last_build time (note: only done at startup)
-        d = self.getState('last_build', None)
+        d.addCallback(lambda _:
+                      self.getState('last_build', None))
 
         def set_last(lastActuated):
             self.lastActuated = lastActuated
@@ -83,30 +84,26 @@ class Timed(base.BaseScheduler):
 
         # give subclasses a chance to start up
         d.addCallback(lambda _: self.startTimedSchedulerService())
-
-        # startService does not return a Deferred, so handle errors with a traceback
-        d.addErrback(log.err, "while initializing %s '%s'" %
-                     (self.__class__.__name__, self.name))
+        return d
 
     def startTimedSchedulerService(self):
-        """Hook for subclasses to participate in the L{startService} process;
+        """Hook for subclasses to participate in the L{activate} process;
         can return a Deferred"""
 
-    def stopService(self):
+    @defer.inlineCallbacks
+    def deactivate(self):
+        yield base.BaseScheduler.deactivate(self)
+
         # shut down any pending actuation, and ensure that we wait for any
         # current actuation to complete by acquiring the lock.  This ensures
-        # that no build will be scheduled after stopService is complete.
+        # that no build will be scheduled after deactivate is complete.
         def stop_actuating():
             self.actuateOk = False
             self.actuateAt = None
             if self.actuateAtTimer:
                 self.actuateAtTimer.cancel()
             self.actuateAtTimer = None
-        d = self.actuationLock.run(stop_actuating)
-
-        # and chain to the parent class
-        d.addCallback(lambda _: base.BaseScheduler.stopService(self))
-        return d
+        yield self.actuationLock.run(stop_actuating)
 
     # Scheduler methods
 
@@ -208,7 +205,7 @@ class Periodic(Timed):
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
                  branch=None, properties={}, onlyImportant=False,
-                 codebases=base.BaseScheduler.DefaultCodebases):
+                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         Timed.__init__(self, name=name, builderNames=builderNames,
                        properties=properties, reason=reason, codebases=codebases)
         if periodicBuildTimer <= 0:
@@ -233,7 +230,7 @@ class NightlyBase(Timed):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason='NightlyBase(%(name)s)',
-                 properties={}, codebases=base.BaseScheduler.DefaultCodebases):
+                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         Timed.__init__(self, name=name, builderNames=builderNames,
                        reason=reason, properties=properties, codebases=codebases)
 
@@ -288,7 +285,7 @@ class Nightly(NightlyBase):
                  createAbsoluteSourceStamps=False,
                  properties={}, change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
-                 codebases=base.BaseScheduler.DefaultCodebases):
+                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
                              properties=properties, codebases=codebases, reason=reason)
@@ -410,32 +407,42 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
-                 properties={}, codebases=base.BaseScheduler.DefaultCodebases):
+                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
                              dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason,
                              codebases=codebases)
 
         self._lastTrigger = None
 
-    def startService(self):
-        NightlyBase.startService(self)
-
-        # get the scheduler's lastTrigger time (note: only done at startup)
-        d = self.getState('lastTrigger', None)
-
-        def setLast(lastTrigger):
+    @defer.inlineCallbacks
+    def activate(self):
+        yield NightlyBase.activate(self)
+        lastTrigger = yield self.getState('lastTrigger', None)
+        self._lastTrigger = None
+        if lastTrigger:
             try:
-                if lastTrigger:
-                    assert isinstance(lastTrigger[0], dict)
-                    self._lastTrigger = (lastTrigger[0], properties.Properties.fromDict(lastTrigger[1]))
-            except:
-                # If the lastTrigger isn't of the right format, ignore it
-                log.msg("NightlyTriggerable Scheduler <%s>: bad lastTrigger: %r" % (self.name, lastTrigger))
-        d.addCallback(setLast)
+                if isinstance(lastTrigger[0], list):
+                    self._lastTrigger = (lastTrigger[0],
+                                         properties.Properties.fromDict(lastTrigger[1]))
+                # handle state from before Buildbot-0.9.0
+                elif isinstance(lastTrigger[0], dict):
+                    self._lastTrigger = (lastTrigger[0].values(),
+                                         properties.Properties.fromDict(lastTrigger[1]))
+            except Exception:
+                pass
+            # If the lastTrigger isn't of the right format, ignore it
+            if not self._lastTrigger:
+                log.msg(
+                    format="NightlyTriggerable Scheduler <%(scheduler)s>: "
+                    "could not load previous state; starting fresh",
+                    scheduler=self.name)
 
     def trigger(self, sourcestamps, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
+        assert isinstance(sourcestamps, list), \
+            "trigger requires a list of sourcestamps"
+
         self._lastTrigger = (sourcestamps, set_props)
 
         # record the trigger in the db
@@ -468,5 +475,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampSetDetails(reason=self.reason, sourcestamps=sourcestamps,
-                                                       properties=props)
+        yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
+                                                          sourcestamps=sourcestamps, properties=props)

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import locale
 import mock
 import os
 
@@ -205,6 +206,58 @@ class Flatten(unittest.TestCase):
         self.assertEqual(util.flatten([(1, 2), 3]), [(1, 2), 3])
 
 
+class Ascii2Unicode(unittest.TestCase):
+
+    def test_unicode(self):
+        rv = util.ascii2unicode(u'\N{SNOWMAN}')
+        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', unicode))
+
+    def test_ascii(self):
+        rv = util.ascii2unicode('abcd')
+        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+
+    def test_nonascii(self):
+        self.assertRaises(UnicodeDecodeError, lambda:
+                          util.ascii2unicode('a\x85'))
+
+    def test_None(self):
+        self.assertEqual(util.ascii2unicode(None), None)
+
+
+class StringToBoolean(unittest.TestCase):
+
+    def test_it(self):
+        stringValues = [
+            ('on', True),
+            ('true', True),
+            ('yes', True),
+            ('1', True),
+            ('off', False),
+            ('false', False),
+            ('no', False),
+            ('0', False),
+            ('ON', True),
+            ('TRUE', True),
+            ('YES', True),
+            ('OFF', False),
+            ('FALSE', False),
+            ('NO', False),
+        ]
+        for s, b in stringValues:
+            self.assertEqual(util.string2boolean(s), b, repr(s))
+
+    def test_ascii(self):
+        rv = util.ascii2unicode('abcd')
+        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+
+    def test_nonascii(self):
+        self.assertRaises(UnicodeDecodeError, lambda:
+                          util.ascii2unicode('a\x85'))
+
+    def test_None(self):
+        self.assertEqual(util.ascii2unicode(None), None)
+
+
 class AsyncSleep(unittest.TestCase):
 
     def test_sleep(self):
@@ -228,8 +281,9 @@ class FunctionalEnvironment(unittest.TestCase):
         self.assertEqual(config.error.called, False)
 
     def test_broken_locale(self):
-        environ = {'LANG': 'NINE.UTF-8'}
-        self.patch(os, 'environ', environ)
+        def err():
+            raise KeyError
+        self.patch(locale, 'getdefaultlocale', err)
         config = mock.Mock()
         util.check_functional_environment(config)
-        config.error.assert_called()
+        config.error.assert_called_with(mock.ANY)

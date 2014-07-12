@@ -4,7 +4,10 @@ BuildSteps
 .. py:module:: buildbot.process.buildstep
 
 There are a few parent classes that are used as base classes for real buildsteps.
-This section describes the base classes.  The "leaf" classes are described in :doc:`../manual/cfg-buildsteps`.
+This section describes the base classes.
+The "leaf" classes are described in :doc:`../manual/cfg-buildsteps`.
+
+See :ref:`Writing-New-BuildSteps` for a guide to implementing new steps.
 
 BuildStep
 ---------
@@ -17,6 +20,12 @@ BuildStep
     .. py:attribute:: name
 
         The name of the step.
+        Note that this value may change when the step is started, if the existing name was not unique.
+
+    .. py:attribute:: stepid
+
+        The ID of this step in the database.
+        This attribute is not set until the step starts.
 
     .. py:attribute:: description
 
@@ -79,6 +88,17 @@ BuildStep
     .. py:attribute:: alwaysRun
 
         If true, the step will run even if a previous step halts the build with ``haltOnFailure``.
+
+    .. py:attribute:: logEncoding
+
+        The log encoding to use for logs produced in this step, or None to ues the global default.
+        See :ref:`Log-Encodings`.
+
+    .. py:attribute:: rendered
+
+        At the begining of the step, the renderable attributes are rendered against the properties.
+        There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs. To address this problem, a ``rendered`` attribute is
+        available for methods that could be called early in the buildstep creation.
 
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
@@ -332,34 +352,30 @@ BuildStep
         :param command: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :returns: Deferred
 
-        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.buildstep.RemoteCommand.run`.
+        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
 
-    .. py:method:: addURL(name, url)
-
-        :param name: URL name
-        :param url: the URL
-
-        Add a link to the given ``url``, with the given ``name`` to displays of this step.
-        This allows a step to provide links to data that is not available in the log files.
-
-    The :class:`BuildStep` class provides minimal support for log handling, that is extended by the :class:`LoggingBuildStep` class.
-    The following methods provide some useful behaviors.
+    The :class:`BuildStep` class provides methods to add log data to the step.
+    Subclasses provide a great deal of user-configurable functionality on top of these methods.
     These methods can be called while the step is running, but not before.
 
-    .. py:method:: addLog(name)
+    .. py:method:: addLog(name, type="s", logEncoding=None)
 
         :param name: log name
-        :returns: :class:`~buildbot.status.logfile.LogFile` instance via Deferred
+        :param type: log type; see :bb:rtype:`logchunk`
+        :param logEncoding: the log encoding, or None to use the step or global default (see :ref:`Log-Encodings`)
+        :returns: :class:`~buildbot.process.log.Log` instance via Deferred
 
         Add a new logfile with the given name to the step, and return the log file instance.
 
     .. py:method:: getLog(name)
 
         :param name: log name
-        :returns: :class:`~buildbot.status.logfile.LogFile` instance
-        :raises: :exc:`KeyError` if the log is not found
+        :raises KeyError: if there is no such log
+        :returns: :class:`~buildbot.process.log.Log` instance
+        :raises KeyError: if no such log is defined
 
-        Get an existing logfile by name.
+        Return an existing logfile, previously added with :py:meth:`addLog`.
+        Note that this return value is synchronous, and only available after :py:meth:`addLog`'s deferred has fired.
 
     .. py:method:: addCompleteLog(name, text)
 
@@ -370,6 +386,9 @@ BuildStep
         This method adds a new log and sets ``text`` as its content.
         This is often useful to add a short logfile describing activities performed on the master.
         The logfile is immediately closed, and no further data can be added.
+
+        If the logfile's content is a bytestring, it is decoded with the step's log encoding or the global default log encoding.
+        To add a logfile with a different character encoding, perform the decode operation directly and pass the resulting unicode string to this method.
 
     .. py:method:: addHTMLLog(name, html)
 
@@ -389,14 +408,21 @@ BuildStep
 
         See :ref:`Adding-LogObservers` for more information on log observers.
 
+    Along with logs, build steps have an associated set of links that can be used to provide additional information for developers.
+    Those links are added during the build with this method:
+
+    .. py:method:: addURL(name, url)
+
+        :param name: URL name
+        :param url: the URL
+
+        Add a link to the given ``url``, with the given ``name`` to displays of this step.
+        This allows a step to provide links to data that is not available in the log files.
+
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
-
-    :param logfiles: see :bb:step:`ShellCommand`
-    :param lazylogfiles: see :bb:step:`ShellCommand`
-    :param log_eval_func: see :bb:step:`ShellCommand`
+.. py:class:: LoggingBuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     The remaining arguments are passed to the :class:`BuildStep` constructor.
 
@@ -426,25 +452,35 @@ LoggingBuildStep
 
         Note that lazy logfiles cannot be specified using this method; they must be provided as constructor arguments.
 
-    .. py:method:: startCommand(command)
+    .. py:method:: setupLogsRunCommandAndProcessResults(cmd, stdioLog=None, closeLogWhenFinished=True, errorMessages=None, logfiles=None, lazylogfiles=False):
 
-        :param command: the :class:`~buildbot.process.buildstep.RemoteCommand`
+        :param command: the :class:`~buildbot.process.remotecommand.RemoteCommand`
             instance to start
+        :param stdioLog: an optional :class:`~buildbot.process.log.Log` object where the
+            stdout of the command will be stored.
+        :param closeLogWhenFinished: a boolean
+        :param logfiles: optional dictionary see :bb:step:`ShellCommand`
+        :param lazylogfiles: optional boolean see :bb:step:`ShellCommand`
+
+        :returns: step result from :mod:`buildbot.status.results`
 
         .. note::
-
-            This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged.
-            It will be removed, and its use is deprecated.
+            This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged. It will be removed, and its use is deprecated.
 
          Handle all of the mechanics of running the given command.
-         This sets up all required logfiles, keeps status text up to date, and calls the utility hooks described below.
-         When the command is finished, the step is finished as well, making this class is unsuitable for steps that run more than one command in sequence.
+         This sets up all required logfiles, and calls the utility hooks described below.
 
-         Subclasses should override :meth:`~buildbot.process.buildstep.BuildStep.start` and, after setting up an appropriate command, call this method. ::
+         Subclasses should use that method if they want to launch multiple commands in a single step.
+         One could use that method, like for example ::
 
-            def start(self):
-                cmd = RemoteShellCommand(...)
-                self.startCommand(cmd, warnings)
+            @defer.inlineCallbacks
+            def run(self):
+                cmd = RemoteCommand(...)
+                res = yield self.setupLogRunCommandAndProcessResults(cmd)
+                if res == results.SUCCESS:
+                     cmd = RemoteCommand(...)
+                     res = yield self.setupLogRunCommandAndProcessResults(cmd)
+                defer.returnValue(res)
 
     To refine the status output, override one or more of the following methods.
     The :class:`LoggingBuildStep` implementations are stubs, so there is no need to call the parent method.
@@ -456,41 +492,12 @@ LoggingBuildStep
         This is a general-purpose hook method for subclasses.
         It will be called after the remote command has finished, but before any of the other hook functions are called.
 
-    .. py:method:: createSummary(stdio)
-
-        :param stdio: stdio :class:`~buildbot.status.logfile.LogFile`
-
-        This hook is designed to perform any summarization of the step, based either on the contents of the stdio logfile, or on instance attributes set earlier in the step processing.
-        Implementations of this method often call e.g., :meth:`~BuildStep.addURL`.
-
     .. py:method:: evaluateCommand(command)
 
         :param command: the just-completed remote command
         :returns: step result from :mod:`buildbot.status.results`
 
         This hook should decide what result the step should have.
-        The default implementation invokes ``log_eval_func`` if it exists, and looks at :attr:`~buildbot.process.buildstep.RemoteCommand.rc` to distinguish :data:`~buildbot.status.results.SUCCESS` from :data:`~buildbot.status.results.FAILURE`.
-
-    The remaining methods provide an embarrassment of ways to set the summary of the step that appears in the various status interfaces.
-    The easiest way to affect this output is to override :meth:`~BuildStep.describe`.
-    If that is not flexible enough, override :meth:`getText` and/or :meth:`getText2`.
-
-    .. py:method:: getText(command, results)
-
-        :param command: the just-completed remote command
-        :param results: step result from :meth:`evaluateCommand`
-        :returns: a list of short strings
-
-        This method is the primary means of describing the step.
-        The default implementation calls :meth:`~BuildStep.describe`, which is usually the easiest method to override, and then appends a string describing the step status if it was not successful.
-
-    .. py:method:: getText2(command, results)
-
-        :param command: the just-completed remote command
-        :param results: step result from :meth:`evaluateCommand`
-        :returns: a list of short strings
-
-        Like :meth:`getText`, this method summarizes the step's result, but it is only called when that result affects the build, either by making it halt, flunk, or end with warnings.
 
 CommandMixin
 ------------
@@ -529,7 +536,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: pathExists(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: Boolean via Deferred
 
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
@@ -537,7 +544,7 @@ This class can only be used in new-style steps.
 
     .. py:method:: glob(path)
 
-        :param path path to test
+        :param path: path to test
         :returns: list of filenames
 
         Get the list of files matching the given path pattern on the slave.
@@ -558,26 +565,26 @@ This class can only be used in new-style steps.
     This mixin manages the following step configuration parameters, the contents of which are documented in the manual.
     Naturally, all of these are renderable.
 
-    ..py:attribute:: command
-    ..py:attribute:: workdir
-    ..py:attribute:: env
-    ..py:attribute:: want_stdout
-    ..py:attribute:: want_stderr
-    ..py:attribute:: usePTY
-    ..py:attribute:: logfiles
-    ..py:attribute:: lazylogfiles
-    ..py:attribute:: timeout
-    ..py:attribute:: maxTime
-    ..py:attribute:: logEnviron
-    ..py:attribute:: interruptSignal
-    ..py:attribute:: sigtermTime
-    ..py:attribute:: initialStdin
-    ..py:attribute:: decodeRC
+    .. py:attribute:: command
+    .. py:attribute:: workdir
+    .. py:attribute:: env
+    .. py:attribute:: want_stdout
+    .. py:attribute:: want_stderr
+    .. py:attribute:: usePTY
+    .. py:attribute:: logfiles
+    .. py:attribute:: lazylogfiles
+    .. py:attribute:: timeout
+    .. py:attribute:: maxTime
+    .. py:attribute:: logEnviron
+    .. py:attribute:: interruptSignal
+    .. py:attribute:: sigtermTime
+    .. py:attribute:: initialStdin
+    .. py:attribute:: decodeRC
 
-    ..py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
+    .. py:method:: setupShellMixin(constructorArgs, prohibitArgs=[])
 
-        :param dict constructorArgs constructor keyword arguments
-        :param list prohibitArgs list of recognized arguments to reject
+        :param dict constructorArgs: constructor keyword arguments
+        :param list prohibitArgs: list of recognized arguments to reject
         :returns: keyword arguments destined for :py:class:`BuildStep`
 
         This method is intended to be called from the shell constructor, passed any keyword arguments not otherwise used by the step.
@@ -586,7 +593,7 @@ This class can only be used in new-style steps.
 
         The return value should be passed to the :py:class:`BuildStep` constructor.
 
-    ..py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
+    .. py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
 
         :param collectStdout: if true, the command's stdout wil be available in ``cmd.stdout`` on completion
         :param collectStderr: if true, the command's stderr wil be available in ``cmd.stderr`` on completion

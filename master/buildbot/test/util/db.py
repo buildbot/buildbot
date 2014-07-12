@@ -72,9 +72,20 @@ class RealDatabaseMixin(object):
             pass
 
         # see if we can find any other tables to drop
-        meta = MetaData(bind=conn)
-        meta.reflect()
-        meta.drop_all()
+        try:
+            meta = MetaData(bind=conn)
+            meta.reflect()
+            meta.drop_all()
+        except Exception, e:
+            # sometimes this goes badly wrong; being able to see the schema
+            # can be a big help
+            if conn.engine.dialect.name == 'sqlite':
+                r = conn.execute("select sql from sqlite_master "
+                                 "where type='table'")
+                log.msg("Current schema:")
+                for row in r.fetchall():
+                    log.msg(row.sql)
+            raise e
 
     def __thd_create_tables(self, conn, table_names):
         all_table_names = set(table_names)

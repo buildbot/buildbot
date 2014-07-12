@@ -17,7 +17,6 @@ import StringIO
 import mock
 
 from buildbot import interfaces
-from buildbot.process import subunitlogobserver
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import subunit
@@ -40,7 +39,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
         self.logobserver.warningio = StringIO.StringIO()
-        self.patch(subunitlogobserver, 'SubunitLogObserver',
+        self.patch(subunit, 'SubunitLogObserver',
                    lambda: self.logobserver)
         return self.setUpBuildStep()
 

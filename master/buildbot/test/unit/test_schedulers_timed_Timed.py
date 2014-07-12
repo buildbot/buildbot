@@ -53,7 +53,7 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
     def test_getPendingBuildTimes(self):
         sched = self.makeScheduler(name='test', builderNames=['foo'])
 
-        sched.startService()
+        sched.activate()
 
         self.assertEqual(sched.got_lastActuation, None)
         self.assertEqual(sched.getPendingBuildTimes(), [1060])
@@ -62,5 +62,5 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertTrue(sched.started_build)
         self.assertEqual(sched.getPendingBuildTimes(), [1120])
 
-        d = sched.stopService()
+        d = sched.deactivate()
         return d

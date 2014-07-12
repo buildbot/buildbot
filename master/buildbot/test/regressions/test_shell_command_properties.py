@@ -21,7 +21,6 @@ from buildbot import config
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Properties
 from buildbot.process.properties import WithProperties
-from buildbot.sourcestamp import SourceStamp
 from buildbot.steps.shell import SetPropertyFromCommand
 from buildbot.steps.shell import ShellCommand
 
@@ -88,7 +87,10 @@ class TestShellCommandProperties(unittest.TestCase):
         f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))
         f.addStep(ShellCommand(command=["echo", WithProperties("%(propname)s")]))
 
-        ss = SourceStamp()
+        ss = mock.Mock(name="sourcestamp")
+        ss.repository = 'repo'
+        ss.changes = []
+        ss.patch = ss.patch_info = None
 
         req = FakeBuildRequest("Testing", {ss.repository: ss}, None)
 
@@ -107,7 +109,10 @@ class TestSetProperty(unittest.TestCase):
         f = BuildFactory()
         f.addStep(SetPropertyFromCommand(command=["echo", "value"], property="propname"))
 
-        ss = SourceStamp()
+        ss = mock.Mock(name="sourcestamp")
+        ss.repository = 'repo'
+        ss.changes = []
+        ss.patch = ss.patch_info = None
 
         req = FakeBuildRequest("Testing", {ss.repository: ss}, None)
 

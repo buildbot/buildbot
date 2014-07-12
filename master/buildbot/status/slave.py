@@ -15,11 +15,8 @@
 
 import time
 
-import copy
-
 from buildbot import interfaces
 from buildbot.util import ascii2unicode
-from buildbot.util import json
 from buildbot.util.eventual import eventually
 from zope.interface import implements
 
@@ -27,6 +24,10 @@ from zope.interface import implements
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
 
+    admin = None
+    host = None
+    access_uri = None
+    version = None
     connected = False
     graceful_shutdown = False
     paused = False
@@ -37,24 +38,22 @@ class SlaveStatus:
         self.runningBuilds = []
         self.graceful_callbacks = []
         self.pause_callbacks = []
-        self.info = {}
-        self.info_change_callbacks = []
         self.connect_times = []
 
     def getName(self):
         return self.name
 
     def getAdmin(self):
-        return self.getInfo('admin')
+        return self.admin
 
     def getHost(self):
-        return self.getInfo('host')
+        return self.host
 
     def getAccessURI(self):
-        return self.getInfo('access_uri')
+        return self.access_uri
 
     def getVersion(self):
-        return self.getInfo('version')
+        return self.version
 
     def isConnected(self):
         return self.connected
@@ -73,16 +72,16 @@ class SlaveStatus:
         return len([t for t in self.connect_times if t > then])
 
     def setAdmin(self, admin):
-        self.updateInfo(admin=admin)
+        self.admin = ascii2unicode(admin)
 
     def setHost(self, host):
-        self.updateInfo(host=host)
+        self.host = ascii2unicode(host)
 
     def setAccessURI(self, access_uri):
-        self.updateInfo(access_uri=access_uri)
+        self.access_uri = access_uri
 
     def setVersion(self, version):
-        self.updateInfo(version=version)
+        self.version = version
 
     def setConnected(self, isConnected):
         self.connected = isConnected
@@ -140,50 +139,6 @@ class SlaveStatus:
         if watcher in self.graceful_callbacks:
             self.graceful_callbacks.remove(watcher)
 
-    def getInfoAsDict(self):
-        return copy.deepcopy(self.info)
-
-    def setInfoDict(self, info):
-        self.info = info
-
-    def getInfo(self, key, default=None):
-        return self.info.get(key, default)
-
-    def updateInfo(self, **kwargs):
-        # round-trip the value through json to 'normalize' it and
-        # to ensure bad values dont get stuffed into the dictionary
-        new_values = json.loads(json.dumps(kwargs))
-
-        for special_key in ['admin', 'host']:
-            if special_key in new_values:
-                new_values[special_key] = ascii2unicode(new_values[special_key])
-
-        # try to see if anything changed (so we should inform watchers)
-        for k, v in new_values.iteritems():
-            if k not in self.info:
-                break
-            if self.info[k] != v:
-                break
-        else:
-            # nothing changed so just bail now
-            return
-
-        self.info.update(new_values)
-
-        for watcher in self.info_change_callbacks:
-            eventually(watcher, self.getInfoAsDict())
-
-    def hasInfo(self, key):
-        return key in self.info
-
-    def addInfoWatcher(self, watcher):
-        if watcher not in self.info_change_callbacks:
-            self.info_change_callbacks.append(watcher)
-
-    def removeInfoWatcher(self, watcher):
-        if watcher in self.info_change_callbacks:
-            self.info_change_callbacks.remove(watcher)
-
     def asDict(self):
         result = {}
         # Constant
@@ -196,5 +151,4 @@ class SlaveStatus:
         result['version'] = self.getVersion()
         result['connected'] = self.isConnected()
         result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
-        result['info'] = self.getInfoAsDict()
         return result

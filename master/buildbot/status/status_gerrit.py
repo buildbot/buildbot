@@ -31,6 +31,7 @@ from buildbot.status.builder import WARNINGS
 from distutils.version import LooseVersion
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
+from twisted.python import log
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -212,7 +213,8 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
     def startService(self):
         print """Starting up."""
         if self.summaryCB:
-            self.summarySubscribe()
+            # TODO: handle deferred
+            self.summarySubscribe().addErrback(log.err, 'while subscribing')
 
         StatusReceiverMultiService.startService(self)
 

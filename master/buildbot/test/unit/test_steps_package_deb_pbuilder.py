@@ -71,7 +71,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
         return self.runStep()
 
-    def test_buildonly(self):
+    def test_buildonly_and_property(self):
         self.setupStep(pbuilder.DebPbuilder())
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
@@ -81,8 +81,14 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
+            + ExpectShell.log(
+                'stdio',
+                stdout='blah\ndpkg-genchanges  >../somefilename.changes\foo\n')
             + 0)
         self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectProperty('deb-changes',
+                            'somefilename.changes',
+                            'DebPbuilder')
         return self.runStep()
 
     def test_architecture(self):

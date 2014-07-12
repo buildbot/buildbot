@@ -151,7 +151,7 @@ class IStatus(Interface):
         """Return a list of ISchedulerStatus objects for all
         currently-registered Schedulers."""
 
-    def getBuilderNames(categories=None):
+    def getBuilderNames(tags=None):
         """Return a list of the names of all current Builders."""
     def getBuilder(name):
         """Return the IBuilderStatus object for a given named Builder. Raises
@@ -328,9 +328,6 @@ class IBuilderStatus(Interface):
     def getName():
         """Return the name of this Builder (a string)."""
 
-    def getCategory():
-        """Return the category of this builder (a string)."""
-
     def getDescription():
         """Return the description of this builder (a string)."""
 
@@ -488,15 +485,6 @@ class IBuildStatus(Interface):
         """Return a string that indicates why the build was run. 'changes',
         'forced', and 'periodic' are the most likely values. 'try' will be
         added in the future."""
-
-    def getSourceStamps():
-        """Return a list of SourceStamp objects which can be used to re-create
-        the source tree that this build used.
-
-        This method will return None if the source information is no longer
-        available."""
-        # TODO: it should be possible to expire the patch but still remember
-        # that the build was r123+something.
 
     def getChanges():
         """Return a list of Change objects which represent which source
@@ -731,126 +719,6 @@ LOG_CHANNEL_STDERR = 1
 LOG_CHANNEL_HEADER = 2
 
 
-class IStatusLog(Interface):
-
-    """I represent a single Log, which is a growing list of text items that
-    contains some kind of output for a single BuildStep. I might be finished,
-    in which case this list has stopped growing.
-
-    Each Log has a name, usually something boring like 'log' or 'output'.
-    These names are not guaranteed to be unique, however they are usually
-    chosen to be useful within the scope of a single step (i.e. the Compile
-    step might produce both 'log' and 'warnings'). The name may also have
-    spaces. If you want something more globally meaningful, at least within a
-    given Build, try::
-
-      '%s.%s' % (log.getStep.getName(), log.getName())
-
-    The Log can be presented as plain text, or it can be accessed as a list
-    of items, each of which has a channel indicator (header, stdout, stderr)
-    and a text chunk. An HTML display might represent the interleaved
-    channels with different styles, while a straight download-the-text
-    interface would just want to retrieve a big string.
-
-    The 'header' channel is used by ShellCommands to prepend a note about
-    which command is about to be run ('running command FOO in directory
-    DIR'), and append another note giving the exit code of the process.
-
-    Logs can be streaming: if the Log has not yet finished, you can
-    subscribe to receive new chunks as they are added.
-
-    A ShellCommand will have a Log associated with it that gathers stdout
-    and stderr. Logs may also be created by parsing command output or
-    through other synthetic means (grepping for all the warnings in a
-    compile log, or listing all the test cases that are going to be run).
-    Such synthetic Logs are usually finished as soon as they are created."""
-
-    def getName():
-        """Returns a short string with the name of this log, probably 'log'.
-        """
-
-    def getStep():
-        """Returns the IBuildStepStatus which owns this log."""
-        # TODO: can there be non-Step logs?
-
-    def isFinished():
-        """Return a boolean. True means the log has finished and is closed,
-        False means it is still open and new chunks may be added to it."""
-
-    def waitUntilFinished():
-        """Return a Deferred that will fire when the log is closed. If the
-        log has already finished, this deferred will fire right away. The
-        callback is given this IStatusLog instance as an argument."""
-
-    def subscribe(receiver, catchup):
-        """Register an IStatusReceiver to receive chunks (with logChunk) as
-        data is added to the Log. If you use this, you will also want to use
-        waitUntilFinished to find out when the listener can be retired.
-        Subscribing to a closed Log is a no-op.
-
-        If 'catchup' is True, the receiver will immediately be sent a series
-        of logChunk messages to bring it up to date with the partially-filled
-        log. This allows a status client to join a Log already in progress
-        without missing any data. If the Log has already finished, it is too
-        late to catch up: just do getText() instead.
-
-        If the Log is very large, the receiver will be called many times with
-        a lot of data. There is no way to throttle this data. If the receiver
-        is planning on sending the data on to somewhere else, over a narrow
-        connection, you can get a throttleable subscription by using
-        C{subscribeConsumer} instead."""
-
-    def unsubscribe(receiver):
-        """Remove a receiver previously registered with subscribe(). Attempts
-        to remove a receiver which was not previously registered is a no-op.
-        """
-
-    def subscribeConsumer(consumer):
-        """Register an L{IStatusLogConsumer} to receive all chunks of the
-        logfile, including all the old entries and any that will arrive in
-        the future. The consumer will first have their C{registerProducer}
-        method invoked with a reference to an object that can be told
-        C{pauseProducing}, C{resumeProducing}, and C{stopProducing}. Then the
-        consumer's C{writeChunk} method will be called repeatedly with each
-        (channel, text) tuple in the log, starting with the very first. The
-        consumer will be notified with C{finish} when the log has been
-        exhausted (which can only happen when the log is finished). Note that
-        a small amount of data could be written via C{writeChunk} even after
-        C{pauseProducing} has been called.
-
-        To unsubscribe the consumer, use C{producer.stopProducing}."""
-
-    # once the log has finished, the following methods make sense. They can
-    # be called earlier, but they will only return the contents of the log up
-    # to the point at which they were called. You will lose items that are
-    # added later. Use C{subscribe} or C{subscribeConsumer} to avoid missing
-    # anything.
-
-    def hasContents():
-        """Returns True if the LogFile still has contents available. Returns
-        False for logs that have been pruned. Clients should test this before
-        offering to show the contents of any log."""
-
-    def getText():
-        """Return one big string with the contents of the Log. This merges
-        all non-header chunks together."""
-
-    def readlines(channel=LOG_CHANNEL_STDOUT):
-        """Read lines from one channel of the logfile. This returns an
-        iterator that will provide single lines of text (including the
-        trailing newline).
-        """
-
-    def getTextWithHeaders():
-        """Return one big string with the contents of the Log. This merges
-        all chunks (including headers) together."""
-
-    def getChunks():
-        """Generate a list of (channel, text) tuples. 'channel' is a number,
-        0 for stdout, 1 for stderr, 2 for header. (note that stderr is merged
-        into stdout if PTYs are in use)."""
-
-
 class IStatusLogConsumer(Interface):
 
     """I am an object which can be passed to IStatusLog.subscribeConsumer().
@@ -1040,12 +908,6 @@ class IControl(Interface):
 
 class IBuilderControl(Interface):
 
-    def submitBuildRequest(ss, reason, props=None):
-        """Create a BuildRequest, which will eventually cause a build of the
-        given SourceStamp to be run on this builder. This returns a
-        BuildRequestStatus object via a Deferred, which can be used to keep
-        track of the builds that are performed."""
-
     def rebuildBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a
         BuildRequest to our Builder using the same SourceStamp as the earlier
@@ -1104,25 +966,6 @@ class IBuildControl(Interface):
         finished."""
 
 
-class ILogFile(Interface):
-
-    """This is the internal interface to a LogFile, used by the BuildStep to
-    write data into the log.
-    """
-    def addStdout(data):
-        pass
-
-    def addStderr(data):
-        pass
-
-    def addHeader(data):
-        pass
-
-    def finish():
-        """The process that is feeding the log file has finished, and no
-        further data will be added. This closes the logfile."""
-
-
 class ILogObserver(Interface):
 
     """Objects which provide this interface can be used in a BuildStep to
@@ -1142,7 +985,7 @@ class ILogObserver(Interface):
 
 
 class IBuildSlave(Interface):
-    # this is a marker interface for the BuildSlave class
+    # callback methods from the manager
     pass
 
 
@@ -1276,7 +1119,8 @@ class ITriggerableScheduler(Interface):
     A scheduler that can be triggered by buildsteps.
     """
 
-    def trigger(sourcestamps, set_props=None):
+    def trigger(waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         """Trigger a build with the given source stamp and properties.
         """
 
@@ -1284,4 +1128,10 @@ class ITriggerableScheduler(Interface):
 class IBuildStepFactory(Interface):
 
     def buildStep():
+        pass
+
+
+class IConfigured(Interface):
+
+    def getConfigDict():
         pass

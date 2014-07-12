@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.application import service
+from buildbot.util import service
 from zope.interface import implements
 
 from buildbot import pbutil
@@ -95,14 +95,14 @@ class StatusReceiverBase:
         pass
 
 
-class StatusReceiverMultiService(StatusReceiverBase, service.MultiService,
+class StatusReceiverMultiService(StatusReceiverBase, service.AsyncMultiService,
                                  util.ComparableMixin):
 
     def __init__(self):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
 
 
-class StatusReceiverService(StatusReceiverBase, service.Service,
+class StatusReceiverService(StatusReceiverBase, service.AsyncService,
                             util.ComparableMixin):
     pass
 

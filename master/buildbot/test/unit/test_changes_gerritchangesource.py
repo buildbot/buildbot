@@ -42,6 +42,13 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = self.newChangeSource('somehost', 'someuser')
         self.assertSubstring("GerritChangeSource", s.describe())
 
+    def test_name(self):
+        s = self.newChangeSource('somehost', 'someuser')
+        self.assertEqual("GerritChangeSource:someuser@somehost:29418", s.name)
+
+        s = self.newChangeSource('somehost', 'someuser', name="MyName")
+        self.assertEqual("MyName", s.name)
+
     # TODO: test the backoff algorithm
 
     # this variable is reused in test_steps_source_repo
@@ -54,6 +61,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                        'project': u'pr',
                        'branch': u'br/4321',
                        'revlink': u'http://buildbot.net',
+                       'codebase': None,
+                       'revision': u'abcdef',
+                       'src': None,
+                       'when_timestamp': None,
                        'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
                                       u'event.change.subject': u'fix 1234',
                                       u'event.change.project': u'pr',
@@ -63,8 +74,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                                       u'event.change.branch': u'br',
                                       u'event.type': u'patchset-created',
                                       u'event.patchSet.revision': u'abcdef',
-                                      u'event.patchSet.number': u'12'},
-                       u'revision': u'abcdef'}
+                                      u'event.patchSet.number': u'12'}}
 
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
@@ -82,8 +92,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         )))
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
         d.addCallback(check)
@@ -107,9 +117,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
-            self.assertEqual(c["category"], "change-merged")
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
+            self.failUnlessEqual(c["category"], "change-merged")
             self.assertEqual(c["branch"], "br")
         d.addCallback(check)
         return d
@@ -118,7 +128,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = self.newChangeSource(
             'somehost', 'some_choosy_user')
         d = s.lineReceived(json.dumps(self.change_merged_event))
-        check = lambda _: self.assertEqual(len(self.changes_added), 0)
+        check = lambda _: self.failUnlessEqual(
+            len(self.master.data.updates.changesAdded), 0)
         d.addCallback(check)
         return d
 
@@ -135,24 +146,31 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
         def check(_):
-            self.assertEqual(len(self.changes_added), 1)
-            c = self.changes_added[0]
-            self.assertEqual(c['project'], "world")
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            c = self.master.data.updates.changesAdded[0]
+            self.failUnlessEqual(c['project'], "world")
         d.addCallback(check)
         return d
 
 
 class TestGerritChangeFilter(unittest.TestCase):
+
     def test_basic(self):
         class Change(object):
+
             def __init__(self, chdict):
                 self.__dict__ = chdict
 
         ch = Change(TestGerritChangeSource.expected_change)
-        f = gerritchangesource.GerritChangeFilter(branch=["br"], eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(
+            branch=["br"], eventtype=["patchset-created"])
         self.assertTrue(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(branch="br2", eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(
+            branch="br2", eventtype=["patchset-created"])
         self.assertFalse(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(branch="br", eventtype="ref-updated")
+        f = gerritchangesource.GerritChangeFilter(
+            branch="br", eventtype="ref-updated")
         self.assertFalse(f.filter_change(ch))
-        self.assertEqual(repr(f), '<GerritChangeFilter on prop:event.change.branch == br and prop:event.type == ref-updated>')
+        self.assertEqual(
+            repr(f),
+            '<GerritChangeFilter on prop:event.change.branch == br and prop:event.type == ref-updated>')

@@ -16,13 +16,34 @@
 import calendar
 
 from buildbot import interfaces
-from buildbot import sourcestamp
 from buildbot.db import buildrequests
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implements
+
+
+class TempSourceStamp(object):
+    # temporary fake sourcestamp; attributes are added below
+
+    def asDict(self):
+        # This return value should match the kwargs to SourceStampsConnectorComponent.findSourceStampId
+        result = vars(self).copy()
+
+        del result['ssid']
+        del result['changes']
+
+        if 'patch' in result and result['patch'] is None:
+            result['patch'] = (None, None, None)
+        result['patch_level'], result['patch_body'], result['patch_subdir'] = result.pop('patch')
+        result['patch_author'], result['patch_comment'] = result.pop('patch_info')
+
+        assert all(
+            isinstance(val, (unicode, type(None), int))
+            for attr, val in result.items()
+        ), result
+        return result
 
 
 class BuildRequest(object):
@@ -35,19 +56,6 @@ class BuildRequest(object):
     parameters, as well as in starting a build.  Construction of a BuildRequest
     object is a heavyweight process involving a lot of database queries, so
     it should be avoided where possible.  See bug #1894.
-
-    Build requests have a SourceStamp which specifies what sources to build.
-    This may specify a specific revision of the source tree (so source.branch,
-    source.revision, and source.patch are used). The .patch attribute is either
-    None or a tuple of (patchlevel, diff), consisting of a number to use in
-    'patch -pN', and a unified-format context diff.
-
-    Alternatively, the SourceStamp may specify a set of Changes to be built,
-    contained in source.changes. In this case, the requeset may be mergeable
-    with other BuildRequests on the same branch.
-
-    @type source: L{buildbot.sourcestamp.SourceStamp}
-    @ivar source: the source stamp that this BuildRequest use
 
     @type reason: string
     @ivar reason: the reason this Build is being requested. Schedulers provide
@@ -72,9 +80,8 @@ class BuildRequest(object):
     @ivar bsid: ID of the parent buildset
     """
 
-    source = None
-    sources = None
     submittedAt = None
+    sources = {}
 
     @classmethod
     def fromBrdict(cls, master, brdict):
@@ -92,7 +99,7 @@ class BuildRequest(object):
         @returns: L{BuildRequest}, via Deferred
         """
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['brid'], brdict=brdict, master=master)
+        return cache.get(brdict['buildrequestid'], brdict=brdict, master=master)
 
     @classmethod
     @defer.inlineCallbacks
@@ -105,6 +112,7 @@ class BuildRequest(object):
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
+        buildrequest.waitedFor = brdict['waited_for']
 
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
@@ -116,77 +124,80 @@ class BuildRequest(object):
 
         buildrequest.properties = properties.Properties.fromDict(buildset_properties)
 
-        # fetch the sourcestamp dictionary
-        sslist = yield master.db.sourcestamps.getSourceStamps(buildset['sourcestampsetid'])
-        assert len(sslist) > 0, "Empty sourcestampset: db schema enforces set to exist but cannot enforce a non empty set"
-
-        # and turn it into a SourceStamps
+        # make a fake sources dict (temporary)
+        bsdata = yield master.data.get(('buildsets', str(buildrequest.bsid)))
+        assert bsdata['sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
-
-        def store_source(source):
-            buildrequest.sources[source.codebase] = source
-
-        dlist = []
-        for ssdict in sslist:
-            d = sourcestamp.SourceStamp.fromSsdict(master, ssdict)
-            d.addCallback(store_source)
-            dlist.append(d)
-
-        yield defer.gatherResults(dlist)
-
-        if buildrequest.sources:
-            buildrequest.source = buildrequest.sources.values()[0]
+        for ssdata in bsdata['sourcestamps']:
+            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp()
+            ss.ssid = ssdata['ssid']
+            ss.branch = ssdata['branch']
+            ss.revision = ssdata['revision']
+            ss.repository = ssdata['repository']
+            ss.project = ssdata['project']
+            ss.codebase = ssdata['codebase']
+            if ssdata['patch']:
+                patch = ssdata['patch']
+                ss.patch = (patch['level'], patch['body'], patch['subdir'])
+                ss.patch_info = (patch['author'], patch['comment'])
+            else:
+                ss.patch = None
+                ss.patch_info = (None, None)
+            ss.changes = []
+            # XXX: sourcestamps don't have changes anymore; this affects merging!!
 
         defer.returnValue(buildrequest)
 
-    def requestsHaveSameCodebases(self, other):
-        self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())
-        return self_codebases == other_codebases
-
-    def requestsHaveChangesForSameCodebases(self, other):
-        # Merge can only be done if both requests have sourcestampsets containing
-        # comparable sourcestamps, that means sourcestamps with the same codebase.
-        # This means that both requests must have exact the same set of codebases
-        # If not then merge cannot be performed.
-        # The second requirement is that both request have the changes in the
-        # same codebases.
-        #
-        # Normaly a scheduler always delivers the same set of codebases:
-        #   sourcestamps with and without changes
-        # For the case a scheduler is not configured with a set of codebases
-        # it delivers only a set with sourcestamps that have changes.
-        self_codebases = set(self.sources.iterkeys())
-        other_codebases = set(other.sources.iterkeys())
-        if self_codebases != other_codebases:
-            return False
-
-        for c in self_codebases:
-            # Check either both or neither have changes
-            if ((len(self.sources[c].changes) > 0)
-                    != (len(other.sources[c].changes) > 0)):
-                return False
-        # all codebases tested, no differences found
-        return True
-
+    @defer.inlineCallbacks
     def canBeMergedWith(self, other):
         """
-        Returns if both requests can be merged
+        Returns true if both requests can be merged, via Deferred.
+
+        This implements Buildbot's default merging strategy.
         """
 
-        if not self.requestsHaveChangesForSameCodebases(other):
-            return False
+        # short-circuit: if these are for the same buildset, merge away
+        if self.bsid == other.bsid:
+            defer.returnValue(True)
+            return
 
-        # get codebases from myself, they are equal to other
-        self_codebases = set(self.sources.iterkeys())
+        # get the buidlsets for each buildrequest
+        selfBuildsets = yield self.master.data.get(
+            ('buildsets', str(self.bsid)))
+        otherBuildsets = yield self.master.data.get(
+            ('buildsets', str(other.bsid)))
 
-        for c in self_codebases:
-            # check to prevent exception
-            if c not in other.sources:
-                return False
-            if not self.sources[c].canBeMergedWith(other.sources[c]):
-                return False
-        return True
+        # extract sourcestamps, as dictionaries by codebase
+        selfSources = dict((ss['codebase'], ss)
+                           for ss in selfBuildsets['sourcestamps'])
+        otherSources = dict((ss['codebase'], ss)
+                            for ss in otherBuildsets['sourcestamps'])
+
+        # if the sets of codebases do not match, we can't merge
+        if set(selfSources) != set(otherSources):
+            defer.returnValue(False)
+            return
+
+        for c, selfSS in selfSources.iteritems():
+            otherSS = otherSources[c]
+            if selfSS['revision'] != otherSS['revision']:
+                defer.returnValue(False)
+                return
+            if selfSS['repository'] != otherSS['repository']:
+                defer.returnValue(False)
+                return
+            if selfSS['branch'] != otherSS['branch']:
+                defer.returnValue(False)
+                return
+            if selfSS['project'] != otherSS['project']:
+                defer.returnValue(False)
+                return
+            # anything with a patch won't be merged
+            if selfSS['patch'] or otherSS['patch']:
+                defer.returnValue(False)
+                return
+
+        defer.returnValue(True)
 
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
@@ -205,7 +216,11 @@ class BuildRequest(object):
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
             assert len(all_sources) > 0, "each codebase should have atleast one sourcestamp"
-            all_merged_sources[codebase] = all_sources[0].mergeWith(all_sources[1:])
+
+            # TODO: select the sourcestamp that best represents the merge,
+            # preferably the latest one.  This used to be accomplished by
+            # looking at changeids and picking the highest-numbered.
+            all_merged_sources[codebase] = all_sources[-1]
 
         return [source for source in all_merged_sources.itervalues()]
 
@@ -225,19 +240,29 @@ class BuildRequest(object):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
         try:
-            yield self.master.db.buildrequests.claimBuildRequests([self.id])
+            yield self.master.data.updates.claimBuildRequests([self.id])
         except buildrequests.AlreadyClaimedError:
             log.msg("build request already claimed; cannot cancel")
             return
 
+        # send a cancellation message
+        builderid = -1  # TODO
+        key = ('buildrequests', self.bsid, builderid, self.id, 'cancelled')
+        msg = dict(
+            brid=self.id,
+            bsid=self.bsid,
+            buildername=self.buildername,
+            builderid=builderid)
+        self.master.mq.produce(key, msg)
+
         # then complete it with 'FAILURE'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
         # references.
-        yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                 FAILURE)
+        yield self.master.data.updates.completeBuildRequests([self.id],
+                                                             FAILURE)
 
-        # and let the master know that the enclosing buildset may be complete
-        yield self.master.maybeBuildsetComplete(self.bsid)
+        # and see if the enclosing buildset may be complete
+        yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
 
 
 class BuildRequestControl:

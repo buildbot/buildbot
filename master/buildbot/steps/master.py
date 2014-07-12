@@ -200,25 +200,6 @@ class SetProperty(BuildStep):
         self.finished(SUCCESS)
 
 
-class SetSlaveInfo(BuildStep):
-    name = 'SetSlaveInfo'
-    description = ['Setting']
-    descriptionDone = ['Set']
-
-    def start(self):
-        update = self.getSlaveInfoUpdate()
-
-        if update and isinstance(update, dict):
-            self.build.slavebuilder.slave.updateSlaveInfo(**update)
-
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
-
-    def getSlaveInfoUpdate(self):
-        # should subclass; return a dictionary to update info with
-        return {}
-
-
 class LogRenderable(BuildStep):
     name = 'LogRenderable'
     description = ['Logging']

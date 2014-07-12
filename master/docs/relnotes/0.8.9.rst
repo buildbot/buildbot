@@ -106,7 +106,7 @@ Features
 * Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
   the slave is not connected.
 
-* Buildslave info can now be retrieved via :ref:`Interpolate` and a new :bb:step:`SetSlaveInfo` buildstep.
+* Buildslave info can now be retrieved via :ref:`Interpolate` and a new ``SetSlaveInfo`` buildstep.
 
 * The ``GNUAutotools`` factory now has a reconf option to run autoreconf before ``./configure``.
 
@@ -129,7 +129,7 @@ Features
 
 * The waterfall and atom/rss feeds can be filtered with the ``project`` url paramter.
 
-* The WebStatus :ref:`Authorization` support now includes a ``view`` action which can be used to restrict read-only access to the Buildbot instance.
+* The WebStatus ``Authorization`` support now includes a ``view`` action which can be used to restrict read-only access to the Buildbot instance.
 
 * The web status now has options to cancel some or all pending builds.
 
@@ -180,7 +180,7 @@ Features
 
 * An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
 
-* Systemd unit files for Buildbot are available in the :bb:src:`contrib/` directory.
+* Systemd unit files for Buildbot are available in the :bb:src:`master/contrib/` directory.
 
 * We've added some extra checking to make sure that you have a valid locale before starting buildbot (#2608).
 

@@ -22,8 +22,6 @@ include docs/relnotes/*
 
 include buildbot/scripts/sample.cfg
 include buildbot/scripts/buildbot_tac.tmpl
-include buildbot/status/web/files/*
-include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 
@@ -32,3 +30,5 @@ include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/* contrib/libvirt/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
 include contrib/init-scripts/* contrib/bash/* contrib/zsh/*
+
+include master/buildbot/www/index.html

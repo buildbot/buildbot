@@ -13,10 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
+from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from twisted.trial import unittest
@@ -89,7 +88,7 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.run)
-        def run(self, step, remote):
+        def run(self, step, conn, builder_name):
             pass
 
     def test_signature_useLog(self):
@@ -141,9 +140,7 @@ class TestRunCommand(unittest.TestCase, Tests):
     def test_notStdioLog(self):
         logname = 'notstdio'
         cmd = self.makeRemoteCommand(stdioLogName=logname)
-        step = mock.Mock(name='step')
-        step.logobservers = []
-        log = fakeremotecommand.FakeLogFile(logname, step)
+        log = logfile.FakeLogFile(logname, 'dummy')
         cmd.useLog(log)
         cmd.addStdout('some stdout')
         self.failUnlessEqual(log.stdout, 'some stdout')

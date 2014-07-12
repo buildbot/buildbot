@@ -21,8 +21,8 @@
 
 import os
 
+from buildbot.util import service
 from twisted.application import internet
-from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -38,11 +38,11 @@ class NoSuchMaildir(Exception):
     pass
 
 
-class MaildirService(service.MultiService):
+class MaildirService(service.AsyncMultiService):
     pollinterval = 10  # only used if we don't have DNotify
 
     def __init__(self, basedir=None):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         if basedir:
             self.setBasedir(basedir)
         self.files = []
@@ -59,7 +59,6 @@ class MaildirService(service.MultiService):
         self.curdir = os.path.join(self.basedir, "cur")
 
     def startService(self):
-        service.MultiService.startService(self)
         if not os.path.isdir(self.newdir) or not os.path.isdir(self.curdir):
             raise NoSuchMaildir("invalid maildir '%s'" % self.basedir)
         try:
@@ -78,6 +77,7 @@ class MaildirService(service.MultiService):
             self.timerService = internet.TimerService(self.pollinterval, self.poll)
             self.timerService.setServiceParent(self)
         self.poll()
+        return service.AsyncMultiService.startService(self)
 
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
@@ -100,7 +100,7 @@ class MaildirService(service.MultiService):
         if self.timerService is not None:
             self.timerService.disownServiceParent()
             self.timerService = None
-        return service.MultiService.stopService(self)
+        return service.AsyncMultiService.stopService(self)
 
     @defer.inlineCallbacks
     def poll(self):

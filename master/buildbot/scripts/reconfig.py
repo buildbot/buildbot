@@ -36,8 +36,6 @@ class Reconfigurator:
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
             print "Reconfig (through SIGHUP) is not supported on Windows."
-            print "The 'buildbot debugclient' tool can trigger a reconfig"
-            print "remotely, but requires Gtk+ libraries to run."
             return
 
         with open(os.path.join(basedir, "twistd.pid"), "rt") as f:

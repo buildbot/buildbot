@@ -13,11 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import pprint
 import re
 import textwrap
 
 from buildbot.changes import changes
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from twisted.internet import defer
 from twisted.trial import unittest
 
 
@@ -25,7 +28,7 @@ class Change(unittest.TestCase):
 
     change23_rows = [
         fakedb.Change(changeid=23, author="dustin", comments="fix whitespace",
-                      is_dir=0, branch="warnerdb", revision="deadbeef",
+                      branch="warnerdb", revision="deadbeef",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
                       project='Buildbot'),
@@ -40,9 +43,9 @@ class Change(unittest.TestCase):
     ]
 
     def setUp(self):
+        self.master = fakemaster.make_master(testcase=self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
-            isdir=0,
             repository=u'git://warner',
             codebase=u'mainapp',
             who=u'dustin',
@@ -55,6 +58,36 @@ class Change(unittest.TestCase):
             files=[u'master/README.txt', u'slave/README.txt'],
             revision=u'deadbeef'))
         self.change23.number = 23
+
+    @defer.inlineCallbacks
+    def test_fromChdict(self):
+        # get a real honest-to-goodness chdict from the fake db
+        yield self.master.db.insertTestData(self.change23_rows)
+        chdict = yield self.master.db.changes.getChange(23)
+
+        exp = self.change23
+        got = yield changes.Change.fromChdict(self.master, chdict)
+
+        # compare
+        ok = True
+        ok = ok and got.number == exp.number
+        ok = ok and got.who == exp.who
+        ok = ok and sorted(got.files) == sorted(exp.files)
+        ok = ok and got.comments == exp.comments
+        ok = ok and got.revision == exp.revision
+        ok = ok and got.when == exp.when
+        ok = ok and got.branch == exp.branch
+        ok = ok and got.category == exp.category
+        ok = ok and got.revlink == exp.revlink
+        ok = ok and got.properties == exp.properties
+        ok = ok and got.repository == exp.repository
+        ok = ok and got.codebase == exp.codebase
+        ok = ok and got.project == exp.project
+        if not ok:
+            def printable(c):
+                return pprint.pformat(c.__dict__)
+            self.fail("changes do not match; expected\n%s\ngot\n%s" %
+                      (printable(exp), printable(got)))
 
     def test_str(self):
         string = str(self.change23)

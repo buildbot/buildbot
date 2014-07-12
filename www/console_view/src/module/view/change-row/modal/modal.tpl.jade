@@ -1,0 +1,6 @@
+// Show build summary for the selected build in a modal window
+.modal-header
+    i.fa.fa-times.pull-right(ng-click='modal.close()')
+    h4.modal-title Build summary
+.modal-body
+    buildsummary(ng-if='modal.selectedBuild' buildid='modal.selectedBuild.buildid')

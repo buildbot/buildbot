@@ -18,11 +18,15 @@ import time
 from datetime import datetime
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client
 
 from buildbot.changes import base
+from buildbot.util import ascii2unicode
+from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
+from buildbot.util import epoch2datetime
 from buildbot.util import json
 
 
@@ -61,7 +65,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.lastPoll = time.time()
         self.useTimestamps = useTimestamps
         self.category = category
-        self.project = project
+        self.project = ascii2unicode(project)
         self.initLock = defer.DeferredLock()
 
     def describe(self):
@@ -116,7 +120,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                             pr['updated_on'].split('.')[0],
                             '%Y-%m-%dT%H:%M:%S')
                     else:
-                        updated = datetime.now()
+                        updated = epoch2datetime(reactor.seconds())
                     title = pr['title']
                     # parse commit api page
                     page = yield client.getPage(str(pr['source']['commit']['links']['self']['href']))
@@ -132,17 +136,17 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     # update database
                     yield self._setCurrentRev(nr, revision)
                     # emit the change
-                    yield self.master.addChange(
+                    yield self.master.data.updates.addChange(
                         author=author,
                         revision=revision,
                         revlink=revlink,
                         comments='pull-request #%d: %s\n%s' % (nr, title, prlink),
-                        when_timestamp=updated,
+                        when_timestamp=datetime2epoch(updated),
                         branch=self.branch,
                         category=self.category,
                         project=self.project,
                         repository=repo,
-                        src='pull-request #%d' % nr,
+                        src=u'bitbucket',
                     )
 
     def _processChangesFailure(self, f):

@@ -15,14 +15,13 @@
 
 from __future__ import with_statement
 
-import cPickle
 import os
 import shutil
 
 from buildbot.test.util import db
+from buildbot.util import pickle
 
 from buildbot.changes.changes import Change
-from buildbot.changes.changes import OldChangeMaster
 
 
 class ChangeImportMixin(db.RealDatabaseMixin):
@@ -42,12 +41,14 @@ class ChangeImportMixin(db.RealDatabaseMixin):
 
     def make_pickle(self, *changes, **kwargs):
         recode_fn = kwargs.pop('recode_fn', None)
-        cm = OldChangeMaster()
+        # this uses the now-defunct ChangeMaster, which exists only in the
+        # buildbot.util.pickle module
+        cm = pickle.ChangeMaster()
         cm.changes = changes
         if recode_fn:
             recode_fn(cm)
         with open(self.changes_pickle, "wb") as f:
-            cPickle.dump(cm, f)
+            pickle.dump(cm, f)
 
     def make_change(self, **kwargs):
         return Change(**kwargs)

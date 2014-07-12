@@ -15,177 +15,162 @@
 
 from buildbot.db import sourcestamps
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
+from buildbot.test.util import interfaces
+from buildbot.test.util import validation
+from buildbot.util import epoch2datetime
+from twisted.internet import defer
+from twisted.internet import task
 from twisted.trial import unittest
 
+CREATED_AT = 927845299
 
-class TestSourceStampsConnectorComponent(
-    connector_component.ConnectorComponentMixin,
-        unittest.TestCase):
 
-    def setUp(self):
-        d = self.setUpConnectorComponent(
-            table_names=['changes', 'change_files', 'patches',
-                         'sourcestamp_changes', 'sourcestamps', 'sourcestampsets'])
+class Tests(interfaces.InterfaceTests):
 
-        def finish_setup(_):
-            self.db.sourcestamps = \
-                sourcestamps.SourceStampsConnectorComponent(self.db)
-        d.addCallback(finish_setup)
+    def test_signature_findSourceStampId(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.findSourceStampId)
+        def findSourceStampId(self, branch=None, revision=None,
+                              repository=None, project=None, codebase=None, patch_body=None,
+                              patch_level=None, patch_author=None, patch_comment=None,
+                              patch_subdir=None):
+            pass
 
-        return d
+    def test_signature_getSourceStamp(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStamp)
+        def getSourceStamp(self, key, no_cache=False):
+            pass
 
-    def tearDown(self):
-        return self.tearDownConnectorComponent()
+    def test_signature_getSourceStamps(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStamps)
+        def getSourceStamps(self):
+            pass
 
-    # tests
+    @defer.inlineCallbacks
+    def test_findSourceStampId_simple(self):
+        clock = task.Clock()
+        clock.advance(CREATED_AT)
+        ssid = yield self.db.sourcestamps.findSourceStampId(
+            branch=u'production', revision=u'abdef',
+            repository=u'test://repo', codebase=u'cb', project=u'stamper',
+            _reactor=clock)
+        ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
+        validation.verifyDbDict(self, 'ssdict', ssdict)
+        self.assertEqual(ssdict, {
+            'branch': u'production',
+            'codebase': u'cb',
+            'patchid': None,
+            'patch_author': None,
+            'patch_body': None,
+            'patch_comment': None,
+            'patch_level': None,
+            'patch_subdir': None,
+            'project': u'stamper',
+            'repository': u'test://repo',
+            'revision': u'abdef',
+            'ssid': ssid,
+            'created_at': epoch2datetime(CREATED_AT),
+        })
 
-    def test_addSourceStamp_simple(self):
-        # add a sourcestampset for referential integrity
-        d = self.insertTestData([
-            fakedb.SourceStampSet(id=1),
-        ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.addSourceStamp(branch='production', revision='abdef',
-                                                          repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1))
+    @defer.inlineCallbacks
+    def test_findSourceStampId_simple_unique(self):
+        ssid1 = yield self.db.sourcestamps.findSourceStampId(
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper')
+        ssid2 = yield self.db.sourcestamps.findSourceStampId(
+            branch='production', revision='xxxxx',  # different revision
+            repository='test://repo', codebase='cb', project='stamper')
+        ssid3 = yield self.db.sourcestamps.findSourceStampId(  # same as ssid1
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper')
+        self.assertEqual(ssid1, ssid3)
+        self.assertNotEqual(ssid1, ssid2)
 
-        def check(ssid):
-            def thd(conn):
-                # should see one sourcestamp row
-                ss_tbl = self.db.model.sourcestamps
-                r = conn.execute(ss_tbl.select())
-                rows = [(row.id, row.branch, row.revision,
-                         row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
-                        for row in r.fetchall()]
-                self.assertEqual(rows,
-                                 [(ssid, 'production', 'abdef', None, 'test://repo', 'cb', 'stamper', 1)])
+    @defer.inlineCallbacks
+    def test_findSourceStampId_simple_unique_patch(self):
+        ssid1 = yield self.db.sourcestamps.findSourceStampId(
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper',
+            patch_body='++ --', patch_level=1, patch_author='me',
+            patch_comment='hi', patch_subdir='.')
+        ssid2 = yield self.db.sourcestamps.findSourceStampId(
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper',
+            patch_body='++ --', patch_level=1, patch_author='me',
+            patch_comment='hi', patch_subdir='.')
+        # even with the same patch contents, we get different ids
+        self.assertNotEqual(ssid1, ssid2)
 
-                # .. and no sourcestamp_changes
-                ssc_tbl = self.db.model.sourcestamp_changes
-                r = conn.execute(ssc_tbl.select())
-                rows = [1 for row in r.fetchall()]
-                self.assertEqual(rows, [])
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
-
-    def test_addSourceStamp_changes(self):
-        # add some sample changes and a sourcestampset for referential integrity
-        d = self.insertTestData([
-            fakedb.SourceStampSet(id=1),
-            fakedb.Change(changeid=3),
-            fakedb.Change(changeid=4),
-        ])
-
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.addSourceStamp(branch='production', revision='abdef',
-                                                          repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1, changeids=[3, 4]))
-
-        def check(ssid):
-            def thd(conn):
-                # should see one sourcestamp row
-                ss_tbl = self.db.model.sourcestamps
-                r = conn.execute(ss_tbl.select())
-                rows = [(row.id, row.branch, row.revision,
-                         row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
-                        for row in r.fetchall()]
-                self.assertEqual(rows,
-                                 [(ssid, 'production', 'abdef', None, 'test://repo', 'cb', 'stamper', 1)])
-
-                # .. and two sourcestamp_changes
-                ssc_tbl = self.db.model.sourcestamp_changes
-                r = conn.execute(ssc_tbl.select())
-                rows = [(row.sourcestampid, row.changeid) for row in r.fetchall()]
-                self.assertEqual(sorted(rows), [(ssid, 3), (ssid, 4)])
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
-
-    def test_addSourceStamp_patch(self):
-        # add a sourcestampset for referential integrity
-        d = self.insertTestData([
-            fakedb.SourceStampSet(id=1),
-        ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.addSourceStamp(branch='production', revision='abdef',
-                                                          repository='test://repo', codebase='cb', project='stamper', sourcestampsetid=1, patch_body='my patch', patch_level=3,
-                                                          patch_subdir='master/', patch_author='me',
-                                                          patch_comment="comment"))
-
-        def check(ssid):
-            def thd(conn):
-                # should see one sourcestamp row
-                ss_tbl = self.db.model.sourcestamps
-                r = conn.execute(ss_tbl.select())
-                rows = [(row.id, row.branch, row.revision,
-                         row.patchid, row.repository, row.codebase, row.project, row.sourcestampsetid)
-                        for row in r.fetchall()]
-                patchid = row.patchid
-                self.assertNotEqual(patchid, None)
-                self.assertEqual(rows,
-                                 [(ssid, 'production', 'abdef', patchid, 'test://repo', 'cb',
-                                   'stamper', 1)])
-
-                # .. and a single patch
-                patches_tbl = self.db.model.patches
-                r = conn.execute(patches_tbl.select())
-                rows = [(row.id, row.patchlevel, row.patch_base64, row.subdir,
-                         row.patch_author, row.patch_comment)
-                        for row in r.fetchall()]
-                self.assertEqual(rows, [(patchid, 3, 'bXkgcGF0Y2g=', 'master/',
-                                         'me', 'comment')])
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
+    @defer.inlineCallbacks
+    def test_findSourceStampId_patch(self):
+        clock = task.Clock()
+        clock.advance(CREATED_AT)
+        ssid = yield self.db.sourcestamps.findSourceStampId(
+            branch=u'production', revision=u'abdef',
+            repository=u'test://repo', codebase=u'cb', project=u'stamper',
+            patch_body='my patch', patch_level=3, patch_subdir=u'master/',
+            patch_author=u'me', patch_comment=u"comment", _reactor=clock)
+        ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
+        validation.verifyDbDict(self, 'ssdict', ssdict)
+        self.assertEqual(ssdict, {
+            'branch': u'production',
+            'codebase': u'cb',
+            'patchid': 1,
+            'patch_author': 'me',
+            'patch_body': 'my patch',
+            'patch_comment': 'comment',
+            'patch_level': 3,
+            'patch_subdir': 'master/',
+            'project': u'stamper',
+            'repository': u'test://repo',
+            'revision': u'abdef',
+            'created_at': epoch2datetime(CREATED_AT),
+            'ssid': ssid,
+        })
 
     def test_getSourceStamp_simple(self):
         d = self.insertTestData([
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch='br', revision='rv', repository='rep', codebase='cb', project='prj'),
+            fakedb.SourceStamp(id=234, branch='br', revision='rv',
+                               repository='rep', codebase='cb', project='prj',
+                               created_at=CREATED_AT),
         ])
         d.addCallback(lambda _:
                       self.db.sourcestamps.getSourceStamp(234))
 
         def check(ssdict):
-            self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv',
-                                          sourcestampsetid=234, repository='rep', codebase='cb',
-                                          project='prj', patch_body=None,
-                                          patch_level=None, patch_subdir=None,
-                                          patch_author=None, patch_comment=None, changeids=set([])))
+            validation.verifyDbDict(self, 'ssdict', ssdict)
+            self.assertEqual(ssdict, {
+                'ssid': 234,
+                'created_at': epoch2datetime(CREATED_AT),
+                'branch': 'br',
+                'revision': 'rv',
+                'repository': 'rep',
+                'codebase': 'cb',
+                'project': 'prj',
+                'patchid': None,
+                'patch_body': None,
+                'patch_level': None,
+                'patch_subdir': None,
+                'patch_author': None,
+                'patch_comment': None,
+            })
         d.addCallback(check)
         return d
 
     def test_getSourceStamp_simple_None(self):
         "check that NULL branch and revision are handled correctly"
         d = self.insertTestData([
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, branch=None, revision=None,
+            fakedb.SourceStamp(id=234, branch=None, revision=None,
                                repository='rep', codebase='cb', project='prj'),
         ])
         d.addCallback(lambda _:
                       self.db.sourcestamps.getSourceStamp(234))
 
         def check(ssdict):
+            validation.verifyDbDict(self, 'ssdict', ssdict)
             self.assertEqual((ssdict['branch'], ssdict['revision']),
                              (None, None))
-        d.addCallback(check)
-        return d
-
-    def test_getSourceStamp_changes(self):
-        d = self.insertTestData([
-            fakedb.Change(changeid=16),
-            fakedb.Change(changeid=19),
-            fakedb.Change(changeid=20),
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=16),
-            fakedb.SourceStampChange(sourcestampid=234, changeid=20),
-        ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStamp(234))
-
-        def check(ssdict):
-            self.assertEqual(ssdict['changeids'], set([16, 20]))
         d.addCallback(check)
         return d
 
@@ -194,13 +179,13 @@ class TestSourceStampsConnectorComponent(
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
-            fakedb.SourceStampSet(id=234),
-            fakedb.SourceStamp(id=234, sourcestampsetid=234, patchid=99),
+            fakedb.SourceStamp(id=234, patchid=99),
         ])
         d.addCallback(lambda _:
                       self.db.sourcestamps.getSourceStamp(234))
 
         def check(ssdict):
+            validation.verifyDbDict(self, 'ssdict', ssdict)
             self.assertEqual(dict((k, v) for k, v in ssdict.iteritems()
                                   if k.startswith('patch_')),
                              dict(patch_body='hello, world',
@@ -218,3 +203,92 @@ class TestSourceStampsConnectorComponent(
             self.assertEqual(ssdict, None)
         d.addCallback(check)
         return d
+
+    def test_getSourceStamps(self):
+        d = self.insertTestData([
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+                         patch_author='bar', patch_comment='foo', subdir='/foo',
+                         patchlevel=3),
+            fakedb.SourceStamp(id=234, revision='r', project='p',
+                               codebase='c', repository='rep', branch='b', patchid=99,
+                               created_at=CREATED_AT),
+            fakedb.SourceStamp(id=235, revision='r2', project='p2',
+                               codebase='c2', repository='rep2', branch='b2', patchid=None,
+                               created_at=CREATED_AT + 10),
+        ])
+        d.addCallback(lambda _:
+                      self.db.sourcestamps.getSourceStamps())
+
+        @d.addCallback
+        def check(sourcestamps):
+            self.assertEqual(sorted(sourcestamps), sorted([{
+                'branch': u'b',
+                'codebase': u'c',
+                'patch_author': u'bar',
+                'patchid': 99,
+                'patch_body': 'hello, world',
+                'patch_comment': u'foo',
+                'patch_level': 3,
+                'patch_subdir': u'/foo',
+                'project': u'p',
+                'repository': u'rep',
+                'revision': u'r',
+                'created_at': epoch2datetime(CREATED_AT),
+                'ssid': 234,
+            }, {
+                'branch': u'b2',
+                'codebase': u'c2',
+                'patchid': None,
+                'patch_author': None,
+                'patch_body': None,
+                'patch_comment': None,
+                'patch_level': None,
+                'patch_subdir': None,
+                'project': u'p2',
+                'repository': u'rep2',
+                'revision': u'r2',
+                'created_at': epoch2datetime(CREATED_AT + 10),
+                'ssid': 235,
+            }]))
+        return d
+
+    def test_getSourceStamps_empty(self):
+        d = self.db.sourcestamps.getSourceStamps()
+
+        @d.addCallback
+        def check(sourcestamps):
+            self.assertEqual(sourcestamps, [])
+        return d
+
+
+class RealTests(Tests):
+
+    pass
+
+
+class TestFakeDB(unittest.TestCase, Tests):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.db = self.master.db
+        self.db.checkForeignKeys = True
+        self.insertTestData = self.db.insertTestData
+
+
+class TestRealDB(unittest.TestCase,
+                 connector_component.ConnectorComponentMixin,
+                 RealTests):
+
+    def setUp(self):
+        d = self.setUpConnectorComponent(
+            table_names=['sourcestamps', 'patches'])
+
+        def finish_setup(_):
+            self.db.sourcestamps = \
+                sourcestamps.SourceStampsConnectorComponent(self.db)
+        d.addCallback(finish_setup)
+
+        return d
+
+    def tearDown(self):
+        return self.tearDownConnectorComponent()

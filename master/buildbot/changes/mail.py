@@ -67,7 +67,8 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.addChange(src=src, **chdict)
+                return self.master.data.updates.addChange(src=unicode(src),
+                                                          **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
         d.addCallback(add_change)
@@ -102,6 +103,7 @@ class CVSMaildirSource(MaildirSource):
             author = addr  # might still be useful
         else:
             author = addr[:at]
+        author = util.ascii2unicode(author)
 
         # CVS accepts RFC822 dates. buildbot-cvs-mail adds the date as
         # part of the mail header, so use that.

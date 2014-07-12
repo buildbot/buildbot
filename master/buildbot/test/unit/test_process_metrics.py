@@ -28,7 +28,6 @@ class TestMetricBase(unittest.TestCase):
         self.clock = task.Clock()
         self.observer = metrics.MetricLogObserver()
         self.observer.parent = self.master = fakemaster.make_master()
-        self.master.config.db['db_poll_interval'] = 60
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
         self.observer._reactor = self.clock
         self.observer.startService()

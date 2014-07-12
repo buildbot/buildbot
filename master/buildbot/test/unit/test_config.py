@@ -34,7 +34,7 @@ from buildbot.status import base as status_base
 from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -49,21 +49,25 @@ global_defaults = dict(
     buildHorizon=None,
     logCompressionLimit=4096,
     logCompressionMethod='bz2',
+    logEncoding='utf-8',
     logMaxTailSize=None,
     logMaxSize=None,
     properties=properties.Properties(),
     mergeRequests=None,
     prioritizeBuilders=None,
     protocols={},
-    slavePortnum=None,
     multiMaster=False,
-    debugPassword=None,
     manhole=None,
+    www=dict(port=None, url='http://localhost:8080/', plugins={},
+             auth={'name': 'NoAuth'},
+             avatar_methods={'name': 'gravatar'}),
 )
 
 
 class FakeChangeSource(changes_base.ChangeSource):
-    pass
+
+    def __init__(self):
+        changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
 
 
 class FakeStatusReceiver(status_base.StatusReceiver):
@@ -171,8 +175,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected = dict(
             # validation,
             db=dict(
-                db_url='sqlite:///state.sqlite',
-                db_poll_interval=None),
+                db_url='sqlite:///state.sqlite'),
+            mq=dict(type='simple'),
             metrics=None,
             caches=dict(Changes=10, Builds=15),
             schedulers={},
@@ -187,6 +191,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(cfg, attr))
             for attr, exp in expected.iteritems()])
+        got = interfaces.IConfigured(got).getConfigDict()
+        expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
 
     def test_defaults_validation(self):
@@ -345,6 +351,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         got = dict([
             (attr, getattr(self.cfg, attr))
             for attr, exp in expected.iteritems()])
+        got = interfaces.IConfigured(got).getConfigDict()
+        expected = interfaces.IConfigured(expected).getConfigDict()
+
         self.assertEqual(got, expected)
 
     # tests
@@ -448,6 +457,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_logMaxTailSize(self):
         self.do_test_load_global(dict(logMaxTailSize=123), logMaxTailSize=123)
 
+    def test_load_global_logEncoding(self):
+        self.do_test_load_global(
+            dict(logEncoding='latin-2'), logEncoding='latin-2')
+
     def test_load_global_properties(self):
         exp = properties.Properties()
         exp.setProperty('x', 10, self.filename)
@@ -498,10 +511,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_multiMaster(self):
         self.do_test_load_global(dict(multiMaster=1), multiMaster=1)
 
-    def test_load_global_debugPassword(self):
-        self.do_test_load_global(dict(debugPassword='xyz'),
-                                 debugPassword='xyz')
-
     def test_load_global_manhole(self):
         mh = mock.Mock(name='manhole')
         self.do_test_load_global(dict(manhole=mh), manhole=mh)
@@ -543,31 +552,46 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_db_defaults(self):
         self.cfg.load_db(self.filename, {})
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=None))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_db_url(self):
         self.cfg.load_db(self.filename, dict(db_url='abcd'))
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=None))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_db_poll_interval(self):
+        # value is ignored, but no error
         self.cfg.load_db(self.filename, dict(db_poll_interval=2))
         self.assertResults(
-            db=dict(db_url='sqlite:///state.sqlite', db_poll_interval=2))
+            db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_dict(self):
+        # db_poll_interval value is ignored, but no error
         self.cfg.load_db(self.filename,
                          dict(db=dict(db_url='abcd', db_poll_interval=10)))
-        self.assertResults(db=dict(db_url='abcd', db_poll_interval=10))
+        self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
         self.cfg.load_db(self.filename,
                          dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
         self.assertConfigError(self.errors, "unrecognized keys in")
 
-    def test_load_db_not_int(self):
-        self.cfg.load_db(self.filename,
-                         dict(db=dict(db_url='abcd', db_poll_interval='ten')))
-        self.assertConfigError(self.errors, "must be an int")
+    def test_load_mq_defaults(self):
+        self.cfg.load_mq(self.filename, {})
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_explicit_type(self):
+        self.cfg.load_mq(self.filename,
+                         dict(mq=dict(type='simple')))
+        self.assertResults(mq=dict(type='simple'))
+
+    def test_load_mq_unk_type(self):
+        self.cfg.load_mq(self.filename, dict(mq=dict(type='foo')))
+        self.assertConfigError(self.errors, "mq type 'foo' is not known")
+
+    def test_load_mq_unk_keys(self):
+        self.cfg.load_mq(self.filename,
+                         dict(mq=dict(bar='bar')))
+        self.assertConfigError(self.errors, "unrecognized keys in")
 
     def test_load_metrics_defaults(self):
         self.cfg.load_metrics(self.filename, {})
@@ -773,6 +797,50 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     dict(user_managers=[um]))
         self.assertResults(user_managers=[um])
 
+    def test_load_www_default(self):
+        self.cfg.load_www(self.filename, {})
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                                    plugins={}, auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'}))
+
+    def test_load_www_port(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(port=9888)))
+        self.assertResults(www=dict(port=9888, url='http://localhost:9888/',
+                                    plugins={}, auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'}))
+
+    def test_load_www_plugin(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(plugins={'waterfall': {'foo': 'bar'}})))
+        self.assertResults(www=dict(port=None, url='http://localhost:8080/',
+                                    plugins={'waterfall': {'foo': 'bar'}},
+                                    auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'}))
+
+    def test_load_www_url_no_slash(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(url='http://foo', port=20)))
+        self.assertResults(www=dict(port=20, url='http://foo/',
+                                    plugins={}, auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'}))
+
+    def test_load_www_allowed_origins(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(url='http://foo',
+                                        allowed_origins=['a', 'b'])))
+        self.assertResults(www=dict(port=None, url='http://foo/',
+                                    allowed_origins=['a', 'b'],
+                                    plugins={}, auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'}
+                                    ))
+
+    def test_load_www_unknown(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(foo="bar")))
+        self.assertConfigError(self.errors,
+                               "unknown www configuration parameter(s) foo")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
@@ -976,11 +1044,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertConfigError(self.errors, "logHorizon must be less")
 
-    def test_check_ports_slavePortnum_set(self):
-        self.cfg.slavePortnum = 10
-        self.cfg.check_ports()
-        self.assertNoConfigErrors(self.errors)
-
     def test_check_ports_protocols_set(self):
         self.cfg.protocols = {"pb": {"port": 10}}
         self.cfg.check_ports()
@@ -991,12 +1054,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "slaves are configured, but c['protocols'] not")
-
-    def test_check_ports_protocols_not_set_debug(self):
-        self.cfg.debugPassword = 'ssh'
-        self.cfg.check_ports()
-        self.assertConfigError(self.errors,
-                               "debug client is configured, but c['protocols'] not")
 
     def test_check_ports_protocols_port_duplication(self):
         self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
@@ -1029,6 +1086,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertRaisesConfigError(
             "builder names must not start with an underscore: '_a'",
             lambda: config.BuilderConfig(name='_a',
+                                         factory=self.factory, slavenames=['a']))
+
+    def test_utf8_name(self):
+        self.assertRaisesConfigError(
+            "builder names must be unicode or ASCII",
+            lambda: config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
                                          factory=self.factory, slavenames=['a']))
 
     def test_no_factory(self):
@@ -1067,6 +1130,25 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda: config.BuilderConfig(category=13,
                                          name='a', slavenames=['a'], factory=self.factory))
 
+    def test_tags_must_be_list(self):
+        self.assertRaisesConfigError(
+            "tags must be a list",
+            lambda: config.BuilderConfig(tags='abc',
+                                         name='a', slavenames=['a'], factory=self.factory))
+
+    def test_tags_must_be_list_of_str(self):
+        self.assertRaisesConfigError(
+            "tags list contains something that is not a string",
+            lambda: config.BuilderConfig(tags=['abc', 13],
+                                         name='a', slavenames=['a'], factory=self.factory))
+
+    def test_tags_no_categories_too(self):
+        self.assertRaisesConfigError(
+            "categories are deprecated and replaced by tags; you should only specify tags",
+            lambda: config.BuilderConfig(tags=['abc'],
+                                         category='def',
+                                         name='a', slavenames=['a'], factory=self.factory))
+
     def test_inv_nextSlave(self):
         self.assertRaisesConfigError(
             "nextSlave must be a callable",
@@ -1100,13 +1182,20 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               slavenames=['a'],
                               builddir='a_b_c',
                               slavebuilddir='a_b_c',
-                              category='',
+                              tags=None,
                               nextSlave=None,
                               locks=[],
                               env={},
                               properties={},
                               mergeRequests=None,
                               description=None)
+
+    def test_unicode_name(self):
+        cfg = config.BuilderConfig(
+            name=u'a \N{SNOWMAN} c', slavename='a', factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg,
+                              name=u'a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(
@@ -1121,7 +1210,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               slavenames=['s2', 's1'],
                               builddir='bd',
                               slavebuilddir='sbd',
-                              category='c',
+                              tags=['c'],
                               locks=['l'],
                               env={'x': 10},
                               properties={'y': 20},
@@ -1133,12 +1222,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
             name='b', slavename='s1', slavenames='s2', builddir='bd',
-            slavebuilddir='sbd', factory=self.factory, category='c',
+            slavebuilddir='sbd', factory=self.factory, tags=['c'],
             nextSlave=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
             description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
-                                               'category': 'c',
+                                               'tags': ['c'],
                                                'description': 'buzz',
                                                'env': {'x': 10},
                                                'factory': self.factory,
@@ -1166,7 +1255,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
 
 class FakeService(config.ReconfigurableServiceMixin,
-                  service.Service):
+                  service.AsyncService):
 
     succeed = True
     call_index = 1
@@ -1183,7 +1272,7 @@ class FakeService(config.ReconfigurableServiceMixin,
 
 
 class FakeMultiService(config.ReconfigurableServiceMixin,
-                       service.MultiService):
+                       service.AsyncMultiService):
 
     def reconfigService(self, new_config):
         self.called = True

@@ -1,0 +1,19 @@
+.container
+  .row
+    ul.breadcrumb
+      li
+        a(href:"#/builders") Builders
+  .row
+    table.table.table-hover.table-striped.table-condensed
+      tr
+          td Builder Name
+          td Builds
+        tr(ng-repeat='builder in builders')
+          td(style="width:200px")
+            a(href='#/builders/{{ builder.builderid }}')
+              | {{ builder.name }}
+          td
+            span(data-ng-repeat="build in builder.builds")
+                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.number}}")
+                    span.badge-status(ng-class="results2class(build, 'pulse')")
+                      | {{ build.number }}

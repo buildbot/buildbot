@@ -22,8 +22,12 @@ import warnings
 
 from buildbot import interfaces
 from buildbot import locks
+from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
+from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
+from buildbot.www import auth
+from buildbot.www import avatar
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
@@ -54,7 +58,12 @@ def error(error):
         raise ConfigErrors([error])
 
 
-class MasterConfig(object):
+def warnDeprecated(version, msg):
+    # for now just log the deprecation
+    log.msg("NOTE: [%s and later] %s" % (version, msg))
+
+
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -71,15 +80,14 @@ class MasterConfig(object):
         self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
         self.logCompressionMethod = 'bz2'
-        self.logMaxTailSize = None
+        self.logEncoding = 'utf-8'
         self.logMaxSize = None
+        self.logMaxTailSize = None
         self.properties = properties.Properties()
         self.mergeRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
-        self.slavePortnum = None
         self.multiMaster = False
-        self.debugPassword = None
         self.manhole = None
         self.protocols = {}
 
@@ -91,7 +99,9 @@ class MasterConfig(object):
         )
         self.db = dict(
             db_url='sqlite:///state.sqlite',
-            db_poll_interval=None,
+        )
+        self.mq = dict(
+            type='simple',
         )
         self.metrics = None
         self.caches = dict(
@@ -105,17 +115,26 @@ class MasterConfig(object):
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
+        self.www = dict(
+            port=None,
+            url='http://localhost:8080/',
+            plugins=dict(),
+            auth=auth.NoAuth(),
+            avatar_methods=avatar.AvatarGravatar()
+        )
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url", "debugPassword", "eventHorizon",
-        "logCompressionLimit", "logCompressionMethod", "logHorizon",
-        "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
-        "multiMaster", "prioritizeBuilders", "projectName", "projectURL",
-        "properties", "protocols", "revlink", "schedulers", "slavePortnum",
-        "slaves", "status", "title", "titleURL", "user_managers", "validation"
+        'db', "db_poll_interval", "db_url", "eventHorizon",
+        "logCompressionLimit", "logCompressionMethod", "logEncoding",
+        "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
+        "mergeRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
+        "projectName", "projectURL", "properties", "protocols", "revlink",
+        "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
+        "user_managers", "validation", 'www'
     ])
+    compare_attrs = list(_known_config_keys)
 
     @classmethod
     def loadConfig(cls, basedir, filename):
@@ -196,6 +215,7 @@ class MasterConfig(object):
             config.load_global(filename, config_dict)
             config.load_validation(filename, config_dict)
             config.load_db(filename, config_dict)
+            config.load_mq(filename, config_dict)
             config.load_metrics(filename, config_dict)
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
@@ -204,6 +224,7 @@ class MasterConfig(object):
             config.load_change_sources(filename, config_dict)
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
+            config.load_www(filename, config_dict)
 
             # run some sanity checks
             config.check_single_master()
@@ -263,6 +284,7 @@ class MasterConfig(object):
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
+        copy_param('logEncoding')
 
         properties = config_dict.get('properties', {})
         if not isinstance(properties, dict):
@@ -320,7 +342,8 @@ class MasterConfig(object):
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
 
-        copy_str_param('debugPassword')
+        if 'debugPassword' in config_dict:
+            log.msg("the 'debugPassword' parameter is unused and can be removed from the configuration flie")
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
@@ -351,7 +374,7 @@ class MasterConfig(object):
     def load_db(self, filename, config_dict):
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) > set(['db_url', 'db_poll_interval']):
+            if set(db.keys()) - set(['db_url', 'db_poll_interval']):
                 error("unrecognized keys in c['db']")
             self.db.update(db)
         if 'db_url' in config_dict:
@@ -359,15 +382,30 @@ class MasterConfig(object):
         if 'db_poll_interval' in config_dict:
             self.db['db_poll_interval'] = config_dict["db_poll_interval"]
 
-        # we don't attempt to parse db URLs here - the engine strategy will do so
+        # we don't attempt to parse db URLs here - the engine strategy will do
+        # so.
 
-        # check the db_poll_interval
-        db_poll_interval = self.db['db_poll_interval']
-        if db_poll_interval is not None and \
-                not isinstance(db_poll_interval, int):
-            error("c['db_poll_interval'] must be an int")
-        else:
-            self.db['db_poll_interval'] = db_poll_interval
+        # db_poll_interval is deprecated
+        if 'db_poll_interval' in self.db:
+            warnDeprecated("0.8.7", "db_poll_interval is deprecated and will be ignored")
+            del self.db['db_poll_interval']
+
+    def load_mq(self, filename, config_dict):
+        from buildbot.mq import connector  # avoid circular imports
+        if 'mq' in config_dict:
+            self.mq.update(config_dict['mq'])
+
+        classes = connector.MQConnector.classes
+        typ = self.mq.get('type', 'simple')
+        if typ not in classes:
+            error("mq type '%s' is not known" % (typ,))
+            return
+
+        known_keys = classes[typ]['keys']
+        unk = set(self.mq.keys()) - known_keys - set(['type'])
+        if unk:
+            error("unrecognized keys in c['mq']: %s"
+                  % (', '.join(unk),))
 
     def load_metrics(self, filename, config_dict):
         # we don't try to validate metrics keys
@@ -525,6 +563,27 @@ class MasterConfig(object):
 
         self.user_managers = user_managers
 
+    def load_www(self, filename, config_dict):
+        if 'www' not in config_dict:
+            return
+        www_cfg = config_dict['www']
+        allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
+                       'rest_minimum_version', 'allowed_origins', 'jsonp',
+                       'plugins', 'auth', 'avatar_methods'])
+        unknown = set(www_cfg.iterkeys()) - allowed
+        if unknown:
+            error("unknown www configuration parameter(s) %s" %
+                  (', '.join(unknown),))
+
+        self.www.update(www_cfg)
+
+        # invent an appropriate URL given the port
+        if 'port' in www_cfg and 'url' not in www_cfg:
+            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
+
+        if not self.www['url'].endswith('/'):
+            self.www['url'] += '/'
+
     def check_single_master(self):
         # check additional problems that are only valid in a single-master
         # installation
@@ -629,14 +688,13 @@ class MasterConfig(object):
             return
         if self.slaves:
             error("slaves are configured, but c['protocols'] not")
-        if self.debugPassword:
-            error("debug client is configured, but c['protocols'] not")
 
 
-class BuilderConfig:
+class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, slavename=None, slavenames=None,
-                 builddir=None, slavebuilddir=None, factory=None, category=None,
+                 builddir=None, slavebuilddir=None, factory=None,
+                 tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, mergeRequests=None, description=None,
                  canStartBuild=None):
@@ -647,7 +705,10 @@ class BuilderConfig:
             name = '<unknown>'
         elif name[0] == '_':
             error("builder names must not start with an underscore: '%s'" % name)
-        self.name = name
+        try:
+            self.name = util.ascii2unicode(name)
+        except UnicodeDecodeError:
+            error("builder names must be unicode or ASCII")
 
         # factory is required
         if factory is None:
@@ -688,10 +749,25 @@ class BuilderConfig:
         self.slavebuilddir = slavebuilddir
 
         # remainder are optional
-        if category is not None and not isinstance(category, str):
-            error("builder '%s': category must be a string" % (name,))
 
-        self.category = category or ''
+        if category and tags:
+            error("builder '%s': builder categories are deprecated and "
+                  "replaced by tags; you should only specify tags" % (name,))
+        if category:
+            warnDeprecated("0.9", "builder '%s': builder categories are "
+                                  "deprecated and should be replaced with "
+                                  "'tags=[cat]'" % (name,))
+            if not isinstance(category, str):
+                error("builder '%s': category must be a string" % (name,))
+            tags = [category]
+        if tags:
+            if not isinstance(tags, list):
+                error("builder '%s': tags must be a list" % (name,))
+            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
+            if bad_tags:
+                error("builder '%s': tags list contains something that is not a string" % (name,))
+        self.tags = tags
+
         self.nextSlave = nextSlave
         if nextSlave and not callable(nextSlave):
             error('nextSlave must be a callable')
@@ -721,8 +797,8 @@ class BuilderConfig:
             'builddir': self.builddir,
             'slavebuilddir': self.slavebuilddir,
         }
-        if self.category:
-            rv['category'] = self.category
+        if self.tags:
+            rv['tags'] = self.tags
         if self.nextSlave:
             rv['nextSlave'] = self.nextSlave
         if self.nextBuild:

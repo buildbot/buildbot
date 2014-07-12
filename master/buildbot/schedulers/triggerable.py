@@ -18,6 +18,7 @@ from zope.interface import implements
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot.util import debounce
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -31,12 +32,15 @@ class Triggerable(base.BaseScheduler):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
         self._waiters = {}
-        self._bsc_subscription = None
-        self.reason = "The Triggerable scheduler named '%s' triggered this build" % name
+        self._buildset_complete_consumer = None
+        self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
 
-    def trigger(self, sourcestamps=None, set_props=None):
+    def trigger(self, waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         """Trigger this scheduler with the optional given list of sourcestamps
-        Returns a deferred that will fire when the buildset is finished."""
+        Returns two deferreds:
+            idsDeferred -- yields the ids of the buildset and buildrequest, as soon as they are available.
+            resultsDeferred -- yields the build result(s), when they finish."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
         props = Properties()
@@ -47,23 +51,38 @@ class Triggerable(base.BaseScheduler):
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
-        d = self.addBuildsetForSourceStampSetDetails(self.reason,
-                                                     sourcestamps, props)
+        idsDeferred = self.addBuildsetForSourceStampsWithDefaults(
+            self.reason,
+            sourcestamps, waited_for,
+            properties=props,
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship)
 
-        def setup_waiter(xxx_todo_changeme):
-            (bsid, brids) = xxx_todo_changeme
-            d = defer.Deferred()
-            self._waiters[bsid] = (d, brids)
+        resultsDeferred = defer.Deferred()
+
+        def setup_waiter(ids):
+            bsid, brids = ids
+            self._waiters[bsid] = (resultsDeferred, brids)
             self._updateWaiters()
-            return d
-        d.addCallback(setup_waiter)
-        return d
+            return ids
 
+        idsDeferred.addCallback(setup_waiter)
+        return idsDeferred, resultsDeferred
+
+    @defer.inlineCallbacks
+    def startService(self):
+        yield base.BaseScheduler.startService(self)
+        self._updateWaiters.start()
+
+    @defer.inlineCallbacks
     def stopService(self):
+        # finish any _updateWaiters calls
+        yield self._updateWaiters.stop()
+
         # cancel any outstanding subscription
-        if self._bsc_subscription:
-            self._bsc_subscription.unsubscribe()
-            self._bsc_subscription = None
+        if self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
         # and errback any outstanding deferreds
         if self._waiters:
@@ -72,25 +91,28 @@ class Triggerable(base.BaseScheduler):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
-        return base.BaseScheduler.stopService(self)
+        yield base.BaseScheduler.stopService(self)
 
+    @debounce.method(wait=0)
+    @defer.inlineCallbacks
     def _updateWaiters(self):
-        if self._waiters and not self._bsc_subscription:
-            self._bsc_subscription = \
-                self.master.subscribeToBuildsetCompletions(
-                    self._buildsetComplete)
-        elif not self._waiters and self._bsc_subscription:
-            self._bsc_subscription.unsubscribe()
-            self._bsc_subscription = None
+        if self._waiters and not self._buildset_complete_consumer:
+            startConsuming = self.master.mq.startConsuming
+            self._buildset_complete_consumer = yield startConsuming(
+                self._buildset_complete_cb,
+                ('buildsets', None, 'complete'))
+        elif not self._waiters and self._buildset_complete_consumer:
+            self._buildset_complete_consumer.stopConsuming()
+            self._buildset_complete_consumer = None
 
-    def _buildsetComplete(self, bsid, result):
-        if bsid not in self._waiters:
+    def _buildset_complete_cb(self, key, msg):
+        if msg['bsid'] not in self._waiters:
             return
 
-        # pop this bsid from the waiters list, and potentially unsubscribe
-        # from completion notifications
-        d, brids = self._waiters.pop(bsid)
+        # pop this bsid from the waiters list,
+        d, brids = self._waiters.pop(msg['bsid'])
+        # ..and potentially stop consuming buildset completion notifications
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
-        d.callback((result, brids))
+        d.callback((msg['results'], brids))

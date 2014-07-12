@@ -74,8 +74,10 @@ class DebounceTest(unittest.TestCase):
                 pass  # just check the expCalls
             elif e == 'start':
                 db.maybe.start()
-            elif e == 'stop':
+            elif e in ('stop', 'stop-and-called'):
                 db.stopDeferreds.append(db.maybe.stop())
+                if e == 'stop-and-called':
+                    db.expCalls += 1
             elif e == 'stopNotComplete':
                 self.assertFalse(db.stopDeferreds[-1].called)
             elif e == 'stopComplete':
@@ -170,12 +172,13 @@ class DebounceTest(unittest.TestCase):
 
     def test_stop_while_waiting(self):
         """If the debounced method is stopped while waiting, the waiting call
-        never occurs, stop returns immediately, and subsequent calls do
+        occurs immediately, stop returns immediately, and subsequent calls do
         nothing."""
         self.scenario([
             (1, 0.0, 'maybe'),
-            (1, 2.0, 'stop'),
-            (1, 2.0, 'stopComplete'),
+            (1, 2.0, 'stop-and-called'),
+            (1, 2.1, 'complete'),
+            (1, 2.1, 'stopComplete'),
             (1, 3.0, 'maybe'),
             (1, 8.0, 'check'),  # not called
         ])

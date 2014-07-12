@@ -1,0 +1,34 @@
+.change-row
+    .col-15
+        .name
+            i.fa.fa-chevron-circle-down(ng-click='cr.toggleInfo()' ng-class="{'fa-rotate-180': !cr.infoIsCollapsed}")
+            | {{ cr.change.changeid }}.
+            span(tooltip='{{ cr.change.comments }}' tooltip-placement='top')
+                a(ng-if='cr.change.email'
+                  ng-href='mailto: {{cr.change.email}}'
+                  target='_blank')
+                  |  {{ cr.change.author }}
+                span(ng-if='!cr.change.email')  {{ cr.change.author }}
+    .col-85
+        .builds
+            a.build(ng-repeat="build in cr.change.builds | orderBy:'builderid'"
+                    ng-style="{'width': cr.cellWidth}")
+                .badge-status(ng-if='build.buildid'
+                              ng-class="cr.results2class(build, 'pulse')"
+                              ng-click='cr.selectBuild(build)')
+                    | {{ build.number }}
+    .col.info-collapse(ng-hide='cr.infoIsCollapsed')
+        // Comment
+        .info
+            i.fa.fa-comment-o
+            p {{ cr.change.comments }}
+        // Link to the change
+        .info
+            i.fa.fa-link
+            p
+                a(ng-href='{{ cr.change.link }}' target='_blank') {{ cr.change.revision | limitTo: 10 }}
+        // Changed files
+        .info
+            i.fa.fa-file-o
+            p(ng-repeat='file in cr.change.files')
+                a(ng-href='{{ cr.createFileLink(file) }}' target='_blank') {{ file }}

@@ -9,15 +9,15 @@ to reconfigure such services, too - see :ref:`developer-reconfiguration`.
 Twisted arranges services into trees; the following section describes the
 service tree on a running master.
 
-Buildmaster Service Hierarchy
------------------------------
+BuildMaster Object
+------------------
 
 The hierarchy begins with the master, a :py:class:`buildbot.master.BuildMaster`
 instance.  Most other services contain a reference to this object in their
 ``master`` attribute, and in general the appropriate way to access other
 objects or services is to begin with ``self.master`` and navigate from there.
 
-The master has several child services:
+The master has a number of useful attributes:
 
 ``master.metrics``
     A :py:class:`buildbot.process.metrics.MetricLogObserver` instance that
@@ -31,6 +31,11 @@ The master has several child services:
     A :py:class:`buildbot.pbmanager.PBManager` instance that handles incoming
     PB connections, potentially on multiple ports, and dispatching those
     connections to appropriate components based on the supplied username.
+
+``master.buildslaves``
+    A :py:class:`buildbot.buildslave.manager.BuildslaveManager` instance that
+    provides wrapper around multiple master-slave protocols(e.g. PB) to unify
+    calls for them from higher level code 
 
 ``master.change_svc``
     A :py:class:`buildbot.changes.manager.ChangeManager` instance that manages
@@ -64,9 +69,13 @@ The master has several child services:
 
 ``master.debug``
     A :py:class:`buildbot.process.debug.DebugServices` instance that manages
-    debugging-related access -- the debug client and manhole.
+    debugging-related access -- the manhole, in particular.
 
 ``master.status``
     A :py:class:`buildbot.status.master.Status` instance that provides access
     to all status data.  This instance is also the service parent for all
     status listeners.
+
+``master.masterid``
+    This is the ID for this master, from the ``masters`` table.
+    It is used in the database and messages to uniquely identify this master.

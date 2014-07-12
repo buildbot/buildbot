@@ -547,8 +547,7 @@ described by a couple of simple attributes. These developers make
 changes to the source code, causing builds which may succeed or fail.
 
 Users also may have different levels of authorization when issuing Buildbot
-commands, such as forcing a build from the web interface or from an IRC channel
-(see :bb:status:`WebStatus` and :bb:status:`IRC`).
+commands, such as forcing a build from the web interface or from an IRC channel.
 
 Each developer is primarily known through the source control system. Each
 :class:`Change` object that arrives is tagged with a :attr:`who` field that
@@ -612,9 +611,6 @@ For managing users manually, use the ``buildbot user`` command, which allows
 you to add, remove, update, and show various attributes of users in the Buildbot
 database (see :ref:`Command-line-Tool`).
 
-To show all of the users in the database in a more pretty manner, use the users page in
-the :bb:Status:`WebStatus`.
-
 Uses
 ++++
 
@@ -626,11 +622,9 @@ One such use is being able to find email addresses based on a set of Builds
 to notify users through the ``MailNotifier``. This process is explained
 more clearly in :ref:`Email-Addresses`.
 
-Another way to utilize `User Objects` is through `UsersAuth` for web authentication
-(see :bb:status:`WebStatus`). To use `UsersAuth`, you need to
-set a `bb_username` and `bb_password` via the ``buildbot user`` command line tool
-to check against. The password will be encrypted before storing in the database
-along with other user attributes.
+Another way to utilize `User Objects` is through `UsersAuth` for web authentication.
+To use `UsersAuth`, you need to set a `bb_username` and `bb_password` via the ``buildbot user`` command line tool to check against.
+The password will be encrypted before storing in the database along with other user attributes.
 
 .. _Doing-Things-With-Users:
 
@@ -723,14 +717,6 @@ Hassler logic to send them an email message instead.
 
 These operations and authentication of commands issued by particular
 nicknames will be implemented in :ref:`User-Objects`.
-
-.. _Live-Status-Clients:
-
-Live Status Clients
-~~~~~~~~~~~~~~~~~~~
-
-The Buildbot also offers a desktop status client interface which can display
-real-time build status in a GUI panel on the developer's desktop.
 
 .. index:: Properties
 

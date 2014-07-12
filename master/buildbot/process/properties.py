@@ -98,8 +98,10 @@ class Properties(util.ComparableMixin):
         return l
 
     def asDict(self):
-        """Return the properties as a simple key:value dictionary"""
-        return dict(self.properties)
+        """Return the properties as a simple key:value dictionary,
+        properly unicoded"""
+        return dict((util.ascii2unicode(k), (v, util.ascii2unicode(s)))
+                    for k, (v, s) in self.properties.iteritems())
 
     def __repr__(self):
         return ('Properties(**' +
@@ -395,14 +397,6 @@ class _SourceStampDict(util.ComparableMixin, object):
             return {}
 
 
-class _SlaveInfoDict(util.ComparableMixin, object):
-    implements(IRenderable)
-
-    def getRenderingFor(self, build):
-        slave = build.getBuild().slavebuilder.slave
-        return slave.slave_status.getInfoAsDict()
-
-
 class _Lazy(util.ComparableMixin, object):
     implements(IRenderable)
 
@@ -481,17 +475,6 @@ class Interpolate(util.ComparableMixin, object):
             config.error("Attribute must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
         return _SourceStampDict(codebase), attr, repl
-
-    @staticmethod
-    def _parse_slave(arg):
-        try:
-            key, repl = arg.split(":", 1)
-        except ValueError:
-            key, repl = arg, None
-        if not Interpolate.identifier_re.match(key):
-            config.error("Keyword must be alphanumeric for slave-info Interpolation '%s'" % arg)
-            key = repl = None
-        return _SlaveInfoDict(), key, repl
 
     def _parse_kw(self, arg):
         try:
@@ -668,6 +651,11 @@ class FlattenList(util.ComparableMixin):
             return flatten(r, self.types)
         d.addCallback(flat)
         return d
+
+    def __add__(self, b):
+        if isinstance(b, FlattenList):
+            b = b.nestedlist
+        return FlattenList(self.nestedlist + b, self.types)
 
 
 class _Renderer(util.ComparableMixin, object):

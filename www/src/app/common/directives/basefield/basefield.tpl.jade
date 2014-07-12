@@ -1,0 +1,9 @@
+div
+    div.form-group(ng-class="{'has-warning': field.warnings,'has-error': field.errors}")
+        div(ng-transclude)
+        .popover.bottom.anim-popover(ng-if="field.errors", style="display:block;top:40px")
+            h5.popover-title
+                | {{field.label}}:
+            .popover-content
+                p {{field.errors}}
+            .arrow

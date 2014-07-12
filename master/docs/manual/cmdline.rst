@@ -75,6 +75,18 @@ This creates a new directory and populates it with files that allow it to be use
 You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
 This allows you to move the master directory without editing this file.
 
+.. bb:cmdline:: upgrade-master
+
+upgrade-master
+++++++++++++++
+
+.. code-block:: none
+
+    buildbot upgrade-master {BASEDIR}
+
+This upgrades a previously created buildmaster's base directory for a new version of buildbot master source code.
+This will copy the web server static files, and potencially upgrade the db.
+
 .. bb:cmdline:: start (buildbot)
 
 start
@@ -132,51 +144,6 @@ Developer Tools
 
 These tools are provided for use by the developers who are working on
 the code that the buildbot is monitoring.
-
-.. bb:cmdline:: statuslog
-
-statuslog
-+++++++++
-
-.. code-block:: none
-
-    buildbot statuslog --master {MASTERHOST}:{PORT}
-
-This command starts a simple text-based status client, one which just
-prints out a new line each time an event occurs on the buildmaster.
-
-The :option:`--master` option provides the location of the
-:class:`buildbot.status.client.PBListener` status port, used to deliver
-build information to realtime status clients. The option is always in
-the form of a string, with hostname and port number separated by a
-colon (:samp:`{HOSTNAME}:{PORTNUM}`). Note that this port is *not* the
-same as the slaveport (although a future version may allow the same
-port number to be used for both purposes). If you get an error message
-to the effect of ``Failure: twisted.cred.error.UnauthorizedLogin:``,
-this may indicate that you are connecting to the slaveport rather than
-a :class:`PBListener` port.
-
-The :option:`--master` option can also be provided by the
-``masterstatus`` name in :file:`.buildbot/options`
-(see :ref:`buildbot-config-directory`).
-
-.. bb:cmdline:: statusgui
-
-statusgui
-+++++++++
-
-If you have set up a :bb:status:`PBListener`, you will be able
-to monitor your Buildbot using a simple Gtk+ application invoked with
-the ``buildbot statusgui`` command:
-
-.. code-block:: none
-
-    buildbot statusgui --master {MASTERHOST}:{PORT}
-
-This command starts a simple Gtk+-based status client, which contains a few
-boxes for each Builder that change color as events occur. It uses the same
-``--master`` argument and ``masterstatus`` option as the
-``buildbot statuslog`` command (:bb:cmdline:`statuslog`).
 
 .. bb:cmdline:: try
 
@@ -600,68 +567,6 @@ arguments which can influence the ``Change`` that gets submitted:
     ``svn``, ``darcs``, ``hg``, ``bzr``, ``git``, ``mtn``, or ``p4``.
     Defaults to ``None``.
 
-.. bb:cmdline:: debugclient
-
-debugclient
-+++++++++++
-
-.. code-block:: none
-
-    buildbot debugclient --master {MASTERHOST}:{PORT} --passwd {DEBUGPW}
-
-This launches a small Gtk+/Glade-based debug tool, connecting to the
-buildmaster's ``debug port``. This debug port shares the same port
-number as the slaveport (see :ref:`Setting-the-PB-Port-for-Slaves`), but the
-``debugPort`` is only enabled if you set a debug password in the
-buildmaster's config file (see :ref:`Debug-Options`). The
-:option:`--passwd` option must match the ``c['debugPassword']``
-value.
-
-:option:`--master` can also be provided in :file:`.debug/options` by the
-``master`` key. :option:`--passwd` can be provided by the
-``debugPassword`` key.  See :ref:`buildbot-config-directory`.
-
-The :guilabel:`Connect` button must be pressed before any of the other
-buttons will be active. This establishes the connection to the
-buildmaster. The other sections of the tool are as follows:
-
-:guilabel:`Reload .cfg`
-    Forces the buildmaster to reload its :file:`master.cfg` file. This is
-    equivalent to sending a SIGHUP to the buildmaster, but can be done
-    remotely through the debug port. Note that it is a good idea to be
-    watching the buildmaster's :file:`twistd.log` as you reload the config
-    file, as any errors which are detected in the config file will be
-    announced there.
-
-:guilabel:`Rebuild .py`
-    (not yet implemented). The idea here is to use Twisted's ``rebuild``
-    facilities to replace the buildmaster's running code with a new
-    version. Even if this worked, it would only be used by buildbot
-    developers.
-
-:guilabel:`poke IRC`
-    This locates a :class:`words.IRC` status target and causes it to emit a
-    message on all the channels to which it is currently connected. This
-    was used to debug a problem in which the buildmaster lost the
-    connection to the IRC server and did not attempt to reconnect.
-
-:guilabel:`Commit`
-    This allows you to inject a :class:`Change`, just as if a real one had been
-    delivered by whatever VC hook you are using. You can set the name of
-    the committed file and the name of the user who is doing the commit.
-    Optionally, you can also set a revision for the change. If the
-    revision you provide looks like a number, it will be sent as an
-    integer, otherwise it will be sent as a string.
-
-:guilabel:`Force Build`
-    This lets you force a :class:`Builder` (selected by name) to start a build of
-    the current source tree.
-
-:guilabel:`Currently`
-    (obsolete). This was used to manually set the status of the given
-    :class:`Builder`, but the status-assignment code was changed in an incompatible
-    way and these buttons are no longer meaningful.
-
 .. bb:cmdline:: user
 
 user
@@ -813,29 +718,13 @@ following is a brief sample of what this file's contents could be.
     masterstatus = 'buildbot.example.org:12345'
     # for 'sendchange' or the debug port
     master = 'buildbot.example.org:18990'
-    debugPassword = 'eiv7Po'
 
 Note carefully that the names in the :file:`options` file usually do not match
 the command-line option name.
 
-``masterstatus``
-    Equivalent to :option:`--master` for :bb:cmdline:`statuslog` and :bb:cmdline:`statusgui`, this
-    gives the location of the :class:`client.PBListener` status port.
-
 ``master``
-    Equivalent to :option:`--master` for :bb:cmdline:`debugclient` and :bb:cmdline:`sendchange`.
-    This option is used for two purposes.  It is the location of the
-    ``debugPort`` for ``debugclient`` and the location of the
-    :class:`pb.PBChangeSource` for ```sendchange``.  Generally these are the
-    same port.
-
-``debugPassword``
-    Equivalent to :option:`--passwd` for :bb:cmdline:`debugclient`.
-
-    .. important::
-
-        This value must match the value of :bb:cfg:`debugPassword`, used to
-        protect the debug port, for the :bb:cmdline:`debugclient` command.
+    Equivalent to :option:`--master` for :bb:cmdline:`sendchange`.
+    It is the location of the :class:`pb.PBChangeSource` for ```sendchange``.
 
 ``username``
     Equivalent to :option:`--username` for the :bb:cmdline:`sendchange` command.

@@ -97,15 +97,20 @@ class TestGerritStatusPush(unittest.TestCase):
         gsp.master_status.getURLForThing = Mock()
         gsp.master_status.getURLForThing.return_value = self.THING_URL
 
-        gsp.master.db = fakedb.FakeDBConnector(self)
+        gsp.master.db = fakedb.FakeDBConnector(gsp.master, self)
 
-        fakedata = [fakedb.SourceStampSet(id=127), fakedb.Buildset(id=99, sourcestampsetid=127, results=finalResult, reason="testReason")]
+        fakedata = [
+            fakedb.Master(id=92),
+            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildset(id=99, results=finalResult, reason="testReason"),
+        ]
 
         breqid = 1000
         for (builder, build) in buildpairs:
             fakedata.append(fakedb.BuildRequest(id=breqid, buildsetid=99,
                                                 buildername=builder.name))
-            fakedata.append(fakedb.Build(number=0, brid=breqid))
+            fakedata.append(fakedb.Build(number=0, buildrequestid=breqid,
+                                         masterid=92, buildslaveid=13))
             breqid = breqid + 1
 
         gsp.master.db.insertTestData(fakedata)
@@ -113,7 +118,8 @@ class TestGerritStatusPush(unittest.TestCase):
         fakeSCR = Mock()
         gsp.sendCodeReview = fakeSCR
 
-        d = gsp._buildsetComplete(99, finalResult)
+        d = gsp._buildsetComplete('buildset.99.complete',
+                                  dict(bsid=99, result=SUCCESS))
 
         @d.addCallback
         def check(_):

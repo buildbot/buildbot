@@ -16,27 +16,28 @@
 import textwrap
 
 from buildbot import config
+from buildbot.db import builders
 from buildbot.db import buildrequests
 from buildbot.db import builds
 from buildbot.db import buildsets
 from buildbot.db import buildslaves
 from buildbot.db import changes
+from buildbot.db import changesources
 from buildbot.db import enginestrategy
+from buildbot.db import exceptions
+from buildbot.db import logs
+from buildbot.db import masters
 from buildbot.db import model
 from buildbot.db import pool
 from buildbot.db import schedulers
 from buildbot.db import sourcestamps
-from buildbot.db import sourcestampsets
 from buildbot.db import state
+from buildbot.db import steps
 from buildbot.db import users
+from buildbot.util import service
 from twisted.application import internet
-from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
-
-
-class DatabaseNotReadyError(Exception):
-    pass
 
 upgrade_message = textwrap.dedent("""\
 
@@ -50,7 +51,7 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
+class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -63,7 +64,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
     CLEANUP_PERIOD = 3600
 
     def __init__(self, master, basedir):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('db')
         self.master = master
         self.basedir = basedir
@@ -77,15 +78,19 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.pool = None  # set up in reconfigService
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
+        self.changesources = changesources.ChangeSourcesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
-        self.sourcestampsets = sourcestampsets.SourceStampSetsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.buildslaves = buildslaves.BuildslavesConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
+        self.masters = masters.MastersConnectorComponent(self)
+        self.builders = builders.BuildersConnectorComponent(self)
+        self.steps = steps.StepsConnectorComponent(self)
+        self.logs = logs.LogsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
@@ -109,7 +114,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
                 if not res:
                     for l in upgrade_message.split('\n'):
                         log.msg(l)
-                    raise DatabaseNotReadyError()
+                    raise exceptions.DatabaseNotReadyError()
             d.addCallback(check_current)
         else:
             d = defer.succeed(None)

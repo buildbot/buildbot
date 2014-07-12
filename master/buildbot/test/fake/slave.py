@@ -16,6 +16,7 @@
 import os
 
 from buildbot.process import properties
+from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
 
 
@@ -24,7 +25,12 @@ class FakeSlave(object):
 
     def __init__(self, master):
         self.master = master
+        self.conn = fakeprotocol.FakeConnection(master, self)
         self.properties = properties.Properties()
+        self.buildslaveid = 383
+
+    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
+        pass
 
     def acquireLocks(self):
         pass
@@ -32,14 +38,14 @@ class FakeSlave(object):
     def releaseLocks(self):
         pass
 
-    def attached(self, bot):
+    def attached(self, conn):
         self.slave_system = 'posix'
         self.path_module = os.path
         self.buildslaveid = 1234
         self.slave_basedir = '/sl'
         return defer.succeed(None)
 
-    def detached(self, mind):
+    def detached(self):
         pass
 
     def addSlaveBuilder(self, sb):
