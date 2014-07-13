@@ -50,7 +50,7 @@ class IPlugin(Interface):
     """
 
 
-class IChangeSource(Interface):
+class IChangeSource(IPlugin):
 
     """
     Service which feeds Change objects to the changemaster. When files or

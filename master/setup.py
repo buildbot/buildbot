@@ -78,6 +78,33 @@ class our_sdist(sdist):
         open(dst_fn, 'w').write(src)
 
 
+def define_plugin_entry(name, module_name):
+    """
+    helper to produce lines suitable for setup.py's entry_points
+    """
+    if isinstance(name, tuple):
+        entry, name = name
+    else:
+        entry = name
+    return '%s = %s:%s' % (entry, module_name, name)
+
+
+def define_plugin_entries(groups):
+    """
+    helper to all groups for plugins
+    """
+    result = dict()
+
+    for group, modules in groups:
+        tempo = []
+        for module_name, names in modules:
+            tempo.extend([define_plugin_entry(name, module_name)
+                          for name in names])
+        result[group] = tempo
+
+    return result
+
+
 long_description = """
 The BuildBot is a system to automate the compile/test cycle required by
 most software projects to validate code changes. By automatically
@@ -175,6 +202,22 @@ setup_args = {
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
+    'entry_points': define_plugin_entries([
+        ('buildbot.change_source', [
+            ('buildbot.changes.mail', [
+                'MaildirSource', 'CVSMaildirSource',
+                'SVNCommitEmailMaildirSource',
+                'BzrLaunchpadEmailMaildirSource']),
+            ('buildbot.changes.bitbucket', ['BitbucketPullrequestPoller']),
+            ('buildbot.changes.bonsaipoller', ['BonsaiPoller']),
+            ('buildbot.changes.gerritchangesource', ['GerritChangeSource']),
+            ('buildbot.changes.gitpoller', ['GitPoller']),
+            ('buildbot.changes.hgpoller', ['HgPoller']),
+            ('buildbot.changes.p4poller', ['P4Source']),
+            ('buildbot.changes.pb', ['PBChangeSource']),
+            ('buildbot.changes.svnpoller', ['SVNPoller'])
+        ])
+    ])
 }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
