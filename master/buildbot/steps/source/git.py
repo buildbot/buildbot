@@ -435,8 +435,6 @@ class Git(Source):
     def _checkoutSubmodule(self, _):
         if self.submodules:
             command = ['submodule', 'foreach', 'git', 'checkout', '-f']
-            if self.mode == 'full' and self.method == 'fresh':
-                command.append('-x')
             return self._dovccmd(command)
         else:
             return defer.succeed(0)
