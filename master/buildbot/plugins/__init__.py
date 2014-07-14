@@ -19,5 +19,7 @@ Buildbot plugin infrastructure
 
 from buildbot.plugins.db import get_plugins
 from buildbot.interfaces import IChangeSource
+from buildbot.interfaces import IScheduler
 
 changes = get_plugins('change_source', IChangeSource)
+schedulers = get_plugins('scheduler', IScheduler)

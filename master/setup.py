@@ -216,6 +216,16 @@ setup_args = {
             ('buildbot.changes.p4poller', ['P4Source']),
             ('buildbot.changes.pb', ['PBChangeSource']),
             ('buildbot.changes.svnpoller', ['SVNPoller'])
+        ]),
+        ('buildbot.scheduler', [
+            ('buildbot.schedulers.basic', [
+                'SingleBranchScheduler', 'AnyBranchScheduler', 'Triggerable']),
+            ('buildbot.schedulers.dependent', ['Dependent']),
+            ('buildbot.schedulers.forcesched', ['ForceScheduler']),
+            ('buildbot.schedulers.timed', [
+                'Periodic', 'Nightly', 'NightlyTriggerable']),
+            ('buildbot.schedulers.trysched', [
+                'Try_Jobdir', 'Try_Userpass'])
         ])
     ])
 }
