@@ -38,15 +38,15 @@
                   No logs
                 </div>
             {{/if}}                            
-             
-            {{#if s.hasDependency}}
+
+            {{#if s.hasURLs}}
                 <div class="logs-txt">
-                  {{#if s.hasZero}}
+                  {{#if s.hasDependency}}
                     Dependencies
                     {{else}}
                     Arifacts
                   {{/if}}
-                </div>              
+                </div>
                 <ul class="log-list log-list-js dependency-list">
                   {{#each s.urls }}
                       {{#if results includeZero=true}}
@@ -59,8 +59,7 @@
                       {{/if}}
                   {{/each}}
                 </ul>
-            {{/if}}
-              
+          {{/if}}
         </li>
     {{/stepStarted}}
 
