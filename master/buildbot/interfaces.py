@@ -1272,7 +1272,7 @@ class IProperties(Interface):
         """
 
 
-class IScheduler(Interface):
+class IScheduler(IPlugin):
     pass
 
 
