@@ -125,43 +125,58 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             el.attr('src', 'images/' + images[Math.floor(Math.random() * images.length)]);
 
         },
-        tooltip: function (el) {
+        tooltip: function (elements) {
+            $.each(elements, function (i, el) {
+                var $elem = $(el),
+                    $toolTipCont = $("<div/>").addClass("tooltip-cont"),
+                    clickEvent;
 
-            el.hover(function (e) {
-                var thisEl = $(this);
 
-                var toolTipCont = $('<div class="tooltip-cont" />');
-                this.t = this.title;
-                this.title = "";
-                var cursorPosTop = e.pageY + 20;
-                var cursorPosLeft = e.pageX + 5;
-                $(e.target).click(function () {
-                    toolTipCont.remove();
-                });
 
-                if (screenSize.isMediumScreen() || !thisEl.hasClass('responsive-tooltip')) {
-                    
-                    toolTipCont.html(this.t)
-                        .appendTo('body')
-                        .css({'top': cursorPosTop, 'left': cursorPosLeft})
-                        .fadeIn('fast');
-                } else if (thisEl.hasClass('responsive-tooltip')) {
+                $elem.hover(function (e) {
+                    var title,
+                        cursorPosTop = e.pageY + 20,
+                        cursorPosLeft = e.pageX + 5,
+                        clickHandler = function (event) {
+                            clickEvent = event;
+                            $toolTipCont.remove();
+                            $(e.target).unbind(event);
+                        };
 
-                    toolTipCont.html(this.t)
-                        .appendTo('body')
-                        .css({'top': cursorPosTop, 'right': 28 })
-                        .fadeIn('fast');
-                }
+                    if ($elem.attr("title") !== undefined) {
+                        $elem.attr("data-title", $elem.attr("title"));
+                        $elem.attr("title", undefined);
+                    }
+                    title = $elem.attr("data-title");
 
-            }, function () {
-                this.title = this.t;
-                var toolTipCont = $('.tooltip-cont');
-                toolTipCont.fadeOut('fast', function () {
-                    $(this).remove();
+                    $elem.bind("click", clickHandler);
+
+                    if (screenSize.isMediumScreen() || !$elem.hasClass('responsive-tooltip')) {
+                        $toolTipCont.html(title)
+                            .appendTo('body')
+                            .css({'top': cursorPosTop, 'left': cursorPosLeft})
+                            .fadeIn('fast');
+                    } else if ($elem.hasClass('responsive-tooltip')) {
+
+                        $toolTipCont.html(title)
+                            .appendTo('body')
+                            .css({'top': cursorPosTop, 'right': 28 })
+                            .fadeIn('fast');
+                    }
+
+                }, function () {
+                    if (clickEvent !== undefined) {
+                        $elem.unbind(clickEvent);
+                        clickEvent = undefined;
+                    }
+
+                    var toolTipCont = $('.tooltip-cont');
+                    toolTipCont.fadeOut('fast', function () {
+                        $(this).unbind();
+                        $(this).remove();
+                    });
                 });
             });
-
-
         },
         authorizeUser: function () {
             // Force a user to login
