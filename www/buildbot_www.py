@@ -27,6 +27,8 @@ class Application(object):
     def __init__(self):
         self.description = "Buildbot UI"
         # VERSION's location differs depending on whether we're installed
+        # XXX(sa2ajj): do we need to determine version here, since it's
+        # available through plugins API?
         for f in sibpath('VERSION'), sibpath('static', 'VERSION'):
             if os.path.exists(f):
                 self.version = open(f).read().strip()
