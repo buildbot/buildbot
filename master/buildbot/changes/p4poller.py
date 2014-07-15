@@ -18,7 +18,7 @@
 # Many thanks to Dave Peticolas for contributing this module
 
 import datetime
-import dateutil
+import dateutil.tz
 import exceptions
 import os
 import os.path
@@ -148,7 +148,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.project = util.ascii2unicode(project)
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
-        self.server_tz = server_tz
+        self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None
 
         self._ticket_passwd = None
         self._ticket_login_counter = 0
@@ -272,7 +272,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             if self.server_tz:
                 # Convert from the server's timezone to the local timezone.
                 when = when.replace(tzinfo=self.server_tz)
-                when = when.astimezone(dateutil.tz.tzlocal())
             when = util.datetime2epoch(when)
             comments = ''
             while not lines[0].startswith('Affected files'):

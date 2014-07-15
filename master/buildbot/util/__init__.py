@@ -16,6 +16,7 @@
 
 import calendar
 import datetime
+import dateutil.tz
 import locale
 import re
 import string
@@ -88,7 +89,8 @@ class ComparableMixin(object):
 
     def __hash__(self):
         compare_attrs = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
+        reflect.accumulateClassList(
+            self.__class__, 'compare_attrs', compare_attrs)
 
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in compare_attrs]
@@ -104,7 +106,8 @@ class ComparableMixin(object):
             return result
 
         compare_attrs = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
+        reflect.accumulateClassList(
+            self.__class__, 'compare_attrs', compare_attrs)
 
         self_list = [getattr(self, name, self._None)
                      for name in compare_attrs]
@@ -114,7 +117,8 @@ class ComparableMixin(object):
 
     def getConfigDict(self):
         compare_attrs = []
-        reflect.accumulateClassList(self.__class__, 'compare_attrs', compare_attrs)
+        reflect.accumulateClassList(
+            self.__class__, 'compare_attrs', compare_attrs)
         return dict([(k, getattr(self, k)) for k in compare_attrs
                      if hasattr(self, k) and k not in ("passwd", "password")])
 
@@ -182,20 +186,8 @@ NotABranch = NotABranch()
 
 # time-handling methods
 
-
-class UTC(datetime.tzinfo):
-
-    """Simple definition of UTC timezone"""
-
-    def utcoffset(self, dt):
-        return datetime.timedelta(0)
-
-    def dst(self, dt):
-        return datetime.timedelta(0)
-
-    def tzname(self):
-        return "UTC"
-UTC = UTC()
+# this used to be a custom class; now it's just an instance of dateutil's class
+UTC = dateutil.tz.tzutc()
 
 
 def epoch2datetime(epoch):
