@@ -160,6 +160,15 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
                     status = helpers.cssClassesEnum.RUNNING;
                 }
 
+                stepData.hasURLs = Object.keys(stepData.urls).length > 0;
+                $.each(stepData.urls, function (i, url) {
+                    if (url.url !== undefined) {
+                        stepData.hasDependency = true;
+                        return false;
+                    }
+                    return true;
+                });
+
                 var cssClass = helpers.getCssClassFromStatus(status);
                 var startTime = stepData.times[0];
                 var endTime = stepData.times[1];

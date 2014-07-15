@@ -201,6 +201,7 @@ class Git(Source):
         d = self._dovccmd(command)
         d.addCallback(self._doFetch)
         d.addCallback(self._updateSubmodule)
+        d.addCallback(self._checkoutSubmodule)
         d.addCallback(self._cleanSubmodule)
         return d
 
@@ -222,6 +223,7 @@ class Git(Source):
         d = self._dovccmd(command)
         d.addCallback(self._doFetch)
         d.addCallback(self._updateSubmodule)
+        d.addCallback(self._checkoutSubmodule)
         d.addCallback(self._cleanSubmodule)
         return d
 
@@ -427,6 +429,13 @@ class Git(Source):
     def _updateSubmodule(self, _):
         if self.submodules:
             return self._dovccmd(['submodule', 'update', '--init', '--recursive'])
+        else:
+            return defer.succeed(0)
+
+    def _checkoutSubmodule(self, _):
+        if self.submodules:
+            command = ['submodule', 'foreach', 'git', 'checkout', '-f']
+            return self._dovccmd(command)
         else:
             return defer.succeed(0)
 

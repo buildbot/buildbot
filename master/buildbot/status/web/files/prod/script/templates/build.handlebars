@@ -21,34 +21,45 @@
                 <span class="update-time-js">running</span>
             {{/s.isFinished}}
         </p>
-
+            
             {{#if s.logs.length}}
-                <div class="logs-txt">
-                    Logs
-                </div>
-            {{/if}}
-
-            <ul class="log-list log-list-js">
+              <div class="logs-txt">
+                  Logs
+              </div>
+                          
+              <ul class="log-list log-list-js dependency-list">
                 {{#each s.logs}}
-                        <li class="s-logs-js"><a href="{{this.[1]}}">{{this.[0]}}</a></li>
+                  <li class="s-logs-js"><a href="{{this.[1]}}">{{this.[0]}}</a></li>
                 {{/each}}
+              </ul>
+              
+              {{else}}
+                 <div class="logs-txt text-muted">
+                  No logs
+                </div>
+            {{/if}}                            
 
-              {{^s.logs}}
-                  <li><span>no logs</span></li>
-              {{/s.logs}}
-
-
-                {{#each s.urls }}
-                    {{#if results includeZero=true}}
-                        <li class="log-list-{{buildCSSClass this.results }} urls-mod"><a title="{{ this.results }}"
-                                                                     href="{{ this.url }}">{{ @key }}</a></li>
+            {{#if s.hasURLs}}
+                <div class="logs-txt">
+                  {{#if s.hasDependency}}
+                    Dependencies
                     {{else}}
-                        {{results}}
-                        <li class="artifact-js"><a target="_blank" href="{{ this }}">{{ @key }}</a></li>
-                    {{/if}}
-                {{/each}}
-
-            </ul>
+                    Arifacts
+                  {{/if}}
+                </div>
+                <ul class="log-list log-list-js dependency-list">
+                  {{#each s.urls }}
+                      {{#if results includeZero=true}}
+                          <li class="log-list-{{buildCSSClass this.results }} urls-mod clearfix">
+                            <a title="{{ this.results }}" href="{{ this.url }}"><span class="{{buildCSSClass this.results }}"></span>{{ @key }}</a>
+                          </li>
+                      {{else}}
+                          {{results}}
+                          <li class="artifact-js"><a target="_blank" href="{{ this }}">{{ @key }}</a></li>
+                      {{/if}}
+                  {{/each}}
+                </ul>
+          {{/if}}
         </li>
     {{/stepStarted}}
 
