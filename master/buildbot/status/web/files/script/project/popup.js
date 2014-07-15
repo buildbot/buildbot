@@ -10,8 +10,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
         $.fn.popup = function (options) {
             var $elem = $(this);
-            var opts = $.extend({}, $.fn.popup.defaults, options),
-                clickHandler;
+            var opts = $.extend({}, $.fn.popup.defaults, options);
             $elem.settings = opts;
 
             var privateFunc = {
@@ -52,21 +51,29 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 clear: function () {
                     if ($elem.attr("data-ui-popup") === "true") {
                         if (opts.destroyAfter) {
+                            helpers.clearChildEvents($elem);
+                            $elem.off();
                             $elem.remove();
+                            delete opts.title;
+                            delete opts.html;
+                            $elem = null;
                         } else {
                             $elem.empty();
                         }
                     }
                 },
                 showPopup: function () {
-                    if (opts.center) {
-                        setTimeout(function () {
-                            helpers.jCenter($elem);
-                            $(window).resize(function () {
+
+                    //Delay these things slightly so the DOM has time to update
+                    setTimeout(function () {
+                        privateFunc.initCloseButton();
+                        helpers.jCenter($elem);
+                        if (opts.center) {
+                            $(window).on("resize.popup", function () {
                                 helpers.jCenter($elem);
                             });
-                        }, 50);
-                    }
+                        }
+                    }, 1);
 
                     if (opts.animate) {
                         $elem.fadeIn(opts.showAnimation, function () {
@@ -74,12 +81,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                             opts.onShow($elem);
                         });
                     } else {
-                        $elem.show({
-                            complete: function () {
-                                opts.onShow($elem);
-                                privateFunc.initCloseButton();
-                            }
-                        });
+                        $elem.show();
+                        opts.onShow($elem);
                     }
                 },
                 hidePopup: function () {
@@ -94,23 +97,17 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         privateFunc.clear();
                         opts.onHide($elem);
                     }
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
+
+                    //Remove event handlers
+                    $(document).off("click.popup touchstart.popup");
+                    $(window).off("resize.popup");
                 },
                 initCloseButton: function () {
-                    //Hide when clicking document or close button clicked
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
-                    $(document).bind("click touchstart", function (e) {
+                    $(document).on("click.popup touchstart.popup", function (e) {
                         if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
                             if ($elem.is(":visible")) {
                                 privateFunc.hidePopup();
-                                $(this).unbind(e);
-                                clickHandler = e;
+                                $(this).unbind("click.popup touchstart.popup", e.callee);
                             }
                         }
                     });
@@ -322,6 +319,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                         }
                                     }
                                 });
+                            },
+                            onHide: function ($elem) {
+                                timeElements.clearTimeObjects($elem);
                             }
                         }));
                     }
@@ -366,7 +366,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     .done(function (html) {
                         // Create popup
                         var $popup = $("<div/>").popup({
-                            title: $('<h2 class="small-head" />').html(title),
+                            title: $('<h2 class="small-head" />').text(title),
                             html: html,
                             destroyAfter: true,
                             autoShow: false,
