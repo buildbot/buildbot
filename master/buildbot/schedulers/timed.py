@@ -22,18 +22,10 @@ from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
+from buildbot.util import croniter
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
-# Import croniter if available.
-# This is only required for Nightly schedulers,
-# so fail gracefully if it isn't present.
-try:
-    from buildbot.util import croniter
-except ImportError:
-    # Pyflakes doesn't like a redefinition here
-    # Instead, we check if croniter is defined when we need it
-    pass
 
 
 class Timed(base.BaseScheduler):

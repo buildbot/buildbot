@@ -51,6 +51,11 @@ But the devil is in the details:
  * If you want multiple masters, you'll need an external message broker of some sort.
    Messaging is based on `Kombu <http://kombu.readthedocs.org/>`_, and supports the backends that Kombu supports.
 
+Minor Python Packages
+.....................
+
+* Buildbot requires at least Twisted-11.0.0.
+
 Features
 ~~~~~~~~
 
@@ -104,6 +109,8 @@ Fixes
 
   More detailed information is available in :bb:status:`GerritStatusPush`
   section.
+
+* :bb:chsrc:`P4Poller`'s ``server_tz`` parameter now works correctly.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

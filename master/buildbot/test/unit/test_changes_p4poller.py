@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import datetime
+import dateutil.tz
 
 from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
@@ -343,6 +344,34 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'when_timestamp': datetime2epoch(when),
             }])
             self.assertEquals(self.changesource.last_change, 5)
+            self.assertAllCommandsRan()
+        d.addCallback(check)
+        return d
+
+    def test_server_tz(self):
+        """Verify that the server_tz parameter is handled correctly"""
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=get_simple_split,
+                     server_tz="Europe/Berlin"))
+        self.expectCommands(
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
+        )
+        self.add_p4_describe_result(5, p4change[5])
+
+        self.changesource.last_change = 50
+        d = self.changesource.poll()
+
+        def check(res):
+            # when_timestamp is converted from 21:55:39 Berlin time to UTC
+            when_berlin = self.makeTime("2006/04/13 21:55:39")
+            when_berlin = when_berlin.replace(tzinfo=dateutil.tz.gettz('Europe/Berlin'))
+            when = datetime2epoch(when_berlin)
+
+            self.assertEqual([ch['when_timestamp']
+                              for ch in self.master.data.updates.changesAdded],
+                             [when, when])
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d

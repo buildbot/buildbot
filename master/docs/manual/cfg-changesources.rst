@@ -618,8 +618,7 @@ depot for changes. It accepts the following arguments:
 
 ``server_tz``
     The timezone of the Perforce server, using the usual timezone format
-    (e.g: ``Europe/Stockholm``) in case it's in a different timezone than the
-    buildbot master.
+    (e.g: ``"Europe/Stockholm"``) in case it's not in UTC.
 
 ``use_tickets``
     Set to ``True`` to use ticket-based authentication, instead of passwords (but
