@@ -97,7 +97,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     them to the change master."""
 
     compare_attrs = ("p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollInterval", "pollAtLaunch")
+                     "p4bin", "pollInterval", "pollAtLaunch",
+                     "server_tz")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET", "PATH"]
