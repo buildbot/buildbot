@@ -243,7 +243,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         lastRev = self.lastRev.get(branch)
         self.lastRev[branch] = newRev
         if not lastRev:
-            return
+            masterRev = self.lastRev.get('refs/heads/master')
+            if masterRev:
+                mergeBaseArgs = [masterRev, newRev]
+                lastRev = yield self._dovccmd('merge-base', mergeBaseArgs, path=self.workdir)
+            else:
+                return
 
         # get the change list
         revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
