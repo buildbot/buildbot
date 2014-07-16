@@ -276,7 +276,10 @@ define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment',
         rtfGenericTableProcess: function ($table, data) {
             timeElements.clearTimeObjects($table);
             helpers.clearChildEvents($table);
-            $table.fnClearTable();
+            $table.fnClearTable(false);
+
+            //Clear up the table correctly
+            $table.find("tbody tr").remove();
 
             try {
                 $table.fnAddData(data);
