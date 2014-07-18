@@ -1147,7 +1147,7 @@ class ILogObserver(Interface):
         pass
 
 
-class IBuildSlave(Interface):
+class IBuildSlave(IPlugin):
     # this is a marker interface for the BuildSlave class
     pass
 
