@@ -13,8 +13,7 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
             var $elem = $(this),
                 $dropdown,
                 opts = $.extend({}, $.fn.dropdown.defaults, options),
-                isVisible = false,
-                clickHandler;
+                isVisible = false;
             $elem.settings = opts;
 
             var dropdownPrivate = {
@@ -65,12 +64,19 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                 showDropdown: function () {
                     opts.beforeShow($elem, $dropdown);
 
-                    if (($.isFunction(opts.animate) && opts.animate()) || (!$.isFunction(opts.animate) && opts.animate)) {
-                        $dropdown.slideDown(opts.showAnimation, function () {
+                    if (opts.animate !== false || $.isFunction(opts.animate)) {
+                        var animationComplete = function animationComplete() {
                             dropdownPrivate.initCloseButton();
                             opts.onShow($elem, $dropdown);
                             isVisible = true;
-                        });
+                        };
+
+                        if ($.isFunction(opts.animate) && opts.animate()) {
+                            animationComplete();
+                        } else {
+                            $dropdown.slideDown(opts.showAnimation, animationComplete);
+                        }
+
                     } else {
                         isVisible = true;
                         $dropdown.show();
@@ -93,24 +99,16 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                         opts.onHide($elem, $dropdown);
                     }
 
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
+                    $(document).unbind("click.dropdown");
                 },
                 initCloseButton: function () {
                     //Hide when clicking document or close button clicked
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
-                    $(document).bind("click touchstart", function (e) {
+                    $(document).bind("click.dropdown touchstart.dropdown", function (e) {
                         if ((!$dropdown.is(e.target) && $dropdown.has(e.target).length === 0) || $dropdown.find(".close-btn").is(e.target)) {
                             if (isVisible) {
                                 dropdownPrivate.hideDropdown();
                             }
                             $(this).unbind(e);
-                            clickHandler = e;
                         }
                     });
                 }

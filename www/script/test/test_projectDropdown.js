@@ -37,7 +37,7 @@ define(["jquery", "projectdropdown"], function ($, pd) {
         });
     }
 
-    describe("A basic dropdown of doom", function () {
+    describe("A basic dropdown", function () {
         beforeEach(function (done) {
             $dropdownButton = $("<div/>").dropdown({
                 html: "Testing content",

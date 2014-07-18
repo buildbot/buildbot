@@ -99,7 +99,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     }
 
                     //Remove event handlers
-                    $(document).off("click.popup touchstart.popup");
+                    $(document).off("click.popup");
+                    $(document).off("touchstart.popup");
                     $(window).off("resize.popup");
                 },
                 initCloseButton: function () {
