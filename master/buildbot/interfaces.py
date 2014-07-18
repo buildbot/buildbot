@@ -990,7 +990,7 @@ class ILogObserver(Interface):
         pass
 
 
-class IBuildSlave(Interface):
+class IBuildSlave(IPlugin):
     # callback methods from the manager
     pass
 

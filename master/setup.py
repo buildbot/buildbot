@@ -226,6 +226,12 @@ setup_args = {
                 'Periodic', 'Nightly', 'NightlyTriggerable']),
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
+        ]),
+        ('buildbot.build_slave', [
+            ('buildbot.buildslave.base', ['BuildSlave']),
+            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
+            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
+            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave'])
         ])
     ])
 }
