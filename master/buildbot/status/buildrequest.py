@@ -128,7 +128,10 @@ class BuildRequestStatus:
 
     def getSlaves(self):
         builder = self.status.getBuilder(self.getBuilderName())
-        return builder.slavenames
+        if builder is not None:
+            return builder.slavenames
+
+        return []
 
     def asDict(self):
         result = {}
@@ -149,18 +152,21 @@ class BuildRequestStatus:
     def asDict_async(self, request=None):
         result = {}
 
-        builder = self.status.getBuilder(self.getBuilderName())
+
         ss = yield self.getSourceStamp()
         sources = yield self.getSourceStamps()
         result['brid'] = self.brid
         result['source'] = ss.asDict()
         result['sources'] = [s.asDict() for s in sources.values()]
         result['builderName'] = self.getBuilderName()
-        result['builderFriendlyName'] = builder.getFriendlyName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
-        result['builderURL'] = self.status.getURLForThing(builder)
+
+        builder = self.status.getBuilder(self.getBuilderName())
+        if builder is not None:
+            result['builderFriendlyName'] = builder.getFriendlyName()
+            result['builderURL'] = self.status.getURLForThing(builder)
 
         if request is not None:
             from buildbot.status.web.base import getCodebasesArg

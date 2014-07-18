@@ -662,7 +662,7 @@ class MasterConfig(object):
 
 class ProjectConfig:
 
-    def __init__(self, name=None, codebases = None):
+    def __init__(self, name=None, codebases=[]):
         self.name = name
         self.codebases = codebases
 
