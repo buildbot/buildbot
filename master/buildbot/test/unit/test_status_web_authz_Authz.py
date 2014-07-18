@@ -19,6 +19,8 @@ from twisted.internet import defer
 
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import IAuth, AuthBase
+from buildbot.test.fake import fakemaster
+
 
 class StubRequest(object):
     # all we need from a request is username/password
@@ -54,6 +56,7 @@ class StubAuth(AuthBase):
     implements(IAuth)
     def __init__(self, user):
         self.user = user
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
 
     def authenticate(self, user, pw):
         return user == self.user
