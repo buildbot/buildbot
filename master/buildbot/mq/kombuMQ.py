@@ -78,8 +78,8 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             self.queues[name].declare()
         else:
             log.msg(
-                "ERR: Routing Key %s has been used by, register queue failed" % key)
-            raise Exception("ERROR: Routing Key %s has been used" % key)
+                "ERR: Routing Key %s has been used, register queue failed" % key)
+            # raise Exception("ERROR: Routing Key %s has been used" % key)
             # NOTE(damon) should raise an exception here?
 
     def _checkKey(self, key):
@@ -96,9 +96,12 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         key = self.formatKey(routingKey)
         data = self.formatData(data)
         message = Message(self.channel, body=data)
-        self.producer.publish(message.body, routing_key=key)
-        # TODO(damon) default serializer is JSON, it doesn't support python's
-        # datetime
+        try:
+            self.producer.publish(message.body, routing_key=key)
+        except:
+            ensurePublish = self.conn.ensure(self.producer, 
+                                        self.producer.publish, max_retries=3)
+            ensurePublish(message.body, routing_key=key)
 
     def registerConsumer(self, queues_name, callback, name=None, durable=False):
         # queues_name can be a list of queues' names or one queue's name
@@ -124,11 +127,16 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def startConsuming(self, callback, routingKey, persistent_name=None):
         key = self.formatKey(routingKey)
 
-        log.msg(str(key) + str(self.queues))
         try:
             queue = self.queues[key]
         except:
-            self.registerQueue(key)
+            try:
+                self.registerQueue(key)
+            except:
+                ensureRegister = self.conn.ensure(None, 
+                                                  self.registerQueue, 
+                                                  max_retries=3)
+                ensureRegister(key)
             try:
                 queue = self.queues.get(key)
             except:
@@ -150,7 +158,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         # self.consumers[key].addCallback = self.consumers[key].register_callback
         # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
 
-        return self.consumers[key]
+        return DeferConsumer(self.consumers[key])
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
@@ -200,14 +208,19 @@ class KombuHub(multiprocessing.Process):
         self.lock = multiprocessing.Lock()
 
         self.conn.register_with_event_loop(self.hub)
+        self.attempts = 5
 
     def run(self):
-        self.lock.acquire()
-        self.hub.run_forever()
+        if self.attempts == 0:
+           raise "Attempts run kombu hub 5 times and all fail"
+        try:
+           self.hub.run_forever()
+        except:
+           self.attempts = self.attempts - 1
+           self.run()
 
     def __exit__(self):
         self.hub.stop()
-        self.lock.release()
 
 class DeferConsumer(object):
 
@@ -218,3 +231,10 @@ class DeferConsumer(object):
 
     def addCallback(self, callback):
         self.consumer.register_callback(callback)
+
+    def addErrback(self, callback, msg):
+        self.consumer.register_callback(callback)
+        log.msg(msg)
+
+    def stopConsuming(self):
+        pass
