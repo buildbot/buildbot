@@ -199,26 +199,27 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
             });
 
         },
-        jCenter: function (el) {
+        jCenter: function ($el) {
+            if ($el !== undefined && $el !== null) {
 
-            var h = $(window).height();
-            var w = $(window).width();
-            var tu = el.outerHeight();
-            var tw = el.outerWidth();
+                var h = $(window).height();
+                var w = $(window).width();
+                var tu = $el.outerHeight();
+                var tw = $el.outerWidth();
 
-            // adjust height to browser height , "height":h - 75 , "height":'auto'
+                // adjust height to browser height , "height":h - 75 , "height":'auto'
 
-            if (h < (tu + 5)) {
+                if (h < (tu + 5)) {
 
-                el.css({"top": 5 + $(window).scrollTop() + "px", "height": h - 60});
-            } else {
+                    $el.css({"top": 5 + $(window).scrollTop() + "px", "height": h - 60});
+                } else {
 
-                el.css({"top": (h - tu) / 2 + $(window).scrollTop() + 'px', "height": 'auto'});
+                    $el.css({"top": (h - tu) / 2 + $(window).scrollTop() + 'px', "height": 'auto'});
+                }
+
+                $el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
+                return $el;
             }
-
-            el.css("left", (w - tw) / 2 + $(window).scrollLeft() + "px");
-            return el;
-
         },
         parseReasonString: function () { // parse reason string on the buildqueue page
             $('.codebases-list .reason-txt').each(function () {

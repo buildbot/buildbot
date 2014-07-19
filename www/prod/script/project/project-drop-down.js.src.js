@@ -13,8 +13,7 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
             var $elem = $(this),
                 $dropdown,
                 opts = $.extend({}, $.fn.dropdown.defaults, options),
-                isVisible = false,
-                clickHandler;
+                isVisible = false;
             $elem.settings = opts;
 
             var dropdownPrivate = {
@@ -65,12 +64,19 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                 showDropdown: function () {
                     opts.beforeShow($elem, $dropdown);
 
-                    if (($.isFunction(opts.animate) && opts.animate()) || (!$.isFunction(opts.animate) && opts.animate)) {
-                        $dropdown.slideDown(opts.showAnimation, function () {
+                    if (opts.animate !== false || $.isFunction(opts.animate)) {
+                        var animationComplete = function animationComplete() {
                             dropdownPrivate.initCloseButton();
                             opts.onShow($elem, $dropdown);
                             isVisible = true;
-                        });
+                        };
+
+                        if ($.isFunction(opts.animate) && opts.animate()) {
+                            animationComplete();
+                        } else {
+                            $dropdown.slideDown(opts.showAnimation, animationComplete);
+                        }
+
                     } else {
                         isVisible = true;
                         $dropdown.show();
@@ -81,6 +87,8 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                     }
                 },
                 hideDropdown: function () {
+                    $(document).unbind("click.dropdown touchstart.dropdown");
+
                     if (($.isFunction(opts.animate) && opts.animate()) || (!$.isFunction(opts.animate) && opts.animate)) {
                         $dropdown.slideUp(opts.hideAnimation, function () {
                             $dropdown.hide();
@@ -92,25 +100,15 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                         $dropdown.hide();
                         opts.onHide($elem, $dropdown);
                     }
-
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
                 },
                 initCloseButton: function () {
                     //Hide when clicking document or close button clicked
-                    if (clickHandler !== undefined) {
-                        $(this).unbind(clickHandler);
-                        clickHandler = undefined;
-                    }
-                    $(document).bind("click touchstart", function (e) {
+                    $(document).on("click.dropdown touchstart.dropdown", function (e) {
                         if ((!$dropdown.is(e.target) && $dropdown.has(e.target).length === 0) || $dropdown.find(".close-btn").is(e.target)) {
                             if (isVisible) {
                                 dropdownPrivate.hideDropdown();
                             }
                             $(this).unbind(e);
-                            clickHandler = e;
                         }
                     });
                 }
@@ -176,7 +174,7 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                 },
                 onCreate: function ($elem, $dropdown) {
                     $('#bowlG').remove();
-                    $(window).resize(function () {
+                    $(window).on("resize.dropdown", function () {
                         $elem.hideDropdown();
                     });
                 },
@@ -234,7 +232,7 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                 }
             });
 
-            $(window).resize(function () {
+            $(window).on("resize.mobile", function () {
                 $(".top-menu").removeClass("show-topmenu");
             });
         }

@@ -1,0 +1,53 @@
+{{#name}}
+	<a href="{{url}}">{{friendly_name}}{{^friendly_name}}{{name}}{{/friendly_name}}</a>
+{{/name}}
+
+{{#progressBar}}
+	<div data-starttime="{{etaStart}}" data-etatime="{{etaCurrent}}" class="percent-outer-js percent-outer">
+		<span class="time-txt-js time-txt"></span>
+		<div class="percent-inner-js percent-inner">
+			<div class="progressbar-overlay"></div>								
+		</div>
+	</div>
+{{/progressBar}}
+	
+{{#showNoJobs}}
+	<span class="small-txt">
+		No jobs
+    </span>
+{{/showNoJobs}}
+
+{{#showLatestBuild}}
+	{{#latestBuild}}
+		<span class="hide hidden-date-js"></span>
+		<span class="last-run"></span>
+		<span class="small-txt"></span>
+	{{/latestBuild}}
+{{/showLatestBuild}}
+{{#customBuild}}
+	<a class="custom-build more-info" title="Run custom build" href="#" data-popup-title="Run custom build" data-builder-name="{{builderName}}" data-builder-url="{{url}}" data-return-page="builders_json">
+	</a>
+	<a class="instant-build run-build" title="Run build with default values" href="#">
+	</a>
+{{/customBuild}}
+
+{{#showStatus}}
+	{{#latestBuild}}	
+	<span class="hide">{{text.0}}</span>
+	<a href="{{#url}}{{path}}{{/url}}">#{{number}}</a>
+	<span class="status-text">
+	 {{#text}}
+	 	{{.}}
+	 {{/text}}
+	</span>
+	{{/latestBuild}}
+{{/showStatus}}
+
+{{#showShortcuts}}
+    {{#data.latestBuild.artifacts}}
+        <a href="#" class="artifact-js more-info" title="Show artifacts"></a>
+    {{/data.latestBuild.artifacts}}
+    {{#data.latestBuild.failure_url}}
+        <a href="{{data.latestBuild.failure_url}}" class="point-of-failure" title="Show the point of failure"></a>
+    {{/data.latestBuild.failure_url}}
+{{/showShortcuts}}

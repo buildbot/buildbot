@@ -47,9 +47,9 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
 
                 case 'buildqueue_page':
                     // For the frontpage
-                    require(['rtBuildqueue'],
-                        function (rtBuildqueue) {
-                            rtBuildqueue.init();
+                    require(['rtBuildQueue'],
+                        function (rtBuildQueue) {
+                            rtBuildQueue.init();
                         });
                     break;
             	default:

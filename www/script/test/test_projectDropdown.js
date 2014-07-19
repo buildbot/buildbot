@@ -16,6 +16,25 @@ define(["jquery", "projectdropdown"], function ($, pd) {
 
     function removeDropdownFromDOM($elem) {
         $elem.remove();
+        $(document).off();
+        $(window).off();
+    }
+
+    function checkDocumentHasNoEvents() {
+        it("has removed all events", function () {
+            $dropdownButton.hideDropdown();
+
+            var documentEvents = $._data(document, "events"),
+                windowEvents = $._data(window, "events");
+
+            if (documentEvents !== undefined && !$.isEmptyObject(documentEvents)) {
+                expect(Object.keys(documentEvents).length).toEqual(0);
+            }
+
+            if (windowEvents !== undefined && !$.isEmptyObject(windowEvents)) {
+                expect(Object.keys(windowEvents).length).toEqual(0);
+            }
+        });
     }
 
     function dropdownCanBeClosed() {
@@ -29,6 +48,10 @@ define(["jquery", "projectdropdown"], function ($, pd) {
                     var $div = $dropdownButton.find("div").first();
                     expect($div.length).toEqual(1);
                     expect($div.css("display")).toEqual("none");
+
+                    if (!$.isEmptyObject($._data(document, "events"))) {
+                        expect(Object.keys($._data(document, "events")).length).toEqual(0);
+                    }
                     done();
                 }
             });
@@ -52,6 +75,7 @@ define(["jquery", "projectdropdown"], function ($, pd) {
 
         afterEach(function () {
             removeDropdownFromDOM($dropdownButton);
+            $(document).off();
         });
 
         it("renders correctly", function () {
@@ -67,6 +91,7 @@ define(["jquery", "projectdropdown"], function ($, pd) {
         });
 
         dropdownCanBeClosed();
+        checkDocumentHasNoEvents();
     });
 
     describe("An async dropdown", function () {
@@ -99,5 +124,6 @@ define(["jquery", "projectdropdown"], function ($, pd) {
         });
 
         dropdownCanBeClosed();
+        checkDocumentHasNoEvents();
     });
 });

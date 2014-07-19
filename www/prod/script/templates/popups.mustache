@@ -1,0 +1,178 @@
+{{#preloader}}
+	<div id="bowlG">
+		<div id="bowl_ringG">
+			<div class="ball_holderG">
+				<div class="ballG">
+				</div>
+			</div>
+		</div>
+	</div>
+{{/preloader}}
+
+{{#popupOuter}}
+	<div class="more-info-box remove-js">
+		<span tabindex="0" class="close-btn"></span>
+			<h3 class="codebases-head">{{headline}}</h3>
+			<div id="content1">
+				
+			</div>
+	</div>
+{{/popupOuter}}
+
+{{#MoreInfoBoxOuter}}
+	<div class="more-info-box more-info-box-js {{popUpClass}}">
+		<span class="close-btn"></span>				
+		{{>partial}}
+	</div>
+{{/MoreInfoBoxOuter}}
+
+{{#errorinput}}
+	<div class="error-input">
+		{{text}}		
+	</div>
+{{/errorinput}}
+
+{{#showPendingJobs}}
+	<h3>Pending Build Requests</h3>
+	<ul class="pending-job-list">
+			<li>
+				<p class="txt-cont">Cancel all builds<br>
+					
+				</p>
+				<form id="cancelall" class="command cancelbuild" action="{{cancelURL}}" name="cancel" method="post">
+			        <input type="hidden" value="all" name="id" />
+			    	<input type="submit" value="Cancel" class="grey-btn" />
+			  	</form>
+			</li>				
+		{{#pendingJobs}}		
+			<li>
+				<p class="txt-cont">Waiting <span class="waiting-time-js"></span><br>
+					{{reason}}                                                                                   	
+				</p>
+				<form class="command cancelbuild" action="{{cancelURL}}" name="cancel" method="post">
+			        <input type="hidden" value="{{brid}}" name="id" />
+			    	<input type="submit" value="Cancel" class="grey-btn" />
+			  	</form>
+			</li>		
+		{{/pendingJobs}}
+	</ul>
+{{/showPendingJobs}}
+
+{{#showBuilders}}
+	<h3>Additional information</h3>
+	
+	{{#version}}
+		<br>
+		<h4>Buildbot</h4>
+		<span>{{version}}</span>
+		<br>
+	{{/version}}
+	{{#admin}}
+		<h4>Admin</h4>
+	    <span>{{admin}}</span>
+	    <br>
+    {{/admin}}
+	
+	<h4 class="last">Builders</h4>
+	
+	<ul class="builders-list">
+		{{#builders}}	
+			{{#.}}
+				<li>
+					<a href="{{url}}">
+						{{friendly_name}}
+					</a>
+				</li>
+			{{/.}}
+			{{^.}}
+				<li>
+				 	<span class="Warning">no builders</span>
+				</li>
+			{{/.}}			
+		{{/builders}}		
+	</ul>
+
+{{/showBuilders}}
+
+{{#showCodebases}}
+	<h3>Codebases</h3>
+	<table class="table-1 first-child">
+	<thead>
+	    <th class="txt-align-left">
+	        Codebase
+	    </th>
+	    <th class="txt-align-left">
+	        Repository
+	    </th>
+	    <th class="txt-align-left">
+	        Branch
+	    </th>
+	    <th class="txt-align-left">
+	        Revision
+	    </th>
+	</thead>
+	    <tbody>
+	        {{#sources}}
+	    	<tr>
+	    		<td class="txt-align-left">
+	    			{{codebase}}
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{repository}}                    			
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{branch}}                              
+	    		</td>
+	    		<td class="txt-align-left">
+	                {{revision}}                   			
+	    		</td>
+	    	</tr>
+	        {{/sources}}
+	    </tbody>
+	</table>
+
+{{/showCodebases}}
+{{#showCompatibleSlaves}}
+		<h3>Compatible slaves</h3>
+		<ul class="codebases-list">
+		{{#slaves}}	
+			{{#.}}
+			    <li> 
+                    <a href="/buildslaves/{{.}}">
+			    	    {{.}}
+                    </a>
+			    </li>
+			{{/.}}
+		{{/slaves}}	
+		</ul>
+{{/showCompatibleSlaves}}
+
+{{#showRunningBuilds}}
+		<h3>Running builds</h3>
+		<br>
+		<ul class="list current-job-js building">	    	    		    			
+		{{#runningBuilds}}
+				<li>
+					<a href="{{#url}}{{path}}{{/url}}">#{{number}}{{^number}}0{{/number}}</a>					
+						<a href="{{builder_url}}">{{builderFriendlyName}}</a> 
+						<span class="spin-icon animate-spin pull-bottom"></span>					
+					{{#eta}}
+						<div data-starttime="{{times.0}}" data-etatime="{{eta}}" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt"></span>
+							<div class="percent-inner-js percent-inner">
+								<div class="progressbar-overlay"></div>									
+							</div>
+						</div>					
+					{{/eta}}
+	                {{^eta}}
+						<div data-starttime="{{times.0}}" data-etatime="0" class="percent-outer-js percent-outer">
+							<span class="time-txt-js time-txt">{{times.0}}</span>
+							<div class="percent-inner-js percent-inner">
+								<div class="progressbar-overlay"></div>	
+							</div>
+						</div>
+	                {{/eta}}					
+				</li>									
+		{{/runningBuilds}}
+		</ul>	
+{{/showRunningBuilds}}

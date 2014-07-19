@@ -57,6 +57,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                             delete opts.title;
                             delete opts.html;
                             $elem = null;
+
+                            $(document).off("click.popup touchstart.popup");
+                            $(window).off("resize.popup");
                         } else {
                             $elem.empty();
                         }
@@ -77,7 +80,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
                     if (opts.animate) {
                         $elem.fadeIn(opts.showAnimation, function () {
-                            privateFunc.initCloseButton();
                             opts.onShow($elem);
                         });
                     } else {
@@ -86,6 +88,10 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     }
                 },
                 hidePopup: function () {
+                    //Remove event handlers
+                    $(document).off("click.popup touchstart.popup");
+                    $(window).off("resize.popup");
+
                     if (opts.animate) {
                         $elem.fadeOut(opts.hideAnimation, function () {
                             $elem.hide();
@@ -97,11 +103,6 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         privateFunc.clear();
                         opts.onHide($elem);
                     }
-
-                    //Remove event handlers
-                    $(document).off("click.popup");
-                    $(document).off("touchstart.popup");
-                    $(window).off("resize.popup");
                 },
                 initCloseButton: function () {
                     $(document).on("click.popup touchstart.popup", function (e) {
@@ -249,7 +250,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 onShow: function ($elem) {
                                     selectors.init();
                                     helpers.jCenter($elem);
-                                    $(window).resize(function () {
+                                    $(window).on("resize.popup", function () {
                                         helpers.jCenter($elem);
                                     });
                                 }
