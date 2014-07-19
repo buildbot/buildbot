@@ -44,6 +44,12 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
 
+class IPlugin(Interface):
+    """
+    Base interface for all Buildbot plugins
+    """
+
+
 class IChangeSource(Interface):
 
     """
