@@ -62,6 +62,9 @@ define(["jquery", "ui.dropdown"], function ($, pd) {
 
     describe("A basic dropdown", function () {
         beforeEach(function (done) {
+            $(document).off();
+            $(window).off();
+
             $dropdownButton = $("<div/>").dropdown({
                 html: "Testing content",
                 animated: false,
