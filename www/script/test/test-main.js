@@ -28,8 +28,10 @@
 
         paths: {
             'jquery': 'libs/jquery',
+            'jquery-ui': 'libs/jquery-ui',
             'ui.dropdown': 'project/ui/dropdown',
             'ui.popup': 'project/ui/popup',
+            'ui.preloader': 'project/ui/preloader',
             'selectors': 'project/selectors',
             'select2': 'plugins/select2',
             'datatables-plugin': 'plugins/jquery-datatables',
@@ -65,6 +67,9 @@
         shim: {
             'underscore': {
                 exports: '_'
+            },
+            'ui.preloader': {
+                deps: ['jquery-ui']
             }
         }
     });

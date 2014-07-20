@@ -3,8 +3,6 @@ main.js
 ----------------
 libs/jquery.js
 project/screen-size.js
-text.js
-text!templates/popups.mustache
 libs/mustache.js
 libs/mustache-wrap.js
 plugins/moment-with-langs.js
@@ -14,6 +12,8 @@ project/helpers.js
 plugins/jquery-datatables.js
 libs/natural-sort.js
 libs/jquery.form.js
+text.js
+text!templates/popups.mustache
 plugins/toastr.js
 project/ui/popup.js
 project/dataTables.js
@@ -31,4 +31,6 @@ libs/handlebars.js
 project/rtGenericTable.js
 project/rtBuilders.js
 plugins/jquery-overscroll.js
+libs/jquery-ui.js
+project/ui/preloader.js
 main.js

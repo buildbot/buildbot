@@ -1,5 +1,5 @@
 /*global define, requirejs*/
-define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, popupsMus, Mustache, extendMoment, timeElements) {
+define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, Mustache, extendMoment, timeElements) {
 
     "use strict";
     var helpers,
@@ -238,10 +238,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
                     return;
                 }
             }
-            var mustacheTmpl = Mustache.render(popupsMus, {'preloader': 'true'}),
-                preloader = $(mustacheTmpl),
-                selectAll = $('#selectall');
-
+            var selectAll = $('#selectall');
 
             selectAll.click(function () {
                 var tableNodes = $table.dataTable().fnGetNodes();
@@ -250,7 +247,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
 
             function ajaxPost(str) {
                 var $dataTable = $table.dataTable();
-                $('body').append(preloader).show();
+                $("#preloader").preloader("showPreloader");
                 str = str + '&ajax=true';
 
                 $.ajax({
@@ -266,7 +263,7 @@ define(['jquery', 'screensize', 'text!templates/popups.mustache', 'mustache', "e
                         }
 
                         selectAll.prop('checked', false);
-                        preloader.remove();
+                        $("#preloader").preloader("hidePreloader");
                     }
                 });
                 return false;

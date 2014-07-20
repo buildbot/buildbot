@@ -2,8 +2,10 @@
 require.config({
     paths: {
         'jquery-internal': 'libs/jquery',
+        'jquery-ui': 'libs/jquery-ui',
         'ui.dropdown': 'project/ui/dropdown',
         'ui.popup': 'project/ui/popup',
+        'ui.preloader': 'project/ui/preloader',
         'selectors': 'project/selectors',
         'select2': 'plugins/select2',
         'datatables-plugin': 'plugins/jquery-datatables',
@@ -38,6 +40,9 @@ require.config({
     shim: {
         'overscroll': {
             deps: ['jquery']
+        },
+        'ui.preloader': {
+            deps: ['jquery-ui']
         }
     }
 });
@@ -47,16 +52,27 @@ define('jquery', ['jquery-internal'], function () {
     return jQuery;
 });
 
-define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'screensize', 'ui.dropdown', 'extend-moment',
-        'text!templates/popups.mustache', 'mustache', 'timeElements', 'URIjs/URI', 'rtGlobal', 'toastr', 'realtimerouting',
-        'realtimePages', 'rtBuilders', 'overscroll'],
-    function ($, helpers, dataTables, popup, screenSize, projectDropDown, extendMoment, popups, Mustache, timeElements, URI, rtGlobal, toastr) {
+define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'ui.dropdown', 'extend-moment', 'mustache', 'timeElements',
+        'URIjs/URI', 'rtGlobal', 'toastr', 'realtimerouting', 'realtimePages', 'rtBuilders', 'overscroll', 'ui.preloader', 'screensize'],
+    function ($, helpers, dataTables, popup, dropdown, extendMoment, Mustache, timeElements, URI, rtGlobal, toastr) {
 
         'use strict';
 
         // reveal the page when all scripts are loaded
         $(document).ready(function () {
-            $('body').show();
+            var $body = $("body");
+            $body.show();
+
+            var $preloader = $("<div/>").preloader({
+                "autoShow": false
+            }).attr("id", "preloader");
+            $body.append($preloader);
+
+            if ($body.attr("id") === "usersettings_page") {
+                require(["userSettings"], function (userSettings) {
+                    userSettings.init();
+                });
+            }
 
             // swipe or scroll in the codebases overview
             if ($('#builders_page').length || $('#builder_page').length) {
@@ -94,9 +110,7 @@ define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'screensize', 'ui.dropdow
             }
 
             if (helpers.isRealTimePage() === true) {
-                var preloader = $(Mustache.render(popups, {'preloader': 'true'}));
-                $('div.content').append(preloader);
-
+                $preloader.preloader("showPreloader");
             }
 
             if ($('#home_page').length > 0) {
@@ -114,18 +128,12 @@ define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'screensize', 'ui.dropdow
             // get scripts for general popups
             popup.init();
             // get scripts for the projects dropdown
-            projectDropDown.init();
+            dropdown.init();
 
             // get all common scripts
             helpers.init();
             dataTables.init();
             extendMoment.init();
             timeElements.init();
-
-            if ($("body").attr("id") === "usersettings_page") {
-                require(["userSettings"], function (userSettings) {
-                    userSettings.init();
-                });
-            }
         });
     });

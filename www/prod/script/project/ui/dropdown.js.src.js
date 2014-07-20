@@ -2,10 +2,6 @@
 define(['jquery', 'screensize'], function ($, screenSize) {
 
     
-    //TODO: Put this in a template + make preloader plugin
-    var projectDropDown,
-        preloader = '<div id="bowlG"><div id="bowl_ringG"><div class="ball_holderG"><div class="ballG"></div></div></div></div>';
-
 
     // Extend our jquery object with dropdown widget
     (function ($) {
@@ -87,7 +83,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
                     }
                 },
                 hideDropdown: function () {
-                    $(document).unbind("click.dropdown touchstart.dropdown");
+                    $(document).off("click.dropdown touchstart.dropdown");
 
                     if (($.isFunction(opts.animate) && opts.animate()) || (!$.isFunction(opts.animate) && opts.animate)) {
                         $dropdown.slideUp(opts.hideAnimation, function () {
@@ -161,7 +157,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
         };
     }(jQuery));
 
-    projectDropDown = {
+    return {
         init: function () {
 
             var mobileHTML,
@@ -170,10 +166,10 @@ define(['jquery', 'screensize'], function ($, screenSize) {
             $("#projectDropdown").dropdown({
                 url: "/projects",
                 beforeCreate: function ($elem) {
-                    $('body').append(preloader).show();
+                    $("#preloader").preloader("showPreloader");
                 },
                 onCreate: function ($elem, $dropdown) {
-                    $('#bowlG').remove();
+                    $("#preloader").preloader("hidePreloader");
                     $(window).on("resize.dropdown", function () {
                         $elem.hideDropdown();
                     });
@@ -237,6 +233,4 @@ define(['jquery', 'screensize'], function ($, screenSize) {
             });
         }
     };
-
-    return projectDropDown;
 });

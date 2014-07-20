@@ -226,14 +226,11 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
             $codebaseElem.click(function (event) {
                 event.preventDefault();
 
-                //TODO: Remove this
-                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-                var preloader = $(mustacheTmpl);
-                $('body').append(preloader).show();
+                $("#preloader").preloader("showPreloader");
 
                 $.get(codebasesURL).
                     done(function (html) {
-                        preloader.remove();
+                        $("#preloader").preloader("hidePreloader");
                         requirejs(['selectors'], function (selectors) {
                             var fw = $(html).find('#formWrapper');
                             fw.children('#getForm').attr('action', window.location.href);
@@ -267,17 +264,14 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 url = "/json/pending/{0}/?{1}".format(builder_name, paramsString);
 
             function openPopup() {
-                // TODO: Remove this
-                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-                var preloader = $(mustacheTmpl);
-                $('body').append(preloader).show();
+                $("#preloader").preloader("showPreloader");
 
                 $.ajax({
                     url: url,
                     cache: false,
                     dataType: "json",
                     success: function (data) {
-                        preloader.remove();
+                        $("#preloader").preloader("hidePreloader");
 
                         var cancelURL = data[0].builderURL;
                         var properties = "";
@@ -353,10 +347,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     urlParams = helpers.codebasesFromURL({builder_url: builderURL, builder_name: builderName, return_page: dataReturnPage});
 
 
-                var mustacheTmpl = Mustache.render(popups, {'preloader': 'true'});
-                var $preloader = $(mustacheTmpl); //TODO: Move elsewhere
-                $body.append($preloader);
-                $preloader.show();
+                $("#preloader").preloader("showPreloader");
 
                 function errorCreatingBuild() {
                     toastr.error('There was an error when creating your build please try again later', 'Error', {
@@ -380,21 +371,21 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                     formOptions = {
                                         beforeSubmit: function () {
                                             $elem.hidePopup();
-                                            $preloader.show();
+                                            $("#preloader").preloader("hidePreloader");
                                         },
                                         success: function (data) {
                                             requirejs(['realtimePages'], function (realtimePages) {
                                                 var name = dataReturnPage.replace("_json", "");
                                                 realtimePages.updateSingleRealTimeData(name, data);
                                             });
-                                            $preloader.remove();
+                                            $("#preloader").preloader("hidePreloader");
 
                                             toastr.info('Your build will start shortly', 'Info', {
                                                 iconClass: 'info'
                                             });
                                         },
                                         error: function () {
-                                            $preloader.remove();
+                                            $("#preloader").preloader("hidePreloader");
                                             errorCreatingBuild();
                                         }
                                     };
@@ -416,7 +407,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         errorCreatingBuild();
                     })
                     .always(function () {
-                        $preloader.hide();
+                        $("#preloader").preloader("hidePreloader");
                     });
             }
 

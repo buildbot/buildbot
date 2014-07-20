@@ -32,7 +32,7 @@ define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                 // if the socket connection is success
                 if (sock) {
                     sock.onopen = function () {
-                        $('#bowlG').remove();
+                        $("#preloader").preloader("hidePreloader");
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
                             var data = {
@@ -152,7 +152,7 @@ define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal,
         getInstantJSON: function () {
             var script = $('#instant-json');
             // remove prelaoder
-            $('#bowlG').remove();
+            $("#preloader").preloader("hidePreloader");
             $('.initjson').show();
             if (script.length && window.instantJSON !== undefined) {
                 script.remove();
