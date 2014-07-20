@@ -1,5 +1,5 @@
 /*global define, describe, it, expect, beforeEach, afterEach*/
-define(["jquery", "popup"], function ($, popup) {
+define(["jquery", "ui.popup"], function ($, popup) {
     "use strict";
 
     var $popup,

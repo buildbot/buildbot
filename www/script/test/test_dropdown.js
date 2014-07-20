@@ -1,5 +1,5 @@
 /*global define, describe, it, expect, beforeEach, afterEach*/
-define(["jquery", "projectdropdown"], function ($, pd) {
+define(["jquery", "ui.dropdown"], function ($, pd) {
     "use strict";
 
     var $body = $("body"),
@@ -79,7 +79,6 @@ define(["jquery", "projectdropdown"], function ($, pd) {
         });
 
         it("renders correctly", function () {
-            $dropdownButton.click();
             var $div = $dropdownButton.find("div").first();
             expect($div.length).toEqual(1);
             expect($div.hasClass("more-info-box")).toBeTruthy();

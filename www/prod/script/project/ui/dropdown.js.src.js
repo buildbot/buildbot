@@ -1,5 +1,5 @@
 /*global define, jQuery*/
-define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
+define(['jquery', 'screensize'], function ($, screenSize) {
 
     
     //TODO: Put this in a template + make preloader plugin
@@ -72,11 +72,11 @@ define(['jquery', 'screensize', 'helpers'], function ($, screenSize, helpers) {
                         };
 
                         if ($.isFunction(opts.animate) && opts.animate()) {
-                            animationComplete();
-                        } else {
                             $dropdown.slideDown(opts.showAnimation, animationComplete);
+                        } else {
+                            $dropdown.show();
+                            animationComplete();
                         }
-
                     } else {
                         isVisible = true;
                         $dropdown.show();

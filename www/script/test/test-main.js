@@ -28,6 +28,8 @@
 
         paths: {
             'jquery': 'libs/jquery',
+            'ui.dropdown': 'project/ui/dropdown',
+            'ui.popup': 'project/ui/popup',
             'selectors': 'project/selectors',
             'select2': 'plugins/select2',
             'datatables-plugin': 'plugins/jquery-datatables',
@@ -35,8 +37,6 @@
             'dotdotdot': 'plugins/jquery-dotdotdot',
             'screensize': 'project/screen-size',
             'helpers': 'project/helpers',
-            'projectdropdown': 'project/project-drop-down',
-            'popup': 'project/popup',
             'realtimePages': 'project/realtimePages',
             'realtimerouting': 'project/realtimeRouting',
             'rtBuildDetail': 'project/rtBuildDetail',

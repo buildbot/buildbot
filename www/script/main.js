@@ -2,6 +2,8 @@
 require.config({
     paths: {
         'jquery-internal': 'libs/jquery',
+        'ui.dropdown': 'project/ui/dropdown',
+        'ui.popup': 'project/ui/popup',
         'selectors': 'project/selectors',
         'select2': 'plugins/select2',
         'datatables-plugin': 'plugins/jquery-datatables',
@@ -9,8 +11,6 @@ require.config({
         'dotdotdot': 'plugins/jquery-dotdotdot',
         'screensize': 'project/screen-size',
         'helpers': 'project/helpers',
-        'projectdropdown': 'project/project-drop-down',
-        'popup': 'project/popup',
         'realtimePages': 'project/realtimePages',
         'realtimerouting': 'project/realtimeRouting',
         'rtBuildDetail': 'project/rtBuildDetail',
@@ -47,7 +47,7 @@ define('jquery', ['jquery-internal'], function () {
     return jQuery;
 });
 
-define(['jquery', 'helpers', 'dataTables', 'popup', 'screensize', 'projectdropdown', 'extend-moment',
+define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'screensize', 'ui.dropdown', 'extend-moment',
         'text!templates/popups.mustache', 'mustache', 'timeElements', 'URIjs/URI', 'rtGlobal', 'toastr', 'realtimerouting',
         'realtimePages', 'rtBuilders', 'overscroll'],
     function ($, helpers, dataTables, popup, screenSize, projectDropDown, extendMoment, popups, Mustache, timeElements, URI, rtGlobal, toastr) {

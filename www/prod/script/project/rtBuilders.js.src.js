@@ -1,5 +1,5 @@
 /*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'popup','toastr'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup, toastr) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'ui.popup','toastr'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup, toastr) {
     
     var rtBuilders,
         $tbsorter;

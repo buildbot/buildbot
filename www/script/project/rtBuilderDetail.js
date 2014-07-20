@@ -1,6 +1,6 @@
 /*global define, Handlebars*/
 define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'handlebars', 'extend-moment',
-        'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable', 'popup'],
+        'libs/jquery.form', 'text!templates/builderdetail.handlebars', 'timeElements', 'rtGenericTable', 'ui.popup'],
     function ($, realtimePages, helpers, dt, hb, extendMoment, form, builderdetail, timeElements, rtTable, popup) {
         "use strict";
         var rtBuilderDetail,

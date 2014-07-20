@@ -1,5 +1,5 @@
 /*global define, moment*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'popup', 'rtGenericTable'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup, rtTable) {
+define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'ui.popup', 'rtGenericTable'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup, rtTable) {
     "use strict";
     var $tbsorter,
         rtBuildQueue;

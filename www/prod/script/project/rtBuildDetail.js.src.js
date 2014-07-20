@@ -1,5 +1,5 @@
 /*global define, Handlebars */
-define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'popup'], function ($, realtimePages, helpers, hb, mustache, build, builders, timeElements, popups) {
+define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'ui.popup'], function ($, realtimePages, helpers, hb, mustache, build, builders, timeElements, popups) {
     
     var rtBuildDetail,
         buildHandle = Handlebars.compile(build),
