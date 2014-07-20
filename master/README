@@ -1,14 +1,12 @@
 
-BuildBot: build/test automation
+Buildbot: The Continuous Integration Framework
   http://buildbot.net
   Brian Warner <warner-buildbot @ lothar . com>
-  Dustin J. Mitchell <dustin@v.igoro.us>
+  Dustin J. Mitchell <dustin@buildbot.net>
 
 
-Buildbot is a continuous integration system designed to automate the
-build/test cycle. By automatically rebuilding and testing the tree each time
-something has changed, build problems are pinpointed quickly, before other
-developers are inconvenienced by the failure.  Features
+Buildbot is an open-source framework for automating software build, test, and
+release processes.
 
 * Buildbot is easy to set up, but very extensible and customizable.  It
   supports arbitrary build processes, and is not limited to common build

@@ -57,7 +57,7 @@ prefix_output_2 = """\
 """
 
 # this is the svn info output for a local repository, svn info --xml
-# file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository
+# file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository
 prefix_output_3 = """\
 <?xml version="1.0"?>
 <info>
@@ -65,9 +65,9 @@ prefix_output_3 = """\
    kind="dir"
    path="SVN-Repository"
    revision="3">
-<url>file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</url>
+<url>file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</url>
 <repository>
-<root>file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</root>
+<root>file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</root>
 <uuid>c0f47ff4-ba1e-0410-96b5-d44cc5c79e7f</uuid>
 </repository>
 <commit
@@ -79,7 +79,7 @@ prefix_output_3 = """\
 </info>
 """
 
-# % svn info --xml file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk
+# % svn info --xml file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk
 
 prefix_output_4 = """\
 <?xml version="1.0"?>
@@ -88,9 +88,9 @@ prefix_output_4 = """\
    kind="dir"
    path="trunk"
    revision="3">
-<url>file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk</url>
+<url>file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk</url>
 <repository>
-<root>file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</root>
+<root>file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository</root>
 <uuid>c0f47ff4-ba1e-0410-96b5-d44cc5c79e7f</uuid>
 </repository>
 <commit
@@ -105,7 +105,7 @@ prefix_output_4 = """\
 
 # output from svn log on .../SVN-Repository/sample
 # (so it includes trunk and branches)
-sample_base = ("file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/" +
+sample_base = ("file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/" +
                "_trial_temp/test_vc/repositories/SVN-Repository/sample")
 sample_logentries = [None] * 6
 
@@ -206,9 +206,9 @@ sample_info_output = """\
    kind="dir"
    path="sample"
    revision="4">
-<url>file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample</url>
+<url>file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample</url>
 <repository>
-<root>file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository</root>
+<root>file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository</root>
 <uuid>4f94adfc-c41e-0410-92d5-fbf86b7c7689</uuid>
 </repository>
 <commit
@@ -310,12 +310,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         return self.do_test_get_prefix(base, prefix_output_2, '')
 
     def test_get_prefix_3(self):
-        base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
+        base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
                 "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository")
         return self.do_test_get_prefix(base, prefix_output_3, '')
 
     def test_get_prefix_4(self):
-        base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
+        base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
                 "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk")
         return self.do_test_get_prefix(base, prefix_output_3, 'sample/trunk')
 
@@ -352,7 +352,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(new), 0)
 
     def test_create_changes(self):
-        base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
+        base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
                 "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample")
         s = self.attachSVNPoller(base, split_file=split_file)
         s._prefix = "sample"
@@ -412,7 +412,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 f["codebase"] = "overriden-codebase"
             return f
 
-        base = ("file:///home/warner/stuff/Projects/BuildBot/trees/" +
+        base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
                 "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample")
         s = self.attachSVNPoller(base, split_file=custom_split_file)
         s._prefix = "sample"
@@ -478,7 +478,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'files': [''],
                 'project': '',
                 'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
                 'revision': '2',
                 'revlink': '',
                 'src': 'svn',
@@ -503,7 +503,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'files': ['main.c'],
                 'project': '',
                 'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
                 'revision': '3',
                 'revlink': '',
                 'src': 'svn',
@@ -517,7 +517,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'files': ['version.c'],
                 'project': '',
                 'properties': {},
-                'repository': 'file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
+                'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
                 'revision': '4',
                 'revlink': '',
                 'src': 'svn',

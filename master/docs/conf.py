@@ -186,7 +186,7 @@ html_use_modindex = True
 # html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'BuildBotdoc'
+htmlhelp_basename = 'Buildbotdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -200,7 +200,7 @@ latex_paper_size = 'a4'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'BuildBot.tex', u'BuildBot Documentation',
+    ('index', 'Buildbot.tex', u'Buildbot Documentation',
      u'Brian Warner', 'manual'),
 ]
 
@@ -233,7 +233,7 @@ latex_show_urls = True
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'buildbot', u'BuildBot Documentation',
+    ('index', 'buildbot', u'Buildbot Documentation',
      [u'Brian Warner'], 1)
 ]
 

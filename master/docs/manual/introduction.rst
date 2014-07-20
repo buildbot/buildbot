@@ -3,7 +3,7 @@
 Introduction
 ============
 
-BuildBot is a system to automate the compile/test cycle required by most
+Buildbot is a system to automate the compile/test cycle required by most
 software projects to validate code changes. By automatically rebuilding and
 testing the tree each time something has changed, build problems are
 pinpointed quickly, before other developers are inconvenienced by the

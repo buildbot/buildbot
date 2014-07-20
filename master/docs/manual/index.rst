@@ -1,4 +1,4 @@
-This is the BuildBot manual for Buildbot version |version|.
+This is the Buildbot manual for Buildbot version |version|.
 
 Buildbot Manual
 ---------------

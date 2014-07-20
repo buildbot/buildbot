@@ -479,7 +479,7 @@ workdir.  Note that the value must be returned immediately - Deferreds are not
 supported.
 
 This can be useful, for example, in scenarios with multiple repositories
-submitting changes to BuildBot. In this case you likely will want to have a
+submitting changes to Buildbot. In this case you likely will want to have a
 dedicated workdir per repository, since otherwise a sourcing step with mode =
 "update" will fail as a workdir with a working copy of repository A can't be
 "updated" for changes from a repository B. Here is an example how you can

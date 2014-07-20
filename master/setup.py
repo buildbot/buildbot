@@ -86,7 +86,7 @@ class our_sdist(sdist):
 
 
 long_description = """
-The BuildBot is a system to automate the compile/test cycle required by
+The Buildbot is a system to automate the compile/test cycle required by
 most software projects to validate code changes. By automatically
 rebuilding and testing the tree each time something has changed, build
 problems are pinpointed quickly, before other developers are
@@ -110,7 +110,7 @@ if 'sdist' in sys.argv or sys.platform == 'win32':
 setup_args = {
     'name': "buildbot",
     'version': version,
-    'description': "BuildBot build automation system",
+    'description': "The Continuous Integration Framework",
     'long_description': long_description,
     'author': "Brian Warner",
     'author_email': "warner-buildbot@lothar.com",
