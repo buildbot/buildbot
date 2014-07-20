@@ -110,7 +110,7 @@ Fixes
   More detailed information is available in :bb:status:`GerritStatusPush`
   section.
 
-* :bb:chsrc:`P4Poller`'s ``server_tz`` parameter now works correctly.
+* :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
