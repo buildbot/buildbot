@@ -15,6 +15,7 @@
 
 
 import os
+import sys
 
 from buildbot.data import connector
 from buildbot.test.fake import fakemaster
@@ -28,14 +29,15 @@ from twisted.internet import defer
 def dataspec(config):
     master = yield fakemaster.make_master()
     data = connector.DataConnector(master)
-
-    dirs = os.path.dirname(config['out'])
-    if dirs and not os.path.exists(dirs):
-        os.makedirs(dirs)
-
-    with open(config['out'], "w") as f:
-        if config['global'] is not None:
-            f.write("window." + config['global'] + '=')
-        f.write(json.dumps(data.allEndpoints(), indent=2))
-    print "written", config['out']
+    if config['out'] != '--':
+        dirs = os.path.dirname(config['out'])
+        if dirs and not os.path.exists(dirs):
+            os.makedirs(dirs)
+        f = open(config['out'], "w")
+    else:
+        f = sys.stdout
+    if config['global'] is not None:
+        f.write("window." + config['global'] + '=')
+    f.write(json.dumps(data.allEndpoints(), indent=2))
+    f.close()
     defer.returnValue(0)

@@ -1,4 +1,4 @@
-angular.module('buildbot.common').factory 'mqService', ['$http', '$rootScope', '$q', ($http, $rootScope, $q) ->
+angular.module('app').factory 'mqService', ['$http', '$rootScope', '$q', ($http, $rootScope, $q) ->
     # private variables
     match = (matcher, value) ->
         # ultra simple matcher used to route event back to the original subscriber

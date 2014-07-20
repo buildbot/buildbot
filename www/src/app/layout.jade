@@ -6,16 +6,11 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     title Buildbot
     meta(name='description', content='Buildbot web UI')
     meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
-    link(rel='stylesheet', href='styles/main.css')
+    link(rel='stylesheet', href='styles.css')
 
-    body(ng-cloak)
+    body(ng-cloak, ng-app="app")
         block content
         block footer
 
     script(src="config.js")
-    case environment || 'prod'
-        when 'prod'
-            script(src="scripts/require.js")
-            script(src="scripts/main.js")
-        default
-            script(src="scripts/libs/require.js", data-main='scripts/main.js')
+    script(src="scripts.js")

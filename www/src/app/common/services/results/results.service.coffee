@@ -1,4 +1,4 @@
-angular.module('buildbot.common').factory 'resultsService',
+angular.module('app').factory 'resultsService',
 ['$log', 'results', 'resultsTexts'
     ($log, results, resultsTexts) ->
         results: results

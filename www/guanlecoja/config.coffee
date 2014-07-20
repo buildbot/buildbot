@@ -23,7 +23,6 @@ module.exports =
             js: [
                 'src/libs/jquery/dist/jquery.js'
                 'src/libs/angular/angular.js'
-                'src/libs/requirejs/require.js'
 
                 'src/libs/angular-animate/angular-animate.js'
                 'src/libs/angular-bootstrap/ui-bootstrap-tpls.js'

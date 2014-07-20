@@ -1,6 +1,5 @@
 # first thing, we install underscore.string inside lodash
-require ['underscore.string'], (_str) ->
-    _.mixin(_str.exports())
+_.mixin(_.str.exports())
 
 angular.module 'app', [
     'ngAnimate'

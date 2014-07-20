@@ -2,10 +2,9 @@
     Recent storage service
 ###
 
-angular.module('buildbot.common').factory 'recentStorage',
+angular.module('app').factory 'recentStorage',
     ['$q', '$window', '$rootScope', ($q, $window, $rootScope) ->
         self = this
-
         db = null
         setUp = false
         self =
