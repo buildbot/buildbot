@@ -1,5 +1,5 @@
 /*global define*/
-define(['jquery', 'helpers'], function ($) {
+define(['jquery'], function ($) {
 
     
 
@@ -10,24 +10,22 @@ define(['jquery', 'helpers'], function ($) {
             LARGE: 1520
         };
 
-    var publicFunc = {
+    return {
         isExtraSmallScreen: function () {
-            return publicFunc.getViewportMediaQuery(viewportSizes.EXTRA_SMALL).matches;
+            return this.getViewportMediaQuery(viewportSizes.EXTRA_SMALL).matches;
         },
         isSmallScreen: function () {
-            return publicFunc.getViewportMediaQuery(viewportSizes.SMALL).matches;
+            return this.getViewportMediaQuery(viewportSizes.SMALL).matches;
         },
         isMediumScreen: function () {
-            return publicFunc.getViewportMediaQuery(viewportSizes.MEDIUM).matches;
+            return this.getViewportMediaQuery(viewportSizes.MEDIUM).matches;
         },
         isLargeScreen: function () {
-            return publicFunc.getViewportMediaQuery(viewportSizes.LARGE).matches;
+            return this.getViewportMediaQuery(viewportSizes.LARGE).matches;
         },
         getViewportMediaQuery: function (size) {
             return window.matchMedia("(min-width: {0}px".format(size));
         },
         viewportSizes: viewportSizes
     };
-
-    return publicFunc;
 });

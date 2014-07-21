@@ -145,7 +145,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
 
                     if ($elem.attr("title") !== undefined) {
                         $elem.attr("data-title", $elem.attr("title"));
-                        $elem.attr("title", undefined);
+                        $elem.removeAttr("title");
                     }
                     title = $elem.attr("data-title");
 
