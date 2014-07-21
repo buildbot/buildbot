@@ -58,8 +58,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                             delete opts.html;
                             $elem = null;
 
-                            $(document).off("click.popup touchstart.popup");
-                            $(window).off("resize.popup");
+                            $(document).off("click.katana.popup touchstart.katana.popup");
+                            $(window).off("resize.katana.popup");
                         } else {
                             $elem.empty();
                         }
@@ -72,7 +72,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         privateFunc.initCloseButton();
                         helpers.jCenter($elem);
                         if (opts.center) {
-                            $(window).on("resize.popup", function () {
+                            $(window).on("resize.katana.popup", function () {
                                 helpers.jCenter($elem);
                             });
                         }
@@ -89,8 +89,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 },
                 hidePopup: function () {
                     //Remove event handlers
-                    $(document).off("click.popup touchstart.popup");
-                    $(window).off("resize.popup");
+                    $(document).off("click.katana.popup touchstart.katana.popup");
+                    $(window).off("resize.katana.popup");
 
                     if (opts.animate) {
                         $elem.fadeOut(opts.hideAnimation, function () {
@@ -105,11 +105,11 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     }
                 },
                 initCloseButton: function () {
-                    $(document).on("click.popup touchstart.popup", function (e) {
+                    $(document).on("click.katana.popup touchstart.katana.popup", function (e) {
                         if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
                             if ($elem.is(":visible")) {
                                 privateFunc.hidePopup();
-                                $(this).unbind("click.popup touchstart.popup", e.callee);
+                                $(this).off("click.katana.popup touchstart.katana.popup", e.callee);
                             }
                         }
                     });

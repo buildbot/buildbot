@@ -26,7 +26,7 @@ define(['main'], function () {
                         this.each(function (i) {
                             $.fn.dataTableExt.iApiIndex = i;
                             var anControl = $('input', that.fnSettings().aanFeatures.f);
-                            anControl.unbind('keyup').bind('keypress', function (e) {
+                            anControl.unbind('keyup').bind('keypress.katana', function (e) {
                                 if (e.which === 13) {
                                     $.fn.dataTableExt.iApiIndex = i;
                                     that.fnFilter(anControl.val());

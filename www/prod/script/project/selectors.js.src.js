@@ -33,7 +33,7 @@ define(['jquery', 'select2'], function ($) {
 
             // unbind the click event on close for the sorting functionality
             $commonBranchSelect.add($selectBranches).on("select2-close", function () {
-                $('.sort-name').unbind('click');
+                $('.sort-name').unbind('click.katana');
                 $('.select2-container').removeClass('select2-container-active');
             });
 
@@ -106,7 +106,7 @@ define(['jquery', 'select2'], function ($) {
             var selectResults = selector.children(".select2-results");
             var sortLink = selector.children('.sort-name');
 
-            sortLink.bind('click', function (e) {
+            sortLink.bind('click.katana', function (e) {
                 e.preventDefault();
                 sortLink.toggleClass('direction-up');
                 selectResults.children('li').sort(function (a, b) {

@@ -83,7 +83,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
                     }
                 },
                 hideDropdown: function () {
-                    $(document).off("click.dropdown touchstart.dropdown");
+                    $(document).off("click.katana.dropdown touchstart.katana.dropdown");
 
                     if (($.isFunction(opts.animate) && opts.animate()) || (!$.isFunction(opts.animate) && opts.animate)) {
                         $dropdown.slideUp(opts.hideAnimation, function () {
@@ -99,12 +99,12 @@ define(['jquery', 'screensize'], function ($, screenSize) {
                 },
                 initCloseButton: function () {
                     //Hide when clicking document or close button clicked
-                    $(document).on("click.dropdown touchstart.dropdown", function (e) {
+                    $(document).on("click.katana.dropdown touchstart.katana.dropdown", function (e) {
                         if ((!$dropdown.is(e.target) && $dropdown.has(e.target).length === 0) || $dropdown.find(".close-btn").is(e.target)) {
                             if (isVisible) {
                                 dropdownPrivate.hideDropdown();
                             }
-                            $(this).unbind(e);
+                            $(this).off(e);
                         }
                     });
                 }

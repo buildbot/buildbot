@@ -149,7 +149,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                     }
                     title = $elem.attr("data-title");
 
-                    $elem.bind("click", clickHandler);
+                    $elem.bind("click.katana", clickHandler);
 
                     if (screenSize.isMediumScreen() || !$elem.hasClass('responsive-tooltip')) {
                         $toolTipCont.html(title)
@@ -404,7 +404,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 $('.tool-tip').remove();
             });
             // ios fix
-            $(document).bind('click touchstart', function (e) {
+            $(document).bind('click.katana touchstart.katana', function (e) {
                 $('.tool-tip').remove();
                 $(this).unbind(e);
             });
@@ -517,7 +517,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
 
             var closeBtn = $('.close-btn').add(document);
 
-            closeBtn.bind('click touchstart', function (e) {
+            closeBtn.bind('click.katana touchstart.katana', function (e) {
 
                 if ((!$(e.target).closest(boxElement).length || $(e.target).closest('.close-btn').length)) {
 
@@ -593,7 +593,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
          * @param $elem
          */
         clearChildEvents: function ($elem) {
-            $elem.find("*").addBack().off();
+            $elem.find("*").addBack().off(".katana");
         },
         cssClassesEnum : css_class_enum
     };
