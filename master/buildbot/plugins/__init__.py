@@ -22,6 +22,9 @@ from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
 
+
+__all__ = ['changes', 'schedulers', 'buildslave']
+
 # Names here match the names of the corresponding Buildbot module, hence
 # 'changes', 'schedulers', but 'buildslave'
 changes = get_plugins('change_source', IChangeSource)
