@@ -145,6 +145,11 @@ define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment)
                 "time": parseInt(startTimestamp, 10),
                 "eta": parseInt(eta, 10)
             };
+
+            if (isNaN(obj.eta)) {
+                obj.eta = 0;
+            }
+
             privateFunc.addElem($el, obj, timeObjects.progressBars);
         },
         updateTimeObjects: function () {

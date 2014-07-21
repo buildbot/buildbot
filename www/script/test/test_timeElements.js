@@ -45,6 +45,8 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
             expect($elem.text()).toContain("ETA:");
         } else if (eta < 0) {
             expect($elem.text()).toContain("Overtime:");
+        } else {
+            expect($elem.text()).toContain("Elapsed:");
         }
 
         moment.lang(old_lang);
@@ -225,6 +227,11 @@ define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], functio
         it("shows the correct time for 30 seconds without eta", function () {
             var time = serverTimeOffset.subtract("seconds", 30).startOf('second').unix();
             testProgressBar(time, 0, "progress-bar-no-eta-en");
+        });
+
+        it("shows the correct time for 30 seconds with undefined eta", function () {
+            var time = serverTimeOffset.subtract("seconds", 30).startOf('second').unix();
+            testProgressBar(time, undefined, "progress-bar-no-eta-en");
         });
 
         it("shows the correct time of 30 seconds with eta of 60 seconds", function () {
