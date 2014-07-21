@@ -8,8 +8,8 @@ require.config({
         'ui.preloader': 'project/ui/preloader',
         'selectors': 'project/selectors',
         'select2': 'plugins/select2',
-        'datatables-plugin': 'plugins/jquery-datatables',
-        'dataTables': 'project/dataTables',
+        'datatables': 'libs/jquery-datatables',
+        'datatables-extend': 'project/datatables-extend',
         'dotdotdot': 'plugins/jquery-dotdotdot',
         'screensize': 'project/screen-size',
         'helpers': 'project/helpers',
@@ -52,7 +52,7 @@ define('jquery', ['jquery-internal'], function () {
     return jQuery;
 });
 
-define(['jquery', 'helpers', 'dataTables', 'ui.popup', 'ui.dropdown', 'extend-moment', 'mustache', 'timeElements',
+define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'extend-moment', 'mustache', 'timeElements',
         'URIjs/URI', 'rtGlobal', 'toastr', 'realtimerouting', 'realtimePages', 'rtBuilders', 'overscroll', 'ui.preloader', 'screensize'],
     function ($, helpers, dataTables, popup, dropdown, extendMoment, Mustache, timeElements, URI, rtGlobal, toastr) {
 

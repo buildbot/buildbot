@@ -2,7 +2,7 @@
 define(['main'], function () {
     "use strict";
 
-    require(['jquery', 'moment', 'helpers', 'datatables-plugin'], function ($, moment, helpers) {
+    require(['jquery', 'moment', 'helpers', 'datatables-extend'], function ($, moment, helpers) {
         var oTable,
             th,
             privateFunc = {

@@ -9,14 +9,14 @@ plugins/moment-with-langs.js
 project/extendMoment.js
 project/timeElements.js
 project/helpers.js
-plugins/jquery-datatables.js
+libs/jquery-datatables.js
 libs/natural-sort.js
 libs/jquery.form.js
 text.js
 text!templates/popups.mustache
 plugins/toastr.js
 project/ui/popup.js
-project/dataTables.js
+project/datatables-extend.js
 project/ui/dropdown.js
 libs/uri/punycode.js
 libs/uri/IPv6.js

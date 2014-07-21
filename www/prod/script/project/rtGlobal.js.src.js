@@ -1,5 +1,5 @@
 /*global define, requirejs*/
-define(['jquery', 'helpers', 'dataTables', 'extend-moment'], function ($, helpers, dt, extendMoment) {
+define(['jquery', 'helpers', 'datatables-extend', 'extend-moment'], function ($, helpers, dt, extendMoment) {
     
     var buildQueueTotal = $('#buildQueueTotal'),
         buildSlavesTotal = $('#buildSlavesTotal'),

@@ -1,5 +1,5 @@
 /*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'dataTables', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements', 'rtGenericTable', 'moment', 'ui.popup'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements, rtTable, moment, popup) {
+define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements', 'rtGenericTable', 'moment', 'ui.popup'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements, rtTable, moment, popup) {
     "use strict";
     var rtBuildSlaves,
         $tbSlaves;

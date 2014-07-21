@@ -1,5 +1,5 @@
 /*global define, Handlebars*/
-define(['jquery', 'dataTables', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'ui.popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
+define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'ui.popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
 
     
 
