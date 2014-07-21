@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
+import inspect
 
 import os
 import re
@@ -26,6 +27,13 @@ from buildbot.revlinks import default_revlink_matcher
 from twisted.python import log, failure
 from twisted.internet import defer
 from twisted.application import service
+
+#Make sure we can load our www module from the master folder
+buildbot_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0] + "../../../"
+buildbot_folder = os.path.realpath(os.path.abspath(buildbot_folder))
+print buildbot_folder
+if buildbot_folder not in sys.path:
+    sys.path.append(buildbot_folder)
 
 class ConfigErrors(Exception):
 
