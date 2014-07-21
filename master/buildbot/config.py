@@ -31,7 +31,6 @@ from twisted.application import service
 #Make sure we can load our www module from the master folder
 buildbot_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0] + "../../../"
 buildbot_folder = os.path.realpath(os.path.abspath(buildbot_folder))
-print buildbot_folder
 if buildbot_folder not in sys.path:
     sys.path.append(buildbot_folder)
 
