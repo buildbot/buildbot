@@ -116,7 +116,7 @@ Source Stamp Attributes
 
 ``changes``
 
-    This attribute is a list of dictionaries reperesnting the changes that make up this sourcestamp.
+    This attribute is a list of dictionaries representing the changes that make up this sourcestamp.
 
 Using Properties in Steps
 -------------------------
