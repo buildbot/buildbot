@@ -74,9 +74,9 @@ def makeSampleConfig(config):
 
 def makePublicHtml(config):
     files = {
-        'bg_gradient.jpg' : "../status/web/files/bg_gradient.jpg",
-        'robots.txt' : "../status/web/files/robots.txt",
-        'favicon.ico' : "../status/web/files/favicon.ico",
+        'bg_gradient.jpg' : "../../../www/images/bg_gradient.jpg",
+        'robots.txt' : "../../../www/robots.txt",
+        'favicon.ico' : "../../../www/favicon.ico",
     }
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
@@ -96,7 +96,7 @@ def makePublicHtml(config):
 
 def makeTemplatesDir(config):
     files = {
-        'README.txt' : "../status/web/files/templates_readme.txt",
+        'README.txt' : "../../../www/templates_readme.txt",
     }
     template_dir = os.path.join(config['basedir'], "templates")
     if os.path.exists(template_dir):
