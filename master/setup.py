@@ -232,6 +232,72 @@ setup_args = {
             ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
             ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
             ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave'])
+        ]),
+        ('buildbot.step', [
+            ('buildbot.process.buildstep', ['BuildStep']),
+            ('buildbot.steps.http', [
+                'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
+                'OPTIONS']),
+            ('buildbot.steps.master', [
+                'MasterShellCommand', 'SetProperty', 'LogRenderable']),
+            ('buildbot.steps.maxq', ['MaxQ']),
+            ('buildbot.steps.mswin', ['Robocopy']),
+            ('buildbot.steps.mtrlogobserver', ['MTR']),
+            ('buildbot.steps.package.deb.lintian', ['DebLintian']),
+            ('buildbot.steps.package.deb.pbuilder', [
+                'DebPbuilder', 'DebCowbuilder', 'UbuPbuilder',
+                'UbuCowbuilder']),
+            ('buildbot.steps.package.rpm.mock', [
+                'Mock', 'MockBuildSRPM', 'MockRebuild']),
+            ('buildbot.steps.package.rpm.rpmbuild', ['RpmBuild']),
+            ('buildbot.steps.package.rpm.rpmspec', ['RpmSpec']),
+            ('buildbot.steps.python', [
+                'BuildEPYDoc', 'PyFlakes', 'PyLint', 'Sphinx']),
+            ('buildbot.steps.python_twisted', [
+                'HLint', 'Trial', 'RemovePYCs']),
+            ('buildbot.steps.shell', [
+                'ShellCommand', 'TreeSize', 'SetPropertyFromCommand',
+                'Configure', 'WarningCountingShellCommand', 'Compile',
+                'Test', 'PerlModuleTest']),
+            ('buildbot.steps.shellsequence', ['ShellSequence']),
+            ('buildbot.steps.slave', [
+                'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
+                'RemoveDirectory', 'MakeDirectory']),
+            ('buildbot.steps.source.bzr', ['Bzr']),
+            ('buildbot.steps.source.cvs', ['CVS']),
+            ('buildbot.steps.source.darcs', ['Darcs']),
+            ('buildbot.steps.source.git', ['Git']),
+            ('buildbot.steps.source.mercurial', ['Mercurial']),
+            ('buildbot.steps.source.mtn', ['Monotone']),
+            ('buildbot.steps.source.p4', ['P4']),
+            ('buildbot.steps.source.repo', ['Repo']),
+            ('buildbot.steps.source.svn', ['SVN']),
+            ('buildbot.steps.subunit', ['SubunitShellCommand']),
+            ('buildbot.steps.transfer', [
+                'FileUpload', 'DirectoryUpload', 'MultipleFileUpload',
+                'FileDownload', 'StringDownload', 'JSONStringDownload',
+                'JSONPropertiesDownload']),
+            ('buildbot.steps.trigger', ['Trigger']),
+            ('buildbot.steps.vstudio', [
+                'VC6', 'VC7', 'VS2003', 'VC8', 'VS2005', 'VCExpress9', 'VC9',
+                'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
+                'MsBuild4', 'MsBuild', 'MsBuild12'])
+        ]),
+        ('buildbot.status', [
+            ('buildbot.status.mail', ['MailNotifier']),
+            ('buildbot.status.words', ['IRC']),
+            ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
+            ('buildbot.status.status_gerrit', ['GerritStatusPush']),
+            ('buildbot.status.github', ['GitHubStatus'])
+        ]),
+        ('buildbot.util', [
+            ('buildbot.process.factory', [
+                'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
+                'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
+            ('buildbot.changes.filter', ['ChangeFilter']),
+            ('buildbot.config', ['BuilderConfig']),
+            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
+            ('buildbot.steps.shellsequence', ['ShellArg'])
         ])
     ])
 }

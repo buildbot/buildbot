@@ -1291,3 +1291,10 @@ class IBuildStepFactory(Interface):
 
     def buildStep():
         pass
+
+
+class IBuildStep(IPlugin):
+    """
+    A build step
+    """
+    # Currently has nothing

@@ -85,6 +85,8 @@ class _BuildStepFactory(util.ComparableMixin):
 
 class BuildStep(object, properties.PropertiesMixin):
 
+    implements(interfaces.IBuildStep)
+
     haltOnFailure = False
     flunkOnWarnings = False
     flunkOnFailure = False

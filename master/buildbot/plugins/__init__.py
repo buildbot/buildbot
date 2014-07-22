@@ -19,14 +19,16 @@ Buildbot plugin infrastructure
 
 from buildbot.plugins.db import get_plugins
 from buildbot.interfaces import IBuildSlave
+from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
 
 
-__all__ = ['changes', 'schedulers', 'buildslave']
+__all__ = ['changes', 'schedulers', 'buildslave', 'steps']
 
 # Names here match the names of the corresponding Buildbot module, hence
 # 'changes', 'schedulers', but 'buildslave'
 changes = get_plugins('change_source', IChangeSource)
 schedulers = get_plugins('scheduler', IScheduler)
 buildslave = get_plugins('build_slave', IBuildSlave)
+steps = get_plugins('step', IBuildStep)
