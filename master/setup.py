@@ -291,13 +291,52 @@ setup_args = {
             ('buildbot.status.github', ['GitHubStatus'])
         ]),
         ('buildbot.util', [
+            # Connection seems to be a way too generic name, though
+            ('buildbot.buildslave.libvirt', ['Connection']),
+            ('buildbot.changes.filter', ['ChangeFilter']),
+            ('buildbot.changes.gerritchangesource', ['GerritChangeFilter']),
+            ('buildbot.changes.svnpoller', [
+                ('svn.split_file_projects_branches',
+                 'split_file_projects_branches'),
+                ('svn.split_file_branches', 'split_file_branches'),
+                ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
+            ('buildbot.config', ['BuilderConfig']),
+            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
+            ('buildbot.manhole', [
+                'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
+            ('buildbot.process.builder', ['enforceChosenSlave']),
             ('buildbot.process.factory', [
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
-            ('buildbot.changes.filter', ['ChangeFilter']),
-            ('buildbot.config', ['BuilderConfig']),
-            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
-            ('buildbot.steps.shellsequence', ['ShellArg'])
+            ('buildbot.process.logobserver', ['LogLineObserver']),
+            ('buildbot.process.properties', [
+                'FlattenList', 'Interpolate', 'Property', 'WithProperties',
+                'renderer']),
+            ('buildbot.process.properties', [
+                'CommandlineUserManager']),
+            ('buildbot.revlinks', ['RevlinkMatch']),
+            ('buildbot.schedulers.forcesched', [
+                'AnyPropertyParameter', 'BooleanParameter',
+                'BuildslaveChoiceParameter', 'ChoiceStringParameter',
+                'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
+                'IntParameter', 'NestedParameter', 'ParameterGroup',
+                'StringParameter', 'TextParameter', 'UserNameParameter']),
+            ('buildbot.status.results', [
+                'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
+                'EXCEPTION', 'RETRY', 'CANCELLED']),
+            ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
+            ('buildbot.steps.source.repo', [
+                ('repo.DownloadsFromChangeSource',
+                 'RepoDownloadsFromChangeSource'),
+                ('repo.DownloadsFromProperties',
+                 'RepoDownloadsFromProperties')]),
+            ('buildbot.steps.shellsequence', ['ShellArg']),
+            ('buildbot.www.avatar', ['AvatarGravatar']),
+            ('buildbot.www.auth', [
+                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
+            ('buildbot.www.ldapuserinfos', ['LdapUserInfo']),
+            ('buildbot.www.oauth2', [
+                'GoogleAuth', 'GitHubAuth'])
         ])
     ])
 }
