@@ -226,6 +226,8 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin):
 
+    implements(interfaces.IBuildStep)
+
     alwaysRun = False
     doStepIf = True
     hideStepIf = False

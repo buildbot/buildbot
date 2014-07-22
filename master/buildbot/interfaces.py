@@ -1137,6 +1137,13 @@ class IBuildStepFactory(Interface):
         pass
 
 
+class IBuildStep(IPlugin):
+    """
+    A build step
+    """
+    # Currently has nothing
+
+
 class IConfigured(Interface):
 
     def getConfigDict():
