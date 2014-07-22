@@ -18,6 +18,7 @@ from __future__ import with_statement
 
 import os, re, itertools
 from cPickle import load, dump
+import datetime
 from buildbot.interfaces import IStatusReceiver
 from twisted.internet import defer
 
@@ -66,6 +67,7 @@ class BuilderStatus(styles.Versioned):
     unavailable_build_numbers = set()
     pendingBuildsCache = None
     status = None
+    latestBuildCache = {}
 
     def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
@@ -113,6 +115,11 @@ class BuilderStatus(styles.Versioned):
         del d['status']
         del d['nextBuildNumber']
         del d['master']
+
+        if 'pendingBuildCache' in d:
+            del d['pendingBuildCache']
+
+        d['latestBuildCache'] = self.latestBuildCache
         return d
 
     def __setstate__(self, d):
@@ -153,12 +160,14 @@ class BuilderStatus(styles.Versioned):
         else:
             self.nextBuildNumber = 0
 
-    def saveYourself(self):
-        for b in self.currentBuilds:
-            if not b.isFinished:
-                # interrupted build, need to save it anyway.
-                # BuildStatus.saveYourself will mark it as interrupted.
-                b.saveYourself()
+    def saveYourself(self, skipBuilds=False):
+        if skipBuilds is False:
+            for b in self.currentBuilds:
+                if not b.isFinished:
+                    # interrupted build, need to save it anyway.
+                    # BuildStatus.saveYourself will mark it as interrupted.
+                    b.saveYourself()
+
         filename = os.path.join(self.basedir, "builder")
         tmpfilename = filename + ".tmp"
         try:
@@ -402,7 +411,24 @@ class BuilderStatus(styles.Versioned):
                                max_buildnum=None,
                                finished_before=None,
                                results=None,
-                               max_search=2000):
+                               max_search=2000,
+                               useCache=False):
+
+        key = self.getLatestBuildKey(codebases)
+        if useCache and num_builds == 1:
+            if key in self.latestBuildCache:
+                cache = self.latestBuildCache[key]
+                max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
+                if datetime.datetime.now() - cache["date"] > max_cache:
+                    del self.latestBuildCache[key]
+                elif cache["build"] is not None:
+                    b = self.getBuild(self.latestBuildCache[key]["build"])
+                    if b is not None:
+                        yield b
+                        return
+                else:
+                    return
+
         got = 0
         branches = set(branches)
         codebases = codebases
@@ -437,7 +463,13 @@ class BuilderStatus(styles.Versioned):
             yield build
             if num_builds is not None:
                 if got >= num_builds:
+                    #Save our latest builds to the cache
+                    if useCache and num_builds == 1:
+                        self.saveLatestBuild(build, key)
                     return
+
+        self.saveLatestBuild(build=None, key=key)
+
 
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this
@@ -607,7 +639,45 @@ class BuilderStatus(styles.Versioned):
                 log.msg("Exception caught notifying %r of buildFinished event" % w)
                 log.err()
 
+        self.saveLatestBuild(s)
         self.prune() # conserve disk
+
+    def getLatestBuildKey(self, codebases):
+        project = self.master.getProject(self.getProject())
+        project_codebases = project.codebases
+        cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+
+        output = ""
+        for cb in cb_keys:
+            key = cb.keys()[0]
+            branch = cb[key]["branch"]
+            if key in codebases:
+                branch = codebases[key]
+            output += "{0}={1}".format(key, branch)
+
+        return output
+
+    def saveLatestBuild(self, build, key=None):
+        cache = {"build": None, "date": datetime.datetime.now()}
+
+        if build is not None:
+            cache["build"] = build.number
+
+        if key is None:
+            #Save the latest build to all matching keys
+            ss = build.getSourceStamps()
+            if len(ss):
+                codebases = sorted(ss, key=lambda s: s.codebase)
+                key = ""
+                for c in codebases:
+                    key += "{0}={1}".format(c.codebase, c.branch)
+
+                for k in self.latestBuildCache.keys():
+                    if key in k:
+                        self.latestBuildCache[k] = cache
+        else:
+            self.latestBuildCache[key] = cache
+        self.saveYourself(skipBuilds=True)
 
 
     def asDict(self, codebases={}, request=None, base_build_dict=False):

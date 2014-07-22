@@ -86,6 +86,7 @@ class MasterConfig(object):
         self.analytics_code = None
         self.gzip = True
         self.autobahn_push = "false"
+        self.lastBuildCacheDays = 30
 
         self.ldap = dict(
             ldap_server = 'my_ldap_server',
@@ -124,7 +125,8 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip", "autobahn_push"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
+        "autobahn_push", "lastBuildCacheDays"
     ])
 
     @classmethod
@@ -265,6 +267,7 @@ class MasterConfig(object):
         copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
+        copy_int_param('lastBuildCacheDays')
 
         copy_int_param('logCompressionLimit')
 
