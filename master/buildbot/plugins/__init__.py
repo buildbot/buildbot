@@ -25,7 +25,7 @@ from buildbot.interfaces import IScheduler
 from buildbot.interfaces import IStatusReceiver
 
 
-__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'status']
+__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'status', 'util']
 
 
 # Names here match the names of the corresponding Buildbot module, hence
@@ -35,3 +35,4 @@ schedulers = get_plugins('scheduler', IScheduler)
 buildslave = get_plugins('build_slave', IBuildSlave)
 steps = get_plugins('step', IBuildStep)
 status = get_plugins('status', IStatusReceiver)
+util = get_plugins('util', None)
