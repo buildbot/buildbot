@@ -889,7 +889,7 @@ class IStatusLogConsumer(Interface):
         """The log has finished sending chunks to the consumer."""
 
 
-class IStatusReceiver(Interface):
+class IStatusReceiver(IPlugin):
 
     """I am an object which can receive build status updates. I may be
     subscribed to an IStatus, an IBuilderStatus, or an IBuildStatus."""
