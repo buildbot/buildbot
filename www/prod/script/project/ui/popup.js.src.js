@@ -329,7 +329,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                 openPopup();
             });
         },
-        initRunBuild: function (customBuildElem, instantBuildElem) {
+        initRunBuild: function (customBuildElem, instantBuildElem, redirectToBuilder) {
             var $customBuild = $(customBuildElem),
                 $instantBuild = $(instantBuildElem);
 
@@ -374,6 +374,9 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                             $("#preloader").preloader("hidePreloader");
                                         },
                                         success: function (data) {
+                                            if (redirectToBuilder) {
+                                                window.location.href = builderURL;
+                                            }
                                             requirejs(['realtimePages'], function (realtimePages) {
                                                 var name = dataReturnPage.replace("_json", "");
                                                 realtimePages.updateSingleRealTimeData(name, data);

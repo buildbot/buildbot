@@ -319,7 +319,8 @@
   </form>
 {% endmacro %}
 
-{% macro rebuild_build(rebuild_url, authz, exactly, ss) %}
+{% macro rebuild_build(rebuild_url, authz, exactly, ss, builderName, url) %}
+<div class="forms-inline">
  <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
 
     {% if exactly %}
@@ -350,6 +351,12 @@
      <input class="grey-btn" type="submit" value="Rebuild" />
    
  </form>
+
+ <form method="post" action="#" class="rebuild">
+     <input type="button" class="instant-build grey-btn" value="Build Latest" title="Run build at latest changes">
+     <input type="button" class="custom-build grey-btn" value="Custom Build" title="Run custom build" data-popup-title="Run custom build" data-builder-name="{{builderName}}" data-builder-url="{{url}}" data-return-page="builders_json">
+ </form>
+</div>
 {% endmacro %}
 
 {% macro show_users(users_url, authz) %}

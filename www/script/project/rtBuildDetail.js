@@ -88,6 +88,9 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
 
                 $body.append($popup);
             });
+
+            // Setup build buttons
+            popups.initRunBuild($(".custom-build"), $(".instant-build"), true);
         },
         processBuildDetailPage: function (data) {
             //We get slighlty different data objects from autobahn
