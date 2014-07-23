@@ -49,28 +49,17 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             'buildbot', 'topic', channel=self.channel, durable=True)
         # NOTE(damon) if durable = false, durable queue will cant bind to this
         # exchange
-        try:
-            self.exchange.declare()
-        except amqp.exceptions.PreconditionFailed, e:
-            log.msg(
-                "WARNNING: exchange buildbot already exist, " +
-                "this maybe casued by anomaly exit last time")
-            # NOTE(damon) should we raise Exception here?
-        except:
-            log.msg("ERR: Unexpected error")
-            raise
-        finally:
-            log.msg("MSG: Exchange start successfully")
+        self.exchange.declare()
+        log.msg("MSG: Exchange start successfully")
 
     def reconfigService(self, new_config):
         self.debug = new_config.mq.get('debug', True)
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        return config.ReconfigurableServiceMixin.reconfigService(self,  new_config)
 
     def registerQueue(self, key, name=None, durable=False):
-        if name == None:
+        if name is None:
             name = key
-        if self._checkKey(key) == True:
+        if self._checkKey(key):
             # NOTE(damon) check for if called by other class
             self.queues[name] = kombu.Queue(
                 name, self.exchange, channel=self.channel, routing_key=key,
@@ -87,7 +76,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         for queue in self.queues.values():
             if queue.routing_key == key:
                 return False
-        return True
+        return not any(queue.routing_key == key for queue in self.queues.values())
 
     def produce(self, routingKey, data):
         self.debug = True
@@ -99,8 +88,8 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         try:
             self.producer.publish(message.body, routing_key=key)
         except:
-            ensurePublish = self.conn.ensure(self.producer, 
-                                        self.producer.publish, max_retries=3)
+            ensurePublish = self.conn.ensure(self.producer,
+                                             self.producer.publish, max_retries=3)
             ensurePublish(message.body, routing_key=key)
 
     def registerConsumer(self, queues_name, callback, name=None, durable=False):
@@ -109,7 +98,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         if name == None:
             name = queues_name
 
-        if type(queues_name) == list:
+        if isinstance(queues_name, list):
             queues = self.getQueues(queues_name)
         else:
             queues = self.queues.get(queues_name)
@@ -119,28 +108,17 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             self.consumers[name].register_callback(callback)
 
     def getQueues(self, queues_name):
-        queues = []
-        for name in queues_name:
-            queues.append(self.queues[name])
-        return queues
+        return [self.queues[name] for name in queues_name]
 
     def startConsuming(self, callback, routingKey, persistent_name=None):
         key = self.formatKey(routingKey)
 
-        try:
-            queue = self.queues[key]
-        except:
-            try:
-                self.registerQueue(key)
-            except:
-                ensureRegister = self.conn.ensure(None, 
-                                                  self.registerQueue, 
-                                                  max_retries=3)
-                ensureRegister(key)
-            try:
-                queue = self.queues.get(key)
-            except:
-                raise
+        if key not in self.queues:
+            ensureRegister = self.conn.ensure(None,
+                                              self.registerQueue,
+                                              max_retries=5)
+            ensureRegister(key)
+        queue = self.queues.get(key)
 
         if key in self.consumers.keys():
             log.msg(
@@ -154,9 +132,6 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
                 self.consumers[key].register_callback(callback)
         else:
             self.registerConsumer(key, callback)
-
-        # self.consumers[key].addCallback = self.consumers[key].register_callback
-        # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
 
         return DeferConsumer(self.consumers[key])
 
@@ -177,24 +152,16 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             for key in data:
                 if isinstance(data[key], datetime):
                     data[key] = datetime2epoch(data[key])
-                elif type(data[key]) in (dict, list, tuple):
+                elif isinstance(data[index], (dict, list, tuple)):
                     data[key] = self.formatData(data[key])
         elif type(data) in (list, tuple):
             for index in range(len(data)):
                 if isinstance(data[index], datetime):
                     data[index] = datetime2epoch(data[index])
-                elif type(data[index]) in (dict, list, tuple):
+                elif isinstance(data[index], (dict, list, tuple)):
                     data[index] = self.formatData(data[index])
 
         return data
-
-
-    def __exit__(self):
-        self.message_hub.__exit__()
-        for queue in self.queues:
-            queue.delete(nowait=True)
-        self.exchange.delete(nowait=True)
-        self.conn.release()
 
 
 class KombuHub(multiprocessing.Process):
@@ -212,15 +179,16 @@ class KombuHub(multiprocessing.Process):
 
     def run(self):
         if self.attempts == 0:
-           raise "Attempts run kombu hub 5 times and all fail"
+            raise "Attempts run kombu hub 5 times and all fail"
         try:
-           self.hub.run_forever()
+            self.hub.run_forever()
         except:
-           self.attempts = self.attempts - 1
-           self.run()
+            self.attempts = self.attempts - 1
+            self.run()
 
     def __exit__(self):
         self.hub.stop()
+
 
 class DeferConsumer(object):
 
