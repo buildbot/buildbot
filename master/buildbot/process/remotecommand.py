@@ -353,7 +353,7 @@ class RemoteShellCommand(RemoteCommand):
             # fixup themselves
             if self.step.slaveVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
-            if not self.step.slaveVersionIsOlderThan("shell", "2.16"):
+            if self.step.slaveVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])
