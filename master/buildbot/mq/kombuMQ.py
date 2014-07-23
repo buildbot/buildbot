@@ -22,6 +22,7 @@ import multiprocessing
 from buildbot import config
 from buildbot.mq import base
 from buildbot.util import datetime2epoch
+from buildbot.util import json
 from datetime import datetime
 from kombu.transport.base import Message
 from twisted.python import log
@@ -83,7 +84,8 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         if self.debug:
             log.msg("MSG: %s\n%s" % (routingKey, pprint.pformat(data)))
         key = self.formatKey(routingKey)
-        data = self.formatData(data)
+        data = json.dumps(data, default=self._toJson,
+                          sort_keys=True, separators=(',', ':'))
         message = Message(self.channel, body=data)
         try:
             self.producer.publish(message.body, routing_key=key)
@@ -147,21 +149,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
 
         return result[:-1]
 
-    def formatData(self, data):
-        if isinstance(data, dict):
-            for key in data:
-                if isinstance(data[key], datetime):
-                    data[key] = datetime2epoch(data[key])
-                elif isinstance(data[index], (dict, list, tuple)):
-                    data[key] = self.formatData(data[key])
-        elif type(data) in (list, tuple):
-            for index in range(len(data)):
-                if isinstance(data[index], datetime):
-                    data[index] = datetime2epoch(data[index])
-                elif isinstance(data[index], (dict, list, tuple)):
-                    data[index] = self.formatData(data[index])
-
-        return data
+    def _toJson(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return datetime2epoch(obj)
 
 
 class KombuHub(multiprocessing.Process):
