@@ -471,7 +471,8 @@ class BuilderStatus(styles.Versioned):
                         self.saveLatestBuild(build, key)
                     return
 
-        self.saveLatestBuild(build=None, key=key)
+        if useCache and num_builds == 1:
+            self.saveLatestBuild(build=None, key=key)
 
 
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
@@ -669,11 +670,8 @@ class BuilderStatus(styles.Versioned):
         if key is None:
             #Save the latest build to all matching keys
             ss = build.getSourceStamps()
-            if len(ss):
-                codebases = sorted(ss, key=lambda s: s.codebase)
-                key = ""
-                for c in codebases:
-                    key += "{0}={1}".format(c.codebase, c.branch)
+            for s in ss:
+                key = "{0}={1}".format(s.codebase, s.branch)
 
                 for k in self.latestBuildCache.keys():
                     if key in k:
