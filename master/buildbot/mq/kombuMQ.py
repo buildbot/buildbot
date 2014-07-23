@@ -39,7 +39,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         self.queues = {}
         self.producer = kombu.Producer(
             self.channel, exchange=self.exchange, auto_declare=False)
-        # NOTE(damon) auto_declrae often cause redeclare and will cause error
+        # NOTE(damon) auto_declrae often causes redeclare and will cause error
         self.consumers = {}
         self.message_hub = KombuHub(self.conn)
         self.message_hub.start()
@@ -47,7 +47,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def setupExchange(self):
         self.exchange = kombu.Exchange(
             'buildbot', 'topic', channel=self.channel, durable=True)
-        # NOTE(damon) if durable = false, durable queue will cant bind to this
+        # NOTE(damon) if durable = false, durable queue won't bind to this
         # exchange
         self.exchange.declare()
         log.msg("MSG: Exchange start successfully")
@@ -95,7 +95,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def registerConsumer(self, queues_name, callback, name=None, durable=False):
         # queues_name can be a list of queues' names or one queue's name
         # (list of strings or one string)
-        if name == None:
+        if name is None:
             name = queues_name
 
         if isinstance(queues_name, list):
