@@ -90,6 +90,7 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         except:
             ensurePublish = self.conn.ensure(self.producer,
                                              self.producer.publish, max_retries=3)
+            ensurePublish(message.body, routing_key=key)
 
     def registerConsumer(self, queues_name, callback, name=None, durable=False):
         # queues_name can be a list of queues' names or one queue's name
@@ -112,20 +113,12 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def startConsuming(self, callback, routingKey, persistent_name=None):
         key = self.formatKey(routingKey)
 
-        try:
-            queue = self.queues[key]
-        except:
-            try:
-                self.registerQueue(key)
-            except:
-                ensureRegister = self.conn.ensure(None, 
-                                                  self.registerQueue, 
-                                                  max_retries=3)
-                ensureRegister(key)
-            try:
-                queue = self.queues.get(key)
-            except:
-                raise
+        if key not in self.queues:
+            ensureRegister = self.conn.ensure(None,
+                                              self.registerQueue,
+                                              max_retries=5)
+            ensureRegister(key)
+        queue = self.queues.get(key)
 
         if key in self.consumers.keys():
             log.msg(
@@ -139,9 +132,6 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
                 self.consumers[key].register_callback(callback)
         else:
             self.registerConsumer(key, callback)
-
-        # self.consumers[key].addCallback = self.consumers[key].register_callback
-        # self.consumers[key].addErrback = lambda x, y: log.msg("ERR: %s" % y)
 
         return DeferConsumer(self.consumers[key])
 
@@ -162,24 +152,16 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
             for key in data:
                 if isinstance(data[key], datetime):
                     data[key] = datetime2epoch(data[key])
-                elif type(data[key]) in (dict, list, tuple):
+                elif isinstance(data[index], (dict, list, tuple)):
                     data[key] = self.formatData(data[key])
         elif type(data) in (list, tuple):
             for index in range(len(data)):
                 if isinstance(data[index], datetime):
                     data[index] = datetime2epoch(data[index])
-                elif type(data[index]) in (dict, list, tuple):
+                elif isinstance(data[index], (dict, list, tuple)):
                     data[index] = self.formatData(data[index])
 
         return data
-
-
-    def __exit__(self):
-        self.message_hub.__exit__()
-        for queue in self.queues:
-            queue.delete(nowait=True)
-        self.exchange.delete(nowait=True)
-        self.conn.release()
 
 
 class KombuHub(multiprocessing.Process):
@@ -197,15 +179,16 @@ class KombuHub(multiprocessing.Process):
 
     def run(self):
         if self.attempts == 0:
-           raise "Attempts run kombu hub 5 times and all fail"
+            raise "Attempts run kombu hub 5 times and all fail"
         try:
-           self.hub.run_forever()
+            self.hub.run_forever()
         except:
-           self.attempts = self.attempts - 1
-           self.run()
+            self.attempts = self.attempts - 1
+            self.run()
 
     def __exit__(self):
         self.hub.stop()
+
 
 class DeferConsumer(object):
 
