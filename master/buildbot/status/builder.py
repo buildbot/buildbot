@@ -67,7 +67,6 @@ class BuilderStatus(styles.Versioned):
     unavailable_build_numbers = set()
     pendingBuildsCache = None
     status = None
-    latestBuildCache = {}
 
     def __init__(self, buildername, category, master, friendly_name=None):
         self.name = buildername
@@ -89,6 +88,7 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = LRUCache(self.cacheMiss)
         self.reason = None
         self.unavailable_build_numbers = set()
+        self.latestBuildCache = {}
 
 
     # persistence
@@ -96,6 +96,9 @@ class BuilderStatus(styles.Versioned):
     def setStatus(self, status):
         self.status = status
         self.pendingBuildCache = PendingBuildsCache(self)
+
+        if not hasattr(self, 'latestBuildCache'):
+            self.latestBuildCache = {}
 
     def __getstate__(self):
         # when saving, don't record transient stuff like what builds are
