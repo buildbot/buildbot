@@ -9,6 +9,10 @@ However, this documentation should be in ``.rst`` files under ``master/docs/deve
 For private methods or where code deserves some kind of explanatory preface, use comments instead of a docstring.
 While some docstrings remain within the code, these should be migrated to documentation files and removed as the code is modified.
 
+Within the reStructuredText files, write with each English sentence on its own line.
+While this does not affect the generated output, it makes git diffs between versions of the documentation easier to read, as they are not obscured by changes due to re-wrapping.
+This convention is not followed everywhere, but we are slowly migrating documentation from the old (wrapped) style as we update it.
+
 Symbol Names
 ------------
 
