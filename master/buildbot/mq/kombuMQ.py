@@ -140,14 +140,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
         # format
-        result = ""
-        for item in key:
-            if item == None:
-                result += "*."
-            else:
-                result += item + "."
+        result = [item for item in key]
 
-        return result[:-1]
+        return ".".join(result)
 
     def _toJson(self, obj):
         if isinstance(obj, datetime.datetime):
