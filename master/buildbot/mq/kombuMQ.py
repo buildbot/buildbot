@@ -87,12 +87,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         data = json.dumps(data, default=self._toJson,
                           sort_keys=True, separators=(',', ':'))
         message = Message(self.channel, body=data)
-        try:
-            self.producer.publish(message.body, routing_key=key)
-        except:
-            ensurePublish = self.conn.ensure(self.producer,
-                                             self.producer.publish, max_retries=3)
-            ensurePublish(message.body, routing_key=key)
+        ensurePublish = self.conn.ensure(self.producer,
+                                             self.producer.publish, max_retries=5)
+        ensurePublish(message.body, routing_key=key)
 
     def registerConsumer(self, queues_name, callback, name=None, durable=False):
         # queues_name can be a list of queues' names or one queue's name
