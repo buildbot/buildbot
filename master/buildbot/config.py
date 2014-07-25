@@ -672,9 +672,10 @@ class MasterConfig(object):
 
 class ProjectConfig:
 
-    def __init__(self, name=None, codebases=[]):
+    def __init__(self, name=None, codebases=[], priority=sys.maxint):
         self.name = name
         self.codebases = codebases
+        self.priority = priority
 
         errors = ConfigErrors([])
 

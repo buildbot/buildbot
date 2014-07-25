@@ -13,7 +13,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from operator import attrgetter
 
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.builder import BuildersResource
@@ -29,9 +29,11 @@ class ProjectsResource(HtmlResource):
         status = self.getStatus(req)
 
         projects = req.args.get("projects", status.getProjects())
+        project_objs = [status.master.getProject(p) for p in projects]
         cxt['projects'] = []
         if len(projects) > 0:
-            cxt['projects'] = util.naturalSort(projects.keys())
+            project_objs = sorted(project_objs, key=attrgetter('priority', 'name'))
+            cxt['projects'] = [p.name for p in project_objs]
             
             cxt['projects_codebases'] = status.getProjects() 
 
