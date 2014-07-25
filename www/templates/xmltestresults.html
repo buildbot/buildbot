@@ -42,15 +42,18 @@
                 <input type="checkbox" value="Skipped" id="skippedinput"/>
             </div>
             <div class="dataTables_filter">
-                <label class="input-label">
-                    <input type="text" placeholder="Free text filter" id="filterinput" />
-                </label>
+                <label class="input-label"></label>
+                <input type="text" placeholder="Free text filter" id="filterinput" />
             </div>
                 <button class="grey-btn" id="submitFilter">Filter</button>
                 <button class="grey-btn" id="clearFilter">Clear</button>
         </div>
+        </div>
+        </div>
+        </div>
 
-
+        <div class="row">
+        <div class="col-md-offset-1 col-md-10">
         <h1 class="main-head" id=":i18n:Summary">Summary</h1>
         <table class="table-1" id="summaryTable">
             <thead>
@@ -82,8 +85,13 @@
                 </tr>
             </tbody>
         </table>
+        </div>
+        </div>
+
         {% for ts in test_suites %}
             {%  if ts.results  %}
+            <div class="row">
+            <div class="col-md-offset-1 col-md-10">
             <div class="table-holder">
                 <ul class="summary-list">
                     <li><b id="Tests">Tests </b>{{ ts.tests }}</li>
@@ -107,7 +115,7 @@
                     <tbody>
                         {% for test in ts.results %}
                         <tr>
-                            <td class="txt-align-left first-child "><span class="case-names">{{ test.name }}</span></td>
+                            <td class="txt-align-left first-child "><span>{{ test.name }}</span></td>
                             <td class="{{ test.result }}">{{ test.result }}</td>
                             {% if test.time %}
                             <td data-time="{{ test.time }}">{{ test.time }}</td>
@@ -134,6 +142,8 @@
                     </tbody>
                 </table>
                 <a class="back-top-top" href="#top">Back to top</a>
+            </div>
+            </div>
             </div>
             {% endif %}
         {% endfor %}
