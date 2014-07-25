@@ -55,7 +55,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
                  properties={}, locks=None, keepalive_interval=3600,
-                 friendlyName=None):
+                 friendlyName=None, os=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -117,6 +117,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.detached_subs = None
 
         self._old_builder_list = None
+        self.os = os
 
     def __repr__(self):
         return "<%s %r>" % (self.__class__.__name__, self.slavename)
