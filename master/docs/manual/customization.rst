@@ -854,8 +854,21 @@ For more information on the available commands, see :doc:`../developer/master-sl
     Step Progress
     BuildStepFailed
 
-A Somewhat Whimsical Example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Writing New Status Plugins
+--------------------------
+
+Each status plugin is an object which provides the :class:`twisted.application.service.IService` interface, which creates a tree of Services with the buildmaster at the top [not strictly true].
+The status plugins are all children of an object which implements :class:`buildbot.interfaces.IStatus`, the main status object.
+From this object, the plugin can retrieve anything it wants about current and past builds.
+It can also subscribe to hear about new and upcoming builds.
+
+Status plugins which only react to human queries (like the Waterfall display) never need to subscribe to anything: they are idle until someone asks a question, then wake up and extract the information they need to answer it, then they go back to sleep.
+Plugins which need to act spontaneously when builds complete (like the :class:`MailNotifier` plugin) need to subscribe to hear about new builds.
+
+If the status plugin needs to run network services (like the HTTP server used by the Waterfall plugin), they can be attached as Service children of the plugin itself, using the :class:`IServiceCollection` interface.
+
+A Somewhat Whimsical Example (or "It's now customized, how do I deploy it?")
+----------------------------------------------------------------------------
 
 Let's say that we've got some snazzy new unit-test framework called Framboozle.
 It's the hottest thing since sliced bread.
@@ -894,7 +907,7 @@ How do we actually deploy it?
 You have a couple of different options.
 
 Inclusion in the :file:`master.cfg` file
-########################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like::
 
@@ -911,7 +924,7 @@ The downside is that every time you reload the config file, the Framboozle class
 Bleh.
 
 python file somewhere on the system
-###################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Instead, we can put this code in a separate file, and import it into the master.cfg file just like we would the normal buildsteps like :bb:step:`ShellCommand` and :bb:step:`SVN`.
 
@@ -954,7 +967,7 @@ On the other hand, you either have to start your buildmaster in a slightly weird
 
 
 Install this code into a standard Python library directory
-##########################################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Find out what your Python's standard include path is by asking it:
 
@@ -986,7 +999,7 @@ The downside is that you probably have to be root to write to one of those stand
 
 
 Submit the code for inclusion in the Buildbot distribution
-##########################################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch in a bug at http://buildbot.net.
 In either case, post a note about your patch to the mailing list, so others can provide feedback and, eventually, commit it.
@@ -1008,18 +1021,5 @@ Putting it in a file in a personal library directory (2) makes it available for 
 Putting it in a file in a system-wide shared library directory (3) makes it available for any buildmasters that anyone on that system might be running.
 Getting it into the buildbot's upstream repository (4) makes it available for any buildmasters that anyone in the world might be running.
 It's all a matter of how widely you want to deploy that new class.
-
-Writing New Status Plugins
---------------------------
-
-Each status plugin is an object which provides the :class:`twisted.application.service.IService` interface, which creates a tree of Services with the buildmaster at the top [not strictly true].
-The status plugins are all children of an object which implements :class:`buildbot.interfaces.IStatus`, the main status object.
-From this object, the plugin can retrieve anything it wants about current and past builds.
-It can also subscribe to hear about new and upcoming builds.
-
-Status plugins which only react to human queries (like the Waterfall display) never need to subscribe to anything: they are idle until someone asks a question, then wake up and extract the information they need to answer it, then they go back to sleep.
-Plugins which need to act spontaneously when builds complete (like the :class:`MailNotifier` plugin) need to subscribe to hear about new builds.
-
-If the status plugin needs to run network services (like the HTTP server used by the Waterfall plugin), they can be attached as Service children of the plugin itself, using the :class:`IServiceCollection` interface.
 
 .. [#framboozle_reg] framboozle.com is still available. Remember, I get 10% :).
