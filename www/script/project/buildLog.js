@@ -20,6 +20,7 @@ define(["main"], function () {
         $iFrame.iFrameResize({
             "autoResize": true,
             "sizeWidth": false,
+            "enablePublicMethods": true,
             "resizedCallback": function () {
                 maybeScroll($scrollOpt.prop("checked"));
             }
