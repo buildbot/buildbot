@@ -69,18 +69,18 @@ create a "guanlecoja/config.coffee" with the configuration variables:
                 # JavaScript libraries. Which javascript files to include, from the
                 # one downloaded by bower
                 js: [
-                    'src/libs/jquery/dist/jquery.js'
-                    'src/libs/angular/angular.js'
+                    'libs/jquery/dist/jquery.js'
+                    'libs/angular/angular.js'
 
-                    'src/libs/angular-animate/angular-animate.js'
-                    'src/libs/angular-bootstrap/ui-bootstrap-tpls.js'
-                    'src/libs/angular-ui-router/release/angular-ui-router.js'
-                    'src/libs/angular-recursion/angular-recursion.js'
+                    'libs/angular-animate/angular-animate.js'
+                    'libs/angular-bootstrap/ui-bootstrap-tpls.js'
+                    'libs/angular-ui-router/release/angular-ui-router.js'
+                    'libs/angular-recursion/angular-recursion.js'
 
-                    'src/libs/lodash/dist/lodash.js'
-                    'src/libs/moment/moment.js'
-                    'src/libs/underscore.string/lib/underscore.string.js'
-                    'src/libs/restangular/dist/restangular.js'
+                    'libs/lodash/dist/lodash.js'
+                    'libs/moment/moment.js'
+                    'libs/underscore.string/lib/underscore.string.js'
+                    'libs/restangular/dist/restangular.js'
                 ]
 
 You can override more file patterns. See the defaultconfig.coffee for list of patterns available.
@@ -88,7 +88,7 @@ Normally, only the Javascript libraries are needed to configure.
 
 create a ".bowerrc" with the configuration variables:
 
-    {"directory": "src/libs"}
+    {"directory": "libs"}
 
 so that your bower dependencies are stored on side of your source code.
 You also want to configure ".gitignore", to ignore this directory.
@@ -103,8 +103,24 @@ Use bower.json as usual to describe your javascript libraries dependancies. You 
 
 * ``gulp prod``: Use this for production. It will generate a ready for prod build of your application, with all the javascript concatenated and minified.
 
+
+### Debugging via sourcemaps.
+
+``gulp dev`` enable sourcemaps. This is a modern technique to map the compiled javascript to the original coffee-script tree.
+Just enable sourcemaps into your browser. (its in Chrome Dev Tools's Setting panel)
+Full source code is actually embedded in the scripts.js.map
+
+### Live Reloading
+
+You will need to install RemoteLiveReload extension:
+https://chrome.google.com/webstore/detail/remotelivereload/jlppknnillhjgiengoigajegdpieppei
+
+This extension only works when you are testing on the same machine where gulp is running, using port 35729.
+If you really care about developing on a remote machine, you can always forward the 35729 port.
+
+
 ### Examples
 
-Guanlecoja methodology has been built for the buildbot project, but is very generic, and can be used for any projects.
+Guanlecoja methodology has been built for the buildbot project, but is very generic, and can be used for any projects\.
 
 You can see it in action at https://github.com/buildbot/buildbot/tree/master/www

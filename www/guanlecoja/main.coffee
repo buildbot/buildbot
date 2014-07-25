@@ -45,10 +45,11 @@ module.exports =  (gulp) ->
     # we do it synchronously to simplify things
     require('rimraf').sync(config.dir.build)
 
+    script_sources = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates)
+
     gulp.task 'scripts', ->
         # libs first, then app, then the rest
-        src = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates)
-        gulp.src src
+        gulp.src script_sources
             .pipe cached('scripts')
             .pipe gif(dev, sourcemaps.init())
             # coffee build
@@ -121,10 +122,11 @@ module.exports =  (gulp) ->
 
 
     gulp.task "watch", ->
-        gulp.watch(config.files.scripts, ["scripts"])
+        # karma own watch mode is used. no need to restart karma
+        gulp.watch(script_sources, ["scripts"])
         gulp.watch(config.files.tests, ["tests"])
         gulp.watch(config.files.less, ["styles"])
-
+        null
 
     gulp.task "default", ['scripts', 'styles', 'fonts', 'imgs', 'index', 'tests', 'generatedfixtures', 'fixtures'], ->
         karmaconf =

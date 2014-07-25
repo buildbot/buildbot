@@ -2,7 +2,7 @@
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   module.exports = function(gulp) {
-    var annotate, argv, buildConfig, cached, coffee, concat, config, cssmin, dev, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, prod, remember, rename, sourcemaps, templateCache, uglify, _;
+    var annotate, argv, buildConfig, cached, coffee, concat, config, cssmin, dev, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, prod, remember, rename, script_sources, sourcemaps, templateCache, uglify, _;
     require("coffee-script/register");
     path = require('path');
     fs = require('fs');
@@ -32,10 +32,9 @@
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
     require('rimraf').sync(config.dir.build);
+    script_sources = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates);
     gulp.task('scripts', function() {
-      var src;
-      src = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates);
-      return gulp.src(src).pipe(cached('scripts')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify())).on('error', gutil.log).pipe(gif("*.coffee", coffee())).on('error', gutil.log).pipe(gif("*.jade", jade())).on('error', gutil.log).pipe(gif("*.html", rename(function(p) {
+      return gulp.src(script_sources).pipe(cached('scripts')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify())).on('error', gutil.log).pipe(gif("*.coffee", coffee())).on('error', gutil.log).pipe(gif("*.jade", jade())).on('error', gutil.log).pipe(gif("*.html", rename(function(p) {
         p.dirname = "views";
         p.basename = p.basename.replace(".tpl", "");
         return null;
@@ -73,9 +72,10 @@
       return gulp.src(config.files.index).pipe(jade()).pipe(gulp.dest(config.dir.build));
     });
     gulp.task("watch", function() {
-      gulp.watch(config.files.scripts, ["scripts"]);
+      gulp.watch(script_sources, ["scripts"]);
       gulp.watch(config.files.tests, ["tests"]);
-      return gulp.watch(config.files.less, ["styles"]);
+      gulp.watch(config.files.less, ["styles"]);
+      return null;
     });
     gulp.task("default", ['scripts', 'styles', 'fonts', 'imgs', 'index', 'tests', 'generatedfixtures', 'fixtures'], function() {
       var karmaconf;
