@@ -65,7 +65,6 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
     unavailable_build_numbers = set()
-    pendingBuildsCache = None
     status = None
 
     def __init__(self, buildername, category, master, friendly_name=None):
@@ -89,6 +88,7 @@ class BuilderStatus(styles.Versioned):
         self.reason = None
         self.unavailable_build_numbers = set()
         self.latestBuildCache = {}
+        self.pendingBuildsCache = None
 
 
     # persistence
