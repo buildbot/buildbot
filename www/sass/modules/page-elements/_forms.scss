@@ -139,27 +139,6 @@ form.command_forcebuild .force-nested > .label {
     }
 }
 
-.user-settings {
-    input[type="checkbox"] {
-        float: left;
-        display: block;
-    }
-    label {
-        display: block;
-        float: left;
-        margin-right: 10px;
-        margin-top: -1px;
-    }
-    .question-icon:after {
-        font-size: 14px;        
-        margin-top: 0;
-    }
-    .question-icon {
-         float: left;
-        margin-left: 8px;    
-    }
-}
-
 .forms-inline form {
   display: inline;
 }
