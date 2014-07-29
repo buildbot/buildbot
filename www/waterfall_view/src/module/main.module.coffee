@@ -141,7 +141,7 @@ m.controller 'waterfallController',
             color = @result
 
             # Remove old axis
-            header.select('.axis.x')
+            header.select('.axis.x').remove()
 
             # Top axis shows builder names
             xAxis = @d3.svg.axis()
