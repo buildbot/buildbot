@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from xml.etree import ElementTree
+from twisted.python import log
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
 
 NUNIT, NOSE, JUNIT = range(3)
@@ -79,7 +80,6 @@ class XMLTestResource(HtmlResource):
         if xml_type is JUNIT:
             if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("failure"):
                 result["success"] = "false"
-                print test
                 failure_text = [{"text": test["testcase"][0]["text"]}]
             else:
                 result["success"] = "true"
@@ -226,7 +226,6 @@ class XMLTestResource(HtmlResource):
                     total += c
                     time_count += t
 
-                print classes
                 output_tests = classes.values()
 
             cxt['test_suites'] = output_tests
@@ -252,7 +251,7 @@ class XMLTestResource(HtmlResource):
                 'time': time_count
             }
         except ElementTree.ParseError as e:
-            print "Error with parsing XML: {0}".format(e)
+            log.msg("Error with parsing XML: {0}".format(e))
 
         template = req.site.buildbot_service.templates.get_template("xmltestresults.html")
         return template.render(**cxt)

@@ -3,7 +3,6 @@ from buildbot.status.web.auth import LogoutResource
 from buildbot.status.web.authz import COOKIE_KEY
 from buildbot.status.web.base import HtmlResource, ActionResource, \
     path_to_login, path_to_authenticate, path_to_root, path_to_authfail
-import ldap
 import urllib
 from twisted.python import log
 
@@ -27,11 +26,6 @@ class LoginKatanaResource(HtmlResource):
             return AuthenticateActionResource()
 
 class AuthenticateActionResource(ActionResource):
-
-    def __init__(self):
-        ldap.set_option(ldap.OPT_TIMEOUT, 5.0)
-        ldap.set_option(ldap.OPT_NETWORK_TIMEOUT, 5.0)
-        ldap.set_option(ldap.OPT_REFERRALS, 0)
 
     def authorized(self, username):
         return "?autorized=True&user=%s" % username

@@ -328,6 +328,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def getProjects(self):
         return self.config.projects
 
+    def getProject(self, name):
+        for n, p in self.config.projects.iteritems():
+            if name == n:
+                return p
+
     def allSchedulers(self):
         return list(self.scheduler_manager)
 

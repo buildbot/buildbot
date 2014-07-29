@@ -710,7 +710,7 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
     all_loaders = [jinja2.FileSystemLoader(os.path.join(os.getcwd(), 'templates'))]
     if jinja_loaders:
         all_loaders.extend(jinja_loaders)
-    all_loaders.append(jinja2.PackageLoader('buildbot.status.web', 'templates'))
+    all_loaders.append(jinja2.PackageLoader('www', 'templates'))
     loader = jinja2.ChoiceLoader(all_loaders)
 
     env = jinja2.Environment(loader=loader,

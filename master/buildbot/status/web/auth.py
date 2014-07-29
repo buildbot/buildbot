@@ -53,7 +53,14 @@ class AuthBase:
 
     def getUserInfo(self, user):
         """default dummy impl"""
-        return dict(userName=user, fullName=user, email=user+"@localhost", groups=[ user ])
+        d = defer.maybeDeferred(self.master.db.users.findUserByAttr, user, "ldap", user)
+
+        def result(uid):
+            return dict(uid=uid, userName=user, fullName=user, email=user+"@localhost", groups=[ user ])
+
+        d.addBoth(result)
+        return d
+
 
 class BasicAuth(AuthBase):
     implements(IAuth)
@@ -161,54 +168,68 @@ class LDAPAuth(AuthBase):
     def __init__(self, server, base_dn):
         self.server = server
         self.base_dn = base_dn
+        try:
+            import ldap
+            ldap.set_option(ldap.OPT_TIMEOUT, 5.0)
+            ldap.set_option(ldap.OPT_NETWORK_TIMEOUT, 5.0)
+            ldap.set_option(ldap.OPT_REFERRALS, 0)
+        except ImportError:
+            log.msg("LDAP module missing authentications will fail")
 
     def authenticate(self, user, passwd):
-        import ldap
-        l = ldap.initialize(self.server)
-
         try:
-            l.simple_bind_s("uid=%s,cn=users,%s" % (user, self.base_dn), passwd)
-            dn = l.whoami_s()
-            if dn:
-                return True
+            import ldap
+            l = ldap.initialize(self.server)
 
-            return False
-        except Exception, e:
-            log.msg('Error while authenticating: %r' % e)
+            try:
+                l.simple_bind_s("uid=%s,cn=users,%s" % (user, self.base_dn), passwd)
+                dn = l.whoami_s()
+                if dn:
+                    return True
+
+                return False
+            except Exception, e:
+                log.msg('Error while authenticating: %r' % e)
+                return False
+        except ImportError:
+            log.msg("Cannot authenticate while the LDAP module is missing")
             return False
 
     def getUserInfo(self, user):
-        import ldap
-        l = ldap.initialize(self.server)
-        attr = ["cn", "mail"]
-        filter_str = "uid=%s" % user
-
         try:
-            l.simple_bind_s()
-            ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attr)
-            l.unbind()
+            import ldap
+            l = ldap.initialize(self.server)
+            attr = ["cn", "mail"]
+            filter_str = "uid=%s" % user
 
-            fullname = user
-            email = None
-            if ldap_result > 0 and ldap_result[0] > 1:
-                ldap_dict = ldap_result[0][1]
-                if 'cn' in ldap_dict.keys():
-                    fullname = ldap_dict['cn'][0]
-                    email = ldap_dict['mail'][0]
+            try:
+                l.simple_bind_s()
+                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attr)
+                l.unbind()
 
-            if email is not None:
-                ident = "{0} <{1}>".format(fullname, email)
-                d = defer.maybeDeferred(self.master.db.users.findUserByAttr, ident, "ldap", ident)
+                fullname = user
+                email = None
+                if ldap_result > 0 and ldap_result[0] > 1:
+                    ldap_dict = ldap_result[0][1]
+                    if 'cn' in ldap_dict.keys():
+                        fullname = ldap_dict['cn'][0]
+                        email = ldap_dict['mail'][0]
 
-                def result(uid):
-                    return dict(uid=uid, userName=user, fullName=fullname, email=email, groups=[ user ])
+                if email is not None:
+                    ident = "{0} <{1}>".format(fullname, email)
+                    d = defer.maybeDeferred(self.master.db.users.findUserByAttr, ident, "ldap", ident)
 
-                d.addBoth(result)
-                return d
+                    def result(uid):
+                        return dict(uid=uid, userName=user, fullName=fullname, email=email, groups=[ user ])
 
-            return False
-        except Exception, e:
-            log.msg('Error while getting user info: %r' % e)
+                    d.addBoth(result)
+                    return d
+
+                return False
+            except Exception, e:
+                log.msg('Error while getting user info: %r' % e)
+                return False
+        except ImportError:
             return False
 
 

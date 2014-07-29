@@ -1,0 +1,165 @@
+@charset "UTF-8";
+// form elements
+td.select-input {
+	text-align:right;
+	label {
+		padding-right: 3px;
+	}
+}
+
+.select {
+    clear: both;
+    display: block;
+}
+
+// codebases combobox
+.select-tools {
+	font-size: 12px;
+	float:right;
+	color: #666;
+    font-size: 12px;
+    margin-bottom: 10px;
+    padding: 1px;
+   
+    &.var-1 {
+    	width: 100%;
+    	margin-top: 0;
+    	float: none;
+    	background-color: #A3A3A3;
+    	border: 0 none;	
+    	color: #fff;
+    	padding: 3px;
+    }
+    &.var-2 {
+    	margin-top: 0;
+    	float: none;
+    	background-color: #A3A3A3;
+    	border: 0 none;	
+    	color: #fff;
+    	padding: 3px;	
+    }
+}
+// force build dialogue
+.error-input {
+    background-color: rgba(238, 206, 206, 0.42);
+    border: 1px solid #DDC0C0;
+    border-radius: 4px 4px 4px 4px;
+    font-weight: bold;
+    padding: 8px;
+    margin-bottom:15px;
+}
+
+div.force-text input.not-valid {
+    border:1px solid #E42323;
+}
+
+form.command_forcebuild {
+    width: 320px;
+    clear:both;
+    .grey-btn {
+        float:right;     
+    }
+}
+
+form.command_forcebuild .force-textarea > .label {
+    display: block;
+}
+
+form.command_forcebuild .force-nested > .label {
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 5px;
+    margin-top:15px;
+    font-size: 14px;
+    color:#8C8C8C;
+    padding: 0;
+}
+
+
+
+// user login
+ 
+
+.auth {
+    margin: 25px 0;
+    
+    input[type="text"],
+    input[type="password"] {
+        border: 1px solid #ccc;
+        @include border-radius(4px);
+        @include box-shadow(2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset, 1px 1px 0px #fff);
+        @include text-shadow(0 1px 0 #FFFFFF);
+        color: #666666;
+        font-size: 15px;
+        line-height: 13px;
+        padding: 9px 13px 8px;
+        width: 100%;
+        float: left;
+        margin-bottom: 15px;
+        &.not-valid {
+            border: 1px solid #E42323;
+        }
+    }   
+    input[type="checkbox"] {
+        float: left;
+        margin-left: 83px;
+        margin-right: 9px;
+        margin-top: 6px;
+    }
+    input[type="submit"] {
+        @include bgimage(linear-gradient(top , #0A3569 0%, #417FB1 100%));
+        @include box-shadow(1px 1px 0px #fff);
+        border: 1px solid #295E91;
+        @include border-radius( 4px);
+        color: #FFFFFF;
+        font-size: 10px;        
+        padding: 8px 11px;
+        float: right;
+        @include text-shadow( 0 1px 0 rgba(0, 0, 0, 0.59));
+        text-transform: uppercase;
+        clear: both;
+        letter-spacing: 0.8px;
+        &:hover {
+            @include bgimage(linear-gradient(top , #1057AD 0%, #4E98D5 100%));
+        }
+    }
+    
+    label {
+     float: left;
+     font-size: 14px;
+     font-weight: bold;
+     padding-top: 8px;
+     width: 60px;
+     @include text-shadow(0 1px 0 #FFFFFF);
+         &.checkbox-label {
+            font-size: 11px;
+            font-weight: normal;
+            margin-top: -2px;
+        }
+    }
+}
+
+.user-settings {
+    input[type="checkbox"] {
+        float: left;
+        display: block;
+    }
+    label {
+        display: block;
+        float: left;
+        margin-right: 10px;
+        margin-top: -1px;
+    }
+    .question-icon:after {
+        font-size: 14px;        
+        margin-top: 0;
+    }
+    .question-icon {
+         float: left;
+        margin-left: 8px;    
+    }
+}
+
+.forms-inline form {
+  display: inline;
+}

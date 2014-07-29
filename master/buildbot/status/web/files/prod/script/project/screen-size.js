@@ -1,2 +1,0 @@
-define(["jquery","helpers"],function(){var e={EXTRA_SMALL:480,SMALL:768,MEDIUM:992,LARGE:1520},r={isExtraSmallScreen:function(){return r.getViewportMediaQuery(e.EXTRA_SMALL).matches},isSmallScreen:function(){return r.getViewportMediaQuery(e.SMALL).matches},isMediumScreen:function(){return r.getViewportMediaQuery(e.MEDIUM).matches},isLargeScreen:function(){return r.getViewportMediaQuery(e.LARGE).matches},getViewportMediaQuery:function(e){return window.matchMedia("(min-width: {0}px".format(e))},viewportSizes:e};return r});
-//# sourceMappingURL=screen-size.js.map

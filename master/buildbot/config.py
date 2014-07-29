@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from __future__ import with_statement
+import inspect
 
 import os
 import re
@@ -26,6 +27,12 @@ from buildbot.revlinks import default_revlink_matcher
 from twisted.python import log, failure
 from twisted.internet import defer
 from twisted.application import service
+
+#Make sure we can load our www module from the master folder
+buildbot_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0] + "../../../"
+buildbot_folder = os.path.realpath(os.path.abspath(buildbot_folder))
+if buildbot_folder not in sys.path:
+    sys.path.append(buildbot_folder)
 
 class ConfigErrors(Exception):
 
@@ -79,6 +86,7 @@ class MasterConfig(object):
         self.analytics_code = None
         self.gzip = True
         self.autobahn_push = "false"
+        self.lastBuildCacheDays = 30
 
         self.ldap = dict(
             ldap_server = 'my_ldap_server',
@@ -117,7 +125,8 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip", "autobahn_push"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
+        "autobahn_push", "lastBuildCacheDays"
     ])
 
     @classmethod
@@ -258,6 +267,7 @@ class MasterConfig(object):
         copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
+        copy_int_param('lastBuildCacheDays')
 
         copy_int_param('logCompressionLimit')
 
@@ -662,9 +672,10 @@ class MasterConfig(object):
 
 class ProjectConfig:
 
-    def __init__(self, name=None, codebases = None):
+    def __init__(self, name=None, codebases=[], priority=sys.maxint):
         self.name = name
         self.codebases = codebases
+        self.priority = priority
 
         errors = ConfigErrors([])
 

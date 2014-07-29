@@ -1,0 +1,464 @@
+@charset "UTF-8";
+/**
+* Main implementation.
+*
+* @section page-elements
+* @author Simon Holm
+*/
+   
+.tooltip-cont {
+	position:absolute;
+	display:block;	
+	display:none;
+	max-width:350px;
+	@include bgimage(linear-gradient(top, rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
+	@include border-radius(8px);
+	@include text-shadow(0 1px 0 #FFFFFF);
+	@include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
+	padding:8px 8px 8px 8px;
+	z-index:1000;
+	
+}
+  
+div.force-text .label.question-icon {
+	margin-top: 9px;
+}
+ 
+.question-icon {
+
+	&:after {
+
+	 	color: #718396;
+	    content: "";
+	    display: inline-block;
+	    font-family: "katana_icons";
+	    font-size: 16px;
+	    font-weight: normal;
+	    margin-top: 5px;
+	    padding: 0 0 0 0;
+	    position: absolute;	 
+	    @include text-shadow(0 1px 0 #FFFFFF);   
+    }
+    &:hover:after {
+		color: #ccc;
+		cursor: pointer;
+	}
+}
+
+// used on status messages together with the color class
+.result {
+	padding: 4px 9px;
+	display:inline-block;
+}
+
+.status-text {
+	display: inline-block;
+	&:first-letter {
+		text-transform: capitalize;
+	}
+}
+
+// used for hidden html in the forcebuild dialogue. See forms.html
+ 
+ 
+.content-blocks {
+	margin-bottom:15px;	
+}
+
+.dependencies {
+	display:none;
+	select {
+		width: 100%;
+	}
+}
+ 
+
+.slaves-block {
+	display:none;
+    background: none repeat scroll 0 0 #FFF;
+    border: 1px solid #CCCCCC;
+    @include border-radius (5px);
+    @include box-shadow (1px 1px 1px #FFF);
+    padding: 12px 12px 8px;
+    select {
+   		margin-top: 4px;
+    }
+}
+
+// On 'cancel builds' dialogue
+.txt-cont {
+	padding-right:10px;	
+	display:table-cell;
+	margin-bottom:0;
+	vertical-align: middle;
+}
+
+// For ajax content
+#content {
+	min-height: 89px;
+    position: relative;
+}
+
+// preloader
+
+
+#preloader{
+height: 100%;
+left: 0;
+position: fixed;
+top: 0;
+width: 100%;
+	.content & {
+		position: absolute;
+		margin-top: -10px;
+	}
+	
+}
+
+#bowl_ringG{
+@include box-sizing(content-box);	
+left:50%;
+top:50%;
+position:absolute;
+width:30px;
+height:30px;
+border:3px solid #BBBBBB;
+@include border-radius(30px);
+@include box-shadow(1px 1px 1px #fff);
+ 
+}
+
+// rotate ring with ball effect
+.ball_holderG{	
+position:absolute;
+width:8px;
+height:30px;
+left:11px;
+top:0px;
+
+-moz-animation-name:ball_moveG;
+-moz-animation-duration:1s;
+-moz-animation-iteration-count:infinite;
+-moz-animation-timing-function:linear;
+
+-webkit-animation-name:ball_moveG;
+-webkit-animation-duration:1.3s;
+-webkit-animation-iteration-count:infinite;
+-webkit-animation-timing-function:linear;
+
+-ms-animation-name:ball_moveG;
+-ms-animation-duration:1.3s;
+-ms-animation-iteration-count:infinite;
+-ms-animation-timing-function:linear;
+
+-o-animation-name:ball_moveG;
+-o-animation-duration:1.3s;
+-o-animation-iteration-count:infinite;
+-o-animation-timing-function:linear;
+
+animation-name:ball_moveG;
+animation-duration:1.3s;
+animation-iteration-count:infinite;
+animation-timing-function:linear;
+
+}
+
+.ballG{	
+position:absolute;
+left:0px;
+top:-7px;
+width:12px;
+height:12px;
+background: #BBBBBB;
+@include border-radius(10px);
+}
+
+// shake effect
+.shake {
+  -webkit-animation-name: shake;
+  -moz-animation-name: shake;
+  -o-animation-name: shake;
+  animation-name: shake;
+  -webkit-animation-duration:1s;
+  -moz-animation-duration:1s;
+  -ms-animation-duration:1s;
+  -o-animation-duration:1s;
+  animation-duration:1s;
+}
+
+// login box
+.login-box {
+	  
+	&.more-info-box {
+		display: block;
+	    float: none;
+	    padding: 44px 33px 23px;
+	    width: 303px;
+		h3 {
+			display: block;	
+		}
+		.login-welcome-txt {
+			@include text-shadow(0 1px 0 #FFFFFF);
+			color: #666666;
+		    font-size: 14px;
+		    margin-bottom: 15px;
+		    clear: both;
+		}
+	} 
+	h1.logo a {
+			opacity: 1;
+		   	color: #445873;
+		    display: block;
+		    float: none;
+		    font-size: 1.7em;
+		    margin-bottom: 26px;
+		    padding: 0;
+		    margin-right: 14px;
+		span {
+			font-size: 0.8em;
+			color:#445873;
+		}
+		&:hover {
+			opacity: 0.5;
+		}
+	}
+	.error-input {
+		font-size: 14px;
+		font-weight: normal;
+		@include text-shadow(0 1px 0 #FFFFFF);
+		margin-right: 22px;
+	}
+}
+
+.log-in-txt {
+	font-size:12px;
+}
+
+// buildlog
+.content-holder {
+	white-space: pre;
+	font-family: "helvetica neue",sans-serif;
+	font-size: 12px;
+}
+
+body.log.interface {
+	background: #FFFFFF;
+	padding:20px;
+}
+ 
+
+// Ellipsis and tooltip start
+
+	.ellipsis {
+		white-space: normal;
+	   	word-wrap: break-word;
+	    position: relative;
+		max-height:45px;
+		max-width:100px;
+	}
+
+.revision.ellipsis {
+	height:auto;
+	display:block;
+	overflow:hidden;
+}
+ 
+.full {display:none;}
+
+.tool-tip {
+	display:none;
+	background-color:rgba(238, 238, 238, 0.89);
+	border: 1px solid #ccc;
+	@include border-radius(7px);
+	left: 0;
+	padding: 10px;
+	position: absolute;
+	@include text-shadow(0 1px 0 #FFF);
+	top: 100px;
+	z-index: 1;
+	white-space: normal;
+	word-wrap: break-word;
+	max-width: 175px;	
+	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+// Ellipsis and tooltip end
+
+
+.codebase-change-txt {
+	color:#666;
+	@include text-shadow(0 1px 0 #FFF);
+}
+
+
+// summary on frontpage start
+.rootSummary {
+    font-size: 14px;
+    list-style-type: none;
+    margin: 13px 0 0;
+    padding: 0;
+	li {
+		margin:0 0 15px 0 ;
+		list-style: none;
+		
+		span {
+			font-weight:bold;
+		}
+	}
+}
+ 
+.summary-circles span {
+	background-color: #EEF0F5;
+	//@include bgimage (linear-gradient(top, #3A669A 0%, #6AA1CD 100%));
+	@include border-radius(24px);
+	@include box-shadow(0 1px 1px #FFFFFF inset, 1px 1px 2px transparent);
+	@include text-shadow(-1px -1px 0 #FFFFFF);
+	border:1px solid #CACCD0;
+	padding: 4px 12px;
+	display:inline-block;
+	min-width:15px;
+	text-align:center;
+}
+
+// summary on frontpage end
+
+
+// alert message from buildbot
+.alert {
+  color: #c30000;
+  background-color: #f2dcdc;
+  padding: 5px 5px 5px 25px;
+  margin-bottom: 20px;
+  border-top:1px solid #ccc;
+  border-bottom:1px solid #ccc;
+  border-color: #c30000;
+  font-size: 20px;
+}
+ 
+.footer {
+	background: none repeat scroll 0 0 #FFFFFF;
+    border-top: 2px solid #E3E3E3;
+    color: #B7B7B7;
+    font-size: 11px;
+    padding: 20px 0;
+    text-align: center;
+    margin-top: 35px;
+    h3,h4 {
+    	margin: 10px;
+    	font-size: inherit;
+    }
+}
+
+.auth-user {
+	display:none;
+	@media (min-width: 1200px) {
+		display:block;
+	}	
+   color: rgba(244, 249, 255, 0.84);
+    float: right;
+    font-size: 10px;    
+    span,
+    a {
+    	font-weight: bold;    	
+	}
+	a {
+		color: #3f81b5;
+		@include transition (color 0.5s ease);
+		&:hover {
+			color:#fff;
+		}
+	}
+}
+
+
+    #image {
+		width:275px;
+		img {
+			width: 100%;
+		}
+		@media (min-width: $screen-lg-min) {
+			width:auto;
+			img {
+				width: auto;
+			}
+		}
+		
+	}
+
+
+@media (min-width: $screen-md-min) {
+	.ellipsis {	
+		max-width:300px;
+	}
+	.dataTables_wrapper {
+		overflow: visible;
+	}
+	
+	.tool-tip {
+		max-width: 325px;
+	}
+}
+
+.builders-status-truncate {
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    display: -moz-inline-stack;
+    display: inline-block;
+}
+ 
+.sticky-bar {
+  @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
+  position: fixed;
+  width: 100%;
+  padding: 10px 0 ;  
+  overflow:hidden;
+  z-index: 1000;
+  a,label {
+	color: #fff;
+  	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.44);
+  }
+  a:hover {  	
+  	color: rgba(255,255,255,0.75)
+  }
+  ul li {
+  	color: #fff;
+  	margin-right: 5px;
+  	padding-left: 5px;
+	float: left;
+	&:first-child {
+		padding-left: 0;
+	}
+  }
+}
+
+.sticky-bar-bottom {
+  left: 0;
+  bottom: 0;
+  text-align: right;  
+}
+ 
+#log_page .footer {
+	padding-bottom:52px;
+}
+
+pre.code {
+    padding-left: 15px;
+	white-space: pre-line;
+	@include text-shadow(0 1px 0 #fff);
+}
+
+.log-iframe {
+	background-color: transparent; 
+	border: none ; 
+	padding: 0; 
+	overflow: hidden;	
+	width:100%;
+}
+
+.reset {
+  margin:0 !important;
+  padding:0 !important;
+}

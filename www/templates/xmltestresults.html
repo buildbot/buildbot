@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+
+{% block submenu %}
+  {{submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Test Results", selectedProject=selectedproject)}}
+{% endblock %}
+
+{% macro test_case_result(tc) %}
+    {% if tc.executed|lower == "true" and (tc.success and tc.success|lower == "true") %}
+        Pass
+    {% elif tc.executed|lower == "true" and (tc.result and tc.result|lower == "inconclusive") %}
+        Inconclusive
+    {% elif tc.ignored and tc.ignored|lower == "true" %}
+        Ignored
+    {% elif tc.executed|lower == "false" %}
+        Skipped
+    {% else %}
+        Failure
+    {% endif %}
+{% endmacro %}
+
+{% block extra_script %}
+    <script type="text/javascript">
+        require.deps.push('project/testresults-common');
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="top left"></div>
+    <div class="log-main" data-failed-tests="{{ summary.failed }}">
+
+        <div id="dataTablesFilter" class="fl-right">
+            <div id="CheckBoxesList" class="check-boxes-list">
+                <label for="failedinput">Failed</label>
+                <input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
+                <label for="passinput">Passed</label>
+                <input type="checkbox" value="Pass" id="passinput"/>
+                <label for="ignoreinput">Ignored</label>
+                <input type="checkbox" value="Ignored" id="ignoreinput"/>
+                <label for="inconclusiveinput">Inconclusive</label>
+                <input type="checkbox" value="Inconclusive" id="inconclusiveinput"/>
+                <label for="skippedinput">Skipped</label>
+                <input type="checkbox" value="Skipped" id="skippedinput"/>
+            </div>
+            <div class="dataTables_filter">
+                <label class="input-label"></label>
+                <input type="text" placeholder="Free text filter" id="filterinput" />
+            </div>
+                <button class="grey-btn" id="submitFilter">Filter</button>
+                <button class="grey-btn" id="clearFilter">Clear</button>
+        </div>
+        </div>
+        </div>
+        </div>
+
+        <div class="row">
+        <div class="col-md-offset-1 col-md-10">
+        <h1 class="main-head" id=":i18n:Summary">Summary</h1>
+        <table class="table-1" id="summaryTable">
+            <thead>
+                <tr>
+                <th class="txt-align-left first-child">All tests</th>
+                <th class="txt-align-left first-child">Passed</th>
+                <th class="txt-align-left">Failures</th>
+                <th class="txt-align-left">Ignored</th>
+                <th class="txt-align-left">Skipped</th>
+                <th class="txt-align-left">Inconclusive</th>
+                <th class="txt-align-left">Success Rate</th>
+                <th class="txt-align-left">Time(s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if summary.failed > 0 %}
+                <tr class="Failure">
+                {% else %}
+                <tr class="Pass">
+                {% endif %}
+                <td class="txt-align-left first-child">{{ summary.total }}</td>
+                <td class="txt-align-left">{{ summary.success }}</td>
+                <td class="txt-align-left">{{ summary.failed }}</td>
+                <td class="txt-align-left">{{ summary.ignored }}</td>
+                <td class="txt-align-left">{{ summary.skipped }}</td>
+                <td class="txt-align-left">{{ summary.inconclusive }}</td>
+                <td class="txt-align-left">{{ '%0.2f' % summary.success_rate }} %</td>
+                <td class="txt-align-left" data-time="{{ summary.time }}">{{ summary.time }}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+        </div>
+
+        {% for ts in test_suites %}
+            {%  if ts.results  %}
+            <div class="row">
+            <div class="col-md-offset-1 col-md-10">
+            <div class="table-holder">
+                <ul class="summary-list">
+                    <li><b id="Tests">Tests </b>{{ ts.tests }}</li>
+                    <li><b id="Passed">Passed </b>{{ ts.passed }}</li>
+                    <li><b id="Failures">Failures </b><span>{{ ts.failed }}</span></li>
+                    <li><b id="Error">Ignored </b><span>{{ ts.ignored }}</span></li>
+                    <li><b id="Error">Skipped </b><span>{{ ts.skipped }}</span></li>
+                    <li><b id="Error">Inconclusive </b><span>{{ ts.inconclusive }}</span></li>
+                    <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b>{{ ts.time }}</li>
+                </ul>
+                <h1 class="main-head">{{ ts.name }}</h1>
+                <table class="table-1 tablesorter tablesorter-log-js">
+                    <thead>
+                        <tr>
+                            <th class="txt-align-left first-child" id=":i18n:Name">Name</th>
+                            <th id=":i18n:Status">Status</th>
+                            <th id=":i18n:Time">Time(s)</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for test in ts.results %}
+                        <tr>
+                            <td class="txt-align-left first-child "><span>{{ test.name }}</span></td>
+                            <td class="{{ test.result }}">{{ test.result }}</td>
+                            {% if test.time %}
+                            <td data-time="{{ test.time }}">{{ test.time }}</td>
+                            {% else %}
+                            <td>N/A</td>
+                            {% endif %}
+                        </tr>
+                        {% if test.success and test.success|lower == "false" %}
+                        <tr>
+                            <td class="txt-align-left failure-detail-cont colspan-js">
+                                 <div class="pos-relative">
+                                     <div class="failure-detail-txt">
+                                            {% for line in test.failure_text %}
+                                                {{ line.text|e|trim }}
+                                            {% endfor %}
+                                     </div>
+                                 </div>
+                            </td>
+                            <td class="hidden-result">{{ test.result }}</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a class="back-top-top" href="#top">Back to top</a>
+            </div>
+            </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}

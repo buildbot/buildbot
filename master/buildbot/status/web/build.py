@@ -142,6 +142,7 @@ class StatusResourceBuild(HtmlResource):
         req.setHeader('Cache-Control', 'no-cache')
 
         builder = self.build_status.getBuilder()
+        cxt['builder'] = builder
         cxt['builder_name'] = builder.getFriendlyName()
         cxt['build_number'] = b.getNumber()
         cxt['builder_name_link'] = urllib.quote(self.build_status.getBuilder().getName(), safe='')

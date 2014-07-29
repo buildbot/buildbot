@@ -105,7 +105,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def getSourceStamps(self, absolute=False):
         sourcestamps = []
         if not absolute:
-            sourcestamps.extend(self.sources)
+            if self.sources is not None:
+                sourcestamps.extend(self.sources)
         else:
             all_got_revisions = self.getAllGotRevisions() or {}
             # always make a new instance

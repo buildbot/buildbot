@@ -56,8 +56,7 @@ class SafeGzipEncoderFactory(server.GzipEncoderFactory):
     def encoderForRequest(self, request):
         compressor = server.GzipEncoderFactory.encoderForRequest(self, request)
         if compressor is not None:
-            compressor._zlibCompressor = zlib.compressobj(self.compressLevel,
-                                                          zlib.DEFLATED, 16 + zlib.MAX_WBITS, 7)
+            compressor._zlibCompressor = zlib.compressobj(self.compressLevel, zlib.DEFLATED, 10 + zlib.MAX_WBITS, 5)
 
         return compressor
 
