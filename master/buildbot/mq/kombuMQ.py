@@ -20,12 +20,14 @@ import amqp.exceptions
 import multiprocessing
 
 from buildbot import config
+from twisted.internet import defer
 from buildbot.mq import base
 from buildbot.util import datetime2epoch
 from buildbot.util import json
 from datetime import datetime
 from kombu.transport.base import Message
 from twisted.python import log
+
 
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
@@ -132,7 +134,9 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
         else:
             self.registerConsumer(key, callback)
 
-        return DeferConsumer(self.consumers[key])
+        # return DeferConsumer(self.consumers[key])
+        qref = QueueRef(self.consumers[key], callback)
+        return defer.succeed(qref)
 
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
@@ -188,3 +192,15 @@ class DeferConsumer(object):
 
     def stopConsuming(self):
         pass
+
+class QueueRef(base.QueueRef):
+
+    __slots__ = ['mq', 'filter']
+
+    def __init__(self, consumer, callback):
+        base.QueueRef.__init__(self, callback)
+        self.consumer = consumer
+
+    def stopConsuming(self):
+        self.callback = None
+        self.consumer.cancel()
