@@ -4,6 +4,7 @@
 .log-main .main-head {
 	font-size: 17px;
     margin: 0 0 11px;
+  width: 765px;
 
 }
 .log-main .main-head.big {
@@ -56,10 +57,11 @@
     }
 }
 
-.input-label {
+.dataTables_filter .input-label {
 	font-weight: bold;
 	position: relative;
 	text-shadow: 0 1px 0 white;
+    top: 9px;
 
 	&:after 
 	{
@@ -71,6 +73,9 @@
 	    position: absolute;
 	    top: 1px;
 	}
+}
+.top-filter-list {
+  margin-top:40px;
 }
 
 .check-boxes-list {
@@ -85,6 +90,7 @@
     input {
     	float: left;
     	margin-right:10px;
+      margin-top: 0;
     }
 }
 
@@ -105,7 +111,7 @@
 
 .summary-list {
 	list-style:none;
-    margin: 8px 0 10px;
+    margin: 45px 0 10px;
     padding:0;
     float:right;
     line-height: 11px;
@@ -129,8 +135,7 @@
 .back-top-top {
 	clear: both;
     display: block;
-    float: left;
-    margin-top: -37px;
+    margin-top: 8px;
     font-size: 11px;
 }
 .link-1 {font-weight:bold;}

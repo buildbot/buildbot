@@ -28,7 +28,7 @@
     <div class="top left"></div>
     <div class="log-main" data-failed-tests="{{ summary.failed }}">
 
-        <div id="dataTablesFilter" class="fl-right">
+        <div id="dataTablesFilter" class="fl-right top-filter-list">
             <div id="CheckBoxesList" class="check-boxes-list">
                 <label for="failedinput">Failed</label>
                 <input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
@@ -49,12 +49,10 @@
                 <button class="grey-btn" id="clearFilter">Clear</button>
         </div>
         </div>
-        </div>
-        </div>
 
-        <div class="row">
-        <div class="col-md-offset-1 col-md-10">
         <h1 class="main-head" id=":i18n:Summary">Summary</h1>
+
+        <div class="clearfix"></div>
         <table class="table-1" id="summaryTable">
             <thead>
                 <tr>
@@ -85,24 +83,29 @@
                 </tr>
             </tbody>
         </table>
-        </div>
-        </div>
+
 
         {% for ts in test_suites %}
             {%  if ts.results  %}
-            <div class="row">
-            <div class="col-md-offset-1 col-md-10">
+
             <div class="table-holder">
-                <ul class="summary-list">
-                    <li><b id="Tests">Tests </b>{{ ts.tests }}</li>
-                    <li><b id="Passed">Passed </b>{{ ts.passed }}</li>
-                    <li><b id="Failures">Failures </b><span>{{ ts.failed }}</span></li>
-                    <li><b id="Error">Ignored </b><span>{{ ts.ignored }}</span></li>
-                    <li><b id="Error">Skipped </b><span>{{ ts.skipped }}</span></li>
-                    <li><b id="Error">Inconclusive </b><span>{{ ts.inconclusive }}</span></li>
-                    <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b>{{ ts.time }}</li>
-                </ul>
-                <h1 class="main-head">{{ ts.name }}</h1>
+            <div class="row">
+
+                <div class="col-md-6">
+                    <h1 class="main-head">{{ ts.name }}</h1>
+                </div>
+                <div class="col-md-6">
+                    <ul class="summary-list">
+                        <li><b id="Tests">Tests </b>{{ ts.tests }}</li>
+                        <li><b id="Passed">Passed </b>{{ ts.passed }}</li>
+                        <li><b id="Failures">Failures </b><span>{{ ts.failed }}</span></li>
+                        <li><b id="Error">Ignored </b><span>{{ ts.ignored }}</span></li>
+                        <li><b id="Error">Skipped </b><span>{{ ts.skipped }}</span></li>
+                        <li><b id="Error">Inconclusive </b><span>{{ ts.inconclusive }}</span></li>
+                        <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b>{{ ts.time }}</li>
+                    </ul>
+                 </div>
+            </div>
                 <table class="table-1 tablesorter tablesorter-log-js">
                     <thead>
                         <tr>
@@ -143,9 +146,9 @@
                 </table>
                 <a class="back-top-top" href="#top">Back to top</a>
             </div>
-            </div>
-            </div>
+
+
             {% endif %}
         {% endfor %}
-    </div>
+
 {% endblock %}
