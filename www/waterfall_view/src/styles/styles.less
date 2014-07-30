@@ -1,0 +1,214 @@
+@navbar-height: 52px;
+
+.waterfall {
+  position: absolute;
+  top: @navbar-height;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  .load-indicator {
+    position: fixed;
+    top: @navbar-height;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1001;
+    background-color: #ffffff;
+    display: table;
+
+    .spinner {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: center;
+
+      p {
+        font-weight: 300;
+        margin-top: 10px;
+      }
+    }
+  }
+
+  .header {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100px;
+    line-height: 100px;
+    margin-bottom: 2px;
+    vertical-align: middle;
+
+    .header-content {
+      height: 100%;
+      overflow: hidden;
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .axis {
+        .domain {
+          fill: none;
+        }
+
+        &.x {
+          .tick {
+            text {
+              fill: #3498db;
+              font-size: 12px;
+            }
+
+            line {
+              stroke-width: 4px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    .inner-content {
+      position: absolute;
+      top: 0;
+      bottom: 110px;
+      overflow-y: auto;
+      overflow-x: visible;
+      width: 100%;
+
+      .svg-container {
+        position: relative;
+        width: 100%;
+        height: 16000px;
+
+        svg {
+          width: 100%;
+          height: 100%;
+
+          .chart {
+            .builder {
+              .build {
+                cursor: pointer;
+
+                rect, polygon {
+                  stroke: #3498db;
+                  stroke-width: 1px;
+                }
+
+                polygon {
+                  fill: #fff;
+                }
+
+                .buildstep {
+                  text {
+                    font-size: 12px;
+                  }
+                }
+              }
+
+              text.id {
+                fill: #3498db;
+                font-size: 12px;
+                text-anchor: middle;
+              }
+
+              circle {
+                stroke: #3498db;
+                stroke-width: 1px;
+              }
+            }
+          }
+
+          .axis {
+            .domain {
+              fill: none;
+            }
+
+            &.y {
+              .tick {
+                text {
+                  fill: #3498db;
+                  font-size: 10px;
+                }
+
+                line {
+                  stroke: #3498db;
+                  stroke-width: 1px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .fill {
+    &.success {
+      fill: #88DD33;
+    }
+    &.warnings {
+      fill: #FFAA33;
+    }
+    &.failure {
+      fill: #EE8888;
+    }
+    &.skipped {
+      fill: #AADDEE;
+    }
+    &.exception {
+      fill: #CC66CC;
+    }
+    &.retry {
+      fill: #EECCCC;
+    }
+    // ?
+    &.cancelled {
+      fill: #EECCCC;
+    }
+    &.pending {
+      fill: #E7D100;
+    }
+    &.unknown {
+      fill: #EEEEEE;
+    }
+  }
+
+  .stroke {
+    &.success {
+      stroke: #88DD33;
+    }
+    &.warnings {
+      stroke: #FFAA33;
+    }
+    &.failure {
+      stroke: #EE8888;
+    }
+    &.skipped {
+      stroke: #AADDEE;
+    }
+    &.exception {
+      stroke: #CC66CC;
+    }
+    &.retry {
+      stroke: #EECCCC;
+    }
+    // ?
+    &.cancelled {
+      stroke: #EECCCC;
+    }
+    &.pending {
+      stroke: #E7D100;
+    }
+    &.unknown {
+      stroke: #EEEEEE;
+    }
+  }
+}

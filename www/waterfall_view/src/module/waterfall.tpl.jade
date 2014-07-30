@@ -1,0 +1,10 @@
+.waterfall
+    .load-indicator(ng-show='w.loading')
+        .spinner
+            i.fa.fa-circle-o-notch.fa-spin.fa-2x
+            p loading
+    .header
+        .header-content(ng-style='{width: w.width}')
+    .content
+        .inner-content(ng-style='{width: w.width}')
+            .svg-container

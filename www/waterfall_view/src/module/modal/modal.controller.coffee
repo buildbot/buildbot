@@ -1,4 +1,4 @@
-angular.module('buildbot.console_view').controller 'modalController',
+angular.module('buildbot.waterfall_view').controller 'modalController',
     ['$rootScope', '$modalInstance', 'selectedBuild', class
         constructor: ($rootScope, @$modalInstance, @selectedBuild) ->
             $rootScope.$on '$stateChangeStart', => @close()
