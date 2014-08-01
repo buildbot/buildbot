@@ -2,68 +2,82 @@
 module.exports = function (grunt) {
     "use strict";
 
+    var target = "dev";
+    if (grunt.option('prod')) {
+        target = "prod";
+    }
+
     // Configuration goes here
     grunt.initConfig({
-
-        // Metadata.
-        meta: {
-            basePath: '/',
-            srcPath: 'sass',
-            deployPath: 'css'
+        files: {
+            css: {
+                src: ['sass'],
+                src_watch: ['sass/**/*.scss'],
+                dest: ['prod/css']
+            },
+            js: {
+                src: [
+                    'script/libs/**/*.js',
+                    'script/plugins/**/*.js',
+                    'script/project/**/*.js',
+                    'script/main.js',
+                    'script/require.js'
+                ],
+                dest: ['prod/script']
+            }
         },
-        // compass
-        compass: {                  // Task
-            dev: {                    // Another target
+        compass: {
+            options: {
+                sassDir: '<%= files.css.src %>',
+                cssDir: '<%= files.css.dest %>'
+            },
+            prod: {
                 options: {
-                    sassDir: '<%= meta.srcPath %>',
-                    cssDir: '<%= meta.deployPath %>',
-                    debugInfo: true,
-                    environment: "development"
+                    environment: 'production',
+                    outputStyle: 'compressed'
                 }
             },
-            prod: {                    // Another target
+            dev: {
                 options: {
-                    sassDir: '<%= meta.srcPath %>',
-                    cssDir: 'prod/<%= meta.deployPath %>',
-                    environment: "production"
+                    debugInfo: true,
+                    environment: 'development',
+                    outputStyle: 'nested'
                 }
             }
         },
-        // javascript compression. This task is only used for test results.
-
-        uglify: {
-            my_target: {
-                files: {
-                    'prod/script/logoutput.min.js': ['script/libs/jquery.js', 'script/plugins/jquery-datatables.js', 'script/log.js']
-                }
-            }
-        },
-
         requirejs: {
-            compile: {
+            options: {
+                baseUrl: 'script/',
+                mainConfigFile: 'script/main.js',
+                name: 'main',
+                dir: "<%= files.js.dest %>",
+                preserveLicenseComments: false,
+                generateSourceMaps: true,
+                fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/,
+                findNestedDependencies: true
+            },
+            dev: {
                 options: {
-                    baseUrl: 'script/',
-                    mainConfigFile: 'script/main.js',
-                    name: 'main',
-                    dir: "prod/script",
-                    optimize: 'uglify2',
-                    preserveLicenseComments: false,
-                    generateSourceMaps: true,
-                    fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/
+                    optimize: 'none'
+                }
+            },
+            prod: {
+                options: {
+                    optimize: 'uglify2'
                 }
             }
         },
-        // watch
         watch: {
+            options: {
+                livereload: true
+            },
             css: {
-                files: [
-                    '<%= meta.srcPath %>/**/*.scss'
-                ],
-                tasks: ['compass:dev'],
-                options: {
-                    livereload: true // refreshes the browser on changes install an extension for your browser for this
-                }
-
+                files: ['<%= files.css.src_watch %>'],
+                tasks: ['compass:' + target]
+            },
+            js: {
+                files: ['<%= files.js.src %>'],
+                tasks: ['requirejs:' + target]
             }
         },
 
@@ -81,15 +95,13 @@ module.exports = function (grunt) {
     // Load plugins here
     grunt.loadNpmTasks('grunt-contrib-compass');
     grunt.loadNpmTasks('grunt-contrib-watch'); // run grunt watch for converting sass files to css in realtime
-    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-newer');
     grunt.loadNpmTasks('grunt-karma');
 
     // Define your tasks here
-    grunt.registerTask('default', ['compass']);
-    grunt.registerTask('default', ['uglify']);
-    grunt.registerTask('default', ['requirejs']);
-    grunt.registerTask('prod', ['compass:prod', 'requirejs:compile']); // grunt prod for production
+    grunt.registerTask('default', ['compass:' + target, 'requirejs:' + target, 'watch']);
+    grunt.registerTask('build', ['compass:' + target, 'requirejs:' + target]);
     grunt.registerTask('test', ["karma:unit"]);
 
 };

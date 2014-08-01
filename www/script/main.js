@@ -52,9 +52,8 @@ define('jquery', ['jquery-internal'], function () {
     return jQuery;
 });
 
-define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'extend-moment', 'mustache', 'timeElements',
-        'URIjs/URI', 'rtGlobal', 'toastr', 'realtimerouting', 'realtimePages', 'rtBuilders', 'overscroll', 'ui.preloader', 'screensize'],
-    function ($, helpers, dataTables, popup, dropdown, extendMoment, Mustache, timeElements, URI, rtGlobal, toastr) {
+define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'extend-moment', 'timeElements', 'toastr', 'ui.preloader'],
+    function ($, helpers, dataTables, popup, dropdown, extendMoment, timeElements, toastr, preloader) {
 
         'use strict';
 
