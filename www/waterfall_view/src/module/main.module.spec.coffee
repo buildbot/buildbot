@@ -97,7 +97,7 @@ if window.__karma__?
             # Mocked service
             buildbotServiceMock =
                 some: ->
-                    getList: ->
+                    getList: -> then: ->
                     bind: -> then: ->
                 all: (string) =>
                     deferred = $q.defer()
@@ -122,6 +122,7 @@ if window.__karma__?
                     $q: $q
                     d3Service: d3Service
                     buildbotService: buildbotServiceMock
+                    config: plugins: waterfall_view: {}
 
         beforeEach(inject(injected))
 

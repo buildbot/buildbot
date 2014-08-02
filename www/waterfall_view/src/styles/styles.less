@@ -1,4 +1,5 @@
 @navbar-height: 52px;
+@main-color: #3498db;
 
 .waterfall {
   position: absolute;
@@ -56,8 +57,12 @@
 
         &.x {
           .tick {
+            a {
+              text-decoration: none;
+            }
+
             text {
-              fill: #3498db;
+              fill: @main-color;
               font-size: 12px;
             }
 
@@ -98,7 +103,7 @@
                 cursor: pointer;
 
                 rect, polygon {
-                  stroke: #3498db;
+                  stroke: @main-color;
                   stroke-width: 1px;
                 }
 
@@ -114,13 +119,13 @@
               }
 
               text.id {
-                fill: #3498db;
+                fill: @main-color;
                 font-size: 12px;
                 text-anchor: middle;
               }
 
               circle {
-                stroke: #3498db;
+                stroke: @main-color;
                 stroke-width: 1px;
               }
             }
@@ -134,12 +139,12 @@
             &.y {
               .tick {
                 text {
-                  fill: #3498db;
+                  fill: @main-color;
                   font-size: 10px;
                 }
 
                 line {
-                  stroke: #3498db;
+                  stroke: @main-color;
                   stroke-width: 1px;
                 }
               }

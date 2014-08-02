@@ -1,11 +1,11 @@
 angular.module('buildbot.waterfall_view').service 'dataService',
     [class
         # Returns groups and adds builds to builders
-        getGroups: (builders, builds) ->
+        getGroups: (builders, builds, threshold) ->
+            # Sort builds by buildid
+            builds.sort (a, b) -> a.buildid - b.buildid
             # Create groups: ignore periods when builders are idle
             groups = []
-            # Idle time threshold
-            epsilon = 300
 
             groupid = -1
             last = groupid: 0, time: 0
@@ -13,7 +13,7 @@ angular.module('buildbot.waterfall_view').service 'dataService',
             builder.builds = [] for builder in builders
             for build in builds
                 # Group number starts from 0, for the first time the condition is always true
-                ++groupid if build.started_at - last.time > epsilon
+                ++groupid if build.started_at - last.time > threshold
 
                 # Create new object for a group with the minimum time
                 groups[groupid] ?= min: build.started_at
@@ -21,10 +21,10 @@ angular.module('buildbot.waterfall_view').service 'dataService',
                 if last.groupid isnt groupid
                     groups[last.groupid].max = last.time
 
+                if not build.complete then build.complete_at = Math.round(new Date() / 1000)
                 build.groupid = last.groupid = groupid
                 builders[build.builderid - 1].builds.push(build)
 
-                if not build.complete_at? or not build.complete then build.complete_at = Math.round(new Date() / 1000)
                 if build.complete_at > last.time then last.time = build.complete_at
             # The last group maximum time
             groups[last.groupid].max = last.time
