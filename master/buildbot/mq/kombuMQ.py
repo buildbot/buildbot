@@ -20,14 +20,13 @@ import amqp.exceptions
 import multiprocessing
 
 from buildbot import config
-from twisted.internet import defer
 from buildbot.mq import base
 from buildbot.util import datetime2epoch
 from buildbot.util import json
 from datetime import datetime
 from kombu.transport.base import Message
 from twisted.python import log
-
+from twisted.internet import defer
 
 
 class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
@@ -141,12 +140,12 @@ class KombuMQ(config.ReconfigurableServiceMixin, base.MQBase):
     def formatKey(self, key):
         # transform key from a tuple to a string with standard routing key's
         # format
-        result = [item for item in key]
+        result = [item if item else "*" for item in key]
 
         return ".".join(result)
 
     def _toJson(self, obj):
-        if isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime):
             return datetime2epoch(obj)
 
 
