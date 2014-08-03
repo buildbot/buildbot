@@ -1,5 +1,3 @@
-.. _Customization:
-
 Customization
 =============
 
@@ -16,14 +14,14 @@ Programmatic Configuration Generation
 Bearing in mind that ``master.cfg`` is a Python file, large configurations can be shortened considerably by judicious use of Python loops.
 For example, the following will generate a builder for each of a range of supported versions of Python::
 
-    pythons = [ 'python2.4', 'python2.5', 'python2.6', 'python2.7',
-                'python3.2', 'python3.3' ]
-    pytest_slaves = [ "slave%s" % n for n in range(10) ]
+    pythons = ['python2.4', 'python2.5', 'python2.6', 'python2.7',
+               'python3.2', 'python3.3']
+    pytest_slaves = ["slave%s" % n for n in range(10)]
     for python in pythons:
-        f = BuildFactory()
-        f.addStep(SVN(...))
-        f.addStep(ShellCommand(command=[ python, 'test.py' ]))
-        c['builders'].append(BuilderConfig(
+        f = util.BuildFactory()
+        f.addStep(steps.SVN(...))
+        f.addStep(steps.ShellCommand(command=[python, 'test.py']))
+        c['builders'].append(util.BuilderConfig(
                 name="test-%s" % python,
                 factory=f,
                 slavenames=pytest_slaves))
@@ -53,11 +51,13 @@ For example::
 In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
 In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
 Note the use of the :func:`canBeMergedWith` method to access the source stamp compatibility algorithm.
-Note, in particular, that this function returns a Deferred as of Buildbot-0.9.0.  ::
+Note, in particular, that this function returns a Deferred as of Buildbot-0.9.0.
+
+::
 
     @defer.inlineCallbacks
     def mergeRequests(builder, req1, req2):
-        if (yield req1.source.canBeMergedWith(req2.source)) and  req1.reason == req2.reason:
+        if (yield req1.source.canBeMergedWith(req2.source)) and req1.reason == req2.reason:
            defer.returnValue(True)
         else:
            defer.returnValue(False)
@@ -134,20 +134,22 @@ If some non-immediate result must be calculated, the ``nextBuild`` function can 
         d.addCallback(pick)
         return d
 
-The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`.
+The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
+
+    ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
 .. _Customizing-SVNPoller:
 
 Customizing SVNPoller
 ---------------------
 
-Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: ``({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})``.
-When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the ``{REPOURL}`` and possibly some portion of the ``{PROJECT-plus-BRANCH}`` string.
-The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a ``{FILEPATH}`` (which is relative to the top of a checked-out tree).
+Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: :samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`.
+When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}` string.
+The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of a checked-out tree).
 The details of how these strings are split up depend upon how your repository names its branches.
 
-PROJECT/BRANCHNAME/FILEPATH repositories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:samp:`{PROJECT}/{BRANCHNAME}/{FILEPATH}` repositories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One common layout is to have all the various projects that share a repository get a single top-level directory each, with ``branches``, ``tags``, and ``trunk`` subdirectories:
 
@@ -235,8 +237,8 @@ Note here that we are monitoring at the root of the repository, and that within 
 It is that ``amanda`` subdirectory whose name becomes the ``project`` field of the Change.
 
 
-BRANCHNAME/PROJECT/FILEPATH repositories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:samp:`{BRANCHNAME}/{PROJECT}/{FILEPATH}` repositories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another common way to organize a Subversion repository is to put the branch name at the top, and the projects underneath.
 This is especially frequent when there are a number of related sub-projects that all get released in a group.
@@ -904,7 +906,10 @@ The :class:`BuildStep` class definition itself will look something like this::
 So that's the code that we want to wind up using.
 How do we actually deploy it?
 
-You have a couple of different options.
+You have a number of different options:
+
+.. contents::
+   :local:
 
 Inclusion in the :file:`master.cfg` file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -915,7 +920,7 @@ The simplest technique is to simply put the step class definitions in your :file
     f.addStep(SVN(svnurl="stuff"))
     f.addStep(Framboozle())
 
-Remember that :file:`master.cfg` is secretly just a Python program with one job: populating the :file:`BuildmasterConfig` dictionary.
+Remember that :file:`master.cfg` is secretly just a Python program with one job: populating the :data:`BuildmasterConfig` dictionary.
 And Python programs are allowed to define as many classes as they like.
 So you can define classes and use them in the same file, just as long as the class is defined before some other code tries to use it.
 
@@ -1011,10 +1016,13 @@ In either case, post a note about your patch to the mailing list, so others can 
     f.addStep(SVN(svnurl="stuff"))
     f.addStep(framboozle.Framboozle())
 
-And then you don't even have to install framboozle.py anywhere on your system, since it will ship with Buildbot.
+And then you don't even have to install :file:`framboozle.py` anywhere on your system, since it will ship with Buildbot.
 You don't have to be root, you don't have to set :envvar:`PYTHONPATH`.
 But you do have to make a good case for Framboozle being worth going into the main distribution, you'll probably have to provide docs and some unit test cases, you'll need to figure out what kind of beer the author likes (IPA's and Stouts for Dustin), and then you'll have to wait until the next release.
 But in some environments, all this is easier than getting root on your buildmaster box, so the tradeoffs may actually be worth it.
+
+Summary
+~~~~~~~
 
 Putting the code in master.cfg (1) makes it available to that buildmaster instance.
 Putting it in a file in a personal library directory (2) makes it available for any buildmasters you might be running.

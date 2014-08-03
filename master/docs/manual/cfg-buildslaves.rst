@@ -182,6 +182,11 @@ The following options are available for all latent buildslaves.
 Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 +++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+..
+    XXX(sa2ajj): is it a good candidate to be put into a separate file?
+
+    The point is: tell about availability, but the detailed guide in a separate doc?
+
 `EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to
 start virtual machines in an Amazon data center. Please see their website for
 details, including costs. Using the AWS EC2 latent buildslaves involves getting
@@ -261,8 +266,10 @@ of this writing include ``m1.small``, ``m1.large``, ``m1.xlarge``, ``c1.medium``
 and ``c1.xlarge``; see the EC2 documentation for descriptions of these
 machines).
 
-Here is the simplest example of configuring an EC2 latent buildslave. It
-specifies all necessary remaining values explicitly in the instantiation. ::
+Here is the simplest example of configuring an EC2 latent buildslave.
+It specifies all necessary remaining values explicitly in the instantiation.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -283,11 +290,12 @@ the account information can be specified in alternate ways.
    separate file, and potentially let more people read your main configuration
    file.
 
-By default, you can make an :file:`.ec2` directory in the home folder of the user
-running the buildbot master. In that directory, create a file called :file:`aws_id`.
-The first line of that file should be your access key id; the second line
-should be your secret access key id. Then you can instantiate the build slave
-as follows. ::
+By default, you can make an :file:`.ec2` directory in the home folder of the user running the buildbot master.
+In that directory, create a file called :file:`aws_id`.
+The first line of that file should be your access key id; the second line should be your secret access key id.
+Then you can instantiate the build slave as follows.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -304,9 +312,9 @@ specify one or two AMI filters.
 In all cases, the AMI that sorts last by its location (the S3 bucket and
 manifest name) will be preferred.
 
-One available filter is to specify the acceptable AMI owners, by AWS account
-number (the 12 digit number, usually rendered in AWS with hyphens like
-"1234-5678-9012", should be entered as in integer). ::
+One available filter is to specify the acceptable AMI owners, by AWS account number (the 12 digit number, usually rendered in AWS with hyphens like "1234-5678-9012", should be entered as in integer).
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -316,8 +324,9 @@ number (the 12 digit number, usually rendered in AWS with hyphens like
                                secret_identifier='privatekey'
                                )
 
-The other available filter is to provide a regular expression string that
-will be matched against each AMI's location (the S3 bucket and manifest name). ::
+The other available filter is to provide a regular expression string that will be matched against each AMI's location (the S3 bucket and manifest name).
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
@@ -325,8 +334,10 @@ will be matched against each AMI's location (the S3 bucket and manifest name). :
         valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
 
-The regular expression can specify a group, which will be preferred for the
-sorting.  Only the first group is used; subsequent groups are ignored. ::
+The regular expression can specify a group, which will be preferred for the sorting.
+Only the first group is used; subsequent groups are ignored.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
@@ -334,8 +345,10 @@ sorting.  Only the first group is used; subsequent groups are ignored. ::
         valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
 
-If the group can be cast to an integer, it will be.  This allows 10 to sort
-after 1, for instance. ::
+If the group can be cast to an integer, it will be.
+This allows 10 to sort after 1, for instance.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     bot1 = EC2LatentBuildSlave(
@@ -343,11 +356,11 @@ after 1, for instance. ::
         valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
 
-In addition to using the password as a handshake between the master and the
-slave, you may want to use a firewall to assert that only machines from a
-specific IP can connect as slaves.  This is possible with AWS EC2 by using
-the Elastic IP feature.  To configure, generate a Elastic IP in AWS, and then
-specify it in your configuration using the ``elastic_ip`` argument. ::
+In addition to using the password as a handshake between the master and the slave, you may want to use a firewall to assert that only machines from a specific IP can connect as slaves.
+This is possible with AWS EC2 by using the Elastic IP feature.
+To configure, generate a Elastic IP in AWS, and then specify it in your configuration using the ``elastic_ip`` argument.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -357,9 +370,11 @@ specify it in your configuration using the ``elastic_ip`` argument. ::
                                        elastic_ip='208.77.188.166'
                                        )]
 
-One other way to configure a slave is by settings AWS tags. They can for example be used to 
-have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy. To get Buildbot to tag the latent slave 
-specify the tag keys and values in your configuration using the ``tags`` argument. ::
+One other way to configure a slave is by settings AWS tags.
+They can for example be used to have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy.
+To get Buildbot to tag the latent slave specify the tag keys and values in your configuration using the ``tags`` argument.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -384,10 +399,10 @@ these AWS EC2 values.  They both default to ``latent_buildbot_slave``.
 Spot instances
 ##############
 
-If you would prefer to use spot instances for running your builds, you can accomplish that
-by passing in a True value to the ``spot_instance`` parameter to the EC2LatentBuildSlave
-constructor. Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier``
-in order to limit your builds' budget consumption. ::
+If you would prefer to use spot instances for running your builds, you can accomplish that by passing in a True value to the ``spot_instance`` parameter to the EC2LatentBuildSlave constructor.
+Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`` in order to limit your builds' budget consumption.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -409,12 +424,11 @@ parameter, then a spot request will be sent to Amazon with the above details.
 When a spot request fails
 #########################
 
-In some cases Amazon may reject a spot request because the spot price, determined by taking
-the 24-hour average of that availability zone's spot prices for the given product description,
-is lower than the current price. The optional parameters ``retry`` and ``retry_price_adjustment``
-allow for resubmitting the spot request with an adjusted price. If the spot request continues to
-fail, and the number of attempts exceeds the value of the ``retry`` parameter, an error message
-will be logged. ::
+In some cases Amazon may reject a spot request because the spot price, determined by taking the 24-hour average of that availability zone's spot prices for the given product description, is lower than the current price.
+The optional parameters ``retry`` and ``retry_price_adjustment`` allow for resubmitting the spot request with an adjusted price.
+If the spot request continues to fail, and the number of attempts exceeds the value of the ``retry`` parameter, an error message will be logged.
+
+::
 
     from buildbot.buildslave.ec2 import EC2LatentBuildSlave
     c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
@@ -440,6 +454,9 @@ as normal and run any pending builds.
 
 Libvirt
 +++++++
+
+..
+    XXX(sa2ajj): Ditto
 
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting
 with the virtualization capabilities of recent versions of Linux and other OSes.
@@ -508,7 +525,9 @@ Configuring your Master
 If you want to add a simple on demand VM to your setup, you only need the following. We
 set the username to ``minion1``, the password to ``sekrit``. The base image is called ``base_image``
 and a copy of it will be made for the duration of the VM's life. That copy will be thrown
-away every time a build is complete. ::
+away every time a build is complete.
+
+::
 
     from buildbot.buildslave.libvirt import LibVirtSlave, Connection
     c['slaves'] = [LibVirtSlave('minion1', 'sekrit', Connection("qemu:///session"),
@@ -542,6 +561,10 @@ won't be able to find a VM to start.
 
 OpenStack
 +++++++++
+
+..
+    XXX(sa2ajj): Ditto
+
 `OpenStack <http://openstack.org/>`_ is a series of interconnected components
 that facilitates managing compute, storage, and network resources in a
 data center. It is available under the Apache License and has a REST interface
@@ -599,7 +622,9 @@ passed as options to an OpenStack client.
     A dictionary of string key-value pairs to pass to the instance. These will
     be available under the ``metadata`` key from the metadata service.
 
-Here is the simplest example of configuring an OpenStack latent buildslave. ::
+Here is the simplest example of configuring an OpenStack latent buildslave.
+
+::
 
     from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
     c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
@@ -608,10 +633,11 @@ Here is the simplest example of configuring an OpenStack latent buildslave. ::
                     os_tenant_name='tenant',
                     os_auth_url='http://127.0.0.1:35357/v2.0')]
 
-The ``image`` argument also supports being given a callable. The callable will
-be passed the list of available images and must return the image to use. The
-invocation happens in a separate thread to prevent blocking the build master
-when interacting with OpenStack. ::
+The ``image`` argument also supports being given a callable.
+The callable will be passed the list of available images and must return the image to use.
+The invocation happens in a separate thread to prevent blocking the build master when interacting with OpenStack.
+
+::
 
     from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
 

@@ -149,8 +149,7 @@ parameters which do not accept properties.
 Property
 ++++++++
 
-The simplest form of annotation is to wrap the property name with
-:class:`Property`::
+The simplest form of annotation is to wrap the property name with :class:`Property`::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Property
@@ -170,7 +169,9 @@ parameter is not set::
    f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
                     Property('warnings', default='none', defaultWhenFalse=False) ]))
 
-The default value can reference other properties, e.g., ::
+The default value can reference other properties, e.g.,
+
+::
 
     command=Property('command', default=Property('default-command'))
 
@@ -188,7 +189,9 @@ be interpolated into strings, instead.  The tool for that job is
 
 The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
 In this form, the property name goes in the parentheses, as above.
-A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character"). ::
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
+
+::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Interpolate
@@ -243,7 +246,7 @@ The following ways of interpreting the value are available.
 
 Although these are similar to shell substitutions, no other substitutions are currently supported.
 
-Example ::
+Example::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import Interpolate
@@ -270,7 +273,8 @@ Renderer
 
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
 The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when the step it's passed to begins.
-The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.  For example::
+The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
+For example::
 
     from buildbot.process import properties
     @properties.renderer
@@ -323,17 +327,15 @@ arguments::
                        WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
                        "source"]))
 
-If this :class:`BuildStep` were used in a tree obtained from Git, it would
-create a tarball with a name like
-:file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
+If this :class:`BuildStep` were used in a tree obtained from Git, it would create a tarball with a name like :file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
 
 .. index:: unsupported format character
 
-The more common pattern is to use Python dictionary-style string interpolation
-by using the ``%(propname)s`` syntax. In this form, the property name goes in
-the parentheses, as above.  A common mistake is to omit the trailing "s",
-leading to a rather obscure error from Python ("ValueError: unsupported format
-character"). ::
+The more common pattern is to use Python dictionary-style string interpolation by using the ``%(propname)s`` syntax.
+In this form, the property name goes in the parentheses, as above.
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
+
+::
 
    from buildbot.steps.shell import ShellCommand
    from buildbot.process.properties import WithProperties
@@ -392,7 +394,9 @@ For example::
             return 'qux'
     ShellCommand(command=['echo', DetermineFoo()])
 
-or, more practically, ::
+or, more practically,
+
+::
 
     class Now(object):
         implements(IRenderable)

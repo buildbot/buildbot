@@ -122,11 +122,11 @@ See :bb:index:`chsrc` for a full list of change sources.
 Configuring Change Sources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :bb:cfg:`change_source` configuration key holds all active
-change sources for the configuration.
+The :bb:cfg:`change_source` configuration key holds all active change sources for the configuration.
 
-Most configurations have a single :class:`ChangeSource`, watching only a single
-tree, e.g., ::
+Most configurations have a single :class:`ChangeSource`, watching only a single tree, e.g.,
+
+::
 
     c['change_source'] = PBChangeSource()
 
@@ -179,8 +179,7 @@ change-emailing tools, and each has a slightly different format, so
 each has a different parsing function. There is a separate
 ChangeSource variant for each parsing function.
 
-Once you've chosen a maildir location and a parsing function, create
-the change source and put it in ``change_source`` ::
+Once you've chosen a maildir location and a parsing function, create the change source and put it in ``change_source``::
 
     from buildbot.changes.mail import CVSMaildirSource
     c['change_source'] = CVSMaildirSource("~/maildir-buildbot",
@@ -385,8 +384,9 @@ SVNCommitEmailMaildirSource
 :file:`commit-email.pl` script, which is included in the Subversion
 distribution.
 
-It does not currently handle branches: all of the Change objects that
-it creates will be associated with the default (i.e. trunk) branch. ::
+It does not currently handle branches: all of the Change objects that it creates will be associated with the default (i.e. trunk) branch.
+
+::
 
     from buildbot.changes.mail import SVNCommitEmailMaildirSource
     c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
@@ -419,10 +419,11 @@ The ``prefix`` option is not supported (it is silently ignored). Use the
 branches (and just do not subscribe the buildbot to branches that are not of
 interest).
 
-The revision number is obtained from the email text. The bzr revision id is
-not available in the mails sent by Launchpad. However, it is possible to set
-the bzr `append_revisions_only` option for public shared repositories to
-avoid new pushes of merges changing the meaning of old revision numbers. ::
+The revision number is obtained from the email text.
+The bzr revision id is not available in the mails sent by Launchpad.
+However, it is possible to set the bzr `append_revisions_only` option for public shared repositories to avoid new pushes of merges changing the meaning of old revision numbers.
+
+::
 
     from buildbot.changes.mail import BzrLaunchpadEmailMaildirSource
     bm = { 'lp:~maria-captains/maria/5.1' : '5.1', 'lp:~maria-captains/maria/6.0' : '6.0' }
@@ -631,10 +632,10 @@ depot for changes. It accepts the following arguments:
 Example
 +++++++
 
-This configuration uses the :envvar:`P4PORT`, :envvar:`P4USER`, and :envvar:`P4PASSWD`
-specified in the buildmaster's environment. It watches a project in which the
-branch name is simply the next path component, and the file is all path
-components after. ::
+This configuration uses the :envvar:`P4PORT`, :envvar:`P4USER`, and :envvar:`P4PASSWD` specified in the buildmaster's environment.
+It watches a project in which the branch name is simply the next path component, and the file is all path components after.
+
+::
 
     from buildbot.changes import p4poller
     s = p4poller.P4Source(p4base='//depot/project/',
@@ -806,10 +807,7 @@ is available explicitly as ``split_file_alwaystrunk``::
         svnurl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
         split_file=split_file_alwaystrunk)
 
-
-For repositories with the ``/trunk`` and
-``/branches/{BRANCH}`` layout, ``split_file_branches`` will do the
-job::
+For repositories with the ``/trunk`` and :samp:`/branches/{BRANCH}` layout, ``svn_split_file_branches`` will do the job::
 
     from buildbot.changes.svnpoller import SVNPoller
     from buildbot.changes.svnpoller import split_file_branches
@@ -820,9 +818,7 @@ job::
 When using this splitter the poller will set the ``project`` attribute of any
 changes to the ``project`` attribute of the poller.
 
-For repositories with the ``{PROJECT}/trunk`` and
-``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_projects_branches`` will do
-the job::
+For repositories with the :samp:`{PROJECT}/trunk` and :samp:`{PROJECT}/branches/{BRANCH}` layout, ``svn_split_file_projects_branches`` will do the job::
 
     from buildbot.changes.svnpoller import SVNPoller
     from buildbot.changes.svnpoller import split_file_projects_branches
@@ -849,9 +845,11 @@ configuration can import it. Even putting it in the same directory as the :file:
 should work. Install the poller in the buildbot configuration as with any
 other change source. Minimally, provide a URL that you want to poll (``bzr://``,
 ``bzr+ssh://``, or ``lp:``), making sure the buildbot user has necessary
-privileges. ::
+privileges.
 
-    # bzr_buildbot.py in the same directory as master.cfg
+::
+
+    # put bzr_buildbot.py file to the same directory as master.cfg
     from bzr_buildbot import BzrPoller
     c['change_source'] = BzrPoller(
         url='bzr://hostname/my_project',
@@ -1347,5 +1345,6 @@ configuration would look like this::
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
         pollinterval=10800)
 
-(note that you will need to download ``googlecode_atom.py`` from the Buildbot
-source and install it somewhere on your PYTHONPATH first)
+.. note::
+
+   You will need to download ``googlecode_atom.py`` from the Buildbot source and install it somewhere on your :envvar:`PYTHONPATH` first.

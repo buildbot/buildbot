@@ -41,14 +41,14 @@ This factory would then be attached to one builder (or several, if desired)::
     c['builders'].append(
         BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f))
 
-It is also possible to pass a list of steps into the
-:class:`BuildFactory` when it is created. Using :meth:`addStep` is
-usually simpler, but there are cases where it is more convenient to
-create the list of steps ahead of time, perhaps using some Python
-tricks to generate the steps. ::
+It is also possible to pass a list of steps into the :class:`BuildFactory` when it is created.
+Using :meth:`addStep` is usually simpler, but there are cases where it is more convenient to create the list of steps ahead of time, perhaps using some Python tricks to generate the steps.
+
+::
 
     from buildbot.steps import source, shell
     from buildbot.process import factory
+
 
     all_steps = [
         source.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"),
@@ -63,7 +63,9 @@ Finally, you can also add a sequence of steps all at once::
 Attributes
 ~~~~~~~~~~
 
-The following attributes can be set on a build factory after it is created, e.g., ::
+The following attributes can be set on a build factory after it is created, e.g.,
+
+::
 
     f = factory.BuildFactory()
     f.useProgress = False
@@ -428,9 +430,6 @@ Arguments:
     run the test cases in random order, which sometimes catches subtle
     inter-test dependency bugs. Defaults to ``False``.
 
-The step can also take any of the :class:`ShellCommand` arguments, e.g.,
-:attr:`haltOnFailure`.
+The step can also take any of the :class:`ShellCommand` arguments, e.g., :attr:`haltOnFailure`.
 
-Unless one of ``tests`` or ``testChanges`` are set, the step will
-generate an exception.
-
+Unless one of ``tests`` or ``testChanges`` are set, the step will generate an exception.

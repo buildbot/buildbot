@@ -74,11 +74,9 @@ available with all schedulers.
     remembered and shown in status displays.
 
 ``codebases``
-    When the scheduler processes data from more than 1 repository at the
-    same time then a corresponding codebase definition should be passed for each
-    repository. A codebase definition is a dictionary with one or more of the 
-    following keys: repository, branch, revision. The codebase definitions have
-    also to be passed as dictionary.
+    When the scheduler processes data from more than 1 repository at the same time then a corresponding codebase definition should be passed for each repository.
+    A codebase definition is a dictionary with one or more of the following keys: repository, branch, revision.
+    The codebase definitions have also to be passed as dictionary.
 
     .. code-block:: python
 
@@ -93,14 +91,11 @@ available with all schedulers.
         means that only changes with codebase '' (default value for codebase)
         will be accepted by the scheduler.
 
-    Buildsteps can have a reference to one of the codebases. The step will only
-    get information (revision, branch etc.)  that is related to that codebase.
-    When a scheduler is triggered by new changes, these changes (having a
-    codebase) will be incorporated by the new build. The buildsteps referencing
-    to the codebases that have changes get information about those changes. 
-    The buildstep that references to a codebase that does not have changes in
-    the build get the information from the codebases definition as configured in
-    the scheduler.
+    Buildsteps can have a reference to one of the codebases.
+    The step will only get information (revision, branch etc.) that is related to that codebase.
+    When a scheduler is triggered by new changes, these changes (having a codebase) will be incorporated by the new build.
+    The buildsteps referencing to the codebases that have changes get information about those changes.
+    The buildstep that references to a codebase that does not have changes in the build get the information from the codebases definition as configured in the scheduler.
 
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the
@@ -143,9 +138,9 @@ The failover is non-revertive.
 Change Filters
 ~~~~~~~~~~~~~~
 
-Several schedulers perform filtering on an incoming set of changes.  The filter
-can most generically be specified as a :class:`ChangeFilter`.  Set up a
-:class:`ChangeFilter` like this::
+Several schedulers perform filtering on an incoming set of changes.
+The filter can most generically be specified as a :class:`ChangeFilter`.
+Set up a :class:`ChangeFilter` like this::
 
     from buildbot.changes.filter import ChangeFilter
     my_filter = ChangeFilter(
@@ -161,7 +156,7 @@ There are five attributes of changes on which you can filter:
 
 ``project``
     the project string, as defined by the ChangeSource.
-    
+
 ``repository``
     the repository in which this change occurred.
 
@@ -275,7 +270,7 @@ The arguments to this scheduler are:
     build. If new changes are made during this interval, the timer will be
     restarted, so really the build will be started after a change and then
     after this many seconds of inactivity.
-    
+
     If ``treeStableTimer`` is ``None``, then a separate build is started
     immediately for each Change.
 
@@ -372,7 +367,7 @@ The arguments to this scheduler are:
 .. bb:sched:: Dependent
 
 .. _Dependent-Scheduler:
-    
+
 Dependent Scheduler
 :::::::::::::::::::
 
@@ -435,7 +430,7 @@ Example::
 .. bb:sched:: Periodic
 
 .. _Periodic-Scheduler:
-    
+
 Periodic Scheduler
 ::::::::::::::::::
 
@@ -569,8 +564,7 @@ again at 8:23am, but only if someone has committed code in the interim::
              minute=23,
              onlyIfChanged=True))
 
-The following runs a build every two hours, using Python's :func:`range`
-function::
+The following runs a build every two hours, using Python's :func:`range` function::
 
     c.schedulers.append(
         timed.Nightly(name='every2hours',
@@ -593,7 +587,7 @@ Finally, this example will run only on December 24th::
 .. bb:sched:: Try_Userpass
 
 .. _Try-Schedulers:
-            
+
 Try Schedulers
 ::::::::::::::
 
@@ -640,11 +634,11 @@ currently two ways to set this up:
     a special file containing the source stamp information and drops it in
     the jobdir, just like a standard maildir. When the buildmaster notices
     the new file, it unpacks the information inside and starts the builds.
-    
+
     The config file entries used by 'buildbot try' either specify a local
     queuedir (for which write and mv are used) or a remote one (using scp
     and ssh).
-    
+
     The advantage of this scheme is that it is quite secure, the
     disadvantage is that it requires fiddling outside the buildmaster
     config (to set the permissions on the jobdir correctly). If the
@@ -653,7 +647,7 @@ currently two ways to set this up:
     trial-build userlist. If they are on different machines, this will be
     much more of a hassle. It may also involve granting developer accounts
     on a machine that would not otherwise require them.
-    
+
     To implement this, the buildslave invokes :samp:`ssh -l {username} {host}
     buildbot tryserver {ARGS}`, passing the patch contents over stdin. The
     arguments must include the inlet directory and the revision
@@ -665,7 +659,7 @@ currently two ways to set this up:
     developer runs :command:`buildbot try`, their machine connects to the
     buildmaster via PB and authenticates themselves using that username
     and password, then sends a PB command to start the trial build.
-    
+
     The advantage of this scheme is that the entire configuration is
     performed inside the buildmaster's config file. The disadvantages are
     that it is less secure (while the `cred` authentication system does
@@ -789,7 +783,7 @@ Here is a fully-worked example::
                     builderNames=["package-all-platforms"])
     
     c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
-    
+
     # on checkin, make a tarball, build it, and test it
     checkin_factory = factory.BuildFactory()
     checkin_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],

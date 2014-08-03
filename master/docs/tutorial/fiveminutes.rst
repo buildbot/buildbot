@@ -352,7 +352,7 @@ to not hardcode all the schedulers and builders in the configuration, but
 generate them dynamically starting from list of all projects, branches,
 targets etc. and using loops to generate all possible combinations (or
 only the needed ones, depending on the specific setup), as explained in
-the documentation chapter about :ref:`Customization`.
+the documentation chapter about :doc:`../manual/customization`.
 
 Status targets
 --------------

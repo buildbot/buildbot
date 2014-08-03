@@ -159,7 +159,9 @@ Arguments common to all :class:`BuildStep` subclasses:
     A step can be optionally hidden from the waterfall and build details web pages.
     To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value.
     Steps are always shown while they execute, however after the step as finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
-    For example, in order to hide the step if the step has been skipped, ::
+    For example, in order to hide the step if the step has been skipped,
+
+    ::
 
         factory.addStep(Foo(..., hideStepIf=lambda results, s: results==SKIPPED))
 
@@ -185,15 +187,15 @@ Source Checkout
 
 .. py:module:: buildbot.steps.source
 
-.. caution:: Support for the old slave-side source checkout steps was removed
-    in Buildbot-0.9.0.
+.. caution::
+
+    Support for the old slave-side source checkout steps was removed in Buildbot-0.9.0.
 
     The old source steps were imported like this::
 
         from buildbot.steps.source import Git
 
-    while new source steps are in separate Python modules for each
-    version-control system::
+    while new source steps are in separate Python modules for each version-control system::
 
         from buildbot.steps.source.git import Git
 
@@ -209,8 +211,9 @@ parameters are mostly to specify where exactly the sources are coming from.
 ``method``
 
     These two parameters specify the means by which the source is checked out.
-    ``mode`` specifies the type of checkout and ``method`` tells about the
-    way to implement it. ::
+    ``mode`` specifies the type of checkout and ``method`` tells about the way to implement it.
+
+    ::
 
         factory = BuildFactory()
         from buildbot.steps.source.mercurial import Mercurial
@@ -301,7 +304,9 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/me
 Branches are available in two modes: ``dirname``, where the name of the branch is
 a suffix of the name of the repository, or ``inrepo``, which uses Hg's
 named-branches support. Make sure this setting matches your changehook, if you
-have that installed. ::
+have that installed.
+
+::
 
    from buildbot.steps.source.mercurial import Mercurial
    factory.addStep(Mercurial(repourl='path/to/repo', mode='full',
@@ -357,11 +362,10 @@ Git
 
 .. py:class:: buildbot.steps.source.git.Git
 
-The ``Git`` build step clones or updates a `Git <http://git.or.cz/>`_
-repository and checks out the specified branch or revision. Note that
-the buildbot supports Git version 1.2.0 and later: earlier versions
-(such as the one shipped in Ubuntu 'Dapper') do not support the
-:command:`git init` command that the buildbot uses. ::
+The ``Git`` build step clones or updates a `Git <http://git.or.cz/>`_ repository and checks out the specified branch or revision.
+Note that the buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the buildbot uses.
+
+::
 
    from buildbot.steps.source.git import Git
    factory.addStep(Git(repourl='git://path/to/repo', mode='full',
@@ -614,8 +618,9 @@ CVS
 
 .. py:class:: buildbot.steps.source.cvs.CVS
 
-The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_
-checkout or update. ::
+The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_ checkout or update.
+
+::
 
    from buildbot.steps.source.cvs import CVS
    factory.addStep(CVS(mode='incremental',
@@ -679,11 +684,12 @@ Bzr
 
 .. py:class:: buildbot.steps.source.bzr.Bzr
 
-bzr is a descendant of Arch/Baz, and is frequently referred to
-as simply `Bazaar`. The repository-vs-workspace model is similar to
-Darcs, but it uses a strictly linear sequence of revisions (one
-history per branch) like Arch. Branches are put in subdirectories.
-This makes it look very much like Mercurial. ::
+bzr is a descendant of Arch/Baz, and is frequently referred to as simply `Bazaar`.
+The repository-vs-workspace model is similar to Darcs, but it uses a strictly linear sequence of revisions (one history per branch) like Arch.
+Branches are put in subdirectories.
+This makes it look very much like Mercurial.
+
+::
 
    from buildbot.steps.source.bzr import Bzr
    factory.addStep(Bzr(mode='incremental',
@@ -738,8 +744,9 @@ P4
 
 .. py:class:: buildbot.steps.source.p4.P4
 
-The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_
-client specification and performs an update. ::
+The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ client specification and performs an update.
+
+::
 
    from buildbot.steps.source.p4 import P4
    factory.addStep(P4(p4port=p4port,
@@ -987,8 +994,9 @@ Darcs
 
 .. py:class:: buildbot.steps.source.darcs.Darcs
 
-The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_
-checkout or update. ::
+The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_ checkout or update.
+
+::
 
     from buildbot.steps.source.darcs import Darcs
     factory.addStep(Darcs(repourl='http://path/to/repo',
@@ -1039,8 +1047,9 @@ Monotone
 
 .. py:class:: buildbot.steps.source.mtn.Monotone
 
-The :bb:step:`Monotone <Monotone>` build step performs a `Monotone <http://www.monotone.ca/>`_
-checkout or update. ::
+The :bb:step:`Monotone <Monotone>` build step performs a `Monotone <http://www.monotone.ca/>`_ checkout or update.
+
+::
 
     from buildbot.steps.source.mtn import Monotone
     factory.addStep(Darcs(repourl='http://path/to/repo',
@@ -1087,7 +1096,7 @@ Monotone step takes the following arguments:
 
    ``clean``
       This remove all other files except those tracked and ignored by Monotone. It will remove
-      all the files that appear in :command:`mtn ls unknown`. Then it will pull from 
+      all the files that appear in :command:`mtn ls unknown`. Then it will pull from
       remote and update the working directory.
 
    ``fresh``
@@ -1175,7 +1184,7 @@ The :bb:step:`ShellCommand` arguments are:
 ``env``
     a dictionary of environment strings which will be added to the child
     command's environment. For example, to run tests with a different i18n
-    language setting, you might use ::
+    language setting, you might use::
 
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(command=["make", "test"],
@@ -1202,7 +1211,9 @@ The :bb:step:`ShellCommand` arguments are:
     :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do
     it by putting the value ``${PATH}`` at the end of the value like
     in the example below. Variables that don't exist on the slave will be
-    replaced by ``""``. ::
+    replaced by ``""``.
+
+    ::
 
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
@@ -1264,21 +1275,21 @@ The :bb:step:`ShellCommand` arguments are:
     of seconds) as the build runs, and any new text will be sent over to the
     buildmaster.
 
-    If you provide a dictionary of options instead of a string, you must specify
-    the ``filename`` key. You can optionally provide a ``follow`` key which
-    is a boolean controlling whether a logfile is followed or concatenated in its
-    entirety.  Following is appropriate for logfiles to which the build step will
-    append, where the pre-existing contents are not interesting.  The default value
-    for ``follow`` is ``False``, which gives the same behavior as just
-    providing a string filename. ::
+    If you provide a dictionary of options instead of a string, you must specify the ``filename`` key.
+    You can optionally provide a ``follow`` key which is a boolean controlling whether a logfile is followed or concatenated in its entirety.
+    Following is appropriate for logfiles to which the build step will append, where the pre-existing contents are not interesting.
+    The default value for ``follow`` is ``False``, which gives the same behavior as just providing a string filename.
+
+    ::
 
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
                       command=["make", "test"],
                       logfiles={"triallog": "_trial_temp/test.log"}))
 
-    The above example will add a log named 'triallog' on the master,
-    based on :file:`_trial_temp/test.log` on the slave. ::
+    The above example will add a log named 'triallog' on the master, based on :file:`_trial_temp/test.log` on the slave.
+
+    ::
 
         from buildbot.steps.shell import ShellCommand
         f.addStep(ShellCommand(
@@ -1355,8 +1366,9 @@ The single :bb:step:`ShellSequence` argument aside from the common parameters is
 
 ``commands``
 
-A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable the returns
-a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects. ::
+A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderable the returns a list of :class:`~buildbot.steps.shellsequence.ShellArg` objects.
+
+::
 
         from buildbot.steps.shellsequence import ShellArg
         from buildbot.steps.shellsequence import ShellSequence
@@ -1416,7 +1428,9 @@ This is intended to handle the :command:`./configure` step from
 autoconf-style projects, or the ``perl Makefile.PL`` step from perl
 :file:`MakeMaker.pm`-style modules. The default command is :command:`./configure`
 but you can change this by providing a ``command=`` parameter. The arguments are
-identical to :bb:step:`ShellCommand`. ::
+identical to :bb:step:`ShellCommand`.
+
+::
 
         from buildbot.steps.shell import Configure
         f.addStep(Configure())
@@ -1855,8 +1869,9 @@ SubunitShellCommand
 
 .. py:class:: buildbot.steps.subunit.SubunitShellCommand
 
-This buildstep is similar to :bb:step:`ShellCommand`, except that it runs the log content
-through a subunit filter to extract test and failure counts. ::
+This buildstep is similar to :bb:step:`ShellCommand`, except that it runs the log content through a subunit filter to extract test and failure counts.
+
+::
 
     from buildbot.steps.subunit import SubunitShellCommand
     f.addStep(SubunitShellCommand(command="make test"))
@@ -1879,8 +1894,10 @@ Here are some buildsteps for manipulating the slave's filesystem.
 FileExists
 ++++++++++
 
-This step will assert that a given file exists, failing if it does not.  The
-filename can be specified with a property. ::
+This step will assert that a given file exists, failing if it does not.
+The filename can be specified with a property.
+
+::
 
     from buildbot.steps.slave import FileExists
     f.addStep(FileExists(file='test_data'))
@@ -1892,7 +1909,9 @@ This step requires slave version 0.8.4 or later.
 CopyDirectory
 +++++++++++++++
 
-This command copies a directory on the slave. ::
+This command copies a directory on the slave.
+
+::
 
     from buildbot.steps.slave import CopyDirectory
     f.addStep(CopyDirectory(src="build/data", dest="tmp/data"))
@@ -1915,7 +1934,9 @@ The CopyDirectory step takes the following arguments:
 RemoveDirectory
 +++++++++++++++
 
-This command recursively deletes a directory on the slave. ::
+This command recursively deletes a directory on the slave.
+
+::
 
     from buildbot.steps.slave import RemoveDirectory
     f.addStep(RemoveDirectory(dir="build/build"))
@@ -1927,7 +1948,9 @@ This step requires slave version 0.8.4 or later.
 MakeDirectory
 +++++++++++++++
 
-This command creates a directory on the slave. ::
+This command creates a directory on the slave.
+
+::
 
     from buildbot.steps.slave import MakeDirectory
     f.addStep(MakeDirectory(dir="build/build"))
@@ -1968,13 +1991,12 @@ with an `epydocs` target. You might wish to use something like
 to add :option:`--pdf` to generate a PDF file instead of a large tree
 of HTML files.
 
-The API docs are generated in-place in the build tree (under the
-workdir, in the subdirectory controlled by the :option:`-o` argument). To
-make them useful, you will probably have to copy them to somewhere
-they can be read. A command like ``rsync -ad apiref/
-dev.example.com:~public_html/current-apiref/`` might be useful. You
-might instead want to bundle them into a tarball and publish it in the
-same place where the generated install tarball is placed. ::
+The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the :option:`-o` argument).
+To make them useful, you will probably have to copy them to somewhere they can be read.
+A command like ``rsync -ad apiref/ dev.example.com:~public_html/current-apiref/`` might be useful.
+You might instead want to bundle them into a tarball and publish it in the same place where the generated install tarball is placed.
+
+::
 
     from buildbot.steps.python import BuildEPYDoc
     f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
@@ -1998,10 +2020,11 @@ provide more detailed results but take longer to run.
 The :bb:step:`PyFlakes` step will run pyflakes and
 count the various kinds of errors and warnings it detects.
 
-You must supply the command line to be used. The default is
-``make pyflakes``, which assumes you have a top-level :file:`Makefile`
-with a ``pyflakes`` target. You might want to use something like
-``pyflakes .`` or ``pyflakes src``. ::
+You must supply the command line to be used.
+The default is ``make pyflakes``, which assumes you have a top-level :file:`Makefile` with a ``pyflakes`` target.
+You might want to use something like ``pyflakes .`` or ``pyflakes src``.
+
+::
 
     from buildbot.steps.python import PyFlakes
     f.addStep(PyFlakes(command=["pyflakes", "src"]))
@@ -2019,10 +2042,9 @@ Sphinx
 Generator. It uses `RestructuredText <http://docutils.sourceforge.net/rst.html>`_
 as input format.
 
-The :bb:step:`Sphinx` step will run
-:program:`sphinx-build` or any other program specified in its
-``sphinx`` argument and count the various warnings and error it
-detects. ::
+The :bb:step:`Sphinx` step will run :program:`sphinx-build` or any other program specified in its ``sphinx`` argument and count the various warnings and error it detects.
+
+::
 
     from buildbot.steps.python import Sphinx
     f.addStep(Sphinx(sphinx_builddir="_build"))
@@ -2065,7 +2087,10 @@ PyLint
 Similarly, the :bb:step:`PyLint` step will run :command:`pylint` and
 analyze the results.
 
-You must supply the command line to be used. There is no default. ::
+You must supply the command line to be used.
+There is no default.
+
+::
 
     from buildbot.steps.python import PyLint
     f.addStep(PyLint(command=["pylint", "src"]))
@@ -2127,10 +2152,10 @@ To influence the version of Python being used for the tests, or to add flags to
 the command, set the ``python`` parameter. This can be a string (like
 ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
 
-Trial creates and switches into a directory named :file:`_trial_temp/` before
-running the tests, and sends the twisted log (which includes all exceptions) to
-a file named :file:`test.log`. This file will be pulled up to the master where
-it can be seen as part of the status output. ::
+Trial creates and switches into a directory named :file:`_trial_temp/` before running the tests, and sends the twisted log (which includes all exceptions) to a file named :file:`test.log`.
+This file will be pulled up to the master where it can be seen as part of the status output.
+
+::
 
     from buildbot.steps.python_twisted import Trial
     f.addStep(Trial(tests='petmail.test'))
@@ -2155,11 +2180,11 @@ RemovePYCs
 
 .. py:class:: buildbot.steps.python_twisted.RemovePYCs
 
-This is a simple built-in step that will remove ``.pyc`` files from the
-workdir.  This is useful in builds that update their source (and thus do not
-automatically delete ``.pyc`` files) but where some part of the build
-process is dynamically searching for Python modules.  Notably, trial has a bad
-habit of finding old test modules. ::
+This is a simple built-in step that will remove ``.pyc`` files from the workdir.
+This is useful in builds that update their source (and thus do not automatically delete ``.pyc`` files) but where some part of the build process is dynamically searching for Python modules.
+Notably, trial has a bad habit of finding old test modules.
+
+::
 
     from buildbot.steps.python_twisted import RemovePYCs
     f.addStep(RemovePYCs())
@@ -2184,14 +2209,12 @@ There are a pair of steps named :bb:step:`FileUpload` and
 moves a file *up to* the master, while :bb:step:`FileDownload` moves
 a file *down from* the master.
 
-As an example, let's assume that there is a step which produces an
-HTML file within the source tree that contains some sort of generated
-project documentation. We want to move this file to the buildmaster,
-into a :file:`~/public_html` directory, so it can be visible to
-developers. This file will wind up in the slave-side working directory
-under the name :file:`docs/reference.html`. We want to put it into the
-master-side :file:`~/public_html/ref.html`, and add a link to the HTML
-status to the uploaded file. ::
+As an example, let's assume that there is a step which produces an HTML file within the source tree that contains some sort of generated project documentation.
+We want to move this file to the buildmaster, into a :file:`~/public_html` directory, so it can be visible to developers.
+This file will wind up in the slave-side working directory under the name :file:`docs/reference.html`.
+We want to put it into the master-side :file:`~/public_html/ref.html`, and add a link to the HTML status to the uploaded file.
+
+::
 
     from buildbot.steps.shell import ShellCommand
     from buildbot.steps.transfer import FileUpload
@@ -2375,16 +2398,18 @@ Transfering Strings
 .. py:class:: buildbot.steps.transfer.JSONStringDownload
 .. py:class:: buildbot.steps.transfer.JSONPropertiesDownload
 
-Sometimes it is useful to transfer a calculated value from the master to the
-slave. Instead of having to create a temporary file and then use FileDownload,
-you can use one of the string download steps.  ::
+Sometimes it is useful to transfer a calculated value from the master to the slave.
+Instead of having to create a temporary file and then use FileDownload, you can use one of the string download steps.
+
+::
 
     from buildbot.steps.transfer import StringDownload
     f.addStep(StringDownload(Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
             slavedest="buildid.txt"))
 
-:bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument,
-``s``, representing the string to download instead of a ``mastersrc`` argument. ::
+:bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument, ``s``, representing the string to download instead of a ``mastersrc`` argument.
+
+::
 
     from buildbot.steps.transfer import JSONStringDownload
     buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
@@ -2421,7 +2446,9 @@ the master, instead of the slave.  To be clear, the enclosing :class:`Build`
 object must still have a slave object, just as for any other step -- only, in
 this step, the slave does not do anything.
 
-In this example, the step renames a tarball based on the day of the week. ::
+In this example, the step renames a tarball based on the day of the week.
+
+::
 
     from buildbot.steps.transfer import FileUpload
     from buildbot.steps.master import MasterShellCommand
@@ -2440,7 +2467,9 @@ Environment variables constructed using the ``env`` argument support expansion
 so that if you just want to prepend  :file:`/home/buildbot/bin` to the
 :envvar:`PATH` environment variable, you can do it by putting the value
 ``${PATH}`` at the end of the value like in the example below.
-Variables that don't exist on the master will be replaced by ``""``. ::
+Variables that don't exist on the master will be replaced by ``""``.
+
+::
 
     from buildbot.steps.master import MasterShellCommand
     f.addStep(MasterShellCommand(
@@ -2512,21 +2541,21 @@ add ``strip=False``.
 The ``property`` argument can be specified as a  :ref:`Interpolate`
 object, allowing the property name to be built from other property values.
 
-The more advanced usage allows you to specify a function to extract
-properties from the command output.  Here you can use regular
-expressions, string interpolation, or whatever you would like. In this
-form, :func:`extract_fn` should be passed, and not :class:`Property`.
-The :func:`extract_fn` function is called with three arguments: the exit status of the
-command, its standard output as a string, and its standard error as
-a string.  It should return a dictionary containing all new properties. ::
+The more advanced usage allows you to specify a function to extract properties from the command output.
+Here you can use regular expressions, string interpolation, or whatever you would like.
+In this form, :func:`extract_fn` should be passed, and not :class:`Property`.
+The :func:`extract_fn` function is called with three arguments: the exit status of the command, its standard output as a string, and its standard error as a string.
+It should return a dictionary containing all new properties.
+
+::
 
     def glob2list(rc, stdout, stderr):
         jpgs = [ l.strip() for l in stdout.split('\n') ]
         return { 'jpgs' : jpgs }
     f.addStep(SetPropertyFromCommand(command="ls -1 *.jpg", extract_fn=glob2list))
 
-Note that any ordering relationship of the contents of stdout and
-stderr is lost.  For example, given ::
+Note that any ordering relationship of the contents of stdout and stderr is lost.
+For example, given::
 
     f.addStep(SetPropertyFromCommand(
         command="echo output1; echo error >&2; echo output2",
@@ -2550,12 +2579,11 @@ the :bb:step:`SetPropertiesFromEnv` step.  Pass a variable or list of variables
 in the ``variables`` parameter, then simply use the values as properties in a
 later step.
 
-Note that on Windows, environment variables are case-insensitive, but Buildbot
-property names are case sensitive.  The property will have exactly the variable
-name you specify, even if the underlying environment variable is capitalized
-differently.  If, for example, you use ``variables=['Tmp']``, the result
-will be a property named ``Tmp``, even though the environment variable is
-displayed as :envvar:`TMP` in the Windows GUI. ::
+Note that on Windows, environment variables are case-insensitive, but Buildbot property names are case sensitive.
+The property will have exactly the variable name you specify, even if the underlying environment variable is capitalized differently.
+If, for example, you use ``variables=['Tmp']``, the result will be a property named ``Tmp``, even though the environment variable is displayed as :envvar:`TMP` in the Windows GUI.
+
+::
 
     from buildbot.steps.slave import SetPropertiesFromEnv
     from buildbot.steps.shell import Compile
@@ -2623,7 +2651,7 @@ using properties.
 The ``set_properties`` parameter allows control of the properties that are passed to the triggered scheduler.
 The parameter takes a dictionary mapping property names to values.
 You may use :ref:`Interpolate` here to dynamically construct new property values.
-For the simple case of copying a property, this might look like ::
+For the simple case of copying a property, this might look like::
 
     set_properties={"my_prop1" : Property("my_prop1")}
 
@@ -2760,11 +2788,12 @@ Debian Build Steps
 DebPbuilder
 +++++++++++
 
-The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built
-by pbuilder. It populates the changeroot with a basic system and the packages
-listed as build requirement. The type of chroot to build is specified with the
-``distribution``, ``distribution`` and ``mirror`` parameter. To use pbuilder
-your buildbot must have the right to run pbuilder as root through sudo. ::
+The :bb:step:`DebPbuilder` step builds Debian packages within a chroot built by pbuilder.
+It populates the changeroot with a basic system and the packages listed as build requirement.
+The type of chroot to build is specified with the ``distribution``, ``distribution`` and ``mirror`` parameter.
+To use pbuilder your buildbot must have the right to run pbuilder as root through sudo.
+
+::
 
     from buildbot.steps.package.deb.pbuilder import DebPbuilder
     f.addStep(DebPbuilder())
@@ -2832,8 +2861,10 @@ The step looks at the list of changes in the build to determine which files to
 check - it does not check all files.  It specifically excludes any ``.xhtml``
 files in the top-level ``sandbox/`` directory.
 
-The step takes a single, optional, parameter: ``python``.  This specifies the
-Python executable to use to run Lore. ::
+The step takes a single, optional, parameter: ``python``.
+This specifies the Python executable to use to run Lore.
+
+::
 
     from buildbot.steps.python_twisted import HLint
     f.addStep(HLint())
@@ -2845,7 +2876,9 @@ MaxQ
 
 MaxQ (http://maxq.tigris.org/) is a web testing tool that allows you to record
 HTTP sessions and play them back.  The :bb:step:`MaxQ` step runs this
-framework. ::
+framework.
+
+::
 
     from buildbot.steps.maxq import MaxQ
     f.addStep(MaxQ(testdir='tests/'))
