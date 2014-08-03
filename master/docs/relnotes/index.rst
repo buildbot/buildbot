@@ -147,6 +147,11 @@ Requirements
 * Bulider names are now restricted to unicode strings or ASCII bytestrings.
   Encoded bytestrings are not accepted.
 
+Steps
+.....
+
+* Old-style source steps (imported directly from ``buildbot.steps.source``) are no longer supported on the master.
+
 Changes and Removals
 ....................
 
@@ -248,6 +253,10 @@ Fixes
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* While the buildmaster no longer supports old-style source steps, the buildslave still does.
+  Buildbot-slave-0.9.0 will still run successfully against Buildbot-0.8.9 or earlier, configured to use old-style steps.
+  However, the support is stlil deprecated and will be removed as soon as it is inconvenient for developers.
 
 Details
 -------
