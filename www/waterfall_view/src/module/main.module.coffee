@@ -36,92 +36,172 @@ m.config ['$stateProvider',
 ]
 
 m.controller 'waterfallController',
-    ['$scope', '$q', '$window', '$modal', 'buildbotService', 'd3Service', 'dataService', 'scaleService', class
+    ['$scope', '$q', '$window', '$modal', 'buildbotService', 'd3Service', 'dataService', 'scaleService', '$timeout', 'config', class
         self = null
-        constructor: (@$scope, $q, @$window, @$modal, @buildbotService, d3Service, @dataService, scaleService) ->
+        constructor: (@$scope, $q, @$window, @$modal, @buildbotService, d3Service, @dataService, scaleService, @$timeout, config) ->
             self = @
 
-            # Show loading spinner
+            # Show the loading spinner
             @loading = true
 
+            # Waterfall configuration
+            cfg = config.plugins.waterfall_view
+            @c =
+                # Margins around the chart
+                margin:
+                    top: cfg.margin?.top or 15
+                    right: cfg.margin?.right or 20
+                    bottom: cfg.margin?.bottom or 20
+                    left: cfg.margin?.left or 70
+
+                # Gap between groups (px)
+                gap: cfg.gap or 30
+
+                # Minimum builder column width (px)
+                minColumnWidth: cfg.minColumnWidth or 40
+
+                # Y axis time format (new line: ^)
+                timeFormat: cfg.timeFormat or '%x^%I:%M'
+
+                # Lazy load limit
+                limit: cfg.limit or 40
+
+                # Idle time threshold in unix time stamp (eg. 300 = 5 min)
+                threshold: cfg.threshold or 300
+
+                # Grey rectangle below buildids
+                buildidBackground: cfg.buildidBackground or false
+
             # Load data (builds and builders)
-            # TODO lazy load builds
-            builds = @buildbotService.all('builds').getList()
-            builders = @buildbotService.all('builders').getList()
+            builders = @buildbotService.all('builders').bind(@$scope)
+            builds = @buildbotService.some('builds', {limit: @c.limit, order: "-buildid"}).bind(@$scope)
 
             $q.all([d3Service.get(), builders, builds]).then ([@d3, @builders, @builds]) =>
 
                 # Create a scale object
                 @scale = new scaleService(@d3)
 
-                @groups = @dataService.getGroups(@builders, @builds)
+                # Create groups and add builds to builders
+                @groups = @dataService.getGroups(@builders, @builds, @c.threshold)
+                # Add builder status to builders
                 @dataService.addStatus(@builders)
 
                 # Select containers
-                container = @d3.select('.svg-container')
-                header = @d3.select('.header-content')
+                @container = @d3.select('.svg-container')
+                @header = @d3.select('.header-content')
+                @waterfall = @d3.select('.waterfall')
+                # Append svg elements to the containers
+                @createElements()
 
-                # Options and settings
-                @o =
-                    margin:
-                        top: 15
-                        right: 20
-                        bottom: 20
-                        left: 70
-
-                    gap: 20
-
-                    # SVG width and height
-                    getWidth: -> parseInt container.style('width').replace('px', ''), 10
-                    getHeight: -> parseInt container.style('height').replace('px', ''), 10
-
-                    # Inner width and height
-                    getInnerWidth: -> @getWidth() - @margin.left - @margin.right
-                    getInnerHeight: -> @getHeight() - @margin.top - @margin.bottom
-
-                    # Header height
-                    getHeaderHeight: -> parseInt header.style('height').replace('px', ''), 10
-
-                    # Minimum builder column width
-                    minColumnWidth: 40
-
-                    # Y axis tick values
-                    ticks: []
-                    addTicks: (build) ->
-                        y = self.scale.getY(self.groups, @gap, @getInnerHeight())
-                        @ticks = @ticks.concat [y(build.complete_at), y(build.started_at)]
-                    removeTicks: ->
-                        @ticks = []
-                    getTickValues: ->
-                        y = self.scale.getY(self.groups, @gap, @getInnerHeight())
-                        extents = []
-                        self.groups?.forEach (group) =>
-                            extents.push y(group.min)
-                            extents.push y(group.max)
-                        extents.concat(@ticks)
-
-                    # Y axis time format
-                    timeFormat: '%x %I:%M'
-
-                # Set the content width to the window width
-                @setWidth(@$window.innerWidth)
-
-                # Set the height of the container
-                height = do =>
-                    h = 0
-                    for group in @groups
-                        h += group.max - group.min
-                    return h
-                container.style('height', "#{height}px")
-                        
                 # Render the waterfall
-                @render(header, container)
+                @render()
                 # Hide the spinner
                 @loading = false
 
+                # Render on resize
+                angular.element(@$window).bind 'resize', => @render()
+
+                # Update view on data change
+                @$scope.$watch 'builds', (builds) =>
+                    if builds? and @builds.length isnt builds.length
+                        @builds = builds
+                        @groups = @dataService.getGroups(@builders, @builds, @c.threshold)
+                        @dataService.addStatus(@builders)
+                        @render()
+                , true
+
+                # Lazy load builds on scroll
+                containerParent = @container.node().parentNode
+                cntr = 1
+                onScroll = =>
+                    if  @getHeight() - containerParent.scrollTop < 1000
+                        # Unbind scroll listener to prevent multiple execution before new data are received
+                        angular.element(containerParent).unbind('scroll')
+                        @buildbotService.some('builds', {limit: @c.limit * ++cntr, order: "-complete_at"}).bind(@$scope).then (builds) =>
+                            if builds? and @builds.length isnt builds.length
+                                # $scope.$watch renders the new data
+                                # Rebind scroll listener
+                                angular.element(containerParent).bind 'scroll', onScroll
+                            # All builds are rendered, unbind event listener
+                            else angular.element(containerParent).unbind('scroll')
+
+                # Bind scroll event listener
+                angular.element(containerParent).bind 'scroll', onScroll
+
+        ###
+        # Create svg elements for chart and header, append svg groups
+        ###
+        createElements: ->
+
+            # Remove any unwanted elements first
+            @container.selectAll('*').remove()
+            @header.selectAll('*').remove()
+
+            @chart = @container.append('svg')
+                .append('g')
+                    .attr('transform', "translate(#{@c.margin.left}, #{@c.margin.top})")
+                    .attr('class', 'chart')
+
+            @header = @header.append('svg')
+                .append('g')
+                    .attr('transform', "translate(#{@c.margin.left}, #{@getHeaderHeight()})")
+                    .attr('class', 'header')
+
+        ###
+        # Get the container width
+        ###
+        getWidth: -> parseInt @container.style('width').replace('px', ''), 10
+
+        ###
+        # Set the content width
+        ###
+        setWidth: ->
+            if (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length >= @c.minColumnWidth
+                width = '100%'
+            else
+                width = "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+            @d3.select('.header-content').style('width', width)
+            @d3.select('.inner-content').style('width', width)
+
+        ###
+        # Get the container height
+        ###
+        getHeight: -> parseInt @container.style('height').replace('px', ''), 10
+
+        ###
+        # Set the container height
+        ###
+        setHeight: ->
+            h = - @c.gap
+            for group in @groups
+                h += group.max - group.min + @c.gap
+            height = h + @c.margin.top + @c.margin.bottom
+            @container.style('height', "#{height}px")
+
+        ###
+        # Returns content width
+        ###
+        getInnerWidth: ->
+            width = @getWidth()
+            return width - @c.margin.left - @c.margin.right
+
+        ###
+        # Returns content height
+        ###
+        getInnerHeight: ->
+            height = @getHeight()
+            return height- @c.margin.top - @c.margin.bottom
+
+        ###
+        # Returns headers height
+        ###
+        getHeaderHeight: -> parseInt @header.style('height').replace('px', ''), 10
+
+        ###
         # Returns the result string of a builder, build or step
+        ###
         result: (b) ->
-            if b.complete == false and b.started_at > 0
+            if not b.complete and b.started_at > 0
                 result = 'pending'
             else
                 switch b.results
@@ -134,14 +214,22 @@ m.controller 'waterfallController',
                     else result = 'unknown'
             return result
 
+        ###
+        # Draw x axis
+        ###
         drawXAxis: ->
-            header = @header
-            x = @scale.getX(@builders, @o.getInnerWidth())
+            x = @scale.getX(@builders, @getInnerWidth())
             builderName = @scale.getBuilderName(@builders)
             color = @result
 
             # Remove old axis
-            header.select('.axis.x').remove()
+            @header.select('.axis.x').remove()
+            # Select axis
+            axis = @header.append('g')
+                .attr('class', 'axis x')
+
+            # Remove previous elements
+            axis.selectAll('*').remove()
 
             # Top axis shows builder names
             xAxis = @d3.svg.axis()
@@ -149,15 +237,21 @@ m.controller 'waterfallController',
                 .orient('top')
                 .tickFormat(builderName)
 
-            xAxisSelect = header.append('g')
-                .attr('class', 'axis x')
-                .call(xAxis)
+            xAxisSelect = axis.call(xAxis)
 
-            # Rotate names
+            # Add link
+            link = (builderid) ->
+                p = self.d3.select(@parentNode)
+                a = p.append('a')
+                    .attr('xlink:href', "#/builders/#{builderid}")
+                a.node().appendChild(@)
+
+            # Rotate text
             xAxisSelect.selectAll('text')
                 .style('text-anchor', 'start')
                 .attr('transform', 'translate(0, -5) rotate(-60)')
                 .attr('dy', '.75em')
+                .each(link)
 
             # Rotate tick lines
             xAxisSelect.selectAll('line')
@@ -170,31 +264,60 @@ m.controller 'waterfallController',
                 .attr('class', color)
                 .classed('stroke', true)
 
+        # Y axis tick values
+        ticks: []
+        addTicks: (build) ->
+            y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+            @ticks = @ticks.concat [y(build.complete_at), y(build.started_at)]
+        removeTicks: -> @ticks = []
+
+        ###
+        # Draw y axis
+        ###
         drawYAxis: ->
-            element = @chart
             i = @d3.scale.linear()
-            y = @scale.getY(@groups, @o.gap, @o.getInnerHeight())
-            o = @o
-            d3 = @d3
+            y = @scale.getY(@groups, @c.gap, @getInnerHeight())
 
             # Remove old axis
-            element.select('.axis.y').remove()
+            @chart.select('.axis.y').remove()
+            axis = @chart.append('g')
+                .attr('class', 'axis y')
 
-            tickFormat = (coordinate) ->
+            # Stay on left on horizontal scrolling
+            axis.attr('transform', "translate(#{@waterfall.node().scrollLeft}, 0)")
+            @waterfall.on 'scroll', ->  yAxis.attr('transform', "translate(#{@scrollLeft}, 0)")
+
+            # White background
+            axis.append('rect')
+                .attr('x', - @c.margin.left)
+                .attr('y', - @c.margin.top)
+                .attr('width', @c.margin.left)
+                .attr('height', @getHeight())
+                .style('fill', '#fff')
+
+            ticks = @ticks
+            for group in @groups
+                ticks = ticks.concat [y(group.min), y(group.max)]
+
+            # Y axis tick format
+            tickFormat = (coordinate) =>
                 timestamp = y.invert(coordinate)
                 date = new Date(timestamp * 1000)
-                format = d3.time.format(o.timeFormat)
+                format = @d3.time.format(@c.timeFormat)
                 format(date)
 
-            yAxis = d3.svg.axis()
+            yAxis = @d3.svg.axis()
                 .scale(i)
                 .orient('left')
-                .tickValues(o.getTickValues())
+                .tickValues(ticks)
                 .tickFormat(tickFormat)
 
+            yAxis = axis.call(yAxis)
+
+            # Break text on ^ character
             lineBreak = ->
                 e = self.d3.select(@)
-                words = e.text().split(' ')
+                words = e.text().split('^')
                 e.text('')
 
                 for word, i in words
@@ -202,38 +325,29 @@ m.controller 'waterfallController',
                     if i isnt 0
                         x = e.attr('x')
                         text.attr('x', x).attr('dy', i * 10)
-
-            yAxis = element.append('g')
-                .attr('class', 'axis y')
-                .call(yAxis)
-
             yAxis.selectAll('text').each(lineBreak)
+
+            dasharray = (tick) => if tick in @ticks then '2, 5' else '2, 1'
 
             yAxis.selectAll('.tick')
                 .append('line')
-                    .attr('x2', o.getInnerWidth())
-                    .attr('stroke', '#3498db')
-                    .attr('stroke-dasharray', '5, 10')
+                    .attr('x2', @getInnerWidth())
+                    .attr('stroke-dasharray', dasharray)
 
         drawBuilds: ->
-            element = @chart
-            x = @scale.getX(@builders, @o.getInnerWidth())
-            y = @scale.getY(@groups, @o.gap, @o.getInnerHeight())
-            o = @o
+            x = @scale.getX(@builders, @getInnerWidth())
+            y = @scale.getY(@groups, @c.gap, @getInnerHeight())
             color = @result
 
-            # Set width on resize
-            element.selectAll('.builder')
-                .attr('transform', (builder) => "translate(#{x(builder.builderid)}, 0)")
-            element.selectAll('.build rect').attr('width', x.rangeBand())
-            element.selectAll('.build .id').attr('x', x.rangeBand() / 2)
+            # Remove previous elements
+            @chart.selectAll('.builder').remove()
 
-            # Create builder groups
-            builders = element.selectAll('.builder')
+            # Create builder columns
+            builders = @chart.selectAll('.builder')
                 .data(@builders).enter()
                 .append('g')
                     .attr('class', 'builder')
-                    .attr('transform', (builder) => "translate(#{x(builder.builderid)}, 0)")
+                    .attr('transform', (builder) -> "translate(#{x(builder.builderid)}, 0)")
 
             # Create build group for each build
             data = (builder) -> builder.builds
@@ -252,13 +366,12 @@ m.controller 'waterfallController',
                 .classed('fill', true)
 
             # Optional: grey rectangle below buildids
-            ###
-            builds.append('rect')
-                .attr('y', -14)
-                .attr('width', x.rangeBand())
-                .attr('height', 14)
-                .style('fill', '#BBB')
-            ###
+            if @c.buildidBackground
+                builds.append('rect')
+                    .attr('y', -15)
+                    .attr('width', x.rangeBand())
+                    .attr('height', 15)
+                    .style('fill', '#ccc')
 
             # Draw text over builds
             builds.append('text')
@@ -267,18 +380,19 @@ m.controller 'waterfallController',
                 .attr('y', -3)
                 .text((build) -> build.buildid)
 
+            ###
             # Event actions
+            ###
             mouseOver = (build) ->
                 e = self.d3.select(@)
                 mouse = self.d3.mouse(@)
-                o.addTicks(build)
+                self.addTicks(build)
                 self.drawYAxis()
 
                 # Move build and builder to front
-                e.each ->
-                    p = self.d3.select(@parentNode)
-                    @parentNode.appendChild(@)
-                    p.each -> @parentNode.appendChild(@)
+                p = self.d3.select(@parentNode)
+                @parentNode.appendChild(@)
+                p.each -> @parentNode.appendChild(@)
 
                 # Show tooltip on the left or on the right
                 r = build.builderid < self.builders.length / 2
@@ -286,9 +400,8 @@ m.controller 'waterfallController',
                 # Create tooltip
                 height = 40
                 points = ->
-                    if r
-                        return "20,0 0,#{height / 2} 20,#{height} 170,#{height} 170,0"
-                    return "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
+                    if r then "20,0 0,#{height / 2} 20,#{height} 170,#{height} 170,0"
+                    else "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
                 tooltip = e.append('g')
                     .attr('class', 'svg-tooltip')
                     .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
@@ -300,7 +413,7 @@ m.controller 'waterfallController',
                     .attr('points', points())
 
                 # Load steps
-                build.all('steps').getList().then (buildsteps) ->
+                build.all('steps').bind(self.$scope).then (buildsteps) ->
 
                     # Resize the tooltip
                     height = buildsteps.length * 15 + 7
@@ -311,7 +424,7 @@ m.controller 'waterfallController',
 
                     duration = (step) ->
                         d = new Date((step.complete_at - step.started_at) * 1000)
-                        "#{d / 1000}s"
+                        if d > 0 then "(#{d / 1000}s)" else ''
                     tooltip.selectAll('.buildstep')
                         .data(buildsteps)
                         .enter().append('g')
@@ -324,7 +437,7 @@ m.controller 'waterfallController',
                                 .classed('fill', true)
                                 .transition().delay(100)
                                 # Text format
-                                .text((step, i) -> "#{i + 1}. #{step.name} (#{duration(step)})")
+                                .text((step, i) -> "#{i + 1}. #{step.name} #{duration(step)}")
 
             mouseMove = (build) ->
                 e = self.d3.select(@)
@@ -336,7 +449,7 @@ m.controller 'waterfallController',
 
             mouseOut = (build) ->
                 e = self.d3.select(@)
-                o.removeTicks()
+                self.removeTicks()
                 self.drawYAxis()
 
                 # Remove tooltip
@@ -358,49 +471,19 @@ m.controller 'waterfallController',
                 .on('mouseout', mouseOut)
                 .on('click', click)
 
-        render: (header, container) ->
+        ###
+        # Render the waterfall view
+        ###
+        render: ->
 
-            # Delete all element
-            container.selectAll('*').remove()
-            header.selectAll('*').remove()
+            # Set the content width
+            @setWidth()
 
-            # Create svg elements
-            svg = container.append('svg')
-            headerSvg = header.append('svg')
+            # Set the height of the container
+            @setHeight()
 
-            # Create chart
-            @chart = svg.append('g')
-                .attr('transform', "translate(#{@o.margin.left}, #{@o.margin.top})")
-                .attr('class', 'chart')
-
-            # Create header
-            @header = headerSvg.append('g')
-                .attr('transform', "translate(#{@o.margin.left}, #{@o.getHeaderHeight()})")
-
+            # Draw the waterfall
+            @drawBuilds()
             @drawXAxis()
             @drawYAxis()
-            @drawBuilds()
-
-            # Execute on resize
-            angular.element(@$window).bind 'resize', =>
-                @setWidth(@$window.innerWidth)
-                @$scope.$apply()
-                @drawBuilds()
-                @drawXAxis()
-                @drawYAxis()
-
-            # Draw new builds on change
-            @$scope.$watch @builders, =>
-                @groups = @dataService.getGroups(@builders, @builds)
-                @dataService.addStatus(@builders)
-                @drawBuilds()
-            , true
-
-        setWidth: (width) ->
-            @cellWidth = "#{100 / @builders.length}%"
-            if width / @builders.length > @o.minColumnWidth
-                @width = '100%'
-            else
-                @width = "#{@builders.length * @o.minColumnWidth}px"
-
     ]
