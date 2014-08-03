@@ -232,12 +232,6 @@ class NightlyBase(Timed):
         self.month = month
         self.dayOfWeek = dayOfWeek
 
-        try:
-            croniter
-        except NameError:
-            config.error("python-dateutil required for scheduler %s '%s'." %
-                         (self.__class__.__name__, self.name))
-
     def _timeToCron(self, time, isDayOfWeek=False):
         if isinstance(time, int):
             if isDayOfWeek:

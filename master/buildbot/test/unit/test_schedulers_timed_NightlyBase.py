@@ -13,12 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import time
 
 from buildbot.schedulers import timed
-from buildbot.test.util import compat
-from buildbot.test.util import config
 from buildbot.test.util import scheduler
 try:
     from multiprocessing import Process
@@ -196,26 +193,3 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
                                              ((2011, 1, 4, 22, 19), (2011, 1, 5, 1, 0)),  # 5th
                                              ((2011, 1, 5, 22, 19), (2011, 1, 7, 1, 0)),  # Thurs
                                              )
-
-
-class NightlyCroniterImport(config.ConfigErrorsMixin, unittest.TestCase):
-
-    @compat.skipUnlessPlatformIs('posix')
-    def test_error_without_dateutil(self):
-        """
-        Because it removes a module from sys.modules, this test needs to be run in a new
-        interpreter instance so that it doesn't impact other tests running in the same
-        interpreter (e.g. when using "trial -j 8")
-        """
-        def runInNewInterpreter():
-            del sys.modules['buildbot.schedulers.timed']
-            del sys.modules['buildbot.util']
-            sys.modules["dateutil.relativedelta"] = None
-            from buildbot.schedulers.timed import NightlyBase
-            self.assertRaisesConfigError("python-dateutil",
-                                         lambda: NightlyBase(name='name', builderNames=[]))
-        if not Process:
-            raise unittest.SkipTest("multiprocessing not available on Python-2.5")
-        p = Process(target=runInNewInterpreter)
-        p.start()
-        p.join()
