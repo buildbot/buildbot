@@ -66,12 +66,12 @@ Below a master lock is defined to protect a data base, and a slave lock is creat
 
 ::
 
-    from buildbot import locks
-    
-    db_lock = locks.MasterLock("database")
-    build_lock = locks.SlaveLock("slave_builds",
-                                 maxCount = 1,
-                                 maxCountForSlave = { 'fast': 3, 'new': 2 })
+    from buildbot.plugins import util
+
+    db_lock = util.MasterLock("database")
+    build_lock = util.SlaveLock("slave_builds",
+                                maxCount=1,
+                                maxCountForSlave={'fast': 3, 'new': 2})
 
 :data:`db_lock` is defined to be a master lock.
 The ``database`` string is used for uniquely identifying the lock.
@@ -101,19 +101,17 @@ To illustrate use of locks, a few examples.
 
 ::
 
-    from buildbot import locks
-    from buildbot.steps import source, shell
-    from buildbot.process import factory
-    
-    db_lock = locks.MasterLock("database")
-    build_lock = locks.SlaveLock("slave_builds",
-                                 maxCount = 1,
-                                 maxCountForSlave = { 'fast': 3, 'new': 2 })
-    
-    f = factory.BuildFactory()
-    f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
-    f.addStep(shell.ShellCommand(command="make all"))
-    f.addStep(shell.ShellCommand(command="make test",
+    from buildbot.plugins import util, steps
+
+    db_lock = util.MasterLock("database")
+    build_lock = util.SlaveLock("slave_builds",
+                                maxCount=1,
+                                maxCountForSlave={'fast': 3, 'new': 2})
+
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="http://example.org/svn/Trunk"))
+    f.addStep(steps.ShellCommand(command="make all"))
+    f.addStep(steps.ShellCommand(command="make test",
                                  locks=[db_lock.access('exclusive')]))
 
     b1 = {'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,

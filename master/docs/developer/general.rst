@@ -22,3 +22,4 @@ This section gives some general information about Buildbot development.
     br-claiming
     encodings
     metrics
+    plugins-publish

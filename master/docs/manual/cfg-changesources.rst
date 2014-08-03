@@ -128,13 +128,16 @@ Most configurations have a single :class:`ChangeSource`, watching only a single 
 
 ::
 
-    c['change_source'] = PBChangeSource()
+    from buildbot.plugins import changes
+    c['change_source'] = changes.PBChangeSource()
 
 For more advanced configurations, the parameter can be a list of change sources::
 
     source1 = ...
     source2 = ...
-    c['change_source'] = [ source1, source1 ]
+    c['change_source'] = [
+        source1, source1
+    ]
 
 Repository and Project
 ++++++++++++++++++++++
@@ -181,9 +184,9 @@ ChangeSource variant for each parsing function.
 
 Once you've chosen a maildir location and a parsing function, create the change source and put it in ``change_source``::
 
-    from buildbot.changes.mail import CVSMaildirSource
-    c['change_source'] = CVSMaildirSource("~/maildir-buildbot",
-                                            prefix="/trunk/")
+    from buildbot.plugins import changes
+    c['change_source'] = changes.CVSMaildirSource("~/maildir-buildbot",
+                                                  prefix="/trunk/")
 
 .. _Subscribing-the-Buildmaster:
 
@@ -337,8 +340,8 @@ The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse these messages
 and turn them into Change objects. It takes the directory name of the maildir
 root.  For example::
 
-    from buildbot.changes.mail import CVSMaildirSource
-    c['change_source'] = CVSMaildirSource("/home/buildbot/Mail")
+    from buildbot.plugins import changes
+    c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
 Configuration of CVS and buildbot_cvs_mail.py
 #############################################
@@ -388,8 +391,8 @@ It does not currently handle branches: all of the Change objects that it creates
 
 ::
 
-    from buildbot.changes.mail import SVNCommitEmailMaildirSource
-    c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
+    from buildbot.plugins import changes
+    c['change_source'] = changes.SVNCommitEmailMaildirSource("~/maildir-buildbot")
 
 .. bb:chsrc:: BzrLaunchpadEmailMaildirSource
 
@@ -425,9 +428,13 @@ However, it is possible to set the bzr `append_revisions_only` option for public
 
 ::
 
-    from buildbot.changes.mail import BzrLaunchpadEmailMaildirSource
-    bm = { 'lp:~maria-captains/maria/5.1' : '5.1', 'lp:~maria-captains/maria/6.0' : '6.0' }
-    c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branchMap = bm)
+    from buildbot.plugins import changes
+    bm = {
+        'lp:~maria-captains/maria/5.1': '5.1',
+        'lp:~maria-captains/maria/6.0': '6.0'
+    }
+    c['change_source'] = changes.BzrLaunchpadEmailMaildirSource("~/maildir-buildbot",
+                                                                branchMap=bm)
 
 .. bb:chsrc:: PBChangeSource
 
@@ -491,8 +498,8 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 For example::
 
-    from buildbot.changes import pb
-    c['change_source'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
+    from buildbot.plugins import changes
+    c['change_source'] = changes.PBChangeSource(port=9999, user='laura', passwd='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
@@ -637,10 +644,9 @@ It watches a project in which the branch name is simply the next path component,
 
 ::
 
-    from buildbot.changes import p4poller
-    s = p4poller.P4Source(p4base='//depot/project/',
-                          split_file=lambda branchfile: branchfile.split('/',1),
-                         )
+    from buildbot.plugins import changes
+    s = changes.P4Source(p4base='//depot/project/',
+                         split_file=lambda branchfile: branchfile.split('/',1))
     c['change_source'] = s
 
 .. bb:chsrc:: BonsaiPoller
@@ -798,33 +804,28 @@ multiple branches.
     If specified, the extra arguments will be added to the svn command args.
 
 Several split file functions are available for common SVN repository layouts.
-For a poller that is only monitoring trunk, the default split file function
-is available explicitly as ``split_file_alwaystrunk``::
+For a poller that is only monitoring trunk, the default split file function is available explicitly as ``split_file_alwaystrunk``::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_alwaystrunk
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+    c['change_source'] = changes.SVNPoller(
         svnurl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
-        split_file=split_file_alwaystrunk)
+        split_file=util.svn.split_file_alwaystrunk)
 
-For repositories with the ``/trunk`` and :samp:`/branches/{BRANCH}` layout, ``svn_split_file_branches`` will do the job::
+For repositories with the ``/trunk`` and :samp:`/branches/{BRANCH}` layout, ``split_file_branches`` will do the job::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_branches
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+    c['change_source'] = changes.SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
-        split_file=split_file_branches)
+        split_file=util.svn.split_file_branches)
 
-When using this splitter the poller will set the ``project`` attribute of any
-changes to the ``project`` attribute of the poller.
+When using this splitter the poller will set the ``project`` attribute of any changes to the ``project`` attribute of the poller.
 
-For repositories with the :samp:`{PROJECT}/trunk` and :samp:`{PROJECT}/branches/{BRANCH}` layout, ``svn_split_file_projects_branches`` will do the job::
+For repositories with the :samp:`{PROJECT}/trunk` and :samp:`{PROJECT}/branches/{BRANCH}` layout, ``split_file_projects_branches`` will do the job::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_projects_branches
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+    c['change_source'] = changes.SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
-        split_file=split_file_projects_branches)
+        split_file=util.svn.split_file_projects_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any
 changes to the project determined by the splitter.
@@ -955,9 +956,9 @@ arguments:
 
 A configuration for the Git poller might look like this::
 
-    from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
-                                   branches=['master', 'great_new_feature'])
+    from buildbot.plugins import changes
+    c['change_source'] = changes.GitPoller(repourl='git@example.com:foobaz/myrepo.git',
+                                           branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
 
@@ -1042,10 +1043,10 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
 A configuration for the Mercurial poller might look like this::
 
-    from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
-                                   branch='great_new_feature',
-                                   workdir='hg-myrepo')
+    from buildbot.plugins import changes
+    c['change_source'] = changes.HgPoller(repourl='http://hg.example.org/projects/myrepo',
+                                          branch='great_new_feature',
+                                          workdir='hg-myrepo')
 
 .. bb:chsrc:: BitbucketPullrequestPoller
 
@@ -1108,8 +1109,8 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 
 A minimal configuration for the Bitbucket pull request poller might look like this::
 
-    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
-    c['change_source'] = BitbucketPullrequestPoller(
+    from buildbot.plugins import changes
+    c['change_source'] = changes.BitbucketPullrequestPoller(
         owner='myname',
         slug='myrepo',
       )
@@ -1127,8 +1128,8 @@ The pull request is only processed if at least 3 people have already approved it
             return False
         return True
 
-    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
-    c['change_source'] = BitbucketPullrequestPoller(
+    from buildbot.plugins import changes
+    c['change_source'] = changes.BitbucketPullrequestPoller(
         owner='myname',
         slug='myrepo',
         branch='mybranch',
@@ -1200,8 +1201,8 @@ But you can specify how to handle Events:
 
 An example::
 
-    from buildbot.changes.gerritchangesource import GerritChangeSource
-    class MyGerritChangeSource(GerritChangeSource):
+    from buildbot.plugins import changes
+    class MyGerritChangeSource(changes.GerritChangeSource):
         """Custom GerritChangeSource
         """
         def eventReceived_patchset_created(self, properties, event):
@@ -1273,8 +1274,8 @@ In case of ``ref-updated`` event, these properties will be:
 
 A configuration for this source might look like::
 
-    from buildbot.changes.gerritchangesource import GerritChangeSource
-    c['change_source'] = GerritChangeSource(
+    from buildbot.plugins import changes
+    c['change_source'] = changes.GerritChangeSource(
         "gerrit.example.com",
         "gerrit_user",
         handled_events=["patchset-created", "change-merged"])
@@ -1293,21 +1294,21 @@ set of filter (can as well be specified as value, list, regular expression or ca
 
 An example is following::
 
-      # this scheduler will create builds when a patch is uploaded to gerrit
-      # but only if it is uploaded to the "main" branch
-      AnyBranchScheduler(name="main-precommit",
-                         change_filter=GerritChangeFilter(branch="main",
-                                                          eventtype="patchset-created"),
-                         treeStableTimer=15*60,
-                         builderNames=["main-precommit"])
+    from buildbot.plugins import schedulers, util
+    # this scheduler will create builds when a patch is uploaded to gerrit
+    # but only if it is uploaded to the "main" branch
+    schedulers.AnyBranchScheduler(name="main-precommit",
+                                  change_filter=util.GerritChangeFilter(branch="main",
+                                                                        eventtype="patchset-created"),
+                                  treeStableTimer=15*60,
+                                  builderNames=["main-precommit"])
 
-      # this scheduler will create builds when a patch is merged in the "main" branch
-      # for post-commit tests
-      AnyBranchScheduler(name="main-postcommit",
-                         change_filter=GerritChangeFilter("main",
-                                                          "ref-updated"),
-                         treeStableTimer=15*60,
-                         builderNames=["main-postcommit"])
+    # this scheduler will create builds when a patch is merged in the "main" branch
+    # for post-commit tests
+    schedulers.AnyBranchScheduler(name="main-postcommit",
+                                  change_filter=util.GerritChangeFilter("main", "ref-updated"),
+                                  treeStableTimer=15*60,
+                                  builderNames=["main-postcommit"])
 
 .. bb:chsrc:: Change Hooks
 

@@ -29,12 +29,11 @@ A :class:`BuildFactory` defines the steps that every build will follow.  Think o
 a glorified script.  For example, a build factory which consists of an SVN checkout
 followed by a ``make build`` would be configured as follows::
 
-    from buildbot.steps import svn, shell
-    from buildbot.process import factory
+    from buildbot.plugins import util, steps
 
-    f = factory.BuildFactory()
-    f.addStep(svn.SVN(svnurl="http://..", mode="incremental"))
-    f.addStep(shell.Compile(command=["make", "build"]))
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="http://..", mode="incremental"))
+    f.addStep(steps.Compile(command=["make", "build"]))
 
 This factory would then be attached to one builder (or several, if desired)::
 
@@ -46,15 +45,13 @@ Using :meth:`addStep` is usually simpler, but there are cases where it is more c
 
 ::
 
-    from buildbot.steps import source, shell
-    from buildbot.process import factory
-
+    from buildbot.plugins import steps, util
 
     all_steps = [
-        source.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"),
-        shell.Compile(command=["make", "build"]),
+        steps.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"),
+        steps.Compile(command=["make", "build"]),
     ]
-    f = factory.BuildFactory(all_steps)
+    f = util.BuildFactory(all_steps)
 
 Finally, you can also add a sequence of steps all at once::
 
@@ -67,7 +64,7 @@ The following attributes can be set on a build factory after it is created, e.g.
 
 ::
 
-    f = factory.BuildFactory()
+    f = util.BuildFactory()
     f.useProgress = False
 
 :attr:`useProgress`
@@ -132,8 +129,8 @@ the default values will be suitable.
 
 Example::
 
-    f = factory.GNUAutoconf(source=source.SVN(svnurl=URL, mode="copy"),
-                            flags=["--disable-nls"])
+    f = util.GNUAutoconf(source=source.SVN(svnurl=URL, mode="copy"),
+                         flags=["--disable-nls"])
 
 Required Arguments:
 

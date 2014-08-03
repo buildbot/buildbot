@@ -16,20 +16,18 @@ just append more objects to this list::
 
     c['status'] = []
 
-    from buildbot.status import html
-    c['status'].append(html.Waterfall(http_port=8010))
+    from buildbot.plugins import status
+    c['status'].append(status.Waterfall(http_port=8010))
 
-    from buildbot.status import mail
-    m = mail.MailNotifier(fromaddr="buildbot@localhost",
-                          extraRecipients=["builds@lists.example.com"],
-                          sendToInterestedUsers=False)
+    m = status.MailNotifier(fromaddr="buildbot@localhost",
+                            extraRecipients=["builds@lists.example.com"],
+                            sendToInterestedUsers=False)
     c['status'].append(m)
 
-    from buildbot.status import words
-    c['status'].append(words.IRC(host="irc.example.com", nick="bb",
-                                 channels=[{"channel": "#example1"},
-                                           {"channel": "#example2",
-                                            "password": "somesecretpassword"}]))
+    c['status'].append(status.IRC(host="irc.example.com", nick="bb",
+                                  channels=[{"channel": "#example1"},
+                                            {"channel": "#example2",
+                                             "password": "somesecretpassword"}]))
 
 Most status delivery objects take a ``categories=`` argument, which
 can contain a list of `category` names: in this case, it will only
@@ -94,8 +92,9 @@ and URLs where more information can be obtained.
 
 ::
 
-    from buildbot.status.mail import MailNotifier
-    mn = MailNotifier(fromaddr="buildbot@example.org", lookup="example.org")
+    from buildbot.plugins import status
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             lookup="example.org")
     c['status'].append(mn)
 
 To get a simple one-message-per-build (say, for a mailing list), use
@@ -104,27 +103,29 @@ developers (and thus does not need the ``lookup=`` argument,
 explained below), instead it only ever sends mail to the `extra
 recipients` named in the arguments::
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      extraRecipients=['listaddr@example.org'])
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             extraRecipients=['listaddr@example.org'])
 
 If your SMTP host requires authentication before it allows you to send emails,
 this can also be done by specifying ``smtpUser`` and ``smptPassword``::
 
-    mn = MailNotifier(fromaddr="myuser@gmail.com",
-                      sendToInterestedUsers=False,
-                      extraRecipients=["listaddr@example.org"],
-                      relayhost="smtp.gmail.com", smtpPort=587,
-                      smtpUser="myuser@gmail.com", smtpPassword="mypassword")
+    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+                             sendToInterestedUsers=False,
+                             extraRecipients=["listaddr@example.org"],
+                             relayhost="smtp.gmail.com", smtpPort=587,
+                             smtpUser="myuser@gmail.com",
+                             smtpPassword="mypassword")
 
 If you want to require Transport Layer Security (TLS), then you can also
 set ``useTls``::
 
-    mn = MailNotifier(fromaddr="myuser@gmail.com",
-                      sendToInterestedUsers=False,
-                      extraRecipients=["listaddr@example.org"],
-                      useTls=True, relayhost="smtp.gmail.com", smtpPort=587,
-                      smtpUser="myuser@gmail.com", smtpPassword="mypassword")
+    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+                             sendToInterestedUsers=False,
+                             extraRecipients=["listaddr@example.org"],
+                             useTls=True, relayhost="smtp.gmail.com",
+                             smtpPort=587, smtpUser="myuser@gmail.com",
+                             smtpPassword="mypassword")
 
 .. note:: If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in
    the log while using TLS, this can be due *either* to the server not
@@ -137,9 +138,9 @@ creation of messages with unique content.
 
 For example, if only short emails are desired (e.g., for delivery to phones)::
 
-    from buildbot.status.builder import Results
+    from buildbot.plugins import status, util
     def messageFormatter(mode, name, build, results, master_status):
-        result = Results[results]
+        result = util.Results[results]
 
         text = list()
         text.append("STATUS: %s" % result.title())
@@ -148,17 +149,17 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
             'type' : 'plain'
         }
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      mode=('problem',),
-                      extraRecipients=['listaddr@example.org'],
-                      messageFormatter=messageFormatter)
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             mode=('problem',),
+                             extraRecipients=['listaddr@example.org'],
+                             messageFormatter=messageFormatter)
 
 Another example of a function delivering a customized html email
 containing the last 80 log lines of logs of the last build step is
 given below::
 
-    from buildbot.status.builder import Results
+    from buildbot.plugins import util, status
 
     import cgi, datetime
 
@@ -168,7 +169,7 @@ given below::
         The last 80 lines of the log are provided as well as the changes
         relevant to the build.  Message content is formatted as html.
         """
-        result = Results[results]
+        result = util.Results[results]
 
         limit_lines = 80
         text = list()
@@ -248,11 +249,11 @@ given below::
                 'type': 'html'
                 }
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      mode=('failing',),
-                      extraRecipients=['listaddr@example.org'],
-                      messageFormatter=html_message_formatter)
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             mode=('failing',),
+                             extraRecipients=['listaddr@example.org'],
+                             messageFormatter=html_message_formatter)
 
 MailNotifier arguments
 ++++++++++++++++++++++
@@ -425,8 +426,8 @@ MailNotifier mode
 
 Builder result as a string::
 
-    from buildbot.status.builder import Results
-    result_str = Results[results]
+    from buildbot.plugins import util
+    result_str = util.Results[results]
     # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
 
 URL to build page
@@ -512,18 +513,18 @@ It can also be asked to announce builds as they occur, or be told to shut up.
 
 ::
 
-    from buildbot.status import words
-    irc = words.IRC("irc.example.org", "botnickname",
-                    useColors=False,
-                    channels=[{"channel": "#example1"},
-                              {"channel": "#example2",
-                               "password": "somesecretpassword"}],
-                    password="mysecretnickservpassword",
-                    notify_events={
-                      'exception': 1,
-                      'successToFailure': 1,
-                      'failureToSuccess': 1,
-                    })
+    from buildbot.plugins import status
+    irc = status.words.IRC("irc.example.org", "botnickname",
+                           useColors=False,
+                           channels=[{"channel": "#example1"},
+                                     {"channel": "#example2",
+                                      "password": "somesecretpassword"}],
+                           password="mysecretnickservpassword",
+                           notify_events={
+                             'exception': 1,
+                             'successToFailure': 1,
+                             'failureToSuccess': 1,
+                           })
     c['status'].append(irc)
 
 Take a look at the docstring for :class:`words.IRC` for more details on
@@ -677,13 +678,11 @@ StatusPush
 ::
 
     def Process(self):
-      print str(self.queue.popChunk())
-      self.queueNextServerPush()
+        print str(self.queue.popChunk())
+        self.queueNextServerPush()
 
-    import buildbot.status.status_push
-    sp = buildbot.status.status_push.StatusPush(serverPushCb=Process,
-                                                bufferDelay=0.5,
-                                                retryDelay=5)
+    from buildbot.plugins import status
+    sp = status.StatusPush(serverPushCb=Process, bufferDelay=0.5, retryDelay=5)
     c['status'].append(sp)
 
 :class:`StatusPush` batches events normally processed and sends it to the
@@ -702,9 +701,8 @@ HttpStatusPush
 
 ::
 
-    import buildbot.status.status_push
-    sp = buildbot.status.status_push.HttpStatusPush(
-            serverUrl="http://example.com/submit")
+    from buildbot.plugins import status
+    sp = status.HttpStatusPush(serverUrl="http://example.com/submit")
     c['status'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to
@@ -751,11 +749,11 @@ summarizing the results for all of the builds.
                        :pyobject: gerritReviewCB
                        :language: python
 
-                    Where ``Results``, ``RETRY`` and ``SUCCESS`` are imported like
+                    Which require an extra import in the config:
 
                     .. code-block:: python
 
-                       from buildbot.status.builder import Results, SUCCESS, RETRY
+                       from buildbot.plugins import util
 
    :param startCB: (optional) callback that is called each time a build is
                    started.  Used to define the message sent to Gerrit.
@@ -816,27 +814,25 @@ GitHubStatus
 
 ::
 
-    from buildbot.status.github import GitHubStatus
+    from buildbot.plugins import status, util
 
     repoOwner = Interpolate("%(prop:github_repo_owner)s")
     repoName = Interpolate("%(prop:github_repo_name)s")
     sha = Interpolate("%(src::revision)s")
-    gs = GitHubStatus(token='githubAPIToken',
-                      repoOwner=repoOwner,
-                      repoName=repoName,
-                      sha=sha,
-                      startDescription='Build started.',
-                      endDescription='Build done.',
-                      )
-    buildbot_bbtools = BuilderConfig(
+    gs = status.GitHubStatus(token='githubAPIToken',
+                             repoOwner=repoOwner,
+                             repoName=repoName,
+                             sha=sha,
+                             startDescription='Build started.',
+                             endDescription='Build done.')
+    buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
         slavenames=['slave1'],
         factory=BuilderFactory(),
         properties={
             "github_repo_owner": "buildbot",
             "github_repo_name": "bbtools",
-            },
-        )
+            })
     c['builders'].append(buildbot_bbtools)
     c['status'].append(gs)
 
