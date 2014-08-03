@@ -25,14 +25,16 @@ import os
 import re
 import time
 
-import boto
-import boto.ec2
-import boto.exception
+try:
+    import boto
+except ImportError:
+    boto = None
 
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 
+from buildbot import config
 from buildbot import interfaces
 from buildbot.buildslave.base import AbstractLatentBuildSlave
 
@@ -61,6 +63,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  spot_instance=False, max_spot_price=1.6, volumes=[],
                  placement=None, price_multiplier=1.2, tags={}, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX'):
+
+        if not boto:
+            config.error("The python module 'boto' is needed to use a "
+                         "EC2LatentBuildSlave")
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
