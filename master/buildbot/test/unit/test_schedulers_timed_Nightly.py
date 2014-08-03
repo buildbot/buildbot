@@ -48,11 +48,12 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # keep track of builds in self.events
         self.events = []
 
-        def addBuildsetForLatest(reason='', external_idstring='',
-                                 branch=None, repository='', project=''):
+        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps,
+                                                   waited_for=False, properties=None, builderNames=None,
+                                                   **kw):
             self.assertIn('scheduler named', reason)
             isFirst = (self.events == [])
-            self.events.append('B(%s)@%d' % (branch,
+            self.events.append('B(%s)@%d' % ('no.',
                                              # show the offset as seconds past the GMT hour
                                              self.clock.seconds() - self.localtime_offset))
             if isFirst and firstBuildDuration:
@@ -61,15 +62,19 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 return d
             else:
                 return defer.succeed(None)
-        sched.addBuildsetForLatest = addBuildsetForLatest
+        sched.addBuildsetForSourceStampsWithDefaults = addBuildsetForSourceStampsWithDefaults
 
         origAddBuildsetForChanges = sched.addBuildsetForChanges
 
-        def addBuildsetForChanges(reason='', external_idstring=None, changeids=[]):
+        def addBuildsetForChanges(waited_for=False, reason='',
+                                  external_idstring=None, changeids=[], builderNames=None,
+                                  properties=None,
+                                  **kw):
             self.events.append('B%s@%d' % (repr(changeids).replace(' ', ''),
                                            # show the offset as seconds past the GMT hour
                                            self.clock.seconds() - self.localtime_offset))
-            return origAddBuildsetForChanges(reason=reason, external_idstring=external_idstring, changeids=changeids)
+            return origAddBuildsetForChanges(waited_for, reason, external_idstring, changeids,
+                                             builderNames, properties, **kw)
         sched.addBuildsetForChanges = addBuildsetForChanges
 
         # see self.assertConsumingChanges
