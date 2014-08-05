@@ -29,6 +29,10 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         os_password='pass',
         os_tenant_name='tenant',
         os_auth_url='auth')
+    bs_args = dict(
+        flavor=1,
+        image='image-uuid',
+        **os_auth)
 
     def setUp(self):
         self.patch(openstack, "nce", novaclient)
@@ -38,24 +42,22 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         self.patch(openstack, "nce", None)
         self.patch(openstack, "client", None)
         self.assertRaises(config.ConfigErrors,
-                          openstack.OpenStackLatentBuildSlave, 'bot', 'pass', flavor=1,
-                          image='image', **self.os_auth)
+                          openstack.OpenStackLatentBuildSlave, 'bot', 'pass',
+                          **self.bs_args)
 
     def test_constructor_minimal(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
-        self.assertEqual(bs.image, 'image')
+        self.assertEqual(bs.image, 'image-uuid')
         self.assertEqual(bs.os_username, 'user')
         self.assertEqual(bs.os_password, 'pass')
         self.assertEqual(bs.os_tenant_name, 'tenant')
         self.assertEqual(bs.os_auth_url, 'auth')
 
     def test_getImage_string(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         self.assertEqual('image-uuid', bs._getImage(None, bs.image))
 
     def test_getImage_callable(self):
@@ -69,30 +71,26 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
 
     def test_start_instance_already_exists(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         bs.instance = mock.Mock()
         self.assertRaises(ValueError, bs.start_instance, None)
 
     def test_start_instance_fail_to_find(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_fail_to_start(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_success(self):
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', **self.os_auth)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = bs._start_instance()
         self.assertTrue(uuid)
@@ -101,9 +99,8 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
     def test_start_instance_check_meta(self):
         meta_arg = {'some_key': 'some-value'}
-        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth', meta=meta_arg)
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', meta=meta_arg,
+                                                 **self.bs_args)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = bs._start_instance()
         self.assertIn('meta', bs.instance.boot_kwargs)
