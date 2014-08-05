@@ -1,7 +1,6 @@
 # About #
 
 This is buildbot-www, the Buildbot UI.
-It is based on AngularFun By CaryLandholt (https://twitter.com/carylandholt)
 
 # Connection to Python #
 
@@ -22,5 +21,5 @@ This command will use Node.js and NPM to install all of the prerequisites for
 building the UI.
 
 Then, simply treat the `www` directory as a normal AngularJs project.  Either
-run `grunt` to build on demand, or use `grunt dev` to set up a watcher to
+run `gulp` to build on demand, or use `gulp dev` to set up a watcher to
 build whenever files change.

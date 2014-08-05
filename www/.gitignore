@@ -1,10 +1,7 @@
-buildbot_www
-buildbot_www_test
+static
 .temp
 package.json
-.bowerrc
-bower.json
 VERSION
 node_modules
 npm-debug.log
-src/libs
+libs/

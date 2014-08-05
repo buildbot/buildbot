@@ -37,13 +37,13 @@ class Application(object):
     def __init__(self):
         self.description = "Buildbot CodeParameter"
         # VERSION's location differs depending on whether we're installed
-        for f in sibpath('VERSION'), sibpath('buildbot_www', 'VERSION'):
+        for f in sibpath('VERSION'), sibpath('static', 'VERSION'):
             if os.path.exists(f):
                 self.version = open(f).read().strip()
                 break
         else:
             self.version = '<unknown>'
-        self.static_dir = os.path.abspath(sibpath('buildbot_www'))
+        self.static_dir = os.path.abspath(sibpath('static'))
         self.resource = static.File(self.static_dir)
 
 

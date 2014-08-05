@@ -1,161 +1,160 @@
-if window.__karma__?
-    beforeEach ->
-        # Mocked module dependencies
-        angular.module 'buildbot.common', []
-        angular.module 'ui.bootstrap', []
-        angular.module 'ngAnimate', []
+beforeEach ->
+    # Mocked module dependencies
+    angular.module 'buildbot.common', []
+    angular.module 'ui.bootstrap', []
+    angular.module 'ngAnimate', []
 
-        module 'buildbot.console_view'
+    module 'buildbot.console_view'
 
-    describe 'Console view', ->
-        $state = null
+describe 'Console view', ->
+    $state = null
 
-        injected = ($injector) ->
-            $state = $injector.get('$state')
+    injected = ($injector) ->
+        $state = $injector.get('$state')
 
-        beforeEach(inject(injected))
+    beforeEach(inject(injected))
 
-        it 'should register a new state with the correct configuration', ->
-            name = 'console'
-            state = $state.get().pop()
-            data = state.data
-            expect(state.controller).toBe("#{name}Controller")
-            expect(state.controllerAs).toBe('c')
-            expect(state.templateUrl).toBe("console_view/views/#{name}.html")
-            expect(state.url).toBe("/#{name}")
-            expect(data.tabid).toBe(name)
-            expect(data.tabhash).toBe("##{name}")
+    it 'should register a new state with the correct configuration', ->
+        name = 'console'
+        state = $state.get().pop()
+        data = state.data
+        expect(state.controller).toBe("#{name}Controller")
+        expect(state.controllerAs).toBe('c')
+        expect(state.templateUrl).toBe("console_view/views/#{name}.html")
+        expect(state.url).toBe("/#{name}")
+        expect(data.tabid).toBe(name)
+        expect(data.tabhash).toBe("##{name}")
 
-    describe 'Console view controller', ->
-        createController = scope = $rootScope = null
+describe 'Console view controller', ->
+    createController = scope = $rootScope = null
 
-        # Test data
+    # Test data
 
-        builders = [
-            builderid: 1
-        ,
-            builderid: 2
-        ,
-            builderid: 3
-        ,
-            builderid: 4
+    builders = [
+        builderid: 1
+    ,
+        builderid: 2
+    ,
+        builderid: 3
+    ,
+        builderid: 4
+    ]
+
+    builds1 = [
+        buildid: 1
+        builderid: 1
+        buildrequestid: 1
+    ,
+        buildid: 2
+        builderid: 2
+        buildrequestid: 1
+    ,
+        buildid: 3
+        builderid: 4
+        buildrequestid: 2
+    ,
+        buildid: 4
+        builderid: 3
+        buildrequestid: 2
+    ]
+
+    builds2 = [
+        buildid: 5
+        builderid: 2
+        buildrequestid: 3
+    ]
+
+    builds = builds1.concat(builds2)
+
+    buildrequests = [
+        builderid: 1
+        buildrequestid: 1
+        buildsetid: 1
+    ,
+        builderid: 1
+        buildrequestid: 2
+        buildsetid: 1
+    ,
+        builderid: 1
+        buildrequestid: 3
+        buildsetid: 2
+    ]
+
+    buildsets = [
+        bsid: 1
+        sourcestamps: [
+            ssid: 1
         ]
-
-        builds1 = [
-            buildid: 1
-            builderid: 1
-            buildrequestid: 1
-        ,
-            buildid: 2
-            builderid: 2
-            buildrequestid: 1
-        ,
-            buildid: 3
-            builderid: 4
-            buildrequestid: 2
-        ,
-            buildid: 4
-            builderid: 3
-            buildrequestid: 2
+    ,
+        bsid: 2
+        sourcestamps: [
+            ssid: 2
         ]
+    ]
 
-        builds2 = [
-            buildid: 5
-            builderid: 2
-            buildrequestid: 3
-        ]
+    changes = [
+        changeid: 1
+        sourcestamp:
+            ssid: 1
+    ]
 
-        builds = builds1.concat(builds2)
+    injected = ($injector) ->
+        $q = $injector.get('$q')
+        $rootScope = $injector.get('$rootScope')
+        scope = $rootScope.$new()
+        $controller = $injector.get('$controller')
 
-        buildrequests = [
-            builderid: 1
-            buildrequestid: 1
-            buildsetid: 1
-        ,
-            builderid: 1
-            buildrequestid: 2
-            buildsetid: 1
-        ,
-            builderid: 1
-            buildrequestid: 3
-            buildsetid: 2
-        ]
+        # Mocked service
+        buildbotServiceMock =
+            all: (string) =>
+                deferred = $q.defer()
+                switch string
+                    when 'builds'
+                        deferred.resolve builds
+                    when 'builders'
+                        deferred.resolve builders
+                    when 'changes'
+                        deferred.resolve changes
+                    when 'buildrequests'
+                        deferred.resolve buildrequests
+                    when 'buildsets'
+                        deferred.resolve buildsets
+                    else
+                        deferred.resolve []
+                bind: -> deferred.promise
 
-        buildsets = [
-            bsid: 1
-            sourcestamps: [
-                ssid: 1
-            ]
-        ,
-            bsid: 2
-            sourcestamps: [
-                ssid: 2
-            ]
-        ]
+        # Create new controller using controller as syntax
+        createController = ->
+            $controller 'consoleController as c',
+                # Inject controller dependencies
+                $scope: scope
+                buildbotService: buildbotServiceMock
 
-        changes = [
-            changeid: 1
-            sourcestamp:
-                ssid: 1
-        ]
+    beforeEach(inject(injected))
 
-        injected = ($injector) ->
-            $q = $injector.get('$q')
-            $rootScope = $injector.get('$rootScope')
-            scope = $rootScope.$new()
-            $controller = $injector.get('$controller')
+    it 'should be defined', ->
+        createController()
+        expect(scope.c).toBeDefined()
 
-            # Mocked service
-            buildbotServiceMock =
-                all: (string) =>
-                    deferred = $q.defer()
-                    switch string
-                        when 'builds'
-                            deferred.resolve builds
-                        when 'builders'
-                            deferred.resolve builders
-                        when 'changes'
-                            deferred.resolve changes
-                        when 'buildrequests'
-                            deferred.resolve buildrequests
-                        when 'buildsets'
-                            deferred.resolve buildsets
-                        else
-                            deferred.resolve []
-                    bind: -> deferred.promise
+    it 'should bind the builds, builders, changes, buildrequests and buildsets to scope', ->
+        createController()
+        $rootScope.$digest()
+        expect(scope.c.builds).toBeDefined()
+        expect(scope.c.builds.length).toBe(builds.length)
+        expect(scope.c.builders).toBeDefined()
+        expect(scope.c.builders.length).toBe(builders.length)
+        expect(scope.c.changes).toBeDefined()
+        expect(scope.c.changes.length).toBe(changes.length)
+        expect(scope.c.buildrequests).toBeDefined()
+        expect(scope.c.buildrequests.length).toBe(buildrequests.length)
+        expect(scope.c.buildsets).toBeDefined()
+        expect(scope.c.buildsets.length).toBe(buildsets.length)
 
-            # Create new controller using controller as syntax
-            createController = ->
-                $controller 'consoleController as c',
-                    # Inject controller dependencies
-                    $scope: scope
-                    buildbotService: buildbotServiceMock
-
-        beforeEach(inject(injected))
-
-        it 'should be defined', ->
-            createController()
-            expect(scope.c).toBeDefined()
-
-        it 'should bind the builds, builders, changes, buildrequests and buildsets to scope', ->
-            createController()
-            $rootScope.$digest()
-            expect(scope.c.builds).toBeDefined()
-            expect(scope.c.builds.length).toBe(builds.length)
-            expect(scope.c.builders).toBeDefined()
-            expect(scope.c.builders.length).toBe(builders.length)
-            expect(scope.c.changes).toBeDefined()
-            expect(scope.c.changes.length).toBe(changes.length)
-            expect(scope.c.buildrequests).toBeDefined()
-            expect(scope.c.buildrequests.length).toBe(buildrequests.length)
-            expect(scope.c.buildsets).toBeDefined()
-            expect(scope.c.buildsets.length).toBe(buildsets.length)
-
-        it 'should match the builds with the change', ->
-            createController()
-            $rootScope.$digest()
-            expect(scope.c.changes[0]).toBeDefined()
-            expect(scope.c.changes[0].builds).toBeDefined()
-            expect(scope.c.changes[0].builds.length).toBe(builds1.length)
-            for build in builds1
-                expect(scope.c.changes[0].builds).toContain(build)
+    it 'should match the builds with the change', ->
+        createController()
+        $rootScope.$digest()
+        expect(scope.c.changes[0]).toBeDefined()
+        expect(scope.c.changes[0].builds).toBeDefined()
+        expect(scope.c.changes[0].builds.length).toBe(builds1.length)
+        for build in builds1
+            expect(scope.c.changes[0].builds).toContain(build)

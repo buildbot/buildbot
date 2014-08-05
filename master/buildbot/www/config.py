@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import jinja2
+
 from buildbot.interfaces import IConfigured
 from buildbot.util import json
 from buildbot.www import resource
@@ -20,20 +22,25 @@ from twisted.internet import defer
 from twisted.web.error import Error
 
 
-class SessionConfigResource(resource.Resource):
+class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
+
+    def __init__(self, master, staticdir):
+        resource.Resource.__init__(self, master)
+        loader = jinja2.FileSystemLoader(staticdir)
+        self.jinja = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
 
     def reconfigResource(self, new_config):
         self.config = new_config.www
 
     def render_GET(self, request):
-        return self.asyncRenderHelper(request, self.renderConfig)
+        return self.asyncRenderHelper(request, self.renderIndex)
 
     @defer.inlineCallbacks
-    def renderConfig(self, request):
+    def renderIndex(self, request):
         config = {}
-        request.setHeader("content-type", 'text/javascript')
+        request.setHeader("content-type", 'text/html')
         request.setHeader("Cache-Control", "public;max-age=0")
 
         session = request.getSession()
@@ -53,5 +60,8 @@ class SessionConfigResource(resource.Resource):
             if isinstance(obj, dict):
                 return obj
             return repr(obj) + " not yet IConfigured"
-        defer.returnValue("this.config = " +
-                          json.dumps(config, default=toJson))
+
+        tpl = self.jinja.get_template('index.html')
+        tpl = tpl.render(configjson=json.dumps(config, default=toJson),
+                         config=self.config)
+        defer.returnValue(tpl.encode("ascii"))

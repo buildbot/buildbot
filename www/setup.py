@@ -73,7 +73,7 @@ base_json = {
 package_json = {
     "dependencies": {},
     "devDependencies": {
-        "granlecoja": "latest",
+        "guanlecoja": "latest",
     },
     "engines": {
         "node": ">=0.10.0",
@@ -165,7 +165,7 @@ class grunt(Command):
     ]
 
     sub_commands = [
-        ('bower_install', None)
+#        ('bower_install', None)
     ]
 
     def initialize_options(self):
@@ -269,8 +269,8 @@ class develop(setuptools.command.develop.develop):
     """
 
     sub_commands = setuptools.command.develop.develop.sub_commands + [
-        ('bower_install', None),
-        ('grunt', None)
+#        ('bower_install', None),
+#        ('grunt', None)
     ]
 
     def run(self):

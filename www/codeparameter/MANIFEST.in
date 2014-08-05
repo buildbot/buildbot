@@ -1,3 +1,2 @@
-include package.json
 include VERSION
-recursive-include buildbot_www *
+recursive-include static *

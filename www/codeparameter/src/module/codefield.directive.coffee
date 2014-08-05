@@ -1,13 +1,15 @@
-# using window.define prevents r.js to include everything of ace
-# Ace is already modular, and is better kept this way (e.g. language support is in modules)
-window.define ["codeparameter/scripts/ace/ace"], ->
-    # add ui-ace to the list of needed modules
-    angular.module('app').requires.push("ui.ace")
+app = angular.module('app')
+# add ui-ace to the list of needed modules
+app.requires.push("ui.ace")
 
-    # defines custom field directives which only have templates
-    _.each [ 'codefield' ], (fieldtype) ->
-        angular.module('app').directive fieldtype, ->
-            replace: false
-            restrict: 'E'
-            scope: false
-            templateUrl: "codeparameter/views/#{fieldtype}.html"
+# setup ace to fetch its module from the plugin baseURL
+app.run  (config) ->
+    window.ace.config.set("basePath", config.url + "codeparameter")
+
+
+# defines custom field directives which only have templates
+app.directive 'codefield', ->
+    replace: false
+    restrict: 'E'
+    scope: false
+    templateUrl: "codeparameter/views/codefield.html"

@@ -47,7 +47,9 @@ base_json = {
 package_json = {
     "dependencies": {},
     "devDependencies": {
-        "granlecoja": "latest",
+        "guanlecoja": "latest",
+        "bower": "latest",
+        "gulp": "latest",
     },
     "engines": {
         "node": ">=0.10.0",
@@ -191,8 +193,8 @@ class sdist(setuptools.command.sdist.sdist):
     """
 
     def run(self):
-        if MODE == 'SRC':
-            self.run_command('grunt')
+#        if MODE == 'SRC':
+#            self.run_command('grunt')
         setuptools.command.sdist.sdist.run(self)
 
 cmdclass['sdist'] = sdist
@@ -223,8 +225,8 @@ class develop(setuptools.command.develop.develop):
     """
 
     sub_commands = setuptools.command.develop.develop.sub_commands + [
-        ('bower_install', None),
-        ('grunt', None)
+#        ('bower_install', None),
+#        ('grunt', None)
     ]
 
     def run(self):
