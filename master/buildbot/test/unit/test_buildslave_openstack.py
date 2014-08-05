@@ -20,6 +20,7 @@ import mock
 from buildbot import config
 from buildbot import interfaces
 from buildbot.buildslave import openstack
+from twisted.internet import defer
 from twisted.trial import unittest
 
 
@@ -105,3 +106,54 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         uuid, image_uuid, time_waiting = bs._start_instance()
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
+
+    @defer.inlineCallbacks
+    def test_stop_instance_not_set(self):
+        """
+        Test stopping the instance but with no instance to stop.
+        """
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
+        bs.instance = None
+        stopped = yield bs.stop_instance()
+        self.assertEqual(stopped, None)
+
+    def test_stop_instance_missing(self):
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
+        instance = mock.Mock()
+        instance.id = 'uuid'
+        bs.instance = instance
+        # TODO: Check log for instance not found.
+        bs.stop_instance()
+
+    def test_stop_instance_fast(self):
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
+        # Make instance immediately active.
+        self.patch(novaclient.Servers, 'gets_until_active', 0)
+        s = novaclient.Servers()
+        bs.instance = inst = s.create()
+        self.assertIn(inst.id, s.instances)
+        bs.stop_instance(fast=True)
+        self.assertNotIn(inst.id, s.instances)
+
+    def test_stop_instance_notfast(self):
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
+        # Make instance immediately active.
+        self.patch(novaclient.Servers, 'gets_until_active', 0)
+        s = novaclient.Servers()
+        bs.instance = inst = s.create()
+        self.assertIn(inst.id, s.instances)
+        bs.stop_instance(fast=False)
+        self.assertNotIn(inst.id, s.instances)
+
+    def test_stop_instance_unknown(self):
+        bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_args)
+        # Make instance immediately active.
+        self.patch(novaclient.Servers, 'gets_until_active', 0)
+        s = novaclient.Servers()
+        bs.instance = inst = s.create()
+        # Set status to DELETED. Instance should not be deleted when shutting
+        # down as it already is.
+        inst.status = novaclient.DELETED
+        self.assertIn(inst.id, s.instances)
+        bs.stop_instance()
+        self.assertIn(inst.id, s.instances)

@@ -42,9 +42,7 @@ class Servers():
     fail_to_get = False
     fail_to_start = False
     gets_until_active = 2
-
-    def __init__(self):
-        self.instances = {}
+    instances = {}
 
     def create(self, *boot_args, **boot_kwargs):
         instance_id = uuid.uuid4()
@@ -55,6 +53,8 @@ class Servers():
     def get(self, instance_id):
         if not self.fail_to_get and instance_id in self.instances:
             inst = self.instances[instance_id]
+            if not inst.status.startswith('BUILD'):
+                return inst
             inst.gets += 1
             if inst.gets >= self.gets_until_active:
                 if not self.fail_to_start:
