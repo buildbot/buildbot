@@ -24,6 +24,11 @@ from twisted.trial import unittest
 
 
 class TestOpenStackBuildSlave(unittest.TestCase):
+    os_auth = dict(
+        os_username='user',
+        os_password='pass',
+        os_tenant_name='tenant',
+        os_auth_url='auth')
 
     def setUp(self):
         self.patch(openstack, "nce", novaclient)
@@ -34,13 +39,11 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         self.patch(openstack, "client", None)
         self.assertRaises(config.ConfigErrors,
                           openstack.OpenStackLatentBuildSlave, 'bot', 'pass', flavor=1,
-                          image='image', os_username='user', os_password='pass',
-                          os_tenant_name='tenant', os_auth_url='auth')
+                          image='image', **self.os_auth)
 
     def test_constructor_minimal(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image', **self.os_auth)
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
@@ -52,8 +55,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
     def test_getImage_string(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image-uuid', **self.os_auth)
         self.assertEqual('image-uuid', bs._getImage(None, bs.image))
 
     def test_getImage_callable(self):
@@ -61,23 +63,20 @@ class TestOpenStackBuildSlave(unittest.TestCase):
             return images[0]
 
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image=image_callable, os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image=image_callable, **self.os_auth)
         os_client = novaclient.Client('user', 'pass', 'tenant', 'auth')
         os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
         self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
 
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image-uuid', **self.os_auth)
         bs.instance = mock.Mock()
         self.assertRaises(ValueError, bs.start_instance, None)
 
     def test_start_instance_fail_to_find(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image-uuid', **self.os_auth)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
@@ -85,8 +84,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
     def test_start_instance_fail_to_start(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image-uuid', **self.os_auth)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
         self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
@@ -94,8 +92,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
     def test_start_instance_success(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
-                                                 image='image-uuid', os_username='user', os_password='pass',
-                                                 os_tenant_name='tenant', os_auth_url='auth')
+                                                 image='image-uuid', **self.os_auth)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = bs._start_instance()
         self.assertTrue(uuid)
