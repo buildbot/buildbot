@@ -8,8 +8,7 @@ dependencies = [
 
 # Register new module
 m = angular.module name, dependencies
-if not window.__karma__?
-    angular.module('app').requires.push(name)
+angular.module('app').requires.push(name)
 
 m.config ['$stateProvider',
     ($stateProvider) ->
@@ -35,8 +34,7 @@ m.config ['$stateProvider',
         $stateProvider.state(state)
 ]
 
-m.controller 'consoleController',
-    ['$scope', '$q', '$window', 'buildbotService', class
+m.controller 'consoleController', class
         constructor: (@$scope, $q, $window, @buildbotService) ->
 
             builds = @buildbotService.all('builds').bind @$scope
@@ -87,4 +85,6 @@ m.controller 'consoleController',
 
         closeAll: ->
             @$scope.$broadcast('showAllInfo', true)
-    ]
+
+        showBuilderNames: ->
+            @bigHeader = !@bigHeader
