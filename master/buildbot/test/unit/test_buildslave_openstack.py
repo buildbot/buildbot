@@ -54,7 +54,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,
                                                  image='image-uuid', os_username='user', os_password='pass',
                                                  os_tenant_name='tenant', os_auth_url='auth')
-        self.assertEqual('image-uuid', bs._getImage(None))
+        self.assertEqual('image-uuid', bs._getImage(None, bs.image))
 
     def test_getImage_callable(self):
         def image_callable(images):
@@ -65,7 +65,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
                                                  os_tenant_name='tenant', os_auth_url='auth')
         os_client = novaclient.Client('user', 'pass', 'tenant', 'auth')
         os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
-        self.assertEqual('uuid1', bs._getImage(os_client))
+        self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
 
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', flavor=1,

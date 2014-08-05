@@ -101,13 +101,13 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         client_block_device['volume_size'] = block_device['volume_size']
         return client_block_device
 
-    def _getImage(self, os_client):
+    def _getImage(self, os_client, image):
         # If self.image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
-        if callable(self.image):
-            image_uuid = self.image(os_client.images.list())
+        if callable(image):
+            image_uuid = image(os_client.images.list())
         else:
-            image_uuid = self.image
+            image_uuid = image
         return image_uuid
 
     def start_instance(self, build):
@@ -119,7 +119,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         # Authenticate to OpenStack.
         os_client = client.Client(self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
-        image_uuid = self._getImage(os_client)
+        image_uuid = self._getImage(os_client, self.image)
         boot_args = [self.slavename, image_uuid, self.flavor]
         boot_kwargs = {}
         if self.meta is not None:
