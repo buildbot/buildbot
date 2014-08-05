@@ -121,9 +121,9 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                                   self.os_tenant_name, self.os_auth_url)
         image_uuid = self._getImage(os_client, self.image)
         boot_args = [self.slavename, image_uuid, self.flavor]
-        boot_kwargs = {}
-        if self.meta is not None:
-            boot_kwargs['meta'] = self.meta
+        boot_kwargs = dict(
+            meta=self.meta,
+            block_device_mapping_v2=self.block_devices)
         instance = os_client.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
