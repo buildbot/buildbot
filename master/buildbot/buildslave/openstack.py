@@ -89,8 +89,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         os_client = client.Client(self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
         image_uuid = self._getImage(os_client)
-        flavor_id = self.flavor
-        boot_args = [self.slavename, image_uuid, flavor_id]
+        boot_args = [self.slavename, image_uuid, self.flavor]
         boot_kwargs = {}
         if self.meta is not None:
             boot_kwargs['meta'] = self.meta
