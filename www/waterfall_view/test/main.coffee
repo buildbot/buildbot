@@ -1,7 +1,2 @@
-# adaptation file to run our application's main inside the karma webserver
-if window.__karma__?
-    requirejs.config(
-        baseUrl: '/base/.temp/scripts'
-        deps: ["main"]
-        callback: window.__karma__.start
-    )
+# app module is necessary for plugins, but only in the test environment
+angular.module("app", []).constant("config", {"url": "foourl"})
