@@ -33,18 +33,18 @@ module.exports =
         # CoffeeScript tests
         tests: [
             'test/**/*.coffee'
-            'src/app/**/*.spec.coffee'
+            'src/**/*.spec.coffee'
         ]
 
-        # CoffeeScript fixtures
+        # fixtures
         fixtures: [
             'test/**/*.fixture.*'
-            'src/app/**/*.fixture.*'
+            'src/**/*.fixture.*'
         ]
 
         # Jade templates
         templates: [
-            'src/app/**/*.tpl.jade'
+            'src/**/*.tpl.jade'
         ]
 
         # Jade index
@@ -54,31 +54,30 @@ module.exports =
 
         # Less stylesheets
         less: [
-            'src/styles/styles.less'
-            'src/app/**/*.less'
+            'src/**/*.less'
         ]
 
         # Images
         images: [
-            'src/img/**/*.{png,jpg,gif,ico}'
+            'src/**/*.{png,jpg,gif,ico}'
         ]
 
         # Fonts
         fonts: [
             'libs/font-awesome/fonts/*'
         ]
+    bower:
+        directory: "libs"
+        # JavaScript libraries
+        deps: {}
+        testdeps: {}
 
-        # Library files
-        library:
 
-            # JavaScript libraries
-            js: [
-            ]
+    preparetasks: "bower"
+    buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
+        'index', 'tests', 'generatedfixtures', 'fixtures']
+    testtasks: "karma"
 
-            # JavaScript libraries used during testing only
-            tests: [
-                'libs/angular-mocks/angular-mocks.js'
-            ]
     generatedfixtures: ->
 
     ### ###########################################################################################

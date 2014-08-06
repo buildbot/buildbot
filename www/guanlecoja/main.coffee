@@ -1,34 +1,36 @@
+run_sequence = require 'run-sequence'
+require("coffee-script/register")
+
+# utilities
+path = require('path')
+fs = require('fs')
+_ = require('lodash')
+
+argv = require('minimist')(process.argv.slice(2))
+
+# gulp plugins
+ngClassify = require 'gulp-ng-classify'
+gif = require 'gulp-if'
+sourcemaps = require 'gulp-sourcemaps'
+coffee = require 'gulp-coffee'
+gutil = require 'gulp-util'
+annotate = require 'gulp-ng-annotate'
+concat = require 'gulp-concat'
+cached = require 'gulp-cached'
+karma = require 'gulp-karma'
+remember = require 'gulp-remember'
+uglify = require 'gulp-uglify'
+jade = require 'gulp-jade'
+rename = require 'gulp-rename'
+bower = require 'gulp-bower-deps'
+templateCache = require 'gulp-angular-templatecache'
+lr = require 'gulp-livereload'
+cssmin = require 'gulp-minify-css'
+less = require 'gulp-less'
+fixtures2js = require 'gulp-fixtures2js'
+
 module.exports =  (gulp) ->
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
-
-    require("coffee-script/register")
-
-    # utilities
-    path = require('path')
-    fs = require('fs')
-    _ = require('lodash')
-
-    argv = require('minimist')(process.argv.slice(2))
-
-    # gulp plugins
-    ngClassify = require 'gulp-ng-classify'
-    gif = require 'gulp-if'
-    sourcemaps = require 'gulp-sourcemaps'
-    coffee = require 'gulp-coffee'
-    gutil = require 'gulp-util'
-    annotate = require 'gulp-ng-annotate'
-    concat = require 'gulp-concat'
-    cached = require 'gulp-cached'
-    karma = require 'gulp-karma'
-    remember = require 'gulp-remember'
-    uglify = require 'gulp-uglify'
-    jade = require 'gulp-jade'
-    rename = require 'gulp-rename'
-    templateCache = require 'gulp-angular-templatecache'
-    lr = require 'gulp-livereload'
-    cssmin = require 'gulp-minify-css'
-    less = require 'gulp-less'
-    fixtures2js = require 'gulp-fixtures2js'
 
 
     # in prod mode, we uglify. in dev mode, we create sourcemaps
@@ -41,11 +43,14 @@ module.exports =  (gulp) ->
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"))
     _.merge(config, buildConfig)
 
+    bower = bower(config.bower)
+    bower.installtask(gulp)
+
     # first thing, we remove the build dir
     # we do it synchronously to simplify things
     require('rimraf').sync(config.dir.build)
 
-    script_sources = config.files.library.js.concat(config.files.app, config.files.scripts, config.files.templates)
+    script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates)
 
     gulp.task 'scripts', ->
         # libs first, then app, then the rest
@@ -58,7 +63,10 @@ module.exports =  (gulp) ->
             # jade build
             .pipe(gif("*.jade", jade())).on('error', gutil.log)
             .pipe gif "*.html", rename (p) ->
-                p.dirname = "views"
+                if config.name?
+                    p.dirname = path.join(config.name, "views")
+                else
+                    p.dirname = "views"
                 p.basename = p.basename.replace(".tpl","")
                 null
             .pipe(gif("*.html", templateCache({module:"app"})))
@@ -72,7 +80,8 @@ module.exports =  (gulp) ->
             .pipe gif(dev, lr())
 
     gulp.task 'tests', ->
-        src = config.files.library.tests.concat(config.files.tests)
+        gutil.log bower.testdeps
+        src = bower.testdeps.concat(config.files.tests)
         gulp.src src
             .pipe cached('tests')
             .pipe gif(dev, sourcemaps.init())
@@ -109,11 +118,13 @@ module.exports =  (gulp) ->
     # just copy fonts and imgs to the output dir
     gulp.task 'fonts', ->
         gulp.src config.files.fonts
-            .pipe gulp.dest config.dir.build + "/fonts"
+            .pipe rename dirname:""
+            .pipe gulp.dest path.join(config.dir.build, "fonts")
 
     gulp.task 'imgs', ->
         gulp.src config.files.images
-            .pipe gulp.dest config.dir.build + "/img"
+            .pipe rename dirname:""
+            .pipe gulp.dest path.join(config.dir.build, "img")
 
     gulp.task 'index', ->
         gulp.src config.files.index
@@ -128,13 +139,17 @@ module.exports =  (gulp) ->
         gulp.watch(config.files.less, ["styles"])
         null
 
-    gulp.task "default", ['scripts', 'styles', 'fonts', 'imgs', 'index', 'tests', 'generatedfixtures', 'fixtures'], ->
+    gulp.task "karma", ->
         karmaconf =
             basePath: config.dir.build
             action: if dev then 'watch' else 'run'
         _.merge(karmaconf, config.karma)
         gulp.src ["scripts.js", 'generatedfixtures.js', "fixtures.js", "tests.js"]
             .pipe karma(karmaconf)
+
+    gulp.task "default", (callback) ->
+        run_sequence config.preparetasks, config.buildtasks, config.testtasks,
+            callback
 
     gulp.task "dev", ['default', 'watch']
 

@@ -30,8 +30,10 @@
       "email": "tardyp@gmail.com"
     }
   ],
+  "_comment": "run-sequence requires gulp, and needs the same gulp as our built tree, so that must be a peer dependancy",
   "peerDependencies": {
-    "gulp": "3.8.6"
+    "gulp": "3.8.6",
+    "run-sequence": "~0.3.6"
   },
   "devDependencies": {
     "gulp": "3.8.6",
@@ -56,6 +58,7 @@
     "gulp-rename": "~1.2.0",
     "gulp-sourcemaps": "~1.1.0",
     "gulp-uglify": "~0.3.1",
+    "gulp-bower-deps": "~0.1.0",
     "gulp-util": "~2.2.20",
     "karma": "~0.12.17",
     "karma-jasmine": "~0.2.2",
@@ -70,7 +73,7 @@
   "engines": {
     "node": "~0.8 || ~0.10"
   },
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}

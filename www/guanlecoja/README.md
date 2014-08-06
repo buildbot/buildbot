@@ -124,3 +124,7 @@ If you really care about developing on a remote machine, you can always forward 
 Guanlecoja methodology has been built for the buildbot project, but is very generic, and can be used for any projects\.
 
 You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
+
+### ChangeLog
+
+* 0.2.0: better defaults, add support for automatic bower dependancy fetching
