@@ -1,9 +1,0 @@
-# All files to globally ignore
-buildbot_www
-buildbot_www_test
-.temp
-package.json
-bower.json
-VERSION
-node_modules
-src/libs
