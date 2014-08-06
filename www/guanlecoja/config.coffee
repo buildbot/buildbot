@@ -8,6 +8,12 @@ gulp = require("gulp")
 shell = require("gulp-shell")
 path = require("path")
 
+
+# d3 is loaded on demand, so it is just copied in the static dir
+gulp.task "copyd3", ->
+    gulp.src(["libs/d3/d3.min.js"])
+        .pipe(gulp.dest("static"))
+
 config =
 
     ### ###########################################################################################
@@ -21,7 +27,7 @@ config =
     #   Bower dependancies configuration
     ### ###########################################################################################
     bower:
-        # JavaScript libraries
+        # JavaScript libraries (order matters)
         deps:
             jquery:
                 version: '~2.1.1'
@@ -53,12 +59,19 @@ config =
             restangular:
                 version: "~1.4.0"
                 files: 'dist/restangular.js'
+            d3:  # d3 is loaded on demand via d3Service
+                version: "~3.4.11"
+                files: []
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG
                 files: "angular-mocks.js"
 
+    buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
+        'index', 'tests', 'generatedfixtures', 'fixtures', 'copyd3']
+
     generatedfixtures: ->
         gulp.src ""
             .pipe shell("buildbot dataspec -g window.dataspec -o " + path.join(config.dir.build,"generatedfixtures.js"))
+
 module.exports = config

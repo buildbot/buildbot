@@ -123,12 +123,16 @@ describe 'Console view controller', ->
                         deferred.resolve []
                 bind: -> deferred.promise
 
+        buildbotServiceMock =
+            get:  =>
+                null
         # Create new controller using controller as syntax
         createController = ->
             $controller 'consoleController as c',
                 # Inject controller dependencies
                 $scope: scope
                 buildbotService: buildbotServiceMock
+                d3Service: d3ServiceMock
 
     beforeEach(inject(injected))
 

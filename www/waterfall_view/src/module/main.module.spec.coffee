@@ -88,11 +88,11 @@ if window.__karma__?
             $controller = $injector.get('$controller')
             $window = $injector.get('$window')
             $q = $injector.get('$q')
-            d3Service = $injector.get('d3Service')
 
             deferred = $q.defer()
             deferred.resolve []
-            spyOn(d3Service, 'get').and.returnValue(deferred.promise)
+            d3ServiceFake = ->
+            d3ServiceFake.get = -> deferred.promise
 
             # Mocked service
             buildbotServiceMock =
@@ -120,7 +120,7 @@ if window.__karma__?
                     $scope: scope
                     $window: $window
                     $q: $q
-                    d3Service: d3Service
+                    d3Service: d3ServiceFake
                     buildbotService: buildbotServiceMock
                     config: plugins: waterfall_view: {}
 
