@@ -15,31 +15,10 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+from buildbot_pkg import setup_www_plugin
 
-from setuptools import setup
-
-# For now, we only support develop, and manual npm install
-# plan is to use wheel for binary distribution: http://wheel.readthedocs.org/en/latest/
-
-MODE = 'SRC' if os.path.isdir('src') else 'SDIST'
-
-if MODE == 'SRC':
-    # if we're in a source tree, use master's __init__ to determine the
-    # version, and update the version file as a by-product
-    master_init = os.path.abspath("../master/buildbot/__init__.py")
-    globals = {"__file__": master_init}
-    execfile(master_init, globals)
-    version = globals['version']
-    open('VERSION', 'w').write(version + '\n')
-else:
-    # otherwise, use what the build left us
-    version = open('VERSION').read().strip()
-
-
-setup(
+setup_www_plugin(
     name='buildbot-www',
-    version=version,
     description='Buildbot UI',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
@@ -49,5 +28,5 @@ setup(
     entry_points="""
         [buildbot.www]
         base = buildbot_www:ep
-    """,
+    """
 )

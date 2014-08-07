@@ -15,18 +15,13 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_pkg import setup_www_plugin
-
-setup_www_plugin(
-    name='buildbot-codeparameter',
-    description='Buildbot parameter that use ace.js to display code',
+from setuptools import setup
+setup(
+    name='buildbot_pkg',
+    description='Buildbot packaging tools',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
     license='GNU GPL',
-    py_modules=['buildbot_www'],
-    entry_points="""
-        [buildbot.www]
-        base = buildbot_www:ep
-    """,
+    py_modules=['buildbot_pkg'],
 )
