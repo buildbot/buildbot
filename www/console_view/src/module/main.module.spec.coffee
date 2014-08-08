@@ -101,8 +101,8 @@ describe 'Console view controller', ->
     injected = ($injector) ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
+        $window = $injector.get('$window')
         scope = $rootScope.$new()
-        $controller = $injector.get('$controller')
 
         # Mocked service
         buildbotServiceMock =
@@ -123,13 +123,13 @@ describe 'Console view controller', ->
                         deferred.resolve []
                 bind: -> deferred.promise
 
-        buildbotServiceMock =
-            get:  =>
-                null
         # Create new controller using controller as syntax
+        $controller = $injector.get('$controller')
         createController = ->
-            $controller 'consoleController as c',
+            return $controller 'consoleController as c',
                 # Inject controller dependencies
+                $q: $q
+                $window: $window
                 $scope: scope
                 buildbotService: buildbotServiceMock
 
