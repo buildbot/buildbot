@@ -57,31 +57,46 @@ create a "guanlecoja/config.coffee" with the configuration variables:
         ### ###########################################################################################
         dir:
             # The build folder is where the app resides once it's completely built
-            build: 'buildbot_www'
+            build: 'static'
 
-        ### ###########################################################################################
-        #   This is a collection of file patterns
-        ### ###########################################################################################
-        files:
-            # Library files
-            library:
 
-                # JavaScript libraries. Which javascript files to include, from the
-                # one downloaded by bower
-                js: [
-                    'libs/jquery/dist/jquery.js'
-                    'libs/angular/angular.js'
-
-                    'libs/angular-animate/angular-animate.js'
-                    'libs/angular-bootstrap/ui-bootstrap-tpls.js'
-                    'libs/angular-ui-router/release/angular-ui-router.js'
-                    'libs/angular-recursion/angular-recursion.js'
-
-                    'libs/lodash/dist/lodash.js'
-                    'libs/moment/moment.js'
-                    'libs/underscore.string/lib/underscore.string.js'
-                    'libs/restangular/dist/restangular.js'
-                ]
+    ### ###########################################################################################
+    #   Bower dependancies configuration
+    ### ###########################################################################################
+    bower:
+        # JavaScript libraries (order matters)
+        deps:
+            jquery:
+                version: '~2.1.1'
+                files: 'dist/jquery.js'
+            angular:
+                version: ANGULAR_TAG
+                files: 'angular.js'
+            "angular-animate":
+                version: ANGULAR_TAG
+                files: 'angular-animate.js'
+            "angular-bootstrap":
+                version: '~0.11.0'
+                files: 'ui-bootstrap-tpls.js'
+            "angular-ui-router":
+                version: '~0.2.10'
+                files: 'release/angular-ui-router.js'
+            lodash:
+                version: "~2.4.1"
+                files: 'dist/lodash.js'
+            'underscore.string':
+                version: "~2.3.3"
+                files: 'lib/underscore.string.js'
+            "font-awesome":
+                version: "~4.1.0"
+                files: []
+            "bootstrap":
+                version: "~3.1.1"
+                files: []
+        testdeps:
+            "angular-mocks":
+                version: ANGULAR_TAG
+                files: "angular-mocks.js"
 
 You can override more file patterns. See the defaultconfig.coffee for list of patterns available.
 Normally, only the Javascript libraries are needed to configure.
@@ -127,4 +142,5 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.2.1: doc update
 * 0.2.0: better defaults, add support for automatic bower dependancy fetching
