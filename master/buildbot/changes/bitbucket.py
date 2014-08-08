@@ -137,15 +137,15 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     yield self._setCurrentRev(nr, revision)
                     # emit the change
                     yield self.master.data.updates.addChange(
-                        author=author,
-                        revision=revision,
-                        revlink=revlink,
-                        comments='pull-request #%d: %s\n%s' % (nr, title, prlink),
+                        author=ascii2unicode(author),
+                        revision=ascii2unicode(revision),
+                        revlink=ascii2unicode(revlink),
+                        comments=u'pull-request #%d: %s\n%s' % (nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
                         branch=self.branch,
                         category=self.category,
                         project=self.project,
-                        repository=repo,
+                        repository=ascii2unicode(repo),
                         src=u'bitbucket',
                     )
 
