@@ -22,28 +22,32 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class SessionConfigResource(www.WwwTestMixin, unittest.TestCase):
+class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_render(self):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
         master = self.make_master(url='h:/a/b/', auth=_auth)
-        rsrc = config.SessionConfigResource(master)
+        rsrc = config.IndexResource(master, "foo")
         rsrc.reconfigResource(master.config)
+        rsrc.jinja = mock.Mock()
+        template = mock.Mock()
+        rsrc.jinja.get_template = lambda x: template
+        template.render = lambda configjson, config: configjson
 
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = 'this.config = {"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
-        self.assertEqual(res, exp)
+        exp = '{"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        self.assertIn(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
-        exp = 'this.config = {"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
-        self.assertEqual(res, exp)
+        exp = '{"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
+        self.assertIn(res, exp)
 
         master = self.make_master(url='h:/a/c/', auth=_auth)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = 'this.config = {"url": "h:/a/c/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
-        self.assertEqual(res, exp)
+        exp = '{"url": "h:/a/c/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        self.assertIn(res, exp)

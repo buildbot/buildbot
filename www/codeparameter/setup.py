@@ -19,7 +19,7 @@ from buildbot_pkg import setup_www_plugin
 
 setup_www_plugin(
     name='buildbot-codeparameter',
-    description='Buildbot parameter that use ace.js to display code',
+    description='Buildbot Forcescheduler Parameter that use ace.js to display code',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',

@@ -132,7 +132,6 @@ describe 'Console view controller', ->
                 # Inject controller dependencies
                 $scope: scope
                 buildbotService: buildbotServiceMock
-                d3Service: d3ServiceMock
 
     beforeEach(inject(injected))
 

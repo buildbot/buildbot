@@ -14,15 +14,18 @@
 # Copyright Buildbot Team Members
 
 import subprocess
-from distutils.version import LooseVersion
+
 from distutils.command.build import build
-from setuptools.command.egg_info import egg_info
+from distutils.version import LooseVersion
 from setuptools import setup
+from setuptools.command.egg_info import egg_info
 
 import os
 
+
 def check_output(cmd):
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
 
 def getVersion(init_file):
     version = "0.9.0-unknown"
@@ -86,6 +89,8 @@ def getVersion(init_file):
 # This is why we override both egg_info and build, and the first run build the js.
 
 js_built = False
+
+
 def build_js(cmd):
     global js_built
     if js_built:
@@ -97,22 +102,29 @@ def build_js(cmd):
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
         cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod'])
-    cmd.copy_tree('static', "build/lib/static")
-    cmd.copy_file('VERSION', "build/lib")
+    cmd.copy_tree('static', os.path.join("build", "lib", "static"))
+
+    with open(os.path.join("build", "lib", "VERSION"), "w") as f:
+        f.write(cmd.distribution.metadata.version)
+
     js_built = True
 
 
 class my_build(build):
+
     def run(self):
         build_js(self)
         return build.run(self)
 
+
 class my_egg_info(egg_info):
+
     def run(self):
         build_js(self)
         return egg_info.run(self)
 
 cmdclassforjs = dict(build=my_build, egg_info=my_egg_info)
 
+
 def setup_www_plugin(**kw):
-    setup(version=getVersion("VERSION"), cmdclass=cmdclassforjs, **kw)
+    setup(version=getVersion("."), cmdclass=cmdclassforjs, **kw)

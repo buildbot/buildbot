@@ -109,14 +109,10 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if $slow; then
-    for module in www www/console_view;
+    for module in www www/console_view www/waterfall_view www/codeparameter;
     do
         status "running 'setup.py develop' for $module"
-        (cd $module; python setup.py develop 2>&1 >/dev/null    ) || not_ok "$module/setup.py failed"
-        status "running 'grunt ci' for $module"
-        LOG=/dev/null
-        if [[ `uname` == "Darwin" ]] ;then LOG=/dev/stdout; fi  # grunt >/dev/null hangs on osx ?!
-        (cd $module; node_modules/.bin/grunt --no-color ci 2>&1  >$LOG ) || warning "grunt ci on $module failed (warning until #2700 is resolved)"
+        (cd $module; python setup.py develop >/dev/null    ) || not_ok "$module/setup.py failed"
     done
 fi
 if $slow; then

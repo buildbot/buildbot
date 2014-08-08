@@ -16,8 +16,11 @@
 # Copyright Buildbot Team Members
 
 from setuptools import setup
+import buildbot_pkg
+
 setup(
     name='buildbot_pkg',
+    version=buildbot_pkg.getVersion("."),
     description='Buildbot packaging tools',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',

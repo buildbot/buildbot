@@ -1,6 +1,6 @@
+build
+dist
 static
-.temp
-package.json
 VERSION
 node_modules
 npm-debug.log

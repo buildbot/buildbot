@@ -16,8 +16,9 @@
 import os
 import shutil
 
+from subprocess import call
+from subprocess import check_call
 from twisted.trial import unittest
-from subprocess import check_call, call
 
 
 class BuildbotPkg(unittest.TestCase):
@@ -68,4 +69,3 @@ class BuildbotPkg(unittest.TestCase):
         self.run_setup("sdist")
         check_call("pip install dist/*.tar.gz", shell=True, cwd=self.www)
         self.check_correct_installation()
-
