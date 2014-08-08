@@ -59,6 +59,8 @@ m.controller 'waterfallController',
 
                 # Minimum builder column width (px)
                 minColumnWidth: cfg.minColumnWidth or 40
+                # Maximum builder column width (px)
+                maxColumnWidth: cfg.maxColumnWidth or 80
 
                 # Y axis time format (new line: ^)
                 timeFormat: cfg.timeFormat or '%x^%I:%M'
@@ -156,10 +158,24 @@ m.controller 'waterfallController',
         # Set the content width
         ###
         setWidth: ->
-            if (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length >= @c.minColumnWidth
-                width = '100%'
+
+            if @c.minColumnWidth > 0 and @c.maxColumnWidth > 0 and @c.minColumnWidth <= @c.maxColumnWidth
+                columnWidth = (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length
+
+                narrower =  columnWidth <= @c.maxColumnWidth
+                wider = @c.minColumnWidth <= columnWidth
+
+                width =
+                    if narrower and wider then '100%'
+                    else if narrower
+                        "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+                    else
+                        "#{@builders.length * @c.maxColumnWidth + @c.margin.right + @c.margin.left}px"
+
             else
-                width = "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+                @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}\n\t max: #{@c.maxColumnWidth}"
+                width = 40
+
             @d3.select('.header-content').style('width', width)
             @d3.select('.inner-content').style('width', width)
 
