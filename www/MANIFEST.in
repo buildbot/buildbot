@@ -1,3 +1,2 @@
-include package.json
 include VERSION
 recursive-include static *

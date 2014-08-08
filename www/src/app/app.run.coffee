@@ -10,12 +10,3 @@ angular.module('app').run [
                 console.log config.on_load_warning
             , 500
     ]
-
-config = @config
-@config = undefined  # prevent modules to access config via the global variable
-config ?= {plugins: {}, url: "", devmode: true}
-
-# make the config global variable accessible as a DI module
-# so that it can be mocked in tests
-angular.module('buildbot.common').constant("config", config)
-angular.module('bowerconfigs',[]).constant("bowerconfigs", {})

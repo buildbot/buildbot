@@ -12,10 +12,10 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
         block content
         block footer
 
-    script
-        | window.config={{configjson}}
     script(src="scripts.js")
     | {% for app in config.plugins -%}
     script(src="{{app}}/scripts.js")
     link(rel='stylesheet', href='{{app}}/styles.css')
     | {%- endfor -%}
+    script
+        | angular.module("app").constant("config", {{configjson}})

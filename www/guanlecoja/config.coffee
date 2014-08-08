@@ -62,6 +62,12 @@ config =
             d3:  # d3 is loaded on demand via d3Service
                 version: "~3.4.11"
                 files: []
+            "font-awesome":
+                version: "~4.1.0"
+                files: []
+            "bootstrap":
+                version: "~3.1.1"
+                files: []
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG
