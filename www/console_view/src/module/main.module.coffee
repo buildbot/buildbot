@@ -32,7 +32,7 @@ m.config ($stateProvider) ->
 
     $stateProvider.state(state)
 
-m.controller 'consoleController', class
+m.controller 'consoleController', ["$scope", "$q", "$window", "buildbotService", class
     constructor: (@$scope, $q, $window, @buildbotService) ->
         builds = @buildbotService.all('builds').bind @$scope
         builders = @buildbotService.all('builders').bind @$scope
@@ -84,3 +84,4 @@ m.controller 'consoleController', class
 
     showBuilderNames: ->
         @bigHeader = !@bigHeader
+]
