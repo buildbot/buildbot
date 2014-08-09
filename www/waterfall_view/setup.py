@@ -33,6 +33,6 @@ setup_www_plugin(
     py_modules=['buildbot_www'],
     entry_points="""
         [buildbot.www]
-        base = buildbot_www:ep
+        waterfall_view = buildbot_waterfall_view:ep
     """,
 )

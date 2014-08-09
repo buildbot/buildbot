@@ -32,6 +32,6 @@ setup_www_plugin(
     py_modules=['buildbot_www'],
     entry_points="""
         [buildbot.www]
-        base = buildbot_www:ep
+        codeparameter = buildbot_codeparameter:ep
     """,
 )
