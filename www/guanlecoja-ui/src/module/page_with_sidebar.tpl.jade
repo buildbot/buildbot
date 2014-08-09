@@ -1,0 +1,23 @@
+.gl-page-with-side-bar(ng-class="{'active': c.toggle}")
+    .sidebar.sidebar-blue(ng-mouseenter='c.toggle=1', ng-mouseleave='c.toggle=0')
+        ul
+            li.sidebar-main
+                a(href='#', ng-click='c.toggle=!c.toggle')
+                    | Dashboard
+                    span.menu-icon.fa.fa-bars
+            li.sidebar-title
+                span NAVIGATION
+            div(ng-repeat="group in groups")
+                li.sidebar-list
+                    a(ui-sref='group.sref')
+                        | {{group.caption}}
+                        span.menu-icon.fa(ng-class="'fa-' + group.icon")
+                li.sidebar-list.subitem(ng-repeat="item in group.items")
+                    a(ui-sref='item.sref')
+                        | {{item.caption}}
+        .sidebar-footer
+            .col-xs-4(ng-repeat="item in footer")
+                a(ng-href='item.href')
+                    | {{item.caption}}
+    .content
+        div(ng-transclude)
