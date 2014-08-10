@@ -18,7 +18,7 @@ describe 'Change row directive controller', ->
         # Put fake html template to templateCache
         # The other solution would be to use ngHtml2JsPreprocessor, but in this case
         # only the directive controller is tested
-        $templateCache.put('console_view/views/changerow.html', '<div></div>')
+        $templateCache.put('buildbot.console_view/views/changerow.html', '<div></div>')
 
         $scope = $rootScope.$new()
         element = angular.element('<change-row change="change"></change-row>')

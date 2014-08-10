@@ -7,7 +7,7 @@ angular.module('buildbot.console_view').directive 'changeRow',
             cellWidth: '='
             change: '='
         }
-        templateUrl: 'console_view/views/changerow.html'
+        templateUrl: 'buildbot.console_view/views/changerow.html'
         controller: ['$scope', 'resultsService', '$modal', class
             constructor: ($scope, resultsService, @$modal) ->
                 angular.extend @, resultsService
@@ -41,7 +41,7 @@ angular.module('buildbot.console_view').directive 'changeRow',
 
             selectBuild: (build) ->
                 modal = @$modal.open
-                    templateUrl: 'console_view/views/modal.html'
+                    templateUrl: 'buildbot.console_view/views/modal.html'
                     controller: 'modalController as modal'
                     windowClass: 'modal-small'
                     resolve:

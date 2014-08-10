@@ -1,6 +1,5 @@
-app = angular.module('app')
-# add ui-ace to the list of needed modules
-app.requires.push("ui.ace")
+app = angular.module('buildbot.codeparameter', ["ui.ace"])
+angular.module('app').requires.push("buildbot.codeparameter")
 
 # setup ace to fetch its module from the plugin baseURL
 app.run  (config) ->
@@ -12,4 +11,4 @@ app.directive 'codefield', ->
     replace: false
     restrict: 'E'
     scope: false
-    templateUrl: "codeparameter/views/codefield.html"
+    templateUrl: "buildbot.codeparameter/views/codefield.html"

@@ -20,7 +20,7 @@ describe 'Console view', ->
         data = state.data
         expect(state.controller).toBe("#{name}Controller")
         expect(state.controllerAs).toBe('c')
-        expect(state.templateUrl).toBe("console_view/views/#{name}.html")
+        expect(state.templateUrl).toBe("buildbot.console_view/views/#{name}.html")
         expect(state.url).toBe("/#{name}")
         expect(data.tabid).toBe(name)
         expect(data.tabhash).toBe("##{name}")

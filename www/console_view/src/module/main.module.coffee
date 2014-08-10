@@ -25,7 +25,7 @@ m.config ($stateProvider) ->
     state =
         controller: "#{name}Controller"
         controllerAs: "c"
-        templateUrl: "console_view/views/#{name}.html"
+        templateUrl: "buildbot.console_view/views/#{name}.html"
         name: name
         url: "/#{name}"
         data: cfg

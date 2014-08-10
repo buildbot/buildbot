@@ -27,7 +27,7 @@ m.config ['$stateProvider',
         state =
             controller: "#{name}Controller"
             controllerAs: "w"
-            templateUrl: "waterfall_view/views/#{name}.html"
+            templateUrl: "buildbot.waterfall_view/views/#{name}.html"
             name: name
             url: "/#{name}"
             data: cfg
@@ -474,7 +474,7 @@ m.controller 'waterfallController',
             click = (build) ->
                 # Open modal on click
                 modal = self.$modal.open
-                    templateUrl: 'waterfall_view/views/modal.html'
+                    templateUrl: 'buildbot.waterfall_view/views/modal.html'
                     controller: 'modalController as modal'
                     windowClass: 'modal-small'
                     resolve:

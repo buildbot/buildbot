@@ -7,7 +7,7 @@ angular.module('buildbot.console_view').directive 'buildersHeader',
             cellWidth: '='
             builders: '='
         }
-        templateUrl: 'console_view/views/buildersheader.html'
+        templateUrl: 'buildbot.console_view/views/buildersheader.html'
         controller: ['$scope', class
             constructor: ($scope) ->
                 $scope.$watch 'width', (@width) =>
