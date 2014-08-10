@@ -1,38 +1,39 @@
-name = 'buildbot.console_view'
-dependencies = [
-    'ui.router'
-    'ui.bootstrap'
-    'buildbot.common'
-    'ngAnimate'
-]
-
 # Register new module
-m = angular.module name, dependencies
-angular.module('app').requires.push(name)
+class ConsoleView extends App
+    constructor: -> return [
+        'ui.router'
+        'ui.bootstrap'
+        'buildbot.common'
+        'ngAnimate'
+    ]
 
-m.config ($stateProvider) ->
+# TODO replace
+angular.module('app').requires.push('console_view')
 
-    # Name of the state
-    name = 'console'
+class State extends Config
+    constructor: ($stateProvider) ->
 
-    # Configuration
-    cfg =
-        tabid: name
-        tabhash: "##{name}"
-        caption: 'Console View'
+        # Name of the state
+        name = 'console'
 
-    # Register new state
-    state =
-        controller: "#{name}Controller"
-        controllerAs: "c"
-        templateUrl: "console_view/views/#{name}.html"
-        name: name
-        url: "/#{name}"
-        data: cfg
+        # Configuration
+        cfg =
+            tabid: name
+            tabhash: "##{name}"
+            caption: 'Console View'
 
-    $stateProvider.state(state)
+        # Register new state
+        state =
+            controller: "#{name}Controller"
+            controllerAs: "c"
+            templateUrl: "console_view/views/#{name}.html"
+            name: name
+            url: "/#{name}"
+            data: cfg
 
-m.controller 'consoleController', ["$scope", "$q", "$window", "buildbotService", class
+        $stateProvider.state(state)
+
+class Console extends Controller
     constructor: (@$scope, $q, $window, @buildbotService) ->
         builds = @buildbotService.all('builds').bind @$scope
         builders = @buildbotService.all('builders').bind @$scope
@@ -40,6 +41,7 @@ m.controller 'consoleController', ["$scope", "$q", "$window", "buildbotService",
         buildrequests = @buildbotService.all('buildrequests').bind @$scope
         buildsets = @buildbotService.all('buildsets').bind @$scope
 
+        @loading = true
         $q.all([builds, builders, changes, buildrequests, buildsets])
         .then ([@builds, @builders, @changes, @buildrequests, @buildsets]) =>
             @loading = false
@@ -51,16 +53,17 @@ m.controller 'consoleController', ["$scope", "$q", "$window", "buildbotService",
                         builderid: builder.builderid
 
             for build in @builds
-                @_matchBuildWithChange(build)
+                @matchBuildWithChange(build)
 
-            @_setWidth($window.innerWidth)
+            @setWidth($window.innerWidth)
             angular.element($window).bind 'resize', =>
-                @_setWidth($window.innerWidth)
+                @setWidth($window.innerWidth)
                 $scope.$apply()
 
-    loading: true
-
-    _matchBuildWithChange: (build) =>
+    ###
+    # Match builds with a change
+    ###
+    matchBuildWithChange: (build) =>
         buildrequest = @buildrequests[build.buildrequestid - 1]
         buildset = @buildsets[buildrequest.buildsetid - 1]
         if buildrequest? and buildset? and buildset.sourcestamps?
@@ -69,19 +72,24 @@ m.controller 'consoleController', ["$scope", "$q", "$window", "buildbotService",
                     if change.sourcestamp.ssid == sourcestamp.ssid
                         change.builds[build.builderid - 1] = build
 
-    _setWidth: (width) ->
+    ###
+    # Set the content width
+    ###
+    setWidth: (width) ->
         @cellWidth = "#{100 / @builders.length}%"
         if (0.85 * width) / @builders.length > 40
             @width = '100%'
         else
             @width = "#{@builders.length * 40 / 0.85}px"
 
+    ###
+    # Open all change row information
+    ###
     openAll: ->
         @$scope.$broadcast('showAllInfo', false)
 
+    ###
+    # Close all change row information
+    ###
     closeAll: ->
         @$scope.$broadcast('showAllInfo', true)
-
-    showBuilderNames: ->
-        @bigHeader = !@bigHeader
-]

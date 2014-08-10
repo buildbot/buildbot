@@ -1,6 +1,6 @@
 beforeEach ->
     # Mocked dependency
-    module 'buildbot.console_view'
+    module 'console_view'
 
 describe 'Builders header directive controller', ->
     $scope = controllerData = null

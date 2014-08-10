@@ -27,6 +27,7 @@ module.exports =
             "angular-mocks":
                 version: ANGULAR_TAG
                 files: "angular-mocks.js"
+
     karma:
         # we put tests first, so that we have angular, and fake app defined
         files: ["tests.js", "scripts.js", 'fixtures.js']

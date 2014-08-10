@@ -1,8 +1,7 @@
-angular.module('buildbot.console_view').controller 'modalController',
-    ['$rootScope', '$modalInstance', 'selectedBuild', class
-        constructor: ($rootScope, @$modalInstance, @selectedBuild) ->
-            $rootScope.$on '$stateChangeStart', => @close()
+class ConsoleModal extends Controller('console_view')
+    constructor: ($scope, @$modalInstance, @selectedBuild) ->
+        $scope.$on '$stateChangeStart', =>
+            @close()
 
-        close: ->
-            @$modalInstance.dismiss()
-    ]
+    close: ->
+        @$modalInstance.close()
