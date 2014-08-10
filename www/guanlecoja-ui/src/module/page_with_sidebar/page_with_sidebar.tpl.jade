@@ -1,19 +1,19 @@
-.gl-page-with-side-bar(ng-class="{'active': c.toggle}")
-    .sidebar.sidebar-blue(ng-mouseenter='c.toggle=1', ng-mouseleave='c.toggle=0')
+.gl-page-with-side-bar(ng-class="{'active': page.sidebarActive}")
+    .sidebar.sidebar-blue(ng-mouseenter='page.sidebarActive=1', ng-mouseleave='page.sidebarActive=0')
         ul
             li.sidebar-main
-                a(href='#', ng-click='c.toggle=!c.toggle')
+                a(href='#', ng-click='page.sidebarActive=!page.sidebarActive')
                     | Dashboard
                     span.menu-icon.fa.fa-bars
             li.sidebar-title
                 span NAVIGATION
             div(ng-repeat="group in groups")
                 li.sidebar-list
-                    a(ui-sref='group.sref')
+                    a(ui-sref='{{group.sref}}', ng-click='page.toggleGroup(group)')
                         | {{group.caption}}
                         span.menu-icon.fa(ng-class="'fa-' + group.icon")
-                li.sidebar-list.subitem(ng-repeat="item in group.items")
-                    a(ui-sref='item.sref')
+                li.sidebar-list.subitem(ng-class="{'active': page.activeGroup==group}", ng-repeat="item in group.items")
+                    a(ui-sref='{{item.sref}}')
                         | {{item.caption}}
         .sidebar-footer
             .col-xs-4(ng-repeat="item in footer")

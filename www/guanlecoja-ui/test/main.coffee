@@ -1,17 +1,33 @@
-beforeEach module 'guanlecoja.ui'
-describe 'minimalistic test', ->
-    elmBody = scope = null
+unless __karma__?
+    window.describe = ->
 
-    injected = ($rootScope, $compile) ->
-        elmBody = angular.element(
-          '<sidemenu></sidemenu>'
-        )
+# define sample application logic
 
-        scope = $rootScope;
-        $compile(elmBody)(scope);
-        scope.$digest();
+m = angular.module("app", ["guanlecoja.ui"]);
 
-    beforeEach (inject(injected))
+m.config ($stateProvider) ->
 
-    it 'should load ', ->
-        expect(elmBody).toBeDefined()
+        groups = []
+        for i in ["cab", "camera", "bug", "calendar", "ban", "archive", "edit"]
+            group =
+                name: i
+                items: []
+            for j in ["cab", "camera", "bug", "calendar", "ban", "archive", "edit"]
+                group.items.push
+                    name: i + j
+            groups.push group
+
+        for group in groups
+            for item in group.items
+                state =
+                    controller: "dummyController"
+                    template: "<h1>{{stateName}}</h1>"
+                    name: item.name
+                    url: '/' + item.name
+                    data:
+                        group: group.name
+                        caption: _.string.humanize(item.name)
+                $stateProvider.state(state)
+
+m.controller "dummyController", ($scope, $state) ->
+    $scope.stateName = $state.current.name

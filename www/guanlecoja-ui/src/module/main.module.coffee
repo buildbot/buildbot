@@ -1,1 +1,1 @@
-angular.module("guanlecoja.ui", [])
+angular.module("guanlecoja.ui", ["ui.bootstrap", "ui.router"])

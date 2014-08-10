@@ -1,50 +1,9 @@
 extends layout
 
 block scripts
-    script
-        | angular.module("app", ["guanlecoja.ui", "ui.bootstrap"]);
+    script(src="tests.js")
 
 block content
     gl-page-with-sidebar
-        .page-content
-          // Header Bar
-          .row.header
-            .col-xs-12
-              .meta.pull-left
-                .page
-                  | Dashboard
-                .breadcrumb-links
-                  | Home / Dashboard
-              .user.pull-right
-                .item.dropdown
-                  a.dropdown-toggle(href='#')
-                    img(src='img/avatar.jpg')
-                  ul.dropdown-menu.dropdown-menu-right
-                    li.dropdown-header
-                      | Joe Bloggs
-                    li.divider
-                    li.link
-                      a(href='#')
-                        | Profile
-                    li.link
-                      a(href='#')
-                        | Menu Item
-                    li.link
-                      a(href='#')
-                        | Menu Item
-                    li.divider
-                    li.link
-                      a(href='#')
-                        | Logout
-                .item.dropdown
-                  a.dropdown-toggle(href='#')
-                    i.fa.fa-bell-o
-                  ul.dropdown-menu.dropdown-menu-right
-                    li.dropdown-header
-                      | Notifications
-                    li.divider
-                    li
-                      a(href='#') Server Down!
-          // End Header Bar
-          alertbar
-          ui-view
+        gl-topbar
+        ui-view

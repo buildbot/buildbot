@@ -1,0 +1,95 @@
+.gl-topbar {
+
+    margin-left: 0;
+    margin-right: 0;
+    height: 60px;
+    background: #fff;
+    margin-bottom: 15px;
+    > div:last-child {
+        padding-right: 0;
+    }
+    .meta .page {
+        font-size: 17px;
+        padding-top: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    @media only screen and (min-width : 993px) {
+        .meta .page {
+          width: 380px;
+        }
+    }
+    @media only screen and (max-width : 992px) {
+        .meta .page {
+            width: 180px;
+        }
+    }
+    .meta .breadcrumb-links {
+        font-size: 10px;
+    }
+    .login a {
+        padding: 18px;
+        display: block;
+    }
+    .user {
+        > .item {
+            width: 65px;
+            height: 60px;
+            float: right;
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            a {
+                color: #919191;
+                display: block;
+            }
+            i {
+                font-size: 20px;
+                line-height: 55px;
+            }
+            img {
+                width: 40px;
+                height: 40px;
+                margin-top: 10px;
+                border-radius: 2px;
+            }
+            ul.dropdown-menu {
+                border-radius: 2px;
+                -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.05);
+                box-shadow: 0 6px 12px rgba(0,0,0,.05);
+            }
+            ul.dropdown-menu:before {
+                position: absolute;
+                top: -7px;
+                right: 23px;
+                display: inline-block;
+                border-right: 7px solid transparent;
+                border-bottom: 7px solid #ccc;
+                border-left: 7px solid transparent;
+                border-bottom-color: rgba(0, 0, 0, 0.2);
+                content: '';
+            }
+            ul.dropdown-menu:after {
+                position: absolute;
+                top: -6px;
+                right: 24px;
+                display: inline-block;
+                border-right: 6px solid transparent;
+                border-bottom: 6px solid #ffffff;
+                border-left: 6px solid transparent;
+                content: '';
+            }
+            ul.dropdown-menu .dropdown-header {
+                text-align: center;
+            }
+            ul.dropdown-menu li.link {
+                text-align: left;
+            }
+            ul.dropdown-menu li.link a {
+                padding-left: 7px;
+                padding-right: 7px;
+            }
+        }
+    }
+}

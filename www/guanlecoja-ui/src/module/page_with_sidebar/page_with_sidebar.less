@@ -1,7 +1,10 @@
+/* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
+@gl-sidebar-transition-time: 0.2s;
 .gl-page-with-side-bar {
     padding-left: 70px;
     height: 100%;
     bottom: 0;
+    /* theme */
     .sidebar.sidebar-blue {
         background: #30426a;
         ul .sidebar-main, .sidebar-footer, a:hover {
@@ -11,7 +14,8 @@
             color: #627cb7;
         }
     }
-    transition: all .2s ease 0s;
+    /* animations */
+    transition: all @gl-sidebar-transition-time ease-out 0s;
     &.active {
         transform: translate(180px, 0px);
         -webkit-transform: translate(180px, 0px);
@@ -40,7 +44,12 @@
             display: none;
         }
     }
+    /* sidebar */
     .sidebar {
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
         margin-left: -150px;
         left: -30px;
         width: 250px;
@@ -104,9 +113,25 @@
                 a:hover .menu-icon {
                     text-indent: 25px;
                 }
+                &.subitem {
+                    transition: height @gl-sidebar-transition-time ease-out 0s;
+                    a {
+                        padding-left:20px;
+                        transition: line-height @gl-sidebar-transition-time ease-out 0s, color @gl-sidebar-transition-time ease-out 0s;
+                    }
+                    &:not(.active) {
+                        height: 0px;
+                        a {
+                            line-height: 0px;
+                            color: rgba(255, 0, 0, 0.0);
+                        }
+                    }
+
+                }
             }
         }
     }
+    /* footer */
     .footer {
         position: absolute;
         height: 40px;
@@ -125,6 +150,7 @@
             text-decoration: none;
         }
     }
+    /* content */
     .content {
         padding-left: 0;
         margin-left: 0;

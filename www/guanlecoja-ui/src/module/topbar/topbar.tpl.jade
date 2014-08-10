@@ -1,0 +1,37 @@
+.gl-topbar.row
+    .col-xs-12
+        .pull-left
+            .page
+              | {{page.applicationName}}
+            ng-breadcrumb.breadcrumb-links
+              | Home / Dashboard
+        .user.pull-right
+            .item.dropdown
+                a.dropdown-toggle(href='#')
+                  img(src='img/avatar.jpg')
+                ul.dropdown-menu.dropdown-menu-right
+                    li.dropdown-header
+                        | Joe Bloggs
+                    li.divider
+                    li.link
+                        a(href='#')
+                            | Profile
+                    li.link
+                        a(href='#')
+                            | Menu Item
+                    li.link
+                        a(href='#')
+                            | Menu Item
+                    li.divider
+                    li.link
+                        a(href='#')
+                            | Logout
+            .item.dropdown
+                a.dropdown-toggle(href='#')
+                    i.fa.fa-bell-o
+                ul.dropdown-menu.dropdown-menu-right
+                    li.dropdown-header
+                        | Notifications
+                    li.divider
+                    li
+                        a(href='#') Server Down!
