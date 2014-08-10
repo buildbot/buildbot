@@ -142,5 +142,6 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.2.2: add optional server, handle errors correctly in watch mode
 * 0.2.1: doc update
 * 0.2.0: better defaults, add support for automatic bower dependancy fetching

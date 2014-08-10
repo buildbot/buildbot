@@ -28,6 +28,8 @@ lr = require 'gulp-livereload'
 cssmin = require 'gulp-minify-css'
 less = require 'gulp-less'
 fixtures2js = require 'gulp-fixtures2js'
+connect = require('connect')
+serve_static = require("serve-static")
 
 module.exports =  (gulp) ->
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
@@ -50,18 +52,30 @@ module.exports =  (gulp) ->
     # we do it synchronously to simplify things
     require('rimraf').sync(config.dir.build)
 
-    script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates)
+    error_handler = (e) ->
+        error = gutil.colors.bold.red;
+        if e.fileName?
+            gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
+        else
+            gutil.log(error("#{e.plugin}:#{e.name}"))
+        gutil.log(error(e.message))
+        gutil.beep()
+        @.end()
+        @emit("end")
+        if not dev
+            throw e
 
+    # libs first, then app, then the rest
+    script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates)
     gulp.task 'scripts', ->
-        # libs first, then app, then the rest
         gulp.src script_sources
-            .pipe cached('scripts')
             .pipe gif(dev, sourcemaps.init())
+            .pipe cached('scripts')
             # coffee build
-            .pipe(gif("*.coffee", ngClassify())).on('error', gutil.log)
-            .pipe(gif("*.coffee", coffee())).on('error', gutil.log)
+            .pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler)))
+            .pipe(gif("*.coffee", coffee().on('error', error_handler)))
             # jade build
-            .pipe(gif("*.jade", jade())).on('error', gutil.log)
+            .pipe(gif("*.jade", jade().on('error', error_handler)))
             .pipe gif "*.html", rename (p) ->
                 if config.name?
                     p.dirname = path.join(config.name, "views")
@@ -69,8 +83,8 @@ module.exports =  (gulp) ->
                     p.dirname = "views"
                 p.basename = p.basename.replace(".tpl","")
                 null
-            .pipe(gif("*.html", templateCache({module:"app"})))
             .pipe remember('scripts')
+            .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe concat("scripts.js")
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, annotate())
@@ -80,14 +94,13 @@ module.exports =  (gulp) ->
             .pipe gif(dev, lr())
 
     gulp.task 'tests', ->
-        gutil.log bower.testdeps
         src = bower.testdeps.concat(config.files.tests)
         gulp.src src
             .pipe cached('tests')
             .pipe gif(dev, sourcemaps.init())
             # coffee build
-            .pipe(gif("*.coffee", ngClassify()))
-            .pipe(gif("*.coffee", coffee())).on('error', gutil.log)
+            .pipe(gif("*.coffee", ngClassify(config.ngclassify)))
+            .pipe(gif("*.coffee", coffee().on('error', error_handler)))
             .pipe remember('tests')
             .pipe concat("tests.js")
             .pipe gif(dev, sourcemaps.write("."))
@@ -108,7 +121,7 @@ module.exports =  (gulp) ->
     gulp.task 'styles', ->
         gulp.src config.files.less
             .pipe cached('styles')
-            .pipe less()
+            .pipe less().on('error', error_handler)
             .pipe remember('styles')
             .pipe concat("styles.css")
             .pipe gif(prod, cssmin())
@@ -128,15 +141,23 @@ module.exports =  (gulp) ->
 
     gulp.task 'index', ->
         gulp.src config.files.index
-            .pipe jade()
+            .pipe jade().on('error', error_handler)
             .pipe gulp.dest config.dir.build
 
-
+    # Run server.
+    gulp.task 'server', ['index'], (next) ->
+        if config.devserver?
+            connect()
+            .use(serve_static(config.dir.build))
+            .listen(config.devserver.port, next)
+        else
+            next()
     gulp.task "watch", ->
         # karma own watch mode is used. no need to restart karma
         gulp.watch(script_sources, ["scripts"])
         gulp.watch(config.files.tests, ["tests"])
         gulp.watch(config.files.less, ["styles"])
+        gulp.watch(config.files.index, ["index"])
         null
 
     gulp.task "karma", ->
@@ -151,7 +172,7 @@ module.exports =  (gulp) ->
         run_sequence config.preparetasks, config.buildtasks, config.testtasks,
             callback
 
-    gulp.task "dev", ['default', 'watch']
+    gulp.task "dev", ['default', 'watch', "server"]
 
     # prod is a fake task, which enables minification
     gulp.task "prod", ['default']

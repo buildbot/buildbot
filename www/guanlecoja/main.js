@@ -1,5 +1,5 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, cssmin, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
+  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, serve_static, sourcemaps, templateCache, uglify, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   run_sequence = require('run-sequence');
@@ -52,8 +52,12 @@
 
   fixtures2js = require('gulp-fixtures2js');
 
+  connect = require('connect');
+
+  serve_static = require("serve-static");
+
   module.exports = function(gulp) {
-    var buildConfig, config, dev, prod, script_sources;
+    var buildConfig, config, dev, error_handler, prod, script_sources;
     prod = __indexOf.call(argv._, "prod") >= 0;
     dev = __indexOf.call(argv._, "dev") >= 0;
     config = require("./defaultconfig.coffee");
@@ -62,9 +66,25 @@
     bower = bower(config.bower);
     bower.installtask(gulp);
     require('rimraf').sync(config.dir.build);
+    error_handler = function(e) {
+      var error;
+      error = gutil.colors.bold.red;
+      if (e.fileName != null) {
+        gutil.log(error("" + e.plugin + ":" + e.name + ": " + e.fileName + " +" + e.lineNumber));
+      } else {
+        gutil.log(error("" + e.plugin + ":" + e.name));
+      }
+      gutil.log(error(e.message));
+      gutil.beep();
+      this.end();
+      this.emit("end");
+      if (!dev) {
+        throw e;
+      }
+    };
     script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates);
     gulp.task('scripts', function() {
-      return gulp.src(script_sources).pipe(cached('scripts')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify())).on('error', gutil.log).pipe(gif("*.coffee", coffee())).on('error', gutil.log).pipe(gif("*.jade", jade())).on('error', gutil.log).pipe(gif("*.html", rename(function(p) {
+      return gulp.src(script_sources).pipe(gif(dev, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
         if (config.name != null) {
           p.dirname = path.join(config.name, "views");
         } else {
@@ -72,15 +92,14 @@
         }
         p.basename = p.basename.replace(".tpl", "");
         return null;
-      }))).pipe(gif("*.html", templateCache({
-        module: "app"
-      }))).pipe(remember('scripts')).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+      }))).pipe(remember('scripts')).pipe(gif("*.html", templateCache({
+        module: config.name
+      }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
     gulp.task('tests', function() {
       var src;
-      gutil.log(bower.testdeps);
       src = bower.testdeps.concat(config.files.tests);
-      return gulp.src(src).pipe(cached('tests')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify())).pipe(gif("*.coffee", coffee())).on('error', gutil.log).pipe(remember('tests')).pipe(concat("tests.js")).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build));
+      return gulp.src(src).pipe(cached('tests')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify(config.ngclassify))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(remember('tests')).pipe(concat("tests.js")).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('generatedfixtures', config.generatedfixtures);
     gulp.task('fixtures', function() {
@@ -95,7 +114,7 @@
       })).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('styles', function() {
-      return gulp.src(config.files.less).pipe(cached('styles')).pipe(less()).pipe(remember('styles')).pipe(concat("styles.css")).pipe(gif(prod, cssmin())).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+      return gulp.src(config.files.less).pipe(cached('styles')).pipe(less().on('error', error_handler)).pipe(remember('styles')).pipe(concat("styles.css")).pipe(gif(prod, cssmin())).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
     gulp.task('fonts', function() {
       return gulp.src(config.files.fonts).pipe(rename({
@@ -108,12 +127,20 @@
       })).pipe(gulp.dest(path.join(config.dir.build, "img")));
     });
     gulp.task('index', function() {
-      return gulp.src(config.files.index).pipe(jade()).pipe(gulp.dest(config.dir.build));
+      return gulp.src(config.files.index).pipe(jade().on('error', error_handler)).pipe(gulp.dest(config.dir.build));
+    });
+    gulp.task('server', ['index'], function(next) {
+      if (config.devserver != null) {
+        return connect().use(serve_static(config.dir.build)).listen(config.devserver.port, next);
+      } else {
+        return next();
+      }
     });
     gulp.task("watch", function() {
       gulp.watch(script_sources, ["scripts"]);
       gulp.watch(config.files.tests, ["tests"]);
       gulp.watch(config.files.less, ["styles"]);
+      gulp.watch(config.files.index, ["index"]);
       return null;
     });
     gulp.task("karma", function() {
@@ -128,7 +155,7 @@
     gulp.task("default", function(callback) {
       return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);
     });
-    gulp.task("dev", ['default', 'watch']);
+    gulp.task("dev", ['default', 'watch', "server"]);
     return gulp.task("prod", ['default']);
   };
 
