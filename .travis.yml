@@ -68,9 +68,13 @@ install:
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
   - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
   - "echo 'travis_fold:start:sam'; [ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE; echo 'travis_fold:end:sam'"
+  - (cd pkg;    python setup.py develop)
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
   - (cd www;    python setup.py develop)
+  - (cd www/console_view;    python setup.py develop)
+  - (cd www/waterfall_view;    python setup.py develop)
+  - (cd www/codeparameter;    python setup.py develop)
   # mock is preinstalled on Travis
   # txgithub requires Twisted >= 12.3.0
   - pip install txgithub
