@@ -1,8 +1,9 @@
-angular.module('buildbot.builders').config [ "$stateProvider", ($stateProvider) ->
-    $stateProvider.state "builder.forcebuilder",
-        url: "/force/:scheduler",
-        onEnter: ["$stateParams", "$state", "$modal", "buildbotService"
-            ($stateParams, $state, $modal, buildbotService) ->
+class State extends Config
+    constructor: ($stateProvider) ->
+        $stateProvider.state "builder.forcebuilder",
+            url: "/force/:scheduler",
+            ### @ngInject ###
+            onEnter: ($stateParams, $state, $modal, buildbotService) ->
                 scheduler = buildbotService.one('forceschedulers', $stateParams.scheduler)
                 scheduler.get().then (scheduler_data) ->
                     modal = {}
@@ -27,5 +28,3 @@ angular.module('buildbot.builders').config [ "$stateProvider", ($stateProvider) 
                         $state.go "^",
 
                     modal.modal.result.then(goBuild, goUp)
-            ]
-]

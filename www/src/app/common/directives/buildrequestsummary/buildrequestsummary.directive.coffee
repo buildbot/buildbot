@@ -1,23 +1,19 @@
-angular.module('buildbot.common').directive 'buildrequestsummary',
-['$log', 'RecursionHelper',
-    ($log, RecursionHelper) ->
-        replace: true
-        restrict: 'E'
-        scope: {buildrequestid:'='}
-        templateUrl: 'views/buildrequestsummary.html'
-        compile: RecursionHelper.compile
-        controller: 'buildrequestsummaryController'
-]
+class Buildrequestsummary extends Directive('common')
+    constructor: (RecursionHelper) ->
+        return {
+            replace: true
+            restrict: 'E'
+            scope: {buildrequestid: '='}
+            templateUrl: 'views/buildrequestsummary.html'
+            compile: RecursionHelper.compile
+            controller: '_buildrequestsummaryController'
+        }
 
-angular.module('buildbot.common').controller 'buildrequestsummaryController',
-    ['$scope', 'buildbotService', 'findBuilds',
-        ($scope, buildbotService, findBuilds) ->
+class _buildrequestsummary extends Controller('common')
+    constructor: ($scope, buildbotService, findBuilds) ->
+        $scope.$watch "buildrequest.claimed", (n, o) ->
+            if n  # if it is unclaimed, then claimed, we need to try again
+                findBuilds $scope,
+                    $scope.buildrequest.buildrequestid
 
-            $scope.$watch "buildrequest.claimed", (n,o) ->
-                if n  # if it is unclaimed, then claimed, we need to try again
-                    findBuilds $scope,
-                        $scope.buildrequest.buildrequestid
-
-            buildbotService.one('buildrequests', $scope.buildrequestid)
-            .bind($scope)
-    ]
+        buildbotService.one('buildrequests', $scope.buildrequestid).bind($scope)

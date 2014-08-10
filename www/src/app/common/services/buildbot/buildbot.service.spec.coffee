@@ -128,8 +128,8 @@ describe 'buildbot service', ->
         expect($scope.step).toBeDefined()
         expect([$scope.build, $scope.step]).toEqual(res)
 
-    it 'should return the same object for several subsequent
-            calls to all(), one() and some()', ->
+    it '''should return the same object for several subsequent
+            calls to all(), one() and some()''', ->
         r = buildbotService.all("build")
         r2 = buildbotService.all("build")
         expect(r).toBe(r2)
@@ -148,8 +148,8 @@ describe 'buildbot service', ->
         r2 = buildbotService.one("builder",1).some("build", {limit:20})
         expect(r).toBe(r2)
 
-    it 'should use one request for one endpoint, take advantage of
-            events to maintain synchronisation', ->
+    it '''should use one request for one endpoint, take advantage of
+            events to maintain synchronisation''', ->
         $httpBackend.expectDataGET('builds')
         r = buildbotService.all("builds")
         builds1 = []

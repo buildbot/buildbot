@@ -1,6 +1,5 @@
-angular.module('buildbot.alertpanel').controller 'alertPanelController',
-['$log', '$scope', '$rootScope', '$timeout', 'alert'
-    ($log, $scope, $rootScope, $timeout) ->
+class AlertPanel extends Controller
+    constructor: ($log, $scope, $rootScope, $timeout) ->
         $scope.alerts = []
         $scope.closeAlert = (index) ->
             $scope.alerts.splice(index, 1)
@@ -24,4 +23,3 @@ angular.module('buildbot.alertpanel').controller 'alertPanelController',
                         $scope.closeAlert(i)
                 null
             , 10000)
-]

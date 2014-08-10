@@ -1,5 +1,5 @@
-angular.module('app').run [
-    '$rootScope', '$log', 'config', 'alert', ($rootScope, $log, config, alert) ->
+class RouteChangeListener extends Run
+    constructor: ($rootScope, $log, config, alert) ->
         # fire an event related to the current route
         $rootScope.$on '$routeChangeSuccess', (event, currentRoute, priorRoute) ->
             $rootScope.$broadcast "#{currentRoute.controller}$routeChangeSuccess",
@@ -9,4 +9,3 @@ angular.module('app').run [
                 alert.warning(config.on_load_warning)
                 console.log config.on_load_warning
             , 500
-    ]

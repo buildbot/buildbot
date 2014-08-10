@@ -16,6 +16,8 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     | {% for app in config.plugins -%}
     script(src="{{app}}/scripts.js")
     link(rel='stylesheet', href='{{app}}/styles.css')
+    script
+        | angular.module('app').requires.push('{{app}}')
     | {%- endfor -%}
     script
         | angular.module("app").constant("config", {{configjson}})

@@ -1,4 +1,4 @@
-name = 'buildbot.common'
+name = 'common'
 dependencies = [
     'ui.router'
     'restangular'

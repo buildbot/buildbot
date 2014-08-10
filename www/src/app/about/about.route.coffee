@@ -1,5 +1,5 @@
-angular.module('buildbot.about').config ['$stateProvider',
-    ($stateProvider) ->
+class State extends Config
+    constructor: ($stateProvider) ->
         
         # Name of the state
         name = 'about'
@@ -19,4 +19,3 @@ angular.module('buildbot.about').config ['$stateProvider',
             data: cfg
 
         $stateProvider.state(state)
-]

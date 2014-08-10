@@ -1,9 +1,6 @@
-
-angular.module('buildbot.common').factory 'buildbotService',
-['$log', 'Restangular', 'mqService', '$rootScope', 'BASEURLAPI',
-    'BASEURLSSE', 'plurals', 'singulars', '$q', '$timeout', 'config',
-    ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE, plurals,
-        singulars, $q, $timeout, config) ->
+class BuildbotService extends Factory
+    constructor: ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE,
+        SINGULARS, $q, $timeout, config) ->
         jsonrpc2_id = 1
         referenceid = 1
         config.unbind_delay ?= 10 * 60 * 1000 # 10 min by default
@@ -38,8 +35,8 @@ angular.module('buildbot.common').factory 'buildbotService',
             # some point because this will be a big improve in latency
             # so we return the first elem that we now the type
             for k, v of response
-                if singulars.hasOwnProperty(k)
-                    id = singulars[k] + "id"
+                if SINGULARS.hasOwnProperty(k)
+                    id = SINGULARS[k] + "id"
                     for value in v
                         value["id"] = value[id]
                         value["_raw_data"] = angular.copy(value)
@@ -48,10 +45,10 @@ angular.module('buildbot.common').factory 'buildbotService',
                     else
                         return v[0]
             throw Error("got unexpected value from data api: #{JSON.stringify(response)},
-                         expected one of #{JSON.stringify(singulars)}")
+                         expected one of #{JSON.stringify(SINGULARS)}")
 
         onElemRestangularized = (elem, isCollection, route, Restangular) ->
-            idkey = singulars[elem.route] + "id"
+            idkey = SINGULARS[elem.route] + "id"
 
             # list the callers that reference this elem
             references = {}
@@ -116,7 +113,7 @@ angular.module('buildbot.common').factory 'buildbotService',
                 # manage default options
                 opts ?= {}
                 _.defaults opts,
-                    dest_key: if isCollection then route else singulars[route]
+                    dest_key: if isCollection then route else SINGULARS[route]
                     dest: $scope
                     ismutable: (v) ->
                         if v.complete?
@@ -180,10 +177,8 @@ angular.module('buildbot.common').factory 'buildbotService',
             r = self
             l = []
             for path in paths
-                r = r.one(path, $stateParams[singulars[path]])
+                r = r.one(path, $stateParams[SINGULARS[path]])
                 l.push(r.bind($scope))
             return $q.all(l)
         addSomeAndMemoize(self)
         return self
-
-]

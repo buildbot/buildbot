@@ -1,14 +1,21 @@
-app = angular.module('buildbot.codeparameter', ["ui.ace"])
-angular.module('app').requires.push("buildbot.codeparameter")
+# Register new module
+class Codeparameter extends App
+    constructor: -> return [
+        'ui.ace'
+        'common'
+    ]
 
 # setup ace to fetch its module from the plugin baseURL
-app.run  (config) ->
-    window.ace.config.set("basePath", config.url + "codeparameter")
-
+class AceConfig extends Run
+    constructor: (config) ->
+        window.ace.config.set("basePath", config.url + "codeparameter")
 
 # defines custom field directives which only have templates
-app.directive 'codefield', ->
-    replace: false
-    restrict: 'E'
-    scope: false
-    templateUrl: "buildbot.codeparameter/views/codefield.html"
+class Codefield extends Directive
+    constructor: ->
+        return {
+            replace: false
+            restrict: 'E'
+            scope: false
+            templateUrl: "codeparameter/views/codefield.html"
+        }

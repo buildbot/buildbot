@@ -1,5 +1,5 @@
 beforeEach ->
-    module 'buildbot.console_view'
+    module 'console_view'
     # Mock resultsService
     module ($provide) ->
         $provide.service 'resultsService', ->

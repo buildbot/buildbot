@@ -2,8 +2,8 @@
     Recent storage service
 ###
 
-angular.module('app').factory 'recentStorage',
-    ['$q', '$window', '$rootScope', ($q, $window, $rootScope) ->
+class RecentStorage extends Factory('common')
+    constructor: ($q, $window, $rootScope) ->
         self = this
         db = null
         setUp = false
@@ -111,4 +111,3 @@ angular.module('app').factory 'recentStorage',
                 ]
 
         return service
-    ]

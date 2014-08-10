@@ -1,5 +1,5 @@
-angular.module('buildbot.builders').config ['$stateProvider',
-    ($stateProvider) ->
+class State extends Config
+    constructor: ($stateProvider) ->
 
         # Name of the state
         name = 'log'
@@ -17,10 +17,3 @@ angular.module('buildbot.builders').config ['$stateProvider',
             data: cfg
 
         $stateProvider.state(state)
-]
-
-angular.module('buildbot.builders').controller 'logController',
-['$scope', 'buildbotService', '$stateParams'
-    ($scope, buildbotService, $stateParams) ->
-        buildbotService.bindHierarchy($scope, $stateParams, ["builders", "builds", 'steps', 'logs'])
-]

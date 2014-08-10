@@ -27,7 +27,7 @@ describe 'buildrequest summary controller', ->
         spyOn(mqService,"stopConsuming").and.returnValue(null)
         buildbotService = $injector.get('buildbotService')
         createController = ->
-            return $controller 'buildrequestsummaryController',
+            return $controller '_buildrequestsummaryController',
                 $scope: $scope
     beforeEach(inject(injected))
 

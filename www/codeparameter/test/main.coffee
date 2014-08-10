@@ -1,5 +1,5 @@
-angular.module("app", []).constant("config", {"url": "foourl"})
-beforeEach module 'app'
+angular.module('common', []).constant('config', {'url': 'foourl'})
+beforeEach module 'codeparameter'
 describe 'minimalistic test', ->
     elmBody = scope = null
 

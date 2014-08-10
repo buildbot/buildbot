@@ -1,6 +1,6 @@
 beforeEach module 'app'
 
-describe 'buildsummary controller', ->
+describe 'results service', ->
     resultsService = null
 
     injected = ($injector) ->

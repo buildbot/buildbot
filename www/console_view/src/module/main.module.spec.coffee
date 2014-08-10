@@ -1,10 +1,10 @@
 beforeEach ->
     # Mocked module dependencies
-    angular.module 'buildbot.common', []
+    angular.module 'common', []
     angular.module 'ui.bootstrap', []
     angular.module 'ngAnimate', []
 
-    module 'buildbot.console_view'
+    module 'console_view'
 
 describe 'Console view', ->
     $state = null

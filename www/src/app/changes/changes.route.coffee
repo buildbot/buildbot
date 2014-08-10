@@ -2,18 +2,20 @@ class State extends Config
     constructor: ($stateProvider) ->
 
         # Name of the state
-        name = 'builder'
+        name = 'changes'
 
         # Configuration
         cfg =
-            tabid: 'builders'
+            tabid: name
+            tabhash: "##{name}"
+            caption: 'Last Changes'
 
         # Register new state
         state =
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/builders/:builder'
+            url: '/changes'
             data: cfg
 
         $stateProvider.state(state)

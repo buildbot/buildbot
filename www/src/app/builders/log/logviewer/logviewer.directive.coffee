@@ -1,7 +1,6 @@
 # logviewer. This directive uses jquery for simplicity
-angular.module('buildbot.builders').directive 'logviewer',
-['$log', '$window', 'buildbotService', "$timeout", "$sce",
-    ($log, $window, buildbotService, $timeout, $sce) ->
+class Logviewer extends Directive
+    constructor: ($log, $window, buildbotService, $timeout, $sce) ->
         $window = angular.element($window)
 
         directive = ->
@@ -153,4 +152,3 @@ angular.module('buildbot.builders').directive 'logviewer',
         link: (scope, elm, attr) ->
             self = directive()
             self.link(scope, elm, attr)
-    ]

@@ -4,26 +4,27 @@
 # parent template to have to know each field type in a big ng-switch
 # This is done by merging compile and link phasis, so that the template
 # includes directives whose types depend on the model.
-angular.module('buildbot.common').directive 'forcefield',
-['$log', '$compile', 'RecursionHelper', ($log, $compile, RecursionHelper) ->
-    replace: true
-    restrict: 'E'
-    scope: {field:"="}
-    compile: (element, attrs) ->
-        return RecursionHelper.compile element, (scope, element, attrs) ->
-            if scope.field.type == 'nested'
-                t = scope.field.layout + "layout"
-            else
-                t = scope.field.type + "field"
-            element.html("<#{t}></#{t}>").show()
-            $compile(element.contents())(scope)
-]
+class Forcefield extends Directive('common')
+    constructor: ($log, $compile, RecursionHelper) ->
+        return {
+            replace: true
+            restrict: 'E'
+            scope: {field:"="}
+            compile: (element, attrs) ->
+                return RecursionHelper.compile element, (scope, element, attrs) ->
+                    if scope.field.type == 'nested'
+                        t = scope.field.layout + "layout"
+                    else
+                        t = scope.field.type + "field"
+                    element.html("<#{t}></#{t}>").show()
+                    $compile(element.contents())(scope)
+        }
 
 # these directives, combined with "recursive" implement
 # the template of recursively nested field groups
 _.each ['verticallayout', 'simplelayout', 'tabslayout'],
     (fieldtype) ->
-        angular.module('buildbot.common').directive fieldtype, ->
+        angular.module('common').directive fieldtype, ->
             replace: true
             restrict: 'E'
             templateUrl: "views/#{fieldtype}.html"
@@ -48,7 +49,7 @@ _.each ['verticallayout', 'simplelayout', 'tabslayout'],
 # defines standard field directives which only have templates
 _.each [ 'textfield' , 'intfield', 'textareafield', 'listfield', 'boolfield'],
     (fieldtype) ->
-        angular.module('buildbot.common').directive fieldtype, ->
+        angular.module('common').directive fieldtype, ->
             replace: false
             restrict: 'E'
             scope: false

@@ -1,7 +1,7 @@
 if window.__karma__?
     beforeEach ->
         # Mocked module dependencies
-        angular.module 'buildbot.common', []
+        angular.module 'common', []
         angular.module 'ngAnimate', []
         # Mock modalService
         module ($provide) ->
@@ -9,7 +9,7 @@ if window.__karma__?
             $provide.service '$modalInstance', ->
             null
 
-        module 'buildbot.waterfall_view'
+        module 'waterfall_view'
 
     describe 'Waterfall view', ->
         $state = null

@@ -1,1 +1,2 @@
-angular.module('buildbot.common').constant 'moment', window.moment
+class Moment extends Constant('common')
+    constructor: -> window.moment

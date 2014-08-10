@@ -9,7 +9,7 @@ describe 'buildsummary controller', ->
         $httpBackend = $injector.get('$httpBackend')
         config = $injector.get('config')
         decorateHttpBackend($httpBackend)
-        results = $injector.get('results')
+        results = $injector.get('RESULTS')
         $rootScope = $injector.get('$rootScope')
         $scope = $rootScope.$new()
         $scope.buildid = 1
@@ -31,7 +31,7 @@ describe 'buildsummary controller', ->
         spyOn(mqService,"stopConsuming").and.returnValue(null)
         buildbotService = $injector.get('buildbotService')
         createController = ->
-            return $controller 'buildsummaryController',
+            return $controller '_buildsummaryController',
                 '$scope': $scope
 
     beforeEach(inject(injected))

@@ -1,6 +1,5 @@
-angular.module('buildbot.builders').factory 'findBuilds',
-['$log', 'scopeTimeout', 'buildbotService', '$state', 'results'
-    ($log, scopeTimeout, buildbotService, $state, results) ->
+class FindBuilds extends Factory
+    constructor: ($log, scopeTimeout, buildbotService, $state, RESULTS) ->
         find_build = ($scope, buildrequestid, redirect_to_build) ->
             # get the builds that are addressing this buildrequestid
             buildbotService.some 'builds',
@@ -9,7 +8,7 @@ angular.module('buildbot.builders').factory 'findBuilds',
                 $scope.builds = builds
                 found_one_build = false
                 for build in builds
-                    if build.results != results.RETRY
+                    if build.results != RESULTS.RETRY
                         found_one_build = true
                         if redirect_to_build
                             $state.go "build",
@@ -23,4 +22,3 @@ angular.module('buildbot.builders').factory 'findBuilds',
                         find_build($scope, buildrequestid, redirect_to_build)
                     , 1000
         return find_build
-]
