@@ -227,9 +227,9 @@ class Trigger(BuildStep):
         defer.returnValue(results)
 
     def getResultSummary(self):
-        return {'step': self.getCurrentSummary()} if self.triggeredNames else {}
+        return {u'step': self.getCurrentSummary()[u'step']} if self.triggeredNames else {}
 
     def getCurrentSummary(self):
         if not self.triggeredNames:
             return u'running'
-        return u'triggered %s' % (u', '.join(self.triggeredNames))
+        return {u'step': u'triggered %s' % (u', '.join(self.triggeredNames))}

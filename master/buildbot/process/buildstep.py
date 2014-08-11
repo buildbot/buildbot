@@ -354,7 +354,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.progress.setProgress(metric, value)
 
     def getCurrentSummary(self):
-        return u'running'
+        return {u'step': u'running'}
 
     def getResultSummary(self):
         return {}
@@ -362,14 +362,18 @@ class BuildStep(results.ResultComputingConfigMixin,
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
+        def methodInfo(m):
+            import inspect
+            lines = inspect.getsourcelines(m)
+            return "\nat {0}:{1}:\n {2}".format(inspect.getsourcefile(m), lines[1], "\n".join(lines[0]))
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getResultSummary must return a dictionary')
+                raise TypeError('getResultSummary must return a dictionary: ' + methodInfo(self.getCurrentSummary))
         else:
             summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getCurrentSummary must return a dictionary')
+                raise TypeError('getCurrentSummary must return a dictionary: ' + methodInfo(self.getCurrentSummary))
 
         stepResult = summary.get('step', u'finished')
         if not isinstance(stepResult, unicode):

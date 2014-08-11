@@ -232,7 +232,7 @@ BuildStep
         :returns: dictionary, optionally via Deferred
 
         Returns a dictionary containing status information for a running step.
-        The dictionary can a ``step`` key with a unicode value giving a summary for display with the step.
+        The dictionary can have a ``step`` key with a unicode value giving a summary for display with the step.
         This method is only called while the step is running.
 
         New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``.
