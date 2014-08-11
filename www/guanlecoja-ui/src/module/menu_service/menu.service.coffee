@@ -2,24 +2,41 @@ class GlMenu extends Provider
     constructor: ->
         @groups = {}
 
-        @group = (group) ->
-            @groups[group.name] = group
-            return @groups
+    group: (group) ->
+        group.items = []
+        group.order ?= 99
+        @groups[group.name] = group
+        return @groups
 
-        @$get = ($state) ->
-            groups = {}
-            for state in $state.get()[1...]
-                group = state.data.group
-                unless groups.hasOwnProperty(group)
-                    groups[group] =
-                        caption: group
-                        sref: group
-                        icon: group
-                        items: []
-                groups[group].items.push
-                    caption: state.name
-                    sref: state.name
-            groups = _.values(groups)
-            return {
-                getGroups: -> groups
-            }
+    $get: ($state) ->
+        for state in $state.get()[1...]
+            group = state.data.group
+
+            unless group?
+                continue
+
+            unless @groups.hasOwnProperty(group)
+                throw Error("group #{group} has not been defined with glMenuProvider.group(). has: #{_.keys(@groups)}")
+
+            @groups[group].items.push
+                caption: state.data.caption || _.string.humanize(state.name)
+                sref: state.name
+
+        for name, group of @groups
+            # if a group has only no item, we juste delete it
+            if group.items.length == 0
+                delete groups[name]
+            # if a group has only one item, then we put the group == the item
+            else if group.items.length == 1
+                item = group.items[0]
+                group.caption = item.caption
+                group.sref = item.sref
+                group.items = []
+            else
+                group.sref = "."
+        groups = _.values(@groups)
+        groups.sort((a,b) -> a.order - b.order)
+        console.log groups
+        return {
+            getGroups: -> groups
+        }

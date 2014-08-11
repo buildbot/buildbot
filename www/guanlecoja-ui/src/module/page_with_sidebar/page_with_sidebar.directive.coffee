@@ -11,11 +11,25 @@ class GlPageWithSidebar extends Directive
         }
 
 class _glPageWithSidebar extends Controller
-    constructor: ($scope, glMenuProvider) ->
-        $scope.groups = glMenuProvider.getGroups()
+    constructor: (@$scope, glMenuService, @$timeout) ->
+        @$scope.groups = glMenuService.getGroups()
     toggleGroup: (group) ->
         if @activeGroup!=group
             @activeGroup=group
         else
             @activeGroup=null
+    enterSidebar: ->
+        @sidebarActive = 1
+        @inSidebar = 1
+
+    leaveSidebar: ->
+        @inSidebar = 0
+        if @timeout?
+            @$timeout.cancel(@timeout)
+            @timeout = undefined
+        @timeout = @$timeout =>
+            unless @inSidebar
+                @sidebarActive = 0
+                @activeGroup = null
+        , 500
 

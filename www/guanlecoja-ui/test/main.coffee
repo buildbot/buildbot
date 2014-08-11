@@ -5,7 +5,7 @@ unless __karma__?
 
 m = angular.module("app", ["guanlecoja.ui"]);
 
-m.config ($stateProvider) ->
+m.config ($stateProvider, glMenuServiceProvider) ->
 
         groups = []
         for i in ["cab", "camera", "bug", "calendar", "ban", "archive", "edit"]
@@ -15,7 +15,14 @@ m.config ($stateProvider) ->
             for j in ["cab", "camera", "bug", "calendar", "ban", "archive", "edit"]
                 group.items.push
                     name: i + j
+                if i == "bug"
+                    break
             groups.push group
+            glMenuServiceProvider.group
+                name: group.name
+                caption: _.string.humanize(group.name)
+                icon: group.name
+                order: group.name.length
 
         for group in groups
             for item in group.items

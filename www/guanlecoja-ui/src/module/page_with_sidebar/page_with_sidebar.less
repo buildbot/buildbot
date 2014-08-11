@@ -1,6 +1,6 @@
 /* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
 @gl-sidebar-transition-time: 0.2s;
-.gl-page-with-side-bar {
+.gl-page-with-sidebar {
     padding-left: 70px;
     height: 100%;
     bottom: 0;
@@ -98,6 +98,9 @@
                     font-size: 15px;
                     color: #b2bfdc;
                     line-height: 40px;
+                    .fa {
+                        margin-left: -34px;
+                    }
                 }
                 a:hover {
                     color: #fff;
@@ -117,7 +120,7 @@
                     transition: height @gl-sidebar-transition-time ease-out 0s;
                     a {
                         padding-left:20px;
-                        transition: line-height @gl-sidebar-transition-time ease-out 0s, color @gl-sidebar-transition-time ease-out 0s;
+                        transition: line-height @gl-sidebar-transition-time ease-out 0s, color @gl-sidebar-transition-time ease-out 0s,  background @gl-sidebar-transition-time ease-out 0s;;
                     }
                     &:not(.active) {
                         height: 0px;
