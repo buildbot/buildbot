@@ -11,10 +11,11 @@ require("shelljs/global")
 gulp.task "publish", ['default'], ->
     if not exec "git diff --no-ext-diff --quiet --exit-code"
         echo "print commit your changes"
-        exit(1)
+        return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.0.1"
+        version: "1.0.2"
+        main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
         dependencies: {}
 
