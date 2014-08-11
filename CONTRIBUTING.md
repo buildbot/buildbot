@@ -11,6 +11,7 @@ Issues, Bugs, Tickets
 *We do not use the GitHub Issue Tracker for bugs*
 
 Please file tickets for any bugs you discover at http://trac.buildbot.net.
+It is not necessary to file a bug if you are preparing a patch.
 
 Patches
 -------
