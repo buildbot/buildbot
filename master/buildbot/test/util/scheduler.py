@@ -179,7 +179,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                                     waited_for=False, properties=None,
                                                     builderNames=None, **kw):
-        properties = properties.asDict()
+        properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
