@@ -57,9 +57,10 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             self.assertIn('scheduler named', reason)
             isFirst = (self.events == [])
 
-            codebases = [ss['codebase'] for ss in sourcestamps] or [{}]  # default codebase
+            codebases = [ss['codebase'] for ss in sourcestamps] or ['']  # default codebase
+            codebase_dicts = map(sched.getCodebaseDict, codebases)
 
-            self.events.append('B(%s)@%d' % (''.join([str(cb.get('branch')) for cb in codebases]),
+            self.events.append('B(%s)@%d' % (''.join([str(cb.get('branch')) for cb in codebase_dicts]),
                                              # show the offset as seconds past the GMT hour
                                              self.clock.seconds() - self.localtime_offset))
             if isFirst and firstBuildDuration:
