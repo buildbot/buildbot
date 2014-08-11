@@ -93,8 +93,6 @@ module.exports = function (grunt) {
                 files: ['<%= files.html.src %>']
             }
         },
-
-        // karma
         karma: {
             unit: {
                 configFile: "script/karma.config.js",
@@ -112,7 +110,14 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-karma');
 
     // Define your tasks here
-    grunt.registerTask('build', ['compass:' + target, 'requirejs:' + target]);
+    grunt.registerTask('prod', ["test", "build:prod"]);
+    grunt.registerTask('build', 'Builds all of our resources', function (overrideTarget) {
+        if (overrideTarget !== undefined) {
+            target = overrideTarget;
+        }
+        grunt.task.run('compass:' + target);
+        grunt.task.run('requirejs:' + target);
+    });
     grunt.registerTask('test', ["karma:unit"]);
     grunt.registerTask('default', ['build', 'watch']);
 
