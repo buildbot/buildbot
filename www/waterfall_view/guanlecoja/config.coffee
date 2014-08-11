@@ -12,18 +12,9 @@ module.exports =
     name: 'waterfall_view'
     bower:
         testdeps:
-            jquery:
-                version: '2.1.1'
-                files: 'dist/jquery.js'
-            angular:
-                version: ANGULAR_TAG
-                files: 'angular.js'
-            "angular-ui-router":
-                version: '~0.2.10'
-                files: 'release/angular-ui-router.js'
-            lodash:
-                version: "~2.4.1"
-                files: 'dist/lodash.js'
+            "guanlecoja-ui":
+                version: '~1.0.0'
+                files: 'scripts.js'
             "angular-mocks":
                 version: ANGULAR_TAG
                 files: "angular-mocks.js"

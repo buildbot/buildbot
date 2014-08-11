@@ -1,11 +1,18 @@
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider) ->
 
         # Name of the state
         name = 'home'
 
-        # Configuration
+        # Menu configuration
+        glMenuServiceProvider.addGroup
+            name: name
+            caption: 'Home'
+            icon: 'home'
+            order: 1
+
         cfg =
+            group: name
             caption: 'Home'
 
         # Register new state

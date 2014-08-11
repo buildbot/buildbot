@@ -1,11 +1,4 @@
 .container
-  .row
-    ul.breadcrumb
-      li
-        | Buildrequests
-      li
-        a(href="#/buildrequests/{{buildrequest.buildrequestid}}")
-          | {{buildrequest.buildrequestid}}
   .row(ng-repeat="build in builds")
     .col-sm-4
       ul.breadcrumb

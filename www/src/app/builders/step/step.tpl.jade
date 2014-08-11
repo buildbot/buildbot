@@ -1,19 +1,5 @@
 .container
   .row
-    ul.breadcrumb
-      li
-        a(href="#/builders")
-          | Builders
-      li
-        a(href="#/builders/{{builder.builderid}}")
-          | {{builder.name}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
-          | {{build.number}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}")
-          | step {{step.name}}
-  .row
     .col-sm-6
       | status: {{step.state_strings.join(' ')}}
       ul.unstyled

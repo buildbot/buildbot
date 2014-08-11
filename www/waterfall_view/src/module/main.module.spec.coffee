@@ -27,8 +27,6 @@ if window.__karma__?
             expect(state.controllerAs).toBe('w')
             expect(state.templateUrl).toBe("waterfall_view/views/#{name}.html")
             expect(state.url).toBe("/#{name}")
-            expect(data.tabid).toBe(name)
-            expect(data.tabhash).toBe("##{name}")
 
     describe 'Waterfall view controller', ->
         createController = scope = $rootScope = null

@@ -1,13 +1,19 @@
 class State extends Config
-    constructor: ($stateProvider) ->
-        
+    constructor: ($stateProvider, glMenuServiceProvider) ->
+
         # Name of the state
         name = 'about'
 
+        # Menu configuration
+        glMenuServiceProvider.addGroup
+            name: name
+            caption: 'About'
+            icon: 'info-circle'
+            order: 99
+
         # Configuration
         cfg =
-            tabid: name
-            tabhash: "##{name}"
+            group: name
             caption: 'About'
 
         # Register new state

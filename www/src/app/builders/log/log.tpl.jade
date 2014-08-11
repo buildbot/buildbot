@@ -1,21 +1,4 @@
 .container
   .row
-    ul.breadcrumb
-      li
-        a(href="#/builders")
-          | Builders
-      li
-        a(href="#/builders/{{builder.builderid}}")
-          | {{builder.name}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
-          | {{build.number}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}")
-          | step {{step.name}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}")
-          | {{log.name}}
-  .row
     .col-sm-12
       logviewer(logid="log.logid")

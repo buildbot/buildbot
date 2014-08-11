@@ -1,6 +1,6 @@
 // Import bootstrap and font awesome stylesheets
-@import "../../libs/bootstrap/less/bootstrap";
-@import "../../libs/font-awesome/less/font-awesome";
+@import "../../libs/bootstrap/less/bootstrap.less";
+@import (inline) "../../libs/guanlecoja-ui/styles.css";
 
 // Import colors and animation stylesheet
 @import "animations.less";
@@ -12,7 +12,7 @@
 }
 
 /* modal dialog customizations */
-@media screen and (min-width: @screen-sm-min) {
+@media screen {
   .modal-dialog {
     width: 90%;
   }

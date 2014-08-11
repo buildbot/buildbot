@@ -29,33 +29,12 @@ config =
     bower:
         # JavaScript libraries (order matters)
         deps:
-            jquery:
-                version: '~2.1.1'
-                files: 'dist/jquery.js'
-            angular:
-                version: ANGULAR_TAG
-                files: 'angular.js'
-            "angular-animate":
-                version: ANGULAR_TAG
-                files: 'angular-animate.js'
-            "angular-bootstrap":
-                version: '~0.11.0'
-                files: 'ui-bootstrap-tpls.js'
-            "angular-ui-router":
-                version: '~0.2.10'
-                files: 'release/angular-ui-router.js'
-            "angular-recursion":
-                version: '~1.0.1'
-                files: 'angular-recursion.js'
-            lodash:
-                version: "~2.4.1"
-                files: 'dist/lodash.js'
+            "guanlecoja-ui":
+                version: '~1.0.0'
+                files: 'scripts.js'
             moment:
                 version: "~2.6.0"
                 files: 'moment.js'
-            'underscore.string':
-                version: "~2.3.3"
-                files: 'lib/underscore.string.js'
             restangular:
                 version: "~1.4.0"
                 files: 'dist/restangular.js'

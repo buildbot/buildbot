@@ -6,18 +6,25 @@ class App extends App
             'ui.bootstrap'
             'common'
             'ngAnimate'
+            'guanlecoja.ui'
         ]
 
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider) ->
 
         # Name of the state
         name = 'console'
 
+        # Menu configuration
+        glMenuServiceProvider.addGroup
+            name: name
+            caption: 'Console View'
+            icon: 'exclamation-circle'
+            order: 5
+
         # Configuration
         cfg =
-            tabid: name
-            tabhash: "##{name}"
+            group: name
             caption: 'Console View'
 
         # Register new state

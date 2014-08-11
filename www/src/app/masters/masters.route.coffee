@@ -4,10 +4,9 @@ class State extends Config
         # Name of the state
         name = 'masters'
 
-        # Configuration
+        # Menu configuration
         cfg =
-            tabid: name
-            tabhash: "##{name}"
+            group: "builds"
             caption: 'Build Masters'
 
         # Register new state

@@ -22,8 +22,6 @@ describe 'Console view', ->
         expect(state.controllerAs).toBe('c')
         expect(state.templateUrl).toBe("console_view/views/#{name}.html")
         expect(state.url).toBe("/#{name}")
-        expect(data.tabid).toBe(name)
-        expect(data.tabhash).toBe("##{name}")
 
 describe 'Console view controller', ->
     createController = scope = $rootScope = null

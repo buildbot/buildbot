@@ -4,19 +4,24 @@ class WaterfallView extends App
         'ui.router'
         'ngAnimate'
         'common'
+        'guanlecoja.ui'
     ]
 
 # Register new state
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider) ->
 
         # Name of the state
         name = 'waterfall'
 
         # Configuration
+        glMenuServiceProvider.addGroup
+            name: name
+            caption: 'Waterfall View'
+            icon: 'bar-chart-o'
+            order: 5
         cfg =
-            tabid: name
-            tabhash: "##{name}"
+            group: name
             caption: 'Waterfall View'
 
         # Register new state

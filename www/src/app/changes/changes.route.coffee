@@ -6,8 +6,7 @@ class State extends Config
 
         # Configuration
         cfg =
-            tabid: name
-            tabhash: "##{name}"
+            group: "builds"
             caption: 'Last Changes'
 
         # Register new state

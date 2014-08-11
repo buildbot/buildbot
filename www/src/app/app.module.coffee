@@ -1,6 +1,3 @@
-# first thing, we install underscore.string inside lodash
-_.mixin(_.str.exports())
-
 class App extends App
     constructor: -> return [
         'ngAnimate'
@@ -8,4 +5,5 @@ class App extends App
         'ui.router'
         'restangular'
         'RecursionHelper'
+        'guanlecoja.ui'
     ]

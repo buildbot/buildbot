@@ -1,19 +1,6 @@
 .container
   .row
     ul.breadcrumb
-      li
-        a(href="#/builders")
-          | Builders
-      li
-        a(href="#/builders/{{builder.builderid}}")
-          | {{builder.name}}
-      li
-        a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
-          | {{build.number}}
-      li.pull-right
-        button.btn.btn-default(ng-hide="build.complete")
-          i.fa.fa-times-circle
-          | &nbsp;Stop
       li.pull-right
         button.btn.btn-default(ng-show="build.complete") Rebuild
       li.pull-right

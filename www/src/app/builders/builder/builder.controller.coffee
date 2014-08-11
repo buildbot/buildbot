@@ -1,9 +1,16 @@
 class Builder extends Controller
-    constructor: ($scope, buildbotService, $stateParams, resultsService, recentStorage) ->
+    constructor: ($rootScope, $scope, buildbotService, $stateParams, resultsService, recentStorage) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         builder = buildbotService.one('builders', $stateParams.builder)
-        builder.bind($scope).then ->
+        builder.bind($scope).then (builder)->
+            $rootScope.$broadcast "breadcrumb", [
+                    caption: "Builders"
+                    sref: "builders"
+                ,
+                    caption: builder.name
+                    sref: "builder({builder:#{builder.id}})"
+            ]
             recentStorage.addBuilder
                 link: "#/builders/#{$scope.builder.builderid}"
                 caption: $scope.builder.name
