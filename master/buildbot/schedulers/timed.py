@@ -450,7 +450,7 @@ class NightlyTriggerable(NightlyBase):
     @defer.inlineCallbacks
     def startBuild(self):
         if self._lastTrigger is None:
-            defer.returnValue(None)
+            return
 
         (sourcestamps, set_props) = self._lastTrigger
         self._lastTrigger = None
