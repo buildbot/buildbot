@@ -5,6 +5,7 @@
         "npm": ">=1.4.0"
     },
     "devDependencies": {
-        "guanlecoja": "latest"
+        "guanlecoja": "latest",
+        "shelljs": "latest"
     }
 }

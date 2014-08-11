@@ -5,6 +5,30 @@
 ### ###############################################################################################
 ANGULAR_TAG = "~1.2.0"
 
+gulp = require("gulp")
+require("shelljs/global")
+
+gulp.task "publish", ['default'], ->
+    if not exec "git diff --no-ext-diff --quiet --exit-code"
+        echo "print commit your changes"
+        exit(1)
+    bower_json =
+        name: "guanlecoja-ui"
+        version: "1.0.1"
+        description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
+        dependencies: {}
+
+    exec("git checkout gh-pages")
+    cp "-rf", "static/*", "."
+    JSON.stringify(bower_json).to("bower.json")
+    exec("git add .")
+    exec("git commit -m " + bower_json.version)
+    exec("git tag " + bower_json.version)
+    exec("git push origin gh-pages")
+    exec("git push origin " + bower_json.version)
+    exec("git checkout master")
+
+
 module.exports =
 
     ### ###########################################################################################
@@ -22,6 +46,8 @@ module.exports =
     devserver:
         # development server port
         port: 8080
+
+    sourcemaps: true
 
     ### ###########################################################################################
     #   Bower dependancies configuration
