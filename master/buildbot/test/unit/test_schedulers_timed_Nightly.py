@@ -118,11 +118,6 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                                    branch=None, change_filter=filter.ChangeFilter(category_re="fo+o"))
         assert sched.change_filter
 
-    def test_constructor_no_branch(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(name='test', builderNames=['test'],
-                                                     change_filter=filter.ChangeFilter(category_re="fo+o")))
-
     # end-to-end tests: let's see the scheduler in action
 
     def test_iterations_simple(self):

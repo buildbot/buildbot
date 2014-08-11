@@ -28,6 +28,22 @@ from twisted.internet import reactor
 from twisted.python import log
 
 
+def convertBranchParameter(kwargs):
+    # convert kwargs in place
+    branch = kwargs.get('branch')
+    if branch:
+        if 'codebases' in kwargs:
+            config.error("The 'branch' parameter cannot be combined with the 'codebases' parameter")
+        kwargs['codebases'] = {'': {
+            'repository': '',
+            'branch': branch,
+            'project': '',
+            'revision': ''
+        }}
+    if 'branch' in kwargs:
+        del kwargs['branch']
+
+
 class Timed(base.BaseScheduler):
 
     """
@@ -135,6 +151,9 @@ class Timed(base.BaseScheduler):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
 
+    def emptySourceStamps(self):
+        return [dict(codebase=cb) for cb in self.codebases.keys()]
+
     def _scheduleNextBuild_locked(self):
         # clear out the existing timer
         if self.actuateAtTimer:
@@ -187,19 +206,17 @@ class Timed(base.BaseScheduler):
 
 
 class Periodic(Timed):
-    compare_attrs = ('periodicBuildTimer', 'branch',)
+    compare_attrs = ('periodicBuildTimer',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
-                 branch=None, properties={}, onlyImportant=False,
-                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
-        Timed.__init__(self, name=name, builderNames=builderNames,
-                       properties=properties, reason=reason, codebases=codebases)
+                 **kwargs):
+        convertBranchParameter(kwargs)
+        Timed.__init__(self, name=name, builderNames=builderNames, reason=reason, **kwargs)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
-        self.branch = branch
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -209,7 +226,7 @@ class Periodic(Timed):
 
     def startBuild(self):
         return self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                           sourcestamps=[])
+                                                           sourcestamps=self.emptySourceStamps())
 
 
 class NightlyBase(Timed):
@@ -217,10 +234,8 @@ class NightlyBase(Timed):
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 reason='NightlyBase(%(name)s)',
-                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
-        Timed.__init__(self, name=name, builderNames=builderNames,
-                       reason=reason, properties=properties, codebases=codebases)
+                 reason='NightlyBase(%(name)s)', **kwargs):
+        Timed.__init__(self, name=name, builderNames=builderNames, reason=reason, **kwargs)
 
         self.minute = minute
         self.hour = hour
@@ -255,27 +270,20 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase):
-    compare_attrs = ('branch', 'onlyIfChanged', 'fileIsImportant',
+    compare_attrs = ('onlyIfChanged', 'fileIsImportant',
                      'change_filter', 'onlyImportant', 'createAbsoluteSourceStamps',)
-
-    class NoBranch:
-        pass
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
+                 fileIsImportant=None, onlyIfChanged=False,
                  createAbsoluteSourceStamps=False,
-                 properties={}, change_filter=None, onlyImportant=False,
+                 change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
-                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
-        if branch and branch is not Nightly.NoBranch:
-            if codebases is base.BaseScheduler.DEFAULT_CODEBASES:
-                codebases = {'': {'repository': '', 'project': '', 'branch': branch, 'revision': ''}}
-            else:
-                config.error("Nightly(%s): 'codebases' and 'branch' are mutually exclusive" % name)
+                 **kwargs):
+        convertBranchParameter(kwargs)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
-                             properties=properties, codebases=codebases, reason=reason)
+                             reason=reason, **kwargs)
 
         # If True, only important changes will be added to the buildset.
         self.onlyImportant = onlyImportant
@@ -284,16 +292,11 @@ class Nightly(NightlyBase):
             config.error(
                 "fileIsImportant must be a callable")
 
-        if branch is Nightly.NoBranch:
-            config.error(
-                "Nightly parameter 'branch' is required")
-
         if createAbsoluteSourceStamps and not onlyIfChanged:
             config.error(
                 "createAbsoluteSourceStamps can only be used with onlyIfChanged")
 
         self._lastCodebases = {}
-        self.branch = branch
         self.onlyIfChanged = onlyIfChanged
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.fileIsImportant = fileIsImportant
@@ -329,8 +332,11 @@ class Nightly(NightlyBase):
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
         # change filter.
-        if change.branch != self.branch:
-            return defer.succeed(None)  # don't care about this change
+        if change.codebase in self.codebases:
+            if change.branch and change.branch != self.codebases[change.codebase].get('branch'):
+                return defer.succeed(None)  # don't care about this change
+        else:
+            return defer.succeed(None)
 
         d = self.master.db.schedulers.classifyChanges(
             self.objectid, {change.number: important})
@@ -384,9 +390,8 @@ class Nightly(NightlyBase):
                                                     less_than=max_changeid + 1)
         else:
             # start a build of the latest revision, whatever that is
-            ss = {'codebase': ''}
             yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                              sourcestamps=[ss])
+                                                              sourcestamps=self.emptySourceStamps())
 
 
 class NightlyTriggerable(NightlyBase):
@@ -395,10 +400,10 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
-                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
+                 **kwargs):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                             dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason,
-                             codebases=codebases)
+                             dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, reason=reason,
+                             **kwargs)
 
         self._lastTrigger = None
 
