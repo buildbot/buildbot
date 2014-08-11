@@ -270,7 +270,7 @@ class Nightly(NightlyBase):
                  codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         if branch and branch is not Nightly.NoBranch:
             if codebases is base.BaseScheduler.DEFAULT_CODEBASES:
-                codebases = {'': {'repository': '', 'branch': branch}}
+                codebases = {'': {'repository': '', 'project': '', 'branch': branch, 'revision': ''}}
             else:
                 config.error("Nightly(%s): 'codebases' and 'branch' are mutually exclusive" % name)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
@@ -384,7 +384,7 @@ class Nightly(NightlyBase):
                                                     less_than=max_changeid + 1)
         else:
             # start a build of the latest revision, whatever that is
-            ss = {'codebase': self.getCodebaseDict('')}
+            ss = {'codebase': ''}
             yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
                                                               sourcestamps=[ss])
 
