@@ -15,7 +15,6 @@
     "requirejs": "~2.1.14",
     "karma-requirejs": "~0.2.2",
     "grunt-karma": "~0.8.3",
-    "karma-coverage": "~0.2.4",
-    "grunt-newer": "~0.7.0"
+    "karma-coverage": "~0.2.4"
   }
 }

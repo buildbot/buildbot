@@ -20,10 +20,19 @@ module.exports = function (grunt) {
                     'script/libs/**/*.js',
                     'script/plugins/**/*.js',
                     'script/project/**/*.js',
-                    'script/main.js',
-                    'script/require.js'
+                    'script/main.js'
                 ],
-                dest: ['prod/script']
+                dest: "prod/script/main.js",
+                requirejs: {
+                    src: [
+                        'script/require.js'
+                    ]
+                }
+            },
+            html: {
+                src: [
+                    'templates/**/*.html'
+                ]
             }
         },
         compass: {
@@ -50,7 +59,8 @@ module.exports = function (grunt) {
                 baseUrl: 'script/',
                 mainConfigFile: 'script/main.js',
                 name: 'main',
-                dir: "<%= files.js.dest %>",
+                out: "<%= files.js.dest %>",
+                include: 'require.js',
                 preserveLicenseComments: false,
                 generateSourceMaps: true,
                 fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/,
@@ -78,6 +88,9 @@ module.exports = function (grunt) {
             js: {
                 files: ['<%= files.js.src %>'],
                 tasks: ['requirejs:' + target]
+            },
+            html: {
+                files: ['<%= files.html.src %>']
             }
         },
 
@@ -96,12 +109,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-compass');
     grunt.loadNpmTasks('grunt-contrib-watch'); // run grunt watch for converting sass files to css in realtime
     grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-newer');
     grunt.loadNpmTasks('grunt-karma');
 
     // Define your tasks here
-    grunt.registerTask('default', ['compass:' + target, 'requirejs:' + target, 'watch']);
     grunt.registerTask('build', ['compass:' + target, 'requirejs:' + target]);
     grunt.registerTask('test', ["karma:unit"]);
+    grunt.registerTask('default', ['build', 'watch']);
 
 };
