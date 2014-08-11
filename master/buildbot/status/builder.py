@@ -37,6 +37,8 @@ from buildbot.status.results import EXCEPTION, RETRY, Results, worst_status
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
                    EXCEPTION, RETRY, Results, worst_status ]
 
+LATEST_BUILD_FORMAT = "{0}={1};"
+
 class BuilderStatus(styles.Versioned):
     """I handle status information for a single process.build.Builder object.
     That object sends status changes to me (frequently as Events), and I
@@ -657,7 +659,7 @@ class BuilderStatus(styles.Versioned):
             branch = cb[key]["branch"]
             if key in codebases:
                 branch = codebases[key]
-            output += "{0}={1}".format(key, branch)
+            output += LATEST_BUILD_FORMAT.format(key, branch)
 
         return output
 
@@ -671,7 +673,7 @@ class BuilderStatus(styles.Versioned):
             #Save the latest build to all matching keys
             ss = build.getSourceStamps()
             for s in ss:
-                key = "{0}={1}".format(s.codebase, s.branch)
+                key = LATEST_BUILD_FORMAT.format(s.codebase, s.branch)
 
                 for k in self.latestBuildCache.keys():
                     if key in k:
