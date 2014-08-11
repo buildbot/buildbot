@@ -140,8 +140,8 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'handlebars',
                 };
 
                 options.aoColumns = [
-                    { "mData": null, "sWidth": "50%" },
-                    { "mData": null, "sWidth": "50%" }
+                    { "mData": null, "sWidth": "50%","sTitle": "Slave" },
+                    { "mData": null, "sWidth": "50%","sTitle": "Status" }
                 ];
 
                 options.aoColumnDefs = [

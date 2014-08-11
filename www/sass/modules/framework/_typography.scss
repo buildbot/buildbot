@@ -18,6 +18,24 @@
 	@media (min-width: 1200px) {
 		display:inline;
 	}	
+	input[type="checkbox"] {
+        float: left;
+        display: block;
+    }
+    label {
+        display: block;
+        float: left;
+        margin-right: 10px;
+        margin-top: -1px;
+    }
+    .question-icon:after {
+        font-size: 14px;        
+        margin-top: 0;
+    }
+    .question-icon {
+         float: left;
+        margin-left: 8px;    
+    }
 	&:after {
 		color: rgba(244, 249, 255, 0.84);
 		content: "";
@@ -37,13 +55,34 @@
 		opacity: 0.5;
 	}
 }
+
+.question-icon {
+	&:after {
+
+	 	color: #718396;
+	    content: "";
+	    display: inline-block;
+	    font-family: "katana_icons";
+	    font-size: 16px;
+	    font-weight: normal;
+	    margin-top: 5px;
+	    padding: 0 0 0 0;
+	    position: absolute;	 
+	    @include text-shadow(0 1px 0 #FFFFFF);   
+    }
+    &:hover:after {
+		color: #ccc;
+		cursor: pointer;
+	}
+}
+
 .right-block {
 	float:right;
 	margin-top:16px;
 	form {
 		display: inline;
 	}
-	
+	 
 }
 
 .started-time {font-weight:normal;font-size:12px;margin-top:0;margin-bottom:2px;padding-top:0;min-height:15px;}
