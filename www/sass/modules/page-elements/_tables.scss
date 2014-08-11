@@ -95,6 +95,10 @@ ul.building {
 		text-align:right;
 	}
 	th {
+		width: 130px !important;
+		@media (min-width: $screen-lg-min) {	
+			width: inherit !important;
+		}
 		text-align: center;
 		padding:15px 10px;
 		//background-color:#EEF0F5;
@@ -302,6 +306,8 @@ ul.building {
     white-space: nowrap;
     width: 100%;
     float:left;
+    overflow-y:hidden;
+    overflow-x:auto;  
 }
 
 table.codebase-branch-table {
@@ -626,6 +632,7 @@ table.codebase-branch-table {
 	.table-wrapper {
 		overflow: visible;	 	
 	}
+
 }
 
 tr.italic {
