@@ -83,7 +83,8 @@ module.exports =
 
     ngclassify: (config) ->
         ->
-            return appName: config.name
+            factory: format: 'camelCase'
+            appName: config.name
     ### ###########################################################################################
     #   This is the default configuration for karma
     ### ###########################################################################################
