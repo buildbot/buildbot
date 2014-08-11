@@ -57,26 +57,21 @@ class Timed(base.BaseScheduler):
 
         self._reactor = reactor  # patched by tests
 
+    @defer.inlineCallbacks
     def activate(self):
-        d = base.BaseScheduler.activate(self)
+        yield base.BaseScheduler.activate(self)
 
         # no need to lock this; nothing else can run before the service is started
         self.actuateOk = True
 
         # get the scheduler's last_build time (note: only done at startup)
-        d.addCallback(lambda _:
-                      self.getState('last_build', None))
-
-        def set_last(lastActuated):
-            self.lastActuated = lastActuated
-        d.addCallback(set_last)
+        self.lastActuated = yield self.getState('last_build', None)
 
         # schedule the next build
-        d.addCallback(lambda _: self.scheduleNextBuild())
+        yield self.scheduleNextBuild()
 
         # give subclasses a chance to start up
-        d.addCallback(lambda _: self.startTimedSchedulerService())
-        return d
+        yield self.startTimedSchedulerService()
 
     def startTimedSchedulerService(self):
         """Hook for subclasses to participate in the L{activate} process;
