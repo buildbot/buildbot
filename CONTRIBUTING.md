@@ -12,8 +12,6 @@ Issues, Bugs, Tickets
 
 Please file tickets for any bugs you discover at http://trac.buildbot.net.
 
-The GitHub Issue Tracker is enabled only because it is a more usable interface for pull requests.
-
 Patches
 -------
 
