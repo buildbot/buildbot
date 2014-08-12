@@ -27,7 +27,7 @@ class Application(object):
     def __init__(self):
         self.description = "Buildbot UI"
         # VERSION's location differs depending on whether we're installed
-        for f in sibpath('VERSION'), sibpath('static', 'VERSION'):
+        for f in sibpath('VERSION'), sibpath('buildbot_www', 'VERSION'):
             if os.path.exists(f):
                 self.version = open(f).read().strip()
                 break
