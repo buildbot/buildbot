@@ -9,12 +9,14 @@ gulp = require("gulp")
 require("shelljs/global")
 
 gulp.task "publish", ['default'], ->
-    if not exec "git diff --no-ext-diff --quiet --exit-code"
-        echo "print commit your changes"
+    r = exec "git diff --no-ext-diff --quiet --exit-code"
+    if r.code > 0
+        exec("git status")
+        echo "Please commit your changes before publish!"
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.0.4"
+        version: "1.0.5"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
         dependencies: {}
