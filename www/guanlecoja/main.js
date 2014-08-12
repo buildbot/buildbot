@@ -42,7 +42,7 @@
 
   bower = require('gulp-bower-deps');
 
-  templateCache = require('gulp-angular-templatecache');
+  templateCache = require('./gulp-angular-templatecache');
 
   lr = require('gulp-livereload');
 

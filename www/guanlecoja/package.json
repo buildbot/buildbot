@@ -68,7 +68,13 @@
     "minimist": "~0.2.0",
     "connect": "~3.1.0",
     "serve-static": "~1.5.0",
-    "rimraf": "~2.2.8"
+    "rimraf": "~2.2.8",
+
+    "event-stream": "3.x",
+    "js-string-escape": "~1.0.0",
+    "gulp-footer": "1.x",
+    "gulp-header": "1.x"
+
   },
   "main": "./main",
   "bin": {},
