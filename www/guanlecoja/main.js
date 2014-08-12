@@ -85,7 +85,7 @@
     script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates);
     gulp.task('scripts', function() {
       return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
-        if (config.name != null) {
+        if ((config.name != null) || config.name === 'app') {
           p.dirname = path.join(config.name, "views");
         } else {
           p.dirname = "views";
