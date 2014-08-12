@@ -69,7 +69,7 @@ module.exports =  (gulp) ->
     script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates)
     gulp.task 'scripts', ->
         gulp.src script_sources
-            .pipe gif(dev, sourcemaps.init())
+            .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
             # coffee build
             .pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler)))
@@ -89,7 +89,7 @@ module.exports =  (gulp) ->
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, annotate())
             .pipe gif(prod, uglify())
-            .pipe gif(dev, sourcemaps.write("."))
+            .pipe gif(dev or config.sourcemaps, sourcemaps.write("."))
             .pipe gulp.dest config.dir.build
             .pipe gif(dev, lr())
 

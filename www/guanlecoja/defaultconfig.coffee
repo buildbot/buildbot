@@ -83,7 +83,11 @@ module.exports =
 
     ngclassify: (config) ->
         ->
-            return appName: config.name
+            return {
+                appName: config.name
+                provider:
+                    suffix: "Service"
+            }
     ### ###########################################################################################
     #   This is the default configuration for karma
     ### ###########################################################################################

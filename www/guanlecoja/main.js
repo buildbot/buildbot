@@ -84,7 +84,7 @@
     };
     script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates);
     gulp.task('scripts', function() {
-      return gulp.src(script_sources).pipe(gif(dev, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
+      return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
         if (config.name != null) {
           p.dirname = path.join(config.name, "views");
         } else {
@@ -94,7 +94,7 @@
         return null;
       }))).pipe(remember('scripts')).pipe(gif("*.html", templateCache({
         module: config.name
-      }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+      }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
     gulp.task('tests', function() {
       var src;
