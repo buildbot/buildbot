@@ -29,6 +29,7 @@ needs_sphinx = '1.0'
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.todo',
+    'sphinx.ext.extlinks',
     'bbdocs.ext'
 ]
 todo_include_todos=True
@@ -110,6 +111,10 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'python': ('http://python.readthedocs.org/en/latest/', None),
     'sqlalchemy': ('http://sqlalchemy.readthedocs.org/en/latest/', None),
+}
+
+extlinks = {
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #')
 }
 
 # -- Options for HTML output ---------------------------------------------------

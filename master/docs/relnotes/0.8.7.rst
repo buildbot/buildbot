@@ -26,7 +26,7 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 
 * Buildbot no longer forks when told not to daemonize.
 
-* Buildbot's startup is now more robust. See :bb:bug:`1992`.
+* Buildbot's startup is now more robust. See :bug:`1992`.
 
 * The ``Trigger`` step uses the provided list of source stamps exactly, if given, instead of adding them to the sourcestamps of the current build.
   In 0.8.7, they were combined with the source stamps for the current build.
@@ -35,7 +35,7 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
   In 0.8.7, this was mistakenly changed to only ignore the specified revision of the source stamp.
 
 * The ``Triggerable`` scheduler is again properly passing changes through to the scheduled builds.
-  See :bb:bug:`2376`.
+  See :bug:`2376`.
 
 * Web change hooks log errors, allowing debugging.
 
@@ -156,7 +156,7 @@ Deprecations, Removals, and Non-Compatible Changes
   by hand will need to take this into account.
 
 * ``baseURL`` has been removed in :bb:step:`SVN` to use just ``repourl`` - see
-  :bb:bug:`2066`. Branch info should be provided with ``Interpolate``. ::
+  :bug:`2066`. Branch info should be provided with ``Interpolate``. ::
 
     from buildbot.steps.source.svn import SVN
     factory.append(SVN(baseURL="svn://svn.example.org/svn/"))

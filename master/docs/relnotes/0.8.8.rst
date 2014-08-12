@@ -75,9 +75,9 @@ Features
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
-* GNUAutoconf and other pre-defined factories now work correctly (:bb:bug:`2402`)
+* GNUAutoconf and other pre-defined factories now work correctly (:bug:`2402`)
 
-* The pubDate in RSS feeds is now rendered correctly (:bb:bug:`2530`)
+* The pubDate in RSS feeds is now rendered correctly (:bug:`2530`)
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,7 +114,7 @@ Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
-  This release includes the fix for :bb:bug:`2536`.
+  This release includes the fix for :bug:`2536`.
 
 * An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
   to send a message back to the committer.
@@ -131,7 +131,7 @@ Features
 
 * The fix for Twisted bug #5079 is now applied on the slave side, too.
   This fixes a perspective broker memory leak in older versions of Twisted.
-  This fix was added on the master in Buildbot-0.8.4 (see :bb:bug:`1958`).
+  This fix was added on the master in Buildbot-0.8.4 (see :bug:`1958`).
 
 * The ``--nodaemon`` option to ``buildslave start`` now correctly prevents the slave from forking before running.
 

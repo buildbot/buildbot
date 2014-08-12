@@ -26,24 +26,24 @@ In addition to what's listed below, the 0.8.6p1 release adds the following.
   configured.
 
 * The ForceScheduler's properties are correctly updated on reconfig -
-  :bb:bug:`2248`.
+  :bug:`2248`.
 
 * If a slave is lost while waiting for locks, it is properly cleaned up -
-  :bb:bug:`2247`.
+  :bug:`2247`.
 
 * Crashes when adding new steps to a factory in a reconfig are fixed -
-  :bb:bug:`2252`.
+  :bug:`2252`.
 
-* MailNotifier AttributeErrors are fixed - :bb:bug:`2254`.
+* MailNotifier AttributeErrors are fixed - :bug:`2254`.
 
-* Cleanup from failed builds is improved - :bb:bug:`2253`.
+* Cleanup from failed builds is improved - :bug:`2253`.
 
 Master
 ------
 
 * If you are using the GitHub hook, carefully consider the security
   implications of allowing un-authenticated change requests, which can
-  potentially build arbitrary code.  See :bb:bug:`2186`.
+  potentially build arbitrary code.  See :bug:`2186`.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,17 +61,17 @@ Deprecations, Removals, and Non-Compatible Changes
   available.
 
 * This is the last release of Buildbot that will be compatible with Python 2.4.
-  The next version will minimally require Python-2.5.  See :bb:bug:`2157`.
+  The next version will minimally require Python-2.5.  See :bug:`2157`.
 
 * This is the last release of Buildbot that will be compatible with
   Twisted-8.x.y.  The next version will minimally require Twisted-9.0.0.  See
-  :bb:bug:`2182`.
+  :bug:`2182`.
 
 * ``buildbot start`` no longer invokes make if a ``Makefile.buildbot`` exists.
   If you are using this functionality, consider invoking make directly.
 
 * The ``buildbot sendchange`` option ``--username`` has been removed as
-  promised in :bb:bug:`1711`.
+  promised in :bug:`1711`.
 
 * StatusReceivers' checkConfig method should now take an additional `errors`
   parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
@@ -100,7 +100,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Master Side :bb:step:`SVN` Step has been corrected to properly use
   ``--revision`` when ``alwaysUseLatest`` is set to ``False`` when in the
-  ``full`` mode. See :bb:bug:`2194`
+  ``full`` mode. See :bug:`2194`
 
 * Master Side :bb:step:`SVN` Step paramater svnurl has been renamed repourl, to
   be consistent with other master-side source steps.
@@ -160,7 +160,7 @@ Features
   in :bb:pull:`278`.
 
 * The master-side SVN step now has an `export` method which is similar to
-  `copy`, but the build directory does not contain Subversion metdata. (:bb:bug:`2078`)
+  `copy`, but the build directory does not contain Subversion metdata. (:bug:`2078`)
 
 * :py:class:`Property` instances will now render any properties in the
   default value if necessary.  This makes possible constructs like ::
@@ -175,24 +175,24 @@ Features
 
 * Shell command steps will now "flatten" nested lists in the ``command``
   argument.  This allows substitution of multiple command-line arguments using
-  properties.  See :bb:bug:`2150`.
+  properties.  See :bug:`2150`.
   
 * Steps now take an optional ``hideStepIf`` parameter to suppress the step
-  from the waterfall and build details in the web. (:bb:bug:`1743`)
+  from the waterfall and build details in the web. (:bug:`1743`)
 
 * :py:class:`Trigger` steps with ``waitForFinish=True`` now receive a URL to
   all the triggered builds. This URL is displayed in the waterfall and build
-  details. See :bb:bug:`2170`.
+  details. See :bug:`2170`.
 
 * The :bb:src:`master/contrib/fakemaster.py`` script allows you to run arbitrary
   commands on a slave by emulating a master.  See the file itself for
   documentation.
 
 * MailNotifier allows multiple notification modes in the same instance.  See
-  :bb:bug:`2205`.
+  :bug:`2205`.
 
 * SVNPoller now allows passing extra arguments via argument ``extra_args``.
-  See :bb:bug:`1766`
+  See :bug:`1766`
   
 Slave
 -----

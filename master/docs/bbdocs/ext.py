@@ -174,22 +174,6 @@ def make_index(name, localname):
                 dict(name=name, localname=localname))
 
 
-class BugRole(object):
-
-    """
-    A role to create a link to a Trac bug, by number
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        bugnum = text.lstrip('#')
-        node = nodes.reference('', '')
-        node['refuri'] = 'http://trac.buildbot.net/ticket/%s' % bugnum
-        node['reftitle'] = title = 'bug #%s' % bugnum
-        node.append(nodes.Text(title))
-        return [node], []
-
-
 class SrcRole(object):
 
     """
@@ -328,7 +312,6 @@ class BBDomain(Domain):
         'rpath': XRefRole(),
         'index': XRefRole(),
 
-        'bug': BugRole(),
         'src': SrcRole(),
         'pull': PullRole(),
     }
