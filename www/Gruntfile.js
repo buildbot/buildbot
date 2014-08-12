@@ -46,6 +46,7 @@ module.exports = function (grunt) {
             },
             prod: {
                 options: {
+                    force: true,
                     environment: "production",
                     outputStyle: "compressed"
                 }

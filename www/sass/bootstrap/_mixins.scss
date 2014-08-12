@@ -18,13 +18,21 @@
 //    `:before` to contain the top-margins of child elements.
 
 // Create colorblind version of colors
-@mixin colorBlindBackground($classname, $color, $text-color: false, $state-text: false) {
+$cb-saturation: 90%;
+$cb-lightness: 40%;
+
+@mixin colorBlindBackground($classname, $color, $text-color: false, $state-text: false, $color-blind-color: false) {
   .#{$classname} {
     background-color: $color;
   }
   .color-blind-mode {
     .#{$classname} {
-      background-color: change-color($color, $saturation: 100%, $lightness: 50%);
+      @if $color-blind-color {
+        background-color: $color-blind-color;
+      }
+      @else {
+        background-color: change-color($color, $saturation: $cb-saturation, $lightness: $cb-lightness);
+      }
     }
     @if $text-color {
       .#{$classname} {
@@ -38,7 +46,7 @@
       content: $state-text;
     }
     .log-list-#{$classname} > a:before {
-      background-color: change-color($color, $saturation: 100%, $lightness: 50%);
+      background-color: change-color($color, $saturation: $cb-saturation, $lightness: $cb-lightness);
     }
   }
 
