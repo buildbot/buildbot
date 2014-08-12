@@ -1,2 +1,1 @@
-class Moment extends Constant('common')
-    constructor: -> window.moment
+angular.module("common").constant("MOMENT", window.moment)

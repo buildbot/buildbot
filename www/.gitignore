@@ -1,6 +1,7 @@
 build
-dist
-static
+!src/app/builders/build
+dist/
+static/
 VERSION
 node_modules
 npm-debug.log

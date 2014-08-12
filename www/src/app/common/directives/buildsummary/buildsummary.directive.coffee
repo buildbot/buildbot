@@ -1,5 +1,5 @@
 class Buildsummary extends Directive('common')
-    (RecursionHelper) ->
+    constructor: (RecursionHelper) ->
         return {
             replace: true
             restrict: 'E'
@@ -60,4 +60,4 @@ class _buildsummary extends Controller('common')
                             step.fulldisplay = step.complete == 0 || step.results > 0
                         logs = buildbotService.one("steps", step.stepid).all("logs")
                         logs.bind $scope,
-                            dest: step   
+                            dest: step
