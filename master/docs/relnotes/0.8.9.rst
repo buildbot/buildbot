@@ -39,9 +39,9 @@ Features
 
 * Added the :bb:chsrc:`BitbucketPullrequestPoller` changesource.
 
-* The :bb:chsrc:`GitPoller` can now be configured to poll all available branches (:bb:pull:`1010`).
+* The :bb:chsrc:`GitPoller` can now be configured to poll all available branches (:pull:`1010`).
 
-* The :bb:chsrc:`P4Source` changesource now supports Perforce servers in a different timezone than the buildbot master (:bb:pull:`728`).
+* The :bb:chsrc:`P4Source` changesource now supports Perforce servers in a different timezone than the buildbot master (:pull:`728`).
 
 * Each Scheduler type can now take a 'reason' argument to customize the reason it uses for triggered builds.
 
@@ -88,7 +88,7 @@ Features
 
 * New source step :bb:step:`Darcs` added on master side.
 
-* A new :bb:step:`Robocopy` step is available for Windows builders (:bb:pull:`728`).
+* A new :bb:step:`Robocopy` step is available for Windows builders (:pull:`728`).
 
 * The attributes ``description``, ``descriptionDone`` and ``descriptionSuffix`` have been moved from :py:class:`ShellCommand` to its superclass :py:class:`BuildStep` so that any class that inherits from :py:class:`BuildStep` can provide a suitable description of itself.
 
@@ -137,7 +137,7 @@ Features
 
 * It is now possible to select categories to show in the waterfall help
 
-* The web status now automatically scrolls output logs (:bb:pull:`1078`).
+* The web status now automatically scrolls output logs (:pull:`1078`).
 
 * The web UI now supports a PNG Status Resource that can be accessed publicly from for example README.md files or wikis or whatever other resource.
   This view produces an image in PNG format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
@@ -157,11 +157,11 @@ Features
 
 * A new argument ``summaryCB`` has been added to ``GerritStatusPush``, to allow sending one review per buildset. Sending a single "summary" review per buildset is now the default if neither ``summaryCB`` nor ``reviewCB`` are specified.
 
-* The ``comments`` field of changes is no longer limited to 1024 characters on MySQL and Postgres.  See :bug:`2367` and :bb:pull:`736`.
+* The ``comments`` field of changes is no longer limited to 1024 characters on MySQL and Postgres.  See :bug:`2367` and :pull:`736`.
 
-* HTML log files are no longer stored in status pickles (:bb:pull:`1077`)
+* HTML log files are no longer stored in status pickles (:pull:`1077`)
 
-* Builds are now retried after a slave is lost (:bb:pull:`1049`).
+* Builds are now retried after a slave is lost (:pull:`1049`).
 
 * The buildbot status client can now access a build properties via the ``getProperties`` call.
 
@@ -197,7 +197,7 @@ Refer to the documentation for previous versions for infrormation on old-style s
 Fixes
 ~~~~~
 
-* Fixes an issue where :bb:chsrc:`GitPoller` sets the change branch to ``refs/heads/master`` - which isn't compatible with :bb:step:`Git` (:bb:pull:`1069`).
+* Fixes an issue where :bb:chsrc:`GitPoller` sets the change branch to ``refs/heads/master`` - which isn't compatible with :bb:step:`Git` (:pull:`1069`).
 
 * Fixed an issue where the :bb:step:`Git` and :bb:step:`CVS` source steps silently changed the ``workdir`` to ``'build'`` when the 'copy' method is used.
 
@@ -208,19 +208,19 @@ Fixes
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bug:`2586`).
 
-* The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:bb:pull:`1114`).
+* The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:pull:`1114`).
 
 * The source steps now correctly interpolate properties in ``env``.
 
 * ``GerritStatusPush`` now supports setting scores with Gerrit 2.6 and newer
 
-* The change hook no longer fails when passing unicode to ``change_hook_auth`` (:bb:pull:`996`).
+* The change hook no longer fails when passing unicode to ``change_hook_auth`` (:pull:`996`).
 
 * The source steps now correctly interpolate properties in ``env``.
 
-* Whitespace is properly handled for StringParameter, so that appropriate validation errors are raised for ``required`` parameters (:bb:pull:`1084`).
+* Whitespace is properly handled for StringParameter, so that appropriate validation errors are raised for ``required`` parameters (:pull:`1084`).
 
-* Fix a rare case where a buildtep might fail from a GeneratorExit exception (:bb:pull:`1063`).
+* Fix a rare case where a buildtep might fail from a GeneratorExit exception (:pull:`1063`).
 
 * Fixed an issue where UTF-8 data in logs caused RSS feed exceptions (:bug:`951`).
 
@@ -228,15 +228,15 @@ Fixes
 
 * Fixed an issue with pubDate format in feeds.
 
-* Fixed an issue where the step text value could cause a ``TypeError`` in the build detail page (:bb:pull:`1061`).
+* Fixed an issue where the step text value could cause a ``TypeError`` in the build detail page (:pull:`1061`).
 
-* Fix failures where ``git clean`` fails but could be clobbered (:bb:pull:`1058`).
+* Fix failures where ``git clean`` fails but could be clobbered (:pull:`1058`).
 
-* Build step now correctly fails when the git clone step fails (:bb:pull:`1057`).
+* Build step now correctly fails when the git clone step fails (:pull:`1057`).
 
-* Fixed a race condition in slave shutdown (:bb:pull:`1019`).
+* Fixed a race condition in slave shutdown (:pull:`1019`).
 
-* Now correctly unsubscribes StatusPush from status updates when reconfiguring (:bb:pull:`997`).
+* Now correctly unsubscribes StatusPush from status updates when reconfiguring (:pull:`997`).
 
 * Fixes parsing git commit messages that are blank.
 
@@ -342,7 +342,7 @@ Fixes
 ~~~~~
 
 * Fixed an issue when buildstep stop() was raising an exception incorrectly if timeout for
-  buildstep wasn't set or was None (see :bb:pull:`753`) thus keeping watched logfiles open
+  buildstep wasn't set or was None (see :pull:`753`) thus keeping watched logfiles open
   (this prevented their removal on Windows in subsequent builds).
 
 * Fixed a bug in P4 source step where the ``timeout`` parameter was ignored.
@@ -350,7 +350,7 @@ Fixes
 * Fixed a bug in P4 source step where using a custom view-spec could result in failed syncs
   due to incorrectly generated command-lines.
 
-* The logwatcher will use ``/usr/xpg4/bin/tail`` on Solaris, it if is available (:bb:pull:`1065`).
+* The logwatcher will use ``/usr/xpg4/bin/tail`` on Solaris, it if is available (:pull:`1065`).
 
 
 Deprecations, Removals, and Non-Compatible Changes

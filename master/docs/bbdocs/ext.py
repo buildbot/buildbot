@@ -190,21 +190,6 @@ class SrcRole(object):
         return [node], []
 
 
-class PullRole(object):
-
-    """
-    A role to link to a buildbot pull request
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        node = nodes.reference('', '')
-        node['refuri'] = ('https://github.com/buildbot/buildbot/pull/' + text)
-        node['reftitle'] = title = 'pull request %s' % text
-        node.append(nodes.Text(title, title))
-        return [node], []
-
-
 class BBDomain(Domain):
     name = 'bb'
     label = 'Buildbot'
@@ -312,8 +297,7 @@ class BBDomain(Domain):
         'rpath': XRefRole(),
         'index': XRefRole(),
 
-        'src': SrcRole(),
-        'pull': PullRole(),
+        'src': SrcRole()
     }
 
     initial_data = {

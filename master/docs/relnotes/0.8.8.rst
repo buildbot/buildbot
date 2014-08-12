@@ -19,7 +19,7 @@ Features
 * The master now poll the database for pending tasks when running buildbot in multi-master mode.
 
 
-* The algorithm to match build requests to slaves has been rewritten in :bb:pull:`615`.
+* The algorithm to match build requests to slaves has been rewritten :pull:`615`.
   The new algorithm automatically takes locks into account, and will not schedule a build only to have it wait on a lock.
   The algorithm also introduces a ``canStartBuild`` builder configuration option which can be used to prevent a build request being assigned to a slave.
 
@@ -37,7 +37,7 @@ Features
 
 * Slaves can now be paused through the web status.
 
-* The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
+* The latent buildslave support is less buggy, thanks :pull:`646`.
 
 * The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches, codebases, projects, and repositories.
 
@@ -63,10 +63,10 @@ Features
 * The list of force schedulers in the web UI is now sorted by name.
 
 * OpenStack-based Latent Buildslave support was added.
-  See :bb:pull:`666`.
+  See :pull:`666`.
 
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
-  See :bb:pull:`596`.
+  See :pull:`596`.
 
 * Master-side support for Repo is available.
   The step parameters changed to camelCase.

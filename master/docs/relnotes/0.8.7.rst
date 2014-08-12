@@ -80,7 +80,7 @@ Features
 
 * ``IRenderable.getRenderingFor`` can now return a deferred.
 
-* The Mercurial hook now supports multiple masters.  See :bb:pull:`436`.
+* The Mercurial hook now supports multiple masters.  See :pull:`436`.
 
 * There's a new poller for Mercurial: :bb:chsrc:`HgPoller`.
 
@@ -107,10 +107,10 @@ Features
     are now controlled using CSS.
 
 * The :bb:chsrc:`SVNPoller` now supports multiple projects and codebases.
-  See :bb:pull:`443`.
+  See :pull:`443`.
 
 * The :bb:status:`MailNotifier` now takes a callable to calculate the "previous" build for purposes of determining status changes.
-  See :bb:pull:`489`.
+  See :pull:`489`.
 
 * The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
