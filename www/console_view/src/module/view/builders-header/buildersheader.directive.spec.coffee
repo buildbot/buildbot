@@ -14,7 +14,7 @@ describe 'Builders header directive controller', ->
         # Put fake html template to templateCache
         # The other solution would be to use ngHtml2JsPreprocessor, but in this case
         # only the directive controller is tested
-        $templateCache.put('buildbot.console_view/views/buildersheader.html', '<div></div>')
+        $templateCache.put('console_view/views/buildersheader.html', '<div></div>')
 
         $scope = $rootScope.$new()
         element = angular.element('<builders-header builders="builders"></builders-header>')
