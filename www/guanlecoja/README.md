@@ -142,6 +142,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.2.4: small ngClassify default config enhancement
 * 0.2.3: bump ng-classify for better multi module support, hardcode angular-template-cache, waiting my PR is merged
 * 0.2.2: add optional server, handle errors correctly in watch mode
 * 0.2.1: doc update
