@@ -3,7 +3,7 @@ module.exports = function (grunt) {
     "use strict";
 
     var target = "dev";
-    if (grunt.option('prod')) {
+    if (grunt.option("prod")) {
         target = "prod";
     }
 
@@ -11,69 +11,73 @@ module.exports = function (grunt) {
     grunt.initConfig({
         files: {
             css: {
-                src: ['sass'],
-                src_watch: ['sass/**/*.scss'],
-                dest: ['prod/css']
+                src: ["sass"],
+                src_watch: ["sass/**/*.scss"],
+                dest: ["prod/css"]
             },
             js: {
                 src: [
-                    'script/libs/**/*.js',
-                    'script/plugins/**/*.js',
-                    'script/project/**/*.js',
-                    'script/main.js'
+                    "script/libs/**/*.js",
+                    "script/plugins/**/*.js",
+                    "script/project/**/*.js",
+                    "script/main.js"
                 ],
-                dest: "prod/script/main.js",
+                dest: "prod/",
                 requirejs: {
-                    src: [
-                        'script/require.js'
+                    dest: "prod/script/main.js",
+                    include: [
+                        "require.js",
+                        "testResults",
+                        "buildLog",
+                        "buildLogiFrame"
                     ]
                 }
             },
             html: {
                 src: [
-                    'templates/**/*.html'
+                    "templates/**/*.html"
                 ]
             }
         },
         compass: {
             options: {
-                sassDir: '<%= files.css.src %>',
-                cssDir: '<%= files.css.dest %>'
+                sassDir: "<%= files.css.src %>",
+                cssDir: "<%= files.css.dest %>"
             },
             prod: {
                 options: {
-                    environment: 'production',
-                    outputStyle: 'compressed'
+                    environment: "production",
+                    outputStyle: "compressed"
                 }
             },
             dev: {
                 options: {
                     debugInfo: true,
-                    environment: 'development',
-                    outputStyle: 'nested'
+                    environment: "development",
+                    outputStyle: "nested"
                 }
             }
         },
         requirejs: {
             options: {
-                baseUrl: 'script/',
-                mainConfigFile: 'script/main.js',
-                name: 'main',
-                out: "<%= files.js.dest %>",
-                include: 'require.js',
+                baseUrl: "script/",
+                mainConfigFile: "script/main.js",
+                name: "main",
+                out: "<%= files.js.requirejs.dest %>",
+                include: "<%= files.js.requirejs.include %>",
                 preserveLicenseComments: false,
                 generateSourceMaps: true,
                 fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/,
-                findNestedDependencies: true
+                findNestedDependencies: true,
             },
             dev: {
                 options: {
-                    optimize: 'none'
+                    optimize: "none"
                 }
             },
             prod: {
                 options: {
-                    optimize: 'uglify2'
+                    optimize: "uglify2"
                 }
             }
         },
@@ -82,15 +86,15 @@ module.exports = function (grunt) {
                 livereload: true
             },
             css: {
-                files: ['<%= files.css.src_watch %>'],
-                tasks: ['compass:' + target]
+                files: ["<%= files.css.src_watch %>"],
+                tasks: ["compass:" + target]
             },
             js: {
-                files: ['<%= files.js.src %>'],
-                tasks: ['requirejs:' + target]
+                files: ["<%= files.js.src %>"],
+                tasks: ["requirejs:" + target]
             },
             html: {
-                files: ['<%= files.html.src %>']
+                files: ["<%= files.html.src %>"]
             }
         },
         karma: {
@@ -104,21 +108,20 @@ module.exports = function (grunt) {
     });
 
     // Load plugins here
-    grunt.loadNpmTasks('grunt-contrib-compass');
-    grunt.loadNpmTasks('grunt-contrib-watch'); // run grunt watch for converting sass files to css in realtime
-    grunt.loadNpmTasks('grunt-contrib-requirejs');
-    grunt.loadNpmTasks('grunt-karma');
+    grunt.loadNpmTasks("grunt-contrib-compass");
+    grunt.loadNpmTasks("grunt-contrib-watch"); // run grunt watch for converting sass files to css in realtime
+    grunt.loadNpmTasks("grunt-contrib-requirejs");
+    grunt.loadNpmTasks("grunt-karma");
 
     // Define your tasks here
-    grunt.registerTask('prod', ["test", "build:prod"]);
-    grunt.registerTask('build', 'Builds all of our resources', function (overrideTarget) {
+    grunt.registerTask("prod", ["test", "build:prod"]);
+    grunt.registerTask("build", "Builds all of our resources", function (overrideTarget) {
         if (overrideTarget !== undefined) {
             target = overrideTarget;
         }
-        grunt.task.run('compass:' + target);
-        grunt.task.run('requirejs:' + target);
+        grunt.task.run(["compass:" + target, "requirejs:" + target]);
     });
-    grunt.registerTask('test', ["karma:unit"]);
-    grunt.registerTask('default', ['build', 'watch']);
+    grunt.registerTask("test", ["karma:unit"]);
+    grunt.registerTask("default", ["build", "watch"]);
 
 };

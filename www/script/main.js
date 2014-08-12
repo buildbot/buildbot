@@ -1,61 +1,65 @@
 /*global require, define, jQuery*/
 require.config({
     paths: {
-        'jquery-internal': 'libs/jquery',
-        'jquery-ui': 'libs/jquery-ui',
-        'ui.dropdown': 'project/ui/dropdown',
-        'ui.popup': 'project/ui/popup',
-        'ui.preloader': 'project/ui/preloader',
-        'selectors': 'project/selectors',
-        'select2': 'plugins/select2',
-        'datatables': 'libs/jquery-datatables',
-        'datatables-extend': 'project/datatables-extend',
-        'dotdotdot': 'plugins/jquery-dotdotdot',
-        'screensize': 'project/screen-size',
-        'helpers': 'project/helpers',
-        'realtimePages': 'project/realtimePages',
-        'realtimerouting': 'project/realtimeRouting',
-        'rtBuildDetail': 'project/rtBuildDetail',
-        'rtBuilders': 'project/rtBuilders',
-        'rtBuilderDetail': 'project/rtBuilderDetail',
-        'rtBuildSlaves': 'project/rtBuildSlaves',
-        'rtBuildSlaveDetail': 'project/rtBuildSlaveDetail',
-        'rtBuildQueue': 'project/rtBuildQueue',
-        'rtGlobal': 'project/rtGlobal',
-        'jqache': 'plugins/jqache-0-1-1-min',
-        'overscroll': 'plugins/jquery-overscroll',
-        'moment': 'plugins/moment-with-langs',
-        'extend-moment': 'project/extendMoment',
-        'mustache': "libs/mustache-wrap",
-        'handlebars': "libs/handlebars",
-        'livestamp': "plugins/livestamp",
-        'timeElements': "project/timeElements",
-        'iFrameResize': "libs/iframeResizer.min",
-        'rtGenericTable': "project/rtGenericTable",
-        'hbCells': 'templates/rtCells.handlebars',
-        'userSettings': 'project/userSettings',
-        'URIjs': 'libs/uri',
-        'toastr': 'plugins/toastr'
+        "jquery-internal": "libs/jquery",
+        "jquery-ui": "libs/jquery-ui",
+        "ui.dropdown": "project/ui/dropdown",
+        "ui.popup": "project/ui/popup",
+        "ui.preloader": "project/ui/preloader",
+        "selectors": "project/selectors",
+        "select2": "plugins/select2",
+        "datatables": "libs/jquery-datatables",
+        "datatables-extend": "project/datatables-extend",
+        "dotdotdot": "plugins/jquery-dotdotdot",
+        "screensize": "project/screen-size",
+        "helpers": "project/helpers",
+        "realtimePages": "project/realtimePages",
+        "realtimerouting": "project/realtimeRouting",
+        "rtBuildDetail": "project/rtBuildDetail",
+        "rtBuilders": "project/rtBuilders",
+        "rtBuilderDetail": "project/rtBuilderDetail",
+        "rtBuildSlaves": "project/rtBuildSlaves",
+        "rtBuildSlaveDetail": "project/rtBuildSlaveDetail",
+        "rtBuildQueue": "project/rtBuildQueue",
+        "rtGlobal": "project/rtGlobal",
+        "jqache": "plugins/jqache-0-1-1-min",
+        "overscroll": "plugins/jquery-overscroll",
+        "moment": "plugins/moment-with-langs",
+        "extend-moment": "project/extendMoment",
+        "mustache": "libs/mustache-wrap",
+        "handlebars": "libs/handlebars",
+        "livestamp": "plugins/livestamp",
+        "timeElements": "project/timeElements",
+        "iFrameResize": "libs/iframeResizer",
+        "iFrameResizeContent": "libs/iframeResizer.contentWindow",
+        "rtGenericTable": "project/rtGenericTable",
+        "hbCells": "templates/rtCells.handlebars",
+        "userSettings": "project/userSettings",
+        "URIjs": "libs/uri",
+        "toastr": "plugins/toastr",
+        "testResults": "project/testresults-common",
+        "buildLog": "project/buildLog",
+        "buildLogiFrame": "project/buildLog-iFrame"
     },
     shim: {
-        'overscroll': {
-            deps: ['jquery']
+        "overscroll": {
+            deps: ["jquery"]
         },
-        'ui.preloader': {
-            deps: ['jquery-ui']
+        "ui.preloader": {
+            deps: ["jquery-ui"]
         }
     }
 });
 
-define('jquery', ['jquery-internal'], function () {
+define("jquery", ["jquery-internal"], function () {
     "use strict";
     return jQuery;
 });
 
-define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'extend-moment', 'timeElements', 'toastr', 'ui.preloader'],
+define(["jquery", "helpers", "datatables-extend", "ui.popup", "ui.dropdown", "extend-moment", "timeElements", "toastr", "ui.preloader"],
     function ($, helpers, dataTables, popup, dropdown, extendMoment, timeElements, toastr, preloader) {
 
-        'use strict';
+        "use strict";
 
         // reveal the page when all scripts are loaded
         $(document).ready(function () {
@@ -74,35 +78,35 @@ define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'ex
             }
 
             // swipe or scroll in the codebases overview
-            if ($('#builders_page').length || $('#builder_page').length) {
-                require(['overscroll'],
+            if ($("#builders_page").length || $("#builder_page").length) {
+                require(["overscroll"],
                     function (overscroll) {
 
                         $("#overScrollJS").overscroll({
                             showThumbs: false,
-                            direction: 'horizontal'
+                            direction: "horizontal"
                         });
                     });
             }
 
             // tooltip for long txtstrings
-            if ($('.ellipsis-js').length) {
-                require(['dotdotdot'],
+            if ($(".ellipsis-js").length) {
+                require(["dotdotdot"],
                     function () {
                         $(".ellipsis-js").dotdotdot();
                     });
             }
 
             // codebases combobox selector
-            if ($('#commonBranch_select').length || $('.select-tools-js').length) {
-                require(['selectors'],
+            if ($("#commonBranch_select").length || $(".select-tools-js").length) {
+                require(["selectors"],
                     function (selectors) {
                         selectors.init();
                     });
             }
 
             if (helpers.hasfinished() === false) {
-                require(['realtimerouting'],
+                require(["realtimerouting"],
                     function (realtimeRouting) {
                         realtimeRouting.init();
                     });
@@ -112,8 +116,8 @@ define(['jquery', 'helpers', 'datatables-extend', 'ui.popup', 'ui.dropdown', 'ex
                 $preloader.preloader("showPreloader");
             }
 
-            if ($('#home_page').length > 0) {
-                helpers.randomImage($('#image').find('img'));
+            if ($("#home_page").length > 0) {
+                helpers.randomImage($("#image").find("img"));
             }
 
             // setup toastr
