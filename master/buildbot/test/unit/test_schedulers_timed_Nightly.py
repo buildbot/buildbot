@@ -16,7 +16,6 @@
 import mock
 import time
 
-from buildbot import config
 from buildbot.changes import filter
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
