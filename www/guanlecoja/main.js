@@ -1,5 +1,5 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, serve_static, sourcemaps, templateCache, uglify, _,
+  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   run_sequence = require('run-sequence');
@@ -53,8 +53,6 @@
   fixtures2js = require('gulp-fixtures2js');
 
   connect = require('connect');
-
-  serve_static = require("serve-static");
 
   module.exports = function(gulp) {
     var buildConfig, config, dev, error_handler, prod, script_sources;
@@ -131,7 +129,7 @@
     });
     gulp.task('server', ['index'], function(next) {
       if (config.devserver != null) {
-        return connect().use(serve_static(config.dir.build)).listen(config.devserver.port, next);
+        return connect().use(connect["static"](config.dir.build)).listen(config.devserver.port, next);
       } else {
         return next();
       }

@@ -29,7 +29,6 @@ cssmin = require 'gulp-minify-css'
 less = require 'gulp-less'
 fixtures2js = require 'gulp-fixtures2js'
 connect = require('connect')
-serve_static = require("serve-static")
 
 module.exports =  (gulp) ->
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
@@ -148,7 +147,7 @@ module.exports =  (gulp) ->
     gulp.task 'server', ['index'], (next) ->
         if config.devserver?
             connect()
-            .use(serve_static(config.dir.build))
+            .use(connect.static(config.dir.build))
             .listen(config.devserver.port, next)
         else
             next()
