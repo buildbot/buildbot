@@ -18,6 +18,7 @@ gulp.task "publish", ['default'], ->
         name: "guanlecoja-ui"
         version: "1.0.5"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
+        ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
         dependencies: {}
 
