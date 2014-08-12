@@ -13,5 +13,11 @@ class GlTopbar extends Directive
 class _glTopbar extends Controller
     constructor: ($scope, glMenuService) ->
         $scope.appTitle = glMenuService.getAppTitle()
+        $scope.$on "$stateChangeStart", (ev, state) ->
+            console.log state
+            $scope.breadcrumb = [
+                caption: _.humanize(state.name)
+                href: '#' + state.url
+            ]
         $scope.$on "breadcrumb", (e, data) ->
             $scope.breadcrumb = data

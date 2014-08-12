@@ -16,7 +16,7 @@ gulp.task "publish", ['default'], ->
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.0.5"
+        version: "1.0.6"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"

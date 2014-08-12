@@ -15,7 +15,7 @@ class GlMenu extends Provider
     setAppTitle: (title) ->
         @appTitle = title
 
-    $get: ($state) ->
+    $get: ["$state", ($state) ->
         for state in $state.get()[1...]
             group = state.data.group
 
@@ -49,3 +49,4 @@ class GlMenu extends Provider
             getFooter: -> self.footer
             getAppTitle: -> self.appTitle
         }
+    ]
