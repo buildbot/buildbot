@@ -33,7 +33,7 @@ class Application(object):
                 break
         else:
             self.version = '<unknown>'
-        self.static_dir = os.path.abspath(sibpath('buildbot_www'))
+        self.static_dir = os.path.abspath(sibpath('static'))
         self.resource = static.File(self.static_dir)
 
 
