@@ -1,7 +1,12 @@
 /* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
 @gl-sidebar-transition-time: 0.2s;
+@gl-sidebar-small-threshold: 600px;
+
 .gl-page-with-sidebar {
     padding-left: 70px;
+    @media (max-width: @gl-sidebar-small-threshold) {
+        padding-left: 30px;
+    }
     height: 100%;
     bottom: 0;
     /* theme */
@@ -19,6 +24,9 @@
     &.active {
         transform: translate(180px, 0px);
         -webkit-transform: translate(180px, 0px);
+       .sidebar ul {
+            overflow-y: auto;
+        }
     }
     &:not(.active){
 
@@ -51,6 +59,10 @@
         -webkit-user-select: none;
         -ms-user-select: none;
         margin-left: -150px;
+
+        @media (max-width: @gl-sidebar-small-threshold) {
+            width: 210px;
+        }
         left: -30px;
         width: 250px;
         position: fixed;
@@ -64,13 +76,16 @@
             list-style: none;
             text-indent: 20px;
             overflow-x: hidden;
-            overflow-y: auto;
+            overflow-y: hidden;
             li a {
                 color: #fff;
                 display: block;
                 float: left;
                 text-decoration: none;
                 width: 250px;
+                @media (max-width: @gl-sidebar-small-threshold) {
+                    width: 210px;
+                }
             }
             li.sidebar-main {
                 height: 51px;
@@ -83,6 +98,9 @@
                     font-size: 18px;
                     padding-right: 28px;
                     line-height: 50px;
+                    @media (max-width: @gl-sidebar-small-threshold) {
+                        padding-right: 8px;
+                    }
                 }
             }
             li.sidebar-title {
@@ -112,6 +130,9 @@
                     padding-right: 29px;
                     line-height: 40px;
                     width: 70px;
+                    @media (max-width: @gl-sidebar-small-threshold) {
+                        width: 50px;
+                    }
                 }
                 a:hover .menu-icon {
                     text-indent: 25px;
@@ -135,7 +156,7 @@
         }
     }
     /* footer */
-    .footer {
+    .sidebar-footer {
         position: absolute;
         height: 40px;
         bottom: 0;
@@ -155,8 +176,8 @@
     }
     /* content */
     .content {
-        padding-left: 0;
-        margin-left: 0;
+        padding-left: 0px;
+        margin-left: 0px;
         width: 100%;
         height: auto;
     }

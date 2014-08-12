@@ -1,3 +1,5 @@
+@gl-sidebar-small-threshold: 600px;
+
 .fa.fa-ringing {
     -webkit-animation-name: 'ring_animation';
     -webkit-animation-duration: 2000ms;
@@ -40,8 +42,30 @@
     50% { transform: rotate(0deg); }
     100% { }
 }
-
-
+.navbar{
+    max-height: 50px;
+}
+.navbar-nav > li {
+    float: left;
+}
+.navbar .breadcrumb {
+    margin-top: 6px;
+    font-size: 16px;
+    display: inline-block;
+}
+.navbar .navbar-brand {
+    padding-top: 14px;
+    font-size: 21px;
+}
+@media (max-width: @gl-sidebar-small-threshold) {
+    .navbar .navbar-brand {
+        display: none;
+    }
+    .navbar .breadcrumb {
+        font-size: 14px;
+        padding-left: 0px;
+    }
+}
 .avatar {
   background-size: 32px 32px;
   border-radius: 50%;

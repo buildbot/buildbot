@@ -1,12 +1,19 @@
 class GlMenu extends Provider
-    constructor: ->
-        @groups = {}
+    groups: {}
+    footer: []
+    appTitle: "set AppTitle using GlMenuServiceProvider.setAppTitle"
 
-    group: (group) ->
+    addGroup: (group) ->
         group.items = []
         group.order ?= 99
         @groups[group.name] = group
         return @groups
+
+    setFooter: (footer) ->
+        @_footer = footer
+
+    setAppTitle: (title) ->
+        @appTitle = title
 
     $get: ($state) ->
         for state in $state.get()[1...]
@@ -36,7 +43,9 @@ class GlMenu extends Provider
                 group.sref = "."
         groups = _.values(@groups)
         groups.sort((a,b) -> a.order - b.order)
-        console.log groups
+        self = @
         return {
             getGroups: -> groups
+            getFooter: -> self.footer
+            getAppTitle: -> self.appTitle
         }

@@ -1,6 +1,12 @@
 .navbar.navbar-default.navbar-static-top
     .container-fluid
-        ul.nav.navbar-nav.navbar-right
+        a.navbar-brand {{appTitle}}
+        ol.breadcrumb
+            li(ng-repeat="b in breadcrumb")
+                a(ng-if="b.sref", iu-sref="{{b.sref}}") {{b.caption}}
+                a(ng-if="b.href", ng-href="{{b.href}}") {{b.caption}}
+                span(ng-if="b.href == undefined && b.sref == undefined", ng-href="{{b.href}}") {{b.caption}}
+        ul.nav.navbar-nav.pull-right
             li.dropdown
                 a.dropdown-toggle(href='#')
                     i.fa.fa-bell-o.fa-lg.fa-ringing

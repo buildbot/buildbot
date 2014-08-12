@@ -13,6 +13,9 @@ class GlPageWithSidebar extends Directive
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout) ->
         @$scope.groups = glMenuService.getGroups()
+        @$scope.footer = glMenuService.getFooter()
+        @$scope.appTitle = glMenuService.getAppTitle()
+
     toggleGroup: (group) ->
         if @activeGroup!=group
             @activeGroup=group

@@ -3,7 +3,7 @@
         ul
             li.sidebar-main
                 a(href='#', ng-click='page.sidebarActive=!page.sidebarActive')
-                    | Dashboard
+                    | {{appTitle}}
                     span.menu-icon.fa.fa-bars
             li.sidebar-title
                 span NAVIGATION
@@ -24,7 +24,7 @@
                             span.menu-icon.fa(ng-class="'fa-' + group.icon")
         .sidebar-footer
             .col-xs-4(ng-repeat="item in footer")
-                a(ng-href='item.href')
+                a(ng-href='{{item.href}}')
                     | {{item.caption}}
     .content
         div(ng-transclude)
