@@ -87,6 +87,8 @@ module.exports =
                 appName: config.name
                 provider:
                     suffix: "Service"
+                factory:
+                    format: 'camelCase'
             }
     ### ###########################################################################################
     #   This is the default configuration for karma

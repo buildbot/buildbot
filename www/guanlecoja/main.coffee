@@ -77,7 +77,7 @@ module.exports =  (gulp) ->
             # jade build
             .pipe(gif("*.jade", jade().on('error', error_handler)))
             .pipe gif "*.html", rename (p) ->
-                if config.name?
+                if config.name? or config.name is 'app'
                     p.dirname = path.join(config.name, "views")
                 else
                     p.dirname = "views"
