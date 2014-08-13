@@ -30,7 +30,7 @@ from twisted.python import log
 
 def convertBranchParameter(kwargs):
     # convert kwargs in place
-    branch = kwargs.get('branch')
+    branch = kwargs.pop('branch', None)
     if branch:
         if 'codebases' in kwargs:
             config.error("The 'branch' parameter cannot be combined with the 'codebases' parameter")
@@ -40,8 +40,6 @@ def convertBranchParameter(kwargs):
             'project': '',
             'revision': ''
         }}
-    if 'branch' in kwargs:
-        del kwargs['branch']
 
 
 class Timed(base.BaseScheduler):
