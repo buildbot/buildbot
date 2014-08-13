@@ -1,8 +1,13 @@
+@navbar-height: 52px;
+@sidebar-width: 70px;
+
 .console {
   position: absolute;
-  top: 52px;
+  top: @navbar-height;
+  right: 0;
   bottom: 0;
-  width: 100%;
+  left: @sidebar-width;
+  width: auto;
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -25,11 +30,14 @@
 
   .load-indicator {
     position: fixed;
-    z-index: 2;
-    display: table;
-    height: 100%;
+    top: @navbar-height;
+    left: @sidebar-width;
+    padding-right: @sidebar-width;
     width: 100%;
+    height: 100%;
+    z-index: 900;
     background-color: #ffffff;
+    display: table;
 
     .spinner {
       display: table-cell;
