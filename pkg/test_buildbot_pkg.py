@@ -19,34 +19,46 @@ import shutil
 from subprocess import call
 from subprocess import check_call
 from twisted.trial import unittest
+from textwrap import dedent
 
+class BuildbotWWWPkg(unittest.TestCase):
+    pkgName = "buildbot_www"
+    pkgPaths = ["www"]
+    epName = "base"
 
-class BuildbotPkg(unittest.TestCase):
+    loadTestScript = dedent("""
+        import pkg_resources
+        apps = {}
+        for ep in pkg_resources.iter_entry_points('buildbot.www'):
+            apps[ep.name] = ep.load()
 
+        assert("scripts.js" in apps["%(epName)s"].resource.listNames())
+        assert(apps["%(epName)s"].version.startswith("0."))
+        assert(apps["%(epName)s"].description is not None)
+        print apps["%(epName)s"]
+        """)
     @property
-    def www(self):
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "www"))
+    def path(self):
+        return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", *self.pkgPaths))
 
     def rmtree(self, d):
         if os.path.isdir(d):
             shutil.rmtree(d)
 
     def setUp(self):
-        call("pip uninstall -y buildbot_www", shell=True)
-        self.rmtree(os.path.join(self.www, "build"))
-        self.rmtree(os.path.join(self.www, "dist"))
-        self.rmtree(os.path.join(self.www, "static"))
+        call("pip uninstall -y " + self.pkgName, shell=True)
+        self.rmtree(os.path.join(self.path, "build"))
+        self.rmtree(os.path.join(self.path, "dist"))
+        self.rmtree(os.path.join(self.path, "static"))
 
     def run_setup(self, cmd):
-        check_call("python setup.py " + cmd, shell=True, cwd=self.www)
+        check_call("python setup.py " + cmd, shell=True, cwd=self.path)
 
     def check_correct_installation(self):
         # assert we can import buildbot_www
         # and that it has an endpoint with resource containing file "script.js"
         check_call([
-            'python', '-c',
-            'import buildbot_www;'  # no comma
-            'assert("scripts.js" in buildbot_www.ep.resource.listNames())'])
+            'python', '-c', self.loadTestScript % dict(epName=self.epName)])
 
     def test_install(self):
         self.run_setup("install")
@@ -54,7 +66,13 @@ class BuildbotPkg(unittest.TestCase):
 
     def test_wheel(self):
         self.run_setup("bdist_wheel")
-        check_call("pip install dist/*.whl", shell=True, cwd=self.www)
+        check_call("pip install dist/*.whl", shell=True, cwd=self.path)
+        self.check_correct_installation()
+
+    def test_egg(self):
+        self.run_setup("bdist_egg")
+        # egg installation is not supported by pip, so we use easy_install
+        check_call("easy_install dist/*.egg", shell=True, cwd=self.path)
         self.check_correct_installation()
 
     def test_develop(self):
@@ -62,10 +80,25 @@ class BuildbotPkg(unittest.TestCase):
         self.check_correct_installation()
 
     def test_develop_via_pip(self):
-        check_call("pip install -e .", shell=True, cwd=self.www)
+        check_call("pip install -e .", shell=True, cwd=self.path)
         self.check_correct_installation()
 
     def test_sdist(self):
         self.run_setup("sdist")
-        check_call("pip install dist/*.tar.gz", shell=True, cwd=self.www)
+        check_call("pip install dist/*.tar.gz", shell=True, cwd=self.path)
         self.check_correct_installation()
+
+class BuildbotConsolePkg(BuildbotWWWPkg):
+    pkgName = "buildbot-console-view"
+    pkgPaths = ["www", "console_view"]
+    epName = "console_view"
+
+class BuildbotWaterfallPkg(BuildbotWWWPkg):
+    pkgName = "buildbot-waterfall-view"
+    pkgPaths = ["www", "waterfall_view"]
+    epName = "waterfall_view"
+
+class BuildbotCodeparameterPkg(BuildbotWWWPkg):
+    pkgName = "buildbot-codeparameter"
+    pkgPaths = ["www", "codeparameter"]
+    epName = "codeparameter"

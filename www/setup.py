@@ -29,7 +29,7 @@ setup_www_plugin(
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
     license='GNU GPL',
-    py_modules=['buildbot_www'],
+    packages=['buildbot_www'],
     entry_points="""
         [buildbot.www]
         base = buildbot_www:ep

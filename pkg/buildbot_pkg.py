@@ -19,6 +19,7 @@ from distutils.command.build import build
 from distutils.version import LooseVersion
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
+from textwrap import dedent
 
 import os
 
@@ -95,16 +96,26 @@ def build_js(cmd):
     global js_built
     if js_built:
         return
+    package = cmd.distribution.packages[0]
     if os.path.exists("gulpfile.js"):
         npm_version = check_output("npm -v")
         npm_bin = check_output("npm bin").strip()
         assert npm_version != "", "need nodejs and npm installed in current PATH"
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
-        cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod'])
-    cmd.copy_tree('static', os.path.join("build", "lib", "static"))
+        cmd.spawn([os.path.join(npm_bin, "gulp"), 'default'])
+        with open(os.path.join("MANIFEST.in"), "w") as f:
+            f.write(dedent("""
+            include %(package)s/VERSION
+            recursive-include %(package)s/static *
+            """ % dict(package=package)))
 
-    with open(os.path.join("build", "lib", "VERSION"), "w") as f:
+    cmd.copy_tree(os.path.join(package, 'static'), os.path.join("build", "lib", package, "static"))
+
+    with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
+        f.write(cmd.distribution.metadata.version)
+
+    with open(os.path.join(package, "VERSION"), "w") as f:
         f.write(cmd.distribution.metadata.version)
 
     js_built = True
@@ -127,4 +138,5 @@ cmdclassforjs = dict(build=my_build, egg_info=my_egg_info)
 
 
 def setup_www_plugin(**kw):
-    setup(version=getVersion("."), cmdclass=cmdclassforjs, **kw)
+    package = kw['packages'][0]
+    setup(version=getVersion(os.path.join(package, "__init__.py")), cmdclass=cmdclassforjs, **kw)

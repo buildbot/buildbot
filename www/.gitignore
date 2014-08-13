@@ -1,3 +1,4 @@
+MANIFEST.in
 build
 !src/app/builders/build
 dist/

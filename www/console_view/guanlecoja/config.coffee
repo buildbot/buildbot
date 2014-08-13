@@ -10,6 +10,7 @@ module.exports =
     #   Name of the plugin
     ### ###########################################################################################
     name: 'console_view'
+    dir: build: 'buildbot_console_view/static'
     bower:
         testdeps:
             "guanlecoja-ui":

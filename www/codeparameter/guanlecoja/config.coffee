@@ -17,14 +17,14 @@ module.exports =
     #   Name of the plugin
     ### ###########################################################################################
     name: 'codeparameter'
-    plugin: true
+
 
     ### ###########################################################################################
     #   Directories
     ### ###########################################################################################
     dir:
         # The build folder is where the app resides once it's completely built
-        build: 'static'
+        build: 'buildbot_codeparameter/static'
 
     ### ###########################################################################################
     #   Bower dependancies configuration

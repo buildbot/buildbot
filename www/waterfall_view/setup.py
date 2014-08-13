@@ -30,7 +30,7 @@ setup_www_plugin(
     author_email=u'tardyp@gmail.com',
     url='http://buildbot.net/',
     license='GNU GPL',
-    py_modules=['buildbot_www'],
+    packages=['buildbot_waterfall_view'],
     entry_points="""
         [buildbot.www]
         waterfall_view = buildbot_waterfall_view:ep

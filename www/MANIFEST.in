@@ -1,2 +1,0 @@
-include VERSION
-recursive-include static *

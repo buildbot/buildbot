@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -15,23 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-try:
-    from buildbot_pkg import setup_www_plugin
-except ImportError:
-    import sys
-    print >> sys.stderr, "Please install buildbot_pkg module in order to install that package, or use the pre-build .whl modules available on pypi"
-    sys.exit(1)
+import pkg_resources
 
-setup_www_plugin(
-    name='buildbot-codeparameter',
-    description='Buildbot Forcescheduler Parameter that use ace.js to display code',
-    author=u'Pierre Tardy',
-    author_email=u'tardyp@gmail.com',
-    url='http://buildbot.net/',
-    license='GNU GPL',
-    packages=['buildbot_codeparameter'],
-    entry_points="""
-        [buildbot.www]
-        codeparameter = buildbot_codeparameter:ep
-    """,
-)
+from twisted.web import static
+
+class Application(object):
+    def __init__(self, modulename, description):
+        self.description = description
+        self.version = pkg_resources.resource_string(modulename, "/VERSION").strip()
+        self.static_dir = pkg_resources.resource_filename(modulename, "/static")
+        self.resource = static.File(self.static_dir)
+
+    def __repr__(self):
+        return "www.plugin.Application(version={}, description={}, static_dir={})".format(
+            self.version, self.description, self.static_dir)

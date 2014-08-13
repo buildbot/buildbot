@@ -13,29 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-
-from twisted.web import static
-
-
-def sibpath(*elts):
-    return os.path.join(os.path.dirname(__file__), *elts)
-
-
-class Application(object):
-
-    def __init__(self):
-        self.description = "Buildbot UI"
-        # VERSION's location differs depending on whether we're installed
-        for f in sibpath('VERSION'), sibpath('static', 'VERSION'):
-            if os.path.exists(f):
-                self.version = open(f).read().strip()
-                break
-        else:
-            self.version = '<unknown>'
-        self.static_dir = os.path.abspath(sibpath('static'))
-        self.resource = static.File(self.static_dir)
-
+from buildbot.www.plugin import Application
 
 # create the interface for the setuptools entry point
-ep = Application()
+ep = Application(__name__, "Buildbot UI")

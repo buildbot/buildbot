@@ -21,7 +21,7 @@ config =
     ### ###########################################################################################
     dir:
         # The build folder is where the app resides once it's completely built
-        build: 'static'
+        build: 'buildbot_www/static'
 
     ### ###########################################################################################
     #   Bower dependancies configuration

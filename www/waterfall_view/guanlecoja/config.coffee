@@ -10,6 +10,7 @@ module.exports =
     #   Name of the plugin
     ### ###########################################################################################
     name: 'waterfall_view'
+    dir: build: 'buildbot_waterfall_view/static'
     bower:
         testdeps:
             "guanlecoja-ui":
