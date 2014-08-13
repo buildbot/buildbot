@@ -14,6 +14,15 @@
 # Copyright Buildbot Team Members
 
 from buildbot.www.plugin import Application
+from buildbot.schedulers.forcesched import TextParameter
+
+class CodeParameter(TextParameter):
+
+    """A code editor using ace"""
+    spec_attributes = ["mode", "height"]
+    type = "code"
+    mode = "text"
+    height = 200
 
 # create the interface for the setuptools entry point
 ep = Application(__name__, "Buildbot forcescheduler parameter using ace.js to submit code")

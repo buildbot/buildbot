@@ -12,7 +12,7 @@ path = require("path")
 # d3 is loaded on demand, so it is just copied in the static dir
 gulp.task "copyd3", ->
     gulp.src(["libs/d3/d3.min.js"])
-        .pipe(gulp.dest("static"))
+        .pipe(gulp.dest(config.dir.build))
 
 config =
 
