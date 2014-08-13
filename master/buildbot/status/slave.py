@@ -16,6 +16,7 @@
 import time
 from zope.interface import implements
 from buildbot import interfaces
+from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE
 from buildbot.util.eventual import eventually
 
 class SlaveStatus:
@@ -36,6 +37,7 @@ class SlaveStatus:
         self.graceful_callbacks = []
         self.connect_times = []
         self.master = None
+        self.health = 0
 
     def getName(self):
         return self.name
@@ -85,6 +87,7 @@ class SlaveStatus:
     def buildStarted(self, build):
         self.runningBuilds.append(build)
     def buildFinished(self, build):
+        self.updateHealth()
         self.runningBuilds.remove(build)
 
     def getGraceful(self):
@@ -106,6 +109,54 @@ class SlaveStatus:
         if watcher in self.graceful_callbacks:
             self.graceful_callbacks.remove(watcher)
 
+    def getBuilders(self):
+        status = self.master.status
+        my_builders = []
+        for bname in status.getBuilderNames():
+            b = status.getBuilder(bname)
+            for bs in b.getSlaves():
+                if bs.getName() == self.name:
+                    my_builders.append(b)
+
+        return my_builders
+
+    def getRecentBuilds(self, num_builds=15):
+        status = self.master.status
+        n = 0
+        my_builders = self.getBuilders()
+        recent_builds = []
+
+        for rb in status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
+            if rb.getSlavename() == self.name:
+                n += 1
+                recent_builds.append(rb)
+                if n > num_builds:
+                    return recent_builds
+
+        return recent_builds
+
+    def updateHealth(self):
+        num_builds = 15
+        health = 0
+        builds = self.getRecentBuilds(num_builds)
+
+        if len(builds) == 0:
+            self.health = 0
+            return
+
+        build_weight = 1.0 / len(builds)
+
+        for b in builds:
+            if b.getResults() != FAILURE and b.getResults() != WARNINGS and b.getResults() != EXCEPTION:
+                health += build_weight
+
+        if health >= 0.8:
+            self.health = 0
+        elif health >= 0.5:
+            self.health = -1
+        else:
+            self.health = -2
+
     def asDict(self):
         result = {}
         # Constant
@@ -123,5 +174,6 @@ class SlaveStatus:
         builds = sorted(builds, key=lambda b: b['isWaiting'])
         result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()
+        result['health'] = self.health
         return result
 

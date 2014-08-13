@@ -91,7 +91,8 @@ define(["jquery", "rtGenericTable"], function ($, gt) {
         lastMessage: 1403612820.811,
         name: "mba01",
         url: "http://10.45.6.89:8001/buildslaves/mba01",
-        version: "0.8.7p1"
+        version: "0.8.7p1",
+        health: 0
     };
 
     function rawHTMLToJQuery(html, parentElement) {
@@ -464,5 +465,24 @@ define(["jquery", "rtGenericTable"], function ($, gt) {
             setup(customBuildData);
             expect($tr.text()).toEqual("5m 0s");
         });
+    });
+
+    describe("A slave health cell", function () {
+        var $slaveHealthDict = gt.cell.slaveHealth(0);
+
+        function checkHealthType(data, type) {
+            it("renders correctly with health of " + type, function () {
+                var $html = rawHTMLToJQuery($slaveHealthDict.mRender(undefined, undefined, data)),
+                    $span = $html.find("span");
+
+                expect($span.length).toEqual(1);
+                expect($span.hasClass("health-icon")).toBeTruthy();
+                expect($span.hasClass(type + "-health-icon")).toBeTruthy();
+            });
+        }
+
+        checkHealthType($.extend({}, slaveData, {health: 0}), "good");
+        checkHealthType($.extend({}, slaveData, {health: -1}), "warning");
+        checkHealthType($.extend({}, slaveData, {health: -2}), "bad");
     });
 });

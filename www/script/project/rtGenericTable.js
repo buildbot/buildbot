@@ -151,6 +151,23 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                 }
             };
         },
+        slaveHealth: function (index) {
+            var healthNames = ["good", "warning", "bad"];
+            return {
+                "aTargets": [index],
+                "mRender": function (data, type, full) {
+                    if (full.health === undefined) {
+                        full.health = 0;
+                    }
+                    if (type === 'sort') {
+                        return -full.health;
+                    }
+                    var health = healthNames[-full.health];
+                    return hbCells({slaveHealthCell: true, health: health});
+                },
+                "sType": "numeric"
+            };
+        },
         buildProgress: function (index, singleBuild) {
             return {
                 "aTargets": [index],

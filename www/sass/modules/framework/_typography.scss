@@ -306,3 +306,23 @@ span.log-error {
 span.log-warning {
   color: #AD823A;
 }
+
+@mixin healthIcons($status, $icon, $color) {
+  .#{$status}-health-icon:after {
+      font-family: "katana_icons";
+      content: $icon;
+      color: $color;
+  }
+}
+
+.health-icon {
+      display: inline-block;
+      font-size: 16px;
+      font-weight: normal;
+      padding: 0 0 0 0;
+      @include text-shadow(0 1px 0 #FFFFFF);
+}
+
+@include healthIcons("good", "", #32912e);
+@include healthIcons("warning", "", #918d2e);
+@include healthIcons("bad", "", #912E2E);

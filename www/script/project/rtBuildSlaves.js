@@ -23,6 +23,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                 { "mData": null, "bSortable": false},
                 { "mData": null, "bSortable": true},
                 { "mData": null },
+                { "mData": null },
                 { "mData": null }
             ];
 
@@ -58,8 +59,8 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                         timeElements.addTimeAgoElem($(nTd).find('.last-message-timemago'), oData.lastMessage);
                     }
 
-                }
-
+                },
+                rtTable.cell.slaveHealth(5)
             ];
 
             return dt.initTable($tableElem, options);

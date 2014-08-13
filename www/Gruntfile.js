@@ -20,6 +20,7 @@ module.exports = function (grunt) {
                     "script/libs/**/*.js",
                     "script/plugins/**/*.js",
                     "script/project/**/*.js",
+                    "script/templates/*.handlebars",
                     "script/main.js"
                 ],
                 dest: "prod/",
