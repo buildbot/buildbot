@@ -3,7 +3,7 @@
 Build Factories
 ===============
 
-Each Builder is equipped with a ``build factory``, which is defines the steps
+Each Builder is equipped with a ``build factory``, which defines the steps
 used to perform that particular type of build.  This factory is created in the
 configuration file, and attached to a Builder through the ``factory`` element
 of its dictionary.
@@ -43,7 +43,7 @@ This factory would then be attached to one builder (or several, if desired)::
 
 It is also possible to pass a list of steps into the
 :class:`BuildFactory` when it is created. Using :meth:`addStep` is
-usually simpler, but there are cases where is is more convenient to
+usually simpler, but there are cases where it is more convenient to
 create the list of steps ahead of time, perhaps using some Python
 tricks to generate the steps. ::
 
