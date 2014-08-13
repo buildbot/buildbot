@@ -179,7 +179,7 @@ class Waterfall extends Controller
     setHeight: ->
         h = - @c.gap
         for group in @groups
-            h += (group.max - group.min + @c.gap) / 3
+            h += (group.max - group.min + @c.gap)
         height = h + @c.margin.top + @c.margin.bottom
         if height < parseInt @waterfall.style('height').replace('px', ''), 10
             @loadMore()
