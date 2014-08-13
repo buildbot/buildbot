@@ -178,9 +178,9 @@ Features
 
 * Added zsh and bash tab-completions support for 'buildbot' command.
 
-* An example of a declarative configuration is included in :bb:src:`master/contrib/SimpleConfig.py`, with copious comments.
+* An example of a declarative configuration is included in :src:`master/contrib/SimpleConfig.py`, with copious comments.
 
-* Systemd unit files for Buildbot are available in the :bb:src:`master/contrib/` directory.
+* Systemd unit files for Buildbot are available in the :src:`master/contrib/` directory.
 
 * We've added some extra checking to make sure that you have a valid locale before starting buildbot (#2608).
 
@@ -369,7 +369,7 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::

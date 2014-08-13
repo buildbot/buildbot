@@ -1,7 +1,7 @@
 Web Server Classes
 ==================
 
-Most of the source in :bb:src:`master/buildbot/www` is self-explanatory.
+Most of the source in :src:`master/buildbot/www` is self-explanatory.
 However, a few classes and methods deserve some special mention.
 
 Resources

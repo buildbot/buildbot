@@ -174,22 +174,6 @@ def make_index(name, localname):
                 dict(name=name, localname=localname))
 
 
-class SrcRole(object):
-
-    """
-    A role to link to buildbot source on master
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        node = nodes.reference('', '')
-        node['refuri'] = (
-            'https://github.com/buildbot/buildbot/blob/master/%s' % text)
-        node['reftitle'] = title = '%s' % text
-        node.append(nodes.literal(title, title))
-        return [node], []
-
-
 class BBDomain(Domain):
     name = 'bb'
     label = 'Buildbot'
@@ -295,9 +279,7 @@ class BBDomain(Domain):
         'event': XRefRole(),
         'rtype': XRefRole(),
         'rpath': XRefRole(),
-        'index': XRefRole(),
-
-        'src': SrcRole()
+        'index': XRefRole()
     }
 
     initial_data = {

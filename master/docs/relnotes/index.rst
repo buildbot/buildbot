@@ -271,7 +271,7 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::

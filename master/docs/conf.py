@@ -115,7 +115,8 @@ intersphinx_mapping = {
 
 extlinks = {
     'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
-    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request ')
+    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
+    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None)
 }
 
 # -- Options for HTML output ---------------------------------------------------

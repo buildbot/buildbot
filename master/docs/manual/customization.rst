@@ -680,7 +680,7 @@ When the tests are finished, trial emits a long line of `======` and then some l
 We want to avoid parsing these trailing lines, because their format is less well-defined than the `[OK]` lines.
 
 A simple version of the parser for this output looks like this.
-The full version is in :bb:src:`master/buildbot/steps/python_twisted.py`.
+The full version is in :src:`master/buildbot/steps/python_twisted.py`.
 
 .. code-block:: python
 
