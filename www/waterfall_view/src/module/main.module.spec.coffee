@@ -2,7 +2,7 @@ beforeEach ->
     module 'waterfall_view'
 
 describe 'Waterfall view controller', ->
-    createController = scope = $rootScope = $state = null
+    createController = scope = $rootScope = $state = elem = $document = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
@@ -10,28 +10,22 @@ describe 'Waterfall view controller', ->
         $compile = $injector.get('$compile')
         $controller = $injector.get('$controller')
         $state = $injector.get('$state')
-
+        $document = $injector.get('$document')
         elem = angular.element('<div></div>')
+        $document.find("body").append(elem)
         elem.append($compile('<ui-view></ui-view>')(scope))
 
-        # Create new controller
-        createController = ->
-            $controller 'waterfallController as w',
-                $scope: scope
 
     beforeEach(inject(injected))
 
-    it 'should be defined', (done) ->
-        $rootScope.$on '$stateChangeSuccess', ->
-            createController()
-            expect($state.current.name).toBe('waterfall')
-            expect(scope.w).toBeDefined()
-            done()
+    # make sure we remove the element from the dom
+    afterEach ->
+        elem.remove()
+        expect($document.find("svg").length).toEqual(0)
+
+    it 'should be defined', ->
         $state.transitionTo('waterfall')
         $rootScope.$digest()
-
-    #it "should load #{config.plugins.waterfall_view.limit} builds", ->
-    #    $state.transitionTo('waterfall')
-    #    $rootScope.$apply()
-    #    expect(scope.w.builds).toBeDefined()
-    #    expect(scope.w.builds.length).toBe(config.plugins.waterfall_view.limit)
+        # make sure the whole stuff created lots of graphics data
+        expect(elem.find("svg").length).toBeGreaterThan(1)
+        expect(elem.find("g").length).toBeGreaterThan(10)
