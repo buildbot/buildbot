@@ -55,9 +55,10 @@
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, config, dev, error_handler, prod, script_sources;
+    var buildConfig, config, coverage, dev, error_handler, prod, script_sources;
     prod = __indexOf.call(argv._, "prod") >= 0;
     dev = __indexOf.call(argv._, "dev") >= 0;
+    coverage = argv.coverage;
     config = require("./defaultconfig.coffee");
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
@@ -80,7 +81,18 @@
         throw e;
       }
     };
-    script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates);
+    if (coverage) {
+      config.vendors_apart = true;
+      config.templates_apart = true;
+    }
+    if (config.vendors_apart) {
+      script_sources = config.files.app.concat(config.files.scripts);
+    } else {
+      script_sources = bower.deps.concat(config.files.app, config.files.scripts);
+    }
+    if (!config.templates_apart) {
+      script_sources = script_sources.concat(config.files.templates);
+    }
     gulp.task('scripts', function() {
       return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
         if ((config.name != null) && config.name !== 'app') {
@@ -93,6 +105,37 @@
       }))).pipe(remember('scripts')).pipe(gif("*.html", templateCache({
         module: config.name
       }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+    });
+    if (config.vendors_apart) {
+      config.karma.files = ["vendors.js"].concat(config.karma.files);
+    }
+    gulp.task('vendors', function() {
+      if (!config.vendors_apart) {
+        return;
+      }
+      return gulp.src(bower.deps).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(concat("vendors.js")).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+    });
+    gulp.task('templates', function() {
+      if (!config.templates_apart) {
+        return;
+      }
+      return gulp.src(config.files.templates).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
+        if ((config.name != null) && config.name !== 'app') {
+          p.dirname = path.join(config.name, "views");
+        } else {
+          p.dirname = "views";
+        }
+        p.basename = p.basename.replace(".tpl", "");
+        return null;
+      }))).pipe(gif("*.html", templateCache({
+        module: config.name
+      }))).pipe(concat("templates.js")).pipe(gulp.dest(config.dir.build));
+    });
+    gulp.task('classify', function() {
+      if (!config.coffeecoverage) {
+        return;
+      }
+      return gulp.src(script_sources).pipe(ngClassify(config.ngclassify(config))).pipe(gulp.dest("coverage/src"));
     });
     gulp.task('tests', function() {
       var src;
@@ -142,13 +185,31 @@
       return null;
     });
     gulp.task("karma", function() {
-      var karmaconf;
+      var classified, karmaconf;
       karmaconf = {
         basePath: config.dir.build,
         action: dev ? 'watch' : 'run'
       };
       _.merge(karmaconf, config.karma);
-      return gulp.src(["scripts.js", 'generatedfixtures.js', "fixtures.js", "tests.js"]).pipe(karma(karmaconf));
+      if (coverage) {
+        karmaconf.basePath = ".";
+        if (config.coffeecoverage) {
+          karmaconf.files = ["vendors.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"];
+        } else {
+          karmaconf.files = ["vendors.js", "scripts.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"];
+        }
+        karmaconf.files = karmaconf.files.map(function(p) {
+          return path.join(config.dir.build, p);
+        });
+        if (config.coffeecoverage) {
+          classified = script_sources.map(function(p) {
+            return path.join("coverage", p);
+          });
+          karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified));
+          console.log(karmaconf.files);
+        }
+      }
+      return gulp.src(karmaconf.files).pipe(karma(karmaconf));
     });
     gulp.task("default", function(callback) {
       return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);

@@ -38,6 +38,7 @@ module.exports =  (gulp) ->
     # that should be the only difference, to minimize risk on difference between prod and dev builds
     prod = "prod" in argv._
     dev = "dev" in argv._
+    coverage = argv.coverage
 
     # Load in the build config files
     config = require("./defaultconfig.coffee")
@@ -63,9 +64,21 @@ module.exports =  (gulp) ->
         @emit("end")
         if not dev
             throw e
+    if coverage
+        config.vendors_apart = true
+        config.templates_apart = true
+        #config.coffeecoverage = true
 
-    # libs first, then app, then the rest
-    script_sources = bower.deps.concat(config.files.app, config.files.scripts, config.files.templates)
+    if config.vendors_apart
+        # might make sense to put the libs in a separated file
+        script_sources = config.files.app.concat(config.files.scripts)
+    else
+        # libs first, then app, then the rest
+        script_sources = bower.deps.concat(config.files.app, config.files.scripts)
+
+    unless config.templates_apart
+        script_sources = script_sources.concat(config.files.templates)
+
     gulp.task 'scripts', ->
         gulp.src script_sources
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
@@ -91,6 +104,45 @@ module.exports =  (gulp) ->
             .pipe gif(dev or config.sourcemaps, sourcemaps.write("."))
             .pipe gulp.dest config.dir.build
             .pipe gif(dev, lr())
+
+    if config.vendors_apart
+        config.karma.files = ["vendors.js"].concat(config.karma.files)
+
+    gulp.task 'vendors', ->
+        unless config.vendors_apart
+            return
+        gulp.src bower.deps
+            .pipe gif(dev or config.sourcemaps, sourcemaps.init())
+            .pipe concat("vendors.js")
+            # now everything is in js, do angular annotation, and minification
+            .pipe gif(prod, uglify())
+            .pipe gif(dev or config.sourcemaps, sourcemaps.write("."))
+            .pipe gulp.dest config.dir.build
+            .pipe gif(dev, lr())
+
+    gulp.task 'templates', ->
+        unless config.templates_apart
+            return
+        gulp.src config.files.templates
+            # jade build
+            .pipe(gif("*.jade", jade().on('error', error_handler)))
+            .pipe gif "*.html", rename (p) ->
+                if config.name? and config.name isnt 'app'
+                    p.dirname = path.join(config.name, "views")
+                else
+                    p.dirname = "views"
+                p.basename = p.basename.replace(".tpl","")
+                null
+            .pipe(gif("*.html", templateCache({module:config.name})))
+            .pipe concat("templates.js")
+            .pipe gulp.dest config.dir.build
+
+    gulp.task 'classify', ->
+        unless config.coffeecoverage
+            return
+        gulp.src script_sources
+            .pipe(ngClassify(config.ngclassify(config)))
+            .pipe gulp.dest "coverage/src"
 
     gulp.task 'tests', ->
         src = bower.testdeps.concat(config.files.tests)
@@ -163,8 +215,22 @@ module.exports =  (gulp) ->
         karmaconf =
             basePath: config.dir.build
             action: if dev then 'watch' else 'run'
+
         _.merge(karmaconf, config.karma)
-        gulp.src ["scripts.js", 'generatedfixtures.js', "fixtures.js", "tests.js"]
+
+        if coverage
+            karmaconf.basePath = "."
+            if config.coffeecoverage
+                karmaconf.files = ["vendors.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
+            else
+                karmaconf.files = ["vendors.js", "scripts.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
+            karmaconf.files = karmaconf.files.map (p) -> path.join(config.dir.build, p)
+            if config.coffeecoverage
+                classified = script_sources.map (p) ->
+                    path.join("coverage", p)
+                karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified))
+                console.log karmaconf.files
+        gulp.src karmaconf.files
             .pipe karma(karmaconf)
 
     gulp.task "default", (callback) ->

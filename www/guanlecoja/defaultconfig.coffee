@@ -75,8 +75,8 @@ module.exports =
 
 
     preparetasks: "bower"
-    buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
-        'index', 'tests', 'generatedfixtures', 'fixtures']
+    buildtasks: ['scripts', 'styles', 'fonts', 'imgs', 'classify',
+        'index', 'tests', 'generatedfixtures', 'fixtures', 'vendors', 'templates']
     testtasks: "karma"
 
     generatedfixtures: ->
@@ -100,7 +100,7 @@ module.exports =
         # test results reporter to use
         # possible values: 'dots', 'progress'
         # available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress'],
+        reporters: ['progress', 'coverage'],
         # start these browsers
         # available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['PhantomJS'],
@@ -110,7 +110,18 @@ module.exports =
           'karma-jasmine',
           'karma-phantomjs-launcher',
           'karma-sourcemap-loader'
+          'karma-coverage',
+          'karma-coffee-preprocessor'
         ],
         preprocessors: {
-          '**/*.js': ['sourcemap']
+          '**/scripts.js': ['sourcemap', 'coverage']
+          '**/tests.js': ['sourcemap']
+          '**/*.coffee': ['coverage']
         },
+        coverageReporter:
+            reporters: [
+              type : 'html'
+              dir: 'coverage'
+            ,
+              type : 'text'
+          ]
