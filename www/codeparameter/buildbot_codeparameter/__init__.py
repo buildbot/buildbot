@@ -16,6 +16,7 @@
 from buildbot.www.plugin import Application
 from buildbot.schedulers.forcesched import TextParameter
 
+
 class CodeParameter(TextParameter):
 
     """A code editor using ace"""

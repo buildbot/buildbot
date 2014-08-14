@@ -64,18 +64,11 @@ def getVersion(init_file):
 # - override the distutils command to insert our js build
 # - has very small setup.py
 #
-# from setuptools import setup
+# from buildbot_pkg import setup_www
 #
-# class cmdClass(dict):
-#    def get(self, name):
-#        import buildbot_pkg
-#        return buildbot_pkg.getCmdClassForJS(name)
-#
-# setup(
+# setup_www(
 #   ...
-#
-#    setup_requires="buildbot_pkg",
-#    cmdclass=cmdClass(),
+#    packages=["buildbot_myplugin"]
 # )
 #
 # We need to override the first command done, so that source tree is populated very soon,

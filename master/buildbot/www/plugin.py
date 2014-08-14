@@ -17,6 +17,7 @@ import pkg_resources
 
 from twisted.web import static
 
+
 class Application(object):
     def __init__(self, modulename, description):
         self.description = description
