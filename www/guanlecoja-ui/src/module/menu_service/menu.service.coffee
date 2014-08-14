@@ -10,7 +10,7 @@ class GlMenu extends Provider
         return @groups
 
     setFooter: (footer) ->
-        @_footer = footer
+        @footer = footer
 
     setAppTitle: (title) ->
         @appTitle = title
@@ -18,7 +18,6 @@ class GlMenu extends Provider
     $get: ["$state", ($state) ->
         for state in $state.get()[1...]
             group = state.data.group
-
             unless group?
                 continue
 
@@ -32,7 +31,7 @@ class GlMenu extends Provider
         for name, group of @groups
             # if a group has only no item, we juste delete it
             if group.items.length == 0
-                delete groups[name]
+                delete @groups[name]
             # if a group has only one item, then we put the group == the item
             else if group.items.length == 1
                 item = group.items[0]
