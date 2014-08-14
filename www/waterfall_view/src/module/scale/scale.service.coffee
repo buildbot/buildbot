@@ -28,7 +28,7 @@ class ScaleService extends Factory
                                 sum += period for period in periods
                                 return H - (I / T) * sum - id * gap
                             else periods.push(group.max - group.min)
-                        return 0
+                        return undefined
 
                     # coordinate to date
                     @invert: (coordinate) ->
