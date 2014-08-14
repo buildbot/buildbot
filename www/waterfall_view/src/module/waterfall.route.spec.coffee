@@ -17,10 +17,5 @@ describe 'Waterfall view', ->
 
     it 'should register a new state with the correct configuration', ->
         name = 'waterfall'
-        state = $state.get().pop()
-        data = state.data
-        expect(state.name).toBe(name)
-        expect(state.controller).toBe("#{name}Controller")
-        expect(state.controllerAs).toBe('w')
-        expect(state.templateUrl).toBe("waterfall_view/views/#{name}.html")
-        expect(state.url).toBe("/#{name}")
+        states = $state.get().map (state) -> return state.name
+        expect(states).toContain(name)
