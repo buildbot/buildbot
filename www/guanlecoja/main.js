@@ -112,7 +112,7 @@
       }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
     gulp.task('vendors', function() {
-      if (!config.vendors_apart) {
+      if (!(config.vendors_apart && bower.deps.length > 0)) {
         return;
       }
       return gulp.src(bower.deps).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(concat("vendors.js")).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));

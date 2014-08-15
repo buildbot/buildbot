@@ -121,7 +121,7 @@ module.exports =  (gulp) ->
 
     # concat vendors apart
     gulp.task 'vendors', ->
-        unless config.vendors_apart
+        unless config.vendors_apart and bower.deps.length > 0
             return
         gulp.src bower.deps
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
