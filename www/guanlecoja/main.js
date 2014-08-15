@@ -65,6 +65,9 @@
     bower = bower(config.bower);
     bower.installtask(gulp);
     require('rimraf').sync(config.dir.build);
+    if (coverage) {
+      require('rimraf').sync(config.dir.coverage);
+    }
     error_handler = function(e) {
       var error;
       error = gutil.colors.bold.red;
@@ -84,17 +87,18 @@
     if (coverage) {
       config.vendors_apart = true;
       config.templates_apart = true;
-      config.coffeecoverage = true;
     }
-    if (config.vendors_apart) {
-      script_sources = config.files.app.concat(config.files.scripts);
-    } else {
-      script_sources = bower.deps.concat(config.files.app, config.files.scripts);
+    script_sources = config.files.app.concat(config.files.scripts);
+    if (!config.vendors_apart) {
+      script_sources = bower.deps.concat(script_sources);
     }
     if (!config.templates_apart) {
       script_sources = script_sources.concat(config.files.templates);
     }
     gulp.task('scripts', function() {
+      if (coverage && config.coffee_coverage) {
+        return gulp.src(script_sources).pipe(ngClassify(config.ngclassify(config)).on('error', error_handler)).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
+      }
       return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
         if ((config.name != null) && config.name !== 'app') {
           p.dirname = path.join(config.name, "views");
@@ -107,9 +111,6 @@
         module: config.name
       }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
-    if (config.vendors_apart) {
-      config.karma.files = ["vendors.js"].concat(config.karma.files);
-    }
     gulp.task('vendors', function() {
       if (!config.vendors_apart) {
         return;
@@ -131,12 +132,6 @@
       }))).pipe(gif("*.html", templateCache({
         module: config.name
       }))).pipe(concat("templates.js")).pipe(gulp.dest(config.dir.build));
-    });
-    gulp.task('classify', function() {
-      if (!config.coffeecoverage) {
-        return;
-      }
-      return gulp.src(script_sources).pipe(ngClassify(config.ngclassify(config))).pipe(gulp.dest("coverage/src"));
     });
     gulp.task('tests', function() {
       var src;
@@ -180,37 +175,44 @@
     });
     gulp.task("watch", function() {
       gulp.watch(script_sources, ["scripts"]);
+      gulp.watch(config.files.templates, ["templates"]);
       gulp.watch(config.files.tests, ["tests"]);
       gulp.watch(config.files.less, ["styles"]);
       gulp.watch(config.files.index, ["index"]);
       return null;
     });
     gulp.task("karma", function() {
-      var classified, karmaconf;
+      var classified, karmaconf, r, _i, _len, _ref;
       karmaconf = {
         basePath: config.dir.build,
         action: dev ? 'watch' : 'run'
       };
       _.merge(karmaconf, config.karma);
-      if (config.coffeecoverage) {
+      if (config.vendors_apart) {
+        karmaconf.files = ["vendors.js"].concat(config.karma.files);
+      }
+      if (config.templates_apart) {
+        karmaconf.files = karmaconf.files.concat(["templates.js"]);
+      }
+      if (coverage) {
         karmaconf.reporters.push("coverage");
         karmaconf.preprocessors = {
           '**/scripts.js': ['sourcemap', 'coverage'],
           '**/tests.js': ['sourcemap'],
           '**/*.coffee': ['coverage']
         };
-      }
-      if (coverage) {
-        karmaconf.basePath = ".";
-        if (config.coffeecoverage) {
-          karmaconf.files = ["vendors.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"];
-        } else {
-          karmaconf.files = ["vendors.js", "scripts.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"];
+        _ref = karmaconf.coverageReporter.reporters;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          r = _ref[_i];
+          if (r.dir === "coverage") {
+            r.dir = config.dir.coverage;
+          }
         }
+        karmaconf.basePath = ".";
         karmaconf.files = karmaconf.files.map(function(p) {
           return path.join(config.dir.build, p);
         });
-        if (config.coffeecoverage) {
+        if (config.coffee_coverage) {
           classified = script_sources.map(function(p) {
             return path.join("coverage", p);
           });

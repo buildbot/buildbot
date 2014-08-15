@@ -28,6 +28,8 @@ lr = require 'gulp-livereload'
 cssmin = require 'gulp-minify-css'
 less = require 'gulp-less'
 fixtures2js = require 'gulp-fixtures2js'
+
+# dependencies for webserver
 connect = require('connect')
 
 module.exports =  (gulp) ->
@@ -52,6 +54,9 @@ module.exports =  (gulp) ->
     # we do it synchronously to simplify things
     require('rimraf').sync(config.dir.build)
 
+    if coverage
+        require('rimraf').sync(config.dir.coverage)
+
     error_handler = (e) ->
         error = gutil.colors.bold.red;
         if e.fileName?
@@ -64,22 +69,31 @@ module.exports =  (gulp) ->
         @emit("end")
         if not dev
             throw e
+
+    # if coverage, we need to put vendors and templates apart
     if coverage
         config.vendors_apart = true
         config.templates_apart = true
-        config.coffeecoverage = true
 
-    if config.vendors_apart
-        # might make sense to put the libs in a separated file
-        script_sources = config.files.app.concat(config.files.scripts)
-    else
+    script_sources = config.files.app.concat(config.files.scripts)
+
+    unless config.vendors_apart
         # libs first, then app, then the rest
-        script_sources = bower.deps.concat(config.files.app, config.files.scripts)
+        script_sources = bower.deps.concat(script_sources)
 
     unless config.templates_apart
         script_sources = script_sources.concat(config.files.templates)
 
+
+    # main scripts task.
+    # if coffee_coverage, we only pre-process ngclassify, and karma will do the rest
+    # in other cases, we have a more complex setup, if order to enable joining all the sources (vendors, scripts, and templates)
     gulp.task 'scripts', ->
+        if coverage and config.coffee_coverage
+            return gulp.src script_sources
+                .pipe(ngClassify(config.ngclassify(config)).on('error', error_handler))
+                .pipe gulp.dest path.join(config.dir.coverage, "src")
+
         gulp.src script_sources
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
@@ -105,9 +119,7 @@ module.exports =  (gulp) ->
             .pipe gulp.dest config.dir.build
             .pipe gif(dev, lr())
 
-    if config.vendors_apart
-        config.karma.files = ["vendors.js"].concat(config.karma.files)
-
+    # concat vendors apart
     gulp.task 'vendors', ->
         unless config.vendors_apart
             return
@@ -120,6 +132,7 @@ module.exports =  (gulp) ->
             .pipe gulp.dest config.dir.build
             .pipe gif(dev, lr())
 
+    # build and concat templates apart
     gulp.task 'templates', ->
         unless config.templates_apart
             return
@@ -137,13 +150,7 @@ module.exports =  (gulp) ->
             .pipe concat("templates.js")
             .pipe gulp.dest config.dir.build
 
-    gulp.task 'classify', ->
-        unless config.coffeecoverage
-            return
-        gulp.src script_sources
-            .pipe(ngClassify(config.ngclassify(config)))
-            .pipe gulp.dest "coverage/src"
-
+    # the tests files produce another file
     gulp.task 'tests', ->
         src = bower.testdeps.concat(config.files.tests)
         gulp.src src
@@ -158,8 +165,10 @@ module.exports =  (gulp) ->
             .pipe gulp.dest config.dir.build
 
 
+    # a customizable task that generates fixtures from external tool
     gulp.task 'generatedfixtures', config.generatedfixtures
 
+    # a task to compile json fixtures into constants that sits on window.FIXTURES
     gulp.task 'fixtures', ->
         gulp.src config.files.fixtures, base: process.cwd()
             # fixtures
@@ -169,6 +178,7 @@ module.exports =  (gulp) ->
                     "**/*.json": "json"
             .pipe gulp.dest config.dir.build
 
+    # a task to compile less files
     gulp.task 'styles', ->
         gulp.src config.files.less
             .pipe cached('styles')
@@ -190,6 +200,7 @@ module.exports =  (gulp) ->
             .pipe rename dirname:""
             .pipe gulp.dest path.join(config.dir.build, "img")
 
+    # index.jade build
     gulp.task 'index', ->
         gulp.src config.files.index
             .pipe jade().on('error', error_handler)
@@ -203,14 +214,17 @@ module.exports =  (gulp) ->
             .listen(config.devserver.port, next)
         else
             next()
+
     gulp.task "watch", ->
         # karma own watch mode is used. no need to restart karma
         gulp.watch(script_sources, ["scripts"])
+        gulp.watch(config.files.templates, ["templates"])
         gulp.watch(config.files.tests, ["tests"])
         gulp.watch(config.files.less, ["styles"])
         gulp.watch(config.files.index, ["index"])
         null
 
+    # karma configuration, we build a lot of the config file automatically
     gulp.task "karma", ->
         karmaconf =
             basePath: config.dir.build
@@ -218,24 +232,32 @@ module.exports =  (gulp) ->
 
         _.merge(karmaconf, config.karma)
 
-        if config.coffeecoverage
+        if config.vendors_apart
+            karmaconf.files = ["vendors.js"].concat(config.karma.files)
+
+        if config.templates_apart
+            karmaconf.files = karmaconf.files.concat(["templates.js"])
+
+        if coverage
             karmaconf.reporters.push("coverage")
             karmaconf.preprocessors = {
               '**/scripts.js': ['sourcemap', 'coverage']
               '**/tests.js': ['sourcemap']
               '**/*.coffee': ['coverage']
             }
-        if coverage
+            for r in karmaconf.coverageReporter.reporters
+                if r.dir == "coverage"
+                    r.dir = config.dir.coverage
             karmaconf.basePath = "."
-            if config.coffeecoverage
-                karmaconf.files = ["vendors.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
-            else
-                karmaconf.files = ["vendors.js", "scripts.js", "templates.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
             karmaconf.files = karmaconf.files.map (p) -> path.join(config.dir.build, p)
-            if config.coffeecoverage
+
+            if config.coffee_coverage
+                # insert the pre-classified files inside the karma config file list
+                # (after vendors.js)
                 classified = script_sources.map (p) ->
                     path.join("coverage", p)
                 karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified))
+
         gulp.src karmaconf.files
             .pipe karma(karmaconf)
 

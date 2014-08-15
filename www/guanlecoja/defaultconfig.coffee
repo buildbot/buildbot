@@ -14,7 +14,8 @@ module.exports =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'static'
-
+        # The coverage folder is where the files necessary for coverage, and the coverage report are stored
+        coverage: 'coverage'
     ### ###########################################################################################
     #   This is a collection of file patterns
     ### ###########################################################################################
@@ -73,9 +74,23 @@ module.exports =
         deps: {}
         testdeps: {}
 
+    # Enable code coverage on coffeescript. ATM, this restricts you to CS 1.6, so you might want to disable it.
+    coffee_coverage: true
 
+    # produce a vendors.js file with the js dependancies. scripts.js will now only contain
+    # you code logic (and optionally templates)
+    vendors_apart: false
+
+    # produce a templates.js file with all the jade templates in it.
+    templates_apart: false
+
+    # always produce a sourcemaps. This is useful for libs
+    sourcemaps: false
+
+    # configuration for the tasks. most of the tasks can be run independantly except for
+    # bower, and karma which should be run respectively first and last
     preparetasks: "bower"
-    buildtasks: ['scripts', 'styles', 'fonts', 'imgs', 'classify',
+    buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
         'index', 'tests', 'generatedfixtures', 'fixtures', 'vendors', 'templates']
     testtasks: "karma"
 
@@ -106,12 +121,12 @@ module.exports =
         browsers: ['PhantomJS'],
         files: ["scripts.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
         logLevel: "LOG_DEBUG",
+
         plugins: [
-          'karma-jasmine',
-          'karma-phantomjs-launcher',
+          'karma-jasmine'
+          'karma-phantomjs-launcher'
           'karma-sourcemap-loader'
-          'karma-coverage',
-          'karma-coffee-preprocessor'
+          'karma-coverage'
         ],
         preprocessors: {
           '**/scripts.js': ['sourcemap']
