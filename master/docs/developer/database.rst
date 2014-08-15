@@ -1565,9 +1565,7 @@ handled through the model.
     ``master.db.model.buildrequests``, and columns are available in its ``c``
     attribute.
 
-    The source file, :bb:src:`master/buildbot/db/model.py`, contains comments
-    describing each table; that information is not replicated in this
-    documentation.
+    The source file, :src:`master/buildbot/db/model.py`, contains comments describing each table; that information is not replicated in this documentation.
 
     Note that the model is not used for new installations or upgrades of the
     Buildbot database.  See :ref:`Modifying-the-Database-Schema` for more
@@ -1646,7 +1644,7 @@ fake classes in ``master/buildbot/test/fake/fakedb.py``.  Non-DB Buildbot code
 is tested using these fake implementations in order to isolate that code from
 the database code, and to speed-up tests.
 
-The keys and types used in the return value from a connector's ``get`` methods are described in :bb:src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
+The keys and types used in the return value from a connector's ``get`` methods are described in :src:`master/buildbot/test/util/validation.py`, via the ``dbdict`` module-level value.
 This is a dictionary of ``DictValidator`` objects, one for each return value.
 
 These values are used within test methods like this::
@@ -1673,28 +1671,19 @@ To make a change to the schema, first consider how to handle any existing data.
 When adding new columns, this may not be necessary, but table refactorings can
 be complex and require caution so as not to lose information.
 
-Create a new script in :bb:src:`master/buildbot/db/migrate/versions`, following
-the numbering scheme already present.  The script should have an ``update``
-method, which takes an engine as a parameter, and upgrades the database, both
-changing the schema and performing any required data migrations.  The engine
-passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to
-handle adding, altering, and dropping columns.  See the SQLAlchemy-Migrate
-documentation for details.
+Create a new script in :src:`master/buildbot/db/migrate/versions`, following the numbering scheme already present.
+The script should have an ``update`` method, which takes an engine as a parameter, and upgrades the database, both changing the schema and performing any required data migrations.
+The engine passed to this parameter is "enhanced" by SQLAlchemy-Migrate, with methods to handle adding, altering, and dropping columns.
+See the SQLAlchemy-Migrate documentation for details.
 
-Next, modify :bb:src:`master/buildbot/db/model.py` to represent the updated
-schema.  Buildbot's automated tests perform a rudimentary comparison of an
-upgraded database with the model, but it is important to check the details -
-key length, nullability, and so on can sometimes be missed by the checks.  If
-the schema and the upgrade scripts get out of sync, bizarre behavior can
-result.
+Next, modify :src:`master/buildbot/db/model.py` to represent the updated schema.
+Buildbot's automated tests perform a rudimentary comparison of an upgraded database with the model, but it is important to check the details - key length, nullability, and so on can sometimes be missed by the checks.
+If the schema and the upgrade scripts get out of sync, bizarre behavior can result.
 
-Also, adjust the fake database table definitions in
-:bb:src:`master/buildbot/test/fake/fakedb.py` according to your changes.
+Also, adjust the fake database table definitions in :src:`master/buildbot/test/fake/fakedb.py` according to your changes.
 
-Your upgrade script should have unit tests.  The classes in
-:bb:src:`master/buildbot/test/util/migration.py` make this straightforward.
-Unit test scripts should be named e.g.,
-:file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
+Your upgrade script should have unit tests.  The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
+Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
 The :file:`master/buildbot/test/integration/test_upgrade.py` also tests
 upgrades, and will confirm that the resulting database matches the model.  If

@@ -27,7 +27,11 @@ needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.todo', 'bbdocs.ext']
+extensions = [
+    'sphinx.ext.todo',
+    'sphinx.ext.extlinks',
+    'bbdocs.ext'
+]
 todo_include_todos=True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -107,6 +111,12 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'python': ('http://python.readthedocs.org/en/latest/', None),
     'sqlalchemy': ('http://sqlalchemy.readthedocs.org/en/latest/', None),
+}
+
+extlinks = {
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
+    'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
+    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None)
 }
 
 # -- Options for HTML output ---------------------------------------------------
