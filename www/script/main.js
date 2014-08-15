@@ -39,7 +39,8 @@ require.config({
         "toastr": "plugins/toastr",
         "testResults": "project/testresults-common",
         "buildLog": "project/buildLog",
-        "buildLogiFrame": "project/buildLog-iFrame"
+        "buildLogiFrame": "project/buildLog-iFrame",
+        "login": "project/login"
     },
     shim: {
         "overscroll": {

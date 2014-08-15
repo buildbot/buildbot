@@ -36,53 +36,13 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
 
     helpers = {
         init: function () {
-            /*
-             // only for testing
-             $('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
-
-             var ws = $(window).width() + ' ' +  $(window).height();
-
-             $('.windowsize').html(ws);
-
-             $(window).resize(function(event) {
-             ws = $(window).width() + ' ' +  $(window).height();
-             $('.windowsize').html(ws);
-             });
-             */
             // Set the currentmenu item
             helpers.setCurrentItem();
-
-            // Authorize on every page
-            helpers.authorizeUser();
 
             if ($('#buildslave_page').length) {
                 // display the number of current jobs
                 helpers.displaySum($('#currentJobs'), $('#runningBuilds_onBuildslave').find('li'));
             }
-
-            // keyboard shortcuts
-            /*
-             $('body').keyup(function(event) {
-
-             // p
-             if (event.which === 80) {
-             location.href = '/projects'
-             }
-             // q
-             if (event.which === 81) {
-             location.href = '/buildqueue'
-             }
-             // s
-             if (event.which === 83) {
-             location.href = '/buildslaves'
-             }
-             // h
-             if (event.which === 72) {
-             location.href = '/'
-             }
-
-             });
-             */
 
             // submenu overflow on small screens
             helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -114,9 +74,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
             // parse reason string on the buildqueue page
             helpers.parseReasonString();
 
-            $('#authUserBtn').click(function () {
-                helpers.eraseCookie('fullName1', '', 'eraseCookie');
-            });
             helpers.tooltip($('.tooltip'));
 
         },
@@ -130,8 +87,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 var $elem = $(el),
                     $toolTipCont = $("<div/>").addClass("tooltip-cont"),
                     clickEvent;
-
-
 
                 $elem.hover(function (e) {
                     var title,
@@ -177,14 +132,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                     });
                 });
             });
-        },
-        authorizeUser: function () {
-            // Force a user to login
-            var url = window.location;
-            if (helpers.getCookie("BuildBotSession") === '') {
-                // Redirect to loginpage if missing namecookie
-                window.location = "/login";
-            }
         },
         setCurrentItem: function () {
 
@@ -377,7 +324,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 
-            if (isMediumScreen) {                
+            if (isMediumScreen) {
                 $('.breadcrumbs-nav').width('');
             } else {
                 var wEl = 0;
@@ -412,15 +359,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
         displaySum: function (displayEl, countEl) {
             // Insert the total length of the elements
             displayEl.text(countEl.length);
-
-        },
-        setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
-
-            var today = new Date();
-            var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
-            var expiredate = eraseCookie === undefined ? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
-
-            document.cookie = name + "=" + value + "; path=/; expires=" + expiredate;
 
         },
         inDOM: function (element) {
@@ -501,16 +439,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 }
             });
             return isRealtimePage;
-
-        },
-        getCookie: function (name) { // get cookie values
-            var re = new RegExp(name + "=([^;]+)");
-            var value = re.exec(document.cookie);
-            return (value !== null) ? decodeURI(value[1]) : '';
-
-        },
-        eraseCookie: function (name, value, eraseCookie) {
-            helpers.setCookie(name, value, eraseCookie);
 
         },
         closePopup: function (boxElement, clearEl) {
@@ -595,7 +523,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
         clearChildEvents: function ($elem) {
             $elem.find("*").addBack().off(".katana");
         },
-        cssClassesEnum : css_class_enum
+        cssClassesEnum: css_class_enum
     };
 
     return helpers;

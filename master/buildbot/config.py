@@ -85,6 +85,7 @@ class MasterConfig(object):
         self.realTimeServer = ''
         self.analytics_code = None
         self.gzip = True
+        self.requireLogin = True
         self.autobahn_push = "false"
         self.lastBuildCacheDays = 30
 
@@ -126,7 +127,7 @@ class MasterConfig(object):
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
-        "autobahn_push", "lastBuildCacheDays"
+        "autobahn_push", "lastBuildCacheDays", "requireLogin"
     ])
 
     @classmethod
@@ -321,6 +322,9 @@ class MasterConfig(object):
 
         if 'gzip' in config_dict:
             self.gzip = config_dict["gzip"]
+
+        if 'requireLogin' in config_dict:
+            self.requireLogin = config_dict["requireLogin"]
 
         if 'autobahn_push' in config_dict:
             self.autobahn_push = "true" if config_dict["autobahn_push"] else "false"

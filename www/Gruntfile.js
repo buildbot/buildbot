@@ -30,7 +30,8 @@ module.exports = function (grunt) {
                         "require.js",
                         "testResults",
                         "buildLog",
-                        "buildLogiFrame"
+                        "buildLogiFrame",
+                        "login"
                     ]
                 }
             },
