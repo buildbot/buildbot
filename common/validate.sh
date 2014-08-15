@@ -109,7 +109,7 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if $slow; then
-    for module in www www/console_view www/waterfall_view www/codeparameter;
+    for module in www/base www/console_view www/waterfall_view www/codeparameter;
     do
         status "running 'setup.py develop' for $module"
         (cd $module; python setup.py develop >/dev/null    ) || not_ok "$module/setup.py failed"
