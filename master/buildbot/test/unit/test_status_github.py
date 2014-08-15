@@ -119,7 +119,6 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         status = GitHubStatus(
             token=token, repoOwner=repoOwner, repoName=repoName)
 
-        self.assertEqual(token, status._token)
         self.assertEqual(repoOwner, status._repoOwner)
         self.assertEqual(repoName, status._repoName)
 
