@@ -55,14 +55,14 @@
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, config, coverage, dev, error_handler, prod, script_sources;
+    var buildConfig, config, coverage, dev, error_handler, prod, script_sources, _ref;
     prod = __indexOf.call(argv._, "prod") >= 0;
     dev = __indexOf.call(argv._, "dev") >= 0;
     coverage = argv.coverage;
     config = require("./defaultconfig.coffee");
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
-    if (buildConfig.karma.files != null) {
+    if (((_ref = buildConfig.karma) != null ? _ref.files : void 0) != null) {
       config.karma.files = buildConfig.karma.files;
     }
     if (buildConfig.buildtasks != null) {
@@ -188,7 +188,7 @@
       return null;
     });
     gulp.task("karma", function() {
-      var classified, karmaconf, r, scripts_index, _i, _len, _ref;
+      var classified, karmaconf, r, scripts_index, _i, _len, _ref1;
       karmaconf = {
         basePath: config.dir.build,
         action: dev ? 'watch' : 'run'
@@ -207,9 +207,9 @@
           '**/tests.js': ['sourcemap'],
           '**/*.coffee': ['coverage']
         };
-        _ref = karmaconf.coverageReporter.reporters;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          r = _ref[_i];
+        _ref1 = karmaconf.coverageReporter.reporters;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          r = _ref1[_i];
           if (r.dir === "coverage") {
             r.dir = config.dir.coverage;
           }
@@ -225,7 +225,6 @@
           });
           karmaconf.files.splice.apply(karmaconf.files, [scripts_index, 1].concat(classified));
         }
-        console.log(karmaconf.files);
       }
       return gulp.src(karmaconf.files).pipe(karma(karmaconf));
     });

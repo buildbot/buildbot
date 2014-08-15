@@ -48,7 +48,7 @@ module.exports =  (gulp) ->
     _.merge(config, buildConfig)
 
     # _.merge does not play well with lists, we just take the overridden version
-    if buildConfig.karma.files?
+    if buildConfig.karma?.files?
         config.karma.files = buildConfig.karma.files
     if buildConfig.buildtasks?
         config.buildtasks = buildConfig.buildtasks
