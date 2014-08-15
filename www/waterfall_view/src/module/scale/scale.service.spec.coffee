@@ -3,23 +3,6 @@ beforeEach ->
 
 describe 'Scale service', ->
 
-    ###
-    # Test data
-    ###
-    builders = [
-        builderid: 1
-        name: 'builder1'
-    ,
-        builderid: 2
-        name: 'builder2'
-    ,
-        builderid: 3
-        name: 'builder3'
-    ,
-        builderid: 4
-        name: 'builder4'
-    ]
-
     groups = [
                         # Y.M.D - h:m:s
         min: 1325376000 # 2012.01.01 - 0:0:0
@@ -29,14 +12,20 @@ describe 'Scale service', ->
         max: 1396450952 # 2014.04.02 - 15:2:32
     ]
 
-    scaleService = scale = null
+    scaleService = scale = builders = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
-        #d3Service = $injector.get('d3Service')
         scaleService = $injector.get('scaleService')
+        buildbotServiceMock = $injector.get('buildbotService')
 
         scale = new scaleService(window.d3)
+
+        # Use mocked buildbotService to get the sample data
+        buildbotServiceMock.all('builders').getList().then (b) ->
+            builders = b
+        $rootScope.$digest()
+
 
     beforeEach(inject(injected))
 
@@ -82,6 +71,7 @@ describe 'Scale service', ->
         expect(idToY(date)).toBeGreaterThan(idToY(date + 10000))
         # Out of domain
         expect(idToY(1359731102)).toBeUndefined()
+        expect(idToY.invert(120)).toBeUndefined()
 
     it 'should return a builderid to name scale', ->
         # Get new scale

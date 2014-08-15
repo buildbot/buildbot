@@ -1,62 +1,21 @@
 beforeEach ->
     module 'waterfall_view'
 
-describe 'Scale service', ->
+describe 'Data service', ->
 
-    ###
-    # Test data
-    ###
-    builders = [
-        builderid: 1
-        name: 'builder1'
-    ,
-        builderid: 2
-        name: 'builder2'
-    ,
-        builderid: 3
-        name: 'builder3'
-    ,
-        builderid: 4
-        name: 'builder4'
-    ]
-
-    builds = [
-        buildid: 1
-        builderid: 1
-        started_at: 1403059709
-        complete_at: 1403059772
-        complete: true
-        results: 'success'
-    ,
-        buildid: 2
-        builderid: 2
-        buildrequestid: 1
-        started_at: 1403059802
-        complete_at: 1403060287
-        complete: true
-        results: 'success'
-    ,
-        buildid: 3
-        builderid: 4
-        buildrequestid: 2
-        started_at: 1403059710
-        complete_at: 1403060278
-        complete: true
-        results: 'failure'
-    ,
-        buildid: 4
-        builderid: 3
-        buildrequestid: 2
-        started_at: 1403060250
-        complete_at: 0
-        complete: false
-    ]
-
-    dataService = null
+    dataService = builds = builders = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
         dataService = $injector.get('dataService')
+        buildbotServiceMock = $injector.get('buildbotService')
+
+        # Use mocked buildbotService to get the sample data
+        buildbotServiceMock.all('builds').getList().then (b) ->
+            builds = b
+        buildbotServiceMock.all('builders').getList().then (b) ->
+            builders = b
+        $rootScope.$digest()
 
     beforeEach(inject(injected))
 
@@ -72,12 +31,13 @@ describe 'Scale service', ->
     it 'should add builds to builders', ->
         # Add builds to builders
         dataService.getGroups(builders, builds, 0)
-        # Builders builds length should be equal to all builds length
-        buildsInBuilders = 0
         for build in builds
-            buildsInBuilders += builders[build.builderid - 1].builds.length
             # A builder should contain its build
             expect(builders[build.builderid - 1].builds).toContain(build)
+        # Builders builds length should be equal to all builds length
+        buildsInBuilders = 0
+        for builder in builders
+            buildsInBuilders += builder.builds.length
         expect(buildsInBuilders).toEqual(builds.length)
 
     it 'should create groups', ->

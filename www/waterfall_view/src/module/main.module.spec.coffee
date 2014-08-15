@@ -2,7 +2,7 @@ beforeEach ->
     module 'waterfall_view'
 
 describe 'Waterfall view controller', ->
-    $rootScope = $state = elem = w = $document = null
+    $rootScope = $state = elem = w = $document = $window = config = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
@@ -11,6 +11,8 @@ describe 'Waterfall view controller', ->
         $controller = $injector.get('$controller')
         $state = $injector.get('$state')
         $document = $injector.get('$document')
+        $window = $injector.get('$window')
+        config = $injector.get('config')
         elem = angular.element('<div></div>')
         $document.find('body').append(elem)
         elem.append($compile('<ui-view></ui-view>')(scope))
@@ -30,11 +32,22 @@ describe 'Waterfall view controller', ->
         expect(w).toBeDefined()
 
     it 'should bind the builds and builders to scope', ->
+        limit = config.plugins.waterfall_view.limit
         expect(w.builds).toBeDefined()
-        expect(w.builds.length).not.toBe(0)
+        expect(w.builds.length).toBe(limit)
         expect(w.builders).toBeDefined()
         expect(w.builders.length).not.toBe(0)
 
-    it 'should create 2 svg elements and a lot of svg groups', ->
+    it 'should create svg elements', ->
         expect(elem.find('svg').length).toBeGreaterThan(1)
-        expect(elem.find('g').length).toBeGreaterThan(10)
+        expect(elem.find('.builder').length).toBeGreaterThan(1)
+        expect(elem.find('.build').length).toBeGreaterThan(1)
+
+    it 'should trigger mouse events on builds', ->
+        
+
+    it 'should rerender the waterfall on resize', ->
+        spyOn(w, 'render')
+        expect(w.render).not.toHaveBeenCalled()
+        angular.element($window).triggerHandler('resize')
+        expect(w.render).toHaveBeenCalled()

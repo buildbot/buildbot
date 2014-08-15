@@ -1,14 +1,18 @@
 ###
-   # Test data
-   ###
+# Test data
+###
 builders = [
     builderid: 1
+    name: 'builder1'
 ,
     builderid: 2
+    name: 'builder2'
 ,
     builderid: 3
+    name: 'builder3'
 ,
     builderid: 4
+    name: 'builder4'
 ]
 
 builds = [
@@ -17,25 +21,28 @@ builds = [
     started_at: 1403059709
     complete_at: 1403059772
     complete: true
+    results: 'success'
 ,
     buildid: 2
     builderid: 2
     buildrequestid: 1
-    started_at: 1403059711
+    started_at: 1403059802
     complete_at: 1403060287
     complete: true
+    results: 'success'
 ,
     buildid: 3
-    builderid: 4
+    builderid: 2
     buildrequestid: 2
     started_at: 1403059710
     complete_at: 1403060278
     complete: true
+    results: 'failure'
 ,
     buildid: 4
     builderid: 3
     buildrequestid: 2
-    started_at: 1403059710
+    started_at: 1403060250
     complete_at: 0
     complete: false
 ]
@@ -60,12 +67,14 @@ class Buildbot extends Service('common')
         @some = (string, options) ->
             deferred = $q.defer()
             switch string
-                when 'builds' then deferred.resolve builds[0..options.limit]
-                when 'builders' then deferred.resolve builders[0..options.limit]
-                when 'buildrequests' then deferred.resolve buildrequests[0..options.limit]
+                when 'builds' then deferred.resolve builds[0..options.limit-1]
+                when 'builders' then deferred.resolve builders[0..options.limit-1]
+                when 'buildrequests' then deferred.resolve buildrequests[0..options.limit-1]
                 else
                     deferred.resolve []
             bind: ->
+                deferred.promise
+            getSome: ->
                 deferred.promise
         @all = (string) =>
             deferred = $q.defer()

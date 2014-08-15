@@ -40,7 +40,7 @@ class ScaleService extends Factory
                             if group.min <= date <= group.max
                                 return date
                             periods.push(group.max - group.min)
-                        return 0
+                        return undefined
 
             # Returns an id to name scale
             getBuilderName: (builders) ->
