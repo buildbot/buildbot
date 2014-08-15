@@ -62,6 +62,12 @@
     config = require("./defaultconfig.coffee");
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
+    if (buildConfig.karma.files != null) {
+      config.karma.files = buildConfig.karma.files;
+    }
+    if (buildConfig.buildtasks != null) {
+      config.buildtasks = buildConfig.buildtasks;
+    }
     bower = bower(config.bower);
     bower.installtask(gulp);
     require('rimraf').sync(config.dir.build);
@@ -182,7 +188,7 @@
       return null;
     });
     gulp.task("karma", function() {
-      var classified, karmaconf, r, _i, _len, _ref;
+      var classified, karmaconf, r, scripts_index, _i, _len, _ref;
       karmaconf = {
         basePath: config.dir.build,
         action: dev ? 'watch' : 'run'
@@ -209,6 +215,7 @@
           }
         }
         karmaconf.basePath = ".";
+        scripts_index = karmaconf.files.indexOf("scripts.js");
         karmaconf.files = karmaconf.files.map(function(p) {
           return path.join(config.dir.build, p);
         });
@@ -216,8 +223,9 @@
           classified = script_sources.map(function(p) {
             return path.join("coverage", p);
           });
-          karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified));
+          karmaconf.files.splice.apply(karmaconf.files, [scripts_index, 1].concat(classified));
         }
+        console.log(karmaconf.files);
       }
       return gulp.src(karmaconf.files).pipe(karma(karmaconf));
     });

@@ -155,6 +155,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.2.10: fix issue with tests.js first in karma.files
 * 0.2.9: fix problem when no bower deps
 * 0.2.8: add support for coverage
 * 0.2.7: revert connect to 2.x

@@ -47,6 +47,12 @@ module.exports =  (gulp) ->
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"))
     _.merge(config, buildConfig)
 
+    # _.merge does not play well with lists, we just take the overridden version
+    if buildConfig.karma.files?
+        config.karma.files = buildConfig.karma.files
+    if buildConfig.buildtasks?
+        config.buildtasks = buildConfig.buildtasks
+
     bower = bower(config.bower)
     bower.installtask(gulp)
 
@@ -237,7 +243,6 @@ module.exports =  (gulp) ->
 
         if config.templates_apart
             karmaconf.files = karmaconf.files.concat(["templates.js"])
-
         if coverage
             karmaconf.reporters.push("coverage")
             karmaconf.preprocessors = {
@@ -249,6 +254,7 @@ module.exports =  (gulp) ->
                 if r.dir == "coverage"
                     r.dir = config.dir.coverage
             karmaconf.basePath = "."
+            scripts_index = karmaconf.files.indexOf("scripts.js")
             karmaconf.files = karmaconf.files.map (p) -> path.join(config.dir.build, p)
 
             if config.coffee_coverage
@@ -256,7 +262,7 @@ module.exports =  (gulp) ->
                 # (after vendors.js)
                 classified = script_sources.map (p) ->
                     path.join("coverage", p)
-                karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified))
+                karmaconf.files.splice.apply(karmaconf.files, [scripts_index, 1].concat(classified))
 
         gulp.src karmaconf.files
             .pipe karma(karmaconf)
