@@ -18,9 +18,13 @@ import datetime
 
 from twisted.internet import defer
 from twisted.python import log
-from txgithub.api import GithubApi as GitHubAPI
+try:
+    from txgithub.api import GithubApi as GitHubAPI
+except ImportError:
+    GitHubAPI = None
 from zope.interface import implements
 
+from buildbot import config
 from buildbot.interfaces import IStatusReceiver
 from buildbot.process.properties import Interpolate
 from buildbot.status.base import StatusReceiverMultiService
@@ -43,6 +47,9 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         Token for GitHub API.
         """
+        if not GitHubAPI:
+            config.error('GitHubStatus requires txgithub package installed')
+
         StatusReceiverMultiService.__init__(self)
 
         if not sha:
