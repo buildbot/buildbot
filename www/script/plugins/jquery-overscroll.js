@@ -1,117 +1,29 @@
 /**
- * Overscroll v1.7.3
- *  A jQuery Plugin that emulates the iPhone scrolling experience in a browser.
- *  http://azoffdesign.com/overscroll
+ * Overscroll 1.7.7
+ *  Touch scrolling for the browser
+ *  http://azoff.github.io/overscroll/
  *
  * Intended for use with the latest jQuery
  *  http://code.jquery.com/jquery-latest.js
  *  
- * Copyright 2013, Jonathan Azoff
+ * Copyright 2014, Jonathan Azoff
  * Licensed under the MIT license.
  *  https://github.com/azoff/overscroll/blob/master/mit.license
  *
  * For API documentation, see the README file
  *  http://azof.fr/pYCzuM
  *
- * Date: Tuesday, March 18th 2013
+ * Date: Wednesday, February 11th 2014
  */
+/*! Overscroll 1.7.7 | (c) 2014 Jon Azoff | http://azof.fr/pYCzuM */
 (function(global, dom, browser, math, wait, cancel, namespace, $, none){
 
-	// We want to run this plug-in in strict-mode
+	// We want to run overscroll in strict-mode
 	// so that we may benefit from its optimizations
 	'use strict';
 
 	// The key used to bind-instance specific data to an object
 	var datakey = 'overscroll';
-
-    // create <body> node if there's not one present (e.g., for test runners)
-	if (dom.body === null) {
-		dom.documentElement.appendChild(
-			dom.createElement('body')
-		);
-	}
-
-	// quick fix for IE 8 and below since getComputedStyle() is not supported
-	// TODO: find a better solution
-	if (!global.getComputedStyle) {
-		global.getComputedStyle = function (el, pseudo) {
-			this.el = el;
-			this.getPropertyValue = function (prop) {
-				var re = /(\-([a-z]){1})/g;
-				if (prop == 'float') prop = 'styleFloat';
-				if (re.test(prop)) {
-					prop = prop.replace(re, function () {
-						return arguments[2].toUpperCase();
-					});
-				}
-				return el.currentStyle[prop] ? el.currentStyle[prop] : null;
-			};
-			return this;
-		};
-	}
-
-	// runs feature detection for overscroll
-	var compat = {
-		animate: (function(){
-			var fn = global.requestAnimationFrame    ||
-				global.webkitRequestAnimationFrame ||
-				global.mozRequestAnimationFrame    ||
-				global.oRequestAnimationFrame      ||
-				global.msRequestAnimationFrame     ||
-				function(callback) { wait(callback, 1000/60); };
-			return function(callback) {
-				fn.call(global, callback);
-			};
-		})(),
-		overflowScrolling: (function(){
-			var style = '';
-			var div = dom.createElement('div');
-			var prefixes = ['webkit', 'moz', 'o', 'ms'];
-			dom.body.appendChild(div);
-			$.each(prefixes, function(i, prefix){
-				div.style[prefix + 'OverflowScrolling'] = 'touch';
-			});
-			div.style.overflowScrolling = 'touch';
-			var computedStyle = global.getComputedStyle(div);
-			if (!!computedStyle.overflowScrolling) {
-				style = 'overflow-scrolling';
-			} else {
-				$.each(prefixes, function(i, prefix){
-					if (!!computedStyle[prefix + 'OverflowScrolling']) {
-						style = '-' + prefix + '-overflow-scrolling';
-					}
-					return !style;
-				});
-			}
-			div.parentNode.removeChild(div);
-			return style;
-		})(),
-		cursor: (function() {
-			var div = dom.createElement('div');
-			var prefixes = ['webkit', 'moz'];
-			var gmail = 'https://mail.google.com/mail/images/2/';
-			var style = {
-				grab:     'url('+gmail+'openhand.cur), move',
-				grabbing: 'url('+gmail+'closedhand.cur), move'
-			};
-			dom.body.appendChild(div);
-			$.each(prefixes, function(i, prefix){
-				var found, cursor = '-' + prefix + '-grab';
-				div.style.cursor = cursor;
-				var computedStyle = global.getComputedStyle(div);
-				found = computedStyle.cursor === cursor;
-				if (found) {
-					style = {
-						grab:     '-' + prefix + '-grab',
-						grabbing: '-' + prefix + '-grabbing'
-					};
-				}
-				return !found;
-			});
-			div.parentNode.removeChild(div);
-			return style;
-		})()
-	};
 
 	// These are all the events that could possibly
 	// be used by the plug-in
@@ -128,16 +40,16 @@
 	// These settings are used to tweak drift settings
 	// for the plug-in
 	var settings = {
-		captureThreshold:   3,
-		driftDecay:         1.1,
-		driftSequences:     22,
-		driftTimeout:       100,
-		scrollDelta:        15,
-		thumbOpacity:       0.7,
-		thumbThickness:     6,
-		thumbTimeout:       400,
-		wheelDelta:         20,
-		wheelTicks:        120
+		captureThreshold: 3,
+		driftDecay:       1.1,
+		driftSequences:   22,
+		driftTimeout:     100,
+		scrollDelta:      15,
+		thumbOpacity:     0.7,
+		thumbThickness:   6,
+		thumbTimeout:     400,
+		wheelDelta:       20,
+		wheelTicks:       120
 	};
 
 	// These defaults are used to complement any options
@@ -154,8 +66,97 @@
 		wheelDelta:     settings.wheelDelta,
 		wheelDirection: 'multi',
 		zIndex:         999,
-		ignoreSizing:	false
+		ignoreSizing:   false,
+		thumbColor:     'black'
 	};
+
+	// runs feature detection for overscroll
+	function compat() {
+
+		// memoize for lazy-loading
+		if (compat.memo) { return compat.memo; }
+
+		// find an animator function
+		var animator = global.requestAnimationFrame    ||
+			global.webkitRequestAnimationFrame         ||
+			global.mozRequestAnimationFrame            ||
+			global.oRequestAnimationFrame              ||
+			global.msRequestAnimationFrame             ||
+			function(callback) { wait(callback, 1000/60); };
+
+		var nobody = dom.body === null;
+		if (nobody) {
+			dom.documentElement.appendChild(dom.createElement('body'));
+		}
+
+		// find the name of the overflow scrolling style
+		var overflowScrollingStyle = '';
+		(function(){
+			var div = dom.createElement('div');
+			var prefixes = ['webkit', 'moz', 'o', 'ms'];
+
+			dom.body.appendChild(div);
+			$.each(prefixes, function(i, prefix){
+				div.style[prefix + 'OverflowScrolling'] = 'touch';
+			});
+
+			div.style.overflowScrolling = 'touch';
+			var computedStyle = global.getComputedStyle(div);
+			if (!!computedStyle.overflowScrolling) {
+				overflowScrollingStyle = 'overflow-scrolling';
+			} else {
+				$.each(prefixes, function(i, prefix){
+					if (!!computedStyle[prefix + 'OverflowScrolling']) {
+						overflowScrollingStyle = '-' + prefix + '-overflow-scrolling';
+					}
+					return !overflowScrollingStyle;
+				});
+			}
+			div.parentNode.removeChild(div);
+		})();
+
+		// find the cursor styles
+		var cursorStyles = {};
+		(function() {
+			var div = dom.createElement('div');
+			var prefixes = ['webkit', 'moz'];
+			var gmail = 'https://mail.google.com/mail/images/2/';
+			cursorStyles = {
+				grab:     'url('+gmail+'openhand.cur), move',
+				grabbing: 'url('+gmail+'closedhand.cur), move'
+			};
+			dom.body.appendChild(div);
+			$.each(prefixes, function(i, prefix){
+				var found, cursor = '-' + prefix + '-grab';
+				div.style.cursor = cursor;
+				var computedStyle = global.getComputedStyle(div);
+				found = computedStyle.cursor === cursor;
+				if (found) {
+					cursorStyles = {
+						grab:     '-' + prefix + '-grab',
+						grabbing: '-' + prefix + '-grabbing'
+					};
+				}
+				return !found;
+			});
+			div.parentNode.removeChild(div);
+			return cursorStyles;
+		})();
+
+		compat.memo = {
+			animate: function(cb) { return animator.call(global, cb); },
+			overflowScrolling: overflowScrollingStyle,
+			cursor: cursorStyles
+		};
+
+		// remove generated body
+		if (nobody) {
+			dom.documentElement.removeChild(dom.body);
+		}
+
+		return compat.memo;
+
+	}
 
 	// Triggers a DOM event on the overscrolled element.
 	// All events are namespaced under the overscroll name
@@ -411,7 +412,7 @@
 		data.drifting = true;
 
 		// animate the drift sequence
-		compat.animate(function render() {
+		compat().animate(function render() {
 			if (data.drifting) {
 				var min = 1, max = -1;
 				data.drifting = false;
@@ -426,7 +427,7 @@
 					xMod /= decay;
 				}
 				moveThumbs(thumbs, sizing, target.scrollLeft, target.scrollTop);
-				compat.animate(render);
+				compat().animate(render);
 			} else {
 				triggerEvent('driftend', data.target);
 				callback(data);
@@ -453,8 +454,8 @@
 			// without this the simple "click" event won't be recognized on touch clients
 			if (!touches) { event.preventDefault(); }
 
-			if (!compat.overflowScrolling) {
-				target.css('cursor', compat.cursor.grabbing);
+			if (!compat().overflowScrolling) {
+				target.css('cursor', compat().cursor.grabbing);
 				target.data(datakey).dragging = flags.dragging = flags.dragged = false;
 
 				// apply the drag listeners to the doc or target
@@ -503,7 +504,7 @@
 			triggerEvent('dragend', target);
 
 			// only drift if a drag passed our threshold
-			if (flags.dragging && !compat.overflowScrolling) {
+			if (flags.dragging && !compat().overflowScrolling) {
 				drift(target.get(0), event, done);
 			} else {
 				done();
@@ -513,7 +514,7 @@
 
 		// only if we moved, and the mouse down is the same as
 		// the mouse up target do we defer the event
-		if (flags.dragging && !compat.overflowScrolling && data.start && data.start.is(event.target)) {
+		if (flags.dragging && !compat().overflowScrolling && data.start && data.start.is(event.target)) {
 			deferClick(data.start);
 		}
 
@@ -526,7 +527,7 @@
 			flags.dragging = false;
 
 		// set the cursor back to normal
-		target.css('cursor', compat.cursor.grab);
+		target.css('cursor', compat().cursor.grab);
 
 	}
 
@@ -639,7 +640,7 @@
 		return {
 			position: 'absolute',
 			opacity: options.persistThumbs ? settings.thumbOpacity : 0,
-			'background-color': 'black',
+			'background-color': options.thumbColor,
 			width: size.width + 'px',
 			height: size.height + 'px',
 			'border-radius': size.corner + 'px',
@@ -698,7 +699,7 @@
 			// apply any required CSS
 			data.target = target = $(target).css({
 				position: 'relative',
-				cursor: compat.cursor.grab
+				cursor: compat().cursor.grab
 			}).on(events.start, data, start)
 				.on(events.end, data, stop)
 				.on(events.ignored, data, ignore);
@@ -718,8 +719,8 @@
 			}
 
 			// use native oversroll, if it exists
-			if (compat.overflowScrolling) {
-				target.css(compat.overflowScrolling, 'touch');
+			if (compat().overflowScrolling) {
+				target.css(compat().overflowScrolling, 'touch');
 			} else {
 				target.on(events.scroll, data, scroll);
 			}
@@ -731,7 +732,7 @@
 
 			// add thumbs and listeners (if we're showing them)
 			if (options.showThumbs) {
-				if (compat.overflowScrolling) {
+				if (compat().overflowScrolling) {
 					target.css('overflow', 'scroll');
 				} else {
 					target.css('overflow', 'hidden');

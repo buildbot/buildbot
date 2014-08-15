@@ -17,13 +17,17 @@ define(["main"], function () {
             hasPressed = false;
 
         //Start auto resizer
-        $iFrame.iFrameResize({
-            "autoResize": true,
-            "sizeWidth": false,
-            "enablePublicMethods": true,
-            "resizedCallback": function () {
-                maybeScroll($scrollOpt.prop("checked"));
-            }
+        $(document).ready(function () {
+            setTimeout(function () {
+                $iFrame.iFrameResize({
+                    "autoResize": true,
+                    "sizeWidth": false,
+                    "enablePublicMethods": true,
+                    "resizedCallback": function () {
+                        maybeScroll($scrollOpt.prop("checked"));
+                    }
+                });
+            }, 50);
         });
 
         //Show body

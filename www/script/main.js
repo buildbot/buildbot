@@ -57,7 +57,7 @@ define("jquery", ["jquery-internal"], function () {
     return jQuery;
 });
 
-define(["jquery", "helpers", "datatables-extend", "ui.popup", "ui.dropdown", "extend-moment", "timeElements", "toastr", "ui.preloader"],
+define(["jquery", "helpers", "datatables-extend", "ui.popup", "ui.dropdown", "extend-moment", "timeElements", "toastr", "ui.preloader", "overscroll"],
     function ($, helpers, dataTables, popup, dropdown, extendMoment, timeElements, toastr, preloader) {
 
         "use strict";
@@ -79,16 +79,10 @@ define(["jquery", "helpers", "datatables-extend", "ui.popup", "ui.dropdown", "ex
             }
 
             // swipe or scroll in the codebases overview
-            if ($("#builders_page").length || $("#builder_page").length) {
-                require(["overscroll"],
-                    function (overscroll) {
-
-                        $("#overScrollJS").overscroll({
-                            showThumbs: false,
-                            direction: "horizontal"
-                        });
-                    });
-            }
+            $("#overScrollJS").overscroll({
+                showThumbs: false,
+                direction: "horizontal"
+            });
 
             // tooltip for long txtstrings
             if ($(".ellipsis-js").length) {
