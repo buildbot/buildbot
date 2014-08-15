@@ -138,6 +138,8 @@ class MasterConfig(util.ComparableMixin):
 
     @classmethod
     def loadConfig(cls, basedir, filename):
+        basedir = os.path.expanduser(basedir)
+
         if not os.path.isdir(basedir):
             raise ConfigErrors([
                 "basedir '%s' does not exist" % (basedir,),
@@ -159,7 +161,7 @@ class MasterConfig(util.ComparableMixin):
 
         # execute the config file
         localDict = {
-            'basedir': os.path.expanduser(basedir),
+            'basedir': basedir,
             '__file__': os.path.abspath(filename),
         }
 
