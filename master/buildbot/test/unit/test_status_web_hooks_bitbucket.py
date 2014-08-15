@@ -174,7 +174,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         self.assertEqual(commit['branch'], 'master')
         self.assertEqual(
             commit['revlink'],
-            'https://bitbucket.org/marcus/project-x/'
+            'https://bitbucket.org/marcus/project-x/commits/'
             '620ade18607ac42d872b568bb92acaa9a28620e9'
         )
 
@@ -220,7 +220,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         self.assertEqual(commit['branch'], 'master')
         self.assertEqual(
             commit['revlink'],
-            'https://bitbucket.org/marcus/project-x/'
+            'https://bitbucket.org/marcus/project-x/commits/'
             '620ade18607ac42d872b568bb92acaa9a28620e9'
         )
 

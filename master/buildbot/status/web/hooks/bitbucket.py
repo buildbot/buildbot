@@ -52,7 +52,7 @@ def getChanges(request, options=None):
             'revision': commit['raw_node'],
             'when_timestamp': dateparse(commit['utctimestamp']),
             'branch': commit['branch'],
-            'revlink': '%s%s' % (repo_url, commit['raw_node']),
+            'revlink': '%scommits/%s' % (repo_url, commit['raw_node']),
             'repository': repo_url,
             'project': project
         })

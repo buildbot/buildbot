@@ -112,6 +112,8 @@ Fixes
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
+* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
