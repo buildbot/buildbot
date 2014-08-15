@@ -84,6 +84,7 @@
     if (coverage) {
       config.vendors_apart = true;
       config.templates_apart = true;
+      config.coffeecoverage = true;
     }
     if (config.vendors_apart) {
       script_sources = config.files.app.concat(config.files.scripts);
@@ -191,6 +192,14 @@
         action: dev ? 'watch' : 'run'
       };
       _.merge(karmaconf, config.karma);
+      if (config.coffeecoverage) {
+        karmaconf.reporters.push("coverage");
+        karmaconf.preprocessors = {
+          '**/scripts.js': ['sourcemap', 'coverage'],
+          '**/tests.js': ['sourcemap'],
+          '**/*.coffee': ['coverage']
+        };
+      }
       if (coverage) {
         karmaconf.basePath = ".";
         if (config.coffeecoverage) {
@@ -206,7 +215,6 @@
             return path.join("coverage", p);
           });
           karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified));
-          console.log(karmaconf.files);
         }
       }
       return gulp.src(karmaconf.files).pipe(karma(karmaconf));

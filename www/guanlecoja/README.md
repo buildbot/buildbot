@@ -133,6 +133,19 @@ https://chrome.google.com/webstore/detail/remotelivereload/jlppknnillhjgiengoiga
 This extension only works when you are testing on the same machine where gulp is running, using port 35729.
 If you really care about developing on a remote machine, you can always forward the 35729 port.
 
+### Code Coverage
+
+Code Coverage is a technique that tells you how much of your code is run during the unit tests. Achieving coverage of 100% is a good metric to tell the quality of you unit tests, and that the code does not have a corner case typo.
+
+``gulp --coverage`` enables code coverage report using ibrik coffeescript coverage annotation engine.
+This will create a ``coverage`` directory with the report inside it.
+
+#### Caveats:
+
+Ibrik uses the coffeescript-redux compiler, which understands slightly different coffeescript. most notable known issues are:
+
+* It does not supports CS1.7 (e.g. parenthese-less call chaining)
+* class without constructor will fail due to a bug in Ibrik: https://github.com/Constellation/ibrik/issues/21
 
 ### Examples
 
@@ -142,7 +155,8 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
-* 0.2.5: revert connect to 2.x
+* 0.2.8: add support for coverage
+* 0.2.7: revert connect to 2.x
 * 0.2.4: small ngClassify default config enhancement
 * 0.2.3: bump ng-classify for better multi module support, hardcode angular-template-cache, waiting my PR is merged
 * 0.2.2: add optional server, handle errors correctly in watch mode

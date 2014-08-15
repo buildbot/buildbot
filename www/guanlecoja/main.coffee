@@ -67,7 +67,7 @@ module.exports =  (gulp) ->
     if coverage
         config.vendors_apart = true
         config.templates_apart = true
-        #config.coffeecoverage = true
+        config.coffeecoverage = true
 
     if config.vendors_apart
         # might make sense to put the libs in a separated file
@@ -218,6 +218,13 @@ module.exports =  (gulp) ->
 
         _.merge(karmaconf, config.karma)
 
+        if config.coffeecoverage
+            karmaconf.reporters.push("coverage")
+            karmaconf.preprocessors = {
+              '**/scripts.js': ['sourcemap', 'coverage']
+              '**/tests.js': ['sourcemap']
+              '**/*.coffee': ['coverage']
+            }
         if coverage
             karmaconf.basePath = "."
             if config.coffeecoverage
@@ -229,7 +236,6 @@ module.exports =  (gulp) ->
                 classified = script_sources.map (p) ->
                     path.join("coverage", p)
                 karmaconf.files.splice.apply(karmaconf.files, [1, 0].concat(classified))
-                console.log karmaconf.files
         gulp.src karmaconf.files
             .pipe karma(karmaconf)
 
