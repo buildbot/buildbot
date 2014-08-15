@@ -1,6 +1,8 @@
 class GlMenu extends Provider
-    groups: {}
-    footer: []
+    constructor: ->
+        @groups = {}
+        @footer = []
+
     appTitle: "set AppTitle using GlMenuServiceProvider.setAppTitle"
 
     addGroup: (group) ->

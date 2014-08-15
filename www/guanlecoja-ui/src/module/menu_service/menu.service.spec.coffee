@@ -13,11 +13,16 @@ describe 'menuService', ->
                 if i == "bug"
                     break
             groups.push group
-            glMenuServiceProvider.addGroup
-                name: group.name
-                caption: _.string.humanize(group.name)
-                icon: group.name
-                order: group.name.length
+
+            if i == "edit"
+                glMenuServiceProvider.addGroup
+                    name: group.name
+            else
+                glMenuServiceProvider.addGroup
+                    name: group.name
+                    caption: _.string.humanize(group.name)
+                    icon: group.name
+                    order: if i == "edit" then undefined else group.name.length
 
         glMenuServiceProvider.setFooter [
             caption: "Github"
@@ -30,8 +35,8 @@ describe 'menuService', ->
                     name: item.name
                     url: '/' + item.name
                     data:
-                        group: group.name
-                        caption: _.string.humanize(item.name)
+                        group: if item.name == "banedit" then undefined else group.name
+                        caption: if item.name == "editedit" then undefined else _.string.humanize(item.name)
                 $stateProvider.state(state)
         null
 
@@ -60,3 +65,19 @@ describe 'menuService', ->
             inject (glMenuService) ->
                 groups = glMenuService.getGroups()
         expect(run).toThrow()
+
+    # simple test to make sure the directive loads
+    it 'should remove empty groups', ->
+
+        # configure the menu a little bit more.. with an erronous state
+        module (glMenuServiceProvider) ->
+            glMenuServiceProvider.addGroup
+                name: "foo"
+            null
+
+        inject (glMenuService) ->
+            groups = glMenuService.getGroups()
+            namedGroups = {}
+            for g in groups
+                namedGroups[g.name] = g
+            expect(namedGroups["foo"]).not.toBeDefined()
