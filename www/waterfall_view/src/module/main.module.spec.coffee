@@ -20,6 +20,7 @@ describe 'Waterfall view controller', ->
 
     # make sure we remove the element from the dom
     afterEach ->
+        expect($document.find("svg").length).toEqual(2)
         elem.remove()
         expect($document.find("svg").length).toEqual(0)
 
