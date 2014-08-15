@@ -75,13 +75,13 @@ class Waterfall extends Controller
             angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
-            @$scope.$watch 'builds', (builds) =>
+            @$scope.$watch('builds', ((builds) =>
                 if builds? and @builds.length isnt builds.length
                     @builds = builds
                     @groups = @dataService.getGroups(@builders, @builds, @c.threshold)
                     @dataService.addStatus(@builders)
                     @render()
-            , true
+                ), true)
 
             # Lazy load builds on scroll
             containerParent = @container.node().parentNode
