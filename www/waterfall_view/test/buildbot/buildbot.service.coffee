@@ -46,8 +46,6 @@ builds = [
     complete_at: 0
     complete: false
 ]
-for build in builds
-    build.all = -> bind: -> then: ->
 
 buildrequests = [
     builderid: 1
@@ -65,15 +63,16 @@ buildrequests = [
 
 # Mocked buildbot service
 class Buildbot extends Service('common')
-    constructor: ($q) ->
+    constructor: ($q, $timeout) ->
         @some = (string, options) ->
             deferred = $q.defer()
-            switch string
-                when 'builds' then deferred.resolve builds[0..options.limit-1]
-                when 'builders' then deferred.resolve builders[0..options.limit-1]
-                when 'buildrequests' then deferred.resolve buildrequests[0..options.limit-1]
-                else
-                    deferred.resolve []
+            resolve = ->
+                switch string
+                    when 'builds' then deferred.resolve builds[0..options.limit-1]
+                    when 'builders' then deferred.resolve builders[0..options.limit-1]
+                    when 'buildrequests' then deferred.resolve buildrequests[0..options.limit-1]
+                    else deferred.resolve []
+            $timeout(resolve, 100)
             bind: (scope) ->
                 deferred.promise.then (b) ->
                     scope[string] = b
@@ -92,3 +91,10 @@ class Buildbot extends Service('common')
                 deferred.promise
             getList: ->
                 deferred.promise
+
+        for build in builds
+            build.all = (string) ->
+                deferred = $q.defer()
+                # TODO sample data (eg. steps)
+                deferred.resolve []
+                bind: -> deferred.promise

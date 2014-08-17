@@ -6,7 +6,7 @@ beforeEach ->
         null
 
 describe 'Waterfall view controller', ->
-    $rootScope = $state = elem = w = $document = $window = $modal = config = null
+    $rootScope = $state = elem = w = $document = $window = $modal = config = $timeout = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
@@ -17,6 +17,7 @@ describe 'Waterfall view controller', ->
         $document = $injector.get('$document')
         $window = $injector.get('$window')
         $modal = $injector.get('$modal')
+        $timeout = $injector.get('$timeout')
         config = $injector.get('config')
         elem = angular.element('<div></div>')
         elem.append($compile('<ui-view></ui-view>')(scope))
@@ -24,9 +25,17 @@ describe 'Waterfall view controller', ->
 
         $state.transitionTo('waterfall')
         $rootScope.$digest()
-        w = $document.find('.waterfall').scope().w
-
+        scope = $document.find('.waterfall').scope()
+        w = $document.find('.waterfall').controller()
+        spyOn(w, 'mouseOver').and.callThrough()
+        spyOn(w, 'mouseOut').and.callThrough()
+        spyOn(w, 'mouseMove').and.callThrough()
+        spyOn(w, 'click').and.callThrough()
+        spyOn(w, 'loadMore').and.callThrough()
+        # We don't want the setHeight to call loadMore
         spyOn(w, 'setHeight').and.callFake ->
+        # Data is loaded
+        $timeout.flush()
 
     beforeEach(inject(injected))
 
@@ -59,30 +68,57 @@ describe 'Waterfall view controller', ->
         n.__onclick()
         expect($modal.open).toHaveBeenCalled()
         # Test mouseover
+        expect(w.mouseOver).not.toHaveBeenCalled()
         expect(e.select('.svg-tooltip').empty()).toBe(true)
         n.__onmouseover({})
+        expect(w.mouseOver).toHaveBeenCalled()
         expect(e.select('.svg-tooltip').empty()).toBe(false)
         # Test mousemove
-        event = document.createEvent('MouseEvents')
-        event.initMouseEvent('mousemove', true, true, window,
-            0, 0, 0, 100, 850, false, false, false, false, 0, null)
-        expect(e.select('.svg-tooltip').attr('transform')).toContain('NaN')
-        n.__onmousemove(event)
-        expect(e.select('.svg-tooltip').attr('transform')).not.toContain('NaN')
+        expect(w.mouseMove).not.toHaveBeenCalled()
+        n.__onmousemove({})
+        expect(w.mouseMove).toHaveBeenCalled()
         # Test mouseout
+        expect(w.mouseOut).not.toHaveBeenCalled()
         expect(e.select('.svg-tooltip').empty()).toBe(false)
         n.__onmouseout({})
+        expect(w.mouseOut).toHaveBeenCalled()
         expect(e.select('.svg-tooltip').empty()).toBe(true)
 
     it 'should rerender the waterfall on resize', ->
-        spyOn(w, 'render')
+        spyOn(w, 'render').and.callThrough()
         expect(w.render).not.toHaveBeenCalled()
         angular.element($window).triggerHandler('resize')
         expect(w.render).toHaveBeenCalled()
 
     it 'should rerender the waterfall on data change', ->
-        spyOn(w, 'render')
+        spyOn(w, 'render').and.callThrough()
         expect(w.render).not.toHaveBeenCalled()
-        #w.loadMore()
-        $rootScope.$digest()
+        w.loadMore()
+        $timeout.flush()
         expect(w.render).toHaveBeenCalled()
+
+    it 'should lazy load data on scroll', ->
+        spyOn(w, 'getHeight').and.returnValue(900)
+        e = d3.select('.inner-content')
+        n = e.node()
+        expect(w.loadMore).not.toHaveBeenCalled()
+        angular.element(n).triggerHandler('scroll')
+        expect(w.loadMore).toHaveBeenCalled()
+
+    it 'should have string representations of result codes', ->
+        testBuild =
+            complete: false
+            started_at: 0
+        expect(w.result(testBuild)).toBe('pending')
+        testBuild.complete = true
+        expect(w.result(testBuild)).toBe('unknown')
+        results =
+            0: 'success'
+            1: 'warnings'
+            2: 'failure'
+            3: 'skipped'
+            4: 'exception'
+            5: 'cancelled'
+        for i in [0..5]
+            testBuild.results = i
+            expect(w.result(testBuild)).toBe(results[i])

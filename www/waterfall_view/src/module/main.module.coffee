@@ -192,7 +192,7 @@ class Waterfall extends Controller
     # Returns the result string of a builder, build or step
     ###
     result: (b) ->
-        if not b.complete and b.started_at > 0
+        if not b.complete and b.started_at >= 0
             result = 'pending'
         else
             switch b.results
@@ -371,96 +371,96 @@ class Waterfall extends Controller
             .attr('y', -3)
             .text((build) -> build.buildid)
 
-        ###
-        # Event actions
-        ###
-        @mouseOver = (build) ->
-            e = self.d3.select(@)
-            mouse = self.d3.mouse(@)
-            self.addTicks(build)
-            self.drawYAxis()
-
-            # Move build and builder to front
-            p = self.d3.select(@parentNode)
-            @parentNode.appendChild(@)
-            p.each -> @parentNode.appendChild(@)
-
-            # Show tooltip on the left or on the right
-            r = build.builderid < self.builders.length / 2
-
-            # Create tooltip
-            height = 40
-            points = ->
-                if r then "20,0 0,#{height / 2} 20,#{height} 170,#{height} 170,0"
-                else "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
-            tooltip = e.append('g')
-                .attr('class', 'svg-tooltip')
-                .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
-                .append('g')
-                    .attr('class', 'tooltip-content')
-                    .attr('transform', "translate(#{if r then 5 else -175}, #{- height / 2})")
-
-            tooltip.append('polygon')
-                .attr('points', points())
-
-            # Load steps
-            build.all('steps').bind(self.$scope).then (buildsteps) ->
-
-                # Resize the tooltip
-                height = buildsteps.length * 15 + 7
-                tooltip.transition().duration(100)
-                    .attr('transform', "translate(#{if r then 5 else -175}, #{- height / 2})")
-                    .select('polygon')
-                        .attr('points', points())
-
-                duration = (step) ->
-                    d = new Date((step.complete_at - step.started_at) * 1000)
-                    if d > 0 then "(#{d / 1000}s)" else ''
-                tooltip.selectAll('.buildstep')
-                    .data(buildsteps)
-                    .enter().append('g')
-                        .attr('class', 'buildstep')
-                        # Add text
-                        .append('text')
-                            .attr('y', (step, i) -> 15 * (i + 1))
-                            .attr('x', if r then 30 else 10)
-                            .attr('class', color)
-                            .classed('fill', true)
-                            .transition().delay(100)
-                            # Text format
-                            .text((step, i) -> "#{i + 1}. #{step.name} #{duration(step)}")
-
-        @mouseMove = (build) ->
-            e = self.d3.select(@)
-
-            # Move the tooltip to the mouse position
-            mouse = self.d3.mouse(@)
-            e.select('.svg-tooltip')
-                .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
-
-        @mouseOut = (build) ->
-            e = self.d3.select(@)
-            self.removeTicks()
-            self.drawYAxis()
-
-            # Remove tooltip
-            e.selectAll('.svg-tooltip').remove()
-
-        @click = (build) ->
-            # Open modal on click
-            modal = self.$modal.open
-                templateUrl: 'waterfall_view/views/modal.html'
-                controller: 'waterfallModalController as modal'
-                windowClass: 'modal-small'
-                resolve:
-                    selectedBuild: -> build
-
         # Add event listeners
         builds
             .on('mouseover', @mouseOver)
             .on('mousemove', @mouseMove)
             .on('mouseout', @mouseOut)
             .on('click', @click)
+
+    ###
+    # Event actions
+    ###
+    mouseOver: (build) ->
+        e = self.d3.select(@)
+        mouse = self.d3.mouse(@)
+        self.addTicks(build)
+        self.drawYAxis()
+
+        # Move build and builder to front
+        p = self.d3.select(@parentNode)
+        @parentNode.appendChild(@)
+        p.each -> @parentNode.appendChild(@)
+
+        # Show tooltip on the left or on the right
+        r = build.builderid < self.builders.length / 2
+
+        # Create tooltip
+        height = 40
+        points = ->
+            if r then "20,0 0,#{height / 2} 20,#{height} 170,#{height} 170,0"
+            else "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
+        tooltip = e.append('g')
+            .attr('class', 'svg-tooltip')
+            .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
+            .append('g')
+                .attr('class', 'tooltip-content')
+                .attr('transform', "translate(#{if r then 5 else -175}, #{- height / 2})")
+
+        tooltip.append('polygon')
+            .attr('points', points())
+
+        # Load steps
+        build.all('steps').bind(self.$scope).then (buildsteps) ->
+
+            # Resize the tooltip
+            height = buildsteps.length * 15 + 7
+            tooltip.transition().duration(100)
+                .attr('transform', "translate(#{if r then 5 else -175}, #{- height / 2})")
+                .select('polygon')
+                    .attr('points', points())
+
+            duration = (step) ->
+                d = new Date((step.complete_at - step.started_at) * 1000)
+                if d > 0 then "(#{d / 1000}s)" else ''
+            tooltip.selectAll('.buildstep')
+                .data(buildsteps)
+                .enter().append('g')
+                .attr('class', 'buildstep')
+                # Add text
+                .append('text')
+                    .attr('y', (step, i) -> 15 * (i + 1))
+                    .attr('x', if r then 30 else 10)
+                    .attr('class', color)
+                    .classed('fill', true)
+                    .transition().delay(100)
+                    # Text format
+                    .text((step, i) -> "#{i + 1}. #{step.name} #{duration(step)}")
+
+    mouseMove: (build) ->
+        e = self.d3.select(@)
+
+        # Move the tooltip to the mouse position
+        mouse = self.d3.mouse(@)
+        e.select('.svg-tooltip')
+            .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
+
+    mouseOut: (build) ->
+        e = self.d3.select(@)
+        self.removeTicks()
+        self.drawYAxis()
+
+        # Remove tooltip
+        e.selectAll('.svg-tooltip').remove()
+
+    click: (build) ->
+        # Open modal on click
+        modal = self.$modal.open
+            templateUrl: 'waterfall_view/views/modal.html'
+            controller: 'waterfallModalController as modal'
+            windowClass: 'modal-small'
+            resolve:
+                selectedBuild: -> build
 
     ###
     # Render the waterfall view
