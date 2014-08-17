@@ -70,7 +70,7 @@ describe 'Scale service', ->
         # Later times have greater Y coordinate
         expect(idToY(date)).toBeGreaterThan(idToY(date + 10000))
         # Out of domain
-        expect(idToY(1359731102)).toBeUndefined()
+        expect(idToY(1359731101)).toBeUndefined()
         expect(idToY.invert(120)).toBeUndefined()
 
     it 'should return a builderid to name scale', ->

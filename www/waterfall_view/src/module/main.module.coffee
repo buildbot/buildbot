@@ -9,7 +9,7 @@ class WaterfallView extends App
 
 class Waterfall extends Controller
     self = null
-    constructor: (@$scope, $q, @$window, @$modal, @buildbotService, d3Service, @dataService, scaleService, @$timeout, config) ->
+    constructor: (@$scope, $q, @$window, @$modal, @buildbotService, d3Service, @dataService, scaleService, config) ->
         self = @
 
         # Show the loading spinner
@@ -374,7 +374,7 @@ class Waterfall extends Controller
         ###
         # Event actions
         ###
-        mouseOver = (build) ->
+        @mouseOver = (build) ->
             e = self.d3.select(@)
             mouse = self.d3.mouse(@)
             self.addTicks(build)
@@ -430,7 +430,7 @@ class Waterfall extends Controller
                             # Text format
                             .text((step, i) -> "#{i + 1}. #{step.name} #{duration(step)}")
 
-        mouseMove = (build) ->
+        @mouseMove = (build) ->
             e = self.d3.select(@)
 
             # Move the tooltip to the mouse position
@@ -438,7 +438,7 @@ class Waterfall extends Controller
             e.select('.svg-tooltip')
                 .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
 
-        mouseOut = (build) ->
+        @mouseOut = (build) ->
             e = self.d3.select(@)
             self.removeTicks()
             self.drawYAxis()
@@ -446,7 +446,7 @@ class Waterfall extends Controller
             # Remove tooltip
             e.selectAll('.svg-tooltip').remove()
 
-        click = (build) ->
+        @click = (build) ->
             # Open modal on click
             modal = self.$modal.open
                 templateUrl: 'waterfall_view/views/modal.html'
@@ -457,10 +457,10 @@ class Waterfall extends Controller
 
         # Add event listeners
         builds
-            .on('mouseover', mouseOver)
-            .on('mousemove', mouseMove)
-            .on('mouseout', mouseOut)
-            .on('click', click)
+            .on('mouseover', @mouseOver)
+            .on('mousemove', @mouseMove)
+            .on('mouseout', @mouseOut)
+            .on('click', @click)
 
     ###
     # Render the waterfall view

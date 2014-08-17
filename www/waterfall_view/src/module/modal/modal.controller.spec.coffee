@@ -2,7 +2,6 @@ beforeEach ->
     module 'waterfall_view'
     # Mock modalService
     module ($provide) ->
-        $provide.service '$modal', ->
         $provide.service '$modalInstance', -> close: ->
         null
 

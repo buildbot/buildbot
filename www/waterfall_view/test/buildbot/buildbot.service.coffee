@@ -46,6 +46,8 @@ builds = [
     complete_at: 0
     complete: false
 ]
+for build in builds
+    build.all = -> bind: -> then: ->
 
 buildrequests = [
     builderid: 1
@@ -72,7 +74,9 @@ class Buildbot extends Service('common')
                 when 'buildrequests' then deferred.resolve buildrequests[0..options.limit-1]
                 else
                     deferred.resolve []
-            bind: ->
+            bind: (scope) ->
+                deferred.promise.then (b) ->
+                    scope[string] = b
                 deferred.promise
             getSome: ->
                 deferred.promise
@@ -84,7 +88,7 @@ class Buildbot extends Service('common')
                 when 'buildrequests' then deferred.resolve buildrequests
                 else
                     deferred.resolve []
-            bind: ->
+            bind: (scope) ->
                 deferred.promise
             getList: ->
                 deferred.promise
