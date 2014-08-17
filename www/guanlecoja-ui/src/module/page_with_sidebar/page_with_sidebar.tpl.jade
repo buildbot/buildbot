@@ -3,11 +3,11 @@
         ul
             li.sidebar-main
                 a(href='#', ng-click='page.sidebarActive=!page.sidebarActive')
-                    | {{appTitle}}
+                    | {{page.appTitle}}
                     span.menu-icon.fa.fa-bars
             li.sidebar-title
                 span NAVIGATION
-            div(ng-repeat="group in groups")
+            div(ng-repeat="group in page.groups")
                 div(ng-if="group.items.length > 0")
                     li.sidebar-list
                         a(ng-click='page.toggleGroup(group)')
@@ -23,7 +23,7 @@
                             | {{group.caption}}
                             span.menu-icon.fa(ng-class="'fa-' + group.icon")
         .sidebar-footer
-            .col-xs-4(ng-repeat="item in footer")
+            .col-xs-4(ng-repeat="item in page.footer")
                 a(ng-href='{{item.href}}')
                     | {{item.caption}}
     .content

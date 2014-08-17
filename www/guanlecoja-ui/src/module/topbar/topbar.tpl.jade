@@ -6,33 +6,5 @@
                 a(ng-if="b.sref", ui-sref="{{b.sref}}") {{b.caption}}
                 a(ng-if="b.href", ng-href="{{b.href}}") {{b.caption}}
                 span(ng-if="b.href == undefined && b.sref == undefined", ng-href="{{b.href}}") {{b.caption}}
-        ul.nav.navbar-nav.pull-right
-            li.dropdown
-                a.dropdown-toggle(href='#')
-                    i.fa.fa-bell-o.fa-lg.fa-ringing
-                ul.dropdown-menu.dropdown-menu-right
-                    li.dropdown-header
-                        | Notifications
-                    li.divider
-                    li
-                        a(href='#') Server Down!
-            li.dropdown
-                a.dropdown-toggle(href='#')
-                  img.avatar(src='img/avatar.jpg')
-                ul.dropdown-menu.dropdown-menu-right
-                    li.dropdown-header
-                        | Joe Bloggs
-                    li.divider
-                    li.link
-                        a(href='#')
-                            | Profile
-                    li.link
-                        a(href='#')
-                            | Menu Item
-                    li.link
-                        a(href='#')
-                            | Menu Item
-                    li.divider
-                    li.link
-                        a(href='#')
-                            | Logout
+        ul.nav.navbar-nav.pull-right(ng-transclude)
+

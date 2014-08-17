@@ -40,7 +40,6 @@ describe 'menuService', ->
                 $stateProvider.state(state)
         null
 
-    # simple test to make sure the directive loads
     it 'should generate the menu correctly', inject (glMenuService) ->
         groups = glMenuService.getGroups()
         namedGroups = {}

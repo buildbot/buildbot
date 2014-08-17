@@ -26,7 +26,7 @@ describe 'topbar', ->
             name: "foo"
         expect(scope.breadcrumb).toEqual([ { caption : 'Foo', href : '#bar/' } ])
 
-        scope.$broadcast "breadcrumb", [
+        scope.$broadcast "glBreadcrumb", [
             caption: "bar"
             sref: "foo"
         ]

@@ -14,7 +14,6 @@ describe 'page with sidebar', ->
             name: 'g2'
         ]
         glMenuService.getGroups = -> groups
-        console.log glMenuService.getGroups()
         scope = $rootScope;
         $compile(elmBody)(scope);
         scope.$digest();

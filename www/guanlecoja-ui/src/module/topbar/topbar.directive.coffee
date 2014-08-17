@@ -18,5 +18,5 @@ class _glTopbar extends Controller
                 caption: _.humanize(state.name)
                 href: '#' + $location.hash()
             ]
-        $scope.$on "breadcrumb", (e, data) ->
+        $scope.$on "glBreadcrumb", (e, data) ->
             $scope.breadcrumb = data

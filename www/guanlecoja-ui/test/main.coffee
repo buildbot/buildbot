@@ -47,9 +47,11 @@ m.config ($stateProvider, glMenuServiceProvider) ->
                         caption: _.string.humanize(item.name)
                 $stateProvider.state(state)
 
-m.controller "dummyController", ($scope, $state, $rootScope) ->
+m.controller "dummyController", ($scope, $state, glBreadcrumbService, glNotificationService) ->
     $scope.stateName = $state.current.name
-    $rootScope.$broadcast "breadcrumb", [
+    glNotificationService.notify(msg:"You just transitioned to #{$scope.stateName}!", title:"State transitions", group:"state")
+
+    glBreadcrumbService.setBreadcrumb [
         caption: _.string.humanize($state.current.data.group)
     ,
         caption: _.string.humanize($state.current.name)
