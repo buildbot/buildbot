@@ -112,6 +112,8 @@ Fixes
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
+* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -271,7 +273,7 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::

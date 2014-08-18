@@ -39,8 +39,8 @@ This allows frontend developers and users to build custom components for the web
 
 Python development and AngularJS development are very different processes, requiring different environment requirements and skillsets.
 To maimize hackability, Buildbot separates the two cleanly.
-An experienced AngularJS hacker should be quite comfortable in the :bb:src:`www/` directory, with a few exceptions described below.
-Similarly, an experienced Python hacker can simply download the pre-built web UI (from pypi!) and never venture near the :bb:src:`www/` directory.
+An experienced AngularJS hacker should be quite comfortable in the :src:`www/` directory, with a few exceptions described below.
+Similarly, an experienced Python hacker can simply download the pre-built web UI (from pypi!) and never venture near the :src:`www/` directory.
 
 URLs
 ~~~~
@@ -385,7 +385,7 @@ On top of Angular we use nodeJS tools to ease development
    In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
  * `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
  * `jade template langage <http://jade-lang.com/>`_, adds syntax sugar and readbility to angular html templates.
- * `bootstrap <http://twitter.github.com/bootstrap/>`_ is a css library providing know good basis for our styles.
+ * `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
  * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 modules we may or may not want to include:
@@ -556,7 +556,7 @@ A running buildmaster needs to be able to find the JavaScript source code it nee
 This needs to work in a variety of contexts - Python development, JavaScript development, and end-user installations.
 To accomplish this, the grunt build process finishes by bundling all of the static data into a Python distribution tarball, along with a little bit of Python glue.
 The Python glue implements the interface described below, with some care taken to handle multiple contexts.
-The :bb:src:`www/grunt.js`, :bb:src:`www/setup.py`, and :bb:src:`www/buildbot_www.py` scripts are carefully coordinated.
+The :src:`www/grunt.js`, :src:`www/setup.py`, and :src:`www/buildbot_www.py` scripts are carefully coordinated.
 
 
 Hacking Quick-Start

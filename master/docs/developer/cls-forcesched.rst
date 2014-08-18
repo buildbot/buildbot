@@ -86,7 +86,7 @@ new parameter types or hacking the existing types.
 
            A list of types that the parameter conforms to. These are used by the
            jinja template to create appropriate html form widget.  The available
-           values are visible in :bb:src:`master/buildbot/status/web/template/forms.html`
+           values are visible in :src:`master/buildbot/status/web/template/forms.html`
            in the ``force_build_one_scheduler`` macro.
 
     .. py:attribute:: default

@@ -152,24 +152,19 @@ like the following at the end of each test module::
 Mixins
 ------
 
-Buildbot provides a number of purpose-specific mixin classes in
-:bb:src:`master/buildbot/util`.  These generally define a set of utility
-functions as well as ``setUpXxx`` and ``tearDownXxx`` methods.  These methods
-should be called explicitly from your subclass's ``setUp`` and ``tearDown``
-methods.  Note that some of these methods return Deferreds, which should be
-handled properly by the caller.
+Buildbot provides a number of purpose-specific mixin classes in :src:`master/buildbot/util`.
+These generally define a set of utility functions as well as ``setUpXxx`` and ``tearDownXxx`` methods.
+These methods should be called explicitly from your subclass's ``setUp`` and ``tearDown`` methods.
+Note that some of these methods return Deferreds, which should be handled properly by the caller.
 
 .. _Fakes:
 
 Fakes
 -----
 
-Buildbot provides a number of pre-defined fake implementations of internal
-interfaces, in :bb:src:`master/buildbot/fake`.  These are designed to be used
-in unit tests to limit the scope of the test.  For example, the fake DB API
-eliminates the need to create a real database when testing code that uses the
-DB API, and isolates bugs in the system under test from bugs in the real DB
-implementation.
+Buildbot provides a number of pre-defined fake implementations of internal interfaces, in :src:`master/buildbot/fake`.
+These are designed to be used in unit tests to limit the scope of the test.
+For example, the fake DB API eliminates the need to create a real database when testing code that uses the DB API, and isolates bugs in the system under test from bugs in the real DB implementation.
 
 The danger of using fakes is that the fake interface and the real interface can
 differ.  The interface tests exist to solve this problem.  All fakes should be
@@ -180,7 +175,7 @@ compared.
 Type Validation
 ---------------
 
-The :bb:src:`master/buildbot/test/util/validation.py` provides a set of classes and definitions for validating Buildbot data types.
+The :src:`master/buildbot/test/util/validation.py` provides a set of classes and definitions for validating Buildbot data types.
 It supports four types of data:
 
  * DB API dictionaries, as returned from the ``getXxx`` methods,

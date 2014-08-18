@@ -202,9 +202,9 @@ Adding Resource Types
 +++++++++++++++++++++
 
 You'll need to use both plural and singular forms of the resource type; in this example, we'll use 'pub' and 'pubs'.
-You can also follow an existing file, like :bb:src:`master/buildbot/data/changes.py`, to see when to use which form.
+You can also follow an existing file, like :src:`master/buildbot/data/changes.py`, to see when to use which form.
 
-In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
+In :src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
 
     from buildbot.data import base
     class Pub(base.ResourceType):
@@ -282,7 +282,7 @@ In :bb:src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`Resou
 Like all Buildbot source files, every resource type module must have corresponding tests.
 These should thoroughly exercise all update methods.
 
-All resource types must be documented in the Buildbot documentation and linked from the bottom of this file (:bb:src:`master/docs/developer/data.rst`).
+All resource types must be documented in the Buildbot documentation and linked from the bottom of this file (:src:`master/docs/developer/data.rst`).
 
 Adding Endpoints
 ++++++++++++++++
@@ -375,7 +375,7 @@ For example, if an endpoint implements pagination, then it must also completely 
 Adding Messages
 +++++++++++++++
 
-Message types are defined in :bb:src:`master/buildbot/test/util/validation.py`, via the ``message`` module-level value.
+Message types are defined in :src:`master/buildbot/test/util/validation.py`, via the ``message`` module-level value.
 This is a dictionary of ``MessageValidator`` objects, one for each message type.
 The message type is determined from the first atom of its routing key.
 The ``events`` dictionary lists the possible last atoms of the routing key.
@@ -409,10 +409,10 @@ Returning to the pub example::
             # ...
             self.produceMessage(pub, 'taps-updated')
 
-Update methods should be documented in :bb:src:`master/docs/developer/data.rst`.
+Update methods should be documented in :src:`master/docs/developer/data.rst`.
 They should be thoroughly tested with unit tests.
-They should have a fake implentation in :bb:src:`master/buildbot/test/fake/fakedata.py`.
-That fake implementation should be tested to match the real implementation in :bb:src:`master/buildbot/test/interfaces/test_data_connector.py`.
+They should have a fake implentation in :src:`master/buildbot/test/fake/fakedata.py`.
+That fake implementation should be tested to match the real implementation in :src:`master/buildbot/test/interfaces/test_data_connector.py`.
 
 .. _Adding-Fields-to-Resource-Types:
 

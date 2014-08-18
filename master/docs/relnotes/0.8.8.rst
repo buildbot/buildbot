@@ -19,7 +19,7 @@ Features
 * The master now poll the database for pending tasks when running buildbot in multi-master mode.
 
 
-* The algorithm to match build requests to slaves has been rewritten in :bb:pull:`615`.
+* The algorithm to match build requests to slaves has been rewritten :pull:`615`.
   The new algorithm automatically takes locks into account, and will not schedule a build only to have it wait on a lock.
   The algorithm also introduces a ``canStartBuild`` builder configuration option which can be used to prevent a build request being assigned to a slave.
 
@@ -37,7 +37,7 @@ Features
 
 * Slaves can now be paused through the web status.
 
-* The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
+* The latent buildslave support is less buggy, thanks :pull:`646`.
 
 * The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches, codebases, projects, and repositories.
 
@@ -63,10 +63,10 @@ Features
 * The list of force schedulers in the web UI is now sorted by name.
 
 * OpenStack-based Latent Buildslave support was added.
-  See :bb:pull:`666`.
+  See :pull:`666`.
 
 * Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
-  See :bb:pull:`596`.
+  See :pull:`596`.
 
 * Master-side support for Repo is available.
   The step parameters changed to camelCase.
@@ -75,9 +75,9 @@ Features
 
 * Builder configurations can now include a ``description``, which will appear in the web UI to help humans figure out what the builder does.
 
-* GNUAutoconf and other pre-defined factories now work correctly (:bb:bug:`2402`)
+* GNUAutoconf and other pre-defined factories now work correctly (:bug:`2402`)
 
-* The pubDate in RSS feeds is now rendered correctly (:bb:bug:`2530`)
+* The pubDate in RSS feeds is now rendered correctly (:bug:`2530`)
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,7 +114,7 @@ Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
-  This release includes the fix for :bb:bug:`2536`.
+  This release includes the fix for :bug:`2536`.
 
 * An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
   to send a message back to the committer.
@@ -131,7 +131,7 @@ Features
 
 * The fix for Twisted bug #5079 is now applied on the slave side, too.
   This fixes a perspective broker memory leak in older versions of Twisted.
-  This fix was added on the master in Buildbot-0.8.4 (see :bb:bug:`1958`).
+  This fix was added on the master in Buildbot-0.8.4 (see :bug:`1958`).
 
 * The ``--nodaemon`` option to ``buildslave start`` now correctly prevents the slave from forking before running.
 
@@ -151,7 +151,7 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::

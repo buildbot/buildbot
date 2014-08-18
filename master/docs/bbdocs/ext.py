@@ -174,53 +174,6 @@ def make_index(name, localname):
                 dict(name=name, localname=localname))
 
 
-class BugRole(object):
-
-    """
-    A role to create a link to a Trac bug, by number
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        bugnum = text.lstrip('#')
-        node = nodes.reference('', '')
-        node['refuri'] = 'http://trac.buildbot.net/ticket/%s' % bugnum
-        node['reftitle'] = title = 'bug #%s' % bugnum
-        node.append(nodes.Text(title))
-        return [node], []
-
-
-class SrcRole(object):
-
-    """
-    A role to link to buildbot source on master
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        node = nodes.reference('', '')
-        node['refuri'] = (
-            'https://github.com/buildbot/buildbot/blob/master/%s' % text)
-        node['reftitle'] = title = '%s' % text
-        node.append(nodes.literal(title, title))
-        return [node], []
-
-
-class PullRole(object):
-
-    """
-    A role to link to a buildbot pull request
-    """
-
-    def __call__(self, typ, rawtext, text, lineno, inliner,
-                 options={}, content=[]):
-        node = nodes.reference('', '')
-        node['refuri'] = ('https://github.com/buildbot/buildbot/pull/' + text)
-        node['reftitle'] = title = 'pull request %s' % text
-        node.append(nodes.Text(title, title))
-        return [node], []
-
-
 class BBDomain(Domain):
     name = 'bb'
     label = 'Buildbot'
@@ -326,11 +279,7 @@ class BBDomain(Domain):
         'event': XRefRole(),
         'rtype': XRefRole(),
         'rpath': XRefRole(),
-        'index': XRefRole(),
-
-        'bug': BugRole(),
-        'src': SrcRole(),
-        'pull': PullRole(),
+        'index': XRefRole()
     }
 
     initial_data = {
