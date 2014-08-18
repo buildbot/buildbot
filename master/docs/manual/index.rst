@@ -15,3 +15,4 @@ Buildbot Manual
    cmdline
    resources
    optimization
+   plugins

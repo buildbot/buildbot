@@ -21,3 +21,6 @@ pep8:
 
 gruntci:
 	cd www; node_modules/.bin/grunt ci
+
+rmpyc:
+	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;

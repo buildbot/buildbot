@@ -39,7 +39,7 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 ``plugins``
     This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
     These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-www-waterfall``.
-    For example ::
+    For example::
 
         c['www'] = {
             'plugins': {'waterfall': {'num_builds': 50}}
@@ -91,24 +91,28 @@ The available classes are described here:
 
     :param users: list of ``("user","password")`` tuples, or a dictionary of ``{"user": "password", ..}``
 
-    Simple username/password authentication using a list of user/password tuples provided in the configuration file. ::
+    Simple username/password authentication using a list of user/password tuples provided in the configuration file.
 
-        from buildbot.www.auth import UserPasswordAuth
+    ::
+
+        from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': UserPasswordAuth({"homer": "doh!"}),
+            'auth': util.UserPasswordAuth({"homer": "doh!"}),
         }
 
 .. py:class:: buildbot.www.auth.HTPasswdAuth(passwdFile)
 
-    :param passwdFile: An ``.htpasswd`` file to read
+    :param passwdFile: An :file:`.htpasswd` file to read
 
-    This class implements simple username/password authentication against a standard :file:`.htpasswd` file. ::
+    This class implements simple username/password authentication against a standard :file:`.htpasswd` file.
 
-        from buildbot.www.auth import HTPasswdAuth
+    ::
+
+        from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': HTPasswdAuth("my_htpasswd"),
+            'auth': util.HTPasswdAuth("my_htpasswd"),
         }
 
 .. py:class:: buildbot.www.oauth2.GoogleAuth(clientId, clientSecret)
@@ -124,10 +128,10 @@ The available classes are described here:
 
     Example::
 
-        from buildbot.www.oauth2 import GoogleAuth
+        from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': GoogleAuth("clientid", "clientsecret"),
+            'auth': util.GoogleAuth("clientid", "clientsecret"),
         }
 
     in order to use this module, you need to install the python ``requests`` module
@@ -150,10 +154,10 @@ The available classes are described here:
 
     Example::
 
-        from buildbot.www.oauth2 import GitHubAuth
+        from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': GitHubAuth("clientid", "clientsecret"),
+            'auth': util.GitHubAuth("clientid", "clientsecret"),
         }
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
@@ -172,10 +176,10 @@ The available classes are described here:
 
     Example::
 
-        from buildbot.www.auth import RemoteUserAuth
+        from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': RemoteUserAuth(),
+            'auth': util.RemoteUserAuth(),
         }
 
     A corresponding Apache configuration example
@@ -241,13 +245,11 @@ Currently only one provider is available:
 
         Example::
 
-            from buildbot.www.auth import RemoteUserAuth
-            from buildbot.www.ldapuserinfos import LdapUserInfo
-            from buildbot.www.avatar import AvatarGravatar
+            from buildbot.plugins import util
 
             # this configuration works for MS Active Directory ldap implementation
             # we use it for user info, and avatars
-            userInfoProvider = LdapUserInfo(
+            userInfoProvider = util.LdapUserInfo(
                 uri='ldap://ldap.mycompany.com:3268',
                 bind_user='ldap_user',
                 bind_pw='p4$$wd',
@@ -263,15 +265,12 @@ Currently only one provider is available:
             )
             c['www'] = dict(port=PORT, allowed_origins=["*"],
                             url=c['buildbotURL'],
-                            auth=RemoteUserAuth(userInfoProvider),
-                            avatar_methods=[userInfoProvider, AvatarGravatar()]
-                            )
+                            auth=util.RemoteUserAuth(userInfoProvider),
+                            avatar_methods=[userInfoProvider,
+                                            util.AvatarGravatar()])
 
         In order to use this module, you need to install the ``python3-ldap`` module:
 
         .. code-block:: bash
 
                 pip install python3-ldap
-
-
-
