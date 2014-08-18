@@ -385,7 +385,7 @@ On top of Angular we use nodeJS tools to ease development
    In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
  * `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
  * `jade template langage <http://jade-lang.com/>`_, adds syntax sugar and readbility to angular html templates.
- * `bootstrap <http://twitter.github.com/bootstrap/>`_ is a css library providing know good basis for our styles.
+ * `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
  * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 modules we may or may not want to include:
