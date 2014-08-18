@@ -1131,7 +1131,7 @@ Change Hooks
 
 The ``/change_hook`` url is a magic URL which will accept HTTP requests and translate
 them into changes for buildbot. Implementations (such as a trivial json-based endpoint
-and a GitHub implementation) can be found in :bb:src:`master/buildbot/status/web/hooks`.
+and a GitHub implementation) can be found in :src:`master/buildbot/status/web/hooks`.
 The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the
 hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
 separately, for security reasons
