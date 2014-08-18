@@ -23,6 +23,8 @@ from twisted.application import service
 from buildbot.process.builder import Builder
 from buildbot import interfaces, locks, config, util
 from buildbot.process import metrics
+from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
+
 
 class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -220,6 +222,15 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         timer.stop()
 
+    @defer.inlineCallbacks
+    def removeQueuedBuilds(self, builder_name):
+        builds = yield self.master.db.buildrequests.getBuildRequests(claimed=False, buildername=builder_name)
+        if len(builds):
+            log.msg("removing %d builds from the build queue from the builder %s" % (len(builds), builder_name))
+            for brdict in builds:
+                br = yield BuildRequest.fromBrdict(self.master, brdict)
+                brc = BuildRequestControl(None, br)
+                yield brc.cancel()
 
     @defer.inlineCallbacks
     def reconfigServiceBuilders(self, new_config):
@@ -265,6 +276,12 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         metrics.MetricCountEvent.log("num_builders",
                 len(self.builders), absolute=True)
+
+        queued_builds = yield self.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
+        builders = set(b["buildername"] for b in queued_builds if b["buildername"] not in new_set)
+        for builder in builders:
+            self.removeQueuedBuilds(builder)
+
 
         timer.stop()
 
