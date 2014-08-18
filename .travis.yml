@@ -103,7 +103,7 @@ script:
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
-  - "[ $IS_LATEST = false ] || make frontend
+  - "[ $IS_LATEST = false ] || make frontend"
 
 notifications:
   email: false
