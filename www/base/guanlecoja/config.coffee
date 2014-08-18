@@ -30,8 +30,8 @@ config =
         # JavaScript libraries (order matters)
         deps:
             "guanlecoja-ui":
-                version: '~1.0.0'
-                files: 'scripts.js'
+                version: '~1.1.0'
+                files: ['vendors.js', 'scripts.js']
             moment:
                 version: "~2.6.0"
                 files: 'moment.js'
