@@ -149,30 +149,32 @@ parameters which do not accept properties.
 Property
 ++++++++
 
-The simplest form of annotation is to wrap the property name with
-:class:`Property`::
+The simplest form of annotation is to wrap the property name with :class:`Property`::
 
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import Property
+    from buildbot.plugins import steps, util
 
-   f.addStep(ShellCommand(command=[ 'echo', 'buildername:', Property('buildername') ]))
+    f.addStep(steps.ShellCommand(command=['echo', 'buildername:',
+                                 util.Property('buildername')]))
 
 You can specify a default value by passing a ``default`` keyword argument::
 
-   f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
-                                    Property('warnings', default='none') ]))
+    f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
+                                 util.Property('warnings', default='none')]))
 
 The default value is used when the property doesn't exist, or when the value is
 something Python regards as ``False``. The ``defaultWhenFalse`` argument can be
 set to ``False`` to force buildbot to use the default argument only if the
 parameter is not set::
 
-   f.addStep(ShellCommand(command=[ 'echo', 'warnings:',
-                    Property('warnings', default='none', defaultWhenFalse=False) ]))
+    f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
+                                 util.Property('warnings', default='none',
+                                               defaultWhenFalse=False)]))
 
-The default value can reference other properties, e.g., ::
+The default value can reference other properties, e.g.,
 
-    command=Property('command', default=Property('default-command'))
+::
+
+    command=util.Property('command', default=util.Property('default-command'))
 
 .. index:: single: Properties; Interpolate
 
@@ -188,12 +190,14 @@ be interpolated into strings, instead.  The tool for that job is
 
 The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
 In this form, the property name goes in the parentheses, as above.
-A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character"). ::
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
 
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import Interpolate
-   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision)s'),
-                                    'dist' ]))
+::
+
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(command=['make',
+                                          util.Interpolate('REVISION=%(prop:got_revision)s'),
+                                          'dist']))
 
 This example will result in a ``make`` command with an argument like
 ``REVISION=12098``.
@@ -243,12 +247,12 @@ The following ways of interpreting the value are available.
 
 Although these are similar to shell substitutions, no other substitutions are currently supported.
 
-Example ::
+Example::
 
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import Interpolate
-   f.addStep(ShellCommand(command=[ 'make', Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s'),
-                                    'dist' ]))
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(command=['make',
+                                          util.Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s'),
+                                          'dist']))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
 Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
@@ -270,20 +274,23 @@ Renderer
 
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
 The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when the step it's passed to begins.
-The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.  For example::
+The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
+For example::
 
-    from buildbot.process import properties
-    @properties.renderer
+    from buildbot.plugins import steps, util
+
+    @util.renderer
     def makeCommand(props):
-        command = [ 'make' ]
+        command = ['make']
         cpus = props.getProperty('CPUs')
         if cpus:
-            command += [ '-j', str(cpus+1) ]
+            command.extend(['-j', str(cpus+1)])
         else:
-            command += [ '-j', '2' ]
-        command += [ 'all' ]
+            command.extend(['-j', '2'])
+        command.extend(['all'])
         return command
-    f.addStep(ShellCommand(command=makeCommand))
+
+    f.addStep(steps.ShellCommand(command=makeCommand))
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
@@ -316,29 +323,26 @@ The simplest use of this class is with positional string interpolation.  Here,
 ``%s`` is used as a placeholder, and property names are given as subsequent
 arguments::
 
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.properties import WithProperties
-    f.addStep(ShellCommand(
-              command=["tar", "czf",
-                       WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
-                       "source"]))
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(
+        command=["tar", "czf",
+                 util.WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
+                 "source"]))
 
-If this :class:`BuildStep` were used in a tree obtained from Git, it would
-create a tarball with a name like
-:file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
+If this :class:`BuildStep` were used in a tree obtained from Git, it would create a tarball with a name like :file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
 
 .. index:: unsupported format character
 
-The more common pattern is to use Python dictionary-style string interpolation
-by using the ``%(propname)s`` syntax. In this form, the property name goes in
-the parentheses, as above.  A common mistake is to omit the trailing "s",
-leading to a rather obscure error from Python ("ValueError: unsupported format
-character"). ::
+The more common pattern is to use Python dictionary-style string interpolation by using the ``%(propname)s`` syntax.
+In this form, the property name goes in the parentheses, as above.
+A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character").
 
-   from buildbot.steps.shell import ShellCommand
-   from buildbot.process.properties import WithProperties
-   f.addStep(ShellCommand(command=[ 'make', WithProperties('REVISION=%(got_revision)s'),
-                                    'dist' ]))
+::
+
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(command=['make',
+                                          util.WithProperties('REVISION=%(got_revision)s'),
+                                          'dist']))
 
 This example will result in a ``make`` command with an argument like
 ``REVISION=12098``.
@@ -392,7 +396,9 @@ For example::
             return 'qux'
     ShellCommand(command=['echo', DetermineFoo()])
 
-or, more practically, ::
+or, more practically,
+
+::
 
     class Now(object):
         implements(IRenderable)

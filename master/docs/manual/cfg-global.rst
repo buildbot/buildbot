@@ -461,16 +461,16 @@ Two of them use a username+password combination to grant access, one of them use
 ::
 
     # some examples:
-    from buildbot import manhole
-    c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
-    c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
-    c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+    from buildbot.plugins import util
+    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys")
+    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword")
+    c['manhole'] = util.TelnetManhole(1234, "bob", "snoop_my_password_please")
 
 The :class:`Manhole` instance can be configured to listen on a specific port.
 You may wish to have this listening port bind to the loopback interface (sometimes known as `lo0`, `localhost`, or 127.0.0.1) to restrict access to clients which are running on the same host. ::
 
-    from buildbot.manhole import PasswordManhole
-    c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+    from buildbot.plugins import util
+    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
 
 To have the :class:`Manhole` listen on all interfaces, use ``"tcp:9999"`` or simply 9999.
 This port specification uses ``twisted.application.strports``, so you can make it listen on SSL or even UNIX-domain sockets if you want.
@@ -555,11 +555,11 @@ Users Options
 
 ::
 
-    from buildbot.process.users import manual
+    from buildbot.plugins import util
     c['user_managers'] = []
-    c['user_managers'].append(manual.CommandlineUserManager(username="user",
-                                                       passwd="userpw",
-                                                       port=9990))
+    c['user_managers'].append(util.CommandlineUserManager(username="user",
+                                                          passwd="userpw",
+                                                          port=9990))
 
 :bb:cfg:`user_managers` contains a list of ways to manually manage User Objects within Buildbot (see :ref:`User-Objects`).
 Currently implemented is a commandline tool `buildbot user`, described at length in :bb:cmdline:`user`.
@@ -629,9 +629,9 @@ The results are the substituted into the replacement text, along with the revisi
 
 ::
 
-        from buildbot import revlinks
-        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/(.*)'],
-                                              r'http://git.notmuchmail.org/git/\1/commit/%s')
+        from buildbot.plugins import util
+        c['revlink'] = util.RevlinkMatch([r'git://notmuchmail.org/git/(.*)'],
+                                          r'http://git.notmuchmail.org/git/\1/commit/%s')
 
 :class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link callables, and tries each in turn, returning the first successful match.
 
@@ -664,4 +664,3 @@ This codebase will then be a logical name for the combination of repository and 
 The `codebaseGenerator` accepts a change dictionary as produced by the :py:class:`buildbot.db.changes.ChangesConnectorComponent <changes connector component>`, with a changeid equal to `None`.
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
-

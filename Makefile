@@ -21,3 +21,6 @@ pep8:
 
 frontend:
 	for i in www/*/; do pip install -e $$i ; done
+
+rmpyc:
+	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;

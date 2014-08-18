@@ -5,3 +5,5 @@ tutorial:
 	cd docs/tutorial; $(MAKE) html
 pyflakes:
 	pyflakes buildbot
+rmpyc:
+	make -C .. rmpyc

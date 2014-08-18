@@ -11,16 +11,15 @@ Builder Configuration
     :depth: 1
     :local:
 
-The :bb:cfg:`builders` configuration key is a list of objects giving
-configuration for the Builders.  For more information on the function of
-Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.  The class
-definition for the builder configuration is in :file:`buildbot.config`.  In the
-configuration file, its use looks like::
+The :bb:cfg:`builders` configuration key is a list of objects giving configuration for the Builders.
+For more information on the function of Builders in Buildbot, see :ref:`the Concepts chapter <Builder>`.
+The class definition for the builder configuration is in :file:`buildbot.config`.
+However there is a much simpler way to use it, so in the configuration file, its use looks like::
 
-    from buildbot.config import BuilderConfig
+    from buildbot.plugins import util
     c['builders'] = [
-        BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
-        BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
+        util.BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
+        util.BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
     ]
 
 ``BuilderConfig`` takes the following keyword arguments:
