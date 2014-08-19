@@ -24,8 +24,9 @@ load-plugins=
 
 [MESSAGES CONTROL]
 
-# For now disable bunch of checks that does not pass. Most of them should be
-# re-enabled and reported issues fixed.
+# For now disable bunch of checks that does not pass. Some of them should be
+# re-enabled and reported issues fixed, while most are bugs in pylint and could
+# be re-enabled when those are fixed.
 
 # Following are the checks we don't care about, and thus should remain disabled
 #
@@ -125,7 +126,10 @@ disable=
   nonstandard-exception,
   anomalous-unicode-escape-in-string,
   bad-open-mode,
-  superfluous-parens
+  superfluous-parens,
+  no-self-argument,
+  no-value-for-parameter,
+  interface-not-implemented
 
 [REPORTS]
 
