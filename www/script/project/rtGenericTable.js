@@ -1,7 +1,18 @@
 /*global define, Handlebars*/
-define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'ui.popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
-
+define(function (require) {
     "use strict";
+
+    var $ = require('jquery'),
+        dt = require('datatables-extend'),
+        timeElements = require('timeElements'),
+        hbCellsText = require('text!hbCells'),
+        extendMoment = require('extend-moment'),
+        helpers = require('helpers'),
+        moment = require('moment'),
+        popup = require('ui.popup'),
+        URI = require('URIjs/URI');
+
+    require('project/handlebars-extend');
 
     var hbCells = Handlebars.compile(hbCellsText);
 
@@ -152,7 +163,6 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
             };
         },
         slaveHealth: function (index) {
-            var healthNames = ["good", "warning", "bad"];
             return {
                 "aTargets": [index],
                 "mRender": function (data, type, full) {
@@ -162,8 +172,7 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                     if (type === 'sort') {
                         return -full.health;
                     }
-                    var health = healthNames[-full.health];
-                    return hbCells({slaveHealthCell: true, health: health});
+                    return hbCells({slaveHealthCell: true, health: full.health});
                 },
                 "sType": "numeric"
             };

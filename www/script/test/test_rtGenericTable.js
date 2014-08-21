@@ -1,6 +1,8 @@
 /*global define, describe, it, expect, beforeEach, afterEach*/
-define(["jquery", "rtGenericTable"], function ($, gt) {
+define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, gt, hb) {
     "use strict";
+
+    hb.init();
 
     var buildData = {
         artifacts: {

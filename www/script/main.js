@@ -57,81 +57,95 @@ define("jquery", ["jquery-internal"], function () {
     return jQuery;
 });
 
-define(["jquery", "helpers", "datatables-extend", "ui.popup", "ui.dropdown", "extend-moment", "timeElements", "toastr", "ui.preloader", "overscroll"],
-    function ($, helpers, dataTables, popup, dropdown, extendMoment, timeElements, toastr, preloader) {
+define(function (require) {
 
-        "use strict";
+    "use strict";
 
-        // reveal the page when all scripts are loaded
-        $(document).ready(function () {
-            var $body = $("body");
-            $body.show();
+    var $ = require('jquery'),
+        helpers = require('helpers'),
+        dataTables = require('datatables-extend'),
+        popup = require('ui.popup'),
+        dropdown = require('ui.dropdown'),
+        extendMoment = require('extend-moment'),
+        timeElements = require('timeElements'),
+        toastr = require('toastr'),
+        extendHB = require('project/handlebars-extend');
 
-            var $preloader = $("<div/>").preloader({
-                "autoShow": false
-            }).attr("id", "preloader");
-            $body.append($preloader);
+    require('ui.preloader');
+    require('overscroll');
 
-            if ($body.attr("id") === "usersettings_page") {
-                require(["userSettings"], function (userSettings) {
-                    userSettings.init();
-                });
-            }
 
-            // swipe or scroll in the codebases overview
-            $("#overScrollJS").overscroll({
-                showThumbs: false,
-                direction: "horizontal"
+    // reveal the page when all scripts are loaded
+    $(document).ready(function () {
+        var $body = $("body");
+        $body.show();
+
+        var $preloader = $("<div/>").preloader({
+            "autoShow": false
+        }).attr("id", "preloader");
+        $body.append($preloader);
+
+        if ($body.attr("id") === "usersettings_page") {
+            require(["userSettings"], function (userSettings) {
+                userSettings.init();
             });
+        }
 
-            // tooltip for long txtstrings
-            if ($(".ellipsis-js").length) {
-                require(["dotdotdot"],
-                    function () {
-                        $(".ellipsis-js").dotdotdot();
-                    });
-            }
-
-            // codebases combobox selector
-            if ($("#commonBranch_select").length || $(".select-tools-js").length) {
-                require(["selectors"],
-                    function (selectors) {
-                        selectors.init();
-                    });
-            }
-
-            if (helpers.hasfinished() === false) {
-                require(["realtimerouting"],
-                    function (realtimeRouting) {
-                        realtimeRouting.init();
-                    });
-            }
-
-            if (helpers.isRealTimePage() === true) {
-                $preloader.preloader("showPreloader");
-            }
-
-            if ($("#home_page").length > 0) {
-                helpers.randomImage($("#image").find("img"));
-            }
-
-            // setup toastr
-            toastr.options = {
-                closeButton: true,
-                timeOut: 5000,
-                extendedTimeOut: 0,
-                hideDuration: 300
-            };
-
-            // get scripts for general popups
-            popup.init();
-            // get scripts for the projects dropdown
-            dropdown.init();
-
-            // get all common scripts
-            helpers.init();
-            dataTables.init();
-            extendMoment.init();
-            timeElements.init();
+        // swipe or scroll in the codebases overview
+        $("#overScrollJS").overscroll({
+            showThumbs: false,
+            direction: "horizontal"
         });
+
+        // tooltip for long txtstrings
+        if ($(".ellipsis-js").length) {
+            require(["dotdotdot"],
+                function () {
+                    $(".ellipsis-js").dotdotdot();
+                });
+        }
+
+        // codebases combobox selector
+        if ($("#commonBranch_select").length || $(".select-tools-js").length) {
+            require(["selectors"],
+                function (selectors) {
+                    selectors.init();
+                });
+        }
+
+        if (helpers.hasfinished() === false) {
+            require(["realtimerouting"],
+                function (realtimeRouting) {
+                    realtimeRouting.init();
+                });
+        }
+
+        if (helpers.isRealTimePage() === true) {
+            $preloader.preloader("showPreloader");
+        }
+
+        if ($("#home_page").length > 0) {
+            helpers.randomImage($("#image").find("img"));
+        }
+
+        // setup toastr
+        toastr.options = {
+            closeButton: true,
+            timeOut: 5000,
+            extendedTimeOut: 0,
+            hideDuration: 300
+        };
+
+        // get scripts for general popups
+        popup.init();
+        // get scripts for the projects dropdown
+        dropdown.init();
+
+        // get all common scripts
+        helpers.init();
+        dataTables.init();
+        extendMoment.init();
+        timeElements.init();
+        extendHB.init();
     });
+});

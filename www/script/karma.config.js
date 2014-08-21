@@ -25,6 +25,7 @@ module.exports = function (config) {
             {pattern: 'test/*.html', included: false, served: true},
             {pattern: 'templates/**/*.mustache', included: false, served: true},
             {pattern: 'templates/**/*.handlebars', included: false, served: true},
+            {pattern: 'templates/**/*.hbs', included: false, served: true},
             {pattern: 'text.js', included: false, served: true}
         ],
 

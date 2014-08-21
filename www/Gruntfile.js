@@ -39,6 +39,11 @@ module.exports = function (grunt) {
                 src: [
                     "templates/**/*.html"
                 ]
+            },
+            handlebars: {
+                src: [
+                    "script/templates/**/*.hbs"
+                ]
             }
         },
         compass: {
@@ -98,6 +103,10 @@ module.exports = function (grunt) {
             },
             html: {
                 files: ["<%= files.html.src %>"]
+            },
+            handlebars: {
+                files : ["<%= files.handlebars.src %>"],
+                tasks: ["requirejs:" + target]
             }
         },
         karma: {

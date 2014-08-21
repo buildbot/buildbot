@@ -245,6 +245,9 @@ def path_to_json_global_status(status, request):
 def path_to_json_slaves(request):
     return "json/slaves/"
 
+def path_to_json_slave(request, slaveName):
+    return "json/slaves/{0}".format(urllib.quote(slaveName, safe=''))
+
 def path_to_json_past_slave_builds(request, slaveName, number):
     codebases_arg = getCodebasesArg(request=request)
     return "json/slaves/{0}/builds/<{1}{2}".format(urllib.quote(slaveName, safe=''), number, codebases_arg)

@@ -286,14 +286,6 @@
 
 {% endmacro %}
 
-{% macro graceful_shutdown(shutdown_url, authz) %}
-  <form method="post" action="{{ shutdown_url }}" class='command graceful_shutdown'>
-
-  Request slave to <input class="link-button" type="submit" value="shutdown" /> gracefully
-  
- </form>
-{% endmacro %}
-
 {% macro clean_shutdown(shutdown_url, authz) %}
   <form method="post" action="{{ shutdown_url }}" class='command clean_shutdown'>
   <p>To cause this master to shut down cleanly, push the 'Clean Shutdown' button.</p>

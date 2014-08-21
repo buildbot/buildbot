@@ -1,8 +1,22 @@
-/*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', 'text!templates/buildslaves.mustache', 'timeElements', 'rtGenericTable', 'moment', 'ui.popup'], function ($, realtimePages, helpers, dt, mustache, buildslaves, timeElements, rtTable, moment, popup) {
+/*global define, Handlebars*/
+define(function (require) {
     "use strict";
+
+    var $ = require('jquery'),
+        realtimePages = require('realtimePages'),
+        helpers = require('helpers'),
+        dt = require('datatables-extend'),
+        hbSlavesText = require('text!templates/slaves.hbs'),
+        timeElements = require('timeElements'),
+        rtTable = require('rtGenericTable'),
+        moment = require('moment'),
+        popup = require('ui.popup');
+
+    require('project/handlebars-extend');
+
     var rtBuildSlaves,
-        $tbSlaves;
+        $tbSlaves,
+        hbSlaves = Handlebars.compile(hbSlavesText);
 
     rtBuildSlaves = {
         init: function () {
@@ -33,7 +47,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "aTargets": [ 1 ],
                     "sClass": "txt-align-left",
                     "mRender": function () {
-                        return mustache.render(buildslaves, {buildersPopup: true});
+                        return hbSlaves({buildersPopup: true});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
@@ -53,7 +67,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "mRender": function (data, full, type) {
                         var showTimeago = type.lastMessage !== undefined ? true : null;
                         var lastMessageDate = showTimeago ? ' (' + moment.unix(type.lastMessage).format('MMM Do YYYY, H:mm:ss') + ')' : '';
-                        return mustache.render(buildslaves, {showTimeago: showTimeago, showLastMessageDate: lastMessageDate});
+                        return hbSlaves({showTimeago: showTimeago, showLastMessageDate: lastMessageDate});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         timeElements.addTimeAgoElem($(nTd).find('.last-message-timemago'), oData.lastMessage);

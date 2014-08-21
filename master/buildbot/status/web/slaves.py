@@ -21,9 +21,9 @@ from twisted.web.util import Redirect
 from twisted.web.resource import NoResource
 from buildbot.status.web.base import HtmlResource, \
     BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_json_slaves, \
-    path_to_json_past_slave_builds, path_to_json_slave_builds
+    path_to_json_past_slave_builds, path_to_json_slave_builds, path_to_json_slave
 from buildbot.status.web.status_json import SlavesJsonResource, FilterOut, PastBuildsJsonResource, \
-    SlaveBuildsJsonResource
+    SlaveBuildsJsonResource, SlaveJsonResource
 
 
 class ShutdownActionResource(ActionResource):
@@ -78,6 +78,21 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         }
 
         bbURL = s.getBuildbotURL()
+
+        slave_json = SlaveJsonResource(s, slave_status)
+        slave_dict = slave_json.asDict(request)
+        slave_url = bbURL + path_to_json_slave(request, self.slavename)
+        ctx['instant_json']['slave'] = {"url": slave_url,
+                                                 "data": json.dumps(slave_dict, separators=(',', ':')),
+                                                 "waitForPush": s.master.config.autobahn_push,
+                                                 "pushFilters": {
+                                                     "buildStarted": filters,
+                                                     "buildFinished": filters,
+                                                     "stepStarted": filters,
+                                                     "stepFinished": filters,
+                                                 }}
+
+
         recent_builds_json = PastBuildsJsonResource(s, max_builds, slave_status=slave_status)
         recent_builds_dict = recent_builds_json.asDict(request)
         recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
@@ -88,21 +103,6 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                                                     "buildStarted": filters,
                                                     "buildFinished": filters,
                                                 }}
-
-        curr_builds_json = SlaveBuildsJsonResource(s, slave_status)
-        curr_builds_dict = curr_builds_json.asDict(request)
-        curr_builds_url = bbURL + path_to_json_slave_builds(request, self.slavename)
-        ctx['instant_json']['current_builds'] = {"url": curr_builds_url,
-                                                 "data": json.dumps(curr_builds_dict, separators=(',', ':')),
-                                                 "waitForPush": s.master.config.autobahn_push,
-                                                 "pushFilters": {
-                                                     "buildStarted": filters,
-                                                     "buildFinished": filters,
-                                                     "stepStarted": filters,
-                                                     "stepFinished": filters,
-                                                 }}
-
-
 
         # connects over the last hour
         slave = s.getSlave(self.slavename)

@@ -38,6 +38,7 @@ class SlaveStatus:
         self.connect_times = []
         self.master = None
         self.health = 0
+        self.eid = -1
 
     def getName(self):
         return self.name
@@ -175,5 +176,6 @@ class SlaveStatus:
         result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
+        result['eid'] = self.eid
         return result
 
