@@ -435,6 +435,7 @@ class SingleBranchScheduler(CommonStuffMixin,
             'a': {'branch': 'master', 'lastChange': 13,
                   'repository': 'A', 'revision': '1234:abc'}})
 
+    @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
         # check codebase is stored after receiving change.
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -444,21 +445,16 @@ class SingleBranchScheduler(CommonStuffMixin,
         self.db.insertTestData([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')])
 
-        d = sched.activate()
+        yield sched.activate()
 
-        d.addCallback(lambda _:
-                      sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True))
-        d.addCallback(lambda _:
-                      sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True))
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True)
+        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True)
 
-        def check(_):
-            self.db.state.assertState(self.OBJECTID, lastCodebases={
-                'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
-                'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
-        d.addCallback(check)
+        self.db.state.assertState(self.OBJECTID, lastCodebases={
+            'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
+            'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
 
-        d.addCallback(lambda _: sched.deactivate())
-        return d
+        yield sched.deactivate()
 
     def test_gotChange_createAbsoluteSourceStamps_older_change(self):
         # check codebase is not stored if it's older than the most recent

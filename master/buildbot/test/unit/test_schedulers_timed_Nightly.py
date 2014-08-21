@@ -121,6 +121,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     # end-to-end tests: let's see the scheduler in action
 
+    @defer.inlineCallbacks
     def test_iterations_simple(self):
         # note that Nightly works in local time, but the task.Clock() always
         # starts at midnight UTC, so be careful not to use times that are
@@ -132,7 +133,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # add a change classification
         self.db.schedulers.fakeClassifications(self.OBJECTID, {19: True})
 
-        sched.activate()
+        yield sched.activate()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
@@ -164,8 +165,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1260 + self.localtime_offset)
 
-        d = sched.deactivate()
-        return d
+        yield sched.deactivate()
 
     def test_iterations_simple_with_branch(self):
         # see timezone warning above
@@ -197,10 +197,11 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                            minute=[5, 25, 45], onlyIfChanged=True,
                            fileIsImportant=fII, **kwargs)
 
-        self.do_test_iterations_onlyIfChanged_test(fII, *changes_at)
+        return self.do_test_iterations_onlyIfChanged_test(fII, *changes_at)
 
+    @defer.inlineCallbacks
     def do_test_iterations_onlyIfChanged_test(self, fII, *changes_at):
-        self.sched.activate()
+        yield self.sched.activate()
 
         # check that the scheduler has started to consume changes
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=None,
@@ -217,37 +218,41 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                    self.localtime_offset + changes_at[0][0]):
                 when, newchange, important = changes_at.pop(0)
                 self.db.changes.fakeAddChangeInstance(newchange)
-                self.sched.gotChange(newchange, important).addErrback(log.err)
+                yield self.sched.gotChange(newchange, important).addErrback(log.err)
             # and advance the clock by a minute
             self.clock.advance(60)
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_no_changes(self):
-        self.do_test_iterations_onlyIfChanged()
+        yield self.do_test_iterations_onlyIfChanged()
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_unimp_changes(self):
-        self.do_test_iterations_onlyIfChanged(
+        yield self.do_test_iterations_onlyIfChanged(
             (60, mock.Mock(), False),
             (600, mock.Mock(), False))
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_off_branch_changes(self):
-        self.do_test_iterations_onlyIfChanged(
+        yield self.do_test_iterations_onlyIfChanged(
             (60, self.makeFakeChange(branch='testing'), True),
             (1700, self.makeFakeChange(branch='staging'), True))
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_mixed_changes(self):
-        self.do_test_iterations_onlyIfChanged(
+        yield self.do_test_iterations_onlyIfChanged(
             (120, self.makeFakeChange(number=3, branch=None), False),
             (130, self.makeFakeChange(number=4, branch='offbranch'), True),
             (1200, self.makeFakeChange(number=5, branch=None), True),
@@ -267,11 +272,12 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
         # Test createAbsoluteSourceStamps=True when only one codebase has changed
-        self.do_test_iterations_onlyIfChanged(
+        yield self.do_test_iterations_onlyIfChanged(
             (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
@@ -290,8 +296,9 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3)})
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged_loadOther(self):
         # Test createAbsoluteSourceStamps=True when only one codebase has changed,
         # but the other was previously changed
@@ -308,7 +315,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
                                value_json='{"b": {"branch": "master", "repository": "B", "revision": "1234:abc",  "lastChange": 2}}')])
 
-        self.do_test_iterations_onlyIfChanged_test(fII,
+        yield self.do_test_iterations_onlyIfChanged_test(fII,
                                                    (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True))
 
         self.db.state.assertStateByClass('test', 'Nightly',
@@ -326,11 +333,12 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),
             'b': dict(revision='1234:abc', branch="master", repository='B', lastChange=2)})
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
         # Test createAbsoluteSourceStamps=True when both codebases have changed
-        self.do_test_iterations_onlyIfChanged(
+        yield self.do_test_iterations_onlyIfChanged(
             (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
             (122, self.makeFakeChange(number=4, codebase='b', revision='1234:abc'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
@@ -351,4 +359,4 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),
             'b': dict(revision='1234:abc', branch=None, repository='', lastChange=4)})
-        return self.sched.deactivate()
+        yield self.sched.deactivate()
