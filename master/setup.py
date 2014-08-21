@@ -167,6 +167,7 @@ setup_args = {
         "buildbot.db.types",
         "buildbot.monkeypatches",
         "buildbot.mq",
+        "buildbot.plugins",
         "buildbot.process",
         "buildbot.process.users",
         "buildbot.schedulers",
