@@ -85,30 +85,27 @@ class BaseBasicScheduler(base.BaseScheduler):
         # Hook for subclasses to setup before startConsumingChanges().
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def activate(self):
-        d = base.BaseScheduler.activate(self)
-        d.addCallback(lambda _:
-                      self.preStartConsumingChanges())
-        d.addCallback(lambda _:
-                      self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                                 change_filter=self.change_filter,
-                                                 onlyImportant=self.onlyImportant))
+        yield base.BaseScheduler.activate(self)
+        yield self.preStartConsumingChanges()
+        yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                         change_filter=self.change_filter,
+                                         onlyImportant=self.onlyImportant)
 
-        # if treeStableTimer is False, then we don't care about classified
+        # if we have a treeStableTimer, if there are classified changes
+        # out there, start their timers again
+        if self.treeStableTimer:
+            d = self.scanExistingClassifiedChanges()
+
+        # otherwise, we don't care about classified
         # changes, so get rid of any hanging around from previous
         # configurations
-        if not self.treeStableTimer:
-            d.addCallback(lambda _:
-                          self.master.db.schedulers.flushChangeClassifications(
-                              self.objectid))
-
-        # otherwise, if there are classified changes out there, start their
-        # treeStableTimers again
         else:
-            d.addCallback(lambda _:
-                          self.scanExistingClassifiedChanges())
+            d = self.master.db.schedulers.flushChangeClassifications(
+                self.objectid)
 
-        return d
+        yield d
 
     @defer.inlineCallbacks
     def deactivate(self):
