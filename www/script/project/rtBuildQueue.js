@@ -1,22 +1,33 @@
-/*global define, moment*/
-define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', 'text!templates/buildqueue.mustache', 'timeElements', 'ui.popup', 'rtGenericTable'], function ($, realtimePages, helpers, dt, Mustache, buildqueue, timeElements, popup, rtTable) {
+/*global define*/
+define(function (require) {
     "use strict";
-    var $tbsorter,
+
+    var $ = require('jquery'),
+        realtimePages = require('realtimePages'),
+        helpers = require('helpers'),
+        dt = require('datatables-extend'),
+        hb = require('project/handlebars-extend'),
+        timeElements = require('timeElements'),
+        popup = require('ui.popup'),
+        rtTable = require('rtGenericTable'),
+        moment = require('moment'),
+        hbBuildQueue = hb.buildQueue,
+        $tbSorter,
         rtBuildQueue;
 
     rtBuildQueue = {
         init: function () {
-            $tbsorter = rtBuildQueue.dataTableInit();
+            $tbSorter = rtBuildQueue.dataTableInit();
 
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.queue = rtBuildQueue.processBuildQueue;
             realtimePages.initRealtime(realtimeFunctions);
             // check all in tables and remove builds
-            helpers.selectBuildsAction($tbsorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
+            helpers.selectBuildsAction($tbSorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
 
         },
         processBuildQueue: function (data) {
-            rtTable.table.rtfGenericTableProcess($tbsorter, data);
+            rtTable.table.rtfGenericTableProcess($tbSorter, data);
         },
         dataTableInit: function () {
             var options = {};
@@ -43,7 +54,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         var sourcesLength = type.sources.length;
-                        return Mustache.render(buildqueue, {showsources: true, sources: type.sources, codebase: type.codebase, sourcesLength: sourcesLength});
+                        return hbBuildQueue({showsources: true, sources: type.sources, codebase: type.codebase, sourcesLength: sourcesLength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
@@ -55,7 +66,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
                         var requested = moment.unix(type.submittedAt).format('MMMM Do YYYY, H:mm:ss');
-                        return Mustache.render(buildqueue, {reason: type.reason, requested: requested, submittedAt: type.submittedAt});
+                        return hbBuildQueue({reason: type.reason, requested: requested, submittedAt: type.submittedAt});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         timeElements.addElapsedElem($(nTd).find('.waiting-time'), oData.submittedAt);
@@ -66,7 +77,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "sClass": "txt-align-right",
                     "mRender": function (data, full, type) {
                         var slavelength = type.slaves.length;
-                        return Mustache.render(buildqueue, {showslaves: true, slaves: data, slavelength: slavelength});
+                        return hbBuildQueue({showslaves: true, slaves: data, slavelength: slavelength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
@@ -77,7 +88,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "aTargets": [ 4 ],
                     "sClass": "select-input",
                     "mRender": function (data, full, type) {
-                        return Mustache.render(buildqueue, {input: 'true', brid: type.brid});
+                        return hbBuildQueue({input: 'true', brid: type.brid});
                     }
 
                 }

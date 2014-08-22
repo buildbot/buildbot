@@ -1,20 +1,18 @@
-/*global define, Handlebars*/
+/*global define*/
 define(function (require) {
     "use strict";
 
     var $ = require('jquery'),
         dt = require('datatables-extend'),
         timeElements = require('timeElements'),
-        hbCellsText = require('text!hbCells'),
         extendMoment = require('extend-moment'),
         helpers = require('helpers'),
         moment = require('moment'),
         popup = require('ui.popup'),
-        URI = require('URIjs/URI');
+        URI = require('URIjs/URI'),
+        hb = require('project/handlebars-extend');
 
-    require('project/handlebars-extend');
-
-    var hbCells = Handlebars.compile(hbCellsText);
+    var rtCells = hb.rtCells;
 
     var privFunc = {
         getPropertyOnData: function (data, property) {
@@ -56,7 +54,7 @@ define(function (require) {
                     if (full.properties !== undefined) {
                         history_build = privFunc.buildIsHistoric(full.properties);
                     }
-                    return hbCells({
+                    return rtCells({
                         revisionCell: true,
                         sourceStamps: sourceStamps,
                         history_build: history_build,
@@ -70,7 +68,7 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
-                    return hbCells({buildID: true, 'data': full});
+                    return rtCells({buildID: true, 'data': full});
                 }
             };
         },
@@ -79,7 +77,7 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
-                    return hbCells({buildStatus: true, 'build': full});
+                    return rtCells({buildStatus: true, 'build': full});
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
                     $(nTd).removeClass().addClass(oData.results_text);
@@ -91,7 +89,7 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-right" : className,
                 "mRender": function (data, type, full) {
-                    return hbCells({showBuilderName: true, 'data': full});
+                    return rtCells({showBuilderName: true, 'data': full});
                 }
             };
         },
@@ -112,7 +110,7 @@ define(function (require) {
                 "mRender": function (data, type, full) {
                     var name = privFunc.getPropertyOnData(full, slaveNameProperty);
                     var url = privFunc.getPropertyOnData(full, slaveURLProperty);
-                    return hbCells({slaveName: true, 'name': name, 'url': url});
+                    return rtCells({slaveName: true, 'name': name, 'url': url});
                 }
             };
         },
@@ -130,7 +128,7 @@ define(function (require) {
                         statusTxt = type.runningBuilds.length + ' build(s) ';
                         isRunning = true;
                     }
-                    return hbCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
+                    return rtCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
                     if (oData.connected === undefined) {
@@ -172,7 +170,7 @@ define(function (require) {
                     if (type === 'sort') {
                         return -full.health;
                     }
-                    return hbCells({slaveHealthCell: true, health: full.health});
+                    return rtCells({slaveHealthCell: true, health: full.health});
                 },
                 "sType": "numeric"
             };
@@ -182,7 +180,7 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
-                    return hbCells({
+                    return rtCells({
                         buildProgress: true,
                         showPending: !singleBuild,
                         pendingBuilds: singleBuild ? undefined : type.pendingBuilds,
@@ -209,7 +207,7 @@ define(function (require) {
                     var stopURL = URI(type.url.path);
                     stopURL = stopURL.path(stopURL.path() + "/stop");
 
-                    return hbCells({
+                    return rtCells({
                         stopBuild: true,
                         'data': type,
                         stopURL: stopURL

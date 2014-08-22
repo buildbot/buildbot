@@ -6,17 +6,15 @@ define(function (require) {
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
         dt = require('datatables-extend'),
-        hbSlavesText = require('text!templates/slaves.hbs'),
         timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
         moment = require('moment'),
-        popup = require('ui.popup');
-
-    require('project/handlebars-extend');
+        popup = require('ui.popup'),
+        hb = require('project/handlebars-extend');
 
     var rtBuildSlaves,
         $tbSlaves,
-        hbSlaves = Handlebars.compile(hbSlavesText);
+        hbSlaves = hb.slaves;
 
     rtBuildSlaves = {
         init: function () {

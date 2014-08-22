@@ -5,18 +5,17 @@ define(function (require) {
     var $ = require('jquery'),
         realtimePages = require('realtimePages'),
         dt = require('datatables-extend'),
-        hbBuildSlaveDetailText = require('text!templates/buildSlaveDetail.hbs'),
-        hbCellsText = require('text!hbCells'),
         rtTable = require('rtGenericTable'),
-        popup = require('ui.popup');
+        popup = require('ui.popup'),
+        hb = require('project/handlebars-extend');
 
-    require('project/handlebars-extend');
+
     require('extend-moment');
     require('libs/jquery.form');
     require('timeElements');
 
-    var hbCells = Handlebars.compile(hbCellsText),
-        hbBuildSlaveDetail = Handlebars.compile(hbBuildSlaveDetailText),
+    var hbCells = hb.rtCells,
+        hbBuildSlaveDetail = hb.slaveDetail,
         rtBuildSlaveDetail,
         $tbCurrentBuildsTable,
         $tbBuildsTable,

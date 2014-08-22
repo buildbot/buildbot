@@ -23,8 +23,6 @@ module.exports = function (config) {
             {pattern: 'script/project/**/*.js', included: false},
             {pattern: 'script/test/*.js', included: false},
             {pattern: 'script/test/*.html', included: false, served: true},
-            {pattern: 'script/templates/**/*.mustache', included: false, served: true},
-            {pattern: 'script/templates/**/*.handlebars', included: false, served: true},
             {pattern: 'script/templates/**/*.hbs', included: false, served: true},
             {pattern: 'script/text.js', included: false, served: true},
             {pattern: 'generated/**/*.js', included: false, served: true}

@@ -107,7 +107,7 @@ module.exports = function (grunt) {
             },
             handlebars: {
                 files: ["<%= files.handlebars.src %>"],
-                tasks: ["requirejs:" + target]
+                tasks: ["handlebars:compile", "requirejs:" + target]
             }
         },
         karma: {
@@ -127,7 +127,8 @@ module.exports = function (grunt) {
                     partialsUseNamespace: true,
                     namespace: function (filename) {
                         var names = filename.replace(/^script\/templates([\w\W\/]*)(\/[\w\-\/]+)(\.hbs)$/, 'KT$1');
-                        return names.split('/').join('.').replace(".hbs", "");
+                        names = names.split('/').join('.').replace(".hbs", "");
+                        return names;
                     },
                     processPartialName: function (filePath) {
                         //Get the namespace for the partial
@@ -137,7 +138,9 @@ module.exports = function (grunt) {
                         //Grab the partial name and camelCase it
                         var pieces = filePath.split("/");
                         var partialName = pieces[pieces.length - 1].replace(".hbs", "");
-                        partialName = partialName.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                        partialName = partialName.replace(/-([a-z])/g, function (g) {
+                            return g[1].toUpperCase();
+                        });
                         partialName = ns.replace(/\//g, ":") + partialName;
 
                         return partialName;
@@ -145,6 +148,10 @@ module.exports = function (grunt) {
                     processName: function (filePath) {
                         var pieces = filePath.split("/");
                         var partialName = pieces[pieces.length - 1];
+                        partialName = partialName.replace(/-([a-z])/g, function (g) {
+                            return g[1].toUpperCase();
+                        });
+
                         return partialName.replace(".hbs", "");
                     }
                 },

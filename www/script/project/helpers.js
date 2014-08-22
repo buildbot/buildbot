@@ -1,7 +1,13 @@
-/*global define, requirejs*/
-define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, Mustache, extendMoment, timeElements) {
+/*global define*/
+define(function (require) {
 
     "use strict";
+    var $ = require('jquery'),
+        screenSize = require('screensize'),
+        timeElements = require('timeElements');
+
+    require('extend-moment');
+
     var helpers,
         css_class_enum = {},
         css_classes = {
