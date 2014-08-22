@@ -37,7 +37,7 @@ define(function (require) {
             options.aoColumns = [
                 { "mData": null, "sWidth": "20%" },
                 { "mData": null, "sWidth": "15%" },
-                { "mData": null, "sWidth": "10%" },
+                { "mData": null, "sWidth": "10%", "sType": "number-ignore-zero" },
                 { "mData": null, "sWidth": "15%", "sType": "builder-status" },
                 { "mData": null, "sWidth": "5%", "bSortable": false  },
                 { "mData": null, "sWidth": "15%", "bSortable": false  },
@@ -58,6 +58,12 @@ define(function (require) {
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left last-build-js",
                     "mRender": function (data, type, full) {
+                        if (type === "sort") {
+                            if (full.latestBuild !== undefined) {
+                                return full.latestBuild.times[1];
+                            }
+                            return 0;
+                        }
                         return hb.builders({showLatestBuild: true, latestBuild: full.latestBuild});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {

@@ -9,6 +9,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
             //Setup sort neutral function
             dataTables.initSortNatural();
             dataTables.initBuilderStatusSort();
+            dataTables.initNumberIgnoreZeroSort();
 
             //Datatable Defaults
             $.extend($.fn.dataTable.defaults, {
@@ -196,6 +197,46 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return sort(a, b, false);
                 },
                 "builder-status-desc": function (a, b) {
+                    return sort(a, b, true);
+                }
+            });
+        },
+        initNumberIgnoreZeroSort: function initNumberSortMinusZero() {
+            var sort = function sort(a, b, reverse) {
+                var result = -1;
+
+                if (a === b) {
+                    return 0;
+                }
+
+                // Push 0 results always to the bottom
+                if (a === 0) {
+                    return 1;
+                }
+                if (b === 0) {
+                    return -1;
+                }
+
+                //Sort with normal numbers but allow for reversal
+                if (a > b) {
+                    result = 1;
+                } else {
+                    result = -1;
+                }
+
+                if (reverse) {
+                    return -result;
+                }
+
+                console.log(result);
+                return result;
+            };
+
+            $.extend($.fn.dataTableExt.oSort, {
+                "number-ignore-zero-asc": function (a, b) {
+                    return sort(a, b, false);
+                },
+                "number-ignore-zero-desc": function (a, b) {
                     return sort(a, b, true);
                 }
             });
