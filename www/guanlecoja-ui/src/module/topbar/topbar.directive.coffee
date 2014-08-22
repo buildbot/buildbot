@@ -15,7 +15,7 @@ class _glTopbar extends Controller
         $scope.appTitle = glMenuService.getAppTitle()
         $scope.$on "$stateChangeStart", (ev, state) ->
             $scope.breadcrumb = [
-                caption: _.humanize(state.name)
+                caption: state.caption or _.humanize(state.name)
                 href: '#' + $location.hash()
             ]
         $scope.$on "glBreadcrumb", (e, data) ->

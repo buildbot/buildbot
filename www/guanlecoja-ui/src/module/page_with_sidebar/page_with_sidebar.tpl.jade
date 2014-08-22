@@ -15,7 +15,7 @@
                             | &nbsp;{{group.caption}}
                             span.menu-icon.fa(ng-class="'fa-' + group.icon")
                     li.sidebar-list.subitem(ng-class="{'active': page.activeGroup==group}", ng-repeat="item in group.items")
-                        a(ui-sref='{{item.sref}}')
+                        a(ui-sref='{{item.sref}}', ng-click='page.hideSidebar()')
                             | {{item.caption}}
                 div(ng-if="group.items.length == 0")
                     li.sidebar-list

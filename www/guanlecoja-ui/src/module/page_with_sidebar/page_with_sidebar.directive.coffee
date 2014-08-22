@@ -29,6 +29,10 @@ class _glPageWithSidebar extends Controller
         @sidebarActive = true
         @inSidebar = true
 
+    hideSidebar: ->
+        @sidebarActive = false
+        @inSidebar = false
+
     leaveSidebar: ->
         @inSidebar = false
         if @timeout?
