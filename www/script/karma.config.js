@@ -7,7 +7,7 @@ module.exports = function (config) {
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
-        basePath: '',
+        basePath: '../',
 
 
         // frameworks to use
@@ -17,16 +17,17 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
-            'test/test-main.js',
-            {pattern: 'libs/**/*.js', included: false},
-            {pattern: 'plugins/**/*.js', included: false},
-            {pattern: 'project/**/*.js', included: false},
-            {pattern: 'test/*.js', included: false},
-            {pattern: 'test/*.html', included: false, served: true},
-            {pattern: 'templates/**/*.mustache', included: false, served: true},
-            {pattern: 'templates/**/*.handlebars', included: false, served: true},
-            {pattern: 'templates/**/*.hbs', included: false, served: true},
-            {pattern: 'text.js', included: false, served: true}
+            'script/test/test-main.js',
+            {pattern: 'script/libs/**/*.js', included: false},
+            {pattern: 'script/plugins/**/*.js', included: false},
+            {pattern: 'script/project/**/*.js', included: false},
+            {pattern: 'script/test/*.js', included: false},
+            {pattern: 'script/test/*.html', included: false, served: true},
+            {pattern: 'script/templates/**/*.mustache', included: false, served: true},
+            {pattern: 'script/templates/**/*.handlebars', included: false, served: true},
+            {pattern: 'script/templates/**/*.hbs', included: false, served: true},
+            {pattern: 'script/text.js', included: false, served: true},
+            {pattern: 'generated/**/*.js', included: false, served: true}
         ],
 
 

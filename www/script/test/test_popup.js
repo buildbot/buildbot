@@ -122,7 +122,7 @@ define(["jquery", "ui.popup"], function ($, popup) {
 
             beforeEach(function (done) {
                 $popup = $("<div/>").popup({
-                    url: "base/test/test_data.html",
+                    url: "base/script/test/test_data.html",
                     animate: false,
                     onShow: function () {
                         done();

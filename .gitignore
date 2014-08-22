@@ -43,3 +43,4 @@ www/.sass-cache
 www/css/default.css
 www/script/coverage/
 www/prod/script/build.txt
+www/generated/

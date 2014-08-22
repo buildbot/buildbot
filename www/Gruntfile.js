@@ -43,7 +43,8 @@ module.exports = function (grunt) {
             handlebars: {
                 src: [
                     "script/templates/**/*.hbs"
-                ]
+                ],
+                dest: "generated/precompiled.handlebars.js"
             }
         },
         compass: {
@@ -76,7 +77,7 @@ module.exports = function (grunt) {
                 preserveLicenseComments: false,
                 generateSourceMaps: true,
                 fileExclusionRegExp: /^test$|^karma\.config\.js|^coverage$/,
-                findNestedDependencies: true,
+                findNestedDependencies: true
             },
             dev: {
                 options: {
@@ -105,7 +106,7 @@ module.exports = function (grunt) {
                 files: ["<%= files.html.src %>"]
             },
             handlebars: {
-                files : ["<%= files.handlebars.src %>"],
+                files: ["<%= files.handlebars.src %>"],
                 tasks: ["requirejs:" + target]
             }
         },
@@ -116,6 +117,40 @@ module.exports = function (grunt) {
                 singleRun: true,
                 runnerPort: 9876
             }
+        },
+        handlebars: {
+            compile: {
+                options: {
+                    amd: true,
+                    partialRegex: /[\w\W]*/,
+                    partialsPathRegex: /\/partials\//,
+                    partialsUseNamespace: true,
+                    namespace: function (filename) {
+                        var names = filename.replace(/^script\/templates([\w\W\/]*)(\/[\w\-\/]+)(\.hbs)$/, 'KT$1');
+                        return names.split('/').join('.').replace(".hbs", "");
+                    },
+                    processPartialName: function (filePath) {
+                        //Get the namespace for the partial
+                        var ns = filePath.replace(/^script\/templates\/partials([\w\W\/]*)(\/[\w\-\/]+)(\.hbs)$/, '$1:');
+                        ns = ns.replace("/", "");
+
+                        //Grab the partial name and camelCase it
+                        var pieces = filePath.split("/");
+                        var partialName = pieces[pieces.length - 1].replace(".hbs", "");
+                        partialName = partialName.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                        partialName = ns.replace(/\//g, ":") + partialName;
+
+                        return partialName;
+                    },
+                    processName: function (filePath) {
+                        var pieces = filePath.split("/");
+                        var partialName = pieces[pieces.length - 1];
+                        return partialName.replace(".hbs", "");
+                    }
+                },
+                src: ["<%= files.handlebars.src %>"],
+                dest: "<%= files.handlebars.dest %>"
+            }
         }
     });
 
@@ -123,6 +158,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-compass");
     grunt.loadNpmTasks("grunt-contrib-watch"); // run grunt watch for converting sass files to css in realtime
     grunt.loadNpmTasks("grunt-contrib-requirejs");
+    grunt.loadNpmTasks("grunt-contrib-handlebars");
     grunt.loadNpmTasks("grunt-karma");
 
     // Define your tasks here
@@ -131,7 +167,7 @@ module.exports = function (grunt) {
         if (overrideTarget !== undefined) {
             target = overrideTarget;
         }
-        grunt.task.run(["compass:" + target, "requirejs:" + target]);
+        grunt.task.run(["compass:" + target, "handlebars:compile", "requirejs:" + target]);
     });
     grunt.registerTask("test", ["karma:unit"]);
     grunt.registerTask("default", ["build", "watch"]);

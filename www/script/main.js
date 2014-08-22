@@ -1,8 +1,9 @@
-/*global require, define, jQuery*/
+/*global require, define, jQuery, Handlebars*/
 require.config({
     paths: {
         "jquery-internal": "libs/jquery",
         "jquery-ui": "libs/jquery-ui",
+        "handlebars-internal": "libs/handlebars",
         "ui.dropdown": "project/ui/dropdown",
         "ui.popup": "project/ui/popup",
         "ui.preloader": "project/ui/preloader",
@@ -27,7 +28,6 @@ require.config({
         "moment": "plugins/moment-with-langs",
         "extend-moment": "project/extendMoment",
         "mustache": "libs/mustache-wrap",
-        "handlebars": "libs/handlebars",
         "livestamp": "plugins/livestamp",
         "timeElements": "project/timeElements",
         "iFrameResize": "libs/iframeResizer",
@@ -40,7 +40,8 @@ require.config({
         "testResults": "project/testresults-common",
         "buildLog": "project/buildLog",
         "buildLogiFrame": "project/buildLog-iFrame",
-        "login": "project/login"
+        "login": "project/login",
+        "precompiled.handlebars": "../generated/precompiled.handlebars"
     },
     shim: {
         "overscroll": {
@@ -57,6 +58,11 @@ define("jquery", ["jquery-internal"], function () {
     return jQuery;
 });
 
+define("handlebars", ["handlebars-internal"], function () {
+    "use strict";
+    return Handlebars;
+});
+
 define(function (require) {
 
     "use strict";
@@ -68,8 +74,7 @@ define(function (require) {
         dropdown = require('ui.dropdown'),
         extendMoment = require('extend-moment'),
         timeElements = require('timeElements'),
-        toastr = require('toastr'),
-        extendHB = require('project/handlebars-extend');
+        toastr = require('toastr');
 
     require('ui.preloader');
     require('overscroll');
@@ -146,6 +151,5 @@ define(function (require) {
         dataTables.init();
         extendMoment.init();
         timeElements.init();
-        extendHB.init();
     });
 });

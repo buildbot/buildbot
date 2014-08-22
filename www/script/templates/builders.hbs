@@ -3,12 +3,7 @@
 {{/name}}
 
 {{#progressBar}}
-	<div data-starttime="{{etaStart}}" data-etatime="{{etaCurrent}}" class="percent-outer-js percent-outer">
-		<span class="time-txt-js time-txt"></span>
-		<div class="percent-inner-js percent-inner">
-			<div class="progressbar-overlay"></div>								
-		</div>
-	</div>
+    {{> build:progress-bar}}
 {{/progressBar}}
 	
 {{#showNoJobs}}
@@ -33,11 +28,11 @@
 
 {{#showStatus}}
 	{{#latestBuild}}	
-	<span class="hide">{{text.0}}</span>
+	<span class="hide">{{text.[0]}}</span>
 	<a href="{{#url}}{{path}}{{/url}}">#{{number}}</a>
 	<span class="status-text">
 	 {{#text}}
-	 	{{.}}
+	 	{{this}}
 	 {{/text}}
 	</span>
 	{{/latestBuild}}

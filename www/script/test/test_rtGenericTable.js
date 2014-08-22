@@ -2,8 +2,6 @@
 define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, gt, hb) {
     "use strict";
 
-    hb.init();
-
     var buildData = {
         artifacts: {
             "ZippedForTeamCity.zip": "http://artifact.hq.unity3d.com/testbuilds/proj0-Build_MacDevelopmentWebPlayer_128986_13_06_2014_07_44_35_+0000/build/ZippedForTeamCity.zip"

@@ -1,13 +1,22 @@
-/*global define*/
-define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', 'libs/jquery.form', 'text!templates/builders.mustache', 'timeElements', 'rtGenericTable', 'ui.popup','toastr'], function ($, realtimePages, helpers, dt, mustache, form, builders, timeElements, rtTable, popup, toastr) {
+/*global define, Handlebars*/
+define(function (require) {
     "use strict";
-    var rtBuilders,
-        $tbsorter;
 
+    var $ = require('jquery'),
+        realtimePages = require('realtimePages'),
+        helpers = require('helpers'),
+        dt = require('datatables-extend'),
+        timeElements = require('timeElements'),
+        rtTable = require('rtGenericTable'),
+        popup = require('ui.popup'),
+        hb = require('project/handlebars-extend'),
+        $tbSorter;
 
-    rtBuilders = {
+    require('libs/jquery.form');
+
+    var rtBuilders = {
         init: function () {
-            $tbsorter = rtBuilders.dataTableInit($('.builders-table'));
+            $tbSorter = rtBuilders.dataTableInit($('.builders-table'));
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
@@ -20,7 +29,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
             }
         },
         realtimeFunctionsProcessBuilders: function (data) {
-            rtTable.table.rtfGenericTableProcess($tbsorter, data.builders);
+            rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
         },
         dataTableInit: function ($tableElem) {
             var options = {};
@@ -41,7 +50,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "aTargets": [ 0 ],
                     "sClass": "txt-align-left",
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {name: type.name, friendly_name: type.friendly_name, url: type.url});
+                        return hb.builders({name: true, friendly_name: type.friendly_name, url: type.url});
                     }
                 },
                 rtTable.cell.buildProgress(1, false),
@@ -49,7 +58,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left last-build-js",
                     "mRender": function (data, type, full) {
-                        return mustache.render(builders, {showLatestBuild: true, latestBuild: full.latestBuild});
+                        return hb.builders({showLatestBuild: true, latestBuild: full.latestBuild});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild !== undefined) {
@@ -66,7 +75,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                         if (type === 'sort') {
                             return full;
                         }
-                        return mustache.render(builders, {showStatus: true, latestBuild: full.latestBuild, data: full});
+                        return hb.builders({showStatus: true, latestBuild: full.latestBuild, data: full});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
@@ -76,7 +85,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                 {
                     "aTargets": [4],
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {showShortcuts: true, data: type});
+                        return hb.builders({showShortcuts: true, data: type});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {
@@ -99,7 +108,7 @@ define(['jquery', 'realtimePages', 'helpers', 'datatables-extend', 'mustache', '
                 {
                     "aTargets": [ 7 ],
                     "mRender": function (data, full, type) {
-                        return mustache.render(builders, {customBuild: true, url: type.url, builderName: type.name});
+                        return hb.builders({customBuild: true, url: type.url, builderName: type.name});
                     },
                     "fnCreatedCell": function (nTd) {
                         var $nTd = $(nTd);

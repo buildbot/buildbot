@@ -2,7 +2,7 @@
 <ul class="list">
     <li><strong>Hostname:</strong> {{ name }}.hq.unity3d.com</li>
     <li><strong>Health:</strong> {{> slave:health }}</li>
-    <li><strong>Builders:</strong> {{> slave:builders }}</li>
+    <li><strong>Builders:</strong> {{> slave:buildersPopup }}</li>
     {{#if showEID}}
         <li><strong>Yumi URL:</strong> <a href="http://yumi.hq.unity3d.com/agent/{{ eid }}">http://yumi.hq.unity3d.com/agent/{{ eid }}</a>
         </li>
