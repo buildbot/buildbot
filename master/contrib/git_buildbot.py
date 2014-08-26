@@ -297,6 +297,38 @@ def cleanup(res):
     reactor.stop()
 
 
+def process_branch_change(oldrev, newrev, refname, branch):
+     # Find out if the branch was created, deleted or updated.
+     if re.match(r"^0*$", newrev):
+         logging.info("Branch `%s' deleted, ignoring", branch)
+     elif re.match(r"^0*$", oldrev):
+         gen_create_branch_changes(newrev, refname, branch)
+     else:
+         gen_update_branch_changes(oldrev, newrev, refname, branch)
+
+
+def process_tag_change(oldrev, newrev, refname, tag):
+    #Process a new tag, or ignore a deleted tag
+    if re.match(r"^0*$", newrev):
+        logging.info("Tag `%s' deleted, ignoring" % tag)
+    elif re.match(r"^0*$", oldrev):
+        gen_create_tag_changes(newrev, refname, tag)
+
+
+def process_change(oldrev, newrev, refname):
+    # Identify the change as a branch, tag or other, and process it
+    m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+    if not m:
+        logging.info("Ignoring refname `%s': Not a branch or tag" % refname)
+        return
+
+    if m.group(1) == 'heads':
+        branch = m.group(2)
+        process_branch_change(oldrev, newrev, refname, branch)
+    elif m.group(1) == 'tags':
+        tag = m.group(2)
+        process_tag_change(oldrev, newrev, refname, tag)
+
 def process_changes():
     # Read branch updates from stdin and generate Change events
     while True:
@@ -305,29 +337,7 @@ def process_changes():
             break
 
         [oldrev, newrev, refname] = line.split(None, 2)
-
-        # Identify the change as a branch, tag or other, and process it
-        m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
-        if not m:
-            logging.info("Ignoring refname `%s': Not a branch or tag", refname)
-            continue
-
-        if m.group(1) == 'heads':
-            branch = m.group(2)
-             # Find out if the branch was created, deleted or updated.
-             if re.match(r"^0*$", newrev):
-                 logging.info("Branch `%s' deleted, ignoring", branch)
-             elif re.match(r"^0*$", oldrev):
-                 gen_create_branch_changes(newrev, refname, branch)
-             else:
-                 gen_update_branch_changes(oldrev, newrev, refname, branch)
-        elif m.group(1) == 'tags':
-            tag = m.group(2)
-            #Process a new tag, or ignore a deleted tag
-            if re.match(r"^0*$", newrev):
-                logging.info("Tag `%s' deleted, ignoring" % tag)
-            elif re.match(r"^0*$", oldrev):
-                gen_create_tag_changes(newrev, refname, tag)
+        process_change(oldrev, newrev, refname)
 
     # Submit the changes, if any
     if not changes:
