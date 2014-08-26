@@ -339,6 +339,8 @@ def process_changes():
         [oldrev, newrev, refname] = line.split(None, 2)
         process_change(oldrev, newrev, refname)
 
+
+def send_changes():
     # Submit the changes, if any
     if not changes:
         logging.warning("No changes found")
@@ -449,6 +451,7 @@ try:
         first_parent = options.first_parent
 
     process_changes()
+    send_changes()
 except SystemExit:
     pass
 except:
