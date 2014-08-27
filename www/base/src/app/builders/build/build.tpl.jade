@@ -1,0 +1,24 @@
+.container
+  .row
+    ul.breadcrumb
+      li.pull-right
+        button.btn.btn-default(ng-show="build.complete") Rebuild
+      li.pull-right
+        button.btn.btn-default(ng-show="build.complete") Promote
+  .row
+    .col-sm-5
+      buildsummary(ng-if="build", buildid="build.buildid")
+    .col-sm-7
+      tabset
+          tab(heading="properties")
+              rawdata(data="properties")
+          tab(heading="{{buildslave.name}}")
+              rawdata(data="buildslave")
+          tab(heading="builder")
+              rawdata(data="builder")
+          tab(heading="build")
+              rawdata(data="build")
+          tab(heading="buildrequest")
+              rawdata(data="buildrequest")
+          tab(heading="buildset")
+              rawdata(data="buildset")

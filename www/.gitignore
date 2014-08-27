@@ -1,6 +1,6 @@
 MANIFEST.in
 build
-!src/app/builders/build
+!base/src/app/builders/build
 dist/
 static/
 coverage/
