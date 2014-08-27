@@ -431,7 +431,7 @@ class Waterfall extends Controller
                 .append('text')
                     .attr('y', (step, i) -> 15 * (i + 1))
                     .attr('x', if r then 30 else 10)
-                    .attr('class', color)
+                    .attr('class', (step, i) -> self.result(step))
                     .classed('fill', true)
                     .transition().delay(100)
                     # Text format
