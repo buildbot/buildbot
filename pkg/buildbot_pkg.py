@@ -25,7 +25,8 @@ import os
 
 
 def check_output(cmd):
-    return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]
+    popen = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    return popen.communicate()[0].strip()
 
 
 def getVersion(init_file):
