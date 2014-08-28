@@ -35,6 +35,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
         self.remote_repo = 'ssh://example.com/foo/baz'
+        self.branch = 'default'
         self.repo_ready = True
 
         def _isRepositoryReady():
@@ -71,7 +72,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         self.assertSubstring("HgPoller", self.poller.describe())
 
     def test_name(self):
-        self.assertEqual(self.remote_repo, self.poller.name)
+        self.assertEqual("%s[%s]" % (self.remote_repo, self.branch), self.poller.name)
 
         # and one with explicit name...
         other = hgpoller.HgPoller(self.remote_repo, name="MyName", workdir='/some/dir')
