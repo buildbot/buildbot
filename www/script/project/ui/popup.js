@@ -378,6 +378,13 @@ define(function (require) {
                                 //Setup AJAX form and instant builds
                                 var $form = $elem.find('form'),
                                     formOptions = {
+                                        beforeSerialize: function () {
+                                            // Trim revision fields
+                                            $.each($form.find("[name*=_revision]"), function (i, el) {
+                                                var $el = $(el);
+                                                $el.val($.trim($el.val()));
+                                            });
+                                        },
                                         beforeSubmit: function () {
                                             $elem.hidePopup();
                                             $("#preloader").preloader("hidePreloader");

@@ -411,7 +411,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
                         codebase=codebase,
                         repository=ss.get('repository', None),
                         branch=ss.get('branch', None),
-                        revision=ss.get('revision', None),
+                        revision=ss.get('revision', None).strip(),
                         project=ss.get('project', ''),
                         changeids=[c['number'] for c in ss.get('changes', [])],
                         patch_body=ss.get('patch_body', None),
