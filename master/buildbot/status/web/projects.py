@@ -171,7 +171,10 @@ class BranchComparisonResource(HtmlResource):
 
         def set_instant_json(json_name, cmp_info):
             # Create our instant json for the given builders
-            url = status.getBuildbotURL() + path_to_json_builders(cmp_info["request"], self.project.name)
+            for bName, branch in cmp_info["codebases"].iteritems():
+                request.args[bName + "_branch"] = branch
+
+            url = status.getBuildbotURL() + path_to_json_builders(request, self.project.name)
 
             # Remove the extra array we don't need for autobahn
             sources = {}
@@ -194,7 +197,6 @@ class BranchComparisonResource(HtmlResource):
                 }
 
             # Remove from the object as we no longer need these values
-            del cmp_info["request"]
             del cmp_info["output"]
 
         # Get build data for each branch
@@ -211,14 +213,12 @@ class BranchComparisonResource(HtmlResource):
                         obj["codebases"][branch_name] = [branch_info[1]]
 
             # Create a copy of the request to pass around with the updated codebases info
-            req_copy = copy.copy(request)
             for bName, branch in obj["codebases"].iteritems():
-                req_copy.args[bName + "_branch"] = branch
+                request.args[bName + "_branch"] = branch
 
             # Create our json
             j = SingleProjectJsonResource(status, self.project)
             builds = yield j.asDict(request)
-            obj["request"] = req_copy
             obj["output"] = builds["builders"]
 
         # Set the instant json for each of the comparison branches

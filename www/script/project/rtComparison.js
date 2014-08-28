@@ -75,7 +75,10 @@ define(function (require) {
             };
 
             function setupRealtime(index, data) {
-                rawData[index] = helpers.objectPropertiesToArray(data);
+                if (!$.isArray(data)) {
+                    data = data.builders;
+                }
+                rawData[index] = data;
                 $.each($tbBuilders, function eachBuilderTable(i) {
                     rtComparison.processBuilders(i);
                 });
@@ -95,8 +98,6 @@ define(function (require) {
             };
 
             realtimePages.initRealtime(realtimeFunctions);
-
-
         },
         processBuildersData: function processBuildersData() {
             var SUCCESS = helpers.cssClassesEnum.SUCCESS,
@@ -108,14 +109,15 @@ define(function (require) {
                     [],
                     []
                 ];
+
             if (dataA !== undefined && dataB !== undefined) {
 
                 // For each builder in dataA
                 $.each(dataA, function eachBuilder(i, builderA) {
+
                     // Check that the other builder for differences
                     var builderB = dataB[i];
                     var diff = true;
-
 
                     if (builderA.latestBuild === undefined || builderB.latestBuild === undefined) {
                         diff = false;
@@ -131,6 +133,8 @@ define(function (require) {
                                     if ((buildA.results === NOT_REBUILT || buildA.results === SUCCESS || buildA.results === DEPENDENCY_FAILURE)) {
                                         diff = false;
                                     }
+                                } else if ((buildA.results === SUCCESS || buildA.results === NOT_REBUILT) && (buildB.results === SUCCESS || buildB.results === NOT_REBUILT)) {
+                                    diff = false;
                                 }
                             }
                         }
@@ -151,6 +155,13 @@ define(function (require) {
             if ($tbBuilders[index] !== undefined) {
                 var data = rtComparison.processBuildersData()[index];
                 rtTable.table.rtfGenericTableProcess($tbBuilders[index], data);
+
+                //Update the height to the largest found
+                var $elements = $(".comparison-table tr");
+                var maxHeight = Math.max.apply(null, $elements.map(function () {
+                    return $(this).height();
+                }).get());
+                $elements.css("height", maxHeight);
             }
         },
         dataTableInit: function dataTableInit($tableElem) {
