@@ -133,6 +133,19 @@ Fixes
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
 * The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+* :bb:chsrc:`PBChangeSource`'s git hook :file:`contrib/git_buildbot.py` now supports git tags
+
+  A pushed git tag generates a change event with the ``branch`` property equal to the tag name.
+  To schedule builds based on buildbot tags, one could use something like this:
+
+  .. code-block:: python
+
+     c['schedulers'].append(
+        SingleBranchScheduler(name='tags',
+           change_filter=filter.ChangeFilter(
+              branch_re='v[0-9]+\.[0-9]+\.[0-9]+(?:-pre|rc[0-9]+|p[0-9]+)?')
+           treeStableTimer=None,
+           builderNames=['tag_build']))
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
