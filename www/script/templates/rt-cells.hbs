@@ -32,15 +32,6 @@
 	</a>
 {{/buildID}}
 
-{{#buildStatus}}
-    <span class="hide">{{build.text.[0]}}</span>
-    <span class="status-text">
-     {{#build.text}}
-        {{.}}
-     {{/build.text}}
-    </span>
-{{/buildStatus}}
-
 {{#slaveName}}
     {{#if url}}
         <a href="{{url}}">{{name}}</a>
@@ -48,10 +39,6 @@
         {{name}}
     {{/if}}
 {{/slaveName}}
-
-{{#showBuilderName}}
-	<a href="{{data.builder_url}}">{{data.builderFriendlyName}}</a>
-{{/showBuilderName}}
 
 {{#slaveStatus}}
 	{{#showSpinIcon}}

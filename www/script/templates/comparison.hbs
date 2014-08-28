@@ -1,0 +1,17 @@
+<div class="rounded-container col-md-12">
+    <div class="pull-right col-md-offset-11 col-md-1">
+        <button id="submitComparison" class="blue-btn" type="submit">Compare</button>
+    </div>
+    <div id="comparison-toolbar">
+        {{#each builders}}
+            <div class="col-md-6">
+                <h4>{{name}}</h4>
+                {{> builders:comparisonBranchSelect builderData}}
+            </div>
+        {{/each}}
+    </div>
+
+    {{#each builders}}
+        <div class="col-md-6 col-padding-top">{{> builders:comparisonTable this}}</div>
+    {{/each}}
+</div>

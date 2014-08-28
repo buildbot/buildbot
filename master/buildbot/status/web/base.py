@@ -180,11 +180,24 @@ def codebases_to_args(codebases):
 
     return codebases_arg
 
+
 def path_to_codebases(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:
         codebases_arg = getCodebasesArg(request=request)
     return path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + codebases_arg
+
+
+def path_to_comparison(request, projectName, branches=None):
+    url = path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + "/comparison"
+    if branches:
+        arg = "?builders0="
+        for name, branch in branches.iteritems():
+            arg += urllib.quote("{0}={1}".format(name, branch), safe='')
+        url += arg
+
+    return url
+
 
 def path_to_builders(request, projectName, codebases=True):
     codebases_arg = ''

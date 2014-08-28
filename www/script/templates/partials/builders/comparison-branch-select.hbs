@@ -1,0 +1,12 @@
+<ul class="list" data-builder="builders{{ @index }}">
+    {{#each this}}
+        <li>
+            <strong>{{display_name}}:</strong>
+            <select class="select-tools-js" data-name="{{name}}" data-default="{{defaultbranch}}">
+                {{#each branch}}
+                    <option value="{{this}}">{{this}}</option>
+                {{/each}}
+            </select>
+        </li>
+    {{/each}}
+</ul>

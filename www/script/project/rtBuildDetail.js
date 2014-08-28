@@ -72,11 +72,7 @@ define(function (require) {
             timeElements.setHeartbeat(1000);
 
             // insert codebase and branch on the builders page
-            if (window.location.search !== '') {
-                // Parse the url and insert current codebases and branches
-                var $dtWTop = $('.top');
-                helpers.codeBaseBranchOverview($dtWTop);
-            }
+            helpers.codeBaseBranchOverview($('.top'));
 
             //Allow for popups
             $(".popup-btn-js-2").click(function (e) {

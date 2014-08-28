@@ -6,11 +6,11 @@ define(function (require) {
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
         dt = require('datatables-extend'),
-        timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
         popup = require('ui.popup'),
         hb = require('project/handlebars-extend'),
-        $tbSorter;
+        $tbSorter,
+        initializedCodebaseOverview = false;
 
     require('libs/jquery.form');
 
@@ -20,15 +20,14 @@ define(function (require) {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
-
-            // insert codebase and branch on the builders page
-            var $dtWTop = $('.dataTables_wrapper .top');
-            if (window.location.search !== '') {
-                // Parse the url and insert current codebases and branches
-                helpers.codeBaseBranchOverview($dtWTop);
-            }
         },
         realtimeFunctionsProcessBuilders: function (data) {
+            if (initializedCodebaseOverview === false) {
+                initializedCodebaseOverview = true;
+
+                // insert codebase and branch on the builders page
+                helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'), data.comparisonURL);
+            }
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
         },
         dataTableInit: function ($tableElem) {
@@ -46,59 +45,11 @@ define(function (require) {
             ];
 
             options.aoColumnDefs = [
-                {
-                    "aTargets": [ 0 ],
-                    "sClass": "txt-align-left",
-                    "mRender": function (data, full, type) {
-                        return hb.builders({name: true, friendly_name: type.friendly_name, url: type.url});
-                    }
-                },
+                rtTable.cell.builderName(0, "txt-align-left"),
                 rtTable.cell.buildProgress(1, false),
-                {
-                    "aTargets": [ 2 ],
-                    "sClass": "txt-align-left last-build-js",
-                    "mRender": function (data, type, full) {
-                        if (type === "sort") {
-                            if (full.latestBuild !== undefined) {
-                                return full.latestBuild.times[1];
-                            }
-                            return 0;
-                        }
-                        return hb.builders({showLatestBuild: true, latestBuild: full.latestBuild});
-                    },
-                    "fnCreatedCell": function (nTd, sData, oData) {
-                        if (oData.latestBuild !== undefined) {
-                            timeElements.addTimeAgoElem($(nTd).find('.last-run'), oData.latestBuild.times[1]);
-                            var time = helpers.getTime(oData.latestBuild.times[0], oData.latestBuild.times[1]).trim();
-                            $(nTd).find('.small-txt').html('(' + time + ')');
-                            $(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);
-                        }
-                    }
-                },
-                {
-                    "aTargets": [ 3 ],
-                    "mRender": function (data, type, full) {
-                        if (type === 'sort') {
-                            return full;
-                        }
-                        return hb.builders({showStatus: true, latestBuild: full.latestBuild, data: full});
-                    },
-                    "fnCreatedCell": function (nTd, sData, oData) {
-                        var lb = oData.latestBuild === undefined ? '' : oData.latestBuild;
-                        $(nTd).removeClass().addClass(lb.results_text);
-                    }
-                },
-                {
-                    "aTargets": [4],
-                    "mRender": function (data, full, type) {
-                        return hb.builders({showShortcuts: true, data: type});
-                    },
-                    "fnCreatedCell": function (nTd, sData, oData) {
-                        if (oData.latestBuild !== undefined && oData.latestBuild.artifacts !== undefined) {
-                            popup.initArtifacts(oData.latestBuild.artifacts, $(nTd).find(".artifact-js"));
-                        }
-                    }
-                },
+                rtTable.cell.buildLastRun(2),
+                rtTable.cell.buildStatus(3, "latestBuild"),
+                rtTable.cell.buildShortcuts(4, "latestBuild"),
                 rtTable.cell.revision(5, function (data) {
                     if (data.latestBuild !== undefined) {
                         return data.latestBuild.sourceStamps;

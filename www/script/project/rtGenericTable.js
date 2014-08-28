@@ -17,7 +17,7 @@ define(function (require) {
     var privFunc = {
         getPropertyOnData: function (data, property) {
             if (property === undefined) {
-                return undefined;
+                return data;
             }
 
             if (typeof property === 'string' || property instanceof String) {
@@ -72,15 +72,23 @@ define(function (require) {
                 }
             };
         },
-        buildStatus: function (index, className) {
+        buildStatus: function (index, property, className) {
             return {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
-                    return rtCells({buildStatus: true, 'build': full});
+                    var build = privFunc.getPropertyOnData(full, property);
+                    if (build !== undefined) {
+                        return hb.partials.cells["cells:buildStatus"](build);
+                    }
+
+                    return "";
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
-                    $(nTd).removeClass().addClass(oData.results_text);
+                    var build = privFunc.getPropertyOnData(oData, property);
+                    if (build !== undefined) {
+                        $(nTd).removeClass().addClass(build.results_text);
+                    }
                 }
             };
         },
@@ -89,7 +97,7 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-right" : className,
                 "mRender": function (data, type, full) {
-                    return rtCells({showBuilderName: true, 'data': full});
+                    return hb.partials.cells["cells:builderName"](full);
                 }
             };
         },
@@ -245,6 +253,48 @@ define(function (require) {
                     return "N/A";
                 }
             };
+        },
+        buildLastRun: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left last-build-js",
+                "mRender": function (data, type, full) {
+                    if (type === "sort") {
+                        if (full.latestBuild !== undefined) {
+                            return full.latestBuild.times[1];
+                        }
+                        return 0;
+                    }
+                    return hb.partials.cells["cells:buildLastRun"](full.latestBuild);
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    if (oData.latestBuild !== undefined) {
+                        timeElements.addTimeAgoElem($(nTd).find('.last-run'), oData.latestBuild.times[1]);
+                        var time = helpers.getTime(oData.latestBuild.times[0], oData.latestBuild.times[1]).trim();
+                        $(nTd).find('.small-txt').html('(' + time + ')');
+                        $(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);
+                    }
+                }
+            };
+        },
+        buildShortcuts: function (index, property) {
+            return {
+                "aTargets": [index],
+                "mRender": function (data, type, full) {
+                    var build = privFunc.getPropertyOnData(full, property);
+                    if (build !== undefined) {
+                        return hb.partials.cells["cells:buildShortcuts"](build);
+                    }
+
+                    return "";
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    var build = privFunc.getPropertyOnData(oData, property);
+                    if (build !== undefined && build.artifacts !== undefined) {
+                        popup.initArtifacts(build.artifacts, $(nTd).find(".artifact-js"));
+                    }
+                }
+            };
         }
     };
 
@@ -301,9 +351,6 @@ define(function (require) {
             timeElements.clearTimeObjects($table);
             helpers.clearChildEvents($table);
             $table.fnClearTable(false);
-
-            //Clear up the table correctly
-            $table.find("tbody tr").remove();
 
             try {
                 $table.fnAddData(data);

@@ -4,7 +4,8 @@ define(function (require) {
     "use strict";
     var $ = require('jquery'),
         screenSize = require('screensize'),
-        timeElements = require('timeElements');
+        timeElements = require('timeElements'),
+        queryString = require("libs/query-string");
 
     require('extend-moment');
 
@@ -295,38 +296,26 @@ define(function (require) {
                 }
             });
         },
-        codeBaseBranchOverview: function (El) {
+        codeBaseBranchOverview: function (El, compareURL) {
+            if (El !== undefined && location.search.length > 0) {
+                var KT = require('precompiled.handlebars'),
+                    args = queryString.parse(location.search),
+                    branches = {compareURL: compareURL, codebases: []};
 
-            var decodedUri = decodeURIComponent(window.location.search);
-            var parsedUrl = decodedUri.split('&');
-            var cbTable = $('<div class="border-table-holder col-xs-10"><div id="overScrollJS" class="inner-table-holder">' +
-                '<table class="codebase-branch-table"><tr class="codebase"><th>Codebase' +
-                '</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
-
-            cbTable.appendTo(El);
-
-            $(parsedUrl).each(function (i) {
-
-                // split key and value
-                var eqSplit = this.split("=");
-
-                if (eqSplit[0].indexOf('_branch') > 0) {
-
-                    // seperate branch
-                    var codeBases = this.split('_branch')[0];
-                    // remove the ? from the first codebase value
-                    if (i === 0) {
-                        codeBases = this.replace('?', '').split('_branch')[0];
+                // Fix up the data so it can be consumed by handlebars
+                var count = 0;
+                $.each(args, function (name, branch) {
+                    if (name.indexOf("_branch") > -1) {
+                        var cbName = name.replace("_branch", "");
+                        branches.codebases[count] = {"codebase": cbName, "branch": branch};
+                        count += 1;
                     }
+                });
 
-                    var branches = this.split('=')[1];
-
-                    $('tr.codebase').append('<td>' + codeBases + '</td>');
-                    $('tr.branch').append('<td>' + branches + '</td>');
-                }
-
-            });
-
+                // Create the table and append to the given element
+                var cbTable = $(KT.partials.builders["builders:codebaseBranchesTable"](branches));
+                cbTable.appendTo(El);
+            }
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 

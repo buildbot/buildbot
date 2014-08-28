@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+
+{% set bodyId = 'id="comparison"' %}
+
+{% block submenu %}
+    {{ submenu.buildsubmenu(active_page="comparison", pathNum=3, codebasesPath=path_to_codebases, selectedProject=selectedproject, builderName='', buildNumber='', stepName='') }}
+{% endblock %}
+
+{% block content %}
+    <div id="content"></div>
+{% endblock %}

@@ -42,10 +42,7 @@ define(function (require) {
             popup.initRunBuild($(".custom-build"));
 
             // insert codebase and branch
-            if (window.location.search !== '') {
-                // Parse the url and insert current codebases and branches
-                helpers.codeBaseBranchOverview($('#brancOverViewCont'));
-            }
+            helpers.codeBaseBranchOverview($('#brancOverViewCont'));
         },
         rtfProcessCurrentBuilds: function (data) {
             if (data.currentBuilds !== undefined) {

@@ -38,15 +38,17 @@ define(['jquery', 'rtGlobal', 'toastr', 'helpers', 'timeElements'], function ($,
                         $("#preloader").preloader("hidePreloader");
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
-                            var data = {
-                                url: url
-                            };
+                            if (url !== undefined) {
+                                var data = {
+                                    url: url
+                                };
 
-                            if (json !== undefined) {
-                                data.waitForPush = json[name].waitForPush;
-                                data.pushFilters = json[name].pushFilters;
+                                if (json !== undefined) {
+                                    data.waitForPush = json[name].waitForPush;
+                                    data.pushFilters = json[name].pushFilters;
+                                }
+                                realtimePages.sendCommand(KRT_REGISTER_URL, data);
                             }
-                            realtimePages.sendCommand(KRT_REGISTER_URL, data);
                         });
                     };
 

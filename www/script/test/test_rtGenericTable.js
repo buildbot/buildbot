@@ -54,7 +54,10 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
     var builderData = {
         name: "proj0-Build MacDevelopmentWebPlayer",
         friendly_name: "Build MacDevelopmentWebPlayer",
-        latestBuild: buildData
+        latestBuild: buildData,
+        project: "Unity - Trunk",
+        slaves: ["mba01"],
+        url: "http://10.45.6.89:8001/projects/Unity%20-%20Trunk/builders/proj0-Build%20MacDevelopmentWebPlayer?unity_branch=trunk"
     };
 
     var slaveData = {
@@ -213,7 +216,7 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
     describe("A builder name cell", function () {
         var $buildNameDict = gt.cell.builderName(0),
-            $html = rawHTMLToJQuery($buildNameDict.mRender(undefined, undefined, buildData));
+            $html = rawHTMLToJQuery($buildNameDict.mRender(undefined, undefined, builderData));
 
         it("renders correctly", function () {
             var $a = $html.find("a");

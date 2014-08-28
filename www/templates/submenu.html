@@ -25,6 +25,10 @@
 		{% set buildersPath = buildersPath %}
 	{% endif %}
 
+	{% if active_page == 'comparison' %}
+		{% set classPath = 'comparison' %}
+	{% endif %}
+
 	{% if active_page == builderName %}
 		{% set classPath = 'builder' %}
 		{% set builderName = builderName %}

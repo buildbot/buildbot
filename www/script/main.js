@@ -8,7 +8,7 @@ require.config({
         "ui.popup": "project/ui/popup",
         "ui.preloader": "project/ui/preloader",
         "selectors": "project/selectors",
-        "select2": "plugins/select2",
+        "select2": "libs/select2",
         "datatables": "libs/jquery-datatables",
         "datatables-extend": "project/datatables-extend",
         "dotdotdot": "plugins/jquery-dotdotdot",

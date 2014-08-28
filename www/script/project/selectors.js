@@ -76,7 +76,11 @@ define(['jquery', 'select2'], function ($) {
             var defaults = [];
             $(selector).each(function (i, obj) {
                 var opt = $('option[selected]', obj);
-                defaults.push(opt.html().trim());
+                var html = opt.html();
+
+                if (html !== undefined) {
+                    defaults.push(opt.html().trim());
+                }
             });
 
             commonbranchSelect.on("change", function () {

@@ -28,8 +28,14 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 "iDisplayLength": 50,
                 "bStateSave": true
             });
+
+            $.extend($.fn.dataTable.defaults.oLanguage, {
+                "sEmptyTable": "No data has been found"
+            });
         },
         initTable: function ($tableElem, options) {
+
+            var sDom = '<"top col-md-12"flip><"table-wrapper"t><"bottom"pi>';
 
             // add only filter input nor pagination
             if ($tableElem.hasClass('input-js')) {
@@ -37,7 +43,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 options.oLanguage = {
                     "sSearch": ""
                 };
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             // add searchfilterinput, length change and pagination
@@ -56,7 +62,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                         '<option value="-1">All</option>' +
                         '</select>'
                 };
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             //Setup default sorting columns and order
@@ -103,7 +109,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 options.aoColumns = aoColumns;
             }
             if ($tableElem.hasClass('branches-selectors-js') && options.sDom === undefined) {
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             //initialize datatable with options
@@ -228,7 +234,6 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return -result;
                 }
 
-                console.log(result);
                 return result;
             };
 
