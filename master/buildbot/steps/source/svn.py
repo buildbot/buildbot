@@ -411,7 +411,10 @@ class SVN(Source):
         (scheme, authority, path, parameters, query, fragment) = urlparse(uri)
         scheme = lower(scheme)
         if authority:
-            userinfo, host, port = server_authority.match(authority).groups()
+            mo = server_authority.match(authority)
+            if not mo:
+                return uri  # give up
+            userinfo, host, port = mo.groups()
             if host[-1] == '.':
                 host = host[:-1]
             authority = lower(host)
