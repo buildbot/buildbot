@@ -132,7 +132,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
 
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=DEFAULT_REVIEW,
+    def __init__(self, server, username=None, reviewCB=DEFAULT_REVIEW,
                  startCB=None, port=29418, reviewArg=None,
                  startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
                  identity_file=None, **kwargs):
@@ -172,11 +172,13 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             options = ['-i', self.gerrit_identity_file]
         else:
             options = []
-        return ['ssh'] + options + [
-            '@'.join((self.gerrit_username, self.gerrit_server)),
-            '-p', str(self.gerrit_port),
-            'gerrit'
-        ] + list(args)
+        result = ['ssh'] + options
+        if self.gerrit_username:
+            result.append('@'.join((self.gerrit_username, self.gerrit_server)))
+        else:
+            result.append(self.gerrit_server)
+        result += ['-p', str(self.gerrit_port), 'gerrit'] + list(args)
+        return result
 
     class VersionPP(ProcessProtocol):
 

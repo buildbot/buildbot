@@ -86,6 +86,9 @@ Features
 
 * :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
 
+* :class:`~buildbot.changes.gerritchangesource.GerritChangeSource`
+  and :class:`~buildbot.status.status_gerrit.GerritStatusPush` constructors don't require username parameter anymore.
+
 Fixes
 ~~~~~
 

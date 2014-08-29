@@ -224,6 +224,10 @@ class TestGerritStatusPush(unittest.TestCase):
         ]
         self.assertEqual(expected2, with_identity._gerritCmd('foo'))
 
+        without_username = GerritStatusPush(kwargs["server"])
+        expected3 = ['ssh', 'example.com', '-p', '29418', 'gerrit', 'foo']
+        self.assertEqual(expected3, without_username._gerritCmd('foo'))
+
     def test_buildsetComplete_success_sends_summary_review(self):
         d = self.check_summary_build(buildResults=[SUCCESS, SUCCESS],
                                      finalResult=SUCCESS,

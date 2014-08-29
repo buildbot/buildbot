@@ -971,7 +971,7 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
    the port of the gerrit ssh server
 
 ``username``
-   the username to use to connect to gerrit
+   the username to use to connect to gerrit (optional, defaults to username specified in .ssh/config or the current login if the previous is empty).
 
 ``identity_file``
    ssh identity file to for authentication (optional).
