@@ -45,13 +45,13 @@ Darcs
  * :bb:chsrc:`Change Hooks` in WebStatus
 
 Mercurial
- * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/hg_buildbot.py` run in an 'changegroup' hook)
+ * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/hgbuildbot.py` run in an ``changegroup`` hook)
  * :bb:chsrc:`Change Hooks` in WebStatus
- * :bb:chsrc:`PBChangeSource` (listening for connections from
  * BitBucket change hook (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)
  * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
+ * :ref:`Mail-parsing-ChangeSources`, though there are no ready-to-use recipes
 
 Bzr (the newer Bazaar)
  * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/bzr_buildbot.py` run in a post-change-branch-tip or commit hook)
@@ -166,10 +166,10 @@ A `maildir` is a simple directory structure originally developed for qmail that 
 Create a base directory with three subdirectories: :file:`new`, :file:`tmp`, and :file:`cur`.
 When messages arrive, they are put into a uniquely-named file (using pids, timestamps, and random numbers) in :file:`tmp`. When the file is complete, it is atomically renamed into :file:`new`. Eventually the buildmaster notices the file in :file:`new`, reads and parses the contents, then moves it into :file:`cur`. A cronjob can be used to delete files in :file:`cur` at leisure.
 
-Maildirs are frequently created with the :command:`maildirmake` tool, but a simple :command:`mkdir -p ~/MAILDIR/\{cur,new,tmp\}` is pretty much equivalent.
+Maildirs are frequently created with the :command:`maildirmake` tool, but a simple :samp:`mkdir -p ~/{MAILDIR}/\{cur,new,tmp\}` is pretty much equivalent.
 
 Many modern MTAs can deliver directly to maildirs.
-The usual :file:`.forward` or :file:`.procmailrc` syntax is to name the base directory with a trailing slash, so something like ``~/MAILDIR/``\.
+The usual :file:`.forward` or :file:`.procmailrc` syntax is to name the base directory with a trailing slash, so something like :samp:`~/{MAILDIR}/`\.
 qmail and postfix are maildir-capable MTAs, and procmail is a maildir-capable MDA (Mail Delivery Agent).
 
 Here is an example procmail config, located in :file:`~/.procmailrc`:
@@ -225,7 +225,7 @@ Bzr
 
 Mercurial
     NotifyExtension
-        http://www.selenic.com/mercurial/wiki/index.cgi/NotifyExtension
+        http://mercurial.selenic.com/wiki/NotifyExtension
 
 Git
     post-receive-email
