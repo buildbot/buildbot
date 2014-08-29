@@ -62,7 +62,10 @@ from ubuntu:12.04
 #run ln -s /bin/true /sbin/initctl
 
 # Install buildbot and its dependencies
-run echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > \
+
+run /bin/echo -e "\
+    deb http://archive.ubuntu.com/ubuntu precise main universe\n\
+    deb http://archive.ubuntu.com/ubuntu precise-updates main universe" > \
     /etc/apt/sources.list
 run apt-get update
 run DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip python-dev \
