@@ -734,7 +734,7 @@ The :bb:chsrc:`GitPoller` requires Git-1.7 and later.
 It accepts the following arguments:
 
 ``repourl``
-    the git-url that describes the remote repository, e.g.  ``git@example.com:foobaz/myrepo.git`` (see the :command:`git fetch` help for more info on git-url formats)
+    the git-url that describes the remote repository, e.g. ``git@example.com:foobaz/myrepo.git`` (see the :command:`git fetch` help for more info on git-url formats)
 
 ``branches``
     One of the following:
@@ -811,7 +811,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
     This must be unique, and defaults to the ``repourl``.
 
 ``repourl``
-    the url that describes the remote repository, e.g.  ``http://hg.example.com/projects/myrepo``.
+    the url that describes the remote repository, e.g. ``http://hg.example.com/projects/myrepo``.
     Any url suitable for ``hg pull`` can be specified.
 
 ``branch``
