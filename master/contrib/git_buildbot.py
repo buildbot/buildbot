@@ -214,6 +214,19 @@ def gen_create_branch_changes(newrev, refname, branch):
         logging.warning("git rev-list exited with status %d", status)
 
 
+def gen_create_tag_changes(newrev, refname, tag):
+    # A new tag has been created. Generate one change for the commit
+    # a tag may or may not coincide with the head of a branch, so
+    # the "branch" attribute will hold the tag name.
+
+    logging.info("Tag `%s' created" % tag)
+    f = os.popen("git log -n 1 --pretty=oneline %s" % newrev, 'r')
+    gen_changes(f, tag)
+    status = f.close()
+    if status:
+        logging.warning("git log exited with status %d", status)
+
+
 def gen_update_branch_changes(oldrev, newrev, refname, branch):
     # A branch has been updated. If it was a fast-forward update,
     # generate Change events for everything between oldrev and newrev.
@@ -284,6 +297,38 @@ def cleanup(res):
     reactor.stop()
 
 
+def process_branch_change(oldrev, newrev, refname, branch):
+     # Find out if the branch was created, deleted or updated.
+     if re.match(r"^0*$", newrev):
+         logging.info("Branch `%s' deleted, ignoring", branch)
+     elif re.match(r"^0*$", oldrev):
+         gen_create_branch_changes(newrev, refname, branch)
+     else:
+         gen_update_branch_changes(oldrev, newrev, refname, branch)
+
+
+def process_tag_change(oldrev, newrev, refname, tag):
+    #Process a new tag, or ignore a deleted tag
+    if re.match(r"^0*$", newrev):
+        logging.info("Tag `%s' deleted, ignoring" % tag)
+    elif re.match(r"^0*$", oldrev):
+        gen_create_tag_changes(newrev, refname, tag)
+
+
+def process_change(oldrev, newrev, refname):
+    # Identify the change as a branch, tag or other, and process it
+    m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+    if not m:
+        logging.info("Ignoring refname `%s': Not a branch or tag" % refname)
+        return
+
+    if m.group(1) == 'heads':
+        branch = m.group(2)
+        process_branch_change(oldrev, newrev, refname, branch)
+    elif m.group(1) == 'tags':
+        tag = m.group(2)
+        process_tag_change(oldrev, newrev, refname, tag)
+
 def process_changes():
     # Read branch updates from stdin and generate Change events
     while True:
@@ -292,25 +337,10 @@ def process_changes():
             break
 
         [oldrev, newrev, refname] = line.split(None, 2)
+        process_change(oldrev, newrev, refname)
 
-        # We only care about regular heads, i.e. branches
-        m = re.match(r"^refs\/heads\/(.+)$", refname)
-        if not m:
-            logging.info("Ignoring refname `%s': Not a branch", refname)
-            continue
 
-        branch = m.group(1)
-
-        # Find out if the branch was created, deleted or updated. Branches
-        # being deleted aren't really interesting.
-        if re.match(r"^0*$", newrev):
-            logging.info("Branch `%s' deleted, ignoring", branch)
-            continue
-        elif re.match(r"^0*$", oldrev):
-            gen_create_branch_changes(newrev, refname, branch)
-        else:
-            gen_update_branch_changes(oldrev, newrev, refname, branch)
-
+def send_changes():
     # Submit the changes, if any
     if not changes:
         logging.warning("No changes found")
@@ -421,6 +451,7 @@ try:
         first_parent = options.first_parent
 
     process_changes()
+    send_changes()
 except SystemExit:
     pass
 except:
