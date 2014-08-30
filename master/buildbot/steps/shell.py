@@ -400,7 +400,7 @@ class WarningCountingShellCommand(ShellCommand):
     renderables = ['suppressionFile']
 
     warnCount = 0
-    warningPattern = '.*warning[: ].*'
+    warningPattern = '(?i).*warning[: ].*'
     # The defaults work for GNU Make.
     directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")

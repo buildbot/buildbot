@@ -703,12 +703,14 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=["make"])
             + ExpectShell.log('stdio',
-                              stdout='normal: foo\nwarning: blarg!\nalso normal')
+                              stdout='normal: foo\nwarning: blarg!\n'
+                                     'also normal\nWARNING: blarg!\n')
             + 0
         )
         self.expectOutcome(result=WARNINGS, status_text=["'make'", "warnings"])
-        self.expectProperty("warnings-count", 1)
-        self.expectLogfile("warnings (1)", "warning: blarg!\n")
+        self.expectProperty("warnings-count", 2)
+        self.expectLogfile("warnings (2)",
+                           "warning: blarg!\nWARNING: blarg!\n")
         return self.runStep()
 
     def test_custom_pattern(self):
