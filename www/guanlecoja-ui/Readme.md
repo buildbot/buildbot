@@ -119,3 +119,9 @@ Remove a notification from the list.
 #### `glNotificationService.notifications`
 
 The stored list of notifications.
+
+Credits
+=======
+Original Design by Elliot Hesp:
+https://github.com/Ehesp/Responsive-Dashboard
+
