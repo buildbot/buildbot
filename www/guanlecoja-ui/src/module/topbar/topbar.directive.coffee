@@ -18,7 +18,7 @@ class _glTopbar extends Controller
 
         $scope.$on "$stateChangeStart", (ev, state) ->
             $scope.breadcrumb = []
-            if state.data?.group
+            if state.data?.group and state.data?.caption != groups[state.data.group].caption
                 $scope.breadcrumb.push
                     caption: groups[state.data.group].caption
             $scope.breadcrumb.push

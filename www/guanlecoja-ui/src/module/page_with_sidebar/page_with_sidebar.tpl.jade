@@ -2,7 +2,7 @@
     .sidebar.sidebar-blue(ng-mouseenter='page.enterSidebar()',ng-mouseleave='page.leaveSidebar()')
         ul
             li.sidebar-main
-                a(href='#')
+                a(href='javascript:')
                     | {{page.appTitle}}
                     span.menu-icon.fa.fa-bars(ng-hide="page.sidebarActive", ng-click='page.sidebarActive=!page.sidebarActive')
                     span.menu-icon.fa.fa-thumb-tack(ng-show="page.sidebarActive", ng-click="page.sidebarPinned=!page.sidebarPinned", ng-class="{'fa-45': !page.sidebarPinned}")
