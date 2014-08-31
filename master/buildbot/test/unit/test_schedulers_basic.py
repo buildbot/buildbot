@@ -19,7 +19,6 @@ from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
-from buildbot.test.util.todo import todo
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -391,53 +390,6 @@ class SingleBranchScheduler(CommonStuffMixin,
         d.addCallback(check)
 
         d.addCallback(lambda _: sched.deactivate())
-
-    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
-    @defer.inlineCallbacks
-    def test_preStartConsumingChanges_empty(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases,
-                                       createAbsoluteSourceStamps=True)
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {})
-
-    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
-    @defer.inlineCallbacks
-    def test_preStartConsumingChanges_no_createAbsoluteSourceStamps(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases)
-
-        self.db.insertTestData([
-            fakedb.Object(id=self.OBJECTID, name='test',
-                          class_name='SingleBranchScheduler'),
-            fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
-                               value_json='{"a": {"branch": "master"}}')])
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {})
-
-    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
-    @defer.inlineCallbacks
-    def test_preStartConsumingChanges_existing(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases,
-                                       createAbsoluteSourceStamps=True)
-
-        self.db.insertTestData([
-            fakedb.Object(id=self.OBJECTID, name='test',
-                          class_name='SingleBranchScheduler'),
-            fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
-                               value_json='{"a": {"branch": "master", "repository": "A", '
-                               '"revision": "1234:abc",  "lastChange": 13}}')])
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {
-            'a': {'branch': 'master', 'lastChange': 13,
-                  'repository': 'A', 'revision': '1234:abc'}})
 
     @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
