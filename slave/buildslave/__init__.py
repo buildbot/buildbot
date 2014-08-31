@@ -20,27 +20,39 @@
 #
 import os
 
-version = "latest"
 
-try:
-    fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'VERSION')
-    version = open(fn).read().strip()
-
-except IOError:
-    from subprocess import Popen, PIPE
-    import re
-
-    VERSION_MATCH = re.compile(r'\d+\.\d+\.\d+(\w|-)*')
+def getVersion(init_file):
+    try:
+        return os.environ['BUILDBOT_VERSION']
+    except KeyError:
+        pass
 
     try:
-        dir = os.path.dirname(os.path.abspath(__file__))
-        p = Popen(['git', 'describe', '--tags', '--always'], cwd=dir,
-                  stdout=PIPE, stderr=PIPE)
+        cwd = os.path.dirname(os.path.abspath(init_file))
+        fn = os.path.join(cwd, 'VERSION')
+        version = open(fn).read().strip()
+        return version
+    except IOError:
+        pass
+
+    from subprocess import Popen, PIPE, STDOUT
+    import re
+
+    # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
+    # no matter the number of digits for X, Y and Z
+    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
+
+    try:
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
             v = VERSION_MATCH.search(out)
             if v:
-                version = v.group()
+                version = v.group(1)
+        return version
     except OSError:
         pass
+    return "latest"
+
+version = getVersion(__file__)

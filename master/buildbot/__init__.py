@@ -20,30 +20,37 @@ import os
 
 # we can't put this method in utility modules, because they import dependancy packages.
 def getVersion(init_file):
-    version = "latest"
+    try:
+        return os.environ['BUILDBOT_VERSION']
+    except KeyError:
+        pass
+
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
         version = open(fn).read().strip()
-
+        return version
     except IOError:
-        from subprocess import Popen, PIPE, STDOUT
-        import re
+        pass
 
-        # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
-        # no matter the number of digits for X, Y and Z
-        VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
+    from subprocess import Popen, PIPE, STDOUT
+    import re
 
-        try:
-            p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
-            out = p.communicate()[0]
+    # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
+    # no matter the number of digits for X, Y and Z
+    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
 
-            if (not p.returncode) and out:
-                v = VERSION_MATCH.search(out)
-                if v:
-                    version = v.group(1)
-        except OSError:
-            pass
-    return version
+    try:
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        out = p.communicate()[0]
+
+        if (not p.returncode) and out:
+            v = VERSION_MATCH.search(out)
+            if v:
+                version = v.group(1)
+        return version
+    except OSError:
+        pass
+    return "latest"
 
 version = getVersion(__file__)
