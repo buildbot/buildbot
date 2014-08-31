@@ -34,7 +34,8 @@ Available ``kind``\s are:
     status targets, described in :doc:`cfg-statustargets`
 
 ``util``
-    utility classes.  For example, :doc:`BuilderConfig <cfg-builders>`, :doc:`cfg-buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <cfg-interlocks>` are accessible through ``util``.
+    utility classes.
+    For example, :doc:`BuilderConfig <cfg-builders>`, :doc:`cfg-buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <cfg-interlocks>` are accessible through ``util``.
 
 Web interface plugins are not used directly: as described in :doc:`web server configuration <cfg-www>` section, they are listed in the corresponding section of the web server configuration dictionary.
 

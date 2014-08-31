@@ -5,41 +5,38 @@
 Properties
 ==========
 
-Build properties are a generalized way to provide configuration information to
-build steps; see :ref:`Build-Properties` for the conceptual overview of
-properties.
+Build properties are a generalized way to provide configuration information to build steps; see :ref:`Build-Properties` for the conceptual overview of properties.
 
 .. contents::
     :depth: 1
     :local:
 
-Some build properties come from external sources and are set before the build
-begins; others are set during the build, and available for later steps.  The
-sources for properties are:
+Some build properties come from external sources and are set before the build begins; others are set during the build, and available for later steps.
+The sources for properties are:
 
-* :bb:cfg:`global configuration <properties>` -- These properties apply to all
-  builds.
-* :ref:`schedulers <Configuring-Schedulers>` -- A scheduler can specify
-  properties that become available to all builds it starts.
-* :ref:`changes <Change-Sources>` -- A change can have properties attached to
-  it, supplying extra information gathered by the change source.  This is most
-  commonly used with the :bb:cmdline:`sendchange` command.
-* forced builds -- The "Force Build" form allows users to specify properties
-* :bb:cfg:`buildslaves <slaves>` -- A buildslave can pass properties on to
-  the builds it performs.
-* :ref:`builds <Common-Build-Properties>` -- A build automatically sets a
-  number of properties on itself.
-* :bb:cfg:`builders <builders>` -- A builder can set properties on all the
-  builds it runs.
-* :ref:`steps <Build-Steps>` -- The steps of a build can set properties that are available to subsequent steps.
-  In particular, source steps set the `got_revision` property.
+:bb:cfg:`global configuration <properties>`
+    These properties apply to all builds.
+:ref:`schedulers <Configuring-Schedulers>`
+    A scheduler can specify properties that become available to all builds it starts.
+:ref:`changes <Change-Sources>`
+    A change can have properties attached to it, supplying extra information gathered by the change source.
+    This is most commonly used with the :bb:cmdline:`sendchange` command.
+forced builds
+    The "Force Build" form allows users to specify properties
+:bb:cfg:`buildslaves <slaves>`
+    A buildslave can pass properties on to the builds it performs.
+:ref:`builds <Common-Build-Properties>`
+    A build automatically sets a number of properties on itself.
+:bb:cfg:`builders <builders>`
+    A builder can set properties on all the builds it runs.
+:ref:`steps <Build-Steps>`
+    The steps of a build can set properties that are available to subsequent steps.
+    In particular, source steps set the `got_revision` property.
 
-If the same property is supplied in multiple places, the final appearance takes
-precedence.  For example, a property set in a builder configuration will
-override one supplied by a scheduler.
+If the same property is supplied in multiple places, the final appearance takes precedence.
+For example, a property set in a builder configuration will override one supplied by a scheduler.
 
-Properties are stored internally in JSON format, so they are limited to basic
-types of data: numbers, strings, lists, and dictionaries.
+Properties are stored internally in JSON format, so they are limited to basic types of data: numbers, strings, lists, and dictionaries.
 
 .. index:: single: Properties; Common Properties
 
@@ -48,8 +45,7 @@ types of data: numbers, strings, lists, and dictionaries.
 Common Build Properties
 -----------------------
 
-The following build properties are set when the build is started, and
-are available to all steps.
+The following build properties are set when the build is started, and are available to all steps.
 
 .. index:: single: Properties; got_revision
 
@@ -58,9 +54,9 @@ are available to all steps.
     In general this should be the same as ``revision``, except for non-absolute sourcestamps, where ``got_revision`` indicates what revision was current when the checkout was performed.
     This can be used to rebuild the same source code later.
 
-    .. note:: For some VC systems (Darcs in particular), the revision is a
-       large string containing newlines, and is not suitable for interpolation
-       into a filename.
+    .. note::
+
+       For some VC systems (Darcs in particular), the revision is a large string containing newlines, and is not suitable for interpolation into a filename.
 
     For multi-codebase builds (where codebase is not the default `''`), this property is a dictionary, keyed by codebase.
 
@@ -68,32 +64,26 @@ are available to all steps.
 
 ``buildername``
     This is a string that indicates which :class:`Builder` the build was a part of.
-    The combination of buildername and buildnumber uniquely identify a
-    build.
+    The combination of buildername and buildnumber uniquely identify a build.
 
 .. index:: single: Properties; buildnumber
 
 ``buildnumber``
-    Each build gets a number, scoped to the :class:`Builder` (so the first build
-    performed on any given :class:`Builder` will have a build number of 0). This
-    integer property contains the build's number.
+    Each build gets a number, scoped to the :class:`Builder` (so the first build performed on any given :class:`Builder` will have a build number of 0).
+    This integer property contains the build's number.
 
 .. index:: single: Properties; slavename
 
 ``slavename``
-    This is a string which identifies which buildslave the build is
-    running on.
+    This is a string which identifies which buildslave the build is running on.
 
 .. index:: single: Properties; scheduler
 
 ``scheduler``
-    If the build was started from a scheduler, then this property will
-    contain the name of that scheduler.
-
+    If the build was started from a scheduler, then this property will contain the name of that scheduler.
 
 ``workdir``
-    The absolute path of the base working directory on the slave, of the current
-    builder.
+    The absolute path of the base working directory on the slave, of the current builder.
 
 .. index:: single: Properties; workdir
 
@@ -121,26 +111,24 @@ Source Stamp Attributes
 Using Properties in Steps
 -------------------------
 
-For the most part, properties are used to alter the behavior of build steps
-during a build.  This is done by annotating the step definition in
-``master.cfg`` with placeholders.  When the step is started, these
-placeholders will be replaced using the current values of the build properties.
+For the most part, properties are used to alter the behavior of build steps during a build.
+This is done by annotating the step definition in ``master.cfg`` with placeholders.
+When the step is started, these placeholders will be replaced using the current values of the build properties.
 
 .. note::
 
-    Properties are defined while a build is in progress; their values are
-    not available when the configuration file is parsed.  This can sometimes
-    confuse newcomers to Buildbot!  In particular, the following is a common error::
+    Properties are defined while a build is in progress; their values are not available when the configuration file is parsed.
+    This can sometimes confuse newcomers to Buildbot!
+    In particular, the following is a common error::
 
         if Property('release_train') == 'alpha':
             f.addStep(...)
 
-    This does not work because the value of the property is not available when
-    the ``if`` statement is executed.  However, Python will not detect this as
-    an error - you will just never see the step added to the factory.
+    This does not work because the value of the property is not available when the ``if`` statement is executed.
+    However, Python will not detect this as an error - you will just never see the step added to the factory.
 
-You can use build properties in most step parameters.  Please file bugs for any
-parameters which do not accept properties.
+You can use build properties in most step parameters.
+Please file bugs for any parameters which do not accept properties.
 
 .. index:: single: Properties; Property
 
@@ -161,10 +149,8 @@ You can specify a default value by passing a ``default`` keyword argument::
     f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
                                  util.Property('warnings', default='none')]))
 
-The default value is used when the property doesn't exist, or when the value is
-something Python regards as ``False``. The ``defaultWhenFalse`` argument can be
-set to ``False`` to force buildbot to use the default argument only if the
-parameter is not set::
+The default value is used when the property doesn't exist, or when the value is something Python regards as ``False``.
+The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to use the default argument only if the parameter is not set::
 
     f.addStep(steps.ShellCommand(command=['echo', 'warnings:',
                                  util.Property('warnings', default='none',
@@ -183,10 +169,9 @@ The default value can reference other properties, e.g.,
 Interpolate
 +++++++++++
 
-:class:`Property` can only be used to replace an entire argument: in the
-example above, it replaces an argument to ``echo``.  Often, properties need to
-be interpolated into strings, instead.  The tool for that job is
-:ref:`Interpolate`.
+:class:`Property` can only be used to replace an entire argument: in the example above, it replaces an argument to ``echo``.
+Often, properties need to be interpolated into strings, instead.
+The tool for that job is :ref:`Interpolate`.
 
 The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
 In this form, the property name goes in the parentheses, as above.
@@ -199,8 +184,7 @@ A common mistake is to omit the trailing "s", leading to a rather obscure error 
                                           util.Interpolate('REVISION=%(prop:got_revision)s'),
                                           'dist']))
 
-This example will result in a ``make`` command with an argument like
-``REVISION=12098``.
+This example will result in a ``make`` command with an argument like ``REVISION=12098``.
 
 .. _Interpolate-DictStyle:
 
@@ -220,30 +204,24 @@ The following selectors are supported.
 The following ways of interpreting the value are available.
 
 ``-replacement``
-    If the key exists, substitute its value; otherwise,
-    substitute ``replacement``. ``replacement`` may be empty
-    (``%(prop:propname:-)s``). This is the default.
+    If the key exists, substitute its value; otherwise, substitute ``replacement``.
+    ``replacement`` may be empty (``%(prop:propname:-)s``).
+    This is the default.
 
 ``~replacement``
-    Like ``-replacement``, but only substitutes the value
-    of the key if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be
-    false, so such values will be replaced by ``replacement``.
+    Like ``-replacement``, but only substitutes the value of the key if it is something Python regards as ``True``.
+    Python considers ``None``, 0, empty lists, and the empty string to be false, so such values will be replaced by ``replacement``.
 
 ``+replacement``
-    If the key exists, substitute ``replacement``; otherwise,
-    substitute an empty string.
+    If the key exists, substitute ``replacement``; otherwise, substitute an empty string.
 
 ``?|sub_if_exists|sub_if_missing``
 
 ``#?|sub_if_true|sub_if_false``
-    Ternary substitution, depending on either the key being present (with
-    ``?``, similar to ``+``) or being ``True`` (with ``#?``, like ``~``).
-    Notice that there is a pipe immediately following the question mark *and*
-    between the two substitution alternatives. The character that follows the
-    question mark is used as the delimiter between the two alternatives. In the
-    above examples, it is a pipe, but any character other than ``(`` can be used.
-
+    Ternary substitution, depending on either the key being present (with ``?``, similar to ``+``) or being ``True`` (with ``#?``, like ``~``).
+    Notice that there is a pipe immediately following the question mark *and* between the two substitution alternatives.
+    The character that follows the question mark is used as the delimiter between the two alternatives.
+    In the above examples, it is a pipe, but any character other than ``(`` can be used.
 
 Although these are similar to shell substitutions, no other substitutions are currently supported.
 
@@ -261,9 +239,8 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
 
 .. note::
 
-  Like Python, you can use either positional interpolation *or*
-  dictionary-style interpolation, not both.  Thus you cannot use a string
-  like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
+   Like Python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
+   Thus you cannot use a string like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
 .. index:: single: Properties; Renderer
 
@@ -309,19 +286,21 @@ For example::
 ``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
 This is useful when a list-returning property is used in renderables.
 
-.. note:: ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no need to use ``FlattenList`` for it.
+.. note::
+
+   ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no need to use ``FlattenList`` for it.
 
 WithProperties
 ++++++++++++++
 
 .. warning::
 
-    This placeholder is deprecated. It is an older version of :ref:`Interpolate`.
+    This placeholder is deprecated.
+    It is an older version of :ref:`Interpolate`.
     It exists for compatibility with older configs.
 
-The simplest use of this class is with positional string interpolation.  Here,
-``%s`` is used as a placeholder, and property names are given as subsequent
-arguments::
+The simplest use of this class is with positional string interpolation.
+Here, ``%s`` is used as a placeholder, and property names are given as subsequent arguments::
 
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
@@ -344,36 +323,27 @@ A common mistake is to omit the trailing "s", leading to a rather obscure error 
                                           util.WithProperties('REVISION=%(got_revision)s'),
                                           'dist']))
 
-This example will result in a ``make`` command with an argument like
-``REVISION=12098``.
+This example will result in a ``make`` command with an argument like ``REVISION=12098``.
 
 .. _WithProperties-DictStyle:
 
-The dictionary-style interpolation supports a number of more advanced
-syntaxes in the parentheses.
+The dictionary-style interpolation supports a number of more advanced syntaxes in the parentheses.
 
 ``propname:-replacement``
-    If ``propname`` exists, substitute its value; otherwise,
-    substitute ``replacement``. ``replacement`` may be empty
-    (``%(propname:-)s``)
+    If ``propname`` exists, substitute its value; otherwise, substitute ``replacement``.
+    ``replacement`` may be empty (``%(propname:-)s``)
 
 ``propname:~replacement``
-    Like ``propname:-replacement``, but only substitutes the value
-    of property ``propname`` if it is something Python regards as ``True``.
-    Python considers ``None``, 0, empty lists, and the empty string to be
-    false, so such values will be replaced by ``replacement``.
+    Like ``propname:-replacement``, but only substitutes the value of property ``propname`` if it is something Python regards as ``True``.
+    Python considers ``None``, 0, empty lists, and the empty string to be false, so such values will be replaced by ``replacement``.
 
 ``propname:+replacement``
-    If ``propname`` exists, substitute ``replacement``; otherwise,
-    substitute an empty string.
+    If ``propname`` exists, substitute ``replacement``; otherwise, substitute an empty string.
 
-Although these are similar to shell substitutions, no other
-substitutions are currently supported, and ``replacement`` in the
-above cannot contain more substitutions.
+Although these are similar to shell substitutions, no other substitutions are currently supported, and ``replacement`` in the above cannot contain more substitutions.
 
-Note: like Python, you can use either positional interpolation *or*
-dictionary-style interpolation, not both. Thus you cannot use a string like
-``WithProperties("foo-%(revision)s-%s", "branch")``.
+Note: like Python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
+Thus you cannot use a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
 Custom Renderables
 ++++++++++++++++++

@@ -6,8 +6,9 @@ Web Server
 Buildbot contains a built-in web server.
 This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
 
-.. note:
-    As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
+.. note::
+
+   As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
 
 ``port``
     The TCP port on which to serve requests.
@@ -165,7 +166,8 @@ The available classes are described here:
 .. py:class:: buildbot.www.auth.RemoteUserAuth
 
     :param header: header to use to get the username (defaults to ``REMOTE_USER``)
-    :param headerRegex: regular expression to get the username from header value (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)").  Note that your at least need to specify a ``?P<username>`` regular expression named group.
+    :param headerRegex: regular expression to get the username from header value (defaults to ``"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")``\.
+                        Note that your at least need to specify a ``?P<username>`` regular expression named group.
     :param userInfoProvider: user info provider; see :ref:`User-Information`
 
     If the Buildbot UI is served through a reverse proxy that supports HTTP-based authentication (like apache or lighttpd), it's possible to to tell Buildbot to trust the web server and get the username from th request headers.
@@ -234,13 +236,17 @@ Currently only one provider is available:
         :param bind_pw: password of the ``bindUser``
         :param accountBase: the base dn (distinguished name)of the user database
         :param groupBase: the base dn of the groups database
-        :param accountPattern: the pattern for searching in the account database. This must contain the ``%(username)s`` string, which is replaced by the searched username
-        :param groupMemberPattern: the pattern for searching in the group database. This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
+        :param accountPattern: the pattern for searching in the account database.
+                               This must contain the ``%(username)s`` string, which is replaced by the searched username
+        :param groupMemberPattern: the pattern for searching in the group database.
+                                   This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
         :param accountFullName: the name of the field in account ldap database where the full user name is to be found.
         :param accountEmail: the name of the field in account ldap database where the user email is to be found.
         :param groupName: the name of the field in groups ldap database where the group name is to be found.
-        :param avatarPattern: the pattern for searching avatars from emails in the account database. This must contain the ``%(email)s`` string, which is replaced by the searched email
-        :param avatarData: the name of the field in groups ldap database where the avatar picture is to be found. This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
+        :param avatarPattern: the pattern for searching avatars from emails in the account database.
+                              This must contain the ``%(email)s`` string, which is replaced by the searched email
+        :param avatarData: the name of the field in groups ldap database where the avatar picture is to be found.
+                           This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
         :param accountExtraFields: extra fields to extracts for use with the authorization policies.
 
         Example::
