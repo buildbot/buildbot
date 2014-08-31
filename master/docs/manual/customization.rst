@@ -226,7 +226,8 @@ If you have multiple projects in the same repository your split function can att
             return info
         return f
 
-Again, this is provided by default. To use it you would do this::
+Again, this is provided by default.
+To use it you would do this::
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
@@ -1069,4 +1070,7 @@ Putting it in a file in a system-wide shared library directory (3) makes it avai
 Getting it into the buildbot's upstream repository (4) makes it available for any buildmasters that anyone in the world might be running.
 It's all a matter of how widely you want to deploy that new class.
 
-.. [#framboozle_reg] framboozle.com is still available. Remember, I get 10% :).
+.. [#framboozle_reg]
+
+   framboozle.com is still available.
+   Remember, I get 10% :).
