@@ -28,8 +28,8 @@ gulp.task "publish", ['default'], ->
     exec("git add .")
     exec("git commit -m " + bower_json.version)
     exec("git tag " + bower_json.version)
-    exec("git push origin gh-pages")
-    exec("git push origin " + bower_json.version)
+    exec("git push buildbot gh-pages")
+    exec("git push buildbot " + bower_json.version)
     exec("git checkout master")
 
 gulp.task "readme", ->
