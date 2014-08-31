@@ -304,17 +304,15 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
     def preStartConsumingChanges(self):
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def startTimedSchedulerService(self):
         if self.onlyIfChanged:
-            d = self.preStartConsumingChanges()
-
-            d.addCallback(lambda _:
-                          self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                                     change_filter=self.change_filter,
-                                                     onlyImportant=self.onlyImportant))
-            return d
+            yield self.preStartConsumingChanges()
+            yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                             change_filter=self.change_filter,
+                                             onlyImportant=self.onlyImportant)
         else:
-            return self.master.db.schedulers.flushChangeClassifications(self.objectid)
+            yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
