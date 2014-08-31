@@ -20,6 +20,7 @@ from buildbot.changes import filter
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
+from buildbot.util.codebase import AbsoluteSourceStampsMixin
 from collections import defaultdict
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -216,49 +217,22 @@ class BaseBasicScheduler(base.BaseScheduler):
         return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
 
-class SingleBranchScheduler(BaseBasicScheduler):
+class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
 
     def __init__(self, name, createAbsoluteSourceStamps=False, **kwargs):
-        self._lastCodebases = {}
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         BaseBasicScheduler.__init__(self, name, **kwargs)
 
-    def preStartConsumingChanges(self):
-        if self.createAbsoluteSourceStamps:
-            # load saved codebases
-            d = self.getState("lastCodebases", {})
-
-            def setLast(lastCodebases):
-                self._lastCodebases = lastCodebases
-            d.addCallback(setLast)
-            return d
-        else:
-            return defer.succeed(None)
-
+    @defer.inlineCallbacks
     def gotChange(self, change, important):
-        d = defer.succeed(None)
-
         if self.createAbsoluteSourceStamps:
-            self._lastCodebases.setdefault(change.codebase, {})
-            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+            yield self.recordChange(change)
 
-            codebaseDict = dict(repository=change.repository,
-                                branch=change.branch,
-                                revision=change.revision,
-                                lastChange=change.number)
-
-            if change.number > lastChange:
-                self._lastCodebases[change.codebase] = codebaseDict
-                d.addCallback(lambda _:
-                              self.setState('lastCodebases', self._lastCodebases))
-
-        d.addCallback(lambda _:
-                      BaseBasicScheduler.gotChange(self, change, important))
-        return d
+        yield BaseBasicScheduler.gotChange(self, change, important)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return self._lastCodebases.get(codebase, self.codebases[codebase])
+            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
         else:
             return self.codebases[codebase]
 

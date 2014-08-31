@@ -23,6 +23,7 @@ from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util import croniter
+from buildbot.util.codebase import AbsoluteSourceStampsMixin
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -267,7 +268,7 @@ class NightlyBase(Timed):
         return defer.succeed(nextdate)
 
 
-class Nightly(NightlyBase):
+class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
     compare_attrs = ('onlyIfChanged', 'fileIsImportant',
                      'change_filter', 'onlyImportant', 'createAbsoluteSourceStamps',)
 
@@ -294,12 +295,14 @@ class Nightly(NightlyBase):
             config.error(
                 "createAbsoluteSourceStamps can only be used with onlyIfChanged")
 
-        self._lastCodebases = {}
         self.onlyIfChanged = onlyIfChanged
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.fileIsImportant = fileIsImportant
         self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)
+
+    def preStartConsumingChanges(self):
+        return defer.succeed(None)
 
     def startTimedSchedulerService(self):
         if self.onlyIfChanged:
@@ -312,18 +315,6 @@ class Nightly(NightlyBase):
             return d
         else:
             return self.master.db.schedulers.flushChangeClassifications(self.objectid)
-
-    def preStartConsumingChanges(self):
-        if self.createAbsoluteSourceStamps:
-            # load saved codebases
-            d = self.getState("lastCodebases", {})
-
-            def setLast(lastCodebases):
-                self._lastCodebases = lastCodebases
-            d.addCallback(setLast)
-            return d
-        else:
-            return defer.succeed(None)
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
@@ -340,24 +331,13 @@ class Nightly(NightlyBase):
             self.objectid, {change.number: important})
 
         if self.createAbsoluteSourceStamps:
-            self._lastCodebases.setdefault(change.codebase, {})
-            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
-
-            codebaseDict = dict(repository=change.repository,
-                                branch=change.branch,
-                                revision=change.revision,
-                                lastChange=change.number)
-
-            if change.number > lastChange:
-                self._lastCodebases[change.codebase] = codebaseDict
-                d.addCallback(lambda _:
-                              self.setState('lastCodebases', self._lastCodebases))
+            d.addCallback(lambda _: self.recordChange(change))
 
         return d
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return self._lastCodebases.get(codebase, self.codebases[codebase])
+            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
         else:
             return self.codebases[codebase]
 

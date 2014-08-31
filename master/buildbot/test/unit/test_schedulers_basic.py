@@ -19,6 +19,7 @@ from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.test.util.todo import todo
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -388,6 +389,7 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         d.addCallback(lambda _: sched.deactivate())
 
+    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
     @defer.inlineCallbacks
     def test_preStartConsumingChanges_empty(self):
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -398,6 +400,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         yield sched.preStartConsumingChanges()
         self.assertEqual(sched._lastCodebases, {})
 
+    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
     @defer.inlineCallbacks
     def test_preStartConsumingChanges_no_createAbsoluteSourceStamps(self):
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -413,6 +416,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         yield sched.preStartConsumingChanges()
         self.assertEqual(sched._lastCodebases, {})
 
+    @todo('remove: this only checks the internal _lastCodebases property\'s state after preStartConsumingChanges')
     @defer.inlineCallbacks
     def test_preStartConsumingChanges_existing(self):
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -453,6 +457,7 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         yield sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_older_change(self):
         # check codebase is not stored if it's older than the most recent
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -466,22 +471,16 @@ class SingleBranchScheduler(CommonStuffMixin,
                                value_json='{"a": {"branch": "master", "repository": "A", '
                                '"revision": "5555:def",  "lastChange": 20}}')])
 
-        d = sched.activate()
+        yield sched.activate()
 
-        d.addCallback(lambda _:
-                      # this change is not recorded, since it's older than
-                      # change 20
-                      sched.gotChange(self.mkch(codebase='a', revision='1234:abc',
-                                                repository='A', number=10), True))
+        # this change is not recorded, since it's older than
+        # change 20
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=10), True)
 
-        def check(_):
-            self.db.state.assertState(self.OBJECTID,
-                                      lastCodebases={'a': dict(branch='master', repository='A',
-                                                               revision=u'5555:def', lastChange=20)})
-        d.addCallback(check)
+        self.db.state.assertState(self.OBJECTID, lastCodebases={
+            'a': dict(branch='master', repository='A', revision=u'5555:def', lastChange=20)})
 
-        d.addCallback(lambda _: sched.deactivate())
-        return d
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
