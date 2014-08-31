@@ -134,16 +134,11 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         timer_name = self.getTimerNameForChange(change)
 
-        # if we have a treeStableTimer, then record the change's importance
-        # and:
+        # if we have a treeStableTimer
         # - for an important change, start the timer
         # - for an unimportant change, reset the timer if it is running
-        d = self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
 
-        def fix_timer(_):
-            if not important and not self._stable_timers[timer_name]:
-                return
+        if important or self._stable_timers[timer_name]:
             if self._stable_timers[timer_name]:
                 self._stable_timers[timer_name].cancel()
 
@@ -152,8 +147,10 @@ class BaseBasicScheduler(base.BaseScheduler):
                 d.addErrback(log.err, "while firing stable timer")
             self._stable_timers[timer_name] = self._reactor.callLater(
                 self.treeStableTimer, fire_timer)
-        d.addCallback(fix_timer)
-        return d
+
+        # record the change's importance
+        return self.master.db.schedulers.classifyChanges(
+            self.objectid, {change.number: important})
 
     @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
@@ -188,12 +185,10 @@ class BaseBasicScheduler(base.BaseScheduler):
     @util.deferredLocked('_stable_timers_lock')
     @defer.inlineCallbacks
     def stableTimerFired(self, timer_name):
-        # if the service has already been stopped then just bail out
-        if not self._stable_timers[timer_name]:
+        # delete this now-fired timer, if the service has already been stopped
+        # then just bail out
+        if not self._stable_timers.pop(timer_name, None):
             return
-
-        # delete this now-fired timer
-        del self._stable_timers[timer_name]
 
         classifications = \
             yield self.getChangeClassificationsForTimer(self.objectid,
