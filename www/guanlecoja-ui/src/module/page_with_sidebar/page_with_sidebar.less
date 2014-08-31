@@ -1,7 +1,11 @@
 /* Based on http://ehesp.github.io/Responsive-Dashboard/ by Elliot Hesp */
 @gl-sidebar-transition-time: 0.2s;
 @gl-sidebar-small-threshold: 600px;
-
+@gl-sidebar-width: 600px;
+.fa-45{
+        transform: rotate(45deg);
+        -webkit-transform: rotate(45deg);
+}
 .gl-page-with-sidebar {
     padding-left: 70px;
     @media (max-width: @gl-sidebar-small-threshold) {
@@ -19,9 +23,7 @@
             color: #627cb7;
         }
     }
-    /* animations */
-    transition: all @gl-sidebar-transition-time ease-out 0s;
-    &.active {
+    &.active:not(.pinned) .sidebar{
         transform: translate(180px, 0px);
         -webkit-transform: translate(180px, 0px);
        .sidebar ul {
@@ -52,8 +54,28 @@
             display: none;
         }
     }
+    &.pinned{
+         .content {
+            margin-left: 180px;
+        }
+        .sidebar {
+            margin-left: 0px;
+            left: 0px;
+        }
+    }
+    // use ngAnimate for the sidebar
+    &.active-add, &.active-remove {
+        // ngAnimate wants an animation on the object it watches
+        //  even if it is not actually animated
+        transition: all @gl-sidebar-transition-time ease-out 0s;
+        .sidebar {
+            transition: all @gl-sidebar-transition-time ease-out 0s;
+
+        }
+    }
     /* sidebar */
     .sidebar {
+        z-index:3000;
         user-select: none;
         -moz-user-select: none;
         -webkit-user-select: none;
@@ -176,9 +198,12 @@
     }
     /* content */
     .content {
+        transition: margin-left @gl-sidebar-transition-time ease-out 0s;
         padding-left: 0px;
         margin-left: 0px;
-        width: 100%;
+        right:0px;
         height: auto;
+        overflow-y: visible;
     }
+    overflow-y: visible;
 }

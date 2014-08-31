@@ -32,7 +32,7 @@ class GlMenu extends Provider
 
         for name, group of @groups
             # if a group has only no item, we juste delete it
-            if group.items.length == 0
+            if group.items.length == 0 and not group.separator
                 delete @groups[name]
             # if a group has only one item, then we put the group == the item
             else if group.items.length == 1

@@ -12,6 +12,7 @@ class GlPageWithSidebar extends Directive
 
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout) ->
+        @sidebarPinned = false
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
@@ -39,7 +40,7 @@ class _glPageWithSidebar extends Controller
             @$timeout.cancel(@timeout)
             @timeout = undefined
         @timeout = @$timeout (=>
-            unless @inSidebar
+            unless @inSidebar or @sidebarPinned
                 @sidebarActive = false
                 @activeGroup = null
             ), 500

@@ -16,7 +16,7 @@ gulp.task "publish", ['default'], ->
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.1.2"
+        version: "1.2.0"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
@@ -32,8 +32,10 @@ gulp.task "publish", ['default'], ->
     exec("git push origin " + bower_json.version)
     exec("git checkout master")
 
+gulp.task "readme", ->
+    gulp.src("Readme.md").pipe gulp.dest(config.dir.build)
 
-module.exports =
+config =
 
     ### ###########################################################################################
     #   Name of the module
@@ -82,14 +84,18 @@ module.exports =
             'underscore.string':
                 version: "~2.3.3"
                 files: 'lib/underscore.string.js'
-            "font-awesome":
-                version: "~4.1.0"
-                files: []
-            "bootstrap":
-                version: "~3.1.1"
-                files: []
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG
                 files: "angular-mocks.js"
+            "angular-sanitize":
+                version: ANGULAR_TAG
+                files: "angular-sanitize.js"
+            "showdown":
+                version: '0.3.1'
+                files: "compressed/showdown.js"
 
+    buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
+        'index', 'tests', 'generatedfixtures', 'fixtures', 'vendors', 'templates', 'readme']
+
+module.exports = config
