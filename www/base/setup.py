@@ -17,9 +17,11 @@
 
 try:
     from buildbot_pkg import setup_www_plugin
+    import mock, buildbot
 except ImportError:
+    from setuptools import  setup
     import sys
-    print >> sys.stderr, "Please install buildbot_pkg module in order to install that package, or use the pre-build .whl modules available on pypi"
+    print >> sys.stderr, "Please install buildbot, buildbot_pkg, and mock modules in order to install that package, or use the pre-build .whl modules available on pypi"
     sys.exit(1)
 
 setup_www_plugin(
@@ -27,6 +29,7 @@ setup_www_plugin(
     description='Buildbot UI',
     author=u'Pierre Tardy',
     author_email=u'tardyp@gmail.com',
+    setup_requires=['buildbot', 'buildbot_pkg', 'mock'],
     url='http://buildbot.net/',
     license='GNU GPL',
     packages=['buildbot_www'],

@@ -109,9 +109,9 @@ describe 'Waterfall view controller', ->
         testBuild =
             complete: false
             started_at: 0
-        expect(w.result(testBuild)).toBe('pending')
+        expect(w.getResultClassFromThing(testBuild)).toBe('pending')
         testBuild.complete = true
-        expect(w.result(testBuild)).toBe('unknown')
+        expect(w.getResultClassFromThing(testBuild)).toBe('unknown')
         results =
             0: 'success'
             1: 'warnings'
@@ -121,4 +121,4 @@ describe 'Waterfall view controller', ->
             5: 'cancelled'
         for i in [0..5]
             testBuild.results = i
-            expect(w.result(testBuild)).toBe(results[i])
+            expect(w.getResultClassFromThing(testBuild)).toBe(results[i])

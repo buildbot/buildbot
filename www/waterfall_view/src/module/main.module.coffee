@@ -191,7 +191,7 @@ class Waterfall extends Controller
     ###
     # Returns the result string of a builder, build or step
     ###
-    result: (b) ->
+    getResultClassFromThing: (b) ->
         if not b.complete and b.started_at >= 0
             result = 'pending'
         else
@@ -211,7 +211,6 @@ class Waterfall extends Controller
     drawXAxis: ->
         x = @scale.getX(@builders, @getInnerWidth())
         builderName = @scale.getBuilderName(@builders)
-        color = @result
 
         # Remove old axis
         @header.select('.axis.x').remove()
@@ -252,7 +251,7 @@ class Waterfall extends Controller
             .attr('x2', 0)
             .attr('y1', x.rangeBand() / 2)
             .attr('y2', - x.rangeBand() / 2)
-            .attr('class', color)
+            .attr('class', self.getResultClassFromThing)
             .classed('stroke', true)
 
     # Y axis tick values
@@ -328,7 +327,6 @@ class Waterfall extends Controller
     drawBuilds: ->
         x = @scale.getX(@builders, @getInnerWidth())
         y = @scale.getY(@groups, @c.gap, @getInnerHeight())
-        color = @result
 
         # Remove previous elements
         @chart.selectAll('.builder').remove()
@@ -351,7 +349,7 @@ class Waterfall extends Controller
 
         # Draw rectangle for each build
         builds.append('rect')
-            .attr('class', color)
+            .attr('class', self.getResultClassFromThing)
             .attr('width', x.rangeBand())
             .attr('height', (build) -> y(build.started_at) - y(build.complete_at))
             .classed('fill', true)
@@ -431,7 +429,7 @@ class Waterfall extends Controller
                 .append('text')
                     .attr('y', (step, i) -> 15 * (i + 1))
                     .attr('x', if r then 30 else 10)
-                    .attr('class', (step, i) -> self.result(step))
+                    .attr('class', self.getResultClassFromThing)
                     .classed('fill', true)
                     .transition().delay(100)
                     # Text format
