@@ -36,7 +36,8 @@ define(function (require) {
 
             realtimePages.initRealtime(realtimeFunctions);
 
-            helpers.selectBuildsAction($tbPendingBuildsTable, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
+            helpers.selectBuildsAction($tbPendingBuildsTable, false, '/buildqueue/_selected/cancelselected',
+                'cancelselected=', rtTable.table.rtfGenericTableProcess);
 
             //Setup run build
             popup.initRunBuild($(".custom-build"));

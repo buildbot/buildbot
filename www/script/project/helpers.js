@@ -184,7 +184,7 @@ define(function (require) {
             });
 
         },
-        selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters) { // check all in tables and perform remove action
+        selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters, updateFunc) { // check all in tables and perform remove action
 
             if ($table === undefined) {
                 $table = $('#tablesorterRt');
@@ -212,8 +212,7 @@ define(function (require) {
                         //TODO: Remove this so that we can update with a URL that only returns
                         //the new ones
                         if (dontUpdate === false) {
-                            $dataTable.fnClearTable();
-                            $dataTable.fnAddData(data);
+                            updateFunc($dataTable, data);
                         }
 
                         selectAll.prop('checked', false);

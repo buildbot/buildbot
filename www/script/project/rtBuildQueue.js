@@ -23,7 +23,8 @@ define(function (require) {
             realtimeFunctions.queue = rtBuildQueue.processBuildQueue;
             realtimePages.initRealtime(realtimeFunctions);
             // check all in tables and remove builds
-            helpers.selectBuildsAction($tbSorter, '', '/buildqueue/_selected/cancelselected', 'cancelselected=');
+            helpers.selectBuildsAction($tbSorter, false, '/buildqueue/_selected/cancelselected', 'cancelselected=',
+                rtTable.table.rtfGenericTableProcess);
 
         },
         processBuildQueue: function (data) {
