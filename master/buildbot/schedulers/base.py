@@ -407,11 +407,15 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
             ss.update(sourcestamps.get(codebase,{}))
 
             # add sourcestamp to the new setid
+            revision = ss.get('revision', None)
+            if revision is not None:
+                revision = revision.strip()
+
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
                         repository=ss.get('repository', None),
                         branch=ss.get('branch', None),
-                        revision=ss.get('revision', None).strip(),
+                        revision=revision,
                         project=ss.get('project', ''),
                         changeids=[c['number'] for c in ss.get('changes', [])],
                         patch_body=ss.get('patch_body', None),
