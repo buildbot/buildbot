@@ -5,7 +5,7 @@
 * @section framework
 * @author Sumon Holm
 */
- 
+
 // Colors
   
 // Generics
@@ -40,7 +40,7 @@ retry #DDD7DD $color-white "Retry";
 	@include colorBlindBackground (nth($colorvar, 1), nth($colorvar, 2), nth($colorvar, 3),nth($colorvar, 4), $overriden-color);
 }
 
-.table-1 tr .success:first-child {
+.table-katana tr .success:first-child {
 	border-top:none;
 }
 

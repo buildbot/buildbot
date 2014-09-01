@@ -12,7 +12,7 @@
 @import "compass";
 @import "bootstrap/variables";
 @import "bootstrap/bootstrap";
-
+@import "bootstrap-theme";
 @import "modules/base";
 
 // ---------------------------------------------------------------------------
@@ -37,5 +37,5 @@
 @import "modules/page-elements/popups";
 @import "modules/page-elements/main";
 @import "modules/page-elements/toastr";
-@import "testreport"; 
-@import "bootstrap-theme";
+@import "testreport";
+

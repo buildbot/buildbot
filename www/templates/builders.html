@@ -1,35 +1,33 @@
-  {% extends 'layout.html' %}
-  {% import 'forms.html' as forms %}
-  {% import 'submenu.html' as submenu %}
-  {% from 'build_line.html' import build_table %}
-  {% from "box_macros.html" import box %}
-  
-  {% set bodyId = 'id="builders_page"' %}
+{% extends 'layout.html' %}
+{% import 'forms.html' as forms %}
+{% import 'submenu.html' as submenu %}
+{% from 'build_line.html' import build_table %}
+{% from "box_macros.html" import box %}
 
-  {% block submenu %}
-  
-    {{submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='', selectedProject=selectedproject)}}
-  {% endblock %}
+{% set bodyId = 'id="builders_page"' %}
 
-  {% block content %}
-<table data-default-sort-col="0" id="tablesorterRt" class="table-1 first-child tablesorter builders-table input-js initjson">
-    <thead>
+{% block submenu %}
+
+    {{ submenu.buildsubmenu(active_page="builders", pathNum=3, codebasesPath=path_to_codebases, builderName='', buildNumber='', stepName='', selectedProject=selectedproject) }}
+{% endblock %}
+
+{% block content %}
+    <table data-default-sort-col="0" id="tablesorterRt"
+           class="table first-child tablesorter builders-table input-js initjson table-katana">
+        <thead>
         <tr>
-            <th class="txt-align-left">Builder</th>
-            <th class="txt-align-left">Current jobs</th>
-            <th class="txt-align-left">Last run</th>
-            <th class="th4">Status</th>
-            <th class="th4">Shortcuts</th>
-            <th class="txt-align-left">Revision</th>
-            <th class="txt-align-left">Build Time</th>
-
-            <th class="no-tablesorter-js">
-            Run build
-            </th>
+            <th>Builder</th>
+            <th>Current jobs</th>
+            <th>Last run</th>
+            <th>Status</th>
+            <th>Shortcuts</th>
+            <th>Revision</th>
+            <th>Build Time</th>
+            <th>Run build</th>
         </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table>
-  
-  {% endblock %}    
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+{% endblock %}

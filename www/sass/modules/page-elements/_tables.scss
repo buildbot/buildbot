@@ -77,8 +77,13 @@ ul.building {
     -webkit-overflow-scrolling: touch;
 }
 
-.table-1,
-.table-2 {
+@media (min-width: $screen-md-min) {
+    .table-wrapper {
+        overflow: visible;
+    }
+}
+
+.table-katana {
     width: 100%;
     background-color: #fff;
     font-size: 12px;
@@ -94,17 +99,26 @@ ul.building {
     .txt-align-right {
         text-align: right;
     }
-    th {
-        width: 130px !important;
-        @media (min-width: $screen-lg-min) {
-            width: inherit !important;
-        }
+    tr th {
+        border-bottom: none;
+        line-height: inherit;
+        vertical-align: inherit;
+    }
+    tr th:first-child {
+        @include border-radius(4px 4px 0 0);
+        border-left: 1px solid #fff;
+    }
+    tr th:last-child {
+        @include border-radius(4px 4px 0 0);
+        border-right: 1px solid #fff;
+    }
+    tr th {
         text-align: center;
-        padding: 15px 10px;
-        //background-color:#EEF0F5;
+        padding: 15px 10px !important;
         background-color: #DDE3EA;
         @include text-shadow(0 1px 0 #fff);
-        border-top: 1px solid #FFF;
+        border-top: 1px solid #FFF !important;
+        border-bottom: none !important;
     }
     tbody tr {
         &:hover {
@@ -112,23 +126,16 @@ ul.building {
             @include box-shadow(0 0px 12px #FFFFFF inset);
         }
     }
-    tr th:first-child {
-        @include border-radius(4px 4px 0 0);
-    }
-    tr th:last-child {
-        @include border-radius(4px 4px 0 0);
-    }
     td {
         text-align: center;
-        padding: 15px 10px;
-        border-bottom: 1px solid #C8C8C8;
+        padding: 15px 10px !important;
+        border-top: 1px solid #C8C8C8 !important;
         &.buttontd {
             width: 80px;
         }
     }
 
     tr:last-child td {
-
         border-bottom: none;
     }
     tr:first-child td {
@@ -141,20 +148,20 @@ ul.building {
     }
 }
 
-.column .table-1 {
+.column .table-katana {
     margin-bottom: 20px;
 }
 
-.table-1.first-child tr td:first-child,
-.table-1.first-child tr th:first-child {
+.table-katana.first-child tr td:first-child,
+.table-katana.first-child tr th:first-child {
     padding-left: 15px;
 }
 
-.table-1.first-child tr th:first-child {
+.table-katana.first-child tr th:first-child {
     border-left: 1px solid #fff;
 }
 
-.table-1 {
+.table-katana {
     .more-info:after {
         display: inline-block;
     }
@@ -167,10 +174,13 @@ ul.building {
     }
 }
 
-.table-2 {
+.table-stripes {
     td,
     th {
-        text-align: left;
+        text-align: left !important;
+    }
+    tr:first-child td {
+        border-top: none !important;
     }
     tr td:first-child {
         padding-left: 15px;
@@ -512,7 +522,7 @@ table.codebase-branch-table {
     }
 }
 
-.row .table-1 {
+.row .table-katana {
     margin-bottom: 20px;
 }
 
@@ -659,12 +669,7 @@ table.codebase-branch-table {
     }
 }
 
-@media (min-width: $screen-lg-min) {
-    .table-wrapper {
-        overflow: visible;
-    }
 
-}
 
 tr.italic {
     font-style: italic;

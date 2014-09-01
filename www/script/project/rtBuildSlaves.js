@@ -31,12 +31,12 @@ define(function (require) {
             var options = {};
 
             options.aoColumns = [
-                { "mData": null, "bSortable": true},
-                { "mData": null, "bSortable": false},
-                { "mData": null, "bSortable": true},
-                { "mData": null },
-                { "mData": null },
-                { "mData": null }
+                { "mData": null, "bSortable": true, "sWidth": "10%"},
+                { "mData": null, "bSortable": false, "sWidth": "5%"},
+                { "mData": null, "bSortable": true, "sWidth": "10%"},
+                { "mData": null, "sWidth": "10%"},
+                { "mData": null, "sWidth": "10%" },
+                { "mData": null, "sWidth": "5%" }
             ];
 
             options.aoColumnDefs = [

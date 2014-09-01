@@ -92,8 +92,30 @@
     }
 }
 
-.log-main .table-1 {
+.log-main .table-katana {
 	margin-bottom: 44px;
+}
+
+.table-katana .first-child {
+    padding-left: 15px;
+}
+
+.table-katana {
+    table-layout: fixed;
+    width: 100%;
+    td {
+        word-wrap: break-word;
+    }
+    tr td:first-child .failure-detail-txt {
+        padding-top: 10px;
+        padding-left: 15px;
+        font-family: "Courier New";
+        overflow: auto;
+        white-space: pre;
+        max-height: 130px;
+        position: absolute;
+        width: 1445px;
+    }
 }
 
 .log-main .top-menu-container {	 
@@ -138,20 +160,11 @@
 }
 .link-1 {font-weight:bold;}
 
-.table-1 .first-child {
-	padding-left:15px;
-}
-
 .tablesorter .first-child,
 .case-names {
 	font-weight:bold;
 }
-.table-1 {
-	table-layout: fixed; 
-	width: 100%;
-}
 
-.table-1 td {word-wrap: break-word;}
 
 .back-to-detail {
 	display:block;
@@ -171,17 +184,6 @@ span.uncovered {
 span.ignored {background: #ffff00;}
 	 
 .Failure {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
-
-.table-1 tr td:first-child .failure-detail-txt {
-    padding-top: 10px;
-	padding-left: 15px;
-	font-family:"Courier New";
-    overflow: auto;
-    white-space: pre;
-    max-height: 130px;
-    position:absolute;
-    width: 1445px;
-}
  
 .failure-detail-cont {
 	vertical-align:top;

@@ -92,7 +92,7 @@ define(function (require) {
                 { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
                 { "mData": null, "sTitle": "Revision", "sWidth": "30%" },
                 { "mData": null, "sTitle": "Author", "sWidth": "5%"},
-                { "mData": null, "sTitle": hbCells({showInputField: true, text: 'Select all', inputId: 'selectAll'}), "sWidth": "5%", "sClass": "select-input", 'bSortable': false}
+                { "mData": null, "sTitle": hbCells({showInputField: true, text: '', inputId: 'selectAll'}), "sWidth": "7%", "sClass": "select-input", 'bSortable': false}
             ];
 
             options.aoColumnDefs = [

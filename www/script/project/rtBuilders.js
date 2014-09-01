@@ -35,13 +35,13 @@ define(function (require) {
 
             options.aoColumns = [
                 { "mData": null, "sWidth": "20%" },
-                { "mData": null, "sWidth": "15%" },
-                { "mData": null, "sWidth": "10%", "sType": "number-ignore-zero" },
+                { "mData": null, "sWidth": "10%" },
+                { "mData": null, "sWidth": "15%", "sType": "number-ignore-zero" },
                 { "mData": null, "sWidth": "15%", "sType": "builder-status" },
                 { "mData": null, "sWidth": "5%", "bSortable": false  },
                 { "mData": null, "sWidth": "15%", "bSortable": false  },
-                { "mData": null, "sWidth": "10%", "sType": "natural" },
-                { "mData": null, "sWidth": "10%", "bSortable": false }
+                { "mData": null, "sWidth": "5%", "sType": "natural" },
+                { "mData": null, "sWidth": "5%", "bSortable": false }
             ];
 
             options.aoColumnDefs = [

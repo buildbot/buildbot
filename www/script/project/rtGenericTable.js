@@ -97,6 +97,10 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-right" : className,
                 "mRender": function (data, type, full) {
+                    if (full.builderFriendlyName !== undefined) {
+                        full.url = full.builder_url;
+                        full.friendly_name = full.builderFriendlyName;
+                    }
                     return hb.partials.cells["cells:builderName"](full);
                 }
             };
