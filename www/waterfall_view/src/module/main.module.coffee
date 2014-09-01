@@ -60,9 +60,9 @@ class Waterfall extends Controller
             @dataService.addStatus(@builders)
 
             # Select containers
-            @container = @d3.select('.svg-container')
-            @header = @d3.select('.header-content')
             @waterfall = @d3.select('.waterfall')
+            @container = @waterfall.select('.svg-container')
+            @header = @waterfall.select('.header-content')
             # Append svg elements to the containers
             @createElements()
 
@@ -72,6 +72,12 @@ class Waterfall extends Controller
             @loading = false
 
             # Render on resize
+            @$scope.$watch(
+                => @waterfall.style('width')
+            ,
+                (n, o) => if n != o then @render()
+            , true
+            )
             angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
@@ -138,7 +144,7 @@ class Waterfall extends Controller
         if @c.minColumnWidth > 0 and @c.maxColumnWidth > 0 and @c.minColumnWidth <= @c.maxColumnWidth
             columnWidth = (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length
 
-            narrower =  columnWidth <= @c.maxColumnWidth
+            narrower = columnWidth <= @c.maxColumnWidth
             wider = @c.minColumnWidth <= columnWidth
 
             width =
@@ -147,6 +153,9 @@ class Waterfall extends Controller
                     "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
                 else
                     "#{@builders.length * @c.maxColumnWidth + @c.margin.right + @c.margin.left}px"
+
+            @waterfall.select('.inner-content').style('width', width)
+            @waterfall.select('.header-content').style('width', width)
 
         else
             @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}\n\t max: #{@c.maxColumnWidth}"
