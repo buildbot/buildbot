@@ -1,5 +1,5 @@
 {
-  "author": "Simon Nielsen",
+  "author": "Unity Technologies",
   "name": "katanaGruntProject",
   "version": "0.0.0",
   "devDependencies": {
@@ -15,6 +15,7 @@
     "requirejs": "~2.1.14",
     "karma-requirejs": "~0.2.2",
     "grunt-karma": "~0.8.3",
-    "karma-coverage": "~0.2.4"
+    "karma-coverage": "~0.2.4",
+    "grunt-contrib-handlebars": "~0.8.0"
   }
 }
