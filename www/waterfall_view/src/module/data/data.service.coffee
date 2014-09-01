@@ -37,6 +37,8 @@ class Data extends Service
         for builder in builders
             latest = null
             for build in builder.builds
-                latest ?= build
+                latest = build
                 if build.number > latest.number then latest = build
-            builder.results = latest?.results or 'pending'
+            builder.started_at = latest?.started_at
+            builder.complete = latest?.complete or false
+            builder.results = latest?.results
