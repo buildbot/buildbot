@@ -27,7 +27,7 @@ define(["main"], function () {
                         maybeScroll($scrollOpt.prop("checked"));
                     }
                 });
-            }, 50);
+            }, 200);
         });
 
         //Show body
