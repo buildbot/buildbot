@@ -55,10 +55,11 @@
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, config, coverage, dev, error_handler, prod, script_sources, _ref;
+    var buildConfig, config, coverage, dev, error_handler, notests, prod, script_sources, _ref;
     prod = __indexOf.call(argv._, "prod") >= 0;
     dev = __indexOf.call(argv._, "dev") >= 0;
     coverage = argv.coverage;
+    notests = argv.notests;
     config = require("./defaultconfig.coffee");
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
@@ -73,6 +74,9 @@
     require('rimraf').sync(config.dir.build);
     if (coverage) {
       require('rimraf').sync(config.dir.coverage);
+    }
+    if (notests) {
+      config.testtasks = [];
     }
     error_handler = function(e) {
       var error;
@@ -232,6 +236,7 @@
       return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);
     });
     gulp.task("dev", ['default', 'watch', "server"]);
+    gulp.task("prod", ['default']);
     return gulp.task("prod", ['default']);
   };
 

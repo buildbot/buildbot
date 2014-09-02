@@ -20,7 +20,7 @@ version of Guanlecoja, and the greatest build tools will automatically be synchr
 In order to make this promise, Guanlecoja needs to make some decision for you.
 This is why it defines the languages and framework you use, and the organization of your project.
 
-Guanlecoja best practices are well descibed in https://medium.com/@dickeyxxx/266c1a4a6917
+Guanlecoja best practices are well described in https://medium.com/@dickeyxxx/266c1a4a6917
 
 ### yo
 
@@ -50,7 +50,7 @@ create a "guanlecoja/config.coffee" with the configuration variables:
     #   This module contains all configuration for the build process
     #
     ### ###############################################################################################
-    module.exports =
+    config =
 
         ### ###########################################################################################
         #   Directories
@@ -61,54 +61,63 @@ create a "guanlecoja/config.coffee" with the configuration variables:
 
 
     ### ###########################################################################################
-    #   Bower dependancies configuration
+    #   Bower dependencies configuration
     ### ###########################################################################################
-    bower:
-        # JavaScript libraries (order matters)
-        deps:
-            jquery:
-                version: '~2.1.1'
-                files: 'dist/jquery.js'
-            angular:
-                version: ANGULAR_TAG
-                files: 'angular.js'
-            "angular-animate":
-                version: ANGULAR_TAG
-                files: 'angular-animate.js'
-            "angular-bootstrap":
-                version: '~0.11.0'
-                files: 'ui-bootstrap-tpls.js'
-            "angular-ui-router":
-                version: '~0.2.10'
-                files: 'release/angular-ui-router.js'
-            lodash:
-                version: "~2.4.1"
-                files: 'dist/lodash.js'
-            'underscore.string':
-                version: "~2.3.3"
-                files: 'lib/underscore.string.js'
-            "font-awesome":
-                version: "~4.1.0"
-                files: []
-            "bootstrap":
-                version: "~3.1.1"
-                files: []
-        testdeps:
-            "angular-mocks":
-                version: ANGULAR_TAG
-                files: "angular-mocks.js"
+        bower:
+            # JavaScript libraries (order matters)
+            deps:
+                jquery:
+                    version: '~2.1.1'
+                    files: 'dist/jquery.js'
+                angular:
+                    version: '~1.2.11'
+                    files: 'angular.js'
+            testdeps:
+                "angular-mocks":
+                    version: ANGULAR_TAG
+                    files: "angular-mocks.js"
+    module.exports = config
 
-You can override more file patterns. See the defaultconfig.coffee for list of patterns available.
-Normally, only the Javascript libraries are needed to configure.
+#### config details:
 
-create a ".bowerrc" with the configuration variables:
+* `name`: name of the module. If it is not app, then the views will have their own namespace "{name}/views/{viewname}"
 
-    {"directory": "libs"}
+* `dir`: directories configuration
+* `dir.build`: directories where the build happen. There is no intermediate directory, and this points to the final destination of built files.
+* `dir.coverage`: directory where coverage results are output
 
-so that your bower dependencies are stored on side of your source code.
-You also want to configure ".gitignore", to ignore this directory.
+* `files`: file glob specifications. This is a list of globs where to find files of each types. Normally defaults are good enough
 
-Use bower.json as usual to describe your javascript libraries dependancies. You at least need angular.js > 1.2, bootstrap 3.0 and jquery.
+* `files.app`(list of globs): angular.js modules. Those have to be loaded first
+* `files.scripts`(list of globs): application scripts source code. Can be coffee or JS. built in `script.js`
+* `files.tests`(list of globs): tests source code. Can be coffee or JS. built in `tests.js`
+* `files.fixtures`(list of globs): fixtures for tests. Those fixtures can be json files, or text files, are built in `tests.js`, and populated in window.FIXTURES global variable in the test environment.
+* `files.templates`(list of globs): references the templates. All the templates are built in `scripts.js`, and loaded automatically in angularjs's template cache.
+* `files.index`: references the jade file that generates main `index.htm` entrypoint for your SPA. Your index.jade should load built `scripts.js`, and `styles.css`
+* `files.less`: references the less files. By default they can be anywhere in the source code, and are concatenated in styles.css. Order is undefined, so make sure to not have order dependent styling.
+* `files.images`: those images are just copied to `#{config.dir.build}/img`
+* `files.fonts`: those fonts are just copied to `#{config.dir.build}/fonts`
+
+* `bower`: gulp-bower-deps configuration
+* `bower.directory`: directory where js dependencies should be stored locally
+* `bower.deps`: object describing the list of js dependencies for your application. js files are concatenated either in script.js or vendor.js according to the vendors_apart configuration
+* `bower.deps.#{name}`: keys of the deps object are the registered bower package names
+* `bower.deps.#{name}.version`: version descriptor of the bower package.list
+* `bower.deps.#{name}.files`: list of files relative to package installation directory, that guanlecoja will include.
+* `bower.testdeps`: same format as `bower.deps`, but those packages will only be included in test environment.
+
+* `coffee_coverage`(boolean): Enable code coverage on coffeescript. At the moment, this restricts you to CS 1.6, so you might want to disable it. It is anyway only used when building with --coverage
+* `vendors_apart`(boolean): Put the vendor scripts apart in a `vendor.js` file. Putting third party code apart can help doing better cache control when your app is continuously deployed.
+* `templates_apart`(boolean): Put the template cache in another file.
+* `sourcemaps`(boolean): Force generation of sourcemaps even in prod mode. This is useful if you are using guanlecoja to build libs (e.g. guanlecoja.ui)
+
+* `preparetasks`(list of strings): list of tasks to do before building (like fetching bower)
+* `buildtasks`(list of strings): list of tasks for build (everything is made in parallel)
+* `testtasks`(list of strings): list of tasks for testing (done after buildtasks)
+
+* `generatedfixtures`(function): customizing endpoint for generating the fixtures
+* `ngclassify`(function): customizing endpoint for ngClassify, directly passed to gulp-ngclassify
+* `karma`(object): customized options for karma. See karma documentation for more information.
 
 ### Usage
 
@@ -118,6 +127,13 @@ Use bower.json as usual to describe your javascript libraries dependancies. You 
 
 * ``gulp prod``: Use this for production. It will generate a ready for prod build of your application, with all the javascript concatenated and minified.
 
+#### --notests
+
+In some environments where it is hard to install phantomjs, or setup xvfb (old systems, or Paas build environment), it might be suitable to just not run the tests, and only run the build part. In those case, just run:
+
+```
+gulp prod --notests
+```
 
 ### Debugging via sourcemaps.
 

@@ -41,6 +41,7 @@ module.exports =  (gulp) ->
     prod = "prod" in argv._
     dev = "dev" in argv._
     coverage = argv.coverage
+    notests = argv.notests
 
     # Load in the build config files
     config = require("./defaultconfig.coffee")
@@ -62,6 +63,9 @@ module.exports =  (gulp) ->
 
     if coverage
         require('rimraf').sync(config.dir.coverage)
+
+    if notests
+        config.testtasks = []
 
     error_handler = (e) ->
         error = gutil.colors.bold.red;
@@ -272,6 +276,9 @@ module.exports =  (gulp) ->
             callback
 
     gulp.task "dev", ['default', 'watch', "server"]
+
+    # prod is a fake task, which enables minification and
+    gulp.task "prod", ['default']
 
     # prod is a fake task, which enables minification
     gulp.task "prod", ['default']
