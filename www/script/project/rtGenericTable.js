@@ -354,7 +354,10 @@ define(function (require) {
         rtfGenericTableProcess: function ($table, data) {
             timeElements.clearTimeObjects($table);
             helpers.clearChildEvents($table);
-            $table.fnClearTable(false);
+
+            // Remove all cells manually making sure events are correctly removed
+            $table.find("tbody tr :not([class=dataTables_empty])").remove();
+            $table.fnClearTable(true);
 
             try {
                 $table.fnAddData(data);
