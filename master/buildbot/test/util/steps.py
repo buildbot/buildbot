@@ -256,7 +256,6 @@ class BuildStepMixin(object):
                                status_text=self.step_status.status_text)
             self.assertEqual(got_outcome['result'], self.exp_outcome['result'],
                              "expected step outcome")
-            warnings.warn("expectOutcome's second argument ignored; fix after 0.8.9 release")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
