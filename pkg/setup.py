@@ -19,7 +19,7 @@ from setuptools import setup
 import buildbot_pkg
 
 setup(
-    name='buildbot_pkg',
+    name='buildbot-pkg',
     version=buildbot_pkg.getVersion("."),
     description='Buildbot packaging tools',
     author=u'Pierre Tardy',
