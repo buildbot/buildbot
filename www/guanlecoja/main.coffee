@@ -65,7 +65,7 @@ module.exports =  (gulp) ->
         require('rimraf').sync(config.dir.coverage)
 
     if notests
-        config.testtasks = []
+        config.testtasks = ["notests"]
 
     error_handler = (e) ->
         error = gutil.colors.bold.red;
@@ -270,6 +270,9 @@ module.exports =  (gulp) ->
 
         gulp.src karmaconf.files
             .pipe karma(karmaconf)
+
+    gulp.task "notests", ->
+        null
 
     gulp.task "default", (callback) ->
         run_sequence config.preparetasks, config.buildtasks, config.testtasks,

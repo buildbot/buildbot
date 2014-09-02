@@ -76,7 +76,7 @@
       require('rimraf').sync(config.dir.coverage);
     }
     if (notests) {
-      config.testtasks = [];
+      config.testtasks = ["notests"];
     }
     error_handler = function(e) {
       var error;
@@ -231,6 +231,9 @@
         }
       }
       return gulp.src(karmaconf.files).pipe(karma(karmaconf));
+    });
+    gulp.task("notests", function() {
+      return null;
     });
     gulp.task("default", function(callback) {
       return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);
