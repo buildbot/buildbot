@@ -28,10 +28,10 @@ $cb-lightness: 40%;
   .color-blind-mode {
     .#{$classname} {
       @if $color-blind-color {
-        background-color: $color-blind-color;
+        background-color: $color-blind-color !important;
       }
       @else {
-        background-color: change-color($color, $saturation: $cb-saturation, $lightness: $cb-lightness);
+        background-color: change-color($color, $saturation: $cb-saturation, $lightness: $cb-lightness)  !important;
       }
     }
     @if $text-color {
