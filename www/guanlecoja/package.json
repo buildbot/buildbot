@@ -44,7 +44,7 @@
     "connect": "~2.12.0",
     "event-stream": "3.x",
     "gulp-angular-templatecache": "~1.2.1",
-    "gulp-bower-deps": "~0.1.0",
+    "gulp-bower-deps": "~0.2.0",
     "gulp-cached": "~1.0.1",
     "gulp-coffee": "~2.1.1",
     "gulp-concat": "~2.3.3",
@@ -79,7 +79,7 @@
   "engines": {
     "node": "~0.8 || ~0.10"
   },
-  "version": "0.2.11",
+  "version": "0.2.12",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}
