@@ -966,6 +966,14 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=self._reactor.seconds())
         return defer.succeed(None)
 
+    def getUnclaimedBuildRequest(self, sorted=False):
+
+        rv = []
+        for bs in self.reqs.values():
+            rv.append(dict(brid=bs.id, buildername=bs.buildername, reason=bs.reason))
+
+        return rv
+
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
         claimed = mine = False

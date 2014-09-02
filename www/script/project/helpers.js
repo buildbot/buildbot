@@ -1,7 +1,14 @@
-/*global define, requirejs*/
-define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], function ($, screenSize, Mustache, extendMoment, timeElements) {
+/*global define*/
+define(function (require) {
 
     "use strict";
+    var $ = require('jquery'),
+        screenSize = require('screensize'),
+        timeElements = require('timeElements'),
+        queryString = require("libs/query-string");
+
+    require('extend-moment');
+
     var helpers,
         css_class_enum = {},
         css_classes = {
@@ -36,53 +43,13 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
 
     helpers = {
         init: function () {
-            /*
-             // only for testing
-             $('<div/>').addClass('windowsize').css({'position': 'absolute', 'fontSize': '20px'}).prependTo('body');
-
-             var ws = $(window).width() + ' ' +  $(window).height();
-
-             $('.windowsize').html(ws);
-
-             $(window).resize(function(event) {
-             ws = $(window).width() + ' ' +  $(window).height();
-             $('.windowsize').html(ws);
-             });
-             */
             // Set the currentmenu item
             helpers.setCurrentItem();
-
-            // Authorize on every page
-            helpers.authorizeUser();
 
             if ($('#buildslave_page').length) {
                 // display the number of current jobs
                 helpers.displaySum($('#currentJobs'), $('#runningBuilds_onBuildslave').find('li'));
             }
-
-            // keyboard shortcuts
-            /*
-             $('body').keyup(function(event) {
-
-             // p
-             if (event.which === 80) {
-             location.href = '/projects'
-             }
-             // q
-             if (event.which === 81) {
-             location.href = '/buildqueue'
-             }
-             // s
-             if (event.which === 83) {
-             location.href = '/buildslaves'
-             }
-             // h
-             if (event.which === 72) {
-             location.href = '/'
-             }
-
-             });
-             */
 
             // submenu overflow on small screens
             helpers.menuItemWidth(screenSize.isMediumScreen());
@@ -114,9 +81,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
             // parse reason string on the buildqueue page
             helpers.parseReasonString();
 
-            $('#authUserBtn').click(function () {
-                helpers.eraseCookie('fullName1', '', 'eraseCookie');
-            });
             helpers.tooltip($('.tooltip'));
 
         },
@@ -130,8 +94,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 var $elem = $(el),
                     $toolTipCont = $("<div/>").addClass("tooltip-cont"),
                     clickEvent;
-
-
 
                 $elem.hover(function (e) {
                     var title,
@@ -178,14 +140,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 });
             });
         },
-        authorizeUser: function () {
-            // Force a user to login
-            var url = window.location;
-            if (helpers.getCookie("BuildBotSession") === '') {
-                // Redirect to loginpage if missing namecookie
-                window.location = "/login";
-            }
-        },
         setCurrentItem: function () {
 
             var path = window.location.pathname.split("\/");
@@ -230,7 +184,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
             });
 
         },
-        selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters) { // check all in tables and perform remove action
+        selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters, updateFunc) { // check all in tables and perform remove action
 
             if ($table === undefined) {
                 $table = $('#tablesorterRt');
@@ -258,8 +212,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                         //TODO: Remove this so that we can update with a URL that only returns
                         //the new ones
                         if (dontUpdate === false) {
-                            $dataTable.fnClearTable();
-                            $dataTable.fnAddData(data);
+                            updateFunc($dataTable, data);
                         }
 
                         selectAll.prop('checked', false);
@@ -342,42 +295,30 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 }
             });
         },
-        codeBaseBranchOverview: function (El) {
+        codeBaseBranchOverview: function (El, compareURL) {
+            if (El !== undefined && location.search.length > 0) {
+                var KT = require('precompiled.handlebars'),
+                    args = queryString.parse(location.search),
+                    branches = {compareURL: compareURL, codebases: []};
 
-            var decodedUri = decodeURIComponent(window.location.search);
-            var parsedUrl = decodedUri.split('&');
-            var cbTable = $('<div class="border-table-holder col-xs-10"><div id="overScrollJS" class="inner-table-holder">' +
-                '<table class="codebase-branch-table"><tr class="codebase"><th>Codebase' +
-                '</th></tr><tr class="branch"><th>Branch</th></tr></table></div></div>');
-
-            cbTable.appendTo(El);
-
-            $(parsedUrl).each(function (i) {
-
-                // split key and value
-                var eqSplit = this.split("=");
-
-                if (eqSplit[0].indexOf('_branch') > 0) {
-
-                    // seperate branch
-                    var codeBases = this.split('_branch')[0];
-                    // remove the ? from the first codebase value
-                    if (i === 0) {
-                        codeBases = this.replace('?', '').split('_branch')[0];
+                // Fix up the data so it can be consumed by handlebars
+                var count = 0;
+                $.each(args, function (name, branch) {
+                    if (name.indexOf("_branch") > -1) {
+                        var cbName = name.replace("_branch", "");
+                        branches.codebases[count] = {"codebase": cbName, "branch": branch};
+                        count += 1;
                     }
+                });
 
-                    var branches = this.split('=')[1];
-
-                    $('tr.codebase').append('<td>' + codeBases + '</td>');
-                    $('tr.branch').append('<td>' + branches + '</td>');
-                }
-
-            });
-
+                // Create the table and append to the given element
+                var cbTable = $(KT.partials.builders["builders:codebaseBranchesTable"](branches));
+                cbTable.appendTo(El);
+            }
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
 
-            if (isMediumScreen) {                
+            if (isMediumScreen) {
                 $('.breadcrumbs-nav').width('');
             } else {
                 var wEl = 0;
@@ -412,15 +353,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
         displaySum: function (displayEl, countEl) {
             // Insert the total length of the elements
             displayEl.text(countEl.length);
-
-        },
-        setCookie: function (name, value, eraseCookie) { // renew the expirationdate on the cookie
-
-            var today = new Date();
-            var expiry = new Date(today.getTime() + 30 * 24 * 3600 * 1000); // plus 30 days
-            var expiredate = eraseCookie === undefined ? expiry.toGMTString() : 'Thu, 01 Jan 1970 00:00:00 GMT;';
-
-            document.cookie = name + "=" + value + "; path=/; expires=" + expiredate;
 
         },
         inDOM: function (element) {
@@ -501,16 +433,6 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
                 }
             });
             return isRealtimePage;
-
-        },
-        getCookie: function (name) { // get cookie values
-            var re = new RegExp(name + "=([^;]+)");
-            var value = re.exec(document.cookie);
-            return (value !== null) ? decodeURI(value[1]) : '';
-
-        },
-        eraseCookie: function (name, value, eraseCookie) {
-            helpers.setCookie(name, value, eraseCookie);
 
         },
         closePopup: function (boxElement, clearEl) {
@@ -595,7 +517,7 @@ define(['jquery', 'screensize', 'mustache', "extend-moment", "timeElements"], fu
         clearChildEvents: function ($elem) {
             $elem.find("*").addBack().off(".katana");
         },
-        cssClassesEnum : css_class_enum
+        cssClassesEnum: css_class_enum
     };
 
     return helpers;

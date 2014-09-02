@@ -7,7 +7,7 @@ define(["jquery", "realtimePages"], function ($, rt) {
     describe("An instant JSON", function () {
 
         beforeEach(function (done) {
-            $.getScript("/base/test/instantJSON.js", function () {
+            $.getScript("/base/script/test/instantJSON.js", function () {
                 $body.append($("<script/>").attr("id", "instant-json"));
                 done();
             });
@@ -59,7 +59,7 @@ define(["jquery", "realtimePages"], function ($, rt) {
             window.WebSocket = fakeWebSocket(false);
             window.MozWebSocket = fakeWebSocket(true);
 
-            $.getScript("/base/test/instantJSON.js", function () {
+            $.getScript("/base/script/test/instantJSON.js", function () {
                 $body.append($("<script/>").attr("id", "instant-json"));
                 done();
             });

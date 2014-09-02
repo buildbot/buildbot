@@ -1,57 +1,47 @@
 <!DOCTYPE html>
-<html>
-  <head>
- 	<meta charset="utf-8">
- 	<title>Katana - login</title>
+<html style="background-color:inherit;">
+<head>
+    <meta charset="utf-8">
+    <title>Katana - login</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
+    <link rel="stylesheet" href="/prod/css/default.css" type="text/css"/>
     <link href='http://fonts.googleapis.com/css?family=Pacifico&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Leckerli+One&amp;subset=latin' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
-    <script type="text/javascript" src="/prod/script/libs/jquery.js"></script>
+    <script type="text/javascript">
+        var require = {
+            baseUrl: "/prod/script/",
+            urlArgs: "cachebust={{ version }}",
+            deps: ['main', 'login']
+        };
+        require.deps.push('');
+    </script>
 
-    <script type="text/javascript" src="/prod/script/project/login.js"></script>
+</head>
+<body class="interface">
+<div id="login_page" class="login-box more-info-box more-info-box-js">
+    <h1 class="logo">
+        <a href="/">
+            <span>K</span>atana
+        </a>
+    </h1>
 
- </head>
- <body class="interface">
- 	<div id="login_page" class="login-box more-info-box more-info-box-js">
- 		<h1 class="logo">
-      <a href="/">
-        <span>K</span>atana
-      </a>
-   </h1>
+    <p class="login-welcome-txt">
+        Welcome to Unity's BuildServer. Fill in your username and password.
+    </p>
 
- 		<p class="login-welcome-txt">
-			Welcome to Unity's BuildServer. Fill in your username and password.
-		</p>
-		<div class="auth">    
+    <div class="auth">
+        <form id="loginForm" method="post" name="login" action="{{ authenticate_url }}">
+            <input class="defaultText" id="userName" placeholder="Your username" type="text" name="username"/>
+            <input class="defaultText" id="passWord" placeholder="Your password" type="password" name="passwd"/>
 
-
-
-            <form id="loginForm" method="post" name="login" action="{{ authenticate_url }}">
-
-            
-                
-            
-            <input class="defaultText" id="userName" placeholder="Your username" type="text"  name="username" />
-            
-            <input class="defaultText" id="passWord" placeholder="Your password" type="password"  name="passwd" />
-
-                
-                
-                <div class="clear"></div>
-                <input type="submit" value="login" id="submitLogin" />    
-                <!--
-              <input type="checkbox" id="rememberMe" />      
-                <label class="checkbox-label" for="rememberMe">Remember me</label>
-              -->
-              
-
-            </form>
-          
-        </div>
- 	</div>
- </body>
- </html>
+            <div class="clear"></div>
+            <input type="submit" value="login" id="submitLogin"/>
+        </form>
+    </div>
+</div>
+<script type="text/javascript" src="/prod/script/main.js"></script>
+</body>
+</html>

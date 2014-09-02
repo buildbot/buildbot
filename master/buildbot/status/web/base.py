@@ -124,12 +124,16 @@ def path_to_root(request):
     root = "../" * segs
     return root
 
-def path_to_login(request):
-    return  path_to_root(request) + "login"
+def path_to_login(request, referer="", auth_fail=False):
+
+    args = {}
+    args["referer"] = urllib.quote(referer, safe='')
+    args["auth_fail"] = auth_fail
+    return path_to_root(request) + "login?" + urllib.urlencode(args)
 
 def path_to_authenticate(request, default_url):
-    url = request.requestHeaders.getRawHeaders('referer',[default_url])[0]
-    return "{0}/authenticate?referer={1}".format(path_to_login(request), urllib.quote(url, safe=''))
+    url = request.args.get('referer',[default_url])[0]
+    return "{0}/login/authenticate?referer={1}".format(path_to_root(request), urllib.quote(url, safe=''))
 
 def path_to_projects(request):
     return path_to_root(request) + "projects"
@@ -176,11 +180,24 @@ def codebases_to_args(codebases):
 
     return codebases_arg
 
+
 def path_to_codebases(request, projectName, codebases=True):
     codebases_arg = ''
     if codebases:
         codebases_arg = getCodebasesArg(request=request)
     return path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + codebases_arg
+
+
+def path_to_comparison(request, projectName, branches=None):
+    url = path_to_projects(request) + "/" + urllib.quote(projectName, safe='') + "/comparison"
+    if branches:
+        arg = "?builders0="
+        for name, branch in branches.iteritems():
+            arg += urllib.quote("{0}={1}".format(name, branch), safe='')
+        url += arg
+
+    return url
+
 
 def path_to_builders(request, projectName, codebases=True):
     codebases_arg = ''
@@ -240,6 +257,9 @@ def path_to_json_global_status(status, request):
 
 def path_to_json_slaves(request):
     return "json/slaves/"
+
+def path_to_json_slave(request, slaveName):
+    return "json/slaves/{0}".format(urllib.quote(slaveName, safe=''))
 
 def path_to_json_past_slave_builds(request, slaveName, number):
     codebases_arg = getCodebasesArg(request=request)
@@ -464,10 +484,20 @@ class HtmlResource(resource.Resource, ContextMixin):
 
         @defer.inlineCallbacks
         def renderPage():
-            ctx['instant_json'] = yield self.getInstantJSON(request)
-            ctx['user_settings'] = yield ctx['authz'].getAllUserAttr(request)
-            result = yield self.content(request, ctx)
-            defer.returnValue(result)
+            authz = ctx['authz']
+
+            # Is the user allowed to view this page?
+            requireLogin = self.getBuildmaster(request).config.requireLogin
+            allowed_urls = ["/login"]
+            if requireLogin is True and not authz.authenticated(request) and request.path not in allowed_urls:
+                request.redirect(path_to_login(request, str(request.URLPath())))
+                return
+            # User can view this page
+            else:
+                ctx['instant_json'] = yield self.getInstantJSON(request)
+                ctx['user_settings'] = yield authz.getAllUserAttr(request)
+                result = yield self.content(request, ctx)
+                defer.returnValue(result)
 
         d = defer.maybeDeferred(lambda : renderPage())
 
@@ -482,7 +512,8 @@ class HtmlResource(resource.Resource, ContextMixin):
             return data
         d.addCallback(handle)
         def ok(data):
-            request.write(data)
+            if data is not None:
+                request.write(data)
             try:
                 request.finish()
             except RuntimeError:

@@ -1,39 +1,21 @@
-{% macro page_header() %}
+{% macro page_header(version) %}
 <html>
 <head>
 <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
-<script src="/prod/script/libs/jquery.js"></script>
-<script src="/prod/script/libs/iframeResizer.contentWindow.min.js"></script>
 
 <script type="text/javascript">
-    "use strict";
-
-    $("document").ready(function() {
-        setTimeout(function() {
-            var removePadding = function removePadding() {
-                if (window.parentIFrame !== undefined) {
-                    $("pre.code").css("padding-left", 0);
-                    return true;
-                }
-                return false;
-            };
-
-
-            if (!removePadding()) {
-                var i = setInterval(function () {
-                    if (removePadding()) {
-                        clearInterval(i);
-                    }
-                }, 1000);
-            }
-        }, 300);
-    });
-
+    var require = {
+        baseUrl: "/prod/script/",
+        urlArgs: "cachebust={{ version }}",
+        deps: ['main', 'buildLogiFrame']
+    };
+    require.deps.push('');
 </script>
+<script src="/prod/script/main.js"></script>
 
 </head>
 	<body class="interface">
-		<pre class="code">			
+		<pre class="code">
 
 		{% endmacro %}
 

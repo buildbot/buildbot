@@ -28,16 +28,17 @@ class LoginKatanaResource(HtmlResource):
 class AuthenticateActionResource(ActionResource):
 
     def authorized(self, username):
-        return "?autorized=True&user=%s" % username
+        return "?authorized=True&user=%s" % username
 
     def performAction(self, request):
        authz = self.getAuthz(request)
        d = authz.login(request)
+       status = request.site.buildbot_service.master.status
+       root = status.getBuildbotURL()
 
        def on_login(res):
            if res:
-               status = request.site.buildbot_service.master.status
-               root = status.getBuildbotURL()
+
                url = request.args.get('referer', None)
 
                if "authfail" in url[0] or url is None:
@@ -47,7 +48,8 @@ class AuthenticateActionResource(ActionResource):
 
                return url
            else:
-               return path_to_authfail(request)
+               referer = urllib.unquote(request.args.get("referer", [root])[0])
+               return path_to_login(request, referer, True)
 
        d.addBoth(on_login)
        return d
@@ -57,6 +59,7 @@ class LogoutKatanaResource(LogoutResource):
     def performAction(self, request):
         authz = self.getAuthz(request)
         s = authz.session(request)
-        s.expire()
-        request.addCookie(COOKIE_KEY, None, expires=s.getExpiration(), path="/")
+        if s is not None:
+            s.expire()
+            request.addCookie(COOKIE_KEY, None, expires=s.getExpiration(), path="/")
         return LogoutResource.performAction(self, request)

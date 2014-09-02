@@ -196,82 +196,6 @@
     {% endfor %}
      <input class="grey-btn" type="submit" value="Run" />
   </div>
-  {#
-   <div class="dependencies">
-    <table class="table-1"> 
-      <thead>
-        <tr>
-          <th class="txt-align-left">Dependencies</th>
-          <th class="txt-align-left">Build number</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="txt-align-left">
-            Build androidPlayer
-          </td>
-          <td class="txt-align-left">
-            <select>
-              <option>
-                auto
-              </option>
-              <option>
-                2
-              </option>
-            </select>    
-          </td>
-        </tr>
-        <tr>
-          <td class="txt-align-left">
-            Build androidPlayer
-          </td>
-          <td class="txt-align-left">
-            <select>
-              <option>
-                auto
-              </option>
-              <option>
-                2
-              </option>
-            </select>    
-          </td>
-        </tr>
-        <tr>
-          <td class="txt-align-left">
-            Build androidPlayer
-          </td>
-          <td class="txt-align-left">
-            <select>
-              <option>
-                auto
-              </option>
-              <option>
-                2
-              </option>
-            </select>    
-          </td>
-        </tr>
-        <tr>
-          <td class="txt-align-left">
-            Build androidPlayer
-          </td>
-          <td class="txt-align-left">
-            <select>
-              <option>
-                auto
-              </option>
-              <option>
-                2
-              </option>
-            </select>    
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    
-  </div>
-  #}
-
 </div>
   
 
@@ -284,14 +208,6 @@
     {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props, slaves=slaves) }}
   {% endfor %}
 
-{% endmacro %}
-
-{% macro graceful_shutdown(shutdown_url, authz) %}
-  <form method="post" action="{{ shutdown_url }}" class='command graceful_shutdown'>
-
-  Request slave to <input class="link-button" type="submit" value="shutdown" /> gracefully
-  
- </form>
 {% endmacro %}
 
 {% macro clean_shutdown(shutdown_url, authz) %}

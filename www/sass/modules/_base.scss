@@ -5,7 +5,7 @@
 * @section framework
 * @author Sumon Holm
 */
- 
+
 // Colors
   
 // Generics
@@ -13,30 +13,34 @@ $color-white: #fff; // white
 
 // status colors and text
 $state-colors: 
-success #DDE6D6 false "Success", 
+success #DDE6D6 $color-white "Success",
 failure #EFCFCF $color-white "Failure", 
-exception #DDD7DD false "Exception", 
+exception #DDD7DD $color-white "Exception",
 warnings #fa3 $color-white "Warnings", 
 skipped #CBDCE6 $color-white "Skipped", 
 inconclusive #CBDCE6 false "Inconclusive", 
 ignored #CBDCE6 false "Ignored",
-dependency_failure #FCF2F2 false "Dependency failure",
-not_rebuilt #F8FCF2 false "Not rebuilt",
+dependency_failure #FCF2F2 $color-white "Dependency failure",
+not_rebuilt #F8FCF2 $color-white "Not rebuilt",
 start #ccc false "Start",
-idle #F5F5F5 false "Idle",
+idle #F5F5F5 false "Idle" #e0e0e0,
 running #FCFACB false "Running",
 overtime #FCCBCB false "Overtime",
-offline #E7E7E7 false "Offline",
+offline #E7E7E7 false "Offline" #d1d1d1,
 waiting #E7E7E7 false "Waiting for buildslave",
-retry #DDD7DD false "Retry";
+retry #DDD7DD $color-white "Retry";
 
 // Create colorblind version of colors
-
 @each $colorvar in $state-colors {
-	@include colorBlindBackground (nth($colorvar, 1), nth($colorvar, 2), nth($colorvar, 3),nth($colorvar, 4));
+    $overriden-color:  false;
+    @if length($colorvar) >= 5 {
+      $overriden-color: nth($colorvar, 5);
+    }
+
+	@include colorBlindBackground (nth($colorvar, 1), nth($colorvar, 2), nth($colorvar, 3),nth($colorvar, 4), $overriden-color);
 }
 
-.table-1 tr .success:first-child {
+.table-katana tr .success:first-child {
 	border-top:none;
 }
 

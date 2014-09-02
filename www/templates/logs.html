@@ -5,7 +5,7 @@
     
 {% block extra_script %}
     <script type="text/javascript">
-    require.deps.push('project/buildLog');
+    require.deps.push('buildLog');
     </script>
 {% endblock %}
 
@@ -17,7 +17,7 @@
 
     <div id="CheckBoxesList" class="sticky-bar sticky-bar-bottom">
         <div class="container">
-            <ul>
+            <ul class="list-unstyled">
                 <li>
                     <a href="{{ iframe_url }}" target="_blank">Open in new window</a>
                 </li>

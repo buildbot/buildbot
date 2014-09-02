@@ -99,7 +99,7 @@ define(["jquery", "ui.dropdown"], function ($, pd) {
     describe("An async dropdown", function () {
         beforeEach(function (done) {
             $dropdownButton = $("<div/>").dropdown({
-                url: "base/test/test_data.html",
+                url: "base/script/test/test_data.html",
                 animated: false,
                 onShow: function () {
                     done();

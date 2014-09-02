@@ -1,0 +1,16 @@
+{{#progressBar}}
+    {{> build:progress-bar}}
+{{/progressBar}}
+	
+{{#showNoJobs}}
+	<span class="small-txt">
+		No jobs
+    </span>
+{{/showNoJobs}}
+
+{{#customBuild}}
+	<a class="custom-build more-info" title="Run custom build" href="#" data-popup-title="Run custom build" data-builder-name="{{builderName}}" data-builder-url="{{url}}" data-return-page="builders_json">
+	</a>
+	<a class="instant-build run-build" title="Run build with default values" href="#">
+	</a>
+{{/customBuild}}

@@ -1,0 +1,21 @@
+<h3>{{ name }}</h3>
+<ul class="list">
+    <li><strong>Hostname:</strong> {{ name }}.hq.unity3d.com</li>
+    <li><strong>Health:</strong> {{> slave:health }}</li>
+    <li><strong>Builders:</strong> {{> slave:buildersPopup }}</li>
+    {{#if showEID}}
+        <li><strong>Yumi URL:</strong> <a href="http://yumi.hq.unity3d.com/agent/{{ eid }}">http://yumi.hq.unity3d.com/agent/{{ eid }}</a>
+        </li>
+    {{/if}}
+
+    {{#if shutdownURL}}
+        <form method="post" action="{{ shutdownURL}}" class="command">
+            <strong>Shutdown:</strong>
+            {{#if graceful}}
+                Slave will shut down gracefully when it is idle.
+            {{else}}
+                Request slave to <input class="link-button" type="submit" value="shutdown"/> gracefully
+            {{/if}}
+        </form>
+    {{/if}}
+</ul>

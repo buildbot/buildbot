@@ -1,14 +1,23 @@
-/*global define, Handlebars*/
-define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-moment', 'handlebars', 'helpers', 'moment', 'ui.popup', 'URIjs/URI'], function ($, dt, timeElements, hbCellsText, extendMoment, hb, helpers, moment, popup, URI) {
-
+/*global define*/
+define(function (require) {
     "use strict";
 
-    var hbCells = Handlebars.compile(hbCellsText);
+    var $ = require('jquery'),
+        dt = require('datatables-extend'),
+        timeElements = require('timeElements'),
+        extendMoment = require('extend-moment'),
+        helpers = require('helpers'),
+        moment = require('moment'),
+        popup = require('ui.popup'),
+        URI = require('URIjs/URI'),
+        hb = require('project/handlebars-extend');
+
+    var rtCells = hb.rtCells;
 
     var privFunc = {
         getPropertyOnData: function (data, property) {
             if (property === undefined) {
-                return undefined;
+                return data;
             }
 
             if (typeof property === 'string' || property instanceof String) {
@@ -45,7 +54,7 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                     if (full.properties !== undefined) {
                         history_build = privFunc.buildIsHistoric(full.properties);
                     }
-                    return hbCells({
+                    return rtCells({
                         revisionCell: true,
                         sourceStamps: sourceStamps,
                         history_build: history_build,
@@ -59,19 +68,27 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
-                    return hbCells({buildID: true, 'data': full});
+                    return rtCells({buildID: true, 'data': full});
                 }
             };
         },
-        buildStatus: function (index, className) {
+        buildStatus: function (index, property, className) {
             return {
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
-                    return hbCells({buildStatus: true, 'build': full});
+                    var build = privFunc.getPropertyOnData(full, property);
+                    if (build !== undefined) {
+                        return hb.partials.cells["cells:buildStatus"](build);
+                    }
+
+                    return "";
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
-                    $(nTd).removeClass().addClass(oData.results_text);
+                    var build = privFunc.getPropertyOnData(oData, property);
+                    if (build !== undefined) {
+                        $(nTd).removeClass().addClass(build.results_text);
+                    }
                 }
             };
         },
@@ -80,7 +97,11 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                 "aTargets": [index],
                 "sClass": className === undefined ? "txt-align-right" : className,
                 "mRender": function (data, type, full) {
-                    return hbCells({showBuilderName: true, 'data': full});
+                    if (full.builderFriendlyName !== undefined) {
+                        full.url = full.builder_url;
+                        full.friendly_name = full.builderFriendlyName;
+                    }
+                    return hb.partials.cells["cells:builderName"](full);
                 }
             };
         },
@@ -101,7 +122,7 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                 "mRender": function (data, type, full) {
                     var name = privFunc.getPropertyOnData(full, slaveNameProperty);
                     var url = privFunc.getPropertyOnData(full, slaveURLProperty);
-                    return hbCells({slaveName: true, 'name': name, 'url': url});
+                    return rtCells({slaveName: true, 'name': name, 'url': url});
                 }
             };
         },
@@ -119,7 +140,7 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                         statusTxt = type.runningBuilds.length + ' build(s) ';
                         isRunning = true;
                     }
-                    return hbCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
+                    return rtCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
                     if (oData.connected === undefined) {
@@ -151,12 +172,27 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                 }
             };
         },
+        slaveHealth: function (index) {
+            return {
+                "aTargets": [index],
+                "mRender": function (data, type, full) {
+                    if (full.health === undefined) {
+                        full.health = 0;
+                    }
+                    if (type === 'sort') {
+                        return -full.health;
+                    }
+                    return rtCells({slaveHealthCell: true, health: full.health});
+                },
+                "sType": "numeric"
+            };
+        },
         buildProgress: function (index, singleBuild) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, full, type) {
-                    return hbCells({
+                    return rtCells({
                         buildProgress: true,
                         showPending: !singleBuild,
                         pendingBuilds: singleBuild ? undefined : type.pendingBuilds,
@@ -183,7 +219,7 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                     var stopURL = URI(type.url.path);
                     stopURL = stopURL.path(stopURL.path() + "/stop");
 
-                    return hbCells({
+                    return rtCells({
                         stopBuild: true,
                         'data': type,
                         stopURL: stopURL
@@ -219,6 +255,48 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
                         return 0;
                     }
                     return "N/A";
+                }
+            };
+        },
+        buildLastRun: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-left last-build-js",
+                "mRender": function (data, type, full) {
+                    if (type === "sort") {
+                        if (full.latestBuild !== undefined) {
+                            return full.latestBuild.times[1];
+                        }
+                        return 0;
+                    }
+                    return hb.partials.cells["cells:buildLastRun"](full.latestBuild);
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    if (oData.latestBuild !== undefined) {
+                        timeElements.addTimeAgoElem($(nTd).find('.last-run'), oData.latestBuild.times[1]);
+                        var time = helpers.getTime(oData.latestBuild.times[0], oData.latestBuild.times[1]).trim();
+                        $(nTd).find('.small-txt').html('(' + time + ')');
+                        $(nTd).find('.hidden-date-js').html(oData.latestBuild.times[1]);
+                    }
+                }
+            };
+        },
+        buildShortcuts: function (index, property) {
+            return {
+                "aTargets": [index],
+                "mRender": function (data, type, full) {
+                    var build = privFunc.getPropertyOnData(full, property);
+                    if (build !== undefined) {
+                        return hb.partials.cells["cells:buildShortcuts"](build);
+                    }
+
+                    return "";
+                },
+                "fnCreatedCell": function (nTd, sData, oData) {
+                    var build = privFunc.getPropertyOnData(oData, property);
+                    if (build !== undefined && build.artifacts !== undefined) {
+                        popup.initArtifacts(build.artifacts, $(nTd).find(".artifact-js"));
+                    }
                 }
             };
         }
@@ -277,9 +355,6 @@ define(['jquery', 'datatables-extend', 'timeElements', 'text!hbCells', 'extend-m
             timeElements.clearTimeObjects($table);
             helpers.clearChildEvents($table);
             $table.fnClearTable(false);
-
-            //Clear up the table correctly
-            $table.find("tbody tr").remove();
 
             try {
                 $table.fnAddData(data);

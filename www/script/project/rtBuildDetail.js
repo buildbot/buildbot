@@ -1,16 +1,20 @@
 /*global define, Handlebars */
-define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!templates/build.handlebars', 'text!templates/builders.mustache', 'timeElements', 'ui.popup'], function ($, realtimePages, helpers, hb, mustache, build, builders, timeElements, popups) {
+define(function (require) {
     "use strict";
-    var rtBuildDetail,
-        buildHandle = Handlebars.compile(build),
-        isLoaded = false,
-        noMoreReloads = false;
 
-    //Global helper for Handlebar
-    //TODO: Move this when it's used by more pages
-    Handlebars.registerHelper('buildCSSClass', function (value) {
-        return helpers.getCssClassFromStatus(value);
-    });
+    var $ = require('jquery'),
+        realtimePages = require('realtimePages'),
+        helpers = require('helpers'),
+        timeElements = require('timeElements'),
+        popups = require('ui.popup'),
+        qs = require('libs/query-string'),
+        hb = require('project/handlebars-extend'),
+        hbBuild = hb.build;
+
+    var rtBuildDetail,
+        isLoaded = false,
+        noMoreReloads = false,
+        debug = qs.parse(location.search).debug === "true";
 
     var privFunc = {
         updateArtifacts: function (data) { // for the builddetailpage. Puts the artifacts and testresuts on top
@@ -68,11 +72,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
             timeElements.setHeartbeat(1000);
 
             // insert codebase and branch on the builders page
-            if (window.location.search !== '') {
-                // Parse the url and insert current codebases and branches
-                var $dtWTop = $('.top');
-                helpers.codeBaseBranchOverview($dtWTop);
-            }
+            helpers.codeBaseBranchOverview($('.top'));
 
             //Allow for popups
             $(".popup-btn-js-2").click(function (e) {
@@ -125,8 +125,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
             timeElements.clearTimeObjects($buildResult);
             var progressBar = "";
             if (eta !== 0) {
-                progressBar = mustache.render(builders,
-                    {progressBar: true, etaStart: startTime, etaCurrent: eta});
+                progressBar = hb.partials.build["build:progressBar"]({progressBar: true, etaStart: startTime, etaCurrent: eta});
             }
 
             var props = {
@@ -136,7 +135,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
                 progressBar: progressBar
             };
 
-            var html = buildHandle(props);
+            var html = hbBuild(props);
             $buildResult.html(html);
 
             var $progressBar = $buildResult.find(".percent-outer-js");
@@ -149,7 +148,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
             var count = 1;
             /*jslint unparam: true*/
             $.each(data.steps, function (i, stepData) {
-                if (stepData.hidden) {
+                if (stepData.hidden && !debug) {
                     return true;
                 }
 
@@ -185,7 +184,7 @@ define(['jquery', 'realtimePages', 'helpers', 'handlebars', 'mustache', 'text!te
                     s: stepData,
                     url: stepData.url
                 };
-                html += buildHandle(props);
+                html += hbBuild(props);
                 count += 1;
 
                 return true;

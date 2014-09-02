@@ -107,7 +107,7 @@ class TestSlaveComm(unittest.TestCase):
     """
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.master = fakemaster.make_master(True, "TestSlaveComm")
         # set the slave port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()

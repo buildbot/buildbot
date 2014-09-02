@@ -19,8 +19,6 @@
 import datetime
 import re
 from twisted.python import log
-from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot import master
 
 from twisted.internet import defer
 from twisted.web import html, resource, server
@@ -734,6 +732,7 @@ class SingleProjectJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
+        from buildbot.status.web.base import path_to_comparison
         result = {'builders': []}
 
         #Get codebases
@@ -741,6 +740,8 @@ class SingleProjectJsonResource(JsonResource):
         getCodebasesArg(request=request, codebases=codebases)
         encoding = getRequestCharset(request)
         branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
+
+        result['comparisonURL'] = path_to_comparison(request, self.project_status.name, codebases)
 
         defers = []
         for name in self.children:

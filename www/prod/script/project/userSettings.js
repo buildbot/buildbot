@@ -1,2 +1,0 @@
-define(["jquery","libs/jquery.form"],function(n){var i="color-blind-mode",o={initColorBlindBtn:function(){function o(n){var i=n?"1":"0";r.val(i)}{var l=n("#colorBlindMode"),r=n("#colorBlind_setting"),t=n("body");l.parent().find("#colorBlindOpt")}o(t.hasClass(i)),l.click(function(){var n=t.hasClass(i);n===!0?t.removeClass(i):t.addClass(i),o(!n)})}};return{init:function(){o.initColorBlindBtn()}}});
-//# sourceMappingURL=userSettings.js.map

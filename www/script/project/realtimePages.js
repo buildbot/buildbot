@@ -1,5 +1,5 @@
-/*global define*/
-define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal, helpers, timeElements) {
+/*global define, console*/
+define(['jquery', 'rtGlobal', 'toastr', 'helpers', 'timeElements'], function ($, rtGlobal, toastr) {
     "use strict";
     var sock = null;
     var realTimeFunctions = {};
@@ -12,9 +12,11 @@ define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal,
     var KRT_REGISTER_URL = "krtRegisterURL";
 
     //Timeouts
-    var iURLDroppedTimeout = 30000;
-    var iServerDisconnectTimeout = 30000;
-    var KRT_RELOAD_CD = 500; //Amount of time before we can reload data
+    var iURLDroppedTimeout = 30000,
+        iServerDisconnectTimeout = 30000,
+        KRT_RELOAD_CD = 500, //Amount of time before we can reload data
+        iReconnectAttempts = 0,
+        KRT_MAX_RECONNECT = 5;
 
     var realtimePages = {
         createWebSocket: function (wsURI, json) {
@@ -32,24 +34,43 @@ define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal,
                 // if the socket connection is success
                 if (sock) {
                     sock.onopen = function () {
+                        iReconnectAttempts = 0;
                         $("#preloader").preloader("hidePreloader");
                         // get the json url to parse
                         $.each(realtimeURLs, function (name, url) {
-                            var data = {
-                                url: url
-                            };
+                            if (url !== undefined) {
+                                var data = {
+                                    url: url
+                                };
 
-                            if (json !== undefined) {
-                                data.waitForPush = json[name].waitForPush;
-                                data.pushFilters = json[name].pushFilters;
+                                if (json !== undefined) {
+                                    data.waitForPush = json[name].waitForPush;
+                                    data.pushFilters = json[name].pushFilters;
+                                }
+                                realtimePages.sendCommand(KRT_REGISTER_URL, data);
                             }
-                            realtimePages.sendCommand(KRT_REGISTER_URL, data);
                         });
                     };
 
                     // when the connection closes
                     sock.onclose = function () {
                         sock = null;
+                        iReconnectAttempts += 1;
+
+                        if (iReconnectAttempts >= KRT_MAX_RECONNECT) {
+                            toastr.error("Your connection to the realtime server has been lost, after multiple retries. " +
+                                    "To attempt to connect again, please close this toast",
+                                "Unable to connect to realtime",
+                                {
+                                    timeOut: 0,
+                                    onHidden: function () {
+                                        location.reload();
+                                    }
+                                });
+
+                            return;
+                        }
+
                         console.log("We lost our connection, retrying in {0} seconds...".format(iServerDisconnectTimeout / 1000));
                         setTimeout(function () {
                             realtimePages.createWebSocket(wsURI, json);
@@ -124,7 +145,7 @@ define(['jquery', 'rtGlobal', 'helpers', 'timeElements'], function ($, rtGlobal,
             }
         },
         getRealtimeNameFromURL: function (url) {
-            var name;
+            var name = "";
             $.each(realtimeURLs, function (n, u) {
                 if (u === url) {
                     name = n;

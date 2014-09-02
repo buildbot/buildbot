@@ -1,7 +1,16 @@
 /*global define, requirejs, jQuery*/
-define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache', 'mustache', 'timeElements', 'toastr'], function ($, helpers, form, popups, Mustache, timeElements, toastr) {
+define(function (require) {
 
     "use strict";
+
+    var $ = require('jquery'),
+        helpers = require('helpers'),
+        hb = require('project/handlebars-extend'),
+        timeElements = require('timeElements'),
+        toastr = require('toastr'),
+        popups = hb.popups;
+
+    require('libs/jquery.form');
 
     var $body = $("body");
 
@@ -193,8 +202,8 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                     $('.form-message', formEl).hide();
 
                     if (!$('.error-input', formEl).length) {
-                        var mustacheTmplErrorinput = Mustache.render(popups, {'errorinput': 'true', 'text': 'Fill out the empty revision fields or clear all before submitting'});
-                        var errorinput = $(mustacheTmplErrorinput);
+                        var template = popups({'errorinput': 'true', 'text': 'Fill out the empty revision fields or clear all before submitting'});
+                        var errorinput = $(template);
                         $(formEl).prepend(errorinput);
                     }
                     e.preventDefault();
@@ -206,7 +215,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
 
             $jsonPopupElem.click(function (e) {
                 e.preventDefault();
-                var html = Mustache.render(popups, data);
+                var html = popups(data);
                 $body.append($("<div/>").popup({
                     title: "",
                     html: html,
@@ -284,7 +293,7 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                         properties += "returnpage=builders_json";
                         cancelURL = "{0}/cancelbuild?{1}".format(cancelURL, properties);
 
-                        var html = Mustache.render(popups, {pendingJobs: data, showPendingJobs: true, cancelURL: cancelURL});
+                        var html = popups({pendingJobs: data, showPendingJobs: true, cancelURL: cancelURL});
 
                         $body.append($("<div/>").popup({
                             html: html,
@@ -369,6 +378,13 @@ define(['jquery', 'helpers', 'libs/jquery.form', 'text!templates/popups.mustache
                                 //Setup AJAX form and instant builds
                                 var $form = $elem.find('form'),
                                     formOptions = {
+                                        beforeSerialize: function () {
+                                            // Trim revision fields
+                                            $.each($form.find("[name*=_revision]"), function (i, el) {
+                                                var $el = $(el);
+                                                $el.val($.trim($el.val()));
+                                            });
+                                        },
                                         beforeSubmit: function () {
                                             $elem.hidePopup();
                                             $("#preloader").preloader("hidePreloader");

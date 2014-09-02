@@ -20,7 +20,7 @@ from twisted.spread import pb
 from twisted.web import server
 from twisted.web.resource import Resource, NoResource
 
-from buildbot import interfaces
+from buildbot import interfaces, version
 from buildbot.status import logfile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, ContextMixin, \
     path_to_codebases, path_to_build, path_to_builder, path_to_builders
@@ -123,7 +123,7 @@ class TextLog(Resource, ContextMixin):
             url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
 
             if self.iFrame:
-                data = self.chunk_template.module.page_header()
+                data = self.chunk_template.module.page_header(version)
                 data = data.encode('utf-8')
                 req.write(data)
                 self.original.subscribeConsumer(ChunkConsumer(req, self))

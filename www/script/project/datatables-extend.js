@@ -9,6 +9,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
             //Setup sort neutral function
             dataTables.initSortNatural();
             dataTables.initBuilderStatusSort();
+            dataTables.initNumberIgnoreZeroSort();
 
             //Datatable Defaults
             $.extend($.fn.dataTable.defaults, {
@@ -27,8 +28,14 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 "iDisplayLength": 50,
                 "bStateSave": true
             });
+
+            $.extend($.fn.dataTable.defaults.oLanguage, {
+                "sEmptyTable": "No data has been found"
+            });
         },
         initTable: function ($tableElem, options) {
+
+            var sDom = '<"top col-md-12"flip><"table-wrapper"t><"bottom"pi>';
 
             // add only filter input nor pagination
             if ($tableElem.hasClass('input-js')) {
@@ -36,7 +43,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 options.oLanguage = {
                     "sSearch": ""
                 };
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             // add searchfilterinput, length change and pagination
@@ -55,7 +62,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                         '<option value="-1">All</option>' +
                         '</select>'
                 };
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             //Setup default sorting columns and order
@@ -102,7 +109,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 options.aoColumns = aoColumns;
             }
             if ($tableElem.hasClass('branches-selectors-js') && options.sDom === undefined) {
-                options.sDom = '<"top"flip><"table-wrapper"t><"bottom"pi>';
+                options.sDom = sDom;
             }
 
             //initialize datatable with options
@@ -196,6 +203,45 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return sort(a, b, false);
                 },
                 "builder-status-desc": function (a, b) {
+                    return sort(a, b, true);
+                }
+            });
+        },
+        initNumberIgnoreZeroSort: function initNumberSortMinusZero() {
+            var sort = function sort(a, b, reverse) {
+                var result = -1;
+
+                if (a === b) {
+                    return 0;
+                }
+
+                // Push 0 results always to the bottom
+                if (a === 0) {
+                    return 1;
+                }
+                if (b === 0) {
+                    return -1;
+                }
+
+                //Sort with normal numbers but allow for reversal
+                if (a > b) {
+                    result = 1;
+                } else {
+                    result = -1;
+                }
+
+                if (reverse) {
+                    return -result;
+                }
+
+                return result;
+            };
+
+            $.extend($.fn.dataTableExt.oSort, {
+                "number-ignore-zero-asc": function (a, b) {
+                    return sort(a, b, false);
+                },
+                "number-ignore-zero-desc": function (a, b) {
                     return sort(a, b, true);
                 }
             });

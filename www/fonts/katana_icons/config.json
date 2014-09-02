@@ -13,6 +13,12 @@
       "src": "fontelico"
     },
     {
+      "uid": "12f4ece88e46abd864e40b35e05b11cd",
+      "css": "ok",
+      "code": 59407,
+      "src": "fontawesome"
+    },
+    {
       "uid": "ca90da02d2c6a3183f2458e4dc416285",
       "css": "ajust",
       "code": 59403,
@@ -64,6 +70,12 @@
       "uid": "3327862df439988139b61814143b7a42",
       "css": "cancel-circled-2",
       "code": 59416,
+      "src": "typicons"
+    },
+    {
+      "uid": "8f28d948aa6379b1a69d2a090e7531d4",
+      "css": "warning-empty",
+      "code": 59410,
       "src": "typicons"
     },
     {

@@ -1,0 +1,32 @@
+{{#if showslaves}}
+	<a class="more-info popup-btn-json-js mod-1" href="#">
+		 {{slavelength}} slaves
+	</a>
+{{/if}}
+
+{{#if input}}
+	<input class="fi-js fi" type="checkbox" name="cancelselected" value="{{brid}}"/>
+	
+	<a title="Remove this build" class="force-individual-js delete-icon" href="#"></a>
+{{/if}}
+
+{{#if showsources}}
+	<a class="more-info popup-btn-json-js mod-1" href="#">
+		{{sourcesLength}} Codebase 
+	</a>
+{{/if}}
+
+{{#if reason}}
+    <span class="hide">{{submittedAt}}</span>
+	<ul class="codebases-list">
+		<li>
+			{{reason}}
+		</li>
+		<li>
+			requested on {{requested}}
+		</li>
+        <li>
+            Waiting <span class="waiting-time"></span>
+        </li>
+	</ul>
+{{/if}}

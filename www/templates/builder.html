@@ -30,7 +30,7 @@
         Current Builds
       </h2>
 
-      <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+      <table id="rtCurrentBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
       </table>
   
       <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
@@ -39,7 +39,7 @@
         Pending Build Requests
       </h2>
 
-      <table id="rtPendingBuildsTable" class="table-1 tablesorter-js tablesorter first-child buildqueue-table">
+      <table id="rtPendingBuildsTable" class="table table-katana tablesorter-js tablesorter first-child buildqueue-table">
         <thead>
           <tr>
             <th class="txt-align-left">Requested at</th>
@@ -59,11 +59,11 @@
         Build Slaves
       </h2>
       
-      <table id="rtSlavesTable" class="table-1 tablesorter-js tablesorter first-child">
+      <table id="rtSlavesTable" class="table table-katana tablesorter-js tablesorter first-child">
         <thead>
         {% if slaves %}
           <tr>
-            <th class="txt-align-left">Name</th>
+            <th>Name</th>
             <th>Status</th>          
           </tr>
         {% endif %}
@@ -76,7 +76,7 @@
         Recent Builds
       </h2>
 
-      <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
+      <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
       </table>
 
       <!--
@@ -92,7 +92,7 @@
 </div>
 {% endblock %}
     {% elif rt_update.rt_update[0] == 'buildslaves' %}
-    <table class="table-1 tablesorter-js tablesorter first-child">
+    <table class="table table-katana tablesorter-js tablesorter first-child">
               <thead>
               {% if slaves %}
                 <tr>

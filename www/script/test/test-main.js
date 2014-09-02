@@ -1,4 +1,4 @@
-/*global require*/
+/*global require, define*/
 (function () {
     "use strict";
 
@@ -6,7 +6,7 @@
         TEST_REGEXP = /(spec|test_)[\w\W]*\.js$/i;
 
     var pathToModule = function (path) {
-        return path.replace(/^\/base\//, '').replace(/\.js$/, '');
+        return path.replace(/^\/base\/script\//, '').replace(/\.js$/, '');
     };
 
     Object.keys(window.__karma__.files).forEach(function (file) {
@@ -18,7 +18,7 @@
 
     require.config({
         // Karma serves files under /base, which is the basePath from your config file
-        baseUrl: '/base',
+        baseUrl: '/base/script',
 
         // dynamically load all test files
         deps: allTestFiles,
@@ -27,6 +27,7 @@
         callback: window.__karma__.start,
 
         paths: {
+            'handlebars-internal': "libs/handlebars",
             'jquery': 'libs/jquery',
             'jquery-ui': 'libs/jquery-ui',
             'ui.dropdown': 'project/ui/dropdown',
@@ -52,16 +53,14 @@
             'overscroll': 'plugins/jquery-overscroll',
             'moment': 'plugins/moment-with-langs',
             'extend-moment': 'project/extendMoment',
-            'mustache': "libs/mustache-wrap",
-            'handlebars': "libs/handlebars",
             'livestamp': "plugins/livestamp",
             'timeElements': "project/timeElements",
             'iFrameResize': "libs/iframeResizer.min",
             'rtGenericTable': "project/rtGenericTable",
-            'hbCells': 'templates/rtCells.handlebars',
             'userSettings': 'project/userSettings',
             'URIjs': 'libs/uri',
-            'toastr': 'plugins/toastr'
+            'toastr': 'plugins/toastr',
+            "precompiled.handlebars": "../generated/precompiled.handlebars"
         },
 
         shim: {
@@ -70,8 +69,16 @@
             },
             'ui.preloader': {
                 deps: ['jquery-ui']
+            },
+            "precompiled.handlebars": {
+                deps: ['handlebars']
             }
         }
+    });
+
+    define("handlebars", ["handlebars-internal"], function () {
+        "use strict";
+        return Handlebars;
     });
 
 }());

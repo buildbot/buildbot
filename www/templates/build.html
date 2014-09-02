@@ -71,7 +71,7 @@
   Timing
 </h2>
 <div class="dataTables_wrapper">
-  <table class="table-2 m-bottom">
+  <table class="table table-katana table-stripes m-bottom">
     <tr>
       <td>
         Start
@@ -117,7 +117,7 @@ SourceStamps
 {% for ss in sourcestamps %}
 <h3>{{ ss.codebase }}</h3>
 <div class="dataTables_wrapper">
-    <table class="table-2 m-bottom">
+    <table class="table table-katana table-stripes m-bottom">
     
 
     {% if ss.project %}
@@ -179,7 +179,7 @@ SourceStamps
     </a>
     <h3>Overview of build properties</h3>
     <div class="dataTables_wrapper">
-      <table class="table-2">
+      <table class="table table-katana table-stripes">
       <tr>
         <th>Name</th>
         <th>Value</th>
@@ -224,7 +224,7 @@ SourceStamps
     </a>
     <h3>Overview of custom build properties</h3>
     <div class="dataTables_wrapper">
-    <table class="table-2">
+    <table class="table table-katana table-stripes">
       <tr>
         <th>Name</th>
         <th>Label</th>
@@ -309,7 +309,8 @@ SourceStamps
                         </h3>
                       {% endif %}
             <div class="dataTables_wrapper">
-              <table class="table-1 var-1">
+              <table class="table table-katana var-1">
+
                 {% for c in ss.changes %}
 
                     {% if loop.index == 1 %}

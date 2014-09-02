@@ -1,33 +1,35 @@
-define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePages) {
+/*global define*/
+define(function (require) {
     "use strict";
-    var realtimeRouting;
 
-    realtimeRouting = {
-        init: function () {        	
+    var helpers = require('helpers');
 
-        	switch(helpers.getCurrentPage()) { 
-				case 'builddetail_page':        	
-					// For the builddetailpage
-					require(['rtBuildDetail'],
-			        function(rtBuildDetail) {
-			        	rtBuildDetail.init();
-			        });
-			      	break;
-				
-				case 'builders_page':							
-					// For the builderspage
-					require(['rtBuilders'],
-			        function(rtBuilders) {
-			        	rtBuilders.init();
-			        });
-			       break;
+    return {
+        init: function () {
+            /*jslint white: true */
+            switch (helpers.getCurrentPage()) {
+                case 'builddetail_page':
+                    // For the builddetailpage
+                    require(['rtBuildDetail'],
+                        function (rtBuildDetail) {
+                            rtBuildDetail.init();
+                        });
+                    break;
 
-                case 'builderdetail_page':            
+                case 'builders_page':
+                    // For the builderspage
+                    require(['rtBuilders'],
+                        function (rtBuilders) {
+                            rtBuilders.init();
+                        });
+                    break;
+
+                case 'builderdetail_page':
                     // For the builddetailpage
                     require(['rtBuilderDetail'],
-                    function(rtBuilderDetail) {
-                        rtBuilderDetail.init();
-                    });
+                        function (rtBuilderDetail) {
+                            rtBuilderDetail.init();
+                        });
                     break;
 
                 case 'buildslaves_page':
@@ -37,7 +39,7 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                             rtBuildSlaves.init();
                         });
                     break;
-                 case 'buildslavedetail_page':
+                case 'buildslavedetail_page':
                     // For the frontpage
                     require(['rtBuildSlaveDetail'],
                         function (rtBuildSlaveDetail) {
@@ -52,17 +54,22 @@ define(['jquery', 'helpers', 'realtimePages'], function ($, helpers, realtimePag
                             rtBuildQueue.init();
                         });
                     break;
-            	default:
+                case 'comparison':
+                    // For the comparison page
+                    require(['project/rtComparison'],
+                        function (rtComparison) {
+                            rtComparison.init();
+                        });
+                    break;
+                default:
                     // For pages without overriden realtime
                     require(['rtGlobal'],
                         function (rtGlobal) {
-                    	rtGlobal.init();
-                    });
+                            rtGlobal.init();
+                        });
                     break;
-			}
-
-		
-		}
-	};
-   return realtimeRouting
+            }
+            /*jslint white: false */
+        }
+    };
 });

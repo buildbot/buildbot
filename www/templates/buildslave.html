@@ -1,45 +1,38 @@
+{% extends "layout.html" %}
 {% from 'build_line.html' import build_table, build_line %}
 {% import 'forms.html' as forms %}
 {% import 'submenu.html' as submenu %}
-{% extends "layout.html" %}
 
 {% set bodyId = 'id="buildslavedetail_page"' %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename)}}
+    {{ submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename) }}
 {% endblock %}
 
 {% block content %}
-<div class="initjson">
-  <div class="row">
-    <div class="rounded-container">
-        {% if authz.advertiseAction('gracefulShutdown', request) %}
-          {% if slave.getGraceful() %}
-          <div class="graceful_shutdown">
-              Slave will shut down gracefully when it is idle.
-          </div>
-          {% else %}
-              {{ forms.graceful_shutdown(shutdown_url, authz) }}
-          {% endif %}
-        {% endif %}
+    <div class="initjson">
+        <div class="row">
+            <div class="rounded-container">
+                <div id="slaveInfo" class="col-md-12" data-shutdown-url="{% if authz.advertiseAction('gracefulShutdown', request) %}{{ shutdown_url }}{% endif %}" data-graceful="{{  slave.getGraceful() }}">
+                </div>
 
-      <div class="col-md-12">
-            <h2 class="head-2 fl-left"> Current builds </h2>
-            <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
-            <table id="rtCurrentBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-            </table>
-      </div>
-      <div class="col-md-12">
-         <h2 class="head-2">
-          Recent builds
-        </h2>
+                <div class="col-md-6">
+                    <h2 class="head-2 fl-left"> Current builds </h2>
+                    <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
+                    <table id="rtCurrentBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h2 class="head-2">
+                        Recent builds
+                    </h2>
 
-        <table id="rtBuildsTable" class="table-1 tablesorter-js tablesorter first-child">
-        </table>
-      </div>
+                    <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 {% endblock %}
 
 

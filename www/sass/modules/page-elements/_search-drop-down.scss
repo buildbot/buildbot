@@ -27,12 +27,12 @@
     outline: none;
 }
 
-div.common-branch-select {    
+div.common-branch-select {
     float: right;
 }
 
 .pos-relative {
-	position: relative;	
+	position: relative;
 }
 
 #branchTxt {
@@ -42,13 +42,13 @@ div.common-branch-select {
 .help-txt {
     float: right;
     .more-info-box & {
-        float: none;        
-    }        
+        float: none;
+    }
     color: #787878;
-    display: block;    
+    display: block;
     font-weight: normal;
     @include text-shadow(1px 1px 0 #fff);
-    width: 188px;    
+    width: 188px;
     margin: 0px 17px 10px 0;
 }
 
@@ -63,11 +63,11 @@ div.common-branch-select {
     vertical-align: middle;
     text-align: left;
 }
-.select2-container-active {                
+.select2-container-active {
     @include box-shadow($focusShadow, 0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #FFFFFF);
     @include border-radius(5px);
     a.select2-choice {
-        @include box-shadow (0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 0 0 #FFFFFF);        
+        @include box-shadow (0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 0 0 #FFFFFF);
     }
 }
 
@@ -85,15 +85,16 @@ div.common-branch-select {
 
     More Info : http://www.quirksmode.org/css/box.html
   */
-  
+
 	@include box-sizing( border-box); /* css3 */
 }
 
 .select2-container .select2-choice {
       display: block;
+      height: 26px;
       overflow: hidden;
       padding: 0 0 0 8px;
-      
+
       border: 1px solid #aaa;
       border-radius: 5px;
       background-color: #fff;
@@ -142,7 +143,7 @@ div.common-branch-select {
     text-decoration: none;
 
     border: 0;
-    
+
     cursor: pointer;
     outline: 0;
 }
@@ -239,9 +240,9 @@ div.common-branch-select {
 		  }
 }
 .common-branch-select {
-    margin: -7px 0 -6px; 
-    min-width: 204px;    
-    .select2-choice {        
+    margin: -7px 0 -6px;
+    min-width: 204px;
+    .select2-choice {
         @include box-shadow(0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #FFFFFF);
         @include bgimage (linear-gradient(top , #858585 0%, #555555 100%));
         padding: 3px 0 3px 11px;
@@ -259,7 +260,7 @@ div.common-branch-select {
             @include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.44));
             //text-transform: uppercase;
             color: #FFFFFF;
-            font-weight: normal;            
+            font-weight: normal;
         }
     }
 }
@@ -287,7 +288,7 @@ div.common-branch-select {
             position: absolute;
             top: 14px;
     }
-    input {        
+    input {
         @include border-radius (3px);
         color:#666;
         width: 100%;
@@ -299,14 +300,14 @@ div.common-branch-select {
         outline: 0;
         font-family: sans-serif;
         font-size: 1em;
-        border: 1px solid #D6D6D6;        
+        border: 1px solid #D6D6D6;
         -webkit-box-shadow: none;
             box-shadow: none;
     }
 }
 
 .select2-search input.select2-active {
-    
+
 }
 
 /* results */

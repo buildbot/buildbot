@@ -151,11 +151,7 @@ define(['main'], function () {
                 },
                 addCodebasesBar: function () {
                     // insert codebase and branch on the builders page
-                    var $dtWTop = $('.top');
-                    if (window.location.search !== '') {
-                        // Parse the url and insert current codebases and branches
-                        helpers.codeBaseBranchOverview($dtWTop);
-                    }
+                    helpers.codeBaseBranchOverview($('.top'));
                 }
             },
             publicFunc = {
