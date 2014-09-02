@@ -13,7 +13,9 @@ module.exports = function (grunt) {
             css: {
                 src: ["sass"],
                 src_watch: ["sass/**/*.scss"],
-                dest: ["prod/css"]
+                dest: "prod/css",
+                src_css: ['*.css', '!*.min.css'],
+                ext: '.css'
             },
             js: {
                 src: [
@@ -56,7 +58,7 @@ module.exports = function (grunt) {
                 options: {
                     force: true,
                     environment: "production",
-                    outputStyle: "compressed"
+                    outputStyle: "nested"
                 }
             },
             dev: {
@@ -65,6 +67,22 @@ module.exports = function (grunt) {
                     environment: "development",
                     outputStyle: "nested"
                 }
+            }
+        },
+        cssmin: {
+            options : {
+                keepBreaks: true
+            },
+            minify: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= files.css.dest %>',
+                        src: '<%= files.css.src_css %>',
+                        dest: '<%= files.css.dest %>',
+                        ext: '<%= files.css.ext %>'
+                    }
+                ]
             }
         },
         requirejs: {
@@ -96,7 +114,7 @@ module.exports = function (grunt) {
             },
             css: {
                 files: ["<%= files.css.src_watch %>"],
-                tasks: ["compass:" + target]
+                tasks: ["compass:" + target, "cssmin"]
             },
             js: {
                 files: ["<%= files.js.src %>"],
@@ -167,6 +185,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-requirejs");
     grunt.loadNpmTasks("grunt-contrib-handlebars");
     grunt.loadNpmTasks("grunt-karma");
+    grunt.loadNpmTasks('grunt-contrib-cssmin');
 
     // Define your tasks here
     grunt.registerTask("prod", ["test", "build:prod"]);
@@ -174,7 +193,7 @@ module.exports = function (grunt) {
         if (overrideTarget !== undefined) {
             target = overrideTarget;
         }
-        grunt.task.run(["compass:" + target, "handlebars:compile", "requirejs:" + target]);
+        grunt.task.run(["compass:" + target, "cssmin", "handlebars:compile", "requirejs:" + target]);
     });
     grunt.registerTask("test", ["karma:unit"]);
     grunt.registerTask("default", ["build", "watch"]);
