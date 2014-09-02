@@ -104,7 +104,7 @@ def build_js(cmd):
         assert npm_version != "", "need nodejs and npm installed in current PATH"
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
-        cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod'])
+        cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
         with open(os.path.join("MANIFEST.in"), "w") as f:
             f.write(dedent("""
             include %(package)s/VERSION
