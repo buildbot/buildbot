@@ -208,11 +208,9 @@ class Trigger(LoggingBuildStep):
                             url = master.status.getURLForBuild(bn, num)
                             self.step_status.addURL("%s #%d" % (bn, num), url)
 
-                return self.end(result)
-
             builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
-            dl = defer.DeferredList(builddicts, consumeErrors=1)
-            dl.addCallback(add_links)
+            res = yield defer.DeferredList(builddicts, consumeErrors=1)
+            add_links(res)
 
         self.end(result)
         return
