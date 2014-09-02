@@ -30,8 +30,6 @@ class Waterfall extends Controller
 
             # Minimum builder column width (px)
             minColumnWidth: cfg.minColumnWidth or 40
-            # Maximum builder column width (px)
-            maxColumnWidth: cfg.maxColumnWidth or 80
 
             # Y axis time format (new line: ^)
             timeFormat: cfg.timeFormat or '%x^%I:%M'
@@ -141,25 +139,21 @@ class Waterfall extends Controller
     # Set the content width
     ###
     setWidth: ->
-        if @c.minColumnWidth > 0 and @c.maxColumnWidth > 0 and @c.minColumnWidth <= @c.maxColumnWidth
+        if @c.minColumnWidth > 0
             columnWidth = (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length
 
-            narrower = columnWidth <= @c.maxColumnWidth
             wider = @c.minColumnWidth <= columnWidth
 
             width =
-                if narrower and wider then '100%'
-                else if narrower
-                    "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+                if wider then '100%'
                 else
-                    "#{@builders.length * @c.maxColumnWidth + @c.margin.right + @c.margin.left}px"
+                    "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
 
             @waterfall.select('.inner-content').style('width', width)
             @waterfall.select('.header-content').style('width', width)
 
         else
-            @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}\n\t max: #{@c.maxColumnWidth}"
-            width = 40
+            @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}"
 
     ###
     # Get the container height
