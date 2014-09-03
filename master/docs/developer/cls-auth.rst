@@ -6,7 +6,10 @@ Authentication
 .. py:class:: AuthBase
 
     This class is the base class for all authentication methods.
-    All authentications are not done at the same level, so several optional methods are available. This class implements default implementation. The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_info``. The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
+    All authentications are not done at the same level, so several optional methods are available.
+    This class implements default implementation.
+    The login session is stored via twisted's ``request.getSession()``, and detailed used information is stored in ``request.getSession().user_info``.
+    The session information is then sent to the UI via the ``config`` constant (in the ``user`` attribute of ``config``)
 
     .. py:attribute:: userInfoProvider
 
@@ -45,7 +48,8 @@ Authentication
 
         :param request: the request object
 
-        Separate entrypoint for getting user information. This is a mean to call self.userInfoProvider if provided.
+        Separate entrypoint for getting user information.
+        This is a mean to call self.userInfoProvider if provided.
 
 .. py:class:: UserInfoProviderBase
 
@@ -65,7 +69,11 @@ Authentication
 
 .. py:class:: OAuth2Auth
 
-    OAuth2Auth implements oauth2 2 phases authentication. With this method ``/auth/login`` is called twice. Once without argument. It should return the URL the browser has to redirect in order to perform oauth2 authentication, and authorization. Then the oauth2 provider will redirect to ``/auth/login?code=???``, and buildbot web server will verify the code using the oauth2 provider.
+    OAuth2Auth implements oauth2 2 phases authentication.
+    With this method ``/auth/login`` is called twice.
+    Once without argument.
+    It should return the URL the browser has to redirect in order to perform oauth2 authentication, and authorization.
+    Then the oauth2 provider will redirect to ``/auth/login?code=???``, and buildbot web server will verify the code using the oauth2 provider.
 
     Typical login process is:
 

@@ -3,44 +3,34 @@
 Messaging and Queues
 ====================
 
-As of version 0.9.0, Buildbot uses a message-queueing structure to handle
-asynchronous notifications in a distributed fashion.  This avoids, for the most
-part, the need for each master to poll the database, allowing masters to react
-to events as they happen.
+As of version 0.9.0, Buildbot uses a message-queueing structure to handle asynchronous notifications in a distributed fashion.
+This avoids, for the most part, the need for each master to poll the database, allowing masters to react to events as they happen.
 
 Overview
 --------
 
-Buildbot is structured as a hybrid state- and event-based application, which
-will probably offend adherents of either pattern.  In particular, the most
-current state is stored in the :doc:`Database <database>`, while any
-changes to the state are announced in the form of a message.  The content of
-the messages is sufficient to reconstruct the updated state, allowing external
-processes to represent "live" state without polling the database.
+Buildbot is structured as a hybrid state- and event-based application, which will probably offend adherents of either pattern.
+In particular, the most current state is stored in the :doc:`Database <database>`, while any changes to the state are announced in the form of a message.
+The content of the messages is sufficient to reconstruct the updated state, allowing external processes to represent "live" state without polling the database.
 
-This split nature immediately brings to light the problem of synchronizing the
-two interfaces.  Queueing systems can introduce queueing delays as messages
-propagate.   Likewise, database systems may introduce a delay between committed
-modifications and the modified data appearing in queries; for example, with
-MySQL master/slave replication, there can be several seconds' delay in a before
-a slave is updated.
+This split nature immediately brings to light the problem of synchronizing the two interfaces.
+Queueing systems can introduce queueing delays as messages propagate.
+Likewise, database systems may introduce a delay between committed modifications and the modified data appearing in queries; for example, with MySQL master/slave replication, there can be several seconds' delay in a before a slave is updated.
 
-Buildbot's MQ connector simply relays messages, and makes no attempt to
-coordinate the timing of those messages with the corresponding database
-updates.  It is up to higher layers to apply such coordination.
+Buildbot's MQ connector simply relays messages, and makes no attempt to coordinate the timing of those messages with the corresponding database updates.
+It is up to higher layers to apply such coordination.
 
 Connector API
 -------------
 
-All access to the queueing infrastructure is mediated by an MQ connector.  The
-connector's API is defined below.  The connector itself is always available as
-``master.mq``, where ``master`` is the current
-:py:class:`~buildbot.master.BuildMaster` instance.
+All access to the queueing infrastructure is mediated by an MQ connector.
+The connector's API is defined below.
+The connector itself is always available as ``master.mq``, where ``master`` is the current :py:class:`~buildbot.master.BuildMaster` instance.
 
 .. py:module:: buildbot.mq.base
 
-The connector API is quite simple.  It is loosely based on AMQP, although
-simplified because there is only one exchange (see :ref:`queue-schema`).
+The connector API is quite simple.
+It is loosely based on AMQP, although simplified because there is only one exchange (see :ref:`queue-schema`).
 
 All messages include a "routing key", which is a tuple of *7-bit ascii* strings describing the content of the message.
 By convention, the first element of the tuple gives the type of the data in the message.
@@ -53,10 +43,9 @@ For a filter to match a routing key, it must have the same length, and each elem
 
 .. py:class:: MQConnector
 
-    This is an abstract parent class for MQ connectors, and defines the
-    interface.  It should not be instantiated directly.  It is a subclass of
-    :py:class:`buildbot.util.service.AsyncService`, and subclasses can
-    override service methods to start and stop the connector.
+    This is an abstract parent class for MQ connectors, and defines the interface.
+    It should not be instantiated directly.
+    It is a subclass of :py:class:`buildbot.util.service.AsyncService`, and subclasses can override service methods to start and stop the connector.
 
     .. py:method:: produce(routing_key, data)
 
@@ -76,7 +65,8 @@ For a filter to match a routing key, it must have the same length, and each elem
         :param persistent_name: persistent name for this consumer
         :returns: a :py:class:`QueueRef` instance via Deferred
 
-        This method will begin consuming messages matching the filter, invoking ``callback`` for each message.  See above for the format of the filter.
+        This method will begin consuming messages matching the filter, invoking ``callback`` for each message.
+        See above for the format of the filter.
 
         The callback will be invoked with two arguments: the message's routing key and the message body, as a Python data structure.
         It may return a Deferred, but no special processing other than error handling will be applied to that Deferred.
@@ -93,27 +83,22 @@ For a filter to match a routing key, it must have the same length, and each elem
 
 .. py:class:: QueueRef
 
-    The :py:class:`QueueRef` returned (via Deferred) from
-    :py:meth:`~MQConnector.startConsuming` can be used to stop consuming
-    messages when they are no longer needed.  Users should be *very* careful to
-    ensure that consumption is terminated in all cases.
+    The :py:class:`QueueRef` returned (via Deferred) from :py:meth:`~MQConnector.startConsuming` can be used to stop consuming messages when they are no longer needed.
+    Users should be *very* careful to ensure that consumption is terminated in all cases.
 
     .. py:method:: stopConsuming()
 
-        Stop invoking the ``callback`` passed to
-        :py:meth:`~MQConnector.startConsuming`.  This method can be called
-        multiple times for the same :py:class:`QueueRef` instance without harm.
+        Stop invoking the ``callback`` passed to :py:meth:`~MQConnector.startConsuming`.
+        This method can be called multiple times for the same :py:class:`QueueRef` instance without harm.
 
-        After the first call to this method has returned, the callback will not
-        be invoked.
+        After the first call to this method has returned, the callback will not be invoked.
 
 Implementations
 ~~~~~~~~~~~~~~~
 
-Several concrete implementations of the MQ connector exist.  The simplest is
-intended for cases where only one master exists, similar to the SQLite database
-support.  The remainder use various existing queueing applications to support
-distributed communications.
+Several concrete implementations of the MQ connector exist.
+The simplest is intended for cases where only one master exists, similar to the SQLite database support.
+The remainder use various existing queueing applications to support distributed communications.
 
 Simple
 ......
@@ -122,22 +107,17 @@ Simple
 
 .. py:class:: SimpleConnector
 
-    The :py:class:`SimpleMQ` class implements a local equivalent of a
-    message-queueing server.  It is intended for Buildbot installations with
-    only one master.
+    The :py:class:`SimpleMQ` class implements a local equivalent of a message-queueing server.
+    It is intended for Buildbot installations with only one master.
 
 .. _queue-schema:
 
 Queue Schema
 ------------
 
-Buildbot uses a particularly simple architecture: in AMQP terms, all messages
-are sent to a single topic exchange, and consumers define anonymous queues
-bound to that exchange.
+Buildbot uses a particularly simple architecture: in AMQP terms, all messages are sent to a single topic exchange, and consumers define anonymous queues bound to that exchange.
 
-In future versions of Buildbot, some components (e.g., schedulers) may use
-durable queues to ensure that messages are not lost when one or more masters
-are disconnected.
+In future versions of Buildbot, some components (e.g., schedulers) may use durable queues to ensure that messages are not lost when one or more masters are disconnected.
 
 .. _message-schema:
 

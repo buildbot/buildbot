@@ -3,12 +3,12 @@ RemoteCommands
 
 .. py:currentmodule:: buildbot.process.remotecommand
 
-Most of the action in build steps consists of performing operations on the
-slave.  This is accomplished via :class:`RemoteCommand` and its subclasses.
+Most of the action in build steps consists of performing operations on the slave.
+This is accomplished via :class:`RemoteCommand` and its subclasses.
 Each represents a single operation on the slave.
 
-Most data is returned to a command via updates.  These updates are described in
-detail in :ref:`master-slave-updates`.
+Most data is returned to a command via updates.
+These updates are described in detail in :ref:`master-slave-updates`.
 
 RemoteCommand
 ~~~~~~~~~~~~~
@@ -24,19 +24,16 @@ RemoteCommand
     :param decodeRC: dictionary associating ``rc`` values to buildsteps results constants (e.g. ``SUCCESS``, ``FAILURE``, ``WARNINGS``)
     :param stdioLogName: name of the log to which to write the command's stdio
 
-    This class handles running commands, consisting of a command name and
-    a dictionary of arguments.  If true, ``ignore_updates`` will suppress any
-    updates sent from the slave.
+    This class handles running commands, consisting of a command name and a dictionary of arguments.
+    If true, ``ignore_updates`` will suppress any updates sent from the slave.
 
     This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to s stdio logfile named by the ``stdioLogName`` parameter.
     Steps that run multiple commands and want to separate those commands' stdio streams can use this parameter.
 
     It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
 
-    Most slave-side commands, even those which do not spawn a new process on
-    the slave, generate logs and an ``rc``, requiring this class or one of its
-    subclasses.  See :ref:`master-slave-updates` for the updates that each
-    command may send.
+    Most slave-side commands, even those which do not spawn a new process on the slave, generate logs and an ``rc``, requiring this class or one of its subclasses.
+    See :ref:`master-slave-updates` for the updates that each command may send.
 
     .. py:attribute:: active
 
@@ -45,13 +42,12 @@ RemoteCommand
     .. py:method:: run(step, remote)
 
         :param step: the buildstep invoking this command
-        :param remote: a reference to the remote :class:`SlaveBuilder`
-            instance
+        :param remote: a reference to the remote :class:`SlaveBuilder` instance
         :returns: Deferred
 
-        Run the command.  Call this method to initiate the command; the
-        returned Deferred will fire when the command is complete.  The Deferred
-        fires with the :class:`RemoteCommand` instance as its value.
+        Run the command.
+        Call this method to initiate the command; the returned Deferred will fire when the command is complete.
+        The Deferred fires with the :class:`RemoteCommand` instance as its value.
 
     .. py:method:: interrupt(why)
 
@@ -59,10 +55,8 @@ RemoteCommand
         :type why: Twisted Failure
         :returns: Deferred
 
-        This method attempts to stop the running command early.  The Deferred
-        it returns will fire when the interrupt request is received by the
-        slave; this may be a long time before the command itself completes, at
-        which time the Deferred returned from :meth:`run` will fire.
+        This method attempts to stop the running command early.
+        The Deferred it returns will fire when the interrupt request is received by the slave; this may be a long time before the command itself completes, at which time the Deferred returned from :meth:`run` will fire.
 
     .. py:method:: results()
 
@@ -76,27 +70,23 @@ RemoteCommand
 
         This method returns True if the results() function returns FAILURE
 
-    The following methods are invoked from the slave.  They should not be
-    called directly.
+    The following methods are invoked from the slave.
+    They should not be called directly.
 
     .. py:method:: remote_update(updates)
 
         :param updates: new information from the slave
 
-        Handles updates from the slave on the running command.  See
-        :ref:`master-slave-updates` for the content of the updates.  This class
-        splits the updates out, and handles the ``ignore_updates`` option, then
-        calls :meth:`remoteUpdate` to process the update.
+        Handles updates from the slave on the running command.
+        See :ref:`master-slave-updates` for the content of the updates.
+        This class splits the updates out, and handles the ``ignore_updates`` option, then calls :meth:`remoteUpdate` to process the update.
 
     .. py:method:: remote_complete(failure=None)
 
-        :param failure: the failure that caused the step to complete, or None
-            for success
+        :param failure: the failure that caused the step to complete, or None for success
 
-        Called by the slave to indicate that the command is complete.  Normal
-        completion (even with a nonzero ``rc``) will finish with no failure; if
-        ``failure`` is set, then the step should finish with status
-        :attr:`~buildbot.status.results.EXCEPTION`.
+        Called by the slave to indicate that the command is complete.
+        Normal completion (even with a nonzero ``rc``) will finish with no failure; if ``failure`` is set, then the step should finish with status :attr:`~buildbot.status.results.EXCEPTION`.
 
     These methods are hooks for subclasses to add functionality.
 
@@ -108,67 +98,54 @@ RemoteCommand
 
     .. py:method:: remoteComplete(failure)
 
-        :param failure: the failure that caused the step to complete, or None
-            for success
+        :param failure: the failure that caused the step to complete, or None for success
         :returns: Deferred
 
         Handle command completion, performing any necessary cleanup.
-        Subclasses should override this method.  If ``failure`` is not None, it
-        should be returned to ensure proper processing.
+        Subclasses should override this method.
+        If ``failure`` is not None, it should be returned to ensure proper processing.
 
     .. py:attribute:: logs
 
-        A dictionary of :class:`~buildbot.status.logfile.LogFile` instances
-        representing active logs.  Do not modify this directly -- use
-        :meth:`useLog` instead.
+        A dictionary of :class:`~buildbot.status.logfile.LogFile` instances representing active logs.
+        Do not modify this directly -- use :meth:`useLog` instead.
 
     .. py:attribute:: rc
 
         Set to the return code of the command, after the command has completed.
-        For compatibility with shell commands, 0 is taken to indicate success,
-        while nonzero return codes indicate failure.
+        For compatibility with shell commands, 0 is taken to indicate success, while nonzero return codes indicate failure.
 
     .. py:attribute:: stdout
 
-        If the ``collectStdout`` constructor argument is true, then this
-        attribute will contain all data from stdout, as a single string.  This
-        is helpful when running informational commands (e.g., ``svnversion``),
-        but is not appropriate for commands that will produce a large amount of
-        output, as that output is held in memory.
+        If the ``collectStdout`` constructor argument is true, then this attribute will contain all data from stdout, as a single string.
+        This is helpful when running informational commands (e.g., ``svnversion``), but is not appropriate for commands that will produce a large amount of output, as that output is held in memory.
 
-    To set up logging, use :meth:`useLog` or :meth:`useLogDelayed` before
-    starting the command:
+    To set up logging, use :meth:`useLog` or :meth:`useLogDelayed` before starting the command:
 
     .. py:method:: useLog(log, closeWhenFinished=False, logfileName=None)
 
         :param log: the :class:`~buildbot.status.logfile.LogFile` instance to add to.
-        :param closeWhenFinished: if true, call
-            :meth:`~buildbot.status.logfile.LogFile.finish` when the command is
-            finished.
+        :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
         :param logfileName: the name of the logfile, as given to the slave.
-            This is ``stdio`` for standard streams.
+                            This is ``stdio`` for standard streams.
 
-        Route log-related updates to the given logfile.  Note that ``stdio`` is
-        not included by default, and must be added explicitly.  The
-        ``logfileName`` must match the name given by the slave in any ``log``
-        updates.
+        Route log-related updates to the given logfile.
+        Note that ``stdio`` is not included by default, and must be added explicitly.
+        The ``logfileName`` must match the name given by the slave in any ``log`` updates.
 
     .. py:method:: useLogDelayed(logfileName, activateCallback, closeWhenFinished=False)
 
         :param logfileName: the name of the logfile, as given to the slave.
-            This is ``stdio`` for standard streams.
+                            This is ``stdio`` for standard streams.
         :param activateCallback: callback for when the log is added; see below
-        :param closeWhenFinished: if true, call
-            :meth:`~buildbot.status.logfile.LogFile.finish` when the command is
-            finished.
+        :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
 
         Similar to :meth:`useLog`, but the logfile is only actually added when an update arrives for it.
         The callback, ``activateCallback``, will be called with the :class:`~buildbot.process.remotecommand.RemoteCommand` instance when the first update for the log is delivered.
         It should return the desired log instance, optionally via a Deferred.
 
-    With that finished, run the command using the inherited
-    :meth:`~buildbot.process.remotecommand.RemoteCommand.run` method.  During the
-    run, you can inject data into the logfiles with any of these methods:
+    With that finished, run the command using the inherited :meth:`~buildbot.process.remotecommand.RemoteCommand.run` method.
+    During the run, you can inject data into the logfiles with any of these methods:
 
     .. py:method:: addStdout(data)
 
@@ -201,31 +178,25 @@ RemoteCommand
 
 .. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
 
-    :param workdir: directory in which command should be executed, relative to
-        the builder's basedir.
+    :param workdir: directory in which command should be executed, relative to the builder's basedir.
     :param command: shell command to run
     :type command: string or list
     :param want_stdout: If false, then no updates will be sent for stdout.
     :param want_stderr: If false, then no updates will be sent for stderr.
     :param timeout: Maximum time without output before the command is killed.
-    :param maxTime: Maximum overall time from the start before the command is
-        killed.
-    :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing SIGKILL. If None, SIGTERM will not be fired.
-    :param env: A dictionary of environment variables to augment or replace the
-        existing environment on the slave.
+    :param maxTime: Maximum overall time from the start before the command is killed.
+    :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing SIGKILL.
+                        If None, SIGTERM will not be fired.
+    :param env: A dictionary of environment variables to augment or replace the existing environment on the slave.
     :param logfiles: Additional logfiles to request from the slave.
-    :param usePTY: True to use a PTY, false to not use a PTY; the default value
-        uses the default configured on the slave.
+    :param usePTY: True to use a PTY, false to not use a PTY; the default value uses the default configured on the slave.
     :param logEnviron: If false, do not log the environment on the slave.
     :param collectStdout: If True, collect the command's stdout.
 
-    Most of the constructor arguments are sent directly to the slave; see
-    :ref:`shell-command-args` for the details of the formats.  The
-    ``collectStdout`` parameter is as described for the parent class.
+    Most of the constructor arguments are sent directly to the slave; see :ref:`shell-command-args` for the details of the formats.
+    The ``collectStdout`` parameter is as described for the parent class.
 
-    If shell command contains passwords they can be hidden from log files by passing
-    them as tuple in command argument. Eg. ``['print', ('obfuscated', 'password', 'dummytext')]``
-    is logged as ``['print', 'dummytext']``.
+    If shell command contains passwords they can be hidden from log files by passing them as tuple in command argument.
+    Eg. ``['print', ('obfuscated', 'password', 'dummytext')]`` is logged as ``['print', 'dummytext']``.
 
-    This class is used by the :bb:step:`ShellCommand` step, and by steps that
-    run multiple customized shell commands.
+    This class is used by the :bb:step:`ShellCommand` step, and by steps that run multiple customized shell commands.
