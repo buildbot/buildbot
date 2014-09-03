@@ -54,7 +54,8 @@ class Timed(base.BaseScheduler):
     compare_attrs = ('reason',)
     reason = ''
 
-    def __init__(self, name, builderNames, properties={}, reason='', **kwargs):
+    def __init__(self, name, builderNames, properties={}, reason='',
+                 createAbsoluteSourceStamps=False, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
@@ -69,6 +70,8 @@ class Timed(base.BaseScheduler):
         self.actuateAtTimer = None
 
         self.reason = util.ascii2unicode(reason % {'name': name})
+
+        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
 
         self._reactor = reactor  # patched by tests
 
@@ -113,6 +116,31 @@ class Timed(base.BaseScheduler):
         # take the latest-calculated value of actuateAt as a reasonable
         # estimate
         return [self.actuateAt]
+
+    def gotChange(self, change, important):
+        # both important and unimportant changes on our branch are recorded, as
+        # we will include all such changes in any buildsets we start.  Note
+        # that we must check the branch here because it is not included in the
+        # change filter.
+        if change.codebase in self.codebases:
+            if change.branch and change.branch != self.codebases[change.codebase].get('branch'):
+                return defer.succeed(None)  # don't care about this change
+        else:
+            return defer.succeed(None)
+
+        d = self.master.db.schedulers.classifyChanges(
+            self.objectid, {change.number: important})
+
+        if self.createAbsoluteSourceStamps:
+            d.addCallback(lambda _: self.recordChange(change))
+
+        return d
+
+    def getCodebaseDict(self, codebase):
+        if self.createAbsoluteSourceStamps:
+            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
+        else:
+            return self.codebases[codebase]
 
     # Timed methods
 
@@ -270,7 +298,7 @@ class NightlyBase(Timed):
 
 class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
     compare_attrs = ('onlyIfChanged', 'fileIsImportant',
-                     'change_filter', 'onlyImportant', 'createAbsoluteSourceStamps',)
+                     'change_filter', 'onlyImportant',)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
@@ -282,6 +310,7 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
         convertBranchParameter(kwargs)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
+                             createAbsoluteSourceStamps=createAbsoluteSourceStamps,
                              reason=reason, **kwargs)
 
         # If True, only important changes will be added to the buildset.
@@ -296,7 +325,6 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
                 "createAbsoluteSourceStamps can only be used with onlyIfChanged")
 
         self.onlyIfChanged = onlyIfChanged
-        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.fileIsImportant = fileIsImportant
         self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)
@@ -313,31 +341,6 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
                                              onlyImportant=self.onlyImportant)
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
-
-    def gotChange(self, change, important):
-        # both important and unimportant changes on our branch are recorded, as
-        # we will include all such changes in any buildsets we start.  Note
-        # that we must check the branch here because it is not included in the
-        # change filter.
-        if change.codebase in self.codebases:
-            if change.branch and change.branch != self.codebases[change.codebase].get('branch'):
-                return defer.succeed(None)  # don't care about this change
-        else:
-            return defer.succeed(None)
-
-        d = self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
-
-        if self.createAbsoluteSourceStamps:
-            d.addCallback(lambda _: self.recordChange(change))
-
-        return d
-
-    def getCodebaseDict(self, codebase):
-        if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
-        else:
-            return self.codebases[codebase]
 
     @defer.inlineCallbacks
     def startBuild(self):
@@ -425,7 +428,7 @@ class NightlyTriggerable(NightlyBase):
         # Trigger expects a callback with the success of the triggered
         # build, if waitForFinish is True.
         # Just return SUCCESS, to indicate that the trigger was succesful,
-        # don't want for the nightly to run.
+        # don't wait for the nightly to run.
         return d.addCallback(lambda _: buildstep.SUCCESS)
 
     @defer.inlineCallbacks
