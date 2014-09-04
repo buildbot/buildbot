@@ -381,7 +381,7 @@ AngularJS strong points are:
  * A `fast growing community and ecosystem <http://builtwith.angularjs.org/>`_
 
 On top of Angular we use nodeJS tools to ease development
- * grunt buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
+ * gulp buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
    In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
  * `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
  * `jade template langage <http://jade-lang.com/>`_, adds syntax sugar and readbility to angular html templates.
@@ -398,14 +398,73 @@ modules we may or may not want to include:
 Extensibility
 ~~~~~~~~~~~~~
 
-TODO: document writing plugins
+Buildbot UI is designed for extensibility. The base application should be pretty minimal, and only include very basic status pages. Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
+
+Some Web plugins are maintained inside buildbot's git repository, but this is absolutely not necessary. Unofficial plugins are encouraged, please be creative!
+
+Please look at official plugins for working samples.
+
+Typical plugin source code layout is:
+
+.. code-block:: bash
+
+    setup.py                     # standard setup script. Most plugins should use the same boilerplate, which helps building guanlecoja app as part of the setup. Minimal adaptation is needed
+    <pluginname>/__init__.py     # python entrypoint. Must contain an "ep" variable of type buildbot.www.plugin.Application. Minimal adaptation is needed
+    guanlecoja/config.coffee     # Configuration for guanlecoja. Few changes are needed here. Please see guanlecoja docs for details.
+    src/..                       # source code for the angularjs application. See guanlecoja doc for more info of how it is working.
+    package.json                 # declares npm dependency. normallly, only guanlecoja is needed. Typically, no change needed
+    gulpfile.js                  # entrypoint for gulp, should be a one line call to guanlecoja. Typically, no change needed
+    MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
+
+
+Plugins are packaged as python entry-points for the buildbot.www namespace. The python part is defined in the `buildbot.www.plugin` module. The entrypoint must contain a twisted.web Resource, that is populated in the web server in `/<pluginname>/`.
+
+The front-end part of the plugin system automatically loads `/<pluginname>/scripts.js` and `/<pluginname>/styles.css` into the angular.js application. The scripts.js files can register itself as a dependency to the main "app" module, register some new states to $stateProvider, or new menu items via glMenuProvider.
+
+The entrypoint being a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`. You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
+
 
 .. _Routing:
 
 Routing
 ~~~~~~~
 
-The router, we used is provided by angular, and the config is in src/scripts/routes.coffee
+AngularJS uses router to match URL and choose which page to display. The router we use is ui.router. Menu is managed by guanlecoja-ui's glMenuProvider. Please look at ui.router, and guanlecoja-ui documentation for details.
+
+Typically, a route regitration will look like following example.
+
+.. code-block:: coffeescript
+
+# ng-classify declaration. Declares a config class
+class State extends Config
+    # Dependancy injection: we inject $stateProvider and glMenuServiceProvider
+    constructor: ($stateProvider, glMenuServiceProvider) ->
+
+        # Name of the state
+        name = 'console'
+
+        # Menu configuration.
+        glMenuServiceProvider.addGroup
+            name: name
+            caption: 'Console View'     # text of the menu
+            icon: 'exclamation-circle'  # icon, from Font-Awesome
+            order: 5                    # order in the menu, as menu are declared in several places, we need this to control menu order
+
+        # Configuration for the menu-item, here we only have one menu item per menu, glMenuProvider won't create submenus
+        cfg =
+            group: name
+            caption: 'Console View'
+
+        # Register new state
+        state =
+            controller: "#{name}Controller"
+            controllerAs: "c"
+            templateUrl: "console_view/views/#{name}.html"
+            name: name
+            url: "/#{name}"
+            data: cfg
+
+        $stateProvider.state(state)
 
 
 Directives
@@ -566,6 +625,28 @@ This section describes how to get set up quickly to hack on the JavaScript UI.
 It does not assume familiarity with Python, although a Python installation is required, as well as ``virtualenv``.
 You will also need ``NodeJS``, and ``npm`` installed.
 
+Prerequisites
+~~~~~~~~~~~~~
+
+* Install latest release of node.js.
+
+http://nodejs.org/ is a good start for windows and osx.
+
+For linux, as node.js is evolving very fast, distros versions are often too old. For ubuntu, for example, you want to use following ppa:
+
+.. code-block:: none
+
+    sudo add-apt-repository -y ppa:chris-lea/node.js
+
+Please feel free to update this documentation for other distros.
+
+
+* Install gulp globally. Gulp is the build system used for coffeescript development.
+
+.. code-block:: none
+
+    sudo npm install -g gulp
+
 Hacking the Buildbot JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -590,8 +671,9 @@ Next, install the Buildbot-WWW and Buildbot packages using ``--editable``, which
 
 .. code-block:: none
 
-    pip install --editable www/
+    pip install --editable pkg
     pip install --editable master/
+    make frontend
 
 This will fetch a number of dependencies from pypi, the Python package repository.
 This will also fetch a bunch a bunch of node.js dependencies used for building the web application,
@@ -614,20 +696,17 @@ When doing web development, you usually run:
 
 .. code-block:: none
 
-    cd www
-    . tosource
-    grunt dev
+    cd www/base
+    gulp dev
 
-This will compile the webapp in development mode, and automatically rebuild when files change.
+This will compile the base webapp in development mode, and automatically rebuild when files change.
 
-If your browser and dev environment are on the same machine, you can use the livereload feature of the build script.
-For this to work, you need to run those command from another terminal, at the same time as "grunt dev"
+Guanlecoja
+----------
 
-.. code-block:: none
+Buildbot's build environment has been factorized for reuse in other projects and plugins, and is callsed Guanlecoja.
 
-    cd www
-    . tosource
-    grunt reloadserver
+The documentation and meaning of this name is maintained in Guanlecoja's own site. https://github.com/buildbot/guanlecoja/
 
 
 Testing Setup
@@ -636,43 +715,15 @@ Testing Setup
 buildbot_www uses `Karma <http://karma-runner.github.io>`_ to run the coffeescript test suite. This is the official test framework made for angular.js
 We dont run the front-end testsuite inside the python 'trial' test suite, because testing python and JS is technically very different.
 
-Karma needs a browser to run the unit test in. It supports all the major browsers. buildbot www's build script supports two popular browsers,
-and PhantomJS which is headless web browser made for unit testing.
-Like for the livereload feature, the test-runner works with autowatch mode. You need to use "grunt dev" in parallel from the following commands:
+Karma needs a browser to run the unit test in. It supports all the major browsers. Given our current experience, we did not see any bugs yet that would only happen on a particular browser this is the reason that at the moment, only headless browser "PhantomJS" is used for testing.
 
+We enforce that the tests are run all the time after build. This does not impact the build time by a great factor, and simplify the workflow.
 
-Run the tests in Firefox:
-
-.. code-block:: none
-
-    cd www
-    . tosource
-    grunt fftest
-
-Run the tests in Chrome:
+In some case, this might not be desirable, for example if you run the build on headless system, without X. PhantomJS, even if it is headless needs a X server like xvfb. In the case where you are having difficulties to run Phantomjs, you can build without the tests using the command:
 
 .. code-block:: none
 
-    cd www
-    . tosource
-    grunt chrometest
-
-Run the tests in PhantomJS (which you can download at http://phantomjs.org/):
-
-.. code-block:: none
-
-    cd www
-    . tosource
-    grunt pjstest
-
-For the purpose of the metabuildbot, a special grunt target is made for running the test suite inside PhantomJS.
-This special target only runs once, so is not connected to the watch mechanics:
-
-.. code-block:: none
-
-    cd www
-    . tosource
-    grunt ci
+    gulp prod --notests
 
 
 Debug with karma
