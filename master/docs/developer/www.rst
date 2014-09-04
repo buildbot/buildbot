@@ -435,36 +435,36 @@ Typically, a route regitration will look like following example.
 
 .. code-block:: coffeescript
 
-# ng-classify declaration. Declares a config class
-class State extends Config
-    # Dependancy injection: we inject $stateProvider and glMenuServiceProvider
-    constructor: ($stateProvider, glMenuServiceProvider) ->
+    # ng-classify declaration. Declares a config class
+    class State extends Config
+        # Dependancy injection: we inject $stateProvider and glMenuServiceProvider
+        constructor: ($stateProvider, glMenuServiceProvider) ->
 
-        # Name of the state
-        name = 'console'
+            # Name of the state
+            name = 'console'
 
-        # Menu configuration.
-        glMenuServiceProvider.addGroup
-            name: name
-            caption: 'Console View'     # text of the menu
-            icon: 'exclamation-circle'  # icon, from Font-Awesome
-            order: 5                    # order in the menu, as menu are declared in several places, we need this to control menu order
+            # Menu configuration.
+            glMenuServiceProvider.addGroup
+                name: name
+                caption: 'Console View'     # text of the menu
+                icon: 'exclamation-circle'  # icon, from Font-Awesome
+                order: 5                    # order in the menu, as menu are declared in several places, we need this to control menu order
 
-        # Configuration for the menu-item, here we only have one menu item per menu, glMenuProvider won't create submenus
-        cfg =
-            group: name
-            caption: 'Console View'
+            # Configuration for the menu-item, here we only have one menu item per menu, glMenuProvider won't create submenus
+            cfg =
+                group: name
+                caption: 'Console View'
 
-        # Register new state
-        state =
-            controller: "#{name}Controller"
-            controllerAs: "c"
-            templateUrl: "console_view/views/#{name}.html"
-            name: name
-            url: "/#{name}"
-            data: cfg
+            # Register new state
+            state =
+                controller: "#{name}Controller"
+                controllerAs: "c"
+                templateUrl: "console_view/views/#{name}.html"
+                name: name
+                url: "/#{name}"
+                data: cfg
 
-        $stateProvider.state(state)
+            $stateProvider.state(state)
 
 
 Directives
