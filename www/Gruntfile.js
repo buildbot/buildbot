@@ -70,7 +70,7 @@ module.exports = function (grunt) {
             }
         },
         cssmin: {
-            options : {
+            options: {
                 keepBreaks: true
             },
             minify: {
@@ -129,11 +129,23 @@ module.exports = function (grunt) {
             }
         },
         karma: {
-            unit: {
+            options: {
                 configFile: "script/karma.config.js",
                 browsers: ["Chrome"],
                 singleRun: true,
                 runnerPort: 9876
+            },
+            unit: {},
+            coverage: {
+                reporters: "coverage"
+            }
+        },
+        open: {
+            coverage: {
+                path: function () {
+                    var reports = grunt.file.expand('coverage/Chrome*/index.html');
+                    return reports[reports.length - 1].toString();
+                }
             }
         },
         handlebars: {
@@ -186,6 +198,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-handlebars");
     grunt.loadNpmTasks("grunt-karma");
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-open');
 
     // Define your tasks here
     grunt.registerTask("prod", ["test", "build:prod"]);
@@ -196,6 +209,7 @@ module.exports = function (grunt) {
         grunt.task.run(["compass:" + target, "cssmin", "handlebars:compile", "requirejs:" + target]);
     });
     grunt.registerTask("test", ["karma:unit"]);
+    grunt.registerTask("coverage", ["karma:coverage", "open:coverage"]);
     grunt.registerTask("default", ["build", "watch"]);
 
 };
