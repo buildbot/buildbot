@@ -206,7 +206,9 @@ It can also be specified with a single ``try_builders`` option in :file:`.buildb
 
     try_builders = ["full-OSX", "full-win32", "full-linux"]
 
-If you are using the PB approach, you can get the names of the builders that are configured for the try scheduler using the ``get-builder-names`` argument::
+If you are using the PB approach, you can get the names of the builders that are configured for the try scheduler using the ``get-builder-names`` argument:
+
+.. code-block:: bash
 
     buildbot try --get-builder-names --connect=pb --master=... --username=... --passwd=...
 

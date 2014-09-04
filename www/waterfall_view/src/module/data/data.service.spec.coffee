@@ -83,6 +83,5 @@ describe 'Data service', ->
         dataService.getGroups(builders, builds, 0)
         dataService.addStatus(builders)
         for builder in builders
-            expect(builder.results).toBeDefined()
-        # Working builder status is pending
-        expect(builders[2].results).toBe('pending')
+            if builder.complete then expect(builder.results).toBeDefined()
+            else expect(builder.results).not.toBeDefined()
