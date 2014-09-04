@@ -97,8 +97,8 @@ BuildStep
     .. py:attribute:: rendered
 
         At the begining of the step, the renderable attributes are rendered against the properties.
-        There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs. To address this problem, a ``rendered`` attribute is
-        available for methods that could be called early in the buildstep creation.
+        There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs.
+        To address this problem, a ``rendered`` attribute is available for methods that could be called early in the buildstep creation.
 
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
@@ -151,7 +151,8 @@ BuildStep
             :class:`~buildslave.bot.SlaveBuilder` instance
         :returns: Deferred
 
-        Begin the step. This is the build's interface to step execution.
+        Begin the step.
+        This is the build's interface to step execution.
         Subclasses should override :meth:`run` to implement custom behaviors.
 
     .. py:method:: run()
@@ -216,7 +217,8 @@ BuildStep
 
     .. py:attribute:: stopped
 
-        If false, then the step is running.  If true, the step is not running, or has been interrupted.
+        If false, then the step is running.
+        If true, the step is not running, or has been interrupted.
 
     A step can indicate its up-to-the-moment status using a short summary string.
     These methods allow step subclasses to produce such summaries.
@@ -465,7 +467,9 @@ LoggingBuildStep
         :returns: step result from :mod:`buildbot.status.results`
 
         .. note::
-            This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged. It will be removed, and its use is deprecated.
+
+           This method permits an optional ``errorMessages`` parameter, allowing errors detected early in the command process to be logged.
+           It will be removed, and its use is deprecated.
 
          Handle all of the mechanics of running the given command.
          This sets up all required logfiles, and calls the utility hooks described below.

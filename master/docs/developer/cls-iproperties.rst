@@ -21,6 +21,5 @@ IProperties
 
    .. method:: getProperties()
 
-      Get a :class:`buildbot.process.properties.Properties` instance.  The
-      interface of this class is not finalized; where possible, use the other
-      ``IProperties`` methods.
+      Get a :class:`buildbot.process.properties.Properties` instance.
+      The interface of this class is not finalized; where possible, use the other ``IProperties`` methods.
