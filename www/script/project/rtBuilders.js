@@ -33,6 +33,8 @@ define(function (require) {
         dataTableInit: function ($tableElem) {
             var options = {};
 
+            options.iFilterCol = 0;
+
             options.aoColumns = [
                 { "mData": null, "sWidth": "20%" },
                 { "mData": null, "sWidth": "10%" },
