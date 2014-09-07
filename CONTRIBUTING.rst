@@ -12,8 +12,6 @@ See http://trac.buildbot.net/wiki/Development for the full story.
 Issues, Bugs, Tickets
 ---------------------
 
-**We do not use the GitHub Issue Tracker for bugs**
-
 Please file tickets for any bugs you discover at http://trac.buildbot.net.
 It is not necessary to file a bug if you are preparing a patch.
 
@@ -32,6 +30,13 @@ Also you can install our git hook for validating and fixing most common coding s
 ::
 
     cp common/hooks/post-commit .git/hooks
+
+Review
+------
+
+Buildbot's code-review process is described at http://trac.buildbot.net/wiki/PatchReview.
+The important point to know is that Buildbot requires a positive review (adding the "merge-me" label) before a change is eligible to be merged.
+While we try to perform reviews in a timely fashion, if your review has lagged for a week or more please do feel free to nag us in whatever way is easiest for you.
 
 Development Tips
 ----------------
