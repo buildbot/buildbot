@@ -112,7 +112,11 @@ if $slow; then
     for module in www/base www/console_view www/waterfall_view www/codeparameter;
     do
         status "running 'setup.py develop' for $module"
-        (cd $module; python setup.py develop >/dev/null    ) || not_ok "$module/setup.py failed"
+        if ! (cd $module; python setup.py develop >/dev/null ); then
+            warning "$module/setup.py failed; retrying with cleared libs/"
+            rm -rf "$module/libs"
+            (cd $module; python setup.py develop >/dev/null ) || not_ok "$module/setup.py failed"
+        fi
     done
 fi
 if $slow; then
