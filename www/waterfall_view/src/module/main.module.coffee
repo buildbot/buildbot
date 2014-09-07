@@ -30,8 +30,6 @@ class Waterfall extends Controller
 
             # Minimum builder column width (px)
             minColumnWidth: cfg.minColumnWidth or 40
-            # Maximum builder column width (px)
-            maxColumnWidth: cfg.maxColumnWidth or 80
 
             # Y axis time format (new line: ^)
             timeFormat: cfg.timeFormat or '%x^%I:%M'
@@ -60,9 +58,9 @@ class Waterfall extends Controller
             @dataService.addStatus(@builders)
 
             # Select containers
-            @container = @d3.select('.svg-container')
-            @header = @d3.select('.header-content')
             @waterfall = @d3.select('.waterfall')
+            @container = @waterfall.select('.svg-container')
+            @header = @waterfall.select('.header-content')
             # Append svg elements to the containers
             @createElements()
 
@@ -72,6 +70,12 @@ class Waterfall extends Controller
             @loading = false
 
             # Render on resize
+            @$scope.$watch(
+                => @waterfall.style('width')
+            ,
+                (n, o) => if n != o then @render()
+            , true
+            )
             angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
@@ -135,22 +139,21 @@ class Waterfall extends Controller
     # Set the content width
     ###
     setWidth: ->
-        if @c.minColumnWidth > 0 and @c.maxColumnWidth > 0 and @c.minColumnWidth <= @c.maxColumnWidth
+        if @c.minColumnWidth > 0
             columnWidth = (@$window.innerWidth - @c.margin.right - @c.margin.left) / @builders.length
 
-            narrower =  columnWidth <= @c.maxColumnWidth
             wider = @c.minColumnWidth <= columnWidth
 
             width =
-                if narrower and wider then '100%'
-                else if narrower
-                    "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+                if wider then '100%'
                 else
-                    "#{@builders.length * @c.maxColumnWidth + @c.margin.right + @c.margin.left}px"
+                    "#{@builders.length * @c.minColumnWidth + @c.margin.right + @c.margin.left}px"
+
+            @waterfall.select('.inner-content').style('width', width)
+            @waterfall.select('.header-content').style('width', width)
 
         else
-            @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}\n\t max: #{@c.maxColumnWidth}"
-            width = 40
+            @$log.error "Bad column width configuration\n\t min: #{@c.minColumnWidth}"
 
     ###
     # Get the container height

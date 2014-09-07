@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import mock
-import warnings
 
 from twisted.python import log
 
