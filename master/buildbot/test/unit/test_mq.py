@@ -16,6 +16,7 @@
 import mock
 
 from buildbot.mq import simple
+from buildbot.mq import kombuMQ
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
 from buildbot.test.util import tuplematching
@@ -129,3 +130,10 @@ class TestSimpleMQ(unittest.TestCase, RealTests):
     def setUp(self):
         self.master = fakemaster.make_master()
         self.mq = simple.SimpleMQ(self.master)
+
+
+class TestKombuMQ(unittest.TestCase, RealTests):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        self.mq = kombuMQ.KombuMQ(self.master)
