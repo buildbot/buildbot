@@ -136,6 +136,35 @@ class Timed(base.BaseScheduler):
 
         return d
 
+    @defer.inlineCallbacks
+    def startBuildWithChanges(self, onlyIfChanged=False, **kwargs):
+        # use the collected changes to start a build
+        scheds = self.master.db.schedulers
+        classifications = yield scheds.getChangeClassifications(self.objectid)
+
+        # if onlyIfChanged is True, then we will skip this build if no
+        # important changes have occurred since the last invocation
+        if self.onlyIfChanged and not any(classifications.itervalues()):
+            log.msg(("Nightly Scheduler <%s>: skipping build " +
+                     "- No important changes on configured branch") % self.name)
+            return
+
+        changeids = sorted(classifications.keys())
+
+        if changeids:
+            max_changeid = changeids[-1]  # (changeids are sorted)
+            yield self.addBuildsetForChanges(reason=self.reason,
+                                             changeids=changeids,
+                                             **kwargs)
+            yield scheds.flushChangeClassifications(self.objectid,
+                                                    less_than=max_changeid + 1)
+        else:
+            # There are no changes, but onlyIfChanged is False, so start
+            # a build of the latest revision, whatever that is
+            yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
+                                                              sourcestamps=self.emptySourceStamps(),
+                                                              **kwargs)
+
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
             return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
@@ -342,35 +371,8 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
 
-    @defer.inlineCallbacks
     def startBuild(self):
-        scheds = self.master.db.schedulers
-        # if onlyIfChanged is True, then we will skip this build if no
-        # important changes have occurred since the last invocation
-        if self.onlyIfChanged:
-            classifications = \
-                yield scheds.getChangeClassifications(self.objectid)
-
-            # see if we have any important changes
-            for imp in classifications.itervalues():
-                if imp:
-                    break
-            else:
-                log.msg(("Nightly Scheduler <%s>: skipping build " +
-                         "- No important changes on configured branch") % self.name)
-                return
-
-            changeids = sorted(classifications.keys())
-            yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=changeids)
-
-            max_changeid = changeids[-1]  # (changeids are sorted)
-            yield scheds.flushChangeClassifications(self.objectid,
-                                                    less_than=max_changeid + 1)
-        else:
-            # start a build of the latest revision, whatever that is
-            yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                              sourcestamps=self.emptySourceStamps())
+        return self.startBuildWithChanges(self.onlyIfChanged)
 
 
 class NightlyTriggerable(NightlyBase):
