@@ -84,6 +84,8 @@ Features
 
      While the components can be still directly imported as ``buildbot.kind.other.bits``, this might not be the case after Buildbot v1.0 is released.
 
+* :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
+
 Fixes
 ~~~~~
 

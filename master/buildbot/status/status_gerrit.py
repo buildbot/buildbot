@@ -134,7 +134,8 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
 
     def __init__(self, server, username, reviewCB=DEFAULT_REVIEW,
                  startCB=None, port=29418, reviewArg=None,
-                 startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None, **kwargs):
+                 startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
+                 identity_file=None, **kwargs):
         StatusReceiverMultiService.__init__(self)
 
         # If neither reviewCB nor summaryCB were specified, default to sending
@@ -155,6 +156,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         self.gerrit_port = port
         self.gerrit_version = None
         self.gerrit_version_time = 0
+        self.gerrit_identity_file = identity_file
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
         self.startCB = startCB
@@ -163,7 +165,18 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         self.summaryArg = summaryArg
 
     def _gerritCmd(self, *args):
-        return ["ssh", self.gerrit_username + "@" + self.gerrit_server, "-p %d" % self.gerrit_port, "gerrit"] + list(args)
+        '''Construct a command as a list of strings suitable for
+        :func:`subprocess.call`.
+        '''
+        if self.gerrit_identity_file is not None:
+            options = ['-i', self.gerrit_identity_file]
+        else:
+            options = []
+        return ['ssh'] + options + [
+                '@'.join((self.gerrit_username, self.gerrit_server)),
+                '-p', str(self.gerrit_port),
+                'gerrit'
+        ] + list(args)
 
     class VersionPP(ProcessProtocol):
 
