@@ -99,6 +99,15 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertRaisesConfigError("BuildStep name must be a string",
                                      lambda: buildstep.BuildStep(name=5))
 
+    def test_descriptionIsntStringList(self):
+        """
+        When BuildStep is passed a description that isn't a list of strings, it
+        reports a config error.
+        """
+        self.assertRaisesConfigError(
+                "BuildStep parameter 'description' must be a list of strings",
+                lambda: buildstep.BuildStep(description="hi"))
+
     def test_unexpectedKeywordArgument(self):
         """
         When BuildStep is passed an unknown keyword argument, it reports

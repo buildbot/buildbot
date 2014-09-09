@@ -290,6 +290,18 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
 
+        def is_string_list(value):
+            if not isinstance(value, list):
+                return False
+            for elt in value:
+                if not isinstance(elt, basestring):
+                    return False
+            return True
+
+        for attr in 'description', 'descriptionDone', 'descriptionSuffix':
+            val = getattr(self, attr)
+            if val and not is_string_list(val):
+                config.error("BuildStep parameter %r must be a list of strings" % (attr,))
         if not isinstance(self.name, str):
             config.error("BuildStep name must be a string: %r" % (self.name,))
 
