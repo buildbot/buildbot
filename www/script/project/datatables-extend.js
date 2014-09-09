@@ -124,6 +124,9 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 }
             });
 
+            if (options.iFilterCol !== undefined) {
+                dataTables.initSingleColumnFilter(options.iFilterCol);
+            }
 
             return oTable;
         },
@@ -245,6 +248,24 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return sort(a, b, true);
                 }
             });
+        },
+        initSingleColumnFilter: function initSingleColumnFilter(index) {
+            $.fn.dataTableExt.afnFiltering.push(
+                function filter(oSettings, aData, iDataIndex) {
+                    var f = oSettings.oPreviousSearch.sSearch;
+                    if (f !== undefined && f.length > 0) {
+                        var regex = new RegExp(f, "i"),
+                            text = $(aData[index]).text();
+
+                        // Attempt converting the HTML before using the plain string
+                        if (text.length === 0) {
+                            text = aData[index];
+                        }
+                        return text.search(regex) > -1;
+                    }
+                    return true;
+                }
+            );
         }
     };
 

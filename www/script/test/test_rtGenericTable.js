@@ -197,20 +197,42 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
     describe("A build status cell", function () {
         var $buildStatusDict = gt.cell.buildStatus(0),
-            $html = rawHTMLToJQuery($buildStatusDict.mRender(undefined, undefined, buildData)),
+            $html,
+            $spans,
+            statusText = "";
+
+        $.each(buildData.text, function (i, str) {
+            statusText += str;
+        });
+
+        function renderHTML(data) {
+            $html = rawHTMLToJQuery($buildStatusDict.mRender(undefined, undefined, data));
             $spans = $html.find("span");
+        }
 
         it("renders correctly", function () {
-            var statusText = "";
-
-            $.each(buildData.text, function (i, str) {
-                statusText += str;
-            });
-
+            renderHTML(buildData);
             expect($spans.length).toEqual(2);
             $.each($spans, function (i, span) {
                 expect($(span).text().trim()).toEqual(statusText);
             });
+        });
+
+        it("renders correctlXy with a dictionary url", function () {
+            renderHTML(buildData);
+            var $a = $html.find("a");
+            
+            expect($a.length).toEqual(1);
+            expect($a.attr("href")).toEqual(buildData.url.path);
+        });
+
+        it("renders correctly with a string url", function () {
+            var customBuildData = $.extend({}, buildData, {url: "http://www.moo.com"});
+            renderHTML(customBuildData);
+
+            var $a = $html.find("a");
+            expect($a.length).toEqual(1);
+            expect($a.attr("href")).toEqual(customBuildData.url);
         });
     });
 

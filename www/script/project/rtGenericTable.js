@@ -79,6 +79,9 @@ define(function (require) {
                 "mRender": function (data, type, full) {
                     var build = privFunc.getPropertyOnData(full, property);
                     if (build !== undefined) {
+                        if (typeof build.url === "object") {
+                            build = $.extend({}, build, {url: build.url.path});
+                        }
                         return hb.partials.cells["cells:buildStatus"](build);
                     }
 
@@ -98,7 +101,7 @@ define(function (require) {
                 "sClass": className === undefined ? "txt-align-right" : className,
                 "mRender": function (data, type, full) {
                     if (full.builderFriendlyName !== undefined) {
-                        full.url = full.builder_url;
+                        full = $.extend({}, full, {url: full.builder_url});
                         full.friendly_name = full.builderFriendlyName;
                     }
                     return hb.partials.cells["cells:builderName"](full);

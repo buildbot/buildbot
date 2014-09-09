@@ -17,6 +17,7 @@
     "grunt-karma": "~0.8.3",
     "karma-coverage": "~0.2.4",
     "grunt-contrib-handlebars": "~0.8.0",
-    "grunt-contrib-cssmin": "~0.10.0"
+    "grunt-contrib-cssmin": "~0.10.0",
+    "grunt-open": "~0.2.3"
   }
 }

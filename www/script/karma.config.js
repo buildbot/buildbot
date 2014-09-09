@@ -37,15 +37,15 @@ module.exports = function (config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'templates/**/*.mustache': [''],
-            'templates/**/*.handlebars': [''],
-            'project/*.js': ['coverage']
+            'script/templates/**/*.mustache': [''],
+            'script/templates/**/*.handlebars': [''],
+            'script/project/*.js': ['coverage']
         },
 
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['progress'],
+        reporters: ['progress', 'coverage'],
 
 
         // web server port
