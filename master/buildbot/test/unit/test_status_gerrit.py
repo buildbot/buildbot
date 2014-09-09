@@ -206,6 +206,24 @@ class TestGerritStatusPush(unittest.TestCase):
                                                        result)
         return d
 
+    def test_gerrit_ssh_cmd(self):
+        kwargs = {
+            'server': 'example.com',
+            'username': 'buildbot',
+        }
+        without_identity = GerritStatusPush(**kwargs)
+
+        expected1 = ['ssh', 'buildbot@example.com', '-p', '29418', 'gerrit', 'foo']
+        self.assertEqual(expected1, without_identity._gerritCmd('foo'))
+
+        with_identity = GerritStatusPush(
+            identity_file='/path/to/id_rsa', **kwargs)
+        expected2 = [
+            'ssh', '-i', '/path/to/id_rsa', 'buildbot@example.com', '-p', '29418',
+            'gerrit', 'foo',
+        ]
+        self.assertEqual(expected2, with_identity._gerritCmd('foo'))
+
     def test_buildsetComplete_success_sends_summary_review(self):
         d = self.check_summary_build(buildResults=[SUCCESS, SUCCESS],
                                      finalResult=SUCCESS,
