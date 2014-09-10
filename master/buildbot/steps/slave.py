@@ -78,8 +78,8 @@ class FileExists(SlaveBuildStep):
     Check for the existence of a file on the slave.
     """
     name = 'FileExists'
-    description = 'Checking'
-    descriptionDone = 'Checked'
+    description = ['Checking']
+    descriptionDone = ['Checked']
 
     renderables = ['file']
 

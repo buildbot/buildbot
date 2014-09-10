@@ -290,6 +290,19 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
 
+        def is_string_list(value):
+            renderable = lambda x: interfaces.IRenderable.providedBy(x)
+            if renderable(value):
+                return True
+            if not isinstance(value, list):
+                return False
+            return all(isinstance(e, basestring) or renderable(e)
+                       for e in value)
+
+        for attr in 'description', 'descriptionDone', 'descriptionSuffix':
+            val = getattr(self, attr)
+            if val and not is_string_list(val):
+                config.error("BuildStep parameter %r must be a list of strings" % (attr,))
         if not isinstance(self.name, str):
             config.error("BuildStep name must be a string: %r" % (self.name,))
 
