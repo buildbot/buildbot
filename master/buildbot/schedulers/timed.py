@@ -144,7 +144,7 @@ class Timed(base.BaseScheduler):
 
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
-        if self.onlyIfChanged and not any(classifications.itervalues()):
+        if onlyIfChanged and not any(classifications.itervalues()):
             log.msg(("Nightly Scheduler <%s>: skipping build " +
                      "- No important changes on configured branch") % self.name)
             return
@@ -161,8 +161,9 @@ class Timed(base.BaseScheduler):
         else:
             # There are no changes, but onlyIfChanged is False, so start
             # a build of the latest revision, whatever that is
+            sourcestamps = [dict(codebase=cb) for cb in self.codebases.keys()]
             yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                              sourcestamps=self.emptySourceStamps(),
+                                                              sourcestamps=sourcestamps,
                                                               **kwargs)
 
     def getCodebaseDict(self, codebase):
@@ -206,9 +207,6 @@ class Timed(base.BaseScheduler):
     def now(self):
         "Similar to util.now, but patchable by tests"
         return util.now(self._reactor)
-
-    def emptySourceStamps(self):
-        return [dict(codebase=cb) for cb in self.codebases.keys()]
 
     def _scheduleNextBuild_locked(self):
         # clear out the existing timer
@@ -281,8 +279,7 @@ class Periodic(Timed):
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
     def startBuild(self):
-        return self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                           sourcestamps=self.emptySourceStamps())
+        return self.startBuildWithChanges()
 
 
 class NightlyBase(Timed):
