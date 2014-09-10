@@ -60,8 +60,8 @@ def closeSession():
 class HTTPStep(BuildStep):
 
     name = 'HTTPStep'
-    description = 'Requesting'
-    descriptionDone = 'Requested'
+    description = ['Requesting']
+    descriptionDone = ['Requested']
     requestsParams = ["method", "url", "params", "data", "headers",
                       "cookies", "files", "auth",
                       "timeout", "allow_redirects", "proxies",

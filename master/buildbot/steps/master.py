@@ -35,8 +35,8 @@ class MasterShellCommand(BuildStep):
     logfiles are not supported.
     """
     name = 'MasterShellCommand'
-    description = 'Running'
-    descriptionDone = 'Ran'
+    description = ['Running']
+    descriptionDone = ['Ran']
     descriptionSuffix = None
     renderables = ['command', 'env', 'description', 'descriptionDone', 'descriptionSuffix']
     haltOnFailure = True
