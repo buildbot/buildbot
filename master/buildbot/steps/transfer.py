@@ -685,3 +685,63 @@ class JSONPropertiesDownload(StringDownload):
         ),
         )
         return self.super_class.start(self)
+
+
+import os
+from tempfile import mktemp
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from buildbot.process import properties
+
+class S3FileUpload(FileUpload):
+
+    renderables = ['slavesrc', 'bucket', 'key']
+
+    def __init__(self, slavesrc, bucket, key, identifier=None,
+                 secret_identifier=None, aws_id_file_path=None):
+        self.bucket = bucket
+        self.key = key
+
+        self.masterdest = mktemp()
+        FileUpload.__init__(self, slavesrc, self.masterdest, url=key)
+
+        # Get AWS identifier and secret_identifier (from ~/.ec2/aws_id)
+        if identifier is None:
+            assert secret_identifier is None, (
+                'supply both or neither of identifier, secret_identifier')
+            if aws_id_file_path is None:
+                home = os.environ['HOME']
+                aws_id_file_path = os.path.join(home, '.ec2', 'aws_id')
+            if not os.path.exists(aws_id_file_path):
+                raise ValueError(
+                    "Please supply your AWS access key identifier and secret "
+                    "access key identifier either when instantiating this %s "
+                    "or in the %s file (on two lines).\n" %
+                    (self.__class__.__name__, aws_id_file_path))
+            with open(aws_id_file_path, 'r') as aws_file:
+                identifier = aws_file.readline().strip()
+                secret_identifier = aws_file.readline().strip()
+        else:
+            assert aws_id_file_path is None, \
+                'if you supply the identifier and secret_identifier, ' \
+                'do not specify the aws_id_file_path'
+            assert secret_identifier is not None, \
+                'supply both or neither of identifier, secret_identifier'
+
+        # Create a connection to specified S3 bucket
+        self.conn = S3Connection(identifier, secret_identifier)
+
+    def finished(self, results):
+        # Upload to S3
+        s3key = Key(self.conn.get_bucket(self.bucket))
+        s3key.key = self.key
+        s3key.set_contents_from_filename(self.masterdest)
+
+        os.remove(self.masterdest)
+        log.msg("S3FileUpload finished")
+        FileUpload.finished(self, results)
+
+    def failed(self, results):
+        log.msg("S3FileUpload failed")
+        os.remove(self.masterdest)
+        FileUpload.failed(self, results)
