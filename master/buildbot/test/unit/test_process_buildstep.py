@@ -108,6 +108,20 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                 "BuildStep parameter 'description' must be a list of strings",
                 lambda: buildstep.BuildStep(description="hi"))
 
+    def test_renderableDescription(self):
+        """
+        When BuildStep is passed a renderable description, no exception is
+        raised.
+        """
+        buildstep.BuildStep(description=properties.Property('x'))
+
+    def test_renderableDescriptionElement(self):
+        """
+        When BuildStep is passed a list containing a renderable, no exception
+        is raised.
+        """
+        buildstep.BuildStep(description=['str', properties.Property('x')])
+
     def test_unexpectedKeywordArgument(self):
         """
         When BuildStep is passed an unknown keyword argument, it reports

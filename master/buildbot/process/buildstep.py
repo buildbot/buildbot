@@ -291,12 +291,15 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._pendingLogObservers = []
 
         def is_string_list(value):
+            renderable = lambda x: interfaces.IRenderable.providedBy(x)
+            if renderable(value):
+                return True
             if not isinstance(value, list):
                 return False
-            for elt in value:
-                if not isinstance(elt, basestring):
-                    return False
-            return True
+            if all(isinstance(e, basestring) or renderable(e)
+                   for e in value):
+                return True
+            return False
 
         for attr in 'description', 'descriptionDone', 'descriptionSuffix':
             val = getattr(self, attr)
