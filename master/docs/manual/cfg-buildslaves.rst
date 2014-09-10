@@ -614,6 +614,7 @@ The simplest example is an image that is converted to a volume and the instance 
 When the instance is destroyed, the volume will be terminated as well.
 
 ::
+
     from buildbot.plugins import buildslave
     c['slaves'] = [
         buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
