@@ -296,10 +296,8 @@ class BuildStep(results.ResultComputingConfigMixin,
                 return True
             if not isinstance(value, list):
                 return False
-            if all(isinstance(e, basestring) or renderable(e)
-                   for e in value):
-                return True
-            return False
+            return all(isinstance(e, basestring) or renderable(e)
+                       for e in value)
 
         for attr in 'description', 'descriptionDone', 'descriptionSuffix':
             val = getattr(self, attr)
