@@ -107,7 +107,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             for tbl in 'schedulers', 'scheduler_upstream_buildsets':
                 try:
                     conn.execute("select * from %s" % tbl)
-                except:
+                except Exception:
                     pass
                 else:
                     self.fail("%s table still exists" % tbl)

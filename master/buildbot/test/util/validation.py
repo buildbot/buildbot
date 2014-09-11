@@ -218,7 +218,7 @@ class SourcedPropertiesValidator(Validator):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
                 json.dumps(propval)
-            except:
+            except (TypeError, ValueError):
                 yield "%s[%r] value is not JSON-able" % (name, k)
 
 
@@ -229,7 +229,7 @@ class JsonValidator(Validator):
     def validate(self, name, object):
         try:
             json.dumps(object)
-        except:
+        except (TypeError, ValueError):
             yield "%s[%r] value is not JSON-able" % (name, object)
 
 

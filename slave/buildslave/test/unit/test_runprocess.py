@@ -523,7 +523,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             if os.path.exists(pidfile):
                 try:
                     pid = int(open(pidfile).read())
-                except:
+                except (IOError, TypeError, ValueError):
                     pid = None
 
                 if pid is not None:

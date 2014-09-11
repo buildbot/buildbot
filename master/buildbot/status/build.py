@@ -429,7 +429,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 if os.path.exists(filename):
                     os.unlink(filename)
             os.rename(tmpfilename, filename)
-        except:
+        except Exception:
             log.msg("unable to save build %s-#%d" % (self.builder.name,
                                                      self.number))
             log.err()

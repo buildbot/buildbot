@@ -191,7 +191,7 @@ class SourcedProperties(Type):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
                 json.loads(propval)
-            except:
+            except ValueError:
                 yield "%s[%r] value is not JSON-able" % (name, k)
 
 

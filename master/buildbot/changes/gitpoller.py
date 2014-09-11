@@ -168,7 +168,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 revs[branch] = rev = yield self._dovccmd(
                     'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
                 yield self._process_changes(rev, branch)
-            except:
+            except Exception:
                 log.err(_why="trying to poll branch %s of %s"
                         % (branch, self.repourl))
 

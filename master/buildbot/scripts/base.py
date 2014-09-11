@@ -145,7 +145,7 @@ class SubcommandOptions(usage.Options):
                         with open(optfile, "r") as f:
                             options = f.read()
                         exec options in localDict
-                    except:
+                    except Exception:
                         print "error while reading %s" % optfile
                         raise
                     break

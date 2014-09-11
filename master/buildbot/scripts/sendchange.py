@@ -47,7 +47,7 @@ def sendchange(config):
                      category=category, when=when, properties=properties,
                      repository=repository, vc=vc, project=project, revlink=revlink,
                      codebase=codebase)
-    except:
+    except Exception:
         print "change not sent:"
         traceback.print_exc(file=sys.stdout)
         defer.returnValue(1)

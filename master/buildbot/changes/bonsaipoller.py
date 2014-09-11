@@ -106,7 +106,9 @@ class BonsaiParser:
             data = data.decode("latin1")
             self.dom = minidom.parseString(data)
             log.msg(data)
-        except:
+        # depending on the parser in use, this may raise errors from different
+        # hierarchies, so 'Exception' is the most specific we can be.
+        except Exception:
             raise InvalidResultError("Malformed XML in result")
 
         self.ciNodes = self.dom.getElementsByTagName("ci")

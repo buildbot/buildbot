@@ -133,7 +133,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
                 if not m:
                     misses.append((regex, line))
             self.assertEqual(misses, [], "got non-matching lines")
-        except:
+        except Exception:
             log.msg("got output:\n" + output)
             raise
 

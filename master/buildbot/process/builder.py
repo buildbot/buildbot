@@ -315,7 +315,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 while cleanups:
                     fn = cleanups.pop()
                     fn()
-            except:
+            except Exception:
                 log.err(failure.Failure(), "while running %r" % (run_cleanups,))
 
         # the last cleanup we want to perform is to update the big
@@ -342,7 +342,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         try:
             ready = yield slavebuilder.prepare(self.builder_status, build)
-        except:
+        except Exception:
             log.err(failure.Failure(), 'while preparing slavebuilder:')
             ready = False
 
@@ -367,7 +367,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 % (build, slavebuilder))
         try:
             ping_success = yield slavebuilder.ping()
-        except:
+        except Exception:
             log.err(failure.Failure(), 'while pinging slave before build:')
             ping_success = False
 
@@ -386,7 +386,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # tell the remote that it's starting a build, too
         try:
             yield slavebuilder.slave.conn.remoteStartBuild(build.builder.name)
-        except:
+        except Exception:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
             defer.returnValue(False)

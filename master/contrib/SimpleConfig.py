@@ -176,7 +176,7 @@ class SimpleConfig(dict):
         thisfile = thisfile.replace(".pyc", ".py")
         try:
             thisfile = os.readlink(thisfile)
-        except:
+        except OSError:
             pass
         dir = os.path.join(os.path.dirname(thisfile))
 
@@ -210,7 +210,7 @@ class SimpleConfig(dict):
             self.__auth = auth.BasicAuth([(s["webuser"].encode('ascii', 'ignore'), s["webpass"].encode('ascii', 'ignore'))])
             # For the moment, all slaves have same password
             self.slavepass = s["slavepass"].encode('ascii', 'ignore')
-        except:
+        except Exception:
             exit("%s must be a json file containing webuser, webpass, and slavepass; ascii only, no commas in quotes" % secretsfile)
 
         # STATUS TARGETS

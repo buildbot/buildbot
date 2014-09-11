@@ -68,7 +68,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         if self.logfile.openfile:
             try:
                 self.logfile.openfile.close()
-            except:
+            except Exception:
                 pass  # oh well, we tried
         self.tearDownDirs()
 
@@ -84,7 +84,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         if self.logfile.openfile:
             try:
                 self.logfile.openfile.close()
-            except:
+            except Exception:
                 pass  # oh well, we tried
         os.unlink(os.path.join('basedir', '123-stdio'))
 
@@ -342,7 +342,7 @@ class TestHTMLLogFile(unittest.TestCase, dirs.DirsMixin):
         if self.logfile.openfile:
             try:
                 self.logfile.openfile.close()
-            except:
+            except Exception:
                 pass  # oh well, we tried
         self.tearDownDirs()
 

@@ -65,7 +65,7 @@ class FakeUpdates(object):
                 propval = v
             try:
                 json.dumps(propval)
-            except:
+            except (TypeError, ValueError):
                 self.testcase.fail("value for %s is not JSON-able" % (k,))
 
     # update methods

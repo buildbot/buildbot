@@ -44,7 +44,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     os.chdir(basedir)
     try:
         f = open("twistd.pid", "rt")
-    except:
+    except IOError:
         raise SlaveNotRunning()
 
     pid = int(f.read().strip())

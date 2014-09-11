@@ -41,7 +41,7 @@ from email.Utils import formataddr
 
 try:
     import pwd
-except:
+except ImportError:
     # pwd is not available on Windows..
     pwd = None
 

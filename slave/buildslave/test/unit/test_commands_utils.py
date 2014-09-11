@@ -90,7 +90,7 @@ class RmdirRecursive(unittest.TestCase):
         try:
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
-        except:
+        except Exception:
             # this test will probably fail anyway
             e = sys.exc_info()[0]
             raise unittest.SkipTest("could not clean before test: %s" % (e,))
@@ -107,7 +107,7 @@ class RmdirRecursive(unittest.TestCase):
         try:
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
-        except:
+        except Exception:
             print "\n(target directory was not removed by test, and cleanup failed too)\n"
             raise
 

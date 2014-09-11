@@ -33,7 +33,7 @@ class Gerrit(Git):
                     gerrit_branch = "refs/changes/%2.2d/%d/%d" \
                         % (int(change[0]) % 100, int(change[0]), int(change[1]))
                     self.updateSourceProperty("gerrit_branch", gerrit_branch)
-            except:
+            except Exception:
                 pass
 
         branch = gerrit_branch or branch

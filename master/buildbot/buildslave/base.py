@@ -443,7 +443,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
             # handlers from being run. Bummer.
             tport.offset = 0
             tport.dataBuffer = ""
-        except:
+        except Exception:
             # however, these hacks are pretty internal, so don't blow up if
             # they fail or are unavailable
             log.msg("failed to accelerate the shutdown process")

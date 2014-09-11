@@ -264,7 +264,7 @@ class Build(properties.PropertiesMixin):
 
         try:
             self.setupBuild(expectations)  # create .steps
-        except:
+        except Exception:
             # the build hasn't started yet, so log the exception as a point
             # event instead of flunking the build.
             # TODO: associate this failure with the build instead.
@@ -523,7 +523,7 @@ class Build(properties.PropertiesMixin):
         # this may not work well.
         try:
             self.buildFinished(["build", "exception"], EXCEPTION)
-        except:
+        except Exception:
             log.err(Failure(), 'while finishing a build with an exception')
 
     def buildFinished(self, text, results):

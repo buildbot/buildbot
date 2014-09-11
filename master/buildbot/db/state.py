@@ -104,7 +104,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
                 return default
             try:
                 return json.loads(row.value_json)
-            except:
+            except ValueError:
                 raise TypeError("JSON error loading state value '%s' for %d" %
                                 (name, objectid))
         return self.db.pool.do(thd)
@@ -115,7 +115,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
             try:
                 value_json = json.dumps(value)
-            except:
+            except (TypeError, ValueError):
                 raise TypeError("Error encoding JSON for %r" % (value,))
 
             self.checkLength(object_state_tbl.c.name, name)

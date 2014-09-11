@@ -217,7 +217,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 log.msg("Halting master.")
                 _reactor.stop()
                 return
-            except:
+            except Exception:
                 log.err(failure.Failure(), 'while starting BuildMaster')
                 _reactor.stop()
                 return
@@ -263,7 +263,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             yield self.data.updates.masterActive(
                 name=self.name,
                 masterid=self.masterid)
-        except:
+        except Exception:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
             _reactor.stop()
@@ -350,7 +350,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 log.msg(msg)
             failed = True
 
-        except:
+        except Exception:
             log.err(failure.Failure(), 'during reconfig:')
             failed = True
 

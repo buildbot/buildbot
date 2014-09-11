@@ -47,7 +47,7 @@ def validateMasterOption(master):
     try:
         hostname, port = master.split(":")
         port = int(port)
-    except:
+    except (TypeError, ValueError):
         raise usage.UsageError("master must have the form 'hostname:port'")
 
 
@@ -277,7 +277,7 @@ class SendChangeOptions(base.SubcommandOptions):
         if self.get('when'):
             try:
                 self['when'] = float(self['when'])
-            except:
+            except (TypeError, ValueError):
                 raise usage.UsageError('invalid "when" value %s'
                                        % (self['when'],))
         else:

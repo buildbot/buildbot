@@ -111,7 +111,7 @@ class CommandTestMixin:
             try:
                 if "elapsed" in update:
                     continue
-            except:
+            except Exception:
                 pass
             my_updates.append(update)
         self.assertEqual(my_updates, updates, msg)

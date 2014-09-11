@@ -285,7 +285,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 v, s = vs
                 if s != "Change":
                     v, s = vs, "Change"
-            except:
+            except (ValueError, TypeError):
                 v, s = vs, "Change"
             return v, s
 

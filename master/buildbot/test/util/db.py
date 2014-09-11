@@ -160,7 +160,7 @@ class RealDatabaseMixin(object):
                     tbl = model.Model.metadata.tables[row.table]
                     try:
                         tbl.insert(bind=conn).execute(row.values)
-                    except:
+                    except Exception:
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
         return self.db_pool.do(thd)

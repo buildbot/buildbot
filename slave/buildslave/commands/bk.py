@@ -102,14 +102,6 @@ class BK(SourceBaseCommand):
         d = c.start()
 
         def _parse(res):
-            r_raw = c.stdout.strip()
-            try:
-                r = r_raw
-            except:
-                msg = ("BK.parseGotRevision unable to parse output: (%s)" % r_raw)
-                log.msg(msg)
-                self.sendStatus({'header': msg + "\n"})
-                raise ValueError(msg)
-            return r
+            return c.stdout.strip()
         d.addCallback(_parse)
         return d

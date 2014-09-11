@@ -282,7 +282,7 @@ class TestSlaveComm(unittest.TestCase):
         try:
             yield self.connectSlave(waitForBuilderList=False)
             connect_failed = False
-        except:
+        except Exception:
             connect_failed = True
         self.assertTrue(connect_failed)
 

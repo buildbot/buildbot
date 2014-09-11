@@ -168,7 +168,7 @@ class RemoteCommand(pb.Referenceable):
             try:
                 if self.active and not self.ignore_updates:
                     self.remoteUpdate(update)
-            except:
+            except Exception:
                 # log failure, terminate build, let slave retire the update
                 self._finished(Failure())
                 # TODO: what if multiple updates arrive? should

@@ -46,7 +46,7 @@ def sa_version():
         def tryint(s):
             try:
                 return int(s)
-            except:
+            except (ValueError, TypeError):
                 return -1
         return tuple(map(tryint, sa.__version__.split('.')))
     return (0, 0, 0)  # "it's old"

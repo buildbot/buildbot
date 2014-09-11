@@ -424,9 +424,8 @@ class RunProcess:
         self.deferred = defer.Deferred()
         try:
             self._startCommand()
-        except:
-            log.msg("error in RunProcess._startCommand")
-            log.err()
+        except Exception:
+            log.err("error in RunProcess._startCommand")
             self._addToBuffers('stderr', "error in RunProcess._startCommand\n")
             self._addToBuffers('stderr', traceback.format_exc())
             self._sendBuffers()

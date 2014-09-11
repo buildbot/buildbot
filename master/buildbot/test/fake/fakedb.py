@@ -1413,7 +1413,7 @@ class FakeStateComponent(FakeDBComponent):
     def getObjectId(self, name, class_name):
         try:
             id = self.objects[(name, class_name)]
-        except:
+        except KeyError:
             # invent a new id and add it
             id = self.objects[(name, class_name)] = self._newId()
             self.states[id] = {}

@@ -219,7 +219,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 return ["'%s" % words[0], "%s'" % words[1]]
             return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-        except:
+        except Exception:
             log.err(failure.Failure(), "Error describing step")
             return ["???"]
 
