@@ -22,6 +22,7 @@ import re
 import string
 import time
 import types
+import urlparse
 
 from twisted.python import reflect
 
@@ -265,6 +266,15 @@ def check_functional_environment(config):
             "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
             "Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE' are either unset or set to a valid locale.",
         ]))
+
+
+_netloc_url_re = re.compile(r':[^@]*@')
+
+
+def stripUrlPassword(url):
+    parts = list(urlparse.urlsplit(url))
+    parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
+    return urlparse.urlunsplit(parts)
 
 
 __all__ = [

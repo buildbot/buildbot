@@ -287,3 +287,27 @@ class FunctionalEnvironment(unittest.TestCase):
         config = mock.Mock()
         util.check_functional_environment(config)
         config.error.assert_called_with(mock.ANY)
+
+
+class StripUrlPassword(unittest.TestCase):
+
+    def test_simple_url(self):
+        self.assertEqual(util.stripUrlPassword('http://foo.com/bar'),
+                         'http://foo.com/bar')
+
+    def test_username(self):
+        self.assertEqual(util.stripUrlPassword('http://d@foo.com/bar'),
+                         'http://d@foo.com/bar')
+
+    def test_username_with_at(self):
+        self.assertEqual(util.stripUrlPassword('http://d@bb.net@foo.com/bar'),
+                         'http://d@bb.net@foo.com/bar')
+
+    def test_username_pass(self):
+        self.assertEqual(util.stripUrlPassword('http://d:secret@foo.com/bar'),
+                         'http://d:xxxx@foo.com/bar')
+
+    def test_username_pass_with_at(self):
+        self.assertEqual(
+            util.stripUrlPassword('http://d@bb.net:scrt@foo.com/bar'),
+            'http://d@bb.net:xxxx@foo.com/bar')

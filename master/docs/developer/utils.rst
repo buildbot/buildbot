@@ -179,6 +179,13 @@ package.
     Yield a deferred that will fire with no result after ``secs`` seconds.
     This is the asynchronous equivalent to ``time.sleep``, and can be useful in tests.
 
+.. py:function:: stripUrlPassword(url)
+
+    :param url: a URL
+    :returns: URL with any password component replaced with ``xxxx``
+
+    Sanitize a URL; use this before logging or displaying a DB URL.
+
 buildbot.util.lru
 ~~~~~~~~~~~~~~~~~
 
