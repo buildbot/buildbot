@@ -85,7 +85,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(revision='myrev', branch='br', project='p',
                  repository='r', codebase='cb'),
         ], set_props=None)
@@ -103,11 +103,11 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev1', branch='br', project='p',
                  repository='r')
         ], set_props=None)
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev2', branch='br', project='p',
                  repository='r')
         ], set_props=None)
@@ -126,7 +126,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r')
         ], set_props=None)
@@ -149,7 +149,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev1', branch='br', project='p',
                  repository='r')
         ], set_props=None)
@@ -161,7 +161,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
                  revision='myrev1'),
         ])
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev2', branch='br', project='p',
                  repository='r')
         ], set_props=None)
@@ -179,7 +179,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {} ]'),
+                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {}, null, null ]'),
         ])
 
         sched.activate()
@@ -197,7 +197,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {} ]'),
+                               value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {}, null, null ]'),
         ])
 
         sched.activate()
@@ -218,7 +218,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        d = sched.trigger([
+        (idsDeferred, d) = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)
@@ -228,7 +228,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
                 dict(codebase='cb', revision='myrev',
                      branch='br', project='p', repository='r'),
-            ], {}])
+            ], {}, None, None])
 
         return d
 
@@ -241,7 +241,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        d = sched.trigger([
+        (idsDeferre, d) = sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], set_props=None)
@@ -263,7 +263,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched.activate()
 
-        sched.trigger([
+        sched.trigger(False, [
             dict(codebase='cb', revision='myrev', branch='br', project='p',
                  repository='r'),
         ], properties.Properties(testprop='test'))
@@ -271,7 +271,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertState(self.SCHEDULERID, lastTrigger=[[
             dict(codebase='cb', revision='myrev',
                  branch='br', project='p', repository='r'),
-        ], {'testprop': ['test', 'TEST']}])
+        ], {'testprop': ['test', 'TEST']}, None, None])
 
         self.clock.advance(60 * 60)  # Run for 1h
 
@@ -288,7 +288,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {"testprop": ["test", "TEST"]} ]'),
+                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {"testprop": ["test", "TEST"]}, null, null ]'),
         ])
 
         sched.activate()
