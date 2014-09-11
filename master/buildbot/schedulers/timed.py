@@ -394,11 +394,15 @@ class NightlyTriggerable(NightlyBase):
             try:
                 if isinstance(lastTrigger[0], list):
                     self._lastTrigger = (lastTrigger[0],
-                                         properties.Properties.fromDict(lastTrigger[1]))
+                                         properties.Properties.fromDict(lastTrigger[1]),
+                                         lastTrigger[2],
+                                         lastTrigger[3])
                 # handle state from before Buildbot-0.9.0
                 elif isinstance(lastTrigger[0], dict):
                     self._lastTrigger = (lastTrigger[0].values(),
-                                         properties.Properties.fromDict(lastTrigger[1]))
+                                         properties.Properties.fromDict(lastTrigger[1]),
+                                         None,
+                                         None)
             except Exception:
                 pass
             # If the lastTrigger isn't of the right format, ignore it
@@ -408,34 +412,41 @@ class NightlyTriggerable(NightlyBase):
                     "could not load previous state; starting fresh",
                     scheduler=self.name)
 
-    def trigger(self, sourcestamps, set_props=None):
+    def trigger(self, waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         assert isinstance(sourcestamps, list), \
             "trigger requires a list of sourcestamps"
 
-        self._lastTrigger = (sourcestamps, set_props)
+        self._lastTrigger = (sourcestamps,
+                             set_props,
+                             parent_buildid,
+                             parent_relationship)
 
-        # record the trigger in the db
         if set_props:
             propsDict = set_props.asDict()
         else:
             propsDict = {}
-        d = self.setState('lastTrigger',
-                          (sourcestamps, propsDict))
+
+        # record the trigger in the db
+        d = self.setState('lastTrigger', (sourcestamps,
+                                          propsDict,
+                                          parent_buildid,
+                                          parent_relationship))
 
         # Trigger expects a callback with the success of the triggered
         # build, if waitForFinish is True.
         # Just return SUCCESS, to indicate that the trigger was succesful,
         # don't wait for the nightly to run.
-        return d.addCallback(lambda _: buildstep.SUCCESS)
+        return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
 
     @defer.inlineCallbacks
     def startBuild(self):
         if self._lastTrigger is None:
             return
 
-        (sourcestamps, set_props) = self._lastTrigger
+        (sourcestamps, set_props, parent_buildid, parent_relationship) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
 
@@ -446,6 +457,9 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                          sourcestamps=sourcestamps,
-                                                          properties=props)
+        yield self.addBuildsetForSourceStampsWithDefaults(
+            reason=self.reason,
+            sourcestamps=sourcestamps,
+            properties=props,
+            parent_buildid=parent_buildid,
+            parent_relationship=parent_relationship)
