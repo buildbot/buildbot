@@ -183,7 +183,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(
-            result=SUCCESS, status_text=["uploading", "srcfile"])
+            result=SUCCESS, state_string="uploading srcfile")
         d = self.runStep()
         return d
 
@@ -203,7 +203,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(
-            result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
+            result=SUCCESS,
+            state_string="uploading %s" % os.path.basename(__file__))
 
         d = self.runStep()
 
@@ -234,7 +235,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(
-            result=SUCCESS, status_text=["uploading", os.path.basename(__file__)])
+            result=SUCCESS,
+            state_string="uploading %s" % os.path.basename(__file__))
 
         d = self.runStep()
 
@@ -256,7 +258,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 1)
 
         self.expectOutcome(
-            result=FAILURE, status_text=["uploading", "srcfile"])
+            result=FAILURE,
+            state_string="uploading srcfile (failure)")
         d = self.runStep()
         return d
 
@@ -275,7 +278,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(behavior))
 
         self.expectOutcome(
-            result=EXCEPTION, status_text=["upload", "exception"])
+            result=EXCEPTION, state_string="uploading srcfile (exception)")
         d = self.runStep()
 
         @d.addCallback
@@ -314,7 +317,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "srcdir"])
+        self.expectOutcome(result=SUCCESS,
+                           state_string="uploading srcdir")
         d = self.runStep()
         return d
 
@@ -329,7 +333,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
                 writer=ExpectRemoteRef(transfer._DirectoryWriter)))
             + 1)
 
-        self.expectOutcome(result=FAILURE, status_text=["uploading", "srcdir"])
+        self.expectOutcome(result=FAILURE,
+                           state_string="uploading srcdir (failure)")
         d = self.runStep()
         return d
 
@@ -348,7 +353,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(behavior))
 
         self.expectOutcome(
-            result=EXCEPTION, status_text=["upload", "exception"])
+            result=EXCEPTION,
+            state_string="uploading srcdir (exception)")
         d = self.runStep()
 
         @d.addCallback
@@ -381,7 +387,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands()
 
-        self.expectOutcome(result=SKIPPED, status_text=["upload"])
+        self.expectOutcome(result=SKIPPED, state_string="finished (skipped)")
         d = self.runStep()
         return d
 
@@ -401,7 +407,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "1 file"])
+        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.runStep()
         return d
 
@@ -421,7 +427,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(uploadTarFile('fake.tar', test="Hello world!"))
             + 0)
 
-        self.expectOutcome(result=SUCCESS, status_text=["uploading", "1 file"])
+        self.expectOutcome(result=SUCCESS, state_string="uploading 1 file")
         d = self.runStep()
         return d
 
@@ -452,7 +458,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(
-            result=SUCCESS, status_text=["uploading", "2 files"])
+            result=SUCCESS, state_string="uploading 2 files")
         d = self.runStep()
         return d
 
@@ -472,7 +478,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 1)
 
         self.expectOutcome(
-            result=FAILURE, status_text=["uploading", "2 files"])
+            result=FAILURE, state_string="uploading 2 files (failure)")
         d = self.runStep()
         return d
 
@@ -495,7 +501,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + Expect.behavior(behavior))
 
         self.expectOutcome(
-            result=EXCEPTION, status_text=["upload", "exception"])
+            result=EXCEPTION, state_string="uploading 2 files (exception)")
         d = self.runStep()
 
         @d.addCallback
@@ -538,7 +544,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             + 0)
 
         self.expectOutcome(
-            result=SUCCESS, status_text=["uploading", "2 files"])
+            result=SUCCESS, state_string="uploading 2 files")
 
         d = self.runStep()
 

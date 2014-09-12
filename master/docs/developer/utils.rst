@@ -186,6 +186,14 @@ package.
 
     Sanitize a URL; use this before logging or displaying a DB URL.
 
+.. py:function:: join_list(maybe_list)
+
+    :param maybe_list: list, tuple, byte string, or unicode
+    :returns: unicode
+
+    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
+    This is useful for configuration parameters that may be strings or lists of strings.
+
 buildbot.util.lru
 ~~~~~~~~~~~~~~~~~
 

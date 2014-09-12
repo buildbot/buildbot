@@ -53,6 +53,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST',
                                         usePTY="slave-config")
                             + 0 + Expect.log('stdio make BUILDBOT-TEST'))
+        # TODO: need to factor command-summary stuff into a utility method and use it here
         self.expectOutcome(result=SUCCESS, status_text=["'make", "BUILDBOT-TEST'"])
         return self.runStep()
 

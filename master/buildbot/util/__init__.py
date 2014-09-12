@@ -277,6 +277,13 @@ def stripUrlPassword(url):
     return urlparse.urlunsplit(parts)
 
 
+def join_list(maybeList):
+    if isinstance(maybeList, (list, tuple)):
+        return u' '.join(ascii2unicode(s) for s in maybeList)
+    else:
+        return ascii2unicode(maybeList)
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',

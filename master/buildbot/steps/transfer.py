@@ -286,7 +286,7 @@ class FileUpload(_TransferBuildStep):
         log.msg("FileUpload started, from slave %r to master %r"
                 % (source, masterdest))
 
-        self.step_status.setText(['uploading', os.path.basename(source)])
+        self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
             self.addURL(os.path.basename(masterdest), self.url)
 
@@ -347,7 +347,7 @@ class DirectoryUpload(_TransferBuildStep):
         log.msg("DirectoryUpload started, from slave %r to master %r"
                 % (source, masterdest))
 
-        self.step_status.setText(['uploading', os.path.basename(source)])
+        self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
             self.addURL(os.path.basename(masterdest), self.url)
 
@@ -497,7 +497,8 @@ class MultipleFileUpload(_TransferBuildStep):
                 % (sources, masterdest))
 
         nsrcs = len(sources)
-        self.step_status.setText(['uploading', '%d %s' % (nsrcs, 'file' if nsrcs == 1 else 'files')])
+        self.descriptionDone = 'uploading %d %s' % (
+            nsrcs, 'file' if nsrcs == 1 else 'files')
 
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -569,8 +570,7 @@ class FileDownload(_TransferBuildStep):
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 
-        self.step_status.setText(['downloading', "to",
-                                  os.path.basename(slavedest)])
+        self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
 
         # setup structures for reading the file
         try:
@@ -630,8 +630,7 @@ class StringDownload(_TransferBuildStep):
         slavedest = self.slavedest
         log.msg("StringDownload started, from master to slave %r" % slavedest)
 
-        self.step_status.setText(['downloading', "to",
-                                  os.path.basename(slavedest)])
+        self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
 
         # setup structures for reading the file
         fp = StringIO(self.s)

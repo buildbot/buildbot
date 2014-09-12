@@ -165,6 +165,8 @@ class VisualStudio(ShellCommand):
     def describe(self, done=False):
         description = ShellCommand.describe(self, done)
         if done:
+            if not description:
+                description = ['compile']
             description.append('%d projects' % self.step_status.getStatistic('projects', 0))
             description.append('%d files' % self.step_status.getStatistic('files', 0))
             warnings = self.step_status.getStatistic('warnings', 0)

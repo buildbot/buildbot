@@ -126,8 +126,7 @@ class BuildEPYDoc(steps.BuildStepMixin, unittest.TestCase):
             + 1,
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=['epydoc', 'warn=1',
-                                        'err=3', 'failed'])
+                           state_string='epydoc warn=1 err=3 (failure)')
         return self.runStep()
 
 
@@ -147,7 +146,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
             + python.PyLint.RC_OK)
-        self.expectOutcome(result=SUCCESS, status_text=['pylint'])
+        self.expectOutcome(result=SUCCESS, state_string='pylint')
         return self.runStep()
 
     def test_error(self):
@@ -161,8 +160,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'E: 12: Undefined variable \'foo\'\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_ERROR))
         self.expectOutcome(result=FAILURE,
-                           status_text=['pylint', 'error=1', 'warning=1',
-                                        'failed'])
+                           state_string='pylint error=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-error', 1)
         return self.runStep()
@@ -178,8 +176,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'F: 13: something really strange happened\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_FATAL))
         self.expectOutcome(result=FAILURE,
-                           status_text=['pylint', 'fatal=1', 'warning=1',
-                                        'failed'])
+                           state_string='pylint fatal=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-fatal', 1)
         return self.runStep()
@@ -197,8 +194,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'E: 12: Undefined variable \'foo\'\n'))
             + 0)
         self.expectOutcome(result=FAILURE,
-                           status_text=['pylint', 'error=1', 'warning=1',
-                                        'failed'])
+                           state_string='pylint error=1 warning=1 (failure)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-error', 1)
         return self.runStep()
@@ -214,8 +210,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'C:  1:foo123: Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -233,8 +228,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'C:  3,10:foo123: Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -251,8 +245,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'C0111:  1:funcName: Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -270,8 +263,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'C0111:  3,10:foo123: Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -288,8 +280,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'test.py:3: [C0111, foo123] Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -306,8 +297,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                         'test.py:3: [C, foo123] Missing docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pylint', 'convention=1', 'warning=1',
-                                        'warnings'])
+                           state_string='pylint convention=1 warning=1 (warnings)')
         self.expectProperty('pylint-warning', 1)
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
@@ -328,7 +318,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
                         usePTY='slave-config')
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pyflakes'])
+        self.expectOutcome(result=SUCCESS, state_string='pyflakes')
         return self.runStep()
 
     def test_unused(self):
@@ -341,7 +331,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                 stdout="foo.py:1: 'bar' imported but unused\n")
             + 1)
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pyflakes', 'unused=1', 'warnings'])
+                           state_string='pyflakes unused=1 (warnings)')
         self.expectProperty('pyflakes-unused', 1)
         self.expectProperty('pyflakes-total', 1)
         return self.runStep()
@@ -356,7 +346,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                 stdout="foo.py:1: undefined name 'bar'\n")
             + 1)
         self.expectOutcome(result=FAILURE,
-                           status_text=['pyflakes', 'undefined=1', 'failed'])
+                           state_string='pyflakes undefined=1 (failure)')
         self.expectProperty('pyflakes-undefined', 1)
         self.expectProperty('pyflakes-total', 1)
         return self.runStep()
@@ -371,7 +361,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                 stdout="foo.py:2: redefinition of unused 'foo' from line 1\n")
             + 1)
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pyflakes', 'redefs=1', 'warnings'])
+                           state_string='pyflakes redefs=1 (warnings)')
         self.expectProperty('pyflakes-redefs', 1)
         self.expectProperty('pyflakes-total', 1)
         return self.runStep()
@@ -386,7 +376,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                 stdout="foo.py:1: 'from module import *' used; unable to detect undefined names\n")
             + 1)
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pyflakes', 'import*=1', 'warnings'])
+                           state_string='pyflakes import*=1 (warnings)')
         self.expectProperty('pyflakes-import*', 1)
         self.expectProperty('pyflakes-total', 1)
         return self.runStep()
@@ -401,7 +391,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                 stdout="foo.py:2: redefinition of function 'bar' from line 1\n")
             + 1)
         self.expectOutcome(result=WARNINGS,
-                           status_text=['pyflakes', 'misc=1', 'warnings'])
+                           state_string='pyflakes misc=1 (warnings)')
         self.expectProperty('pyflakes-misc', 1)
         self.expectProperty('pyflakes-total', 1)
         return self.runStep()
@@ -432,7 +422,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                               stdout=log_output_success)
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])
+        self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")
         return self.runStep()
 
     def test_failure(self):
@@ -444,7 +434,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                               stdout='oh noes!')
             + 1
         )
-        self.expectOutcome(result=FAILURE, status_text=["sphinx", "0 warnings", "failed"])
+        self.expectOutcome(result=FAILURE, state_string="sphinx 0 warnings")
         return self.runStep()
 
     def test_nochange(self):
@@ -457,7 +447,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["sphinx", "0 warnings"])
+                           state_string="sphinx 0 warnings")
         return self.runStep()
 
     def test_warnings(self):
@@ -470,7 +460,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=WARNINGS,
-                           status_text=["sphinx", "2 warnings", "warnings"])
+                           state_string="sphinx 2 warnings")
         self.expectLogfile("warnings", warnings)
         d = self.runStep()
 
@@ -497,5 +487,5 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                               stdout=log_output_success)
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=["sphinx", "0 warnings"])
+        self.expectOutcome(result=SUCCESS, state_string="sphinx 0 warnings")
         return self.runStep()

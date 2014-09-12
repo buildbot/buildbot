@@ -595,6 +595,7 @@ class Trial(ShellCommand):
     def evaluateCommand(self, cmd):
         return self.results
 
+    # TODO: better rewrite this as new-style
     def getText(self, cmd, results):
         return self.text
 

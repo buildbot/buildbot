@@ -87,7 +87,8 @@ class HTTPStep(BuildStep):
         BuildStep.__init__(self, **kwargs)
 
     def start(self):
-        self.doRequest()
+        d = self.doRequest()
+        d.addErrback(self.failed)
 
     @defer.inlineCallbacks
     def doRequest(self):
@@ -134,8 +135,7 @@ class HTTPStep(BuildStep):
 
         log.finish()
 
-        self.descriptionDone = "Status code: %d" % r.status_code
-        self.step_status.setText(self.describe(done=True))
+        self.descriptionDone = ["Status code: %d" % r.status_code]
         if (r.status_code < 400):
             self.finished(SUCCESS)
         else:
@@ -161,11 +161,6 @@ class HTTPStep(BuildStep):
 
         log.addStdout(' ------ Content ------\n%s' % response.text)
         self.addLog('content').addStdout(response.text)
-
-    def describe(self, done=False):
-        if done:
-            return self.descriptionDone.split()
-        return self.description.split()
 
 
 class POST(HTTPStep):

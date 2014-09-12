@@ -114,7 +114,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -172,7 +172,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -214,7 +214,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -253,7 +253,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -292,7 +292,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -331,7 +331,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -359,7 +359,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -407,7 +407,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -450,7 +450,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -490,7 +490,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -526,7 +526,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -569,7 +569,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -607,7 +607,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_branch(self):
@@ -642,7 +642,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -681,7 +681,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_branch_sourcestamp(self):
@@ -716,7 +716,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -757,7 +757,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -788,7 +788,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -829,7 +829,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -861,7 +861,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -898,7 +898,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -925,7 +925,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -953,7 +953,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -992,7 +992,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -1022,7 +1022,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '-z3', 'checkout', '-d', 'wkdir', '-l', 'mozilla/browser/'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -1062,7 +1062,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
 
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '2012-09-09 12:00:39 +0000', 'CVS')
         return self.runStep()
 
@@ -1077,7 +1077,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 128,
         )
 
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_cvsdiscard_fails(self):
@@ -1114,7 +1114,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 1,
         )
 
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_slave_connection_lost(self):
@@ -1128,6 +1128,5 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ('err', error.ConnectionLost()),
         )
 
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

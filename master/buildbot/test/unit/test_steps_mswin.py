@@ -40,8 +40,6 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
         s = mswin.Robocopy(source, destination, **kwargs)
         self.setupStep(s)
         s.rendered = True
-        self.assertEqual(s.describe(), ['???'])
-        self.assertEqual(s.describe(done=True), ['???'])
 
         command = ['robocopy', source, destination]
         if expected_args:
@@ -55,14 +53,8 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             )
             + expected_code
         )
-        status_text = ["'robocopy", source, "...'"]
-        if expected_res == WARNINGS:
-            status_text.append('warnings')
-        elif expected_res == FAILURE:
-            status_text.append('failed')
-        elif expected_res == EXCEPTION:
-            status_text.append('exception')
-        self.expectOutcome(result=expected_res, status_text=status_text)
+        state_string = "'robocopy %s ...'" % source
+        self.expectOutcome(result=expected_res, state_string=state_string)
         return self.runStep()
 
     def test_copy(self):

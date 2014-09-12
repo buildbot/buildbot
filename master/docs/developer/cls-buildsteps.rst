@@ -100,6 +100,11 @@ BuildStep
         There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs.
         To address this problem, a ``rendered`` attribute is available for methods that could be called early in the buildstep creation.
 
+    .. py:attribute:: results
+
+        This is the result (a code from :py:mod:`buildbot.status.results`) of the step.
+        This attribute only exists after the step is finished, and should only be used in :py:meth:`getResultSummary`.
+
     A few important pieces of information are not available when a step is constructed, and are added later.
     These are set by the following methods; the order in which these methods are called is not defined.
 
@@ -250,8 +255,9 @@ BuildStep
         Either or both keys can be omitted.
 
         This method is only called while the step is finished.
+        The step's result is available in ``self.results`` at that time.
 
-        New-style build steps should override this method to provide a more interesting summary than the default ``u"running"``, or to provide any build summary information.
+        New-style build steps should override this method to provide a more interesting summary than the default, or to provide any build summary information.
 
     .. py:method:: describe(done=False)
 

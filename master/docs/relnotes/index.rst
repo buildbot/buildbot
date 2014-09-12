@@ -187,7 +187,14 @@ Requirements
 Steps
 .....
 
-* Old-style source steps (imported directly from ``buildbot.steps.source``) are no longer supported on the master.
+* New-style steps are now the norm, and support for old-style steps is deprecated.
+  Such support will be removed in the next release.
+
+  * Status strings for old-style steps could be supplied through a wide variety of conflicting means (``describe``, ``description``, ``descriptionDone``, ``descriptionSuffix``, ``getText``, and ``setText``, to name just a few).
+    While all attempts have been made to maintain compatibility, you may find that the status strings for old-style steps have changed in this version.
+    To fix steps that call ``setText``, try setting the ``descriptionDone`` attribute directly, instead -- or just rewrite the step in the new style.
+
+* Old-style *source* steps (imported directly from ``buildbot.steps.source``) are no longer supported on the master.
 
 Changes and Removals
 ....................

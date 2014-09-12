@@ -311,3 +311,21 @@ class StripUrlPassword(unittest.TestCase):
         self.assertEqual(
             util.stripUrlPassword('http://d@bb.net:scrt@foo.com/bar'),
             'http://d@bb.net:xxxx@foo.com/bar')
+
+
+class JoinList(unittest.TestCase):
+
+    def test_list(self):
+        self.assertEqual(util.join_list(['aa', 'bb']), u'aa bb')
+
+    def test_tuple(self):
+        self.assertEqual(util.join_list(('aa', 'bb')), u'aa bb')
+
+    def test_string(self):
+        self.assertEqual(util.join_list('abc'), u'abc')
+
+    def test_unicode(self):
+        self.assertEqual(util.join_list(u'abc'), u'abc')
+
+    def test_nonascii(self):
+        self.assertRaises(UnicodeDecodeError, lambda: util.join_list(['\xff']))

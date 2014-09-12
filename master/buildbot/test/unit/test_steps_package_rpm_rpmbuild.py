@@ -45,7 +45,7 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio',
                               stdout='lalala')
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['RPMBUILD'])
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
     def test_autoRelease(self):
@@ -61,5 +61,5 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['RPMBUILD'])
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()

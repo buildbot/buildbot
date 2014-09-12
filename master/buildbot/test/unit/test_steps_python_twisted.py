@@ -111,7 +111,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
+        self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
 
     def test_run_env_supplement(self):
@@ -129,7 +129,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
+        self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
 
     def test_run_env_nodupe(self):
@@ -147,7 +147,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['no tests', 'run'])
+        self.expectOutcome(result=SUCCESS, state_string='no tests run')
         return self.runStep()
 
     def test_run_singular(self):
@@ -163,7 +163,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
 
     def test_run_plural(self):
@@ -179,7 +179,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
+        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
 
     def test_run_failure(self):
@@ -195,7 +195,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=failureLog)
             + 1
         )
-        self.expectOutcome(result=FAILURE, status_text=['tests', '8 failures'])
+        self.expectOutcome(result=FAILURE, state_string='tests 8 failures')
         self.expectLogfile('problems', failureLog.split('\n\n', 1)[1])
         self.expectLogfile('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
@@ -219,7 +219,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
+        self.expectOutcome(result=SUCCESS, state_string='2 tests passed')
         return self.runStep()
 
     def test_run_jobs(self):
@@ -249,7 +249,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
 
     def test_run_jobsProperties(self):
@@ -278,7 +278,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        self.expectOutcome(result=SUCCESS, state_string='1 test passed')
         return self.runStep()
 
 
@@ -301,7 +301,7 @@ class HLint(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectLogfile('files', 'foo.xhtml\n')
-        self.expectOutcome(result=SUCCESS, status_text=['hlint'])
+        self.expectOutcome(result=SUCCESS, state_string='hlint')
         return self.runStep()
 
     def test_run_warnings(self):
@@ -315,5 +315,5 @@ class HLint(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
-        self.expectOutcome(result=WARNINGS, status_text=['hlint', 'warnings'])
+        self.expectOutcome(result=WARNINGS, state_string='hlint warnings')
         return self.runStep()

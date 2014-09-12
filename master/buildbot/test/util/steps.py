@@ -154,7 +154,8 @@ class BuildStepMixin(object):
 
         # expectations
 
-        self.exp_outcome = None
+        self.exp_result = None
+        self.exp_state_strings = None
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
@@ -176,12 +177,14 @@ class BuildStepMixin(object):
         """
         self.expected_remote_commands.extend(exp)
 
-    def expectOutcome(self, result, status_text):
+    def expectOutcome(self, result, state_string=None):
         """
         Expect the given result (from L{buildbot.status.results}) and status
         text (a list).
         """
-        self.exp_outcome = dict(result=result, status_text=status_text)
+        self.exp_result = result
+        if state_string:
+            self.exp_state_strings = [state_string]
 
     def expectProperty(self, property, value, source=None):
         """
@@ -223,10 +226,13 @@ class BuildStepMixin(object):
             self.debounceClock.advance(1)
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
-            got_outcome = dict(result=result,
-                               status_text=None)
-            self.assertEqual(got_outcome['result'], self.exp_outcome['result'],
-                             "expected step outcome")
+            self.assertEqual(result, self.exp_result, "expected result")
+            if self.exp_state_strings:
+                stepStateStrings = self.master.data.updates.stepStateStrings
+                stepid = stepStateStrings.keys()[0]
+                self.assertEqual(stepStateStrings[stepid],
+                                 self.exp_state_strings,
+                                 "expected step state strings")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)

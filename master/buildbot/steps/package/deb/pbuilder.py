@@ -37,8 +37,8 @@ class DebPbuilder(WarningCountingShellCommand):
 
     haltOnFailure = 1
     flunkOnFailure = 1
-    description = ["pdebuilding"]
-    descriptionDone = ["pdebuild"]
+    description = ["building"]
+    descriptionDone = ["built"]
 
     warningPattern = r".*(warning[: ]|\sW: ).*"
 
@@ -171,7 +171,6 @@ class DebPbuilder(WarningCountingShellCommand):
                 stdio_log = stdio_log = self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
                 d = self.runCommand(cmd)
-                self.step_status.setText(["PBuilder update."])
                 d.addCallback(lambda res: self.startBuild(cmd))
                 return d
             return self.startBuild(cmd)
@@ -199,9 +198,6 @@ class DebCowbuilder(DebPbuilder):
 
     """Build a debian package with cowbuilder inside of a chroot."""
     name = "cowbuilder"
-
-    description = ["pdebuilding"]
-    descriptionDone = ["pdebuild"]
 
     basetgz = "/var/cache/pbuilder/%(distribution)s-%(architecture)s-buildbot.cow/"
 

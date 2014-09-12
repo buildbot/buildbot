@@ -189,8 +189,5 @@ class SubunitShellCommand(ShellCommand):
         if warnings:
             self.addCompleteLog("warnings", warnings)
 
-    def getText(self, cmd, results):
+    def _describe(self, done):
         return self.text
-
-    def getText2(self, cmd, results):
-        return self.text2

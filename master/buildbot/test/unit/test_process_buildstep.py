@@ -86,7 +86,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def _setupWaterfallTest(self, hideStepIf, expect, expectedResult=SUCCESS):
         self.setupStep(TestBuildStep.FakeBuildStep(hideStepIf=hideStepIf))
-        self.expectOutcome(result=expectedResult, status_text=["generic"])
+        self.expectOutcome(result=expectedResult)
         self.expectHidden(expect)
 
     # tests
@@ -148,7 +148,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_start_returns_SKIPPED(self):
         self.setupStep(self.SkippingBuildStep())
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -157,7 +157,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_doStepIf_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=False))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -166,7 +166,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_doStepIf_returns_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=lambda step: False))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -176,7 +176,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.setupStep(self.FakeBuildStep(
             doStepIf=lambda step: defer.succeed(False)))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, status_text=['generic', 'skipped'])
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -241,7 +241,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.setupStep(self.FakeBuildStep(hideStepIf=shouldHide,
                                           doStepIf=createException))
         self.expectOutcome(result=EXCEPTION,
-                           status_text=['generic', 'exception'])
+                           state_string='finished (exception)')
         self.expectHidden(True)
 
         d = self.runStep()
@@ -299,7 +299,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                 testcase.assertIdentical(log1, log2)
                 defer.returnValue(SUCCESS)
         self.setupStep(TestGetLogStep())
-        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -307,7 +307,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.setupStep(
             TestBuildStep.FakeBuildStep(flunkOnFailure=properties.Property('fOF')))
         self.properties.setProperty('fOF', 'yes', 'test')
-        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.flunkOnFailure, 'yes')
 
@@ -415,7 +415,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_updateSummary_old_style(self):
         self.setupStep(OldStyleStep())
         self.step.start = lambda: self.step.updateSummary()
-        self.expectOutcome(result=EXCEPTION, status_text=['generic'])
+        self.expectOutcome(result=EXCEPTION)
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
@@ -627,7 +627,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir': '/some/path', 'logEnviron': False})
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertTrue(self.step.method_return_value)
 
@@ -638,7 +638,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': '/some/path', 'logEnviron': False})
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertTrue(self.step.method_return_value)
 
@@ -649,7 +649,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': '/some/path', 'logEnviron': False})
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=['generic'])
+        self.expectOutcome(result=FAILURE)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -660,7 +660,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': '/some/path', 'logEnviron': False})
             + 1,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertFalse(self.step.method_return_value)
 
@@ -671,7 +671,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/some/path', 'logEnviron': False})
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertTrue(self.step.method_return_value)
 
@@ -682,7 +682,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/some/path', 'logEnviron': False})
             + 1,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertFalse(self.step.method_return_value)
 
@@ -694,7 +694,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             + Expect.log('stdio', header='NOTE: never mind\n')
             + 1,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertFalse(self.step.method_return_value)
         self.assertEqual(self.step.getLog('stdio').header,
@@ -711,8 +711,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             + Expect.update('files', ["one.pyc", "two.pyc"])
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_glob_empty(self):
@@ -722,8 +721,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             + Expect.update('files', [])
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_glob_fail(self):
@@ -732,8 +730,7 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
             + 1
         )
-        self.expectOutcome(result=FAILURE,
-                           status_text=["generic"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
 
@@ -821,7 +818,7 @@ class TestShellMixin(steps.BuildStepMixin,
                         logEnviron=False)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -833,7 +830,7 @@ class TestShellMixin(steps.BuildStepMixin,
             + Expect.log('cleanup', stdout='cleaning\ncleaned\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('cleanup').stdout,
                          u'cleaning\ncleaned\n')
@@ -846,7 +843,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -857,7 +854,7 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -869,7 +866,7 @@ class TestShellMixin(steps.BuildStepMixin,
                         env={'FOO': 'FOO', 'BAR': 'BAR'})
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
     @defer.inlineCallbacks
@@ -881,7 +878,7 @@ class TestShellMixin(steps.BuildStepMixin,
             # note missing parameters
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=['generic'])
+        self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('stdio').header,
                          u'NOTE: slave does not allow master to override usePTY\n'
@@ -895,5 +892,23 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='build', command=['foo', 'BAR'])
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["'foo", "BAR'"])
+        self.expectOutcome(result=SUCCESS, state_string=u"'foo BAR'")
         yield self.runStep()
+
+    def test_getCommandSummary_long(self):
+        self.setupStep(SimpleShellCommand(command=['aaa', 'bbb', 'ccc']))
+        self.assertEqual(self.step._getCommandSummary(), u"'aaa bbb ...'")
+
+    def test_getCommandSummary_short(self):
+        self.setupStep(SimpleShellCommand(command=['aaa']))
+        self.assertEqual(self.step._getCommandSummary(), u"'aaa'")
+
+    def test_getCommandSummary_non_unicode(self):
+        self.setupStep(SimpleShellCommand(command=['a', 'invalid\xff']))
+        self.assertEqual(self.step._getCommandSummary(),
+                         u"'a invalid\ufffd'")
+
+    def test_getCommandSummary_nested(self):
+        self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
+        self.assertEqual(self.step._getCommandSummary(),
+                         u"'a b ...'")

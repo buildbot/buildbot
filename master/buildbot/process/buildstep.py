@@ -47,6 +47,7 @@ from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
+from buildbot.status.results import Results
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
@@ -313,20 +314,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def _describe(self, done=False):
-        if self.descriptionDone and done:
-            return self.descriptionDone
-        elif self.description:
-            return self.description
-        return [self.name]
-
-    def describe(self, done=False):
-        assert(self.rendered)
-        desc = self._describe(done)
-        if self.descriptionSuffix:
-            desc = desc + self.descriptionSuffix
-        return desc
-
     def setBuild(self, build):
         self.build = build
         self.master = self.build.master
@@ -358,10 +345,28 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.progress.setProgress(metric, value)
 
     def getCurrentSummary(self):
-        return {u'step': u'running'}
+        if self.description is not None:
+            stepsumm = util.join_list(self.description)
+            if self.descriptionSuffix:
+                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+        else:
+            stepsumm = u'running'
+        return {u'step': stepsumm}
 
     def getResultSummary(self):
-        return {}
+        if self.descriptionDone is not None or self.description is not None:
+            stepsumm = util.join_list(self.descriptionDone or self.description)
+            if self.descriptionSuffix:
+                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+        else:
+            stepsumm = u'finished'
+
+        if self.results != SUCCESS:
+            stepsumm += u' (%s)' % Results[self.results]
+
+        return {u'step': stepsumm}
+
+    # TODO: test those^^
 
     @debounce.method(wait=1)
     @defer.inlineCallbacks
@@ -381,14 +386,14 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         stepResult = summary.get('step', u'finished')
         if not isinstance(stepResult, unicode):
-            raise TypeError("step result must be unicode")
+            raise TypeError("step result string must be unicode")
         yield self.master.data.updates.setStepStateStrings(self.stepid,
                                                            [stepResult])
 
         if not self._running:
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, unicode):
-                raise TypeError("build result must be unicode")
+                raise TypeError("build result string must be unicode")
     # updateSummary gets patched out for old-style steps, so keep a copy we can
     # call internally for such steps
     realUpdateSummary = updateSummary
@@ -491,6 +496,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
+        self.results = results
         self.realUpdateSummary()
         yield self.realUpdateSummary.stop()
 
@@ -886,6 +892,7 @@ class LoggingBuildStep(BuildStep):
             return self.log_eval_func(cmd, self.step_status)
         return cmd.results()
 
+    # TODO: delete
     def getText(self, cmd, results):
         if results == SUCCESS:
             return self.describe(True)
@@ -898,9 +905,11 @@ class LoggingBuildStep(BuildStep):
         else:
             return self.describe(True) + ["failed"]
 
+    # TODO: delete
     def getText2(self, cmd, results):
         return [self.name]
 
+    # TODO: delete
     def maybeGetText2(self, cmd, results):
         if results == SUCCESS:
             # successful steps do not add anything to the build's text
@@ -1077,53 +1086,6 @@ class ShellMixin(object):
                 cmd.useLog(newlog, False)
 
         defer.returnValue(cmd)
-
-    def _describe(self, done=False):
-        try:
-            if done and self.descriptionDone is not None:
-                return self.descriptionDone
-            if self.description is not None:
-                return self.description
-
-            # if self.cmd is set, then use the RemoteCommand's info
-            if self.cmd:
-                command = self.command.command
-            # otherwise, if we were configured with a command, use that
-            elif self.command:
-                command = self.command
-            else:
-                return super(ShellMixin, self)._describe(done)
-
-            words = command
-            if isinstance(words, (str, unicode)):
-                words = words.split()
-
-            try:
-                len(words)
-            except (AttributeError, TypeError):
-                # WithProperties and Property don't have __len__
-                # For old-style classes instances AttributeError raised,
-                # for new-style classes instances - TypeError.
-                return super(ShellMixin, self)._describe(done)
-
-            # flatten any nested lists
-            words = flatten(words, (list, tuple))
-
-            # strip instances and other detritus (which can happen if a
-            # description is requested before rendering)
-            words = [w for w in words if isinstance(w, (str, unicode))]
-
-            if len(words) < 1:
-                return super(ShellMixin, self)._describe(done)
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
-
-        except Exception:
-            log.err(failure.Failure(), "Error describing step")
-            return super(ShellMixin, self)._describe(done)
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
