@@ -15,8 +15,6 @@
 
 import os
 
-from twisted.python import log
-
 from buildslave import runprocess
 from buildslave.commands.base import SourceBaseCommand
 

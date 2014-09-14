@@ -138,15 +138,15 @@ class _FDDetector(object):
                 return self._devFDImplementation
             else:
                 return self._fallbackFDImplementation
-        except Exception:  # chnanged in Bulidbot to avoid bare 'except'
+        except Exception:  # changed in Buildbot to avoid bare 'except'
             try:
                 self.listdir("/proc/%d/fd" % (self.getpid(),))
                 return self._procFDImplementation
-            except Exception:  # chnanged in Bulidbot to avoid bare 'except'
+            except Exception:  # changed in Buildbot to avoid bare 'except'
                 try:
                     self._resourceFDImplementation()  # Imports resource
                     return self._resourceFDImplementation
-                except Exception:  # chnanged in Bulidbot to avoid bare 'except'
+                except Exception:  # changed in Buildbot to avoid bare 'except'
                     return self._fallbackFDImplementation
 
     def _checkDevFDSanity(self):
