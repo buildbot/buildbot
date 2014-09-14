@@ -54,7 +54,7 @@ def get_sqlalchemy_migrate_version():
                 version = "0.6.1"
             else:
                 version = "0.6"
-        except:
+        except Exception:
             version = "0.0"
     return tuple(map(int, version.split('.')))
 
@@ -120,7 +120,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             log.msg("setting database journal mode to 'wal'")
             try:
                 engine.execute("pragma journal_mode = wal")
-            except:
+            except Exception:
                 log.msg("failed to set journal mode - database may fail")
 
     def special_case_mysql(self, u, kwargs):

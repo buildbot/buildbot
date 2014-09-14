@@ -101,7 +101,7 @@ class croniter(object):
 
                     try:
                         t = int(t)
-                    except:
+                    except (ValueError, TypeError):
                         pass
 
                     if t in self.LOWMAP[i]:

@@ -91,7 +91,7 @@ class SlaveFileUploadCommand(TransferCommand):
             self.fp = open(self.path, 'rb')
             if self.debug:
                 log.msg("Opened '%s' for upload" % self.path)
-        except:
+        except Exception:
             self.fp = None
             self.stderr = "Cannot open file '%s' for upload" % self.path
             self.rc = 1

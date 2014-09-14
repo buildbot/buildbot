@@ -95,7 +95,7 @@ class Resource(resource.Resource):
             except Exception:
                 try:
                     request.finish()
-                except:
+                except Exception:
                     pass
 
         return server.NOT_DONE_YET

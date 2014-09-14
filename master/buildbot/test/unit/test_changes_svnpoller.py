@@ -351,6 +351,20 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(s.last_change, 4)
         self.assertEqual(len(new), 0)
 
+    def test_get_text(self):
+        doc = xml.dom.minidom.parseString("""
+            <parent>
+                <child>
+                    hi
+                    <grandchild>1</grandchild>
+                    <grandchild>2</grandchild>
+                </child>
+            </parent>""".strip())
+        s = self.attachSVNPoller('http://', split_file=split_file)
+
+        self.assertEqual(s._get_text(doc, 'grandchild'), '1')
+        self.assertEqual(s._get_text(doc, 'nonexistent'), 'unknown')
+
     def test_create_changes(self):
         base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
                 "svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample")

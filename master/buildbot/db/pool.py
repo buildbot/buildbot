@@ -284,7 +284,7 @@ class DBThreadPool(threadpool.ThreadPool):
             r = conn.execute("SELECT sqlite_version()")
             vers_row = r.fetchone()
             r.close()
-        except:
+        except Exception:
             return (0,)
 
         if vers_row:

@@ -19,7 +19,7 @@ For example, if most of your build properties are strings, you can gain an appro
             m = my_regexp.match(str)
             try:
                 return list(m.groups())
-            except:
+            except Exception:
                 return original_decode(str, *args, **kw)
         json._default_decoder.decode = decode_with_re
 

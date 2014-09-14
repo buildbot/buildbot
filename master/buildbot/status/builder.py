@@ -169,7 +169,7 @@ class BuilderStatus(styles.Versioned):
                 if os.path.exists(filename):
                     os.unlink(filename)
             os.rename(tmpfilename, filename)
-        except:
+        except Exception:
             log.msg("unable to save builder %s" % self.name)
             log.err()
 
@@ -523,7 +523,7 @@ class BuilderStatus(styles.Versioned):
         for w in self.watchers:
             try:
                 w.builderChangedState(self.name, state)
-            except:
+            except Exception:
                 log.msg("Exception caught publishing state to %r" % w)
                 log.err()
 
@@ -564,7 +564,7 @@ class BuilderStatus(styles.Versioned):
                         s.subscribe(receiver)
                     d = s.waitUntilFinished()
                     d.addCallback(lambda s: s.unsubscribe(receiver))
-            except:
+            except Exception:
                 log.msg("Exception caught notifying %r of buildStarted event" % w)
                 log.err()
 
@@ -578,7 +578,7 @@ class BuilderStatus(styles.Versioned):
         for w in self.watchers:
             try:
                 w.buildFinished(name, s, results)
-            except:
+            except Exception:
                 log.msg("Exception caught notifying %r of buildFinished event" % w)
                 log.err()
 

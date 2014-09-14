@@ -453,8 +453,6 @@ try:
 
     process_changes()
     send_changes()
-except SystemExit:
-    pass
-except:
+except Exception:
     logging.exception("Unhandled exception")
     sys.exit(1)

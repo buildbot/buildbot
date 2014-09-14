@@ -34,7 +34,7 @@ class SchedulerManager(unittest.TestCase):
             k = (sched_name, class_name)
             try:
                 rv = self.objectids[k]
-            except:
+            except KeyError:
                 rv = self.objectids[k] = self.next_objectid
                 self.next_objectid += 1
             return defer.succeed(rv)

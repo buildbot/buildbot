@@ -254,7 +254,7 @@ if DEFINE_POLLER:
                     self.getRawChanges)
             except (SystemExit, KeyboardInterrupt):
                 raise
-            except:
+            except Exception:
                 # we'll try again next poll.  Meanwhile, let's report.
                 twisted.python.log.err()
             else:
@@ -347,7 +347,7 @@ def _putResultInDeferred(reactor, deferred, f, args, kwargs):
     """
     try:
         result = f(*args, **kwargs)
-    except:
+    except Exception:
         f = failure.Failure()
         reactor.callFromThread(deferred.errback, f)
     else:

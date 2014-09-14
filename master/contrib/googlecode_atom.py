@@ -156,7 +156,7 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
             d["files"] = [f.strip() for f in d["files"]]
             try:
                 d["comments"] = content[1].encode("ascii", "replace")
-            except:
+            except Exception:
                 d["comments"] = "No commit message provided"
 
             changes.append(d)

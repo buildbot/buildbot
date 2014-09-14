@@ -61,9 +61,8 @@ class BuildRequestStatus:
                 br = yield buildrequest.BuildRequest.fromBrdict(self.master,
                                                                 self._brdict)
                 self._buildrequest = br
-        except:  # try/finally isn't allowed in generators in older Pythons
+        finally:
             self._buildrequest_lock.release()
-            raise
 
         self._buildrequest_lock.release()
 

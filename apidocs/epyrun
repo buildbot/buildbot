@@ -121,7 +121,7 @@ def main():
     #get list of modules/pkgs on cmd-line
     try:
         i = sys.argv.index("--modules")
-    except:
+    except ValueError:
         pass
     else:
         names = sys.argv[i+1:]
@@ -131,7 +131,7 @@ def main():
         for i in range(len(names)):
             try:
                 j = names[i].rindex('buildbot/')
-            except:
+            except ValueError:
                 raise SystemExit, 'You can only specify buildbot modules or packages'
             else:
                 #strip off any leading directories before the 'twisted/'
@@ -164,7 +164,7 @@ def main():
                 reflect.namedModule(name)
             except ImportError:
                 print 'import error:', name
-            except:
+            except Exception:
                 print 'other error:', name
             else:
                 modnames.append(name)

@@ -151,7 +151,7 @@ class BaseScheduler(ClusteredService, StateMixin):
                 important = fileIsImportant(change)
                 if not important and onlyImportant:
                     return
-            except:
+            except Exception:
                 log.err(failure.Failure(),
                         'in fileIsImportant check for %s' % change)
                 return

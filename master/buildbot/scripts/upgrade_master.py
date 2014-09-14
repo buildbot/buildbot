@@ -69,7 +69,7 @@ def loadConfig(config, configFileName='master.cfg'):
         for msg in e.errors:
             print "  " + msg
         return
-    except:
+    except Exception:
         print "Errors loading configuration:"
         traceback.print_exc(file=sys.stdout)
         return

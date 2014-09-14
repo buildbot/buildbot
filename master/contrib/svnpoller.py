@@ -63,7 +63,7 @@ ini = ConfigParser.SafeConfigParser()
 
 try:
     ini.read(fname)
-except:
+except Exception:
     print "Creating changemonitor config.ini:", fname
     ini.add_section("CurrentRevision")
     ini.set("CurrentRevision", -1)
@@ -95,5 +95,5 @@ if lastrevision != revision:
         f = open(fname, "w")
         ini.write(f)
         # print "WROTE CHANGES TO",fname
-    except:
+    except Exception:
         print "FAILED TO RECORD INI FILE"

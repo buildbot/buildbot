@@ -183,7 +183,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         (claims_tbl.c.brid.in_(batch))
                         & (claims_tbl.c.masterid == self.db.master.masterid))
                     conn.execute(q)
-                except:
+                except Exception:
                     transaction.rollback()
                     raise
 

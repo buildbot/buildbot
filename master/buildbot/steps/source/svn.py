@@ -166,9 +166,8 @@ class SVN(Source):
             old_workdir = self.workdir
             self.workdir = 'source'
             yield self.incremental(None)
-        except:  # finally doesn't work in python-2.4
+        finally:
             self.workdir = old_workdir
-            raise
         self.workdir = old_workdir
 
         # if we're copying, copy; otherwise, export from source to build

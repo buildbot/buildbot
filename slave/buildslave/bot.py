@@ -381,7 +381,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.perspective = perspective
         try:
             perspective.broker.transport.setTcpKeepAlive(1)
-        except:
+        except Exception:
             log.msg("unable to set SO_KEEPALIVE")
             if not self.keepaliveInterval:
                 self.keepaliveInterval = 10 * 60
@@ -516,7 +516,7 @@ class BuildSlave(service.MultiService):
 
         try:
             open(filename, "w").write("%s\n" % hostname)
-        except:
+        except Exception:
             log.msg("failed - ignoring")
 
     def _handleSIGHUP(self, *args):

@@ -358,10 +358,8 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         except IOError:
             log.msg("no saved status pickle, creating a new one")
-        except:
-            log.msg("error while loading status pickle, creating a new one")
-            log.msg("error follows:")
-            log.err()
+        except Exception:
+            log.err("error while loading status pickle, creating a new one")
         if not builder_status:
             builder_status = builder.BuilderStatus(name, tags, self.master,
                                                    description)

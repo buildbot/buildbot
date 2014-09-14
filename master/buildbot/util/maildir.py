@@ -30,7 +30,7 @@ from twisted.python import runtime
 dnotify = None
 try:
     import dnotify
-except:
+except ImportError:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
 
 
@@ -118,7 +118,7 @@ class MaildirService(service.AsyncMultiService):
             for n in newfiles:
                 try:
                     yield self.messageReceived(n)
-                except:
+                except Exception:
                     log.err(None, "while reading '%s' from maildir '%s':" % (n, self.basedir))
         except Exception:
             log.err(None, "while polling maildir '%s':" % (self.basedir,))

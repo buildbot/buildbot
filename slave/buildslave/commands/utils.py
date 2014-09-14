@@ -63,7 +63,7 @@ if runtime.platformType == 'win32':
         if not isinstance(dir, unicode):
             try:
                 dir = unicode(dir, "utf-8")
-            except:
+            except UnicodeDecodeError:
                 log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
 
         try:

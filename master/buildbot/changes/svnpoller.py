@@ -133,7 +133,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 # try writing it, too
                 with open(self.cachepath, "w") as f:
                     f.write(str(self.last_change))
-            except:
+            except Exception:
                 self.cachepath = None
                 log.msg(("SVNPoller: SVNPoller(%s) cache file corrupt or unwriteable; " +
                          "skipping and not using") % self.svnurl)
@@ -302,8 +302,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         try:
             child_nodes = element.getElementsByTagName(tag_name)[0].childNodes
             text = "".join([t.data for t in child_nodes])
-        except:
-            text = "<unknown>"
+        except IndexError:
+            text = "unknown"
         return text
 
     def _transform_path(self, path):

@@ -84,9 +84,7 @@ class MyReporter(SummaryReporter):
                     sortkey = cu.name
                 lines.append((sortkey, fmt_coverage % args))
                 total += nums
-            except KeyboardInterrupt:                       # pragma: no cover
-                raise
-            except:
+            except Exception:
                 if not self.ignore_errors:
                     typ, msg = sys.exc_info()[:2]
                     outfile.write(fmt_err % (cu.name, typ.__name__, msg))

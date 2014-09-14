@@ -177,7 +177,7 @@ class MasterConfig(util.ComparableMixin):
                 for err in e.errors:
                     error(err)
                 raise errors
-            except:
+            except Exception:
                 log.err(failure.Failure(), 'error while parsing config file:')
                 error("error while parsing config file: %s (traceback in logfile)" %
                       (sys.exc_info()[1],),

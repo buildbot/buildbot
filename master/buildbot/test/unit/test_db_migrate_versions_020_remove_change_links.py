@@ -59,7 +59,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             try:
                 conn.execute("select * from change_links")
-            except:
+            except Exception:
                 pass
             else:
                 self.fail("change_links still exists")

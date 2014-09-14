@@ -121,7 +121,6 @@ disable=
   unbalanced-tuple-unpacking,
   unpacking-non-sequence,
   raising-string,
-  bare-except,
   broad-except,
   nonstandard-exception,
   anomalous-unicode-escape-in-string,

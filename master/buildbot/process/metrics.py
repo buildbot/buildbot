@@ -327,7 +327,7 @@ def _get_rss():
         try:
             with open("/proc/%i/statm" % os.getpid()) as f:
                 return int(f.read().split()[1])
-        except:
+        except Exception:
             return 0
     return 0
 
@@ -492,5 +492,5 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
                     continue
                 for line in report.split("\n"):
                     log.msg(line)
-        except:
+        except Exception:
             log.err(None, "generating metric report")

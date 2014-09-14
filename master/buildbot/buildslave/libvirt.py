@@ -63,7 +63,7 @@ class WorkQueue(object):
         # Start doing some work - expects a deferred
         try:
             d2 = next_operation(*args, **kwargs)
-        except:
+        except Exception:
             d2 = defer.fail()
 
         # Whenever a piece of work is done, whether it worked or not
@@ -261,7 +261,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             else:
                 self.domain = yield self.connection.lookupByName(self.name)
                 yield self.domain.create()
-        except:
+        except Exception:
             log.err(failure.Failure(),
                     "Cannot start a VM (%s), failing gracefully and triggering"
                     "a new build check" % self.name)

@@ -97,7 +97,7 @@ class RpmBuild(ShellCommand):
             try:
                 with open(relfile, 'r') as rfile:
                     rel = int(rfile.readline().strip())
-            except:
+            except (IOError, TypeError, ValueError):
                 rel = 0
             self.rpmbuild = self.rpmbuild + ' --define "_release %s"' % rel
             with open(relfile, 'w') as rfile:

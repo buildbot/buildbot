@@ -37,7 +37,7 @@ def stop(config, signame="TERM", wait=False):
     try:
         with open(pidfile, "rt") as f:
             pid = int(f.read().strip())
-    except:
+    except Exception:
         if not config['quiet']:
             print "buildmaster not running"
         return 0
@@ -53,7 +53,7 @@ def stop(config, signame="TERM", wait=False):
                 print "buildmaster not running"
             try:
                 os.unlink(pidfile)
-            except:
+            except OSError:
                 pass
             return 0
 

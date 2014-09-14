@@ -46,7 +46,7 @@ class _SimpleCallQueue(object):
         for cb, args, kwargs in events:
             try:
                 cb(*args, **kwargs)
-            except:
+            except Exception:
                 log.err()
         self._in_turn = False
         if self._events and not self._timer:

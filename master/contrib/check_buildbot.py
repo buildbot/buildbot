@@ -53,12 +53,12 @@ def main():
 
     try:
         data = urllib.urlopen(url).read()
-    except:
+    except Exception:
         exit(CRITICAL, "Error connecting to %s" % url)
 
     try:
         data = json.loads(data)
-    except:
+    except ValueError:
         exit(CRITICAL, "Could not parse output of %s as json" % url)
 
     if not data:
@@ -73,7 +73,7 @@ def main():
 
         try:
             alarm_code = STATUS_CODES[alarm_state[0]]
-        except:
+        except (KeyError, IndexError):
             status = UNKNOWN
             messages.append("%s has unknown alarm state %s" % (alarm_name, alarm_state))
             continue

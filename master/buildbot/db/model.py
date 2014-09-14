@@ -690,7 +690,7 @@ class Model(base.DBConnectorComponent):
                 r = engine.execute("select * from %s limit 1" % tbl)
                 r.close()
                 return True
-            except:
+            except Exception:
                 return False
 
         # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=100
@@ -717,7 +717,7 @@ class Model(base.DBConnectorComponent):
                         version = "0.6.1"
                     else:
                         version = "0.6"
-                except:
+                except Exception:
                     version = "0.0"
             version_tup = tuple(map(int, version.split('.')))
             log.msg("using SQLAlchemy-Migrate version %s" % (version,))

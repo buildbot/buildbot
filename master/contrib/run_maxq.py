@@ -39,7 +39,7 @@ for testlist in files:
         try:
             execfile(test, globals().copy())
 
-        except:
+        except Exception:
             ei = sys.exc_info()
             print "TEST FAILURE:", ei[1]
 

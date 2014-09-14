@@ -253,8 +253,8 @@ class BuildProgress(pb.Referenceable):
             remote.callRemote("progress", self.remaining())
             if last:
                 remote.callRemote("finished", self)
-        except:
-            log.deferr()
+        except Exception:
+            log.err('while updating remote progress')
             self.removeWatcher(remote)
 
     def watcherTimeout(self, remote):

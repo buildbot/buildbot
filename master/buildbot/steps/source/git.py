@@ -332,7 +332,7 @@ class Git(Source):
             stdout = yield self._dovccmd(cmd, collectStdout=True)
             desc = stdout.strip()
             self.updateSourceProperty('commit-description', desc)
-        except:
+        except Exception:
             pass
 
         defer.returnValue(0)

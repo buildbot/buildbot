@@ -621,7 +621,7 @@ class SourceBaseCommand(Command):
         def cleanup(x):
             try:
                 os.unlink(os.path.join(dir, ".buildbot-diff"))
-            except:
+            except OSError:
                 pass
             return x
         d.addBoth(cleanup)

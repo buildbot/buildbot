@@ -35,7 +35,7 @@ class SubscriptionPoint(object):
         for sub in list(self.subscriptions):
             try:
                 sub.callback(*args, **kwargs)
-            except:
+            except Exception:
                 log.err(failure.Failure(),
                         'while invoking callback %s to %s' % (sub.callback, self))
 
