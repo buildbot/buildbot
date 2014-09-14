@@ -16,6 +16,7 @@
 import textwrap
 
 from buildbot import config
+from buildbot import util
 from buildbot.db import builders
 from buildbot.db import buildrequests
 from buildbot.db import builds
@@ -99,7 +100,8 @@ class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
 
-        log.msg("Setting up database with URL %r" % (db_url,))
+        log.msg("Setting up database with URL %r"
+                % util.stripUrlPassword(db_url))
 
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url,
