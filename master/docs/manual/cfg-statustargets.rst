@@ -190,18 +190,20 @@ Another example of a function delivering a customized html email containing the 
                             text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
-            # get log for last step
-            logs = build.getLogs()
+            # get all the steps in build
+            step = build.getSteps()
+            # get logs for the last step
+            logs = step[-1].getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
                 if log.getName() == 'stdio':
                     break
-            name = "%s.%s" % (log.getStep().getName(), log.getName())
-            status, dummy = log.getStep().getResults()
+            name = "%s.%s" % (step().getName(), log.getName())
+            status, dummy = step.getResults()
             # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                           log.getStep().getName(),
+                                           step.getName(),
                                            log.getName())
 
             text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
