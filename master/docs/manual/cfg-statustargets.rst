@@ -202,7 +202,7 @@ Another example of a function delivering a customized html email containing the 
             for log in reversed(logs):
                 if log.getName() == 'stdio':
                     break
-            name = "%s.%s" % (step().getName(), log.getName())
+            name = "%s.%s" % (step.getName(), log.getName())
             status, dummy = step.getResults()
             # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
