@@ -129,7 +129,7 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
                              extraRecipients=['listaddr@example.org'],
                              messageFormatter=messageFormatter)
 
-Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step is given below::
+Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step that finished is given below::
 
     from buildbot.plugins import util, status
 
@@ -190,18 +190,24 @@ Another example of a function delivering a customized html email containing the 
                             text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
-            # get log for last step
-            logs = build.getLogs()
+            # get all the steps in build in reversed order
+            rev_steps = reversed(build.getSteps())
+            # find the last step that finished
+            for step in rev_steps:
+                if step.isFinished():
+                    break
+            # get logs for the last finished step
+            logs = step.getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
                 if log.getName() == 'stdio':
                     break
-            name = "%s.%s" % (log.getStep().getName(), log.getName())
-            status, dummy = log.getStep().getResults()
+            name = "%s.%s" % (step().getName(), log.getName())
+            status, dummy = step.getResults()
             # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                           log.getStep().getName(),
+                                           step.getName(),
                                            log.getName())
 
             text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
