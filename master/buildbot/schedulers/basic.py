@@ -16,7 +16,7 @@
 from buildbot import config
 from buildbot import util
 from buildbot.changes import changes
-from buildbot.changes import filter
+from buildbot.changes.filter import ChangeFilter
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
@@ -241,7 +241,7 @@ class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
                 "the 'branches' argument is not allowed for " +
                 "SingleBranchScheduler")
 
-        return filter.ChangeFilter.fromSchedulerConstructorArgs(
+        return ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter, branch=branch,
             categories=categories)
 
@@ -269,7 +269,7 @@ class AnyBranchScheduler(BaseBasicScheduler):
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         assert branch is NotABranch
-        return filter.ChangeFilter.fromSchedulerConstructorArgs(
+        return ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter, branch=branches,
             categories=categories)
 

@@ -17,7 +17,7 @@ from zope.interface import implements
 
 from buildbot import config
 from buildbot import util
-from buildbot.changes import filter
+from buildbot.changes.filter import ChangeFilter
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
@@ -346,7 +346,7 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
                 "fileIsImportant must be a callable")
 
         self.fileIsImportant = fileIsImportant
-        self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
+        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)
 
     def preStartConsumingChanges(self):
