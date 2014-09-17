@@ -55,7 +55,7 @@ class Timed(base.BaseScheduler):
     reason = ''
 
     def __init__(self, name, builderNames, properties={}, reason='',
-                 createAbsoluteSourceStamps=False, **kwargs):
+                 createAbsoluteSourceStamps=False, onlyIfChanged=False, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
@@ -71,7 +71,12 @@ class Timed(base.BaseScheduler):
 
         self.reason = util.ascii2unicode(reason % {'name': name})
 
+        if createAbsoluteSourceStamps and not onlyIfChanged:
+            config.error(
+                "createAbsoluteSourceStamps can only be used with onlyIfChanged")
+
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
+        self.onlyIfChanged = onlyIfChanged
 
         self._reactor = reactor  # patched by tests
 
@@ -137,16 +142,17 @@ class Timed(base.BaseScheduler):
         return d
 
     @defer.inlineCallbacks
-    def startBuildWithChanges(self, onlyIfChanged=False, **kwargs):
+    def startBuild(self, **kwargs):
         # use the collected changes to start a build
         scheds = self.master.db.schedulers
         classifications = yield scheds.getChangeClassifications(self.objectid)
 
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
-        if onlyIfChanged and not any(classifications.itervalues()):
-            log.msg(("Nightly Scheduler <%s>: skipping build " +
-                     "- No important changes on configured branch") % self.name)
+        if self.onlyIfChanged and not any(classifications.itervalues()):
+            log.msg(("%s scheduler <%s>: skipping build " +
+                     "- No important changes on configured branch") %
+                    (self.__class__.__name__, self.name))
             return
 
         changeids = sorted(classifications.keys())
@@ -173,11 +179,6 @@ class Timed(base.BaseScheduler):
             return self.codebases[codebase]
 
     # Timed methods
-
-    def startBuild(self):
-        """The time has come to start a new build.  Returns a Deferred.
-        Override in subclasses."""
-        raise NotImplementedError
 
     def getNextBuildTime(self, lastActuation):
         """
@@ -224,8 +225,9 @@ class Timed(base.BaseScheduler):
             if actuateAt is not None:
                 untilNext = self.actuateAt - now
                 if untilNext == 0:
-                    log.msg(("%s: missed scheduled build time, so building "
-                             "immediately") % self.name)
+                    log.msg(("%s scheduler <%s>: missed scheduled build time"
+                             " - building immediately") %
+                            (self.__class__.__name__, self.name))
                 self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                               self._actuate)
         d.addCallback(set_timer)
@@ -278,9 +280,6 @@ class Periodic(Timed):
         else:
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
-    def startBuild(self):
-        return self.startBuildWithChanges()
-
 
 class NightlyBase(Timed):
     compare_attrs = ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek')
@@ -323,20 +322,17 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
-    compare_attrs = ('onlyIfChanged', 'fileIsImportant',
-                     'change_filter', 'onlyImportant',)
+    compare_attrs = ('fileIsImportant', 'change_filter', 'onlyImportant',)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 fileIsImportant=None, onlyIfChanged=False,
-                 createAbsoluteSourceStamps=False,
+                 fileIsImportant=None,
                  change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  **kwargs):
         convertBranchParameter(kwargs)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
-                             createAbsoluteSourceStamps=createAbsoluteSourceStamps,
                              reason=reason, **kwargs)
 
         # If True, only important changes will be added to the buildset.
@@ -346,11 +342,6 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
             config.error(
                 "fileIsImportant must be a callable")
 
-        if createAbsoluteSourceStamps and not onlyIfChanged:
-            config.error(
-                "createAbsoluteSourceStamps can only be used with onlyIfChanged")
-
-        self.onlyIfChanged = onlyIfChanged
         self.fileIsImportant = fileIsImportant
         self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)
@@ -367,9 +358,6 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
                                              onlyImportant=self.onlyImportant)
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
-
-    def startBuild(self):
-        return self.startBuildWithChanges(self.onlyIfChanged)
 
 
 class NightlyTriggerable(NightlyBase):
