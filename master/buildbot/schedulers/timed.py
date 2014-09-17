@@ -34,7 +34,8 @@ def convertBranchParameter(kwargs):
     branch = kwargs.pop('branch', None)
     if branch:
         if 'codebases' in kwargs:
-            config.error("The 'branch' parameter cannot be combined with the 'codebases' parameter")
+            config.error("The 'branch' parameter cannot be combined with the "
+                         "'codebases' parameter")
         kwargs['codebases'] = {'': {
             'repository': '',
             'branch': branch,
@@ -55,7 +56,8 @@ class Timed(base.BaseScheduler):
     reason = ''
 
     def __init__(self, name, builderNames, properties={}, reason='',
-                 createAbsoluteSourceStamps=False, onlyIfChanged=False, **kwargs):
+                 createAbsoluteSourceStamps=False, onlyIfChanged=False,
+                 **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
@@ -84,7 +86,8 @@ class Timed(base.BaseScheduler):
     def activate(self):
         yield base.BaseScheduler.activate(self)
 
-        # no need to lock this; nothing else can run before the service is started
+        # no need to lock this
+        # nothing else can run before the service is started
         self.actuateOk = True
 
         # get the scheduler's last_build time (note: only done at startup)
@@ -128,7 +131,8 @@ class Timed(base.BaseScheduler):
         # that we must check the branch here because it is not included in the
         # change filter.
         if change.codebase in self.codebases:
-            if change.branch and change.branch != self.codebases[change.codebase].get('branch'):
+            cb_branch = self.codebases[change.codebase].get('branch')
+            if change.branch and change.branch != cb_branch:
                 return defer.succeed(None)  # don't care about this change
         else:
             return defer.succeed(None)
@@ -168,9 +172,10 @@ class Timed(base.BaseScheduler):
             # There are no changes, but onlyIfChanged is False, so start
             # a build of the latest revision, whatever that is
             sourcestamps = [dict(codebase=cb) for cb in self.codebases.keys()]
-            yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
-                                                              sourcestamps=sourcestamps,
-                                                              **kwargs)
+            yield self.addBuildsetForSourceStampsWithDefaults(
+                reason=self.reason,
+                sourcestamps=sourcestamps,
+                **kwargs)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
@@ -268,7 +273,8 @@ class Periodic(Timed):
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
                  **kwargs):
         convertBranchParameter(kwargs)
-        Timed.__init__(self, name=name, builderNames=builderNames, reason=reason, **kwargs)
+        Timed.__init__(self, name=name, builderNames=builderNames,
+                       reason=reason, **kwargs)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
@@ -286,8 +292,9 @@ class NightlyBase(Timed):
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 reason='NightlyBase(%(name)s)', **kwargs):
-        Timed.__init__(self, name=name, builderNames=builderNames, reason=reason, **kwargs)
+                 **kwargs):
+        Timed.__init__(self, name=name, builderNames=builderNames,
+                       **kwargs)
 
         self.minute = minute
         self.hour = hour
