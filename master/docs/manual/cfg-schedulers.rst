@@ -395,6 +395,14 @@ The arguments to this scheduler are:
 
 ``onlyImportant``
 
+``createAbsoluteSourceStamps``
+    See :ref:`Configuring-Schedulers`.
+
+``onlyIfChanged``
+    If this is true, then builds will not be scheduled at the designated time
+    *unless* the specified branch has seen an important change since
+    the previous build.
+
 ``reason``
     See :ref:`Configuring-Schedulers`.
 
@@ -447,7 +455,6 @@ The full list of parameters is:
 
 ``createAbsoluteSourceStamps``
     See :ref:`Configuring-Schedulers`.
-    Note that ``fileIsImportant``, ``change_filter`` and ``createAbsoluteSourceStamps`` are only relevant if ``onlyIfChanged`` is ``True``.
 
 ``onlyIfChanged``
     If this is true, then builds will not be scheduled at the designated time *unless* the specified branch has seen an important change since the previous build.
