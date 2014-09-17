@@ -197,17 +197,21 @@ Another example of a function delivering a customized html email containing the 
                 if step.isFinished():
                     break
             # get logs for the last finished step
-            logs = step.getLogs()
+            if step.isFinished():
+                logs = step.getLogs()
+            # No step finished, loop just exhausted itself; so as a special case we fetch all logs
+            else:
+                logs = build.getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
                 if log.getName() == 'stdio':
                     break
-            name = "%s.%s" % (step.getName(), log.getName())
-            status, dummy = step.getResults()
+            name = "%s.%s" % (log.getStep().getName(), log.getName())
+            status, dummy = log.getStep().getResults()
             # XXX logs no longer have getText methods!!
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                           step.getName(),
+                                           log.getStep().getName(),
                                            log.getName())
 
             text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
