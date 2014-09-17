@@ -52,7 +52,7 @@ class Timed(base.BaseScheduler):
     before the service stops.
     """
 
-    compare_attrs = ('reason',)
+    compare_attrs = ('reason', 'createAbsoluteSourceStamps', 'onlyIfChanged')
     reason = ''
 
     def __init__(self, name, builderNames, properties={}, reason='',
@@ -91,6 +91,13 @@ class Timed(base.BaseScheduler):
 
         # schedule the next build
         yield self.scheduleNextBuild()
+
+        if self.onlyIfChanged or self.createAbsoluteSourceStamps:
+            yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                             change_filter=self.change_filter,
+                                             onlyImportant=self.onlyImportant)
+        else:
+            yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
 
         # give subclasses a chance to start up
         yield self.startTimedSchedulerService()
@@ -352,15 +359,11 @@ class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
     def preStartConsumingChanges(self):
         return defer.succeed(None)
 
-    @defer.inlineCallbacks
     def startTimedSchedulerService(self):
+        # Keep this for backwards compatibility, subclasses should
+        # override startTimedSchedulerService() instead
         if self.onlyIfChanged:
-            yield self.preStartConsumingChanges()
-            yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                             change_filter=self.change_filter,
-                                             onlyImportant=self.onlyImportant)
-        else:
-            yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
+            return self.preStartConsumingChanges()
 
 
 class NightlyTriggerable(NightlyBase):
