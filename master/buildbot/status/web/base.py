@@ -169,6 +169,18 @@ def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     return codebases_arg
 
 
+def getResultsArg(request):
+    if "results" not in request.args:
+        return None
+
+    try:
+        return [int(res) for res in request.args["results"]]
+    except ValueError:
+        # no results filter,
+        # if we can't parse any of the results argument values
+        return None
+
+
 def codebases_to_args(codebases):
     codebases_arg = ''
     for key, val in codebases.iteritems():

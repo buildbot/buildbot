@@ -80,3 +80,29 @@ class Functions(unittest.TestCase):
             'application/x-www-form-urlencoded ; charset=UTF-16 ; foo=bar',
             'UTF-16')
 
+
+class TestGetResultsArg(unittest.TestCase):
+    def setUpRequest(self, results=None):
+        args = {}
+        if results is not None:
+            args["results"] = results
+
+        request = mock.Mock()
+        request.args = args
+
+        return request
+
+    def test_no_results_arg(self):
+        self.assertIsNone(base.getResultsArg(self.setUpRequest()))
+
+    def test_one_args(self):
+        res = base.getResultsArg(self.setUpRequest(["0"]))
+        self.assertEqual(res, [0])
+
+    def test_many_args(self):
+        res = base.getResultsArg(self.setUpRequest(["5", "8"]))
+        self.assertEqual(res, [5, 8])
+
+    def test_invalid_args(self):
+        self.assertIsNone(base.getResultsArg(self.setUpRequest(["0",
+                                                                "invalid"])))

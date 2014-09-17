@@ -24,7 +24,7 @@ from twisted.internet import defer
 from twisted.web import html, resource, server
 
 from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset
+from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset, getResultsArg
 import json
 
 
@@ -56,7 +56,11 @@ FLAGS = """\
   - codebases
     - Filter builds by the codebases they use an example of this is:
       unity_branch=trunk&cellsdk_branch=default
-      Note: You will probably need to specify all of the codebases
+      Note: You will probably need to specify all of the codebases.
+  - results
+    - Filter builds by the build results. For example:
+      results=0&results=7
+      will only return the build where the result is either 0 or 7.
 
 """
 
@@ -533,9 +537,11 @@ class PastBuildsJsonResource(JsonResource):
             getCodebasesArg(request=request, codebases=codebases)
             encoding = getRequestCharset(request)
             branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
+            results = getResultsArg(request)
 
             builds = list(self.builder_status.generateFinishedBuilds(branches=map_branches(branches),
                                                               codebases=codebases,
+                                                              results=results,
                                                               num_builds=self.number))
 
             return [b.asDict(request) for b in builds]
