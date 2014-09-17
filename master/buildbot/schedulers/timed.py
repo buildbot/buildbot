@@ -73,10 +73,6 @@ class Timed(base.BaseScheduler):
 
         self.reason = util.ascii2unicode(reason % {'name': name})
 
-        if createAbsoluteSourceStamps and not onlyIfChanged:
-            config.error(
-                "createAbsoluteSourceStamps can only be used with onlyIfChanged")
-
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.onlyIfChanged = onlyIfChanged
 
