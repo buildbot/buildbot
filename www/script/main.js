@@ -33,7 +33,6 @@ require.config({
         "iFrameResizeContent": "libs/iframeResizer.contentWindow",
         "rtGenericTable": "project/rtGenericTable",
         "userSettings": "project/userSettings",
-        "URIjs": "libs/uri",
         "toastr": "plugins/toastr",
         "testResults": "project/testresults-common",
         "buildLog": "project/buildLog",

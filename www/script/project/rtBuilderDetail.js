@@ -10,7 +10,8 @@ define(function (require) {
         extendMoment = require('extend-moment'),
         timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
-        popup = require('ui.popup');
+        popup = require('ui.popup'),
+        URI = require('libs/URI/uri');
 
     require('libs/jquery.form');
 
@@ -44,6 +45,18 @@ define(function (require) {
 
             // insert codebase and branch
             helpers.codeBaseBranchOverview($('#brancOverViewCont'));
+
+            var args = URI.parseQuery(window.location.href);
+
+            // Set the value of the numBuildsSelector defaulting to 15 for when not found,
+            // change location on change of the value and initialize select2
+            $(".numBuildsSelector").val(args.numbuilds || 15)
+                .change(function changeNumBuilds() {
+                    var numBuilds = $(this).val();
+
+                    var url = URI(window.location.href).setQuery({numbuilds: numBuilds});
+                    window.location = url;
+                }).select2({minimumResultsForSearch: -1});
         },
         rtfProcessCurrentBuilds: function (data) {
             if (data.currentBuilds !== undefined) {

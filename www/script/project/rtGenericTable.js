@@ -9,7 +9,7 @@ define(function (require) {
         helpers = require('helpers'),
         moment = require('moment'),
         popup = require('ui.popup'),
-        URI = require('URIjs/URI'),
+        URI = require('libs/uri/URI'),
         hb = require('project/handlebars-extend');
 
     var rtCells = hb.rtCells;

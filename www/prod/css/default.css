@@ -1245,6 +1245,7 @@ pre.code{padding-left:15px;white-space:pre-line;text-shadow:0 1px 0 #fff}
 .codebases-list,.reset{margin:0!important;padding:0!important}
 #slaveInfo{padding-bottom:15px}
 .col-padding-top{padding-top:10px}
+.numBuildsSelector{margin-bottom:10px}
 .toast-title{font-weight:700}
 .toast-message{-ms-word-wrap:break-word;word-wrap:break-word}
 .toast-message a,.toast-message label{color:#fff}
