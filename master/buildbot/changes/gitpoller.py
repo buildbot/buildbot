@@ -240,18 +240,18 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         - Add changes to database.
         """
 
-        lastRev = self.lastRev.get(branch)
-        self.lastRev[branch] = newRev
-        if not lastRev:
-            masterRev = self.lastRev.get('refs/heads/master')
-            if masterRev:
-                mergeBaseArgs = [masterRev, newRev]
-                lastRev = yield self._dovccmd('merge-base', mergeBaseArgs, path=self.workdir)
-            else:
-                return
+        # initial run, don't parse all history
+        if not self.lastRev:
+            return
+        if newRev in self.lastRev.values():
+            # TODO: no new changes on this branch
+            # should we just use the lastRev again, but with a different branch?
+            pass
 
         # get the change list
-        revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
+        revListArgs = ([r'--format=%H', r'%s' % newRev] +
+                       [r'^%s' % rev for rev in self.lastRev.values()] +
+                       [r'--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
@@ -259,6 +259,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList = results.split()
         revList.reverse()
         self.changeCount = len(revList)
+        self.lastRev[branch] = newRev
 
         log.msg('gitpoller: processing %d changes: %s from "%s"'
                 % (self.changeCount, revList, self.repourl))
