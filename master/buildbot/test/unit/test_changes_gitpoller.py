@@ -263,7 +263,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                        '--')
             .path('gitpoller-work')
             .exit(1),
@@ -301,7 +302,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '--')
             .path('gitpoller-work')
             .stdout(''),
@@ -366,7 +368,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
+                       '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                        '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
@@ -378,7 +382,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5..9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                       '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                       '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
+                       '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
@@ -485,8 +491,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 'git', 'log', '--format=%H',
-                'fa3ae8ed68e664d4db24798611b352e3c6509930..'
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
@@ -563,7 +569,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       '4423cdbcbb89c14e50dd5f4152415afd686c5241..4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        '--')
             .path('gitpoller-work')
             .stdout(''),
@@ -601,8 +608,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 'git', 'log', '--format=%H',
-                'fa3ae8ed68e664d4db24798611b352e3c6509930..'
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
@@ -615,8 +623,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
                 'git', 'log', '--format=%H',
-                'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5..'
                 '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
+                '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 '--')
             .path('gitpoller-work')
             .stdout('\n'.join(['9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
@@ -700,8 +709,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 'git', 'log', '--format=%H',
-                'fa3ae8ed68e664d4db24798611b352e3c6509930..'
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
@@ -793,8 +803,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
                 'git', 'log', '--format=%H',
-                'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5..'
                 '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                 '--')
             .path('gitpoller-work')
             .stdout('\n'.join(['9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
@@ -872,7 +883,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect('git', 'log',
                        '--format=%H',
-                       'fa3ae8ed68e664d4db24798611b352e3c6509930..4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^fa3ae8ed68e664d4db24798611b352e3c6509930',
                        '--')
             .path('gitpoller-work')
             .stdout('\n'.join([
