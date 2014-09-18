@@ -106,3 +106,21 @@ class TestGetResultsArg(unittest.TestCase):
     def test_invalid_args(self):
         self.assertIsNone(base.getResultsArg(self.setUpRequest(["0",
                                                                 "invalid"])))
+
+
+class TestPath_to_json_past_builds(unittest.TestCase):
+    def setUp(self):
+        self.request = mock.Mock()
+        self.request.args = {}
+
+    def test_minimal(self):
+        self.assertEqual("json/builders/bldr/builds/<43?",
+                         base.path_to_json_past_builds(self.request, "bldr", 43))
+
+    def test_all_args(self):
+        self.request.args = dict(numbuilds=[10],
+                                 results=[0, 7],
+                                 foo=["bar"])
+        self.assertEquals(
+            "json/builders/bldr/builds/<10?foo=bar&results=0&results=7",
+            base.path_to_json_past_builds(self.request, "bldr", 10))
