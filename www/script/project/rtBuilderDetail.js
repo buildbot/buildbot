@@ -11,7 +11,7 @@ define(function (require) {
         timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
         popup = require('ui.popup'),
-        URI = require('libs/URI/uri');
+        URI = require('libs/uri/URI');
 
     require('libs/jquery.form');
 
