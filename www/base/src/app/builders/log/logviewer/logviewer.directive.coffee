@@ -144,11 +144,13 @@ class Logviewer extends Directive
                         self.maybeLoadMore()
                 return null
 
-        replace: true
-        transclude: true
-        restrict: 'E'
-        scope: {logid:"="}
-        templateUrl: "views/logviewer.html"
-        link: (scope, elm, attr) ->
-            self = directive()
-            self.link(scope, elm, attr)
+        return {
+            replace: true
+            transclude: true
+            restrict: 'E'
+            scope: {logid:"="}
+            templateUrl: "views/logviewer.html"
+            link: (scope, elm, attr) ->
+                self = directive()
+                self.link(scope, elm, attr)
+        }
