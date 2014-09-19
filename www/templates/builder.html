@@ -75,14 +75,25 @@
       <h2 class="head-2">
         Recent Builds
       </h2>
-      <div class="pull-right">
-          <label for="numBuildsSelector">Max Builds</label>
-          <select id="numBuildsSelector" class="numBuildsSelector">
-              <option value="15">15</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-          </select>
-      </div>
+
+       <div class="pull-left builder-filters">
+                       <label for="buildResultSelector">Filter Results</label>
+            <input type="hidden" id="buildResultSelector" style="width: 250px">
+
+         </div>
+
+        <div class="pull-right builder-filters">
+
+
+            <label for="numBuildsSelector">Max Builds</label>
+            <select id="numBuildsSelector">
+                <option value="15">15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+
+            <button id="btnFilter" class="blue-btn">Apply</button>
+        </div>
       <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
       </table>
 
