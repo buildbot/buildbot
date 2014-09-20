@@ -99,8 +99,8 @@ the error.
 Open up the config again and introduce a syntax error by removing the first
 single quote in the two lines you changed, so they read::
 
-  c['title'] = "Pyflakes"
-  c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
+  c[title'] = "Pyflakes"
+  c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
 This creates a Python SyntaxError.  Now go ahead and reconfig the buildmaster:
 
