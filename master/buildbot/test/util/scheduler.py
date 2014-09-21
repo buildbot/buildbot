@@ -217,7 +217,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
+        self.addBuildsetCalls.append(('addBuildsetForSourceStamps',
                                       dict(reason=reason, external_idstring=external_idstring,
                                            properties=properties, builderNames=builderNames,
                                            sourcestamps=sourcestamps)))
