@@ -151,7 +151,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         # and check whether a buildset was added in response
         if expect_buildset:
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=None,  # defaults
                     external_idstring=None,
                     properties=None,
