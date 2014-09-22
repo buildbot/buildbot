@@ -25,6 +25,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
 from twisted.python import failure
@@ -211,35 +212,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
             else:
                 return None
 
-            words = command
-            if isinstance(words, (str, unicode)):
-                words = words.split()
-
-            try:
-                len(words)
-            except (AttributeError, TypeError):
-                # WithProperties and Property don't have __len__
-                # For old-style classes instances AttributeError raised,
-                # for new-style classes instances - TypeError.
-                return None
-
-            # flatten any nested lists
-            words = flatten(words, (list, tuple))
-
-            # strip instances and other detritus (which can happen if a
-            # description is requested before rendering)
-            words = [w for w in words if isinstance(w, (str, unicode))]
-
-            if len(words) < 1:
-                return None
-            if len(words) < 3:
-                rv = "'%s'" % (' '.join(words))
-            else:
-                rv = "'%s ...'" % (' '.join(words[:2]))
-
-            # cmd was a comand and thus probably a bytestring.  Be gentle in
-            # trying to covert it.
-            rv = rv.decode('ascii', errors='replace')
+            rv = command_to_string(command)
 
             # add the descriptionSuffix, if one was given
             if self.descriptionSuffix:

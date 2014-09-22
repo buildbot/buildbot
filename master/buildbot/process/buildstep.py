@@ -754,6 +754,21 @@ class BuildStep(results.ResultComputingConfigMixin,
     def setStatistic(self, name, value):
         self.statistics[name] = value
 
+    def _describe(self, done=False):
+        # old-style steps expect this function to exist
+        assert not self.isNewStyle()
+        return []
+
+    def describe(self, done=False):
+        # old-style steps expect this function to exist
+        assert not self.isNewStyle()
+        desc = self._describe(done)
+        if not desc:
+            return []
+        if self.descriptionSuffix:
+            desc = desc + u' ' + util.join_list(self.descriptionSuffix)
+        return desc
+
 
 components.registerAdapter(
     BuildStep._getStepFactory,

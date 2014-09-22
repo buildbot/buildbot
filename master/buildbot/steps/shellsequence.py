@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot import util
 from buildbot.process import buildstep
 from buildbot.status import results
 from twisted.internet import defer
@@ -61,6 +62,7 @@ class ShellArg(results.ResultComputingConfigMixin):
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
+    last_command = None
     renderables = ['commands']
 
     def __init__(self, commands=None, **kwargs):
@@ -93,8 +95,8 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             if not self.shouldRunTheCommand(command):
                 continue
 
-            # stick the command in self.command so that describe can use it
-            self.command = command
+            # keep the command around so we can describe it
+            self.last_command = command
 
             cmd = yield self.makeRemoteShellCommand(command=command,
                                                     stdioLogName=arg.logfile)
@@ -107,3 +109,10 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
 
     def run(self):
         return self.runShellSequence(self.commands)
+
+    def getResultSummary(self):
+        if self.last_command:
+            summary = util.command_to_string(self.last_command)
+            if summary:
+                return {u'step': summary}
+        return super(ShellSequence, self).getResultSummary()

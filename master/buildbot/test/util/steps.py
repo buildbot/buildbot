@@ -229,8 +229,9 @@ class BuildStepMixin(object):
             self.assertEqual(result, self.exp_result, "expected result")
             if self.exp_state_strings:
                 stepStateStrings = self.master.data.updates.stepStateStrings
-                stepid = stepStateStrings.keys()[0]
-                self.assertEqual(stepStateStrings[stepid],
+                stepids = stepStateStrings.keys()
+                assert stepids, "no step state strings were set"
+                self.assertEqual(stepStateStrings[stepids[0]],
                                  self.exp_state_strings,
                                  "expected step state strings")
             for pn, (pv, ps) in self.exp_properties.iteritems():

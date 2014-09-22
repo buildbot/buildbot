@@ -329,3 +329,32 @@ class JoinList(unittest.TestCase):
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda: util.join_list(['\xff']))
+
+
+class CommandToString(unittest.TestCase):
+
+    def test_short_string(self):
+        self.assertEqual(util.command_to_string("ab cd"), u"'ab cd'")
+
+    def test_long_string(self):
+        self.assertEqual(util.command_to_string("ab cd ef"), u"'ab cd ...'")
+
+    def test_list(self):
+        self.assertEqual(util.command_to_string(['ab', 'cd', 'ef']),
+                         u"'ab cd ...'")
+
+    def test_nested_list(self):
+        self.assertEqual(util.command_to_string(['ab', ['cd', ['ef']]]),
+                         u"'ab cd ...'")
+
+    def test_object(self):
+        # this looks like a renderable
+        self.assertEqual(util.command_to_string(object()), None)
+
+    def test_list_with_objects(self):
+        # the object looks like a renderable, and is skipped
+        self.assertEqual(util.command_to_string(['ab', object(), 'cd']),
+                         u"'ab cd'")
+
+    def test_invalid_ascii(self):
+        self.assertEqual(util.command_to_string('a\xffc'), u"'a\ufffdc'")
