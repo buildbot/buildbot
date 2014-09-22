@@ -18,6 +18,7 @@ from buildbot import util
 from buildbot.process import buildstep
 from buildbot.status import results
 from twisted.internet import defer
+from twisted.python import log
 
 
 class ShellArg(results.ResultComputingConfigMixin):
@@ -80,14 +81,19 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def runShellSequence(self, commands):
         terminate = False
         if commands is None:
+            log.msg("After rendering, ShellSequence `commands` is None")
             defer.returnValue(results.EXCEPTION)
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
+                log.msg("After rendering, ShellSequence `commands` list "
+                        "contains something that is not a ShellArg")
                 defer.returnValue(results.EXCEPTION)
             try:
                 arg.validateAttributes()
-            except config.ConfigErrors:
+            except config.ConfigErrors, e:
+                log.msg("After rendering, ShellSequence `commands` is "
+                        "invalid: %s" % (e,))
                 defer.returnValue(results.EXCEPTION)
 
             # handle the command from the arg

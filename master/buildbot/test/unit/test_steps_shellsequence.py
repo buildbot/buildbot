@@ -64,19 +64,19 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
         self.setupStep(self.createDynamicRun(None))
         self.expectOutcome(result=EXCEPTION,
-                           state_string="commands == None")
+                           state_string="finished (exception)")
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
         self.setupStep(self.createDynamicRun(["one command"]))
         self.expectOutcome(result=EXCEPTION,
-                           state_string='one command not ShellArg')
+                           state_string='finished (exception)')
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
         self.setupStep(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
-                           state_string='1 invalid params')
+                           state_string='finished (exception)')
         return self.runStep()
 
     def testMultipleCommandsAreRun(self):
