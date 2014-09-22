@@ -155,11 +155,19 @@ class CopyDirectory(SlaveBuildStep):
         self.finished(SUCCESS)
 
     # TODO: BuildStep subclasses don't have a describe()....
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        desc = desc[:]
-        desc.extend([self.src, "to", self.dest])
-        return desc
+    def getResultSummary(self):
+        src = self.src
+        if isinstance(src, str):
+            src = src.decode('ascii', errors='replace')
+        dest = self.dest
+        if isinstance(dest, str):
+            dest = dest.decode('ascii', errors='replace')
+        copy = u"%s to %s" % (src, dest)
+        if self.results == SUCCESS:
+            rv = u'Copied ' + copy
+        else:
+            rv = u'Copying ' + copy + ' failed.'
+        return {u'step': rv}
 
 
 class RemoveDirectory(SlaveBuildStep):

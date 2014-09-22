@@ -195,7 +195,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=failureLog)
             + 1
         )
-        self.expectOutcome(result=FAILURE, state_string='tests 8 failures')
+        self.expectOutcome(result=FAILURE, state_string='tests 8 failures (failure)')
         self.expectLogfile('problems', failureLog.split('\n\n', 1)[1])
         self.expectLogfile('warnings', textwrap.dedent('''\
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_nodupe ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
@@ -315,5 +315,5 @@ class HLint(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectLogfile('warnings', 'colon: meaning warning')
-        self.expectOutcome(result=WARNINGS, state_string='hlint warnings')
+        self.expectOutcome(result=WARNINGS, state_string='hlint (warnings)')
         return self.runStep()

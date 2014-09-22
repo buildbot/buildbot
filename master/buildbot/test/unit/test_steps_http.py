@@ -86,7 +86,7 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(http.GET(url))
         self.expectLogfile('log', "URL: %s\n ------ Content ------\n404" % (url, ))
         self.expectLogfile('content', "404")
-        self.expectOutcome(result=FAILURE, state_string="Status code: 404")
+        self.expectOutcome(result=FAILURE, state_string="Status code: 404 (failure)")
         return self.runStep()
 
     def test_POST(self):
@@ -99,7 +99,7 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(http.POST(url))
         self.expectLogfile('log', "URL: %s\n ------ Content ------\n%s" % (url, content))
         self.expectLogfile('content', content)
-        self.expectOutcome(result=FAILURE, state_string="Status code: 405")
+        self.expectOutcome(result=FAILURE, state_string="Status code: 405 (failure)")
         return self.runStep()
 
     def test_header(self):

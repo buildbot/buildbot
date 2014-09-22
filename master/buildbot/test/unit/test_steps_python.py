@@ -434,7 +434,8 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                               stdout='oh noes!')
             + 1
         )
-        self.expectOutcome(result=FAILURE, state_string="sphinx 0 warnings")
+        self.expectOutcome(result=FAILURE,
+                           state_string="sphinx 0 warnings (failure)")
         return self.runStep()
 
     def test_nochange(self):
@@ -460,7 +461,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=WARNINGS,
-                           state_string="sphinx 2 warnings")
+                           state_string="sphinx 2 warnings (warnings)")
         self.expectLogfile("warnings", warnings)
         d = self.runStep()
 

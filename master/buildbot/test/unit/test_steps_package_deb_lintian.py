@@ -39,7 +39,7 @@ class TestDebLintian(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['lintian', '-v', 'foo_0.23_i386.changes'])
             + 0)
-        self.expectOutcome(result=SUCCESS, state_string="'lintian -v ...'")
+        self.expectOutcome(result=SUCCESS, state_string="Lintian")
         return self.runStep()
 
     def test_success_suppressTags(self):

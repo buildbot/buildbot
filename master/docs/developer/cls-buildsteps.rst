@@ -620,6 +620,10 @@ This class can only be used in new-style steps.
 
         All that remains is to run the command with :py:meth:`~buildbot.process.buildstep.BuildStep.runCommand`.
 
+    The :py:class:`ShellMixin` class implements :py:meth:`~buildbot.process.buildstep.BuildStep.getResultSummary`, returning a summary of the command.
+    If no command was specified or run, it falls back to the default ``getResultSummary`` based on ``descriptionDone``.
+    Subclasses can override this method to return a more appropriate status.
+
 Exceptions
 ----------
 

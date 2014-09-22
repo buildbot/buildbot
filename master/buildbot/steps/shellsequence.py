@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from buildbot import util
 from buildbot.process import buildstep
 from buildbot.status import results
 from twisted.internet import defer
@@ -115,10 +114,3 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
 
     def run(self):
         return self.runShellSequence(self.commands)
-
-    def getResultSummary(self):
-        if self.last_command:
-            summary = util.command_to_string(self.last_command)
-            if summary:
-                return {u'step': summary}
-        return super(ShellSequence, self).getResultSummary()

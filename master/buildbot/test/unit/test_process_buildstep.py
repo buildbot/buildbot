@@ -251,39 +251,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         d.addCallback(lambda _: self.assertTrue(called[0]))
         return d
 
-    def test_describe(self):
-        description = ['oogaBooga']
-        descriptionDone = ['oogaBooga done!']
-        step = buildstep.BuildStep(description=description,
-                                   descriptionDone=descriptionDone)
-        step.rendered = True
-        self.assertEqual(step.describe(), description)
-        self.assertEqual(step.describe(done=True), descriptionDone)
-
-        step2 = buildstep.BuildStep()
-        step2.rendered = True
-        self.assertEqual(step2.describe(), [step2.name])
-        self.assertEqual(step2.describe(done=True), [step2.name])
-
-    def test_describe_suffix(self):
-        description = ['oogaBooga']
-        descriptionDone = ['oogaBooga done!']
-        descriptionSuffix = ['oogaBooga suffix']
-
-        step = buildstep.BuildStep(description=description,
-                                   descriptionDone=descriptionDone,
-                                   descriptionSuffix=descriptionSuffix)
-        step.rendered = True
-        self.assertEqual(step.describe(), description + descriptionSuffix)
-        self.assertEqual(step.describe(done=True),
-                         descriptionDone + descriptionSuffix)
-
-        step2 = buildstep.BuildStep(descriptionSuffix=descriptionSuffix)
-        step2.rendered = True
-        self.assertEqual(step2.describe(), [step2.name] + descriptionSuffix)
-        self.assertEqual(step2.describe(done=True),
-                         [step2.name] + descriptionSuffix)
-
     @defer.inlineCallbacks
     def test_step_getLog(self):
         testcase = self
@@ -895,20 +862,6 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS, state_string=u"'foo BAR'")
         yield self.runStep()
 
-    def test_getCommandSummary_long(self):
-        self.setupStep(SimpleShellCommand(command=['aaa', 'bbb', 'ccc']))
-        self.assertEqual(self.step._getCommandSummary(), u"'aaa bbb ...'")
-
-    def test_getCommandSummary_short(self):
-        self.setupStep(SimpleShellCommand(command=['aaa']))
-        self.assertEqual(self.step._getCommandSummary(), u"'aaa'")
-
-    def test_getCommandSummary_non_unicode(self):
-        self.setupStep(SimpleShellCommand(command=['a', 'invalid\xff']))
-        self.assertEqual(self.step._getCommandSummary(),
-                         u"'a invalid\ufffd'")
-
-    def test_getCommandSummary_nested(self):
+    def test_getResultSummary(self):
         self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
-        self.assertEqual(self.step._getCommandSummary(),
-                         u"'a b ...'")
+        self.assertEqual(self.step.getResultSummary(), {u'step': u"'a b ...'"})

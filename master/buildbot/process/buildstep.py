@@ -386,7 +386,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         stepResult = summary.get('step', u'finished')
         if not isinstance(stepResult, unicode):
-            raise TypeError("step result string must be unicode")
+            raise TypeError("step result string must be unicode (got %r)"
+                            % (stepResult,))
         yield self.master.data.updates.setStepStateStrings(self.stepid,
                                                            [stepResult])
 
@@ -1052,6 +1053,9 @@ class ShellMixin(object):
             stdio = yield self.addLog(stdioLogName)
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
 
+        # store command away for display
+        self.command = kwargs['command']
+
         # check for the usePTY flag
         if kwargs['usePTY'] != 'slave-config':
             if self.slaveVersionIsOlderThan("shell", "2.7"):
@@ -1101,6 +1105,12 @@ class ShellMixin(object):
                 cmd.useLog(newlog, False)
 
         defer.returnValue(cmd)
+
+    def getResultSummary(self):
+        summary = util.command_to_string(self.command)
+        if not summary:
+            return super(ShellMixin, self).getResultSummary()
+        return {u'step': summary}
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))

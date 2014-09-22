@@ -15,6 +15,7 @@
 
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
+from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.steps import mswin
@@ -54,6 +55,8 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             + expected_code
         )
         state_string = "'robocopy %s ...'" % source
+        if expected_res != SUCCESS:
+            state_string += ' (%s)' % (Results[expected_res])
         self.expectOutcome(result=expected_res, state_string=state_string)
         return self.runStep()
 
