@@ -3,28 +3,33 @@
     a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
       | {{builder.name}}/{{build.number}}
     .pull-right
+      span(ng-show="build.complete")
+          | {{(build.complete_at - build.started_at)| durationformat:'LLL' }}
+      span(ng-show="!build.complete")
+          | {{(now - build.started_at)| durationformat:'LLL' }}
       span(ng-repeat="s in build.state_strings")
-        | {{s}}&nbsp;
-      .label(ng-class="results2class(build)")
+        | &nbsp;{{s}}&nbsp;
+      .label(ng-class="results2class2(build)")
         | {{results2text(build)}}
   ul.list-group.no-select
     li.list-group-item(ng-if="isStepDisplayed(step)", ng-repeat="step in steps",
                        ng-click="step.fulldisplay=!step.fulldisplay")
       span.pull-right(ng-if="step.started_at")
+        | {{ step.duration| durationformat:'LLL' }}
         | &nbsp;{{step.state_strings.join(' ')}}
       span.badge-status(ng-class="results2class(step, 'pulse')")
         | {{step.number}}
       | &nbsp;
-      i.fa.fa-chevron-circle-right.rotate(ng-class="{'rotate-90':fulldisplay}", ng-if="step.logs.length")
+      i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':step.fulldisplay}", ng-if="step.logs.length")
       | &nbsp; {{step.name}}
       div.anim-stepdetails(ng-show="step.fulldisplay")
-        ul.list-unstyled
+        ul
           li(ng-repeat="log in step.logs")
-            a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.name}}") {{log.name}}
+            a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
-      ul.list-unstyled
-        li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
-          buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')
       ul
         li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
           a(href="{{url.url}}") {{url.name}}
+      ul.list-unstyled
+        li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
+          buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')

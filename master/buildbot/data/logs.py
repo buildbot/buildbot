@@ -115,7 +115,7 @@ class Log(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def newLog(self, stepid, name, type):
-        slug = name
+        slug = identifiers.forceIdentifier(50, name)
         while True:
             try:
                 logid = yield self.master.db.logs.addLog(

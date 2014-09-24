@@ -1,9 +1,15 @@
 class Build extends Controller
-    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage) ->
+    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService) ->
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
-            $rootScope.$broadcast "breadcrumb", [
+            glBreadcrumbService.setBreadcrumb [
+                    caption: '-'
+                    sref: "build({build:#{build.number - 1}})"
+                ,
+                    caption: '+'
+                    sref: "build({build:#{build.number + 1}})"
+                ,
                     caption: "Builders"
                     sref: "builders"
                 ,
