@@ -130,8 +130,7 @@ class Model(base.DBConnectorComponent):
                      sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
                      sa.Column('started_at', sa.Integer),
                      sa.Column('complete_at', sa.Integer),
-                     # a list of strings describing the step's state
-                     sa.Column('state_strings_json', sa.Text, nullable=False),
+                     sa.Column('state_string', sa.Text, nullable=False, server_default=''),
                      sa.Column('results', sa.Integer),
                      sa.Column('urls_json', sa.Text, nullable=False),
                      )
