@@ -37,7 +37,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     # minutes past the hour) and subtracted before the time offset is reported.
     localtime_offset = time.timezone % 3600
 
-    def makeScheduler(self, firstBuildDuration=0, **kwargs):
+    def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
                                      self.OBJECTID, overrideBuildsetMethods=True)
 
@@ -47,30 +47,6 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
         # keep track of builds in self.events
         self.events = []
-
-        def addBuildsetForLatest(reason='', external_idstring='',
-                                 branch=None, repository='', project=''):
-            self.assertIn('scheduler named', reason)
-            isFirst = (self.events == [])
-            self.events.append('B(%s)@%d' % (branch,
-                                             # show the offset as seconds past the GMT hour
-                                             self.clock.seconds() - self.localtime_offset))
-            if isFirst and firstBuildDuration:
-                d = defer.Deferred()
-                self.clock.callLater(firstBuildDuration, d.callback, None)
-                return d
-            else:
-                return defer.succeed(None)
-        sched.addBuildsetForLatest = addBuildsetForLatest
-
-        origAddBuildsetForChanges = sched.addBuildsetForChanges
-
-        def addBuildsetForChanges(reason='', external_idstring=None, changeids=[]):
-            self.events.append('B%s@%d' % (repr(changeids).replace(' ', ''),
-                                           # show the offset as seconds past the GMT hour
-                                           self.clock.seconds() - self.localtime_offset))
-            return origAddBuildsetForChanges(reason=reason, external_idstring=external_idstring, changeids=changeids)
-        sched.addBuildsetForChanges = addBuildsetForChanges
 
         # see self.assertConsumingChanges
         self.consumingChanges = None
@@ -82,6 +58,29 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
         return sched
 
+    def fake_addBuildsetForChanges(self, waited_for=False, reason='',
+                                   external_idstring=None, changeids=[],
+                                   builderNames=None, properties=None, **kw):
+        self.events.append('B%s@%d'
+                           % (repr(changeids).replace(' ', ''),
+                              # show the offset as seconds past the GMT hour
+                              self.clock.seconds() - self.localtime_offset))
+        return super(Nightly, self).fake_addBuildsetForChanges(
+            waited_for=waited_for, reason=reason,
+            external_idstring=external_idstring, changeids=changeids,
+            builderNames=builderNames, properties=properties, **kw)
+
+    def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+                                                    waited_for=False,
+                                                    properties=None,
+                                                    builderNames=None,
+                                                    **kw):
+        self.events.append('B@%d'
+                           % (self.clock.seconds() - self.localtime_offset))
+        return super(Nightly, self).fake_addBuildsetForSourceStampsWithDefaults(
+            reason, sourcestamps, waited_for=waited_for,
+            properties=properties, builderNames=builderNames, **kw)
+
     def mkbs(self, **kwargs):
         # create buildset for expected_buildset in assertBuildset.
         bs = dict(reason="The Nightly scheduler named 'test' triggered this build", external_idstring='', sourcestampsetid=100,
@@ -91,7 +90,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     def mkss(self, **kwargs):
         # create sourcestamp for expected_sourcestamps in assertBuildset.
-        ss = dict(branch='master', project='', repository='', sourcestampsetid=100)
+        ss = dict(
+            branch='master', project='', repository='', sourcestampsetid=100)
         ss.update(kwargs)
         return ss
 
@@ -118,11 +118,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     # Tests
 
     def test_constructor_no_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
-        self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        self.assertEqual(
+            sched.reason, "The Nightly scheduler named 'test' triggered this build")
 
     def test_constructor_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', reason="hourly")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', reason="hourly")
         self.assertEqual(sched.reason, "hourly")
 
     def test_constructor_change_filter(self):
@@ -130,10 +133,11 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                                    branch=None, change_filter=filter.ChangeFilter(category_re="fo+o"))
         assert sched.change_filter
 
-    def test_constructor_no_branch(self):
+    def test_constructor_branch_and_codebase(self):
         self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(name='test', builderNames=['test'],
-                                                     change_filter=filter.ChangeFilter(category_re="fo+o")))
+                          lambda: self.makeScheduler(
+                              name='test', builderNames=['test'], branch='a',
+                              codebases={'': {'branch': 'b'}}))
 
     # end-to-end tests: let's see the scheduler in action
 
@@ -157,7 +161,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock.advance(0)  # let it get set up
         while self.clock.seconds() < self.localtime_offset + 30 * 60:
             self.clock.advance(60)
-        self.assertEqual(self.events, ['B(None)@600', 'B(None)@1200', 'B(None)@1260'])
+        self.assertEqual(self.events, ['B@600', 'B@1200', 'B@1260'])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1260 + self.localtime_offset)
 
@@ -174,7 +178,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock.advance(0)
         while self.clock.seconds() < self.localtime_offset + 10 * 60:
             self.clock.advance(60)
-        self.assertEqual(self.events, ['B(master)@300'])
+        self.assertEqual(self.events, ['B@300'])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=300 + self.localtime_offset)
 
@@ -183,7 +187,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     def do_test_iterations_onlyIfChanged(self, *changes_at, **kwargs):
         fII = mock.Mock(name='fII')
-        self.makeScheduler(name='test', builderNames=['test'], branch=None,
+        self.makeScheduler(name='test', builderNames=['test'],
                            minute=[5, 25, 45], onlyIfChanged=True,
                            fileIsImportant=fII, **kwargs)
 
@@ -230,7 +234,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     def test_iterations_onlyIfChanged_off_branch_changes(self):
         self.do_test_iterations_onlyIfChanged(
             (60, self.makeFakeChange(branch='testing'), True),
-            (1700, self.makeFakeChange(branch='staging'), True))
+            (1700, self.makeFakeChange(branch='staging'), True),
+            branch=None)
         self.assertEqual(self.events, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
@@ -242,7 +247,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             (130, self.makeFakeChange(number=4, branch='offbranch'), True),
             (1200, self.makeFakeChange(number=5, branch=None), True),
             (1201, self.makeFakeChange(number=6, branch=None), False),
-            (1202, self.makeFakeChange(number=7, branch='offbranch'), True))
+            (1202, self.makeFakeChange(number=7, branch='offbranch'), True),
+            branch=None)
         # note that the changeid list includes the unimportant changes, but not the
         # off-branch changes, and note that no build took place at 300s, as no important
         # changes had yet arrived
@@ -252,16 +258,19 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         return self.sched.deactivate()
 
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
-        # Test createAbsoluteSourceStamps=True when only one codebase has changed
+        # Test createAbsoluteSourceStamps=True when only one codebase has
+        # changed
         self.do_test_iterations_onlyIfChanged(
-            (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
+            (120, self.makeFakeChange(
+                number=3, codebase='a', revision='2345:bcd'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
             createAbsoluteSourceStamps=True)
         self.assertEqual(self.events, ['B[3]@300'])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {
                 'builderNames': None,
@@ -278,7 +287,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         # Test createAbsoluteSourceStamps=True when only one codebase has changed,
         # but the other was previously changed
         fII = mock.Mock(name='fII')
-        self.makeScheduler(name='test', builderNames=['test'], branch=None,
+        self.makeScheduler(name='test', builderNames=['test'],
                            minute=[5, 25, 45], onlyIfChanged=True,
                            fileIsImportant=fII,
                            codebases={'a': {'repository': "", 'branch': 'master'},
@@ -296,7 +305,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.events, ['B[3]@300'])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {
                 'builderNames': None,
@@ -313,15 +323,18 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
         # Test createAbsoluteSourceStamps=True when both codebases have changed
         self.do_test_iterations_onlyIfChanged(
-            (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
-            (122, self.makeFakeChange(number=4, codebase='b', revision='1234:abc'), True),
+            (120, self.makeFakeChange(
+                number=3, codebase='a', revision='2345:bcd'), True),
+            (122, self.makeFakeChange(
+                number=4, codebase='b', revision='1234:abc'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
             createAbsoluteSourceStamps=True)
         self.assertEqual(self.events, ['B[3,4]@300'])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {
                 'builderNames': None,

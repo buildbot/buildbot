@@ -450,11 +450,14 @@ The full list of parameters is:
     Note that ``fileIsImportant``, ``change_filter`` and ``createAbsoluteSourceStamps`` are only relevant if ``onlyIfChanged`` is ``True``.
 
 ``onlyIfChanged``
-    If this is true, then builds will not be scheduled at the designated time *unless* the specified branch has seen an important change since the previous build.
+    If this is true, then builds will not be scheduled at the designated time *unless* the scheduler seen an important change (matching the change filter) since the previous build.
 
-``branch``
-    (required) The branch to build when the time comes.
-    Remember that a value of ``None`` here means the default branch, and will not match other branches!
+``branch`` (deprecated; use ``codebases`` and ``change_filter``)
+    Specifying ``branch="prod"`` is equivalent to specifying ``codebases={'': {'branch': 'prod'}}``
+    Branch and codebases cannot both be specified.
+
+    If ``onlyIfChanged`` is given, then only changes on that branch are considered.
+    Specify the branch in the ``change_filter`` instead.
 
 ``minute``
     The minute of the hour on which to start the build.

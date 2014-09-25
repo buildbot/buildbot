@@ -266,6 +266,11 @@ Changes for Developers
 
 * The triggerable schedulers` ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
 
+* The :bb:sched:`Periodic` scheduler no longer accepts a ``branch`` parameter; the behavior of this parameter was never documented, anyway.
+
+* The :bb:sched:`Nightly` scheduler's ``branch`` parameter is deprecated, and should be replaced with an equivalent codebase.
+  See the scheduler documentation.
+
 * The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.
   It remains in the codebase to support loading data from pickles on upgrade, but should not be used in running code.
 
