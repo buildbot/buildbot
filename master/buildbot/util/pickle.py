@@ -17,10 +17,14 @@ from __future__ import with_statement
 
 import cPickle
 import cStringIO
+import new
 import os
+import sys
 
 from buildbot import interfaces
 from buildbot import util
+from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.persisted import styles
 from twisted.python import log
 from twisted.python import reflect
@@ -172,10 +176,264 @@ class ChangeMaster:  # pragma: no cover
             print "converted %d strings" % nconvert
 substituteClasses['buildbot.changes.changes', 'ChangeMaster'] = ChangeMaster
 
+
+class BuildStepStatus(styles.Versioned):
+
+    persistenceVersion = 4
+    persistenceForgets = ('wasUpgraded', )
+
+    started = None
+    finished = None
+    progress = None
+    text = []
+    results = None
+    text2 = []
+    watchers = []
+    updates = {}
+    finishedWatchers = []
+    step_number = None
+    hidden = False
+
+    def __init__(self, parent, master, step_number):
+        assert interfaces.IBuildStatus(parent)
+        self.build = parent
+        self.step_number = step_number
+        self.hidden = False
+        self.logs = []
+        self.urls = {}
+        self.watchers = []
+        self.updates = {}
+        self.finishedWatchers = []
+        self.skipped = False
+
+        self.master = master
+
+        self.waitingForLocks = False
+
+    def getName(self):
+        """Returns a short string with the name of this step. This string
+        may have spaces in it."""
+        return self.name
+
+    def getBuild(self):
+        return self.build
+
+    def getTimes(self):
+        return (self.started, self.finished)
+
+    def getExpectations(self):
+        """Returns a list of tuples (name, current, target)."""
+        if not self.progress:
+            return []
+        ret = []
+        metrics = sorted(self.progress.progress.keys())
+        for m in metrics:
+            t = (m, self.progress.progress[m], self.progress.expectations[m])
+            ret.append(t)
+        return ret
+
+    def getLogs(self):
+        return self.logs
+
+    def getURLs(self):
+        return self.urls.copy()
+
+    def isStarted(self):
+        return (self.started is not None)
+
+    def isSkipped(self):
+        return self.skipped
+
+    def isFinished(self):
+        return (self.finished is not None)
+
+    def isHidden(self):
+        return self.hidden
+
+    def waitUntilFinished(self):
+        if self.finished:
+            d = defer.succeed(self)
+        else:
+            d = defer.Deferred()
+            self.finishedWatchers.append(d)
+        return d
+
+    # while the step is running, the following methods make sense.
+    # Afterwards they return None
+
+    def getETA(self):
+        if self.started is None:
+            return None  # not started yet
+        if self.finished is not None:
+            return None  # already finished
+        if not self.progress:
+            return None  # no way to predict
+        return self.progress.remaining()
+
+    # Once you know the step has finished, the following methods are legal.
+    # Before this step has finished, they all return None.
+
+    def getText(self):
+        """Returns a list of strings which describe the step. These are
+        intended to be displayed in a narrow column. If more space is
+        available, the caller should join them together with spaces before
+        presenting them to the user."""
+        return self.text
+
+    def getResults(self):
+        """Return a tuple describing the results of the step.
+        'result' is one of the constants in L{buildbot.status.builder}:
+        SUCCESS, WARNINGS, FAILURE, or SKIPPED.
+        'strings' is an optional list of strings that the step wants to
+        append to the overall build's results. These strings are usually
+        more terse than the ones returned by getText(): in particular,
+        successful Steps do not usually contribute any text to the
+        overall build.
+
+        @rtype:   tuple of int, list of strings
+        @returns: (result, strings)
+        """
+        return (self.results, self.text2)
+
+    # subscription interface
+
+    def subscribe(self, receiver, updateInterval=10):
+        # will get logStarted, logFinished, stepETAUpdate
+        assert receiver not in self.watchers
+        self.watchers.append(receiver)
+        self.sendETAUpdate(receiver, updateInterval)
+
+    def sendETAUpdate(self, receiver, updateInterval):
+        self.updates[receiver] = None
+        # they might unsubscribe during stepETAUpdate
+        receiver.stepETAUpdate(self.build, self,
+                               self.getETA(), self.getExpectations())
+        if receiver in self.watchers:
+            self.updates[receiver] = reactor.callLater(updateInterval,
+                                                       self.sendETAUpdate,
+                                                       receiver,
+                                                       updateInterval)
+
+    def unsubscribe(self, receiver):
+        if receiver in self.watchers:
+            self.watchers.remove(receiver)
+        if receiver in self.updates:
+            if self.updates[receiver] is not None:
+                self.updates[receiver].cancel()
+            del self.updates[receiver]
+
+    # Note: setter methods have been removed
+
+    def checkLogfiles(self):
+        # filter out logs that have been deleted
+        self.logs = [l for l in self.logs if l.old_hasContents()]
+
+    # persistence
+
+    def __getstate__(self):
+        d = styles.Versioned.__getstate__(self)
+        del d['build']  # filled in when loading
+        if "progress" in d:
+            del d['progress']
+        del d['watchers']
+        del d['finishedWatchers']
+        del d['updates']
+        del d['master']
+
+        for attr in ("getStatistic", "hasStatistic", "setStatistic"):
+            if attr in d:
+                del d[attr]
+
+        return d
+
+    def __setstate__(self, d):
+        styles.Versioned.__setstate__(self, d)
+        # self.build must be filled in by our parent
+
+        # point the logs to this object
+        self.watchers = []
+        self.finishedWatchers = []
+        self.updates = {}
+
+    def setProcessObjects(self, build, master):
+        self.build = build
+        self.master = master
+        for loog in self.logs:
+            loog.step = self
+            loog.master = master
+
+    def upgradeToVersion1(self):
+        if not hasattr(self, "urls"):
+            self.urls = {}
+        self.wasUpgraded = True
+
+    def upgradeToVersion2(self):
+        if not hasattr(self, "statistics"):
+            self.statistics = {}
+        self.wasUpgraded = True
+
+    def upgradeToVersion3(self):
+        if not hasattr(self, "step_number"):
+            self.step_number = 0
+        self.wasUpgraded = True
+
+    def upgradeToVersion4(self):
+        if not hasattr(self, "hidden"):
+            self.hidden = False
+        self.wasUpgraded = True
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['name'] = self.getName()
+
+        # Transient
+        result['text'] = self.getText()
+        result['results'] = self.getResults()
+        result['isStarted'] = self.isStarted()
+        result['isFinished'] = self.isFinished()
+        result['times'] = self.getTimes()
+        result['expectations'] = self.getExpectations()
+        result['eta'] = self.getETA()
+        result['urls'] = self.getURLs()
+        result['step_number'] = self.step_number
+        result['hidden'] = self.hidden
+        result['logs'] = [[l.getName(), None]  # used to be (name, URL)
+                          for l in self.getLogs()]
+        return result
+# styles.Versioned requires this latter, as it keys the version numbers on the
+# fully qualified class name.  This module appeared in two different modules
+# historically
+BuildStepStatus.__module__ = 'buildbot.status.builder'
+substituteClasses['buildbot.status.buildstep', 'BuildStepStatus'] = BuildStepStatus
+substituteClasses['buildbot.status.builder', 'BuildStepStatus'] = BuildStepStatus
+
+_already_setup = False
+
+
+def setup():
+    global _already_setup
+    if _already_setup:
+        return
+
+    # move each of the substitute classes to its proper module in sys.modules,
+    # creating it if necessary, and set its __module__ attribute.
+    for info, cls in substituteClasses.iteritems():
+        mod_name, cls_name = info
+        try:
+            mod = reflect.namedModule(mod_name)
+        except (ImportError, AttributeError):
+            mod = new.module(mod_name)
+            sys.modules[mod_name] = mod
+        setattr(mod, cls_name, cls)
+
+    _already_setup = True
+
 # replacements for stdlib pickle methods
 
 
 def _makeUnpickler(file):
+    setup()
     up = cPickle.Unpickler(file)
     # see http://docs.python.org/2/library/pickle.html#subclassing-unpicklers
 
@@ -184,7 +442,11 @@ def _makeUnpickler(file):
             return substituteClasses[(modname, clsname)]
         except KeyError:
             mod = reflect.namedModule(modname)
-            return getattr(mod, clsname)
+            try:
+                return getattr(mod, clsname)
+            except AttributeError:
+                raise AttributeError("Module %r (%s) has no attribute %s"
+                                     % (mod, modname, clsname))
     up.find_global = find_global
     return up
 

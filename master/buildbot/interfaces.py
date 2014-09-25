@@ -45,6 +45,7 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
 
 
 class IPlugin(Interface):
+
     """
     Base interface for all Buildbot plugins
     """
@@ -611,96 +612,6 @@ class ITestResult(Interface):
         'stdout', 'log', 'exceptions'. The values are strings."""
 
 
-class IBuildStepStatus(Interface):
-
-    """I hold status for a single BuildStep."""
-
-    def getName():
-        """Returns a short string with the name of this step. This string
-        may have spaces in it."""
-
-    def getBuild():
-        """Returns the IBuildStatus object which contains this step."""
-
-    def getTimes():
-        """Returns a tuple of (start, end). 'start' and 'end' are the times
-        (seconds since the epoch) when the Step started and finished. If the
-        step has not yet started, 'start' will be None. If the step is still
-        running, 'end' will be None."""
-
-    def getExpectations():
-        """Returns a list of tuples (name, current, target). Each tuple
-        describes a single axis along which the step's progress can be
-        measured. 'name' is a string which describes the axis itself, like
-        'filesCompiled' or 'tests run' or 'bytes of output'. 'current' is a
-        number with the progress made so far, while 'target' is the value
-        that we expect (based upon past experience) to get to when the build
-        is finished.
-
-        'current' will change over time until the step is finished. It is
-        'None' until the step starts. When the build is finished, 'current'
-        may or may not equal 'target' (which is merely the expectation based
-        upon previous builds)."""
-
-    def getURLs():
-        """Returns a dictionary of URLs. Each key is a link name (a short
-        string, like 'results' or 'coverage'), and each value is a URL. These
-        links will be displayed along with the LogFiles.
-        """
-
-    def getLogs():
-        """Returns a list of IStatusLog objects. If the step has not yet
-        finished, this list may be incomplete (asking again later may give
-        you more of them)."""
-
-    def isFinished():
-        """Return a boolean. True means the step has finished, False means it
-        is still running."""
-
-    def waitUntilFinished():
-        """Return a Deferred that will fire when the step finishes. If the
-        step has already finished, this deferred will fire right away. The
-        callback is given this IBuildStepStatus instance as an argument."""
-
-    # while the step is running, the following methods make sense.
-    # Afterwards they return None
-
-    def getETA():
-        """Returns the number of seconds from now in which the step is
-        expected to finish, or None if we can't make a guess. This guess will
-        be refined over time."""
-
-    # Once you know the step has finished, the following methods are legal.
-    # Before ths step has finished, they all return None.
-
-    def getText():
-        """Returns a list of strings which describe the step. These are
-        intended to be displayed in a narrow column. If more space is
-        available, the caller should join them together with spaces before
-        presenting them to the user."""
-
-    def getResults():
-        """Return a tuple describing the results of the step: (result,
-        strings). 'result' is one of the constants in
-        buildbot.status.builder: SUCCESS, WARNINGS, FAILURE, or SKIPPED.
-        'strings' is an optional list of strings that the step wants to
-        append to the overall build's results. These strings are usually
-        more terse than the ones returned by getText(): in particular,
-        successful Steps do not usually contribute any text to the overall
-        build."""
-
-    # subscription interface
-
-    def subscribe(receiver, updateInterval=10):
-        """Register an IStatusReceiver to receive new status events. The
-        receiver will be given logStarted and logFinished messages. It will
-        also be given a ETAUpdate message every 'updateInterval' seconds."""
-
-    def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
-        delivered."""
-
-
 class IStatusEvent(Interface):
 
     """I represent a Builder Event, something non-Build related that can
@@ -1138,6 +1049,7 @@ class IBuildStepFactory(Interface):
 
 
 class IBuildStep(IPlugin):
+
     """
     A build step
     """
