@@ -342,7 +342,7 @@ steps
     * ``buildid`` (the ID of the build containing this step)
     * ``started_at`` (datetime at which this step began)
     * ``complete_at`` (datetime at which this step finished, or None if it is ongoing)
-    * ``state_strings`` (list of short strings describing the step's state)
+    * ``state_string`` (short string describing the step's state)
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
     * ``urls`` (list of URLs produced by this step. Each urls is stored as a dictionary with keys `name` and `url`)
 
@@ -369,24 +369,24 @@ steps
 
         Get all steps in the given build, in order by number.
 
-    .. py:method:: addStep(self, buildid, name, state_strings)
+    .. py:method:: addStep(self, buildid, name, state_string)
 
         :param integer buildid: the build to which to add the step
         :param name: the step name
         :type name: 50-character :ref:`identifier <type-identifier>`
-        :param list state_strings: the initial state of the step
+        :param list state_string: the initial state of the step
         :returns: tuple of step ID, step number, and step name, via Deferred
 
         Add a new step to a build.
         The given name will be used if it is unique; otherwise, a unique numerical suffix will be appended.
 
-    .. py:method:: setStepStateStrings(stepid, state_strings):
+    .. py:method:: setStepStateString(stepid, state_string):
 
         :param integer stepid: step ID
-        :param list state_strings: updated state of the step
+        :param unicode state_string updated state of the step
         :returns: Deferred
 
-        Update the state strings for the given step.
+        Update the state string for the given step.
 
     .. py:method:: finishStep(stepid, results)
 

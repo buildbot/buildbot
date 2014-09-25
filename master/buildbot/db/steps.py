@@ -63,9 +63,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             return [self._stepdictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)
 
-    def addStep(self, buildid, name, state_strings):
-        state_strings_json = json.dumps(state_strings)
-
+    def addStep(self, buildid, name, state_string):
         def thd(conn):
             tbl = self.db.model.steps
             # get the highest current number
@@ -79,7 +77,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # conflict, then the name is likely already taken.
             insert_row = dict(buildid=buildid, number=number,
                               started_at=None, complete_at=None,
-                              state_strings_json=state_strings_json,
+                              state_string=state_string,
                               urls_json='[]', name=name)
             try:
                 r = conn.execute(self.db.model.steps.insert(), insert_row)
@@ -118,11 +116,11 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, started_at=started_at)
         return self.db.pool.do(thd)
 
-    def setStepStateStrings(self, stepid, state_strings):
+    def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
-            conn.execute(q, state_strings_json=json.dumps(state_strings))
+            conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
     def addURL(self, stepid, name, url, _racehook=None):
@@ -176,6 +174,6 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             buildid=row.buildid,
             started_at=mkdt(row.started_at),
             complete_at=mkdt(row.complete_at),
-            state_strings=json.loads(row.state_strings_json),
+            state_string=row.state_string,
             results=row.results,
             urls=json.loads(row.urls_json))

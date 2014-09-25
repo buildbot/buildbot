@@ -569,7 +569,7 @@ _step = dict(
     started_at=IntValidator(),
     complete=BooleanValidator(),
     complete_at=NoneOk(IntValidator()),
-    state_strings=ListValidator(StringValidator()),
+    state_string=StringValidator(),
     results=NoneOk(IntValidator()),
     urls=ListValidator(StringValidator()),
 )
@@ -590,7 +590,7 @@ dbdict['stepdict'] = DictValidator(
     buildid=IntValidator(),
     started_at=DateTimeValidator(),
     complete_at=NoneOk(DateTimeValidator()),
-    state_strings=ListValidator(StringValidator()),
+    state_string=StringValidator(),
     results=NoneOk(IntValidator()),
     urls=ListValidator(StringValidator()),
 )

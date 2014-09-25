@@ -472,7 +472,7 @@ class Step(Row):
         buildid=None,
         started_at=1304262222,
         complete_at=None,
-        state_strings_json='[]',
+        state_string='',
         results=None,
         urls_json='[]')
 
@@ -1755,7 +1755,7 @@ class FakeStepsComponent(FakeDBComponent):
             name=row['name'],
             started_at=_mkdt(row['started_at']),
             complete_at=_mkdt(row['complete_at']),
-            state_strings=json.loads(row['state_strings_json']),
+            state_string=row['state_string'],
             results=row['results'],
             urls=json.loads(row['urls_json']))
 
@@ -1789,9 +1789,9 @@ class FakeStepsComponent(FakeDBComponent):
         ret.sort(key=lambda r: r['number'])
         return defer.succeed(ret)
 
-    def addStep(self, buildid, name, state_strings, _reactor=reactor):
-        validation.verifyType(self.t, 'state_strings', state_strings,
-                              validation.ListValidator(validation.StringValidator()))
+    def addStep(self, buildid, name, state_string, _reactor=reactor):
+        validation.verifyType(self.t, 'state_string', state_string,
+                              validation.StringValidator())
         validation.verifyType(self.t, 'name', name,
                               validation.IdentifierValidator(50))
         # get a unique name and number
@@ -1817,7 +1817,7 @@ class FakeStepsComponent(FakeDBComponent):
             'started_at': None,
             'complete_at': None,
             'results': None,
-            'state_strings_json': unicode(json.dumps(state_strings)),
+            'state_string': state_string,
             'urls_json': '[]'}
 
         return defer.succeed((id, number, name))
@@ -1828,12 +1828,12 @@ class FakeStepsComponent(FakeDBComponent):
             b['started_at'] = _reactor.seconds()
         return defer.succeed(None)
 
-    def setStepStateStrings(self, stepid, state_strings):
-        validation.verifyType(self.t, 'state_strings', state_strings,
-                              validation.ListValidator(validation.StringValidator()))
+    def setStepStateString(self, stepid, state_string):
+        validation.verifyType(self.t, 'state_string', state_string,
+                              validation.StringValidator())
         b = self.steps.get(stepid)
         if b:
-            b['state_strings_json'] = json.dumps(state_strings)
+            b['state_string'] = state_string
         return defer.succeed(None)
 
     def addURL(self, stepid, name, url, _racehook=None):
