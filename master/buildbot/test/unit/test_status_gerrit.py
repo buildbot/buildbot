@@ -27,6 +27,10 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
+import warnings
+warnings.filterwarnings('error', message='.*Gerrit status')
+
+
 def testReviewCB(builderName, build, result, status, arg):
     verified = 1 if result == SUCCESS else -1
     return makeReviewResult(str({'name': builderName, 'result': result}),
@@ -107,7 +111,8 @@ class TestGerritStatusPush(unittest.TestCase):
     }
     THING_URL = 'http://thing.example.com'
 
-    def run_fake_summary_build(self, gsp, buildResults, finalResult, resultText):
+    def run_fake_summary_build(self, gsp, buildResults, finalResult,
+                               resultText, expWarning=False):
         buildpairs = []
         i = 0
         for i in xrange(len(buildResults)):
@@ -166,6 +171,11 @@ class TestGerritStatusPush(unittest.TestCase):
                 info.append({'name': "Builder-%d" % i, 'result': buildResults[i],
                              'resultText': resultText[i], 'text': 'buildText',
                              'url': self.THING_URL})
+            if expWarning:
+                self.assertEqual([w['message'] for w in self.flushWarnings()],
+                                 ['The Gerrit status callback uses the old '
+                                  'way to communicate results.  The outcome '
+                                  'might be not what is expected.'])
             return str(info)
         return d
 
@@ -194,7 +204,7 @@ class TestGerritStatusPush(unittest.TestCase):
         gsp = _get_prepared_gsp(summaryCB=legacyTestSummaryCB)
 
         d = self.run_fake_summary_build(gsp, buildResults, finalResult,
-                                        resultText)
+                                        resultText, expWarning=True)
 
         @d.addCallback
         def check(msg):
@@ -266,11 +276,17 @@ class TestGerritStatusPush(unittest.TestCase):
                                             verifiedScore=-1)
         return d
 
-    def run_fake_single_build(self, gsp, buildResult):
+    def run_fake_single_build(self, gsp, buildResult, expWarning=False):
         build = FakeBuildStatus(name="build")
         build.getProperty = self.TEST_PROPS.get
 
         gsp.buildFinished('dummyBuilder', build, buildResult)
+
+        if expWarning:
+            self.assertEqual([w['message'] for w in self.flushWarnings()],
+                             ['The Gerrit status callback uses the old '
+                              'way to communicate results.  The outcome '
+                              'might be not what is expected.'])
 
         return defer.succeed(str({'name': 'dummyBuilder', 'result': buildResult}))
 
@@ -293,7 +309,7 @@ class TestGerritStatusPush(unittest.TestCase):
     def check_single_build_legacy(self, buildResult, verifiedScore):
         gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB)
 
-        d = self.run_fake_single_build(gsp, buildResult)
+        d = self.run_fake_single_build(gsp, buildResult, expWarning=True)
 
         @d.addCallback
         def check(msg):
