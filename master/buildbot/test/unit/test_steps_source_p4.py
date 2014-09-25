@@ -27,6 +27,7 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
 from twisted.internet import error
+from twisted.python import reflect
 from twisted.trial import unittest
 
 _is_windows = (platform.system() == 'Windows')
@@ -48,6 +49,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         workspace_dir = '/home/user/workspace'
         if _is_windows:
             workspace_dir = r'C:\Users\username\Workspace'
+            self.build.path_module = reflect.namedModule("ntpath")
         self.properties.setProperty('builddir', workspace_dir, 'P4')
 
     def test_no_empty_step_config(self):
