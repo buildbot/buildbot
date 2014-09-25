@@ -373,6 +373,94 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
+    def checkSummary(self, got, step, build=None):
+        self.failUnless(all(isinstance(k, unicode) for k in got.keys()))
+        self.failUnless(all(isinstance(k, unicode) for k in got.values()))
+        exp = {u'step': step}
+        if build:
+            exp[u'build'] = build
+        self.assertEqual(got, exp)
+
+    def test_getCurrentSummary(self):
+        st = buildstep.BuildStep()
+        st.description = None
+        self.checkSummary(st.getCurrentSummary(), u'running')
+
+    def test_getCurrentSummary_description(self):
+        st = buildstep.BuildStep()
+        st.description = 'fooing'
+        self.checkSummary(st.getCurrentSummary(), u'fooing')
+
+    def test_getCurrentSummary_descriptionSuffix(self):
+        st = buildstep.BuildStep()
+        st.description = 'fooing'
+        st.descriptionSuffix = 'bar'
+        self.checkSummary(st.getCurrentSummary(), u'fooing bar')
+
+    def test_getCurrentSummary_description_list(self):
+        st = buildstep.BuildStep()
+        st.description = ['foo', 'ing']
+        self.checkSummary(st.getCurrentSummary(), u'foo ing')
+
+    def test_getCurrentSummary_descriptionSuffix_list(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = ['foo', 'ing']
+        st.descriptionSuffix = ['bar', 'bar2']
+        self.checkSummary(st.getCurrentSummary(), u'foo ing bar bar2')
+
+    def test_getResultSummary(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = None
+        self.checkSummary(st.getResultSummary(), u'finished')
+
+    def test_getResultSummary_description(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = 'fooing'
+        self.checkSummary(st.getResultSummary(), u'fooing')
+
+    def test_getResultSummary_descriptionDone(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = 'fooing'
+        st.descriptionDone = 'fooed'
+        self.checkSummary(st.getResultSummary(), u'fooed')
+
+    def test_getResultSummary_descriptionSuffix(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = 'fooing'
+        st.descriptionSuffix = 'bar'
+        self.checkSummary(st.getResultSummary(), u'fooing bar')
+
+    def test_getResultSummary_descriptionDone_and_Suffix(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.descriptionDone = 'fooed'
+        st.descriptionSuffix = 'bar'
+        self.checkSummary(st.getResultSummary(), u'fooed bar')
+
+    def test_getResultSummary_description_list(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = ['foo', 'ing']
+        self.checkSummary(st.getResultSummary(), u'foo ing')
+
+    def test_getResultSummary_descriptionSuffix_list(self):
+        st = buildstep.BuildStep()
+        st.results = SUCCESS
+        st.description = ['foo', 'ing']
+        st.descriptionSuffix = ['bar', 'bar2']
+        self.checkSummary(st.getResultSummary(), u'foo ing bar bar2')
+
+    def test_getResultSummary_descriptionSuffix_failure(self):
+        st = buildstep.BuildStep()
+        st.results = FAILURE
+        st.description = 'fooing'
+        self.checkSummary(st.getResultSummary(), u'fooing (failure)')
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
