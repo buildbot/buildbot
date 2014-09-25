@@ -126,14 +126,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import TestResult
         assert TestResult
 
-    def test_status_builder_LogFile(self):
-        from buildbot.status.builder import LogFile
-        assert LogFile
-
-    def test_status_builder_HTMLLogFile(self):
-        from buildbot.status.builder import HTMLLogFile
-        assert HTMLLogFile
-
     def test_status_builder_SlaveStatus(self):
         from buildbot.status.builder import SlaveStatus
         assert SlaveStatus

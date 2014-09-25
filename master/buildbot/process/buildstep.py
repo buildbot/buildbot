@@ -40,9 +40,6 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
 from buildbot.status import results
-from buildbot.status.logfile import HEADER
-from buildbot.status.logfile import STDERR
-from buildbot.status.logfile import STDOUT
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
@@ -119,6 +116,11 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # the tricky case of adding data to a log *before* addLog has returned!
     # this also adds the read-only methods such as getText
 
+    # old constants from the status API
+    HEADER = 0
+    STDERR = 1
+    STDOUT = 2
+
     def __init__(self, step, name, addLogDeferred):
         self.step = step
         self.name = name
@@ -172,15 +174,15 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
-        self.chunks.append((STDOUT, data))
+        self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        self.chunks.append((STDERR, data))
+        self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        self.chunks.append((HEADER, data))
+        self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
     def finish(self):
@@ -199,10 +201,10 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         return self.name
 
     def getText(self):
-        return "".join(self.getChunks([STDOUT, STDERR], onlyText=True))
+        return "".join(self.getChunks([self.STDOUT, self.STDERR], onlyText=True))
 
     def readlines(self):
-        alltext = "".join(self.getChunks([STDOUT], onlyText=True))
+        alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
         io = StringIO.StringIO(alltext)
         return io.readlines()
 

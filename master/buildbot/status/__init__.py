@@ -2,7 +2,6 @@ import build
 import builder
 import buildrequest
 import buildset
-import logfile
 import master
 import slave
 import testresult
@@ -15,8 +14,6 @@ build.BuildStatus.__module__ = 'buildbot.status.builder'
 # circular module references among the status modules
 builder.BuildSetStatus = buildset.BuildSetStatus
 builder.TestResult = testresult.TestResult
-builder.LogFile = logfile.LogFile
-builder.HTMLLogFile = logfile.HTMLLogFile
 builder.SlaveStatus = slave.SlaveStatus
 builder.Status = master.Status
 builder.BuildStatus = build.BuildStatus

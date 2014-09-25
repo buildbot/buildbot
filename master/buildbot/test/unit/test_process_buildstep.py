@@ -39,19 +39,6 @@ from twisted.python import log
 from twisted.trial import unittest
 
 
-class FakeLogFile:
-
-    def __init__(self, text):
-        self.text = text
-
-    def getText(self):
-        return self.text
-
-
-class FakeStepStatus:
-    pass
-
-
 class OldStyleStep(buildstep.BuildStep):
 
     def start(self):

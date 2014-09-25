@@ -631,11 +631,6 @@ class IStatusEvent(Interface):
         presenting them to the user."""
 
 
-LOG_CHANNEL_STDOUT = 0
-LOG_CHANNEL_STDERR = 1
-LOG_CHANNEL_HEADER = 2
-
-
 class IStatusLogConsumer(Interface):
 
     """I am an object which can be passed to IStatusLog.subscribeConsumer().
