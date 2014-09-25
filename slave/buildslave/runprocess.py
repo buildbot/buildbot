@@ -49,12 +49,7 @@ def win32_batch_quote(cmd_list):
     # Quote cmd_list to a string that is suitable for inclusion in a
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
-    # As an exception, a lone pipe as an argument is not escaped, and
-    # becomes a shell pipe.
     def escape_arg(arg):
-        if arg == '|':
-            return arg
-
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)

@@ -295,6 +295,12 @@ Deprecations, Removals, and Non-Compatible Changes
   Buildbot-slave-0.9.0 will still run successfully against Buildbot-0.8.9 or earlier, configured to use old-style steps.
   However, the support is stlil deprecated and will be removed as soon as it is inconvenient for developers.
 
+* On Windows, if a :bb:step:`ShellCommand` step in which ``command`` was specified as a list is executed, and a
+  list element is a string consisting of a single pipe character, it no longer creates a pipeline.
+  Instead, the pipe character is passed verbatim as an argument to the program, like any other string.
+  This makes command handling consistent between Windows and Unix-like systems.
+  To have a pipeline, specify ``command`` as a string.
+
 Details
 -------
 
