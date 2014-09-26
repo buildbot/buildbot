@@ -2,7 +2,6 @@ class Log extends Controller
     constructor: ($scope, buildbotService, $stateParams, glBreadcrumbService) ->
         buildbotService.bindHierarchy($scope, $stateParams, ["builders", "builds", 'steps', 'logs'])
         .then ([builder, build, step, log]) ->
-            console.log builder, build, step, log
             glBreadcrumbService.setBreadcrumb [
                     caption: "Builders"
                     sref: "builders"

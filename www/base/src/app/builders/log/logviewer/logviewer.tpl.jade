@@ -6,9 +6,9 @@
         i.fa.fa-search
   pre.row.log(ng-show="log.type!='h'")
     samp(ng-if="log.type=='t'", ng-bind="content")
-    samp(ng-repeat="line in lines | filter:searchText", class="{{line.class}}", ng-if="log.type=='s'")
+    samp(ng-repeat="line in lines | filter:searchText", class="{{line.class}}",  ng-if="log.type=='s'")
         | {{line.content}}
-        | 
+        br
   div.panel(ng-if="log.type=='h'", ng-class="log.name=='err.html' && 'panel-danger' || 'panel-default'")
     div.panel-heading
         h4.panel-title {{log.name}}

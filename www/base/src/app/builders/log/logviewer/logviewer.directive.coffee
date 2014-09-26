@@ -54,7 +54,6 @@ class Logviewer extends Directive
                 if self.scope.log.type != 's'
                     return
                 b = self.getViewPortLineBoundary()
-
                 if b.lastline > self.num_lines - 3
                     self.auto_scroll = true
                 else
@@ -77,7 +76,7 @@ class Logviewer extends Directive
                     b.lastline -= 1
 
                 # hurray! everything is already there!
-                if b.firstline == b.lastline
+                if b.firstline == b.lastline and lines[b.firstline].loaded
                     return
 
                 # load one more page up if the previous line is not loaded
@@ -94,7 +93,7 @@ class Logviewer extends Directive
 
                 spec =
                     offset: b.firstline
-                    limit: b.lastline - b.firstline
+                    limit: b.lastline - b.firstline + 1
                 self.loading = true
                 self.log.all('contents').getList(spec).then (content) ->
                     self.loading = false
