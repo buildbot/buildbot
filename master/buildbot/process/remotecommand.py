@@ -24,6 +24,8 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.spread import pb
 
+class RemoteException(Exception):
+    pass
 
 class RemoteCommand(pb.Referenceable):
 
@@ -286,7 +288,14 @@ class RemoteCommand(pb.Referenceable):
                     log.msg("closing log %s" % loog)
                 loog.finish()
         if maybeFailure:
-            raise maybeFailure
+            # failure from remote are sometimes converted to string, which make them impossible
+            #  to throw back in generators. Such Exceptions would become very hard to debug
+            if (isinstance(maybeFailure.type, basestring) or
+                isinstance(maybeFailure.value, basestring)):
+                maybeFailure.value = RemoteException("%s: %s" % (
+                    maybeFailure.type, maybeFailure.value))
+                maybeFailure.type = RemoteException
+            maybeFailure.raiseException()
 
     def results(self):
         if self.rc in self.decodeRC:

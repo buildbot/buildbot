@@ -511,6 +511,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             try:
                 hidden = hidden(results, self)
             except Exception:
+                why = Failure()
+                log.err(why, "hidden callback failed; traceback follows")
+                yield self.addLogWithFailure(why)
                 results = EXCEPTION
                 hidden = False
         self.step_status.setHidden(hidden)
