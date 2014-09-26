@@ -9,7 +9,7 @@
           | {{(now - build.started_at)| durationformat:'LLL' }}
       span(ng-repeat="s in build.state_strings")
         | &nbsp;{{s}}&nbsp;
-      .label(ng-class="results2class2(build)")
+      .label(ng-class="results2class(build)")
         | {{results2text(build)}}
   ul.list-group.no-select
     li.list-group-item(ng-if="isStepDisplayed(step)", ng-repeat="step in steps",

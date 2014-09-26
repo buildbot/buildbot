@@ -1,24 +1,31 @@
 class Build extends Controller
-    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService) ->
+    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService, $state) ->
+        builderid = _.parseInt($stateParams.builder)
+        buildnumber = _.parseInt($stateParams.build)
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
-            glBreadcrumbService.setBreadcrumb [
-                    caption: '-'
-                    sref: "build({build:#{build.number - 1}})"
-                ,
-                    caption: '+'
-                    sref: "build({build:#{build.number + 1}})"
-                ,
+            breadcrumb = [
                     caption: "Builders"
                     sref: "builders"
                 ,
                     caption: builder.name
-                    sref: "builder({builder:#{builder.id}})"
+                    sref: "builder({builder:#{builderid}})"
                 ,
                     caption: build.number
-                    sref: "build({build:#{build.number}})"
+                    sref: "build({build:#{buildnumber}})"
             ]
+            if buildnumber > 1
+                breadcrumb.splice 0,0,
+                    caption: '←'
+                    sref: "build({build:#{buildnumber - 1}})"
+
+            glBreadcrumbService.setBreadcrumb(breadcrumb)
+            buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild").then ->
+                breadcrumb.push
+                    caption: '→'
+                    sref: "build({build:#{buildnumber + 1}})"
+
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->
