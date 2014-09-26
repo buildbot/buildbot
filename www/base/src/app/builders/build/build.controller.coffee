@@ -35,3 +35,6 @@ class Build extends Controller
                 recentStorage.addBuild
                     link: "#/builders/#{$scope.builder.builderid}/build/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
+        , ->
+            if buildnumber > 1
+                $state.go('build', builder:builderid, build:buildnumber - 1)
