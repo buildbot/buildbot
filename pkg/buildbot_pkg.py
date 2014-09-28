@@ -20,7 +20,6 @@ from distutils.version import LooseVersion
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
 from setuptools.command.install_lib import install_lib
-from textwrap import dedent
 
 import os
 
@@ -106,11 +105,6 @@ def build_js(cmd):
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
         cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
-        with open(os.path.join("MANIFEST.in"), "w") as f:
-            f.write(dedent("""
-            include %(package)s/VERSION
-            recursive-include %(package)s/static *
-            """ % dict(package=package)))
 
     with open(os.path.join(package, "VERSION"), "w") as f:
         f.write(cmd.distribution.metadata.version)
@@ -147,10 +141,22 @@ class my_install_lib(install_lib):
         # and then do the normal install stuff
         return install_lib.run(self)
 
+
+def get_package_data():
+    return {
+        '': [
+            'VERSION',
+            'static/*.*',
+            'static/img/*.*',
+            'static/fonts/*.*',
+        ]
+    }
+
 cmdclassforjs = dict(
     build=my_build,
     egg_info=my_egg_info,
-    install_lib=my_install_lib)
+    install_lib=my_install_lib
+    )
 
 
 def setup_www_plugin(**kwargs):
@@ -160,4 +166,5 @@ def setup_www_plugin(**kwargs):
               build=my_build,
               egg_info=my_egg_info,
               install_lib=my_install_lib),
+          package_data=get_package_data(),
           **kwargs)
