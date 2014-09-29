@@ -70,7 +70,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
                      collectStdout=False, collectStderr=False,
-                     decodeRC={0: SUCCESS},
+                     decodeRC=None,
                      stdioLogName='stdio'):
             pass
 
@@ -95,7 +95,7 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLog)
-        def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        def useLog(self, _log, closeWhenFinished=False, logfileName=None):
             pass
 
     def test_signature_useLogDelayed(self):
