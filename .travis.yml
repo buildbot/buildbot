@@ -104,7 +104,6 @@ script:
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
   - "[ $IS_LATEST = false ] || make frontend"
-  - "[ $IS_LATEST = false ] || make docker_install_tests"
 
 notifications:
   email: false
