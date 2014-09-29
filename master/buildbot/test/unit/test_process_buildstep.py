@@ -219,11 +219,15 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         d.addCallback(lambda _: self.assertTrue(called[0]))
         return d
 
+    @defer.inlineCallbacks
     def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
+
         self._setupWaterfallTest(
-            lambda: 0 / 0, False, expectedResult=EXCEPTION)
-        return self.runStep()
+            lambda x, y: 0 / 0, False, expectedResult=EXCEPTION)
+        self.step.addLogWithFailure = mock.Mock()
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
     @compat.usesFlushLoggedErrors
     def test_hideStepIf_Callable_Exception(self):
