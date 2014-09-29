@@ -77,10 +77,10 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_RemoteShellCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
-                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
+                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
                      usePTY="slave-config", logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
-                     decodeRC={0: SUCCESS},
+                     decodeRC=None,
                      stdioLogName='stdio'):
             pass
 
