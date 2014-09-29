@@ -1025,7 +1025,7 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
-        for arg in constructorArgs:
+        for arg in constructorArgs.keys():
             if arg not in BuildStep.parms:
                 bad(arg)
                 del constructorArgs[arg]
