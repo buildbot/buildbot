@@ -22,5 +22,8 @@ pep8:
 frontend:
 	for i in www/*/; do pip install -e $$i ; done
 
+docker_install_tests:
+	pkg/installation_tests/testall.sh
+
 rmpyc:
 	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
