@@ -117,7 +117,6 @@ class RemoteCommand(pb.Referenceable):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
-        print self.args
         d = self.conn.remoteStartCommand(self, self.builder_name,
                                          self.commandID, self.remote_command,
                                          self.args)
