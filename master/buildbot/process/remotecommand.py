@@ -24,8 +24,10 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.spread import pb
 
+
 class RemoteException(Exception):
     pass
+
 
 class RemoteCommand(pb.Referenceable):
 
@@ -37,8 +39,10 @@ class RemoteCommand(pb.Referenceable):
     debug = False
 
     def __init__(self, remote_command, args, ignore_updates=False,
-                 collectStdout=False, collectStderr=False, decodeRC={0: SUCCESS},
+                 collectStdout=False, collectStderr=False, decodeRC=None,
                  stdioLogName='stdio'):
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         self.logs = {}
         self.delayedLogs = {}
         self._closeWhenFinished = {}
@@ -54,6 +58,12 @@ class RemoteCommand(pb.Referenceable):
         self.args = args
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
+        self.conn = None
+        self.buildslave = None
+        self.step = None
+        self.builder_name = None
+        self.commandID = None
+        self.deferred = None
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
@@ -86,13 +96,13 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
-    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+    def useLog(self, _log, closeWhenFinished=False, logfileName=None):
         # NOTE: log may be a SyngLogFileWrapper or a Log instance, depending on the step
         if not logfileName:
-            logfileName = log.getName()
+            logfileName = _log.getName()
         assert logfileName not in self.logs
         assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = log
+        self.logs[logfileName] = _log
         self._closeWhenFinished[logfileName] = closeWhenFinished
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
@@ -107,6 +117,7 @@ class RemoteCommand(pb.Referenceable):
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
+        print self.args
         d = self.conn.remoteStartCommand(self, self.builder_name,
                                          self.commandID, self.remote_command,
                                          self.args)
@@ -206,22 +217,22 @@ class RemoteCommand(pb.Referenceable):
         if self.collectStdout:
             self.stdout += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log = yield self._unwrap(self.logs[self.stdioLogName])
-            log.addStdout(data)
+            _log = yield self._unwrap(self.logs[self.stdioLogName])
+            _log.addStdout(data)
 
     @defer.inlineCallbacks
     def addStderr(self, data):
         if self.collectStderr:
             self.stderr += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log = yield self._unwrap(self.logs[self.stdioLogName])
-            log.addStderr(data)
+            _log = yield self._unwrap(self.logs[self.stdioLogName])
+            _log.addStderr(data)
 
     @defer.inlineCallbacks
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            log = yield self._unwrap(self.logs[self.stdioLogName])
-            log.addHeader(data)
+            _log = yield self._unwrap(self.logs[self.stdioLogName])
+            _log.addHeader(data)
 
     @defer.inlineCallbacks
     def addToLog(self, logname, data):
@@ -235,8 +246,8 @@ class RemoteCommand(pb.Referenceable):
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            log = yield self._unwrap(self.logs[logname])
-            yield log.addStdout(data)
+            _log = yield self._unwrap(self.logs[logname])
+            yield _log.addStdout(data)
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
 
@@ -288,12 +299,11 @@ class RemoteCommand(pb.Referenceable):
                     log.msg("closing log %s" % loog)
                 loog.finish()
         if maybeFailure:
-            # failure from remote are sometimes converted to string, which make them impossible
-            #  to throw back in generators. Such Exceptions would become very hard to debug
-            if (isinstance(maybeFailure.type, basestring) or
-                isinstance(maybeFailure.value, basestring)):
-                maybeFailure.value = RemoteException("%s: %s" % (
-                    maybeFailure.type, maybeFailure.value))
+            # workaround http://twistedmatrix.com/trac/ticket/5507
+            # CopiedFailure cannot be raised back, this make debug difficult
+            if isinstance(maybeFailure, pb.CopiedFailure):
+                maybeFailure.value = RemoteException("%s: %s\n%s" % (
+                    maybeFailure.type, maybeFailure.value, maybeFailure.traceback))
                 maybeFailure.type = RemoteException
             maybeFailure.raiseException()
 
@@ -312,12 +322,15 @@ class RemoteShellCommand(RemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20 * 60, maxTime=None, sigtermTime=None,
-                 logfiles={}, usePTY="slave-config", logEnviron=True,
+                 logfiles=None, usePTY="slave-config", logEnviron=True,
                  collectStdout=False, collectStderr=False,
                  interruptSignal=None,
-                 initialStdin=None, decodeRC={0: SUCCESS},
+                 initialStdin=None, decodeRC=None,
                  stdioLogName='stdio'):
-
+        if logfiles is None:
+            logfiles = {}
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
         if isinstance(self.command, basestring):
             # Single string command doesn't support obfuscation.
@@ -329,7 +342,7 @@ class RemoteShellCommand(RemoteCommand):
                     return arg[2]
                 else:
                     return arg
-            self.fake_command = map(obfuscate, self.command)
+            self.fake_command = [obfuscate(c) for c in self.command]
 
         if env is not None:
             # avoid mutating the original master.cfg dictionary. Each
