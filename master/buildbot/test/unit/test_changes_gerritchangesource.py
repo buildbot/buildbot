@@ -25,46 +25,46 @@ class TestGerritHelpers(unittest.TestCase):
     def test_proper_json(self):
         self.assertEqual(u"Justin Case <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
-                            "username": "justincase",
-                            "name": "Justin Case",
-                            "email": "justin.case@example.com"
+                             "username": "justincase",
+                             "name": "Justin Case",
+                             "email": "justin.case@example.com"
                          }))
 
     def test_missing_username(self):
         self.assertEqual(u"Justin Case <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
-                            "name": "Justin Case",
-                            "email": "justin.case@example.com"
+                             "name": "Justin Case",
+                             "email": "justin.case@example.com"
                          }))
 
     def test_missing_name(self):
         self.assertEqual(u"unknown <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
-                            "email": "justin.case@example.com"
+                             "email": "justin.case@example.com"
                          }))
         self.assertEqual(u"gerrit <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
-                            "email": "justin.case@example.com"
+                             "email": "justin.case@example.com"
                          }, u"gerrit"))
         self.assertEqual(u"justincase <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
-                            "username": "justincase",
-                            "email": "justin.case@example.com"
+                             "username": "justincase",
+                             "email": "justin.case@example.com"
                          }, u"gerrit"))
 
     def test_missing_email(self):
         self.assertEqual(u"Justin Case",
                          gerritchangesource._gerrit_user_to_author({
-                            "username": "justincase",
-                            "name": "Justin Case"
+                             "username": "justincase",
+                             "name": "Justin Case"
                          }))
         self.assertEqual(u"Justin Case",
                          gerritchangesource._gerrit_user_to_author({
-                            "name": "Justin Case"
+                             "name": "Justin Case"
                          }))
         self.assertEqual(u"justincase",
                          gerritchangesource._gerrit_user_to_author({
-                            "username": "justincase"
+                             "username": "justincase"
                          }))
         self.assertEqual(u"unknown",
                          gerritchangesource._gerrit_user_to_author({
