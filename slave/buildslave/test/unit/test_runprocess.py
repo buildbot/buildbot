@@ -283,23 +283,6 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         return d
 
     @compat.skipUnlessPlatformIs("win32")
-    def testPipeAlone(self):
-        b = FakeSlaveBuilder(False, self.basedir)
-        # this is highly contrived, but it proves the point.
-        cmd = stdoutCommand("b\\na")
-        cmd[0] = cmd[0].replace(".exe", "")
-        cmd.extend(['|', 'sort'])
-        s = runprocess.RunProcess(b, cmd, self.basedir)
-
-        d = s.start()
-
-        def check(ign):
-            self.failUnless({'stdout': nl('a\nb\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
-        d.addCallback(check)
-        return d
-
-    @compat.skipUnlessPlatformIs("win32")
     def testPipeString(self):
         b = FakeSlaveBuilder(False, self.basedir)
         # this is highly contrived, but it proves the point.
