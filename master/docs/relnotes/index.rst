@@ -149,6 +149,8 @@ Fixes
            treeStableTimer=None,
            builderNames=['tag_build']))
 
+* Missing "name" and "email" properties received from Gerrit are now handled properly
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
