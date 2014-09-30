@@ -42,6 +42,21 @@ class GerritChangeFilter(ChangeFilter):
             del self.checks["branch"]
 
 
+def _gerrit_user_to_author(props, username=u"unknown"):
+    """
+    Convert Gerrit account properties to Buildbot format
+
+    Take into account missing values
+    """
+    username = props.get("username", username)
+
+    result = [props.get("name", username)]
+    if "email" in props:
+        result.append(u"<%s>" % props["email"])
+
+    return u" ".join(result)
+
+
 class GerritChangeSource(base.ChangeSource):
 
     """This source will maintain a connection to gerrit ssh server
@@ -182,11 +197,9 @@ class GerritChangeSource(base.ChangeSource):
         if "change" in event and "patchSet" in event:
             event_change = event["change"]
             return self.addChange({
-                'author': "%s <%s>" % (
-                    event_change["owner"]["name"],
-                    event_change["owner"]["email"]),
-                'project': event_change["project"],
-                'repository': "ssh://%s@%s:%s/%s" % (
+                'author': _gerrit_user_to_author(event_change["owner"]),
+                'project': util.ascii2unicode(event_change["project"]),
+                'repository': u"ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),
@@ -199,11 +212,10 @@ class GerritChangeSource(base.ChangeSource):
 
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
-        author = "gerrit"
+        author = u"gerrit"
 
         if "submitter" in event:
-            author = "%s <%s>" % (
-                event["submitter"]["name"], event["submitter"]["email"])
+            author = _gerrit_user_to_author(event["submitter"], author)
 
         return self.addChange(dict(
             author=author,
