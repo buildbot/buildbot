@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process import remotecommand
-from buildbot.status.results import SUCCESS
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
