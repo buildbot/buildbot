@@ -168,7 +168,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 
             for s in self.steps:
                 step_type = s.getStepType()
-                if step_type is AcquireBuildLocks or step_type is Trigger:
+                if step_type == str(AcquireBuildLocks) or step_type == str(Trigger):
                     times = s.getTimes()
                     if times[0] is not None and times[1] is not None:
                         rawBuildTime -= (times[1] - times[0])
@@ -481,7 +481,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             dict['currentStep'] = self.getCurrentStep().asDict()
 
             step_type = self.getCurrentStep().getStepType()
-            if step_type is AcquireBuildLocks or step_type is Trigger:
+            if step_type == str(AcquireBuildLocks) or step_type == str(Trigger):
                 dict['isWaiting'] = True
         else:
             dict['currentStep'] = None

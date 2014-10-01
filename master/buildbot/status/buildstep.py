@@ -79,7 +79,7 @@ class BuildStepStatus(styles.Versioned):
         self.master = master
 
         self.waitingForLocks = False
-        self.step_type = step_type
+        self.step_type = str(step_type)
 
     def getName(self):
         """Returns a short string with the name of this step. This string
@@ -334,7 +334,6 @@ class BuildStepStatus(styles.Versioned):
         del d['finishedWatchers']
         del d['updates']
         del d['master']
-        del d['step_type']
         return d
 
     def __setstate__(self, d):
