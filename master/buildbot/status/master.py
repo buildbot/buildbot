@@ -420,9 +420,9 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         builderid = msg['builderid']
         buildername = None
         # convert builderid to buildername
-        for builder in self.builders.values():
-            if builderid == (yield builder.getBuilderId()):
-                buildername = builder.name
+        for b in self.builders.values():
+            if builderid == (yield b.getBuilderId()):
+                buildername = b.name
                 break
         if buildername in self._builder_observers:
             brs = buildrequest.BuildRequestStatus(buildername,
