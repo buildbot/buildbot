@@ -40,7 +40,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
     @defer.inlineCallbacks
-    def addBuildset(self, sourcestamps, reason, properties, builderNames,
+    def addBuildset(self, sourcestamps, reason, properties, builderids,
                     waited_for, external_idstring=None, submitted_at=None,
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
@@ -104,16 +104,16 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             brids = {}
             br_tbl = self.db.model.buildrequests
             ins = br_tbl.insert()
-            for buildername in builderNames:
-                self.checkLength(br_tbl.c.buildername, buildername)
+            for builderid in builderids:
+                # self.checkLength(br_tbl.c.buildername, buildername)
                 r = conn.execute(ins,
-                                 dict(buildsetid=bsid, buildername=buildername, priority=0,
+                                 dict(buildsetid=bsid, builderid=builderid, priority=0,
                                       claimed_at=0, claimed_by_name=None,
                                       claimed_by_incarnation=None, complete=0, results=-1,
                                       submitted_at=submitted_at, complete_at=None,
                                       waited_for=1 if waited_for else 0))
 
-                brids[buildername] = r.inserted_primary_key[0]
+                brids[builderid] = r.inserted_primary_key[0]
 
             transaction.commit()
 

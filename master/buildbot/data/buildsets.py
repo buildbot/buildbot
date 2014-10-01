@@ -108,6 +108,9 @@ class Buildset(base.ResourceType):
     plural = "buildsets"
     endpoints = [BuildsetEndpoint, BuildsetsEndpoint]
     keyFields = ['bsid']
+    eventPathPatterns = """
+        /buildsets/:bsid
+    """
 
     class EntityType(types.Entity):
         bsid = types.Integer()
@@ -126,13 +129,13 @@ class Buildset(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
-                    properties={}, builderNames=[], external_idstring=None,
+                    properties={}, builderids=[], external_idstring=None,
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
         submitted_at = int(_reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,
-            properties=properties, builderNames=builderNames,
+            properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             submitted_at=epoch2datetime(submitted_at),
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
@@ -144,20 +147,8 @@ class Buildset(base.ResourceType):
             for ssid in bsdict['sourcestamps']]
 
         # notify about the component build requests
-        # TODO: needs to be refactored when buildrequests are in the DB
-        for bn, brid in brids.iteritems():
-            builderid = -1  # TODO
-            msg = dict(
-                brid=brid,
-                bsid=bsid,
-                buildername=bn,
-                builderid=builderid)
-            self.master.mq.produce(('buildsets', str(bsid),
-                                    'builders', str(builderid),
-                                    'buildrequests', str(brid),
-                                    'new'), msg)
-            # TODO
-            # self.master.mq.produce(('buildrequest', None, None, None, 'new'), dict(buildername=bn))
+        brResource = self.master.data.getResourceType("buildrequest")
+        brResource.generateEvent(brids.values(), 'new')
 
         # and the buildset itself
         msg = dict(
@@ -171,13 +162,13 @@ class Buildset(base.ResourceType):
             scheduler=scheduler,
             sourcestamps=sourcestamps)
         # TODO: properties=properties)
-        self.master.mq.produce(("buildsets", str(bsid), "new"), msg)
+        self.produceEvent(msg, "new")
 
         log.msg("added buildset %d to database" % bsid)
 
         # if there are no builderNames, then this is done already, so send the
         # appropriate messages for that
-        if not builderNames:
+        if not builderids:
             yield self.maybeBuildsetComplete(bsid, _reactor=_reactor)
 
         defer.returnValue((bsid, brids))
@@ -237,4 +228,4 @@ class Buildset(base.ResourceType):
             complete_at=complete_at,
             results=cumulative_results)
         # TODO: properties=properties)
-        self.master.mq.produce(('buildsets', str(bsid), 'complete'), msg)
+        self.produceEvent(msg, "complete")

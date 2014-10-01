@@ -117,7 +117,7 @@ class FakeUpdates(object):
 
     @defer.inlineCallbacks
     def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
-                    properties={}, builderNames=[], external_idstring=None,
+                    properties={}, builderids=[], external_idstring=None,
                     parent_buildid=None, parent_relationship=None):
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
@@ -129,7 +129,7 @@ class FakeUpdates(object):
             del ss  # since we use locals(), below
         self.testcase.assertIsInstance(reason, unicode)
         self.assertProperties(sourced=True, properties=properties)
-        self.testcase.assertIsInstance(builderNames, list)
+        self.testcase.assertIsInstance(builderids, list)
         self.testcase.assertIsInstance(external_idstring,
                                        (types.NoneType, unicode))
 
@@ -140,7 +140,7 @@ class FakeUpdates(object):
         # find the buildset in the db later - TODO fix this!
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,
-            properties=properties, builderNames=builderNames,
+            properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
         defer.returnValue((bsid, brids))
@@ -388,6 +388,9 @@ class FakeDataConnector(object):
         if not isinstance(path, tuple):
             raise TypeError('path must be a tuple')
         return self.realConnector.getEndpoint(path)
+
+    def getResourceType(self, name):
+        return getattr(self.rtypes, name)
 
     def get(self, path, filters=None, fields=None,
             order=None, limit=None, offset=None):

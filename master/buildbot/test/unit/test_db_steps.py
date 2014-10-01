@@ -40,7 +40,7 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Buildslave(id=47, name='linux'),
         fakedb.Buildset(id=20),
         fakedb.Builder(id=88, name='b1'),
-        fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
+        fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
                      builderid=88, buildslaveid=47),

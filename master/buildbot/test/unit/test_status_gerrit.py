@@ -124,7 +124,7 @@ class TestGerritStatusPush(unittest.TestCase):
             builder.getBuild.return_value = build
             builder.name = "Builder-%d" % i
             builder.getName.return_value = builder.name
-
+            builder._builderid = i
             build.results = buildResult
             build.finished = True
             build.reason = "testReason"
@@ -153,8 +153,9 @@ class TestGerritStatusPush(unittest.TestCase):
 
         breqid = 1000
         for (builder, build) in buildpairs:
+            fakedata.append(fakedb.Builder(id=builder._builderid, name=builder.name))
             fakedata.append(fakedb.BuildRequest(id=breqid, buildsetid=99,
-                                                buildername=builder.name))
+                                                builderid=builder._builderid))
             fakedata.append(fakedb.Build(number=0, buildrequestid=breqid,
                                          masterid=92, buildslaveid=13))
             breqid = breqid + 1

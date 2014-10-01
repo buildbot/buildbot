@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import copy
 
 from buildbot.data import base
 from buildbot.data import types
@@ -29,7 +30,6 @@ class Db2DataMixin(object):
             'buildrequestid': dbdict['buildrequestid'],
             'buildsetid': dbdict['buildsetid'],
             'builderid': dbdict['builderid'],
-            'buildername': dbdict['buildername'],
             'priority': dbdict['priority'],
             'claimed': dbdict['claimed'],
             'claimed_at': dbdict['claimed_at'],
@@ -53,12 +53,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         buildrequest = yield self.master.db.buildrequests.getBuildRequest(kwargs['buildrequestid'])
-        # the db API returns the buildername,
-        # but we want the data API to return the builderid
-        # TODO: update the db API. In the meantime, we are doing the mapping here
+
         if buildrequest:
-            buildername = buildrequest['buildername']
-            buildrequest['builderid'] = yield self.master.db.builders.findBuilderId(buildername)
             defer.returnValue((yield self.db2data(buildrequest)))
         defer.returnValue(None)
 
@@ -80,20 +76,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        if 'buildername' in kwargs:
-            buildername = kwargs['buildername']
-        elif 'builderid' in kwargs:
-            # convert builderid to buildername using builders db API
-            builderid = kwargs['builderid']
-            builder = yield self.master.db.builders.getBuilder(builderid)
-            if builder:
-                buildername = builder['name']
-            else:
-                # unknown builderid
-                defer.returnValue([])
-        else:
-            buildername = None
-
+        builderid = kwargs.get("builderid", None)
         complete = resultSpec.popBooleanFilter('complete')
         claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')
         if claimed_by_masterid:
@@ -106,18 +89,10 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
 
         bsid = resultSpec.popOneFilter('buildsetid', 'eq')
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
-            buildername=buildername,
+            builderid=builderid,
             complete=complete,
             claimed=claimed,
             bsid=bsid)
-        if buildrequests:
-
-            @defer.inlineCallbacks
-            def appendBuilderid(br):
-                buildername = br['buildername']
-                br['builderid'] = yield self.master.db.builders.findBuilderId(buildername)
-                defer.returnValue(br)
-            buildrequests = [(yield appendBuilderid(br)) for br in buildrequests]
         defer.returnValue(
             [(yield self.db2data(br)) for br in buildrequests])
 
@@ -133,6 +108,7 @@ class BuildRequest(base.ResourceType):
     endpoints = [BuildRequestEndpoint, BuildRequestsEndpoint]
     keyFields = ['buildsetid', 'builderid', 'buildrequestid']
     eventPathPatterns = """
+        /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
         /buildrequests/:buildrequestid
     """
 
@@ -140,7 +116,6 @@ class BuildRequest(base.ResourceType):
         buildrequestid = types.Integer()
         buildsetid = types.Integer()
         builderid = types.Integer()
-        buildername = types.Identifier(20)
         priority = types.Integer()
         claimed = types.Boolean()
         claimed_at = types.NoneOk(types.DateTime())
@@ -157,10 +132,11 @@ class BuildRequest(base.ResourceType):
         for _id in brids:
             # get the build and munge the result for the notification
             br = yield self.master.data.get(('buildrequests', str(_id)))
+            br = copy.deepcopy(br)
             self.produceEvent(br, event)
 
     @defer.inlineCallbacks
-    def callDbBuildRequests(self, brids, db_callable, **kw):
+    def callDbBuildRequests(self, brids, db_callable, event, **kw):
         if not brids:
             # empty buildrequest list. No need to call db API
             defer.returnValue(True)
@@ -170,13 +146,14 @@ class BuildRequest(base.ResourceType):
             # the db layer returned an AlreadyClaimedError exception, usually
             # because one of the buildrequests has already been claimed by another master
             defer.returnValue(False)
-        yield self.generateEvent(brids, "update")
+        yield self.generateEvent(brids, event)
         defer.returnValue(True)
 
     @base.updateMethod
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.claimBuildRequests,
+                                        event="claimed",
                                         claimed_at=claimed_at,
                                         _reactor=_reactor)
 
@@ -184,6 +161,7 @@ class BuildRequest(base.ResourceType):
     def reclaimBuildRequests(self, brids, _reactor=reactor):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.reclaimBuildRequests,
+                                        event="update",
                                         _reactor=_reactor)
 
     @base.updateMethod
@@ -191,7 +169,7 @@ class BuildRequest(base.ResourceType):
     def unclaimBuildRequests(self, brids):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
-            yield self.generateEvent(brids, "update")
+            yield self.generateEvent(brids, "unclaimed")
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -210,7 +188,7 @@ class BuildRequest(base.ResourceType):
             # the db layer returned a NotClaimedError exception, usually
             # because one of the buildrequests has been claimed by another master
             defer.returnValue(False)
-        yield self.generateEvent(brids, "update")
+        yield self.generateEvent(brids, "complete")
         defer.returnValue(True)
 
     @base.updateMethod

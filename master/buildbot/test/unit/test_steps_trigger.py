@@ -116,20 +116,22 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         a.brids = {'A': 11}
         b.brids = {'B': 22}
 
-        make_fake_br = lambda brid, name: fakedb.BuildRequest(
-            id=brid, buildsetid=BRID_TO_BSID(brid), buildername=name)
+        make_fake_br = lambda brid, builderid: fakedb.BuildRequest(
+            id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
         make_fake_build = lambda brid: fakedb.Build(
             buildrequestid=brid, id=BRID_TO_BID(brid),
             number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
             buildslaveid=13)
 
         m.db.insertTestData([
+            fakedb.Builder(id=77, name='A'),
+            fakedb.Builder(id=78, name='B'),
             fakedb.Master(id=9),
             fakedb.Buildset(id=2022),
             fakedb.Buildset(id=2011),
             fakedb.Buildslave(id=13, name="some:slave"),
-            make_fake_br(11, "A"),
-            make_fake_br(22, "B"),
+            make_fake_br(11, 77),
+            make_fake_br(22, 78),
             make_fake_build(11),
             make_fake_build(22),
         ])
@@ -330,9 +332,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                            revision='12345'),
                            FakeSourceStamp(codebase='cb2',
                                            revision='12345')
-        ],
-            gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
-        )
+                           ],
+                       gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
+                       )
         self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectTriggeredWith(
             a=(False,

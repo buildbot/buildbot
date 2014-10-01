@@ -41,7 +41,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
     OTHER_MASTER_ID = 93
 
     def setUpScheduler(self):
-        pass
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantDb=True, wantMq=True, wantData=True)
 
     def tearDownScheduler(self):
         pass
@@ -67,8 +68,6 @@ class SchedulerMixin(interfaces.InterfaceTests):
         scheduler.objectid = objectid
 
         # set up a fake master
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantDb=True, wantMq=True, wantData=True)
         db = self.db = self.master.db
         self.mq = self.master.mq
         scheduler.master = self.master

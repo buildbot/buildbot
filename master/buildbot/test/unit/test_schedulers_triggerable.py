@@ -17,6 +17,7 @@ import mock
 
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
+from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
 from twisted.internet import defer
@@ -51,6 +52,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock_patch.stop()
 
     def makeScheduler(self, **kwargs):
+        self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])
+
         sched = self.attachScheduler(
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
             self.OBJECTID)
@@ -110,6 +113,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 {
                     'buildrequestid': brid,
                     'buildername': u'b',
+                    'builderid': 77,
                     'buildsetid': bsid,
                     'claimed': False,
                     'claimed_at': None,
@@ -136,7 +140,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         sourcestamps=[],
                                         parent_buildid=None,
                                         parent_relationship=None,
-        ))
+                                        ))
 
     # tests
 
@@ -181,7 +185,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         def fired(xxx_todo_changeme):
             (result, brids) = xxx_todo_changeme
             self.assertEqual(result, 3)  # from sendCompletionMessage
-            self.assertEqual(brids, {u'b': 1000})
+            self.assertEqual(brids, {77: 1000})
             self.fired = True
         d.addCallback(fired)
         d.addErrback(log.err)
@@ -235,7 +239,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      codebase='cb', revision='myrev1'),
             ])
         d.addCallback(lambda res_brids: self.assertEqual(res_brids[0], 11)
-                      and self.assertEqual(res_brids[1], {u'b': 1000}))
+                      and self.assertEqual(res_brids[1], {77: 1000}))
 
         waited_for = True
         # and the second time
@@ -249,7 +253,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                      codebase='cb', revision='myrev2'),
             ])
         d.addCallback(lambda res_brids1: self.assertEqual(res_brids1[0], 22)
-                      and self.assertEqual(res_brids1[1], {u'b': 1001}))
+                      and self.assertEqual(res_brids1[1], {77: 1001}))
 
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
