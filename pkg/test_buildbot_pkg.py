@@ -21,9 +21,10 @@ from subprocess import check_call
 from twisted.trial import unittest
 from textwrap import dedent
 
+
 class BuildbotWWWPkg(unittest.TestCase):
     pkgName = "buildbot_www"
-    pkgPaths = ["www"]
+    pkgPaths = ["www", "base"]
     epName = "base"
 
     loadTestScript = dedent("""
@@ -37,6 +38,7 @@ class BuildbotWWWPkg(unittest.TestCase):
         assert(apps["%(epName)s"].description is not None)
         print apps["%(epName)s"]
         """)
+
     @property
     def path(self):
         return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", *self.pkgPaths))
@@ -88,15 +90,18 @@ class BuildbotWWWPkg(unittest.TestCase):
         check_call("pip install dist/*.tar.gz", shell=True, cwd=self.path)
         self.check_correct_installation()
 
+
 class BuildbotConsolePkg(BuildbotWWWPkg):
     pkgName = "buildbot-console-view"
     pkgPaths = ["www", "console_view"]
     epName = "console_view"
 
+
 class BuildbotWaterfallPkg(BuildbotWWWPkg):
     pkgName = "buildbot-waterfall-view"
     pkgPaths = ["www", "waterfall_view"]
     epName = "waterfall_view"
+
 
 class BuildbotCodeparameterPkg(BuildbotWWWPkg):
     pkgName = "buildbot-codeparameter"
