@@ -96,13 +96,13 @@ class RemoteCommand(pb.Referenceable):
         # when our parent Step calls our .lostRemote() method.
         return self.deferred
 
-    def useLog(self, _log, closeWhenFinished=False, logfileName=None):
+    def useLog(self, log_, closeWhenFinished=False, logfileName=None):
         # NOTE: log may be a SyngLogFileWrapper or a Log instance, depending on the step
         if not logfileName:
-            logfileName = _log.getName()
+            logfileName = log_.getName()
         assert logfileName not in self.logs
         assert logfileName not in self.delayedLogs
-        self.logs[logfileName] = _log
+        self.logs[logfileName] = log_
         self._closeWhenFinished[logfileName] = closeWhenFinished
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
@@ -216,22 +216,22 @@ class RemoteCommand(pb.Referenceable):
         if self.collectStdout:
             self.stdout += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            _log = yield self._unwrap(self.logs[self.stdioLogName])
-            _log.addStdout(data)
+            log_ = yield self._unwrap(self.logs[self.stdioLogName])
+            log_.addStdout(data)
 
     @defer.inlineCallbacks
     def addStderr(self, data):
         if self.collectStderr:
             self.stderr += data
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            _log = yield self._unwrap(self.logs[self.stdioLogName])
-            _log.addStderr(data)
+            log_ = yield self._unwrap(self.logs[self.stdioLogName])
+            log_.addStderr(data)
 
     @defer.inlineCallbacks
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
-            _log = yield self._unwrap(self.logs[self.stdioLogName])
-            _log.addHeader(data)
+            log_ = yield self._unwrap(self.logs[self.stdioLogName])
+            log_.addHeader(data)
 
     @defer.inlineCallbacks
     def addToLog(self, logname, data):
@@ -245,8 +245,8 @@ class RemoteCommand(pb.Referenceable):
             self._closeWhenFinished[logname] = closeWhenFinished
 
         if logname in self.logs:
-            _log = yield self._unwrap(self.logs[logname])
-            yield _log.addStdout(data)
+            log_ = yield self._unwrap(self.logs[logname])
+            yield log_.addStdout(data)
         else:
             log.msg("%s.addToLog: no such log %s" % (self, logname))
 

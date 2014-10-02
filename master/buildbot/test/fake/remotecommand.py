@@ -53,10 +53,10 @@ class FakeRemoteCommand(object):
         # delegate back to the test case
         return self.testcase._remotecommand_run(self, step, conn, builder_name)
 
-    def useLog(self, _log, closeWhenFinished=False, logfileName=None):
+    def useLog(self, log_, closeWhenFinished=False, logfileName=None):
         if not logfileName:
-            logfileName = _log.getName()
-        self.logs[logfileName] = _log
+            logfileName = log_.getName()
+        self.logs[logfileName] = log_
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)

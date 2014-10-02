@@ -94,7 +94,7 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLog)
-        def useLog(self, _log, closeWhenFinished=False, logfileName=None):
+        def useLog(self, log_, closeWhenFinished=False, logfileName=None):
             pass
 
     def test_signature_useLogDelayed(self):
