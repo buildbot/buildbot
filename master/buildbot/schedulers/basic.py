@@ -97,16 +97,14 @@ class BaseBasicScheduler(base.BaseScheduler):
         # if we have a treeStableTimer, if there are classified changes
         # out there, start their timers again
         if self.treeStableTimer:
-            d = self.scanExistingClassifiedChanges()
+            yield self.scanExistingClassifiedChanges()
 
         # otherwise, we don't care about classified
         # changes, so get rid of any hanging around from previous
         # configurations
         else:
-            d = self.master.db.schedulers.flushChangeClassifications(
+            yield self.master.db.schedulers.flushChangeClassifications(
                 self.objectid)
-
-        yield d
 
     @defer.inlineCallbacks
     def deactivate(self):

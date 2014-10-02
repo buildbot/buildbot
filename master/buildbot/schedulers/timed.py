@@ -44,7 +44,7 @@ def convertBranchParameter(kwargs):
         }}
 
 
-class Timed(base.BaseScheduler):
+class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     """
     Parent class for timed schedulers.  This takes care of the (surprisingly
@@ -149,7 +149,7 @@ class Timed(base.BaseScheduler):
         return d
 
     @defer.inlineCallbacks
-    def startBuild(self, **kwargs):
+    def startBuild(self):
         # use the collected changes to start a build
         scheds = self.master.db.schedulers
         classifications = yield scheds.getChangeClassifications(self.objectid)
@@ -167,8 +167,7 @@ class Timed(base.BaseScheduler):
         if changeids:
             max_changeid = changeids[-1]  # (changeids are sorted)
             yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=changeids,
-                                             **kwargs)
+                                             changeids=changeids)
             yield scheds.flushChangeClassifications(self.objectid,
                                                     less_than=max_changeid + 1)
         else:
@@ -177,8 +176,7 @@ class Timed(base.BaseScheduler):
             sourcestamps = [dict(codebase=cb) for cb in self.codebases.keys()]
             yield self.addBuildsetForSourceStampsWithDefaults(
                 reason=self.reason,
-                sourcestamps=sourcestamps,
-                **kwargs)
+                sourcestamps=sourcestamps)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
@@ -331,7 +329,7 @@ class NightlyBase(Timed):
         return defer.succeed(nextdate)
 
 
-class Nightly(NightlyBase, AbsoluteSourceStampsMixin):
+class Nightly(NightlyBase):
     compare_attrs = ('fileIsImportant', 'change_filter', 'onlyImportant',)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
