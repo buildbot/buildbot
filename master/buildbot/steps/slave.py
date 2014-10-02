@@ -158,10 +158,10 @@ class CopyDirectory(SlaveBuildStep):
     def getResultSummary(self):
         src = self.src
         if isinstance(src, str):
-            src = src.decode('ascii', errors='replace')
+            src = src.decode('ascii', 'replace')
         dest = self.dest
         if isinstance(dest, str):
-            dest = dest.decode('ascii', errors='replace')
+            dest = dest.decode('ascii', 'replace')
         copy = u"%s to %s" % (src, dest)
         if self.results == SUCCESS:
             rv = u'Copied ' + copy

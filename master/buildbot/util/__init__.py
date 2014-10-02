@@ -313,7 +313,7 @@ def command_to_string(command):
 
     # cmd was a comand and thus probably a bytestring.  Be gentle in
     # trying to covert it.
-    rv = rv.decode('ascii', errors='replace')
+    rv = rv.decode('ascii', 'replace')
 
     return rv
 
