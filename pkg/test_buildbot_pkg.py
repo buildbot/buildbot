@@ -49,6 +49,7 @@ class BuildbotWWWPkg(unittest.TestCase):
 
     def setUp(self):
         call("pip uninstall -y " + self.pkgName, shell=True)
+        call("cd %s; git clean -xdf " % (self.path,), shell=True)
         self.rmtree(os.path.join(self.path, "build"))
         self.rmtree(os.path.join(self.path, "dist"))
         self.rmtree(os.path.join(self.path, "static"))

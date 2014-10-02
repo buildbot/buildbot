@@ -62,7 +62,7 @@ def getVersion(init_file):
                 return version
     except OSError:
         pass
-    return "0.9.0-pre-latest"
+    return "999.0-version-not-found"
 
 
 # JS build strategy:
@@ -106,11 +106,6 @@ def build_js(cmd):
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
         cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
-        with open(os.path.join("MANIFEST.in"), "w") as f:
-            f.write(dedent("""
-            include %(package)s/VERSION
-            recursive-include %(package)s/static *
-            """ % dict(package=package)))
 
     with open(os.path.join(package, "VERSION"), "w") as f:
         f.write(cmd.distribution.metadata.version)
