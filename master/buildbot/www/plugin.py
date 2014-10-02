@@ -26,5 +26,5 @@ class Application(object):
         self.resource = static.File(self.static_dir)
 
     def __repr__(self):
-        return "www.plugin.Application(version={}, description={}, static_dir={})".format(
-            self.version, self.description, self.static_dir)
+        return "www.plugin.Application(version={version}, description={description}, static_dir={static_dir})".format(
+            **self.__dict__)

@@ -27,4 +27,5 @@ setup(
     url='http://buildbot.net/',
     license='GNU GPL',
     py_modules=['buildbot_pkg'],
+    install_requires=['distribute>=0.6.30']
 )

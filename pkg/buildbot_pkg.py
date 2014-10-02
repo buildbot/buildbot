@@ -19,6 +19,7 @@ from distutils.command.build import build
 from distutils.version import LooseVersion
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
+from setuptools.command.install_lib import install_lib
 from textwrap import dedent
 
 import os
@@ -58,10 +59,10 @@ def getVersion(init_file):
             v = VERSION_MATCH.search(out)
             if v:
                 version = v.group(1)
-        return version
+                return version
     except OSError:
         pass
-    return "latest"
+    return "999.0-version-not-found"
 
 
 # JS build strategy:
@@ -105,16 +106,6 @@ def build_js(cmd):
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
         cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
-        with open(os.path.join("MANIFEST.in"), "w") as f:
-            f.write(dedent("""
-            include %(package)s/VERSION
-            recursive-include %(package)s/static *
-            """ % dict(package=package)))
-
-    cmd.copy_tree(os.path.join(package, 'static'), os.path.join("build", "lib", package, "static"))
-
-    with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
-        f.write(cmd.distribution.metadata.version)
 
     with open(os.path.join(package, "VERSION"), "w") as f:
         f.write(cmd.distribution.metadata.version)
@@ -135,9 +126,46 @@ class my_egg_info(egg_info):
         build_js(self)
         return egg_info.run(self)
 
-cmdclassforjs = dict(build=my_build, egg_info=my_egg_info)
+
+class my_install_lib(install_lib):
+
+    def run(self):
+        # copy files to the install_lib directory
+        install_lib_dir = self.get_finalized_command('install').install_lib
+        package = self.distribution.packages[0]
+        self.copy_tree(os.path.join(package, 'static'),
+                       os.path.join(install_lib_dir, package, "static"))
+
+        with open(os.path.join(install_lib_dir, package, "VERSION"), "w") as f:
+            f.write(self.distribution.metadata.version)
+
+        # and then do the normal install stuff
+        return install_lib.run(self)
 
 
-def setup_www_plugin(**kw):
-    package = kw['packages'][0]
-    setup(version=getVersion(os.path.join(package, "__init__.py")), cmdclass=cmdclassforjs, **kw)
+def get_package_data():
+    return {
+        '': [
+            'VERSION',
+            'static/*.*',
+            'static/img/*.*',
+            'static/fonts/*.*',
+        ]
+    }
+
+cmdclassforjs = dict(
+    build=my_build,
+    egg_info=my_egg_info,
+    install_lib=my_install_lib
+    )
+
+
+def setup_www_plugin(**kwargs):
+    package = kwargs['packages'][0]
+    setup(version=getVersion(os.path.join(package, "__init__.py")),
+          cmdclass=dict(
+              build=my_build,
+              egg_info=my_egg_info,
+              install_lib=my_install_lib),
+          package_data=get_package_data(),
+          **kwargs)
