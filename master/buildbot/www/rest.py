@@ -22,7 +22,7 @@ import types
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.util import datetime2epoch
+from buildbot.util import _toJson
 from buildbot.util import json
 from buildbot.www import resource
 from contextlib import contextmanager
@@ -192,7 +192,7 @@ class V2RootResource(resource.Resource):
             result = yield ep.control(method, params, kwargs)
             jsonRpcReply['result'] = result
 
-            data = json.dumps(jsonRpcReply, default=self._toJson,
+            data = json.dumps(jsonRpcReply, default=_toJson,
                               sort_keys=True, separators=(',', ':'))
 
             request.setHeader('content-type', JSON_ENCODED)
@@ -349,10 +349,10 @@ class V2RootResource(resource.Resource):
 
             # filter out blanks if necessary and render the data
             if compact:
-                data = json.dumps(data, default=self._toJson,
+                data = json.dumps(data, default=_toJson,
                                   sort_keys=True, separators=(',', ':'))
             else:
-                data = json.dumps(data, default=self._toJson,
+                data = json.dumps(data, default=_toJson,
                                   sort_keys=True, indent=2)
 
             if request.method == "HEAD":
@@ -424,8 +424,5 @@ class V2RootResource(resource.Resource):
 
         defer.returnValue(res)
 
-    def _toJson(self, obj):
-        if isinstance(obj, datetime.datetime):
-            return datetime2epoch(obj)
 
 RestRootResource.addApiVersion(2, V2RootResource)
