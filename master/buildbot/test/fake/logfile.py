@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot import util
-from buildbot.status.logfile import HEADER
-from buildbot.status.logfile import STDERR
-from buildbot.status.logfile import STDOUT
 from buildbot.util import lineboundaries
 from twisted.internet import defer
 from twisted.python import log
@@ -29,7 +26,6 @@ class FakeLogFile(object):
         self.header = ''
         self.stdout = ''
         self.stderr = ''
-        self.chunks = []
         self.lbfs = {}
         self.finished = False
         self.step = step
@@ -58,19 +54,16 @@ class FakeLogFile(object):
 
     def addHeader(self, text):
         self.header += text
-        self.chunks.append((HEADER, text))
         self._getLbf('h', 'headerReceived').append(text)
         return defer.succeed(None)
 
     def addStdout(self, text):
         self.stdout += text
-        self.chunks.append((STDOUT, text))
         self._getLbf('o', 'outReceived').append(text)
         return defer.succeed(None)
 
     def addStderr(self, text):
         self.stderr += text
-        self.chunks.append((STDERR, text))
         self._getLbf('e', 'errReceived').append(text)
         return defer.succeed(None)
 
@@ -92,10 +85,7 @@ class FakeLogFile(object):
     def fakeData(self, header='', stdout='', stderr=''):
         if header:
             self.header += header
-            self.chunks.append((HEADER, header))
         if stdout:
             self.stdout += stdout
-            self.chunks.append((STDOUT, stdout))
         if stderr:
             self.stderr += stderr
-            self.chunks.append((STDERR, stderr))

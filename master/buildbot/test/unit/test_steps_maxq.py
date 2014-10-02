@@ -42,7 +42,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='no failures\n')
             + 0
         )
-        self.expectOutcome(result=SUCCESS, status_text=['maxq', 'tests'])
+        self.expectOutcome(result=SUCCESS, state_string='success')
         return self.runStep()
 
     def test_nonzero_rc_no_failures(self):
@@ -55,7 +55,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
             + 2
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=['1', 'maxq', 'failures'])
+                           state_string='1 maxq failures')
         return self.runStep()
 
     def test_failures(self):
@@ -68,5 +68,5 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
             + 2
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=['10', 'maxq', 'failures'])
+                           state_string='10 maxq failures')
         return self.runStep()

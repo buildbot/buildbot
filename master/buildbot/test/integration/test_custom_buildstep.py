@@ -256,7 +256,6 @@ class RunSteps(unittest.TestCase):
         self.factory.addStep(FailingCustomStep(exception=ValueError))
         bs = yield self.do_test_step()
         self.assertEqual(bs.getResults(), results.EXCEPTION)
-        # self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
 
     @defer.inlineCallbacks

@@ -47,7 +47,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
         self.expectOutcome(result=SUCCESS,
-                           status_text=["Set"])
+                           state_string="Set")
         self.expectProperty('one', "1", source='me')
         self.expectNoProperty('two')
         self.expectNoProperty('three')
@@ -64,7 +64,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.buildslave.slave_environ = {"ENV": 'EE'}
         self.buildslave.slave_system = 'win32'
         self.expectOutcome(result=SUCCESS,
-                           status_text=["Set"])
+                           state_string="Set")
         self.expectProperty('eNv', 'EE', source='me')
         self.expectLogfile("properties",
                            "eNv = 'EE'")
@@ -86,8 +86,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
             + Expect.update('stat', [stat.S_IFREG, 99, 99])
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["File found."])
+        self.expectOutcome(result=SUCCESS, state_string="File found.")
         return self.runStep()
 
     def test_not_found(self):
@@ -98,7 +97,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["Not a file."])
+                           state_string="Not a file. (failure)")
         return self.runStep()
 
     def test_failure(self):
@@ -108,7 +107,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["File not found."])
+                           state_string="File not found. (failure)")
         return self.runStep()
 
     def test_render(self):
@@ -119,7 +118,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["File not found."])
+                           state_string="File not found. (failure)")
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
@@ -127,7 +126,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(slave.FileExists(file="x"),
                        slave_version=dict())
         self.expectOutcome(result=EXCEPTION,
-                           status_text=["FileExists", "exception"])
+                           state_string="finished (exception)")
         d = self.runStep()
 
         def check(_):
@@ -151,8 +150,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('cpdir', {'fromdir': 's', 'todir': 'd'})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Copied", "s", "to", "d"])
+        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
         return self.runStep()
 
     def test_timeout(self):
@@ -161,8 +159,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 300})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Copied", "s", "to", "d"])
+        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
         return self.runStep()
 
     def test_maxTime(self):
@@ -171,8 +168,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'maxTime': 10})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Copied", "s", "to", "d"])
+        self.expectOutcome(result=SUCCESS, state_string="Copied s to d")
         return self.runStep()
 
     def test_failure(self):
@@ -182,7 +178,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["Copying", "s", "to", "d", "failed."])
+                           state_string="Copying s to d failed.")
         return self.runStep()
 
     def test_render(self):
@@ -193,8 +189,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('cpdir', {'fromdir': 'XXX', 'todir': 'YYY'})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Copied", "XXX", "to", "YYY"])
+        self.expectOutcome(result=SUCCESS, state_string="Copied XXX to YYY")
         return self.runStep()
 
 
@@ -213,7 +208,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["Deleted"])
+                           state_string="Deleted")
         return self.runStep()
 
     def test_failure(self):
@@ -223,7 +218,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["Delete failed."])
+                           state_string="Deleted (failure)")
         return self.runStep()
 
     def test_render(self):
@@ -234,7 +229,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["Deleted"])
+                           state_string="Deleted")
         return self.runStep()
 
 
@@ -252,8 +247,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd'})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Created"])
+        self.expectOutcome(result=SUCCESS, state_string="Created")
         return self.runStep()
 
     def test_failure(self):
@@ -262,8 +256,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd'})
             + 1
         )
-        self.expectOutcome(result=FAILURE,
-                           status_text=["Create failed."])
+        self.expectOutcome(result=FAILURE, state_string="Created (failure)")
         return self.runStep()
 
     def test_render(self):
@@ -273,8 +266,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'XXX'})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["Created"])
+        self.expectOutcome(result=SUCCESS, state_string="Created")
         return self.runStep()
 
 
@@ -310,8 +302,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             x.runRemoteCommand(*cmd_args)
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(Expect(*cmd_args) + 0)
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
 
     def test_runRemoteCommandFail(self):
         cmd_args = ('foo', {'bar': False})
@@ -321,23 +312,23 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             yield x.runRemoteCommand(*cmd_args)
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(Expect(*cmd_args) + 1)
-        self.expectOutcome(result=FAILURE,
-                           status_text=["generic"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_runRemoteCommandFailNoAbandon(self):
         cmd_args = ('foo', {'bar': False})
 
         @defer.inlineCallbacks
         def testFunc(x):
-            res = yield x.runRemoteCommand(*cmd_args,
-                                           **dict(abandonOnFailure=False))
-            x.step_status.setText([str(res)])
+            yield x.runRemoteCommand(*cmd_args,
+                                     **dict(abandonOnFailure=False))
+            testFunc.ran = True
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(Expect(*cmd_args) + 1)
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["True"])
-        return self.runStep()
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.failUnless(testFunc.ran)
 
     def test_mkdir(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))
@@ -345,8 +336,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_rmdir(self):
@@ -355,8 +345,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir': 'd', 'logEnviron': False})
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mkdir_fail(self):
@@ -365,8 +354,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
             + 1
         )
-        self.expectOutcome(result=FAILURE,
-                           status_text=["generic"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_glob(self):
@@ -381,8 +369,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             + Expect.update('files', ["one.pyc", "two.pyc"])
             + 0
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_glob_fail(self):
@@ -391,8 +378,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
             + 1
         )
-        self.expectOutcome(result=FAILURE,
-                           status_text=["generic"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_abandonOnFailure(self):
@@ -405,8 +391,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
             + 1
         )
-        self.expectOutcome(result=FAILURE,
-                           status_text=["generic"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_notAbandonOnFailure(self):
@@ -421,6 +406,5 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
             + 1
         )
-        self.expectOutcome(result=SUCCESS,
-                           status_text=["generic"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()

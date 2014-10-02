@@ -55,7 +55,7 @@ class MaxQ(ShellCommand):
             return FAILURE
         return SUCCESS
 
-    def getText(self, cmd, results):
+    def getResultSummary(self):
         if self.failures:
-            return [str(self.failures), 'maxq', 'failures']
-        return ['maxq', 'tests']
+            return {u'step': u"%d maxq failures" % self.failures}
+        return {u'step': u'success'}

@@ -137,7 +137,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
 
@@ -172,7 +172,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
 
@@ -439,7 +439,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'P4')
         return self.runStep()
 
@@ -741,8 +741,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['p4', '-V'])
             + ('err', error.ConnectionLost()),
         )
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
 
     def test_ticket_auth(self):
@@ -803,5 +802,5 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()

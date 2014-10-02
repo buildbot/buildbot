@@ -164,9 +164,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
 
-    def setStepStatus(self, step_status):
-        LoggingBuildStep.setStepStatus(self, step_status)
-
     def setDefaultWorkdir(self, workdir):
         self.workdir = self.workdir or workdir
 
@@ -298,7 +295,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 self.addCompleteLog("log",
                                     "No sourcestamp found in build for codebase '%s'"
                                     % self.codebase)
-                self.finished(FAILURE)
                 return FAILURE
 
         else:

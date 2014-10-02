@@ -50,7 +50,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS, state_string='built')
         return self.runStep()
 
     def test_update(self):
@@ -68,7 +68,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_buildonly_and_property(self):
@@ -85,7 +85,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout='blah\ndpkg-genchanges  >../somefilename.changes\foo\n')
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('deb-changes',
                             'somefilename.changes',
                             'DebPbuilder')
@@ -109,7 +109,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--architecture', 'amd64', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_distribution(self):
@@ -128,7 +128,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/woody-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_basetgz(self):
@@ -147,7 +147,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/buildbot/stable-local.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mirror(self):
@@ -166,7 +166,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_extrapackages(self):
@@ -187,7 +187,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--extrapackages', 'buildbot'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_keyring(self):
@@ -207,7 +207,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_components(self):
@@ -227,7 +227,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
 
@@ -255,7 +255,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_update(self):
@@ -273,7 +273,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_buildonly(self):
@@ -287,7 +287,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_update_reg(self):
@@ -300,7 +300,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             + 1)
-        self.expectOutcome(result=FAILURE, status_text=['PBuilder update.'])
+        self.expectOutcome(result=FAILURE, state_string='built (failure)')
         return self.runStep()
 
     def test_buildonly_reg(self):
@@ -314,7 +314,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             + 1)
-        self.expectOutcome(result=FAILURE, status_text=['pdebuild', 'failed'])
+        self.expectOutcome(result=FAILURE, state_string='built (failure)')
         return self.runStep()
 
 
@@ -347,7 +347,7 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS, state_string='built')
         return self.runStep()
 
 
@@ -380,5 +380,5 @@ class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['pdebuild'])
+        self.expectOutcome(result=SUCCESS, state_string='built')
         return self.runStep()

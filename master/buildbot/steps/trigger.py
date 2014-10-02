@@ -174,6 +174,7 @@ class Trigger(BuildStep):
         # Get all triggerable schedulers and check if there are invalid schedules
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
         if invalid_schedulers:
+            log.msg("Invalid triggered schedulers: %r" % (invalid_schedulers,))
             defer.returnValue(EXCEPTION)
 
         self.running = True
@@ -227,9 +228,11 @@ class Trigger(BuildStep):
         defer.returnValue(results)
 
     def getResultSummary(self):
+        if self.ended:
+            return {u'step': u'interrupted'}
         return {u'step': self.getCurrentSummary()[u'step']} if self.triggeredNames else {}
 
     def getCurrentSummary(self):
         if not self.triggeredNames:
-            return u'running'
+            return {u'step': u'running'}
         return {u'step': u'triggered %s' % (u', '.join(self.triggeredNames))}

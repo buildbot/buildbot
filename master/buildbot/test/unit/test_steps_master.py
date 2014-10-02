@@ -73,7 +73,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello\r\n")
         else:
             self.expectLogfile('stdio', "hello\n")
-        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        self.expectOutcome(result=SUCCESS, state_string="Ran")
         return self.runStep()
 
     def test_real_cmd_interrupted(self):
@@ -84,10 +84,10 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed'
             self.expectOutcome(result=EXCEPTION,
-                               status_text=["failed (1)", "interrupted"])
+                               state_string="failed (1) (failure)")
         else:
             self.expectOutcome(result=EXCEPTION,
-                               status_text=["killed (9)", "interrupted"])
+                               state_string="killed (9) (exception)")
         d = self.runStep()
         self.step.interrupt("KILL")
         return d
@@ -97,7 +97,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             master.MasterShellCommand(command=cmd))
         self.expectLogfile('stdio', "")
-        self.expectOutcome(result=FAILURE, status_text=["failed (1)"])
+        self.expectOutcome(result=FAILURE, state_string="failed (1) (failure)")
         return self.runStep()
 
     def test_constr_args(self):
@@ -120,7 +120,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 ('err', 'world\n'),
                 ('rc', 0),
             ])
-        self.expectOutcome(result=SUCCESS, status_text=['y'])
+        self.expectOutcome(result=SUCCESS, state_string='y')
         return self.runStep()
 
     def test_env_subst(self):
@@ -133,7 +133,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello\r\n")
         else:
             self.expectLogfile('stdio', "hello\n")
-        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        self.expectOutcome(result=SUCCESS)
 
         def _restore_env(res):
             del os.environ['WORLD']
@@ -153,7 +153,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello;world\r\n")
         else:
             self.expectLogfile('stdio', "hello:world\n")
-        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        self.expectOutcome(result=SUCCESS)
 
         def _restore_env(res):
             del os.environ['WORLD']
@@ -175,7 +175,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
-        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_constr_args_descriptionSuffix(self):
@@ -201,7 +201,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 ('err', 'world\n'),
                 ('rc', 0),
             ])
-        self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
+        self.expectOutcome(result=SUCCESS, state_string='y z')
         return self.runStep()
 
 
@@ -217,7 +217,7 @@ class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
         self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
         self.properties.setProperty('slavename', 'testSlave', source='SetProperty', runtime=True)
-        self.expectOutcome(result=SUCCESS, status_text=["Set"])
+        self.expectOutcome(result=SUCCESS, state_string="Set")
         self.expectProperty('testProperty', 'sch=force, slave=testSlave', source='SetProperty')
         return self.runStep()
 
@@ -234,6 +234,6 @@ class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(master.LogRenderable(content=Interpolate('sch=%(prop:scheduler)s, slave=%(prop:slavename)s')))
         self.properties.setProperty('scheduler', 'force', source='TestSetProperty', runtime=True)
         self.properties.setProperty('slavename', 'testSlave', source='TestSetProperty', runtime=True)
-        self.expectOutcome(result=SUCCESS, status_text=['Logged'])
+        self.expectOutcome(result=SUCCESS, state_string='Logged')
         self.expectLogfile('Output', pprint.pformat('sch=force, slave=testSlave'))
         return self.runStep()

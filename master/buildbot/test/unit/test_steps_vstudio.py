@@ -211,7 +211,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_installdir(self):
@@ -223,7 +223,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         d = self.runStep()
 
         def check_installdir(_):
@@ -239,7 +239,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["compile", "0 projects", "0 files", "failed"])
+                           state_string="compile 0 projects 0 files (failure)")
         return self.runStep()
 
     def test_evaluateCommand_errors(self):
@@ -252,8 +252,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["compile", "0 projects", "0 files",
-                                        "1 errors", "failed"])
+                           state_string="compile 0 projects 0 files 1 errors (failure)")
         return self.runStep()
 
     def test_evaluateCommand_warnings(self):
@@ -266,8 +265,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=WARNINGS,
-                           status_text=["compile", "0 projects", "0 files",
-                                        "1 warnings", "warnings"])
+                           state_string="compile 0 projects 0 files 1 warnings (warnings)")
         return self.runStep()
 
     def test_env_setup(self):
@@ -285,7 +283,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_env_setup_existing(self):
@@ -303,7 +301,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_rendering(self):
@@ -320,7 +318,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         d = self.runStep()
 
         def check_props(_):
@@ -379,7 +377,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_clean(self):
@@ -394,7 +392,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_noproj_build(self):
@@ -409,7 +407,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_env_prepend(self):
@@ -427,7 +425,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -482,7 +480,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_clean(self):
@@ -497,7 +495,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_noproj_build(self):
@@ -511,7 +509,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_env_prepend(self):
@@ -528,7 +526,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -593,7 +591,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_args_x64(self):
@@ -609,7 +607,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_clean(self):
@@ -624,7 +622,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_rendering(self):
@@ -640,7 +638,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         d = self.runStep()
 
         def check_props(_):
@@ -671,7 +669,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_clean(self):
@@ -687,7 +685,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
     def test_mode_build_env(self):
@@ -703,7 +701,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -727,7 +725,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -751,7 +749,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -775,7 +773,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["compile", "0 projects", "0 files"])
+                           state_string="compile 0 projects 0 files")
         return self.runStep()
 
 
@@ -799,7 +797,7 @@ class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["built", "pj for", 'cfg|Win32'])
+                           state_string="built pj for cfg|Win32")
         return self.runStep()
 
     def test_build_solution(self):
@@ -813,7 +811,7 @@ class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["built", "solution for", 'cfg|x64'])
+                           state_string="built solution for cfg|x64")
         return self.runStep()
 
 

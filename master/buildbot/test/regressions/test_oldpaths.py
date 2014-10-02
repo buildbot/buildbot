@@ -118,10 +118,6 @@ class OldImportPaths(unittest.TestCase):
         (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, Results,
          worst_status)
 
-    def test_status_builder_BuildStepStatus(self):
-        from buildbot.status.builder import BuildStepStatus
-        assert BuildStepStatus
-
     def test_status_builder_BuildSetStatus(self):
         from buildbot.status.builder import BuildSetStatus
         assert BuildSetStatus
@@ -129,14 +125,6 @@ class OldImportPaths(unittest.TestCase):
     def test_status_builder_TestResult(self):
         from buildbot.status.builder import TestResult
         assert TestResult
-
-    def test_status_builder_LogFile(self):
-        from buildbot.status.builder import LogFile
-        assert LogFile
-
-    def test_status_builder_HTMLLogFile(self):
-        from buildbot.status.builder import HTMLLogFile
-        assert HTMLLogFile
 
     def test_status_builder_SlaveStatus(self):
         from buildbot.status.builder import SlaveStatus

@@ -81,10 +81,10 @@ class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
             changes = props.getBuild().getSourceStamp(self.codebase).changes
         for change in changes:
             if ("event.type" in change.properties and
-               change.properties["event.type"] == "patchset-created"):
-                    downloads.append("%s %s/%s" % (change.properties["event.change.project"],
-                                                   change.properties["event.change.number"],
-                                                   change.properties["event.patchSet.number"]))
+                    change.properties["event.type"] == "patchset-created"):
+                downloads.append("%s %s/%s" % (change.properties["event.change.project"],
+                                               change.properties["event.change.number"],
+                                               change.properties["event.patchSet.number"]))
         return downloads
 
 
@@ -98,9 +98,9 @@ class Repo(Source):
 
     ref_not_found_re = re.compile(r"fatal: Couldn't find remote ref")
     cherry_pick_error_re = re.compile(r"|".join([r"Automatic cherry-pick failed",
-                                                r"error: "
-                                                r"fatal: "
-                                                r"possibly due to conflict resolution."]))
+                                                 r"error: "
+                                                 r"fatal: "
+                                                 r"possibly due to conflict resolution."]))
     re_change = re.compile(r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
     re_head = re.compile(r"^HEAD is now at ([0-9a-f]+)...")
     mirror_sync_retry = 10  # number of retries, if we detect mirror desynchronization
@@ -182,7 +182,7 @@ class Repo(Source):
         for download in self.repoDownloads:
             project, ch_ps = download.split(" ")[-2:]
             if (self.manifestURL.endswith("/" + project) or
-               self.manifestURL.endswith("/" + project + ".git")):
+                    self.manifestURL.endswith("/" + project + ".git")):
                 ch, ps = map(int, ch_ps.split("/"))
                 branch = "refs/changes/%02d/%d/%d" % (ch % 100, ch, ps)
                 manifest_related_downloads.append(
@@ -214,7 +214,7 @@ class Repo(Source):
 
         def evaluateCommand(cmd):
             if abandonOnFailure and cmd.didFail():
-                self.step_status.setText(["repo failed at: %s" % (" ".join(command[:2]))])
+                self.descriptionDone = "repo failed at: %s" % (" ".join(command[:2]))
                 self.stdio_log.addStderr("Source step failed while running command %s\n" % cmd)
                 raise buildstep.BuildStepFailed()
             return cmd.rc
@@ -344,8 +344,7 @@ class Repo(Source):
                 yield self._sleep(self.mirror_sync_sleep)
 
             if retry == 0:
-                self.step_status.setText(["repo: change %s does not exist" % download])
-                self.step_status.setText2(["repo: change %s does not exist" % download])
+                self.descriptionDone = "repo: change %s does not exist" % download
                 raise buildstep.BuildStepFailed()
 
             if self.lastCommand.didFail() or self._findErrorMessages(self.cherry_pick_error_re):
@@ -353,7 +352,7 @@ class Repo(Source):
                 # in stdout, which reveals the merge errors and exit
                 command = ['forall', '-c', 'git', 'diff', 'HEAD']
                 yield self._repoCmd(command, abandonOnFailure=False)
-                self.step_status.setText(["download failed: %s" % download])
+                self.descriptionDone = "download failed: %s" % download
                 raise buildstep.BuildStepFailed()
 
             if hasattr(self.lastCommand, 'stderr'):

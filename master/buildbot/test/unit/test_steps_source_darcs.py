@@ -75,7 +75,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -109,7 +109,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -143,7 +143,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -170,7 +170,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -211,7 +211,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -256,7 +256,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -298,7 +298,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -333,7 +333,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -361,7 +361,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
@@ -374,6 +374,5 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['darcs', '--version'])
             + ('err', error.ConnectionLost()),
         )
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

@@ -54,7 +54,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                           status_text=["shell", "no tests", "run"])
+                           state_string="shell no tests run")
         return self.runStep()
 
     def test_empty_error(self):
@@ -66,7 +66,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=FAILURE,
-                           status_text=["shell", "no tests", "run"])
+                           state_string="shell no tests run (failure)")
         return self.runStep()
 
     def test_warnings(self):
@@ -80,7 +80,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.warningio.write('not quite up to snuff (io)\n')
         self.logobserver.testsRun = 3
         self.expectOutcome(result=SUCCESS,  # N.B. not WARNINGS
-                           status_text=["shell", "3 tests", "passed"])
+                           state_string="shell 3 tests passed")
         # note that the warnings list is ignored..
         self.expectLogfile('warnings', 'not quite up to snuff (io)\n')
         return self.runStep()

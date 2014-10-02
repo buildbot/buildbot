@@ -63,7 +63,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS, state_string="update")
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -94,7 +94,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_timeout(self):
@@ -127,7 +127,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -158,7 +158,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -188,7 +188,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -223,7 +223,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -270,7 +270,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -301,7 +301,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -331,7 +331,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -359,7 +359,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -401,7 +401,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -431,7 +431,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -459,7 +459,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -488,7 +488,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -522,7 +522,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -549,7 +549,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -577,7 +577,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'Bzr')
         return self.runStep()
 
@@ -605,7 +605,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100\n', 'Bzr')
         return self.runStep()
 
@@ -640,7 +640,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='100\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100\n', 'Bzr')
         return self.runStep()
 
@@ -668,7 +668,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='oiasdfj010laksjfd')
             + 0,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_bad_checkout(self):
@@ -692,7 +692,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stderr='failed\n')
             + 128,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_slave_connection_lost(self):
@@ -705,5 +705,5 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ('err', error.ConnectionLost()),
         )
         self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+                           state_string="update (retry)")
         return self.runStep()
