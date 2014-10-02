@@ -49,12 +49,10 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     Take into account missing values
     """
     username = props.get("username", username)
-
-    result = [props.get("name", username)]
+    username = props.get("name", username)
     if "email" in props:
-        result.append(u"<%s>" % props["email"])
-
-    return u" ".join(result)
+        username += u" <{email}>".format(**props)
+    return username
 
 
 class GerritChangeSource(base.ChangeSource):
