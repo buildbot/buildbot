@@ -105,8 +105,9 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         client_block_device['volume_size'] = block_device['volume_size']
         return client_block_device
 
-    def _getImage(self, os_client, image):
-        # If self.image is a callable, then pass it the list of images. The
+    @staticmethod
+    def _getImage(os_client, image):
+        # If image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
         if callable(image):
             image_uuid = image(os_client.images.list())
