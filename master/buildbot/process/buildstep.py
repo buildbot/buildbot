@@ -513,6 +513,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             try:
                 hidden = hidden(results, self)
             except Exception:
+                why = Failure()
+                log.err(why, "hidden callback failed; traceback follows")
+                yield self.addLogWithFailure(why)
                 results = EXCEPTION
                 hidden = False
         # TODO: hidden
@@ -1037,7 +1040,7 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
-        for arg in constructorArgs:
+        for arg in constructorArgs.keys():
             if arg not in BuildStep.parms:
                 bad(arg)
                 del constructorArgs[arg]

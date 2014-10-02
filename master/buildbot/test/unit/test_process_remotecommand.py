@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process import remotecommand
-from buildbot.status.results import SUCCESS
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
@@ -70,17 +69,17 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.remoteCommandClass.__init__)
         def __init__(self, remote_command, args, ignore_updates=False,
                      collectStdout=False, collectStderr=False,
-                     decodeRC={0: SUCCESS},
+                     decodeRC=None,
                      stdioLogName='stdio'):
             pass
 
     def test_signature_RemoteShellCommand_constructor(self):
         @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
-                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
+                     want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
                      usePTY="slave-config", logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
-                     decodeRC={0: SUCCESS},
+                     decodeRC=None,
                      stdioLogName='stdio'):
             pass
 
@@ -95,7 +94,7 @@ class Tests(interfaces.InterfaceTests):
         cmd = self.makeRemoteCommand()
 
         @self.assertArgSpecMatches(cmd.useLog)
-        def useLog(self, log, closeWhenFinished=False, logfileName=None):
+        def useLog(self, log_, closeWhenFinished=False, logfileName=None):
             pass
 
     def test_signature_useLogDelayed(self):

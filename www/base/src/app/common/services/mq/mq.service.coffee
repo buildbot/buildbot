@@ -3,7 +3,7 @@ class MqService extends Factory('common')
         # private variables
         match = (matcher, value) ->
             # ultra simple matcher used to route event back to the original subscriber
-            matcher = new RegExp(matcher.replace("*", "[^/]+"))
+            matcher = new RegExp("^"+matcher.replace(/\*/g, "[^/]+") + "$")
             return matcher.test(value)
 
         listeners = {}
@@ -13,6 +13,9 @@ class MqService extends Factory('common')
         deferred = null
         lostConnection = false
         self =
+            # tested internal api
+            _match: match
+
             # public api
             on: (name, listener, $scope) ->
                 namedListeners = listeners[name]

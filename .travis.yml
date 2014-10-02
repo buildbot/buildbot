@@ -95,6 +95,7 @@ install:
 
 # Tests running commands
 script:
+  - "[ $IS_LATEST = false ] || make frontend"
   - trial --reporter=text --rterrors buildbot.test
   - trial --reporter=text --rterrors buildslave.test
 
@@ -103,7 +104,6 @@ script:
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
-  - "[ $IS_LATEST = false ] || make frontend"
 
 notifications:
   email: false

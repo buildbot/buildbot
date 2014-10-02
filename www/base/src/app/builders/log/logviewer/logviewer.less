@@ -1,0 +1,18 @@
+.logcontainer{
+    width:100%;
+}
+pre.log {
+    // It is much more difficult to do autoscroll if line wrap is enabled.
+    // For now we just disable it. There is space for some smarter algorithm
+    samp {
+        white-space: nowrap;
+    }
+  overflow: auto;
+}
+
+.logoptions {
+  width: 200px;
+  margin-top: 0px;
+  position: absolute;
+  right:15px;
+}
