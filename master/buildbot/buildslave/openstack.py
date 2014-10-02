@@ -55,9 +55,9 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                  meta=None,
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10, properties={}, locks=None,
-                 # Have a kwargs catch-all to allow passing things directly to
-                 # novaclient v1.1.
-                 **kwargs):
+                 # Have a nova_args parameter to allow passing things directly
+                 # to novaclient v1.1.
+                 nova_args=None):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
@@ -80,7 +80,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             self.block_devices = None
         self.image = image
         self.meta = meta
-        self.extra_kwargs = kwargs
+        self.nova_args = nova_args if nova_args is not None else {}
 
     def _parseBlockDevice(self, block_device):
         """
@@ -129,7 +129,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         boot_kwargs = dict(
             meta=self.meta,
             block_device_mapping_v2=self.block_devices,
-            **self.extra_kwargs)
+            **self.nova_args)
         instance = os_client.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %

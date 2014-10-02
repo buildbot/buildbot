@@ -573,6 +573,11 @@ These are the same details set in either environment variables or passed as opti
     A dictionary of string key-value pairs to pass to the instance.
     These will be available under the ``metadata`` key from the metadata service.
 
+``nova_args``
+    (optional)
+    A dict that will be appended to the arguments when creating a VM.
+    Buildbot uses the OpenStack Nova version 1.1 API.
+
 Here is the simplest example of configuring an OpenStack latent buildslave.
 
 ::
