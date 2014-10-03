@@ -33,6 +33,14 @@ setup_www_plugin(
     url='http://buildbot.net/',
     license='GNU GPL',
     packages=['buildbot_www'],
+    package_data={
+        '': [
+            'VERSION',
+            'static/*',
+            'static/img/*',
+            'static/fonts/*',
+        ]
+    },
     entry_points="""
         [buildbot.www]
         base = buildbot_www:ep

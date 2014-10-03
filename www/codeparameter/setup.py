@@ -30,6 +30,12 @@ setup_www_plugin(
     url='http://buildbot.net/',
     license='GNU GPL',
     packages=['buildbot_codeparameter'],
+    package_data={
+        '': [
+            'VERSION',
+            'static/*'
+        ]
+    },
     entry_points="""
         [buildbot.www]
         codeparameter = buildbot_codeparameter:ep
