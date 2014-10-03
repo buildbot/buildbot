@@ -362,7 +362,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'properties': properties,
             })
 
-        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
+        try:
+            numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
+        except:
+            numbuilds = cxt['numbuilds'] = 10
         maxsearch = int(req.args.get('maxsearch', [200])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(
