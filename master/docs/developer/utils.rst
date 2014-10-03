@@ -157,6 +157,13 @@ package.
     It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
     It raises :py:exc:`KeyError` if the value is not recognized.
 
+.. py:function:: toJson(obj):
+
+    :param obj: object
+    :returns: UNIX epoch timestamp
+
+    This function returns a serializable version of a datetime object (Convert it to a UNIX epoch timestamp)
+
 .. py:data:: NotABranch
 
     This is a sentinel value used to indicate that no branch is specified.  It

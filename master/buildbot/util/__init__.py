@@ -175,7 +175,7 @@ except AttributeError:
     import simplejson as json
 
 
-def _toJson(obj):
+def toJson(obj):
     if isinstance(obj, datetime.datetime):
         return datetime2epoch(obj)
 

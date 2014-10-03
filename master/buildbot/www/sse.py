@@ -16,7 +16,7 @@
 import uuid
 
 from buildbot.data.exceptions import InvalidPathError
-from buildbot.util import _toJson
+from buildbot.util import toJson
 from buildbot.util import json
 from twisted.python import log
 from twisted.web import resource
@@ -41,7 +41,7 @@ class Consumer(object):
         request = self.request
         msg = dict(key=event, message=data)
         request.write("event: " + "event" + "\n")
-        request.write("data: " + json.dumps(msg, default=_toJson) + "\n")
+        request.write("data: " + json.dumps(msg, default=toJson) + "\n")
         request.write("\n")
 
     def registerQref(self, path, qref):
