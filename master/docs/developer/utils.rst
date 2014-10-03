@@ -162,7 +162,8 @@ package.
     :param obj: object
     :returns: UNIX epoch timestamp
 
-    This function returns a serializable version of a datetime object (Convert it to a UNIX epoch timestamp)
+    This function is a helper for json.dump, that allows to convert non-json able objects to json.
+    For now it supports converting datetime.datetime objects to unix timestamp.
 
 .. py:data:: NotABranch
 
