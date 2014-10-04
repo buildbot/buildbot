@@ -204,7 +204,11 @@ class Periodic(Timed):
             config.error(
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
-        self.branch = branch
+        if branch is not None:
+            # this was never documented..
+            config.error(
+                "Periodic's `branch` argument is no longer used; replace it "
+                "with a 'codebases' parameter")
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -213,7 +217,9 @@ class Periodic(Timed):
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
     def startBuild(self):
-        return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
+        return self.addBuildsetForSourceStampsWithDefaults(
+                reason=self.reason,
+                sourcestamps=[])
 
 
 class NightlyBase(Timed):
@@ -283,9 +289,11 @@ class Nightly(NightlyBase):
             config.error(
                 "fileIsImportant must be a callable")
 
-        if branch is Nightly.NoBranch:
-            config.error(
-                "Nightly parameter 'branch' is required")
+        if branch is not Nightly.NoBranch:
+            if codebases != base.BaseScheduler.DEFAULT_CODEBASES:
+                config.error("`branch` and `codebases` cannot both be given "
+                             "to the Nightly scheduler")
+                codebases = {'': {'branch': branch}}
 
         if createAbsoluteSourceStamps and not onlyIfChanged:
             config.error(
@@ -325,10 +333,10 @@ class Nightly(NightlyBase):
 
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
-        # we will include all such changes in any buildsets we start.  Note
-        # that we must check the branch here because it is not included in the
-        # change filter.
-        if change.branch != self.branch:
+        # we will include all such changes in any buildsets we start.
+
+        # handle the deprecated branch parameter
+        if self.branch is not Nightly.NoBranch and change.branch != self.branch:
             return defer.succeed(None)  # don't care about this change
 
         d = self.master.db.schedulers.classifyChanges(
@@ -382,9 +390,10 @@ class Nightly(NightlyBase):
             yield scheds.flushChangeClassifications(self.objectid,
                                                     less_than=max_changeid + 1)
         else:
-            # start a build of the latest revision, whatever that is
-            yield self.addBuildsetForLatest(reason=self.reason,
-                                            branch=self.branch)
+            # start a build based on the latest defaults.
+            yield self.addBuildsetForSourceStampsWithDefaults(
+                    reason=self.reason,
+                    sourcestamps=[])
 
 
 class NightlyTriggerable(NightlyBase):

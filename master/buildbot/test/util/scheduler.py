@@ -62,6 +62,10 @@ class SchedulerMixin(interfaces.InterfaceTests):
         C{addSourceStamp} and C{addSourceStampSet}, and uses that information
         to generate C{addBuildsetForSourceStamp} results.
 
+        To add additional functionality to any of the addBuildsetForXxx
+        methods, just override fake_addBuildsetForXxx.  The signature of this
+        method will be checked at runtime.
+
         @returns: scheduler
         """
         scheduler.objectid = objectid
@@ -176,27 +180,29 @@ class SchedulerMixin(interfaces.InterfaceTests):
         brids = dict(zip(builderNames, self._bridGenerator))
         return defer.succeed((bsid, brids))
 
+    def _addBuildsetCall(self, name, **args):
+        self.addBuildsetCalls.append((name, args))
+
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                                     waited_for=False, properties=None,
                                                     builderNames=None, **kw):
-        properties = properties.asDict()
+        properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
-                                      dict(reason=reason, sourcestamps=sourcestamps,
-                                           waited_for=waited_for, properties=properties,
-                                           builderNames=builderNames)))
+        self._addBuildsetCall('addBuildsetForSourceStampsWithDefaults',
+                              reason=reason, sourcestamps=sourcestamps,
+                              waited_for=waited_for, properties=properties,
+                              builderNames=builderNames)
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForChanges(self, waited_for=False, reason='', external_idstring=None,
                                    changeids=[], builderNames=None, properties=None, **kw):
         properties = properties.asDict() if properties is not None else None
-        self.addBuildsetCalls.append(('addBuildsetForChanges',
-                                      dict(waited_for=waited_for, reason=reason,
-                                           external_idstring=external_idstring,
-                                           changeids=changeids,
-                                           properties=properties, builderNames=builderNames,
-                                           )))
+        self._addBuildsetCall('addBuildsetForChanges',
+                              waited_for=waited_for, reason=reason,
+                              external_idstring=external_idstring,
+                              changeids=changeids, properties=properties,
+                              builderNames=builderNames)
         return self._addBuildsetReturnValue(builderNames)
 
     def fake_addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
@@ -205,9 +211,10 @@ class SchedulerMixin(interfaces.InterfaceTests):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
         sourcestamps.sort()
-        self.addBuildsetCalls.append(('addBuildsetForSourceStamp',
-                                      dict(reason=reason, external_idstring=external_idstring,
-                                           properties=properties, builderNames=builderNames,
-                                           sourcestamps=sourcestamps)))
+        self._addBuildsetCall('addBuildsetForSourceStamp',
+                              reason=reason,
+                              external_idstring=external_idstring,
+                              properties=properties, builderNames=builderNames,
+                              sourcestamps=sourcestamps)
 
         return self._addBuildsetReturnValue(builderNames)
