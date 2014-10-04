@@ -157,6 +157,14 @@ package.
     It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
     It raises :py:exc:`KeyError` if the value is not recognized.
 
+.. py:function:: toJson(obj):
+
+    :param obj: object
+    :returns: UNIX epoch timestamp
+
+    This function is a helper for json.dump, that allows to convert non-json able objects to json.
+    For now it supports converting datetime.datetime objects to unix timestamp.
+
 .. py:data:: NotABranch
 
     This is a sentinel value used to indicate that no branch is specified.  It
