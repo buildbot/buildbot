@@ -58,6 +58,11 @@ def scriptCommand(function, *args):
     runprocess_scripts = util.sibpath(__file__, 'runprocess-scripts.py')
     return [sys.executable, runprocess_scripts, function] + list(args)
 
+
+def printArgsCommand():
+    return [sys.executable, '-c', 'import sys; sys.stdout.write(repr(sys.argv[1:]))']
+
+
 # windows returns rc 1, because exit status cannot indicate "signalled";
 # posix returns rc -1 for "signalled"
 FATAL_RC = -1
@@ -264,20 +269,14 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         # make sure special characters make it through unscathed
         b = FakeSlaveBuilder(False, self.basedir)
         punct = r'''!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~'''
-        s = runprocess.RunProcess(b, ['echo', punct, '%PATH%'],
+        args = [punct, '%PATH%']
+        s = runprocess.RunProcess(b, printArgsCommand() + args,
                                   self.basedir)
 
         d = s.start()
 
-        if runtime.platformType == "win32":
-            # Windows echo doesn't parse arguments, so they remain
-            # quoted/escaped
-            out_punct = '"' + punct.replace('"', r'\"') + '"'
-        else:
-            out_punct = punct
-
         def check(ign):
-            self.failUnless({'stdout': nl(out_punct + ' %PATH%\n')} in b.updates, b.show())
+            self.failUnless({'stdout': nl(repr(args))} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
