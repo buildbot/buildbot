@@ -86,6 +86,8 @@ Features
 
 * :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
 
+* OpenStack latent slaves now support block devices as a bootable volume.
+
 Fixes
 ~~~~~
 

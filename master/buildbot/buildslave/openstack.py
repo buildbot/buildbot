@@ -46,37 +46,73 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
 
     def __init__(self, name, password,
                  flavor,
-                 image,
                  os_username,
                  os_password,
                  os_tenant_name,
                  os_auth_url,
+                 block_devices=None,
+                 image=None,
                  meta=None,
                  max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties={}, locks=None):
+                 build_wait_timeout=60 * 10, properties={}, locks=None,
+                 # Have a nova_args parameter to allow passing things directly
+                 # to novaclient v1.1.
+                 nova_args=None):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
                          "to use a OpenStackLatentBuildSlave")
 
+        if not block_devices and not image:
+            raise ValueError('One of block_devices or image must be given')
+
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties, locks)
         self.flavor = flavor
-        self.image = image
         self.os_username = os_username
         self.os_password = os_password
         self.os_tenant_name = os_tenant_name
         self.os_auth_url = os_auth_url
-        self.meta = meta
-
-    def _getImage(self, os_client):
-        # If self.image is a callable, then pass it the list of images. The
-        # function should return the image's UUID to use.
-        if callable(self.image):
-            image_uuid = self.image(os_client.images.list())
+        if block_devices is not None:
+            self.block_devices = [self._parseBlockDevice(bd) for bd in block_devices]
         else:
-            image_uuid = self.image
+            self.block_devices = None
+        self.image = image
+        self.meta = meta
+        self.nova_args = nova_args if nova_args is not None else {}
+
+    def _parseBlockDevice(self, block_device):
+        """
+        Parse a higher-level view of the block device mapping into something
+        novaclient wants. This should be similar to how Horizon presents it.
+        Required keys:
+            device_name: The name of the device; e.g. vda or xda.
+            source_type: image, snapshot, volume, or blank/None.
+            destination_type: Destination of block device: volume or local.
+            delete_on_termination: True/False.
+            uuid: The image, snapshot, or volume id.
+            boot_index: Integer used for boot order.
+            volume_size: Size of the device in GiB.
+        """
+        client_block_device = {}
+        client_block_device['device_name'] = block_device.get('device_name', 'vda')
+        client_block_device['source_type'] = block_device.get('source_type', 'image')
+        client_block_device['destination_type'] = block_device.get('destination_type', 'volume')
+        client_block_device['delete_on_termination'] = bool(block_device.get('delete_on_termination', True))
+        client_block_device['uuid'] = block_device['uuid']
+        client_block_device['boot_index'] = int(block_device.get('boot_index', 0))
+        client_block_device['volume_size'] = block_device['volume_size']
+        return client_block_device
+
+    @staticmethod
+    def _getImage(os_client, image):
+        # If image is a callable, then pass it the list of images. The
+        # function should return the image's UUID to use.
+        if callable(image):
+            image_uuid = image(os_client.images.list())
+        else:
+            image_uuid = image
         return image_uuid
 
     def start_instance(self, build):
@@ -88,12 +124,12 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         # Authenticate to OpenStack.
         os_client = client.Client(self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
-        image_uuid = self._getImage(os_client)
-        flavor_id = self.flavor
-        boot_args = [self.slavename, image_uuid, flavor_id]
-        boot_kwargs = {}
-        if self.meta is not None:
-            boot_kwargs['meta'] = self.meta
+        image_uuid = self._getImage(os_client, self.image)
+        boot_args = [self.slavename, image_uuid, self.flavor]
+        boot_kwargs = dict(
+            meta=self.meta,
+            block_device_mapping_v2=self.block_devices,
+            **self.nova_args)
         instance = os_client.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
