@@ -1060,8 +1060,8 @@ For example, if only short emails are desired (e.g., for delivery to phones) ::
                       messageFormatter=messageFormatter)
 
 Another example of a function delivering a customized html email
-containing the last 80 log lines of logs of the last build step is
-given below::
+containing the last 80 log lines of logs of the last build step that
+finished is given below::
 
     from buildbot.status.builder import Results
 
@@ -1122,8 +1122,18 @@ given below::
                             text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
-            # get log for last step
-            logs = build.getLogs()
+            # get all the steps in build in reversed order
+            rev_steps = reversed(build.getSteps())
+            # find the last step that finished
+            for step in rev_steps:
+                if step.isFinished():
+                    break
+            # get logs for the last finished step
+            if step.isFinished():
+                logs = step.getLogs()
+            # No step finished, loop just exhausted itself; so as a special case we fetch all logs
+            else:
+                logs = build.getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
                 if log.getName() == 'stdio':
