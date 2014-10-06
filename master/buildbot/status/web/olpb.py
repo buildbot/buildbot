@@ -57,7 +57,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
         status = self.getStatus(req)
         try:
             numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
-        except:
+        except ValueError:
             numbuilds = 10
         builders = req.args.get("builder", [])
         branches = [b for b in req.args.get("branch", []) if b]

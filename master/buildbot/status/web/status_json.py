@@ -652,7 +652,7 @@ class SlaveJsonResource(JsonResource):
             cache_size = builder_status.master.config.caches['Builds']
             try:
                 numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
-            except:
+            except ValueError:
                 numbuilds = 10
             for i in range(1, numbuilds):
                 build_status = builder_status.getBuild(-i)
