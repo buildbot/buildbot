@@ -243,7 +243,10 @@ class RemoteBuildSetStatus(pb.Referenceable):
     def __init__(self, master, bsid, brids):
         self.master = master
         self.bsid = bsid
-        self.brids = brids
+        self.brids = dict()
+        for builderid, brid in self.brids.iteritems():
+            builderDict = yield self.master.data.get(('builders', builderid))
+            self.brids[builderDict['name']] = brid
 
     def remote_getBuildRequests(self):
         return [(n, RemoteBuildRequest(self.master, n, brid))

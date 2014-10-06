@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import hashlib
 import sqlalchemy as sa
 
 from migrate import changeset
@@ -42,22 +43,32 @@ def migrate_data(migrate_engine):
     buildrequests = sa.Table('buildrequests', metadata, autoload=True)
     builders = sa.Table('builders', metadata, autoload=True)
 
+    bName2bID = dict()
+    q = sa.select([builders.c.id, builders.c.name])
+    for row in migrate_engine.execute(q).fetchall():
+        bName2bID[row.name] = row.id
+
+    def hashColumns(*args):
+        # copy paste from buildbot/db/base.py
+        def encode(x):
+            try:
+                return x.encode('utf8')
+            except AttributeError:
+                if x is None:
+                    return '\xf5'
+                return str(x)
+        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+
     def findbuilderid(buildername):
-        tbl = builders
-
-        q = sa.select([tbl.c.id, tbl.c.name])
-        r = migrate_engine.execute(q)
-        row = r.fetchone()
-        r.close()
-
-        if row:
-            return row.id
-
-        r = migrate_engine.execute(tbl.insert(), [{
-            'name': buildername,
-            'name_hash': buildername,   # XXX TODO !
-        }])
-        return r.inserted_primary_key[0]
+        bid = bName2bID.get(buildername)
+        if bid is None: 
+            r = migrate_engine.execute(builders.insert(), [{
+                'name': buildername,
+                'name_hash': hashColumns(buildername),
+            }])
+            bid = r.inserted_primary_key[0]
+            bName2bID[buildername] = bid
+        return bid
 
     c = buildrequests.c
     q = sa.select([c.id, c.buildername])

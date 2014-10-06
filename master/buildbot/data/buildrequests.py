@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import copy
 
 from buildbot.data import base
 from buildbot.data import types
@@ -69,7 +68,6 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
     isCollection = True
     pathPatterns = """
         /buildrequests
-        /builders/i:buildername/buildrequests
         /builders/n:builderid/buildrequests
     """
     rootLinkName = 'buildrequests'
@@ -132,7 +130,6 @@ class BuildRequest(base.ResourceType):
         for _id in brids:
             # get the build and munge the result for the notification
             br = yield self.master.data.get(('buildrequests', str(_id)))
-            br = copy.deepcopy(br)
             self.produceEvent(br, event)
 
     @defer.inlineCallbacks

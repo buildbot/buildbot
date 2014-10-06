@@ -169,8 +169,10 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return ch
 
     def _addBuildsetReturnValue(self, builderNames):
+        # XXX: TODO return builderids
         if builderNames is None:
             builderNames = self.sched.builderNames
+
         bsid = self._bsidGenerator.next()
         brids = dict(zip(builderNames, self._bridGenerator))
         return defer.succeed((bsid, brids))

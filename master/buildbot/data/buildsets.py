@@ -166,7 +166,7 @@ class Buildset(base.ResourceType):
 
         log.msg("added buildset %d to database" % bsid)
 
-        # if there are no builderNames, then this is done already, so send the
+        # if there are no builders, then this is done already, so send the
         # appropriate messages for that
         if not builderids:
             yield self.maybeBuildsetComplete(bsid, _reactor=_reactor)

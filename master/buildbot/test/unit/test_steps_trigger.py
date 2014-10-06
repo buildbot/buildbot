@@ -113,8 +113,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             return [a, b]
         m.allSchedulers = allSchedulers
 
-        a.brids = {'A': 11}
-        b.brids = {'B': 22}
+        a.brids = {77: 11}
+        b.brids = {78: 22}
 
         make_fake_br = lambda brid, builderid: fakedb.BuildRequest(
             id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
@@ -203,13 +203,13 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                 (('b #22', 'baseurl/#buildrequests/22'), {}))
         if 'a' in args:
             self.exp_added_urls.append((('success: A #4011',
-                                         'baseurl/#builders/1/builds/4011'), {}))
+                                         'baseurl/#builders/77/builds/4011'), {}))
         if 'b' in args:
             self.exp_added_urls.append((('success: B #4022',
-                                         'baseurl/#builders/2/builds/4022'), {}))
+                                         'baseurl/#builders/78/builds/4022'), {}))
         if 'afailed' in args:
             self.exp_added_urls.append((('failure: A #4011',
-                                         'baseurl/#builders/1/builds/4011'), {}))
+                                         'baseurl/#builders/77/builds/4011'), {}))
 
     # tests
     def test_no_schedulerNames(self):

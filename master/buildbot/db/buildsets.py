@@ -105,7 +105,6 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             br_tbl = self.db.model.buildrequests
             ins = br_tbl.insert()
             for builderid in builderids:
-                # self.checkLength(br_tbl.c.buildername, buildername)
                 r = conn.execute(ins,
                                  dict(buildsetid=bsid, builderid=builderid, priority=0,
                                       claimed_at=0, claimed_by_name=None,
