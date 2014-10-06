@@ -579,7 +579,10 @@ class MasterConfig(util.ComparableMixin):
 
         # invent an appropriate URL given the port
         if 'port' in www_cfg and 'url' not in www_cfg:
-            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
+            if 'buildbotURL' in www_cfg:
+                self.www['url'] = www_cfg['buildbotURL']
+            else:
+                self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
