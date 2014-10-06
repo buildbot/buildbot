@@ -109,7 +109,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
     def content(self, req, cxt):
         try:
             numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
-        except:
+        except ValueError:
             numbuilds = 10
         branches = [b for b in req.args.get("branch", []) if b]
 
