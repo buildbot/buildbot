@@ -509,7 +509,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
             trysched.Try_Jobdir(
                 name='tsched', builderNames=['buildera', 'builderb'],
                 jobdir='foo'), self.OBJECTID,
-            overrideBuildsetMethods=True)
+            overrideBuildsetMethods=True,
+            createBuilderDB=True)
         fakefile = mock.Mock()
 
         def parseJob_(f):
@@ -653,7 +654,9 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
-                                     self.OBJECTID, overrideBuildsetMethods=True)
+                                     self.OBJECTID,
+                                     overrideBuildsetMethods=True,
+                                     createBuilderDB=True)
         # Try will return a remote version of master.status, so give it
         # something to return
         sched.master.status = mock.Mock()

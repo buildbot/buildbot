@@ -420,7 +420,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         builderid = msg['builderid']
         buildername = None
         # convert builderid to buildername
-        for b in self.builders.values():
+        for b in self.botmaster.builders.values():
             if builderid == (yield b.getBuilderId()):
                 buildername = b.name
                 break

@@ -48,7 +48,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                       **kw):
         sched = self.attachScheduler(
             ForceScheduler(name=name, builderNames=builderNames, **kw),
-            self.OBJECTID, overrideBuildsetMethods=True)
+            self.OBJECTID,
+            overrideBuildsetMethods=True,
+            createBuilderDB=True)
         sched.master.config = config.MasterConfig()
 
         self.assertEquals(sched.name, name)
@@ -134,7 +136,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                 )
 
         # only one builder forced, so there should only be one brid
-        self.assertEqual(res, (500, {'a': 100}))
+        self.assertEqual(res, (500, {1000: 100}))
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a'],
@@ -197,7 +199,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         res = yield sched.force('user', branch='a', reason='because', revision='c',
                                 repository='d', project='p',
                                 )
-        self.assertEqual(res, (500, {'a': 100, 'b': 101}))
+        self.assertEqual(res, (500, {1000: 100, 1001: 101}))
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a', 'b'],
@@ -221,7 +223,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                 branch='a', reason='because', revision='c',
                                 repository='d', project='p',
                                 )
-        self.assertEqual(res, (500, {'a': 100, 'b': 101}))
+        self.assertEqual(res, (500, {1000: 100, 1001: 101}))
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a', 'b'],
@@ -360,7 +362,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         else:
             self.fail("expectKind is wrong type!")
 
-        self.assertEqual((bsid, brids), (500, {'a': 100}))  # only forced on 'a'
+        self.assertEqual((bsid, brids), (500, {1000: 100}))  # only forced on 'a'
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=['a'],

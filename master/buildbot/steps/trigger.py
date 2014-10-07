@@ -23,7 +23,6 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.status.results import statusToString
 from buildbot.status.results import worst_status
-from buildbot.util import ascii2unicode
 from twisted.internet import defer
 from twisted.python import log
 

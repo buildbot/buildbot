@@ -61,7 +61,7 @@ def migrate_data(migrate_engine):
 
     def findbuilderid(buildername):
         bid = bName2bID.get(buildername)
-        if bid is None: 
+        if bid is None:
             r = migrate_engine.execute(builders.insert(), [{
                 'name': buildername,
                 'name_hash': hashColumns(buildername),

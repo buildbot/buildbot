@@ -338,7 +338,6 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                            ],
                        gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
                        )
-        # self.expectOutcome(result=SUCCESS, status_text=['triggered', 'a'])
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(
             a=(False,

@@ -49,7 +49,10 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched = dependent.Dependent(name='n', builderNames=['b'],
                                     upstream=upstream)
-        self.attachScheduler(sched, OBJECTID, overrideBuildsetMethods=True)
+        self.attachScheduler(sched, OBJECTID,
+                             overrideBuildsetMethods=True,
+                             createBuilderDB=True)
+
         return sched
 
     def assertBuildsetSubscriptions(self, bsids=None):
