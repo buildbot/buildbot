@@ -841,6 +841,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "unknown www configuration parameter(s) foo")
 
+    def test_load_www_defaultURL(self):
+        w1 = dict(www=dict(port=20, buildbotURL='http://example.com'))
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=20, url='http://example.com'))
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
