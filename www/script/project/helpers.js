@@ -194,7 +194,7 @@ define(function (require) {
             }
             var selectAll = $('#selectall');
 
-            selectAll.click(function () {
+            selectAll.bind("click.katana", function () {
                 var tableNodes = $table.dataTable().fnGetNodes();
                 $('.fi-js', tableNodes).prop('checked', this.checked);
             });
@@ -222,7 +222,7 @@ define(function (require) {
                 return false;
             }
 
-            $('#submitBtn').click(function (e) {
+            $('#submitBtn').bind("click.katana", function (e) {
                 e.preventDefault();
 
 

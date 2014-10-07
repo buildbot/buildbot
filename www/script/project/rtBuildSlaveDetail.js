@@ -27,7 +27,7 @@ define(function (require) {
                 $.ajax($(this).attr("data-cancel-url"));
             });
 
-            $("#cancelAllCurrentBuilds").click(function () {
+            $("#cancelAllCurrentBuilds").bind("click.katana", function () {
                 var builds = $tbCurrentBuildsTable.find("[data-cancel-url]");
                 $.each(builds, function (index, val) {
                     var $input = $(val).parent().find("[name=cancelselected]");
@@ -37,7 +37,7 @@ define(function (require) {
                 });
             });
 
-            $("#selectAll").click(function () {
+            $("#selectAll").bind("click.katana", function () {
                 var checked = $(this).prop("checked");
                 var builds = $tbCurrentBuildsTable.find("[data-cancel-url]");
                 $.each(builds, function (index, val) {

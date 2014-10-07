@@ -18,7 +18,7 @@ define(['jquery', 'libs/jquery.form'], function ($, form) {
 
             setColorField($body.hasClass(COLOR_BLIND_CSS));
 
-            $colorBtn.click(function () {
+            $colorBtn.bind("click.katana", function () {
                 var colorBlindActivated = $body.hasClass(COLOR_BLIND_CSS);
                 if (colorBlindActivated === true) {
                     $body.removeClass(COLOR_BLIND_CSS);

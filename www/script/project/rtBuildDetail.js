@@ -75,7 +75,7 @@ define(function (require) {
             helpers.codeBaseBranchOverview($('.top'));
 
             //Allow for popups
-            $(".popup-btn-js-2").click(function (e) {
+            $(".popup-btn-js-2").bind("click.katana", function (e) {
                 e.preventDefault();
                 var $elem = $(e.target);
                 var html = $elem.next(".more-info-box-js").html(),

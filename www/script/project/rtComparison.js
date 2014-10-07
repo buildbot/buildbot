@@ -43,7 +43,7 @@ define(function (require) {
                     }
                 ));
 
-                $("#submitComparison").click(function openComparisonPage() {
+                $("#submitComparison").bind("click.katana", function openComparisonPage() {
                     var builders = $("[data-builder]"),
                         output = {};
 

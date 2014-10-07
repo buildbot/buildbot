@@ -72,7 +72,7 @@ define(function (require) {
             // change location on change of the value and initialize select2
             $numBuildsSelector.val(args.numbuilds || 15).select2({minimumResultsForSearch: -1});
 
-            $("#btnFilter").click(function changeNumBuilds() {
+            $("#btnFilter").bind("click.katana", function changeNumBuilds() {
                 var numBuilds = $numBuildsSelector.val();
 
 

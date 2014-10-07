@@ -33,7 +33,7 @@ define(["main"], function () {
         //Show body
         $("body").show();
 
-        $scrollOpt.click(function () {
+        $scrollOpt.bind("click.katana", function () {
             window.scrollTo(0, document.body.scrollHeight);
         });
 

@@ -63,14 +63,14 @@ define(['main'], function () {
                     });
 
                     // show content of exceptions in new window
-                    $('.new-window').click(function (e) {
+                    $('.new-window').bind("click.katana", function (e) {
                         e.preventDefault();
                         var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
                         privateFunc.openNewWindow(newWinHtml);
                     });
 
                     // show more / hide
-                    $('.height-toggle').click(function (e) {
+                    $('.height-toggle').bind("click.katana", function (e) {
                         e.preventDefault();
                         var $failDetail = $(this).parent().find($('.failure-detail-txt')),
                             parentTd = $(this).parent().parent();
@@ -121,12 +121,12 @@ define(['main'], function () {
                         }
                     });
 
-                    $submitButton.click(function () {
+                    $submitButton.bind("click.katana", function () {
                         privateFunc.filterTables($filterInput.val());
                     });
 
                     // clear the input field
-                    $('#clearFilter').click(function () {
+                    $('#clearFilter').bind("click.katana", function () {
                         $filterInput.val("");
                         $submitButton.click();
                     });
@@ -164,7 +164,7 @@ define(['main'], function () {
                     privateFunc.addCodebasesBar();
 
                     var checkboxesList = $('#CheckBoxesList').find('input');
-                    checkboxesList.click(function () {
+                    checkboxesList.bind("click.katana", function () {
                         privateFunc.filterCheckboxes();
                     });
                     privateFunc.filterCheckboxes();

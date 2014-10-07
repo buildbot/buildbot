@@ -17,7 +17,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
                     dropdownPrivate.setupClick();
                 },
                 setupClick: function () {
-                    $elem.click(function () {
+                    $elem.bind("click.katana", function () {
                         if ($dropdown === undefined) {
                             if (dropdownPrivate.createHTML()) {
                                 opts.onCreate($elem, $dropdown);
@@ -219,7 +219,7 @@ define(['jquery', 'screensize'], function ($, screenSize) {
 
             //TODO: This should be elsewhere
             // mobile top menu
-            $('.smartphone-nav').click(function () {
+            $('.smartphone-nav').bind("click.katana", function () {
                 var $topMenu = $('.top-menu');
                 if ($topMenu.is(':hidden')) {
                     $topMenu.addClass('show-topmenu');

@@ -177,7 +177,7 @@ define(function (require) {
         validateForm: function (formContainer) { // validate the forcebuildform
             var formEl = $('.command_forcebuild', formContainer);
             var excludeFields = ':button, :hidden, :checkbox, :submit';
-            $('.grey-btn', formEl).click(function (e) {
+            $('.grey-btn', formEl).bind("click.katana", function (e) {
 
                 var allInputs = $('input', formEl).not(excludeFields);
 
@@ -213,7 +213,7 @@ define(function (require) {
         initJSONPopup: function (jsonPopupElem, data) {
             var $jsonPopupElem = $(jsonPopupElem);
 
-            $jsonPopupElem.click(function (e) {
+            $jsonPopupElem.bind("click.katana", function (e) {
                 e.preventDefault();
                 var html = popups(data);
                 $body.append($("<div/>").popup({
@@ -232,7 +232,7 @@ define(function (require) {
             var $codebaseElem = $(codebaseElem),
                 codebasesURL = $codebaseElem.attr("data-codebases-url");
 
-            $codebaseElem.click(function (event) {
+            $codebaseElem.bind("click.katana", function (event) {
                 event.preventDefault();
 
                 $("#preloader").preloader("showPreloader");
@@ -333,7 +333,7 @@ define(function (require) {
                 });
             }
 
-            $pendingElem.click(function (event) {
+            $pendingElem.bind("click.katana", function (event) {
                 event.preventDefault();
                 openPopup();
             });
@@ -430,12 +430,12 @@ define(function (require) {
                     });
             }
 
-            $customBuild.click(function (event) {
+            $customBuild.bind("click.katana", function (event) {
                 event.preventDefault();
                 openPopup(false);
             });
 
-            $instantBuild.click(function (event) {
+            $instantBuild.bind("click.katana", function (event) {
                 event.preventDefault();
                 openPopup(true);
             });
@@ -443,7 +443,7 @@ define(function (require) {
         initArtifacts: function (artifactList, artifactElem) {
             var $artifactElem = $(artifactElem);
 
-            $artifactElem.click(function (event) {
+            $artifactElem.bind("click.katana", function (event) {
                 event.preventDefault();
 
                 var html = "";
