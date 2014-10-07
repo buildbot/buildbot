@@ -216,7 +216,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
                 'test/public_html',
-                'test/public_html/bg_gradient.jpg',
+                'test/public_html/images/bg_gradient.jpg',
                 'test/public_html/robots.txt',
                 'test/public_html/favicon.ico',
                 'test/templates',
