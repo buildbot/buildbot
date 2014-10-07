@@ -354,11 +354,6 @@ class Build(properties.PropertiesMixin):
             step.name = name
             self.steps.append(step)
 
-            # tell the BuildStatus about the step. This will create a
-            # BuildStepStatus and bind it to the Step.
-            step_status = self.build_status.addStepWithName(name)
-            step.setStepStatus(step_status)
-
             sp = None
             if self.useProgress:
                 # XXX: maybe bail if step.progressMetrics is empty? or skip

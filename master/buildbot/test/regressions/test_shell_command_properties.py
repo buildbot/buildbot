@@ -34,10 +34,6 @@ class FakeBuildStatus:
     def __init__(self):
         self.names = []
 
-    def addStepWithName(self, name):
-        self.names.append(name)
-        return FakeStepStatus()
-
     def getProperties(self):
         return Properties()
 

@@ -29,8 +29,10 @@ class FakeRemoteCommand(object):
 
     def __init__(self, remote_command, args,
                  ignore_updates=False, collectStdout=False, collectStderr=False,
-                 decodeRC={0: SUCCESS},
+                 decodeRC=None,
                  stdioLogName='stdio'):
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -51,10 +53,10 @@ class FakeRemoteCommand(object):
         # delegate back to the test case
         return self.testcase._remotecommand_run(self, step, conn, builder_name)
 
-    def useLog(self, log, closeWhenFinished=False, logfileName=None):
+    def useLog(self, log_, closeWhenFinished=False, logfileName=None):
         if not logfileName:
-            logfileName = log.getName()
-        self.logs[logfileName] = log
+            logfileName = log_.getName()
+        self.logs[logfileName] = log_
 
     def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
         self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
@@ -83,11 +85,15 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
 
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles={},
+                 timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
                  collectStderr=False,
-                 interruptSignal=None, initialStdin=None, decodeRC={0: SUCCESS},
+                 interruptSignal=None, initialStdin=None, decodeRC=None,
                  stdioLogName='stdio'):
+        if logfiles is None:
+            logfiles = {}
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         args = dict(workdir=workdir, command=command, env=env or {},
                     want_stdout=want_stdout, want_stderr=want_stderr,
                     initial_stdin=initialStdin,

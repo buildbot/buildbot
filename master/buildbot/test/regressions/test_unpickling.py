@@ -17,8 +17,8 @@ import base64
 
 from buildbot.status.build import BuildStatus
 from buildbot.status.builder import BuilderStatus
-from buildbot.status.buildstep import BuildStepStatus
 from buildbot.util import pickle
+from buildbot.util.pickle import BuildStepStatus
 from twisted.persisted import styles
 from twisted.trial import unittest
 

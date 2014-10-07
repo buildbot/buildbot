@@ -49,6 +49,7 @@ class FakeUpdates(object):
         self.logs = {}
         self.claimedBuildRequests = set([])
         self.stepStateStrings = {}  # { stepid : [strings] }
+        self.stepUrls = {}  # { stepid : [(name,url)] }
 
     # extra assertions
 
@@ -290,6 +291,7 @@ class FakeUpdates(object):
                               validation.StringValidator())
         validation.verifyType(self.testcase, 'url', url,
                               validation.StringValidator())
+        self.stepUrls.setdefault(stepid, []).append((name, url))
         return defer.succeed(None)
 
     def startStep(self, stepid):

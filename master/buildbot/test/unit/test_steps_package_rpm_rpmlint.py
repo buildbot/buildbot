@@ -34,7 +34,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['rpmlint', '-i', '.'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
+        self.expectOutcome(result=SUCCESS, state_string='Finished checking RPM/SPEC issues')
         return self.runStep()
 
     def test_fileloc_success(self):
@@ -43,7 +43,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['rpmlint', '-i', 'RESULT'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_config_success(self):
@@ -52,5 +52,5 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
             + 0)
-        self.expectOutcome(result=SUCCESS, status_text=['Finished checking RPM/SPEC issues'])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()

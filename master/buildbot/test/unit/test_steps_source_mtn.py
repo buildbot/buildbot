@@ -82,7 +82,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -150,7 +150,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -213,7 +213,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  logEnviron=True))
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE, state_string="update (failure)")
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -254,7 +254,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -299,7 +299,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -341,7 +341,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -383,7 +383,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -439,7 +439,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -494,7 +494,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -538,7 +538,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -588,7 +588,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -638,7 +638,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -706,7 +706,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='95215e2a9a9f8b6f5c9664e3807cd34617ea928c')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '95215e2a9a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
@@ -722,6 +722,5 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                               stdout='monotone 1.0 (base revision: a7c3a1d9de1ba7a62c9dd9efee17252234bb502c)')
             + ('err', error.ConnectionLost()),
         )
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

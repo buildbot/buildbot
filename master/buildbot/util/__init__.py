@@ -174,6 +174,12 @@ except AttributeError:
     sys.modules.pop('json')  # get rid of the bad json module
     import simplejson as json
 
+
+def toJson(obj):
+    if isinstance(obj, datetime.datetime):
+        return datetime2epoch(obj)
+
+
 # changes and schedulers consider None to be a legitimate name for a branch,
 # which makes default function keyword arguments hard to handle.  This value
 # is always false.
@@ -275,6 +281,47 @@ def stripUrlPassword(url):
     parts = list(urlparse.urlsplit(url))
     parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
     return urlparse.urlunsplit(parts)
+
+
+def join_list(maybeList):
+    if isinstance(maybeList, (list, tuple)):
+        return u' '.join(ascii2unicode(s) for s in maybeList)
+    else:
+        return ascii2unicode(maybeList)
+
+
+def command_to_string(command):
+    words = command
+    if isinstance(words, (str, unicode)):
+        words = words.split()
+
+    try:
+        len(words)
+    except (AttributeError, TypeError):
+        # WithProperties and Property don't have __len__
+        # For old-style classes instances AttributeError raised,
+        # for new-style classes instances - TypeError.
+        return None
+
+    # flatten any nested lists
+    words = flatten(words, (list, tuple))
+
+    # strip instances and other detritus (which can happen if a
+    # description is requested before rendering)
+    words = [w for w in words if isinstance(w, (str, unicode))]
+
+    if len(words) < 1:
+        return None
+    if len(words) < 3:
+        rv = "'%s'" % (' '.join(words))
+    else:
+        rv = "'%s ...'" % (' '.join(words[:2]))
+
+    # cmd was a comand and thus probably a bytestring.  Be gentle in
+    # trying to covert it.
+    rv = rv.decode('ascii', 'replace')
+
+    return rv
 
 
 __all__ = [

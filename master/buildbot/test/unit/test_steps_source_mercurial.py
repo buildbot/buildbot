@@ -100,7 +100,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_win32path(self):
@@ -146,7 +146,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_timeout(self):
@@ -199,7 +199,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_patch(self):
@@ -262,7 +262,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_patch_fail(self):
@@ -315,7 +315,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         initialStdin='patch')
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE, state_string="update (failure)")
         return self.runStep()
 
     def test_mode_full_clean_no_existing_repo(self):
@@ -349,7 +349,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clobber(self):
@@ -381,7 +381,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_fresh(self):
@@ -426,7 +426,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_fresh_no_existing_repo(self):
@@ -460,7 +460,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_fresh_retry(self):
@@ -509,7 +509,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo_dirname(self):
@@ -545,7 +545,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_retry(self):
@@ -588,7 +588,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_branch_change_dirname(self):
@@ -630,7 +630,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo_inrepo(self):
@@ -670,7 +670,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_existing_repo(self):
@@ -710,7 +710,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_existing_repo_added_files(self):
@@ -754,7 +754,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_existing_repo_added_files_old_rmdir(self):
@@ -802,7 +802,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_given_revision(self):
@@ -845,7 +845,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_branch_change(self):
@@ -891,7 +891,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_branch_change_no_clobberOnBranchChange(self):
@@ -934,7 +934,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_env(self):
@@ -982,7 +982,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_full_clean_logEnviron(self):
@@ -1036,7 +1036,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_command_fails(self):
@@ -1048,7 +1048,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', '--version'])
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_slave_connection_lost(self):
@@ -1060,6 +1060,5 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--verbose', '--version'])
             + ('err', error.ConnectionLost()),
         )
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

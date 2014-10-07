@@ -45,7 +45,6 @@ class BuildStepMixin(object):
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
     @ivar buildslave: mock buildslave object
-    @ivar step_status: mock StepStatus object
     @ivar properties: build properties (L{Properties} instance)
     """
 
@@ -115,37 +114,11 @@ class BuildStepMixin(object):
 
         self.buildslave = step.buildslave = slave.FakeSlave(self.master)
 
-        # step.step_status
-
-        ss = self.step_status = mock.Mock(name="step_status")
-
-        ss.status_text = None
-        ss.logs = {}
-
-        def ss_setText(strings):
-            ss.status_text = strings
-        ss.old_setText = ss_setText
-
-        def ss_setText2(strings):
-            ss.status_text2 = strings
-        ss.old_setText2 = ss_setText2
-
-        ss.getLogs = lambda: ss.logs.values()
-
-        self.step_statistics = {}
-        self.step.setStatistic = self.step_statistics.__setitem__
-        self.step.getStatistic = self.step_statistics.get
-        self.step.hasStatistic = self.step_statistics.__contains__
-
-        self.step.setStepStatus(ss)
-
         # step overrides
 
         def addLog(name, type='s', logEncoding=None):
-            assert type == 's', "type must be 's' until Data API backend is in place"
             l = logfile.FakeLogFile(name, step)
             self.step.logs[name] = l
-            ss.logs[name] = l
             return defer.succeed(l)
         step.addLog = addLog
         step.addLog_newStyle = addLog
@@ -153,14 +126,13 @@ class BuildStepMixin(object):
         def addHTMLLog(name, html):
             l = logfile.FakeLogFile(name, step)
             l.addStdout(html)
-            ss.logs[name] = l
             return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
             l = logfile.FakeLogFile(name, step)
+            self.step.logs[name] = l
             l.addStdout(text)
-            ss.logs[name] = l
             return defer.succeed(None)
         step.addCompleteLog = addCompleteLog
 
@@ -182,7 +154,8 @@ class BuildStepMixin(object):
 
         # expectations
 
-        self.exp_outcome = None
+        self.exp_result = None
+        self.exp_state_strings = None
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
@@ -204,12 +177,14 @@ class BuildStepMixin(object):
         """
         self.expected_remote_commands.extend(exp)
 
-    def expectOutcome(self, result, status_text):
+    def expectOutcome(self, result, state_string=None):
         """
         Expect the given result (from L{buildbot.status.results}) and status
         text (a list).
         """
-        self.exp_outcome = dict(result=result, status_text=status_text)
+        self.exp_result = result
+        if state_string:
+            self.exp_state_strings = [state_string]
 
     def expectProperty(self, property, value, source=None):
         """
@@ -251,10 +226,14 @@ class BuildStepMixin(object):
             self.debounceClock.advance(1)
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
-            got_outcome = dict(result=result,
-                               status_text=self.step_status.status_text)
-            self.assertEqual(got_outcome['result'], self.exp_outcome['result'],
-                             "expected step outcome")
+            self.assertEqual(result, self.exp_result, "expected result")
+            if self.exp_state_strings:
+                stepStateStrings = self.master.data.updates.stepStateStrings
+                stepids = stepStateStrings.keys()
+                assert stepids, "no step state strings were set"
+                self.assertEqual(stepStateStrings[stepids[0]],
+                                 self.exp_state_strings,
+                                 "expected step state strings")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
@@ -268,8 +247,9 @@ class BuildStepMixin(object):
                                  "unexpected property '%s'" % pn)
             for l, contents in self.exp_logfiles.iteritems():
                 self.assertEqual(
-                    self.step_status.logs[l].stdout, contents, "log '%s' contents" % l)
-            self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
+                    self.step.logs[l].stdout, contents, "log '%s' contents" % l)
+            # XXX TODO: hidden
+            # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
 
     # callbacks from the running step

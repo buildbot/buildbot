@@ -157,6 +157,14 @@ package.
     It is intended to be liberal in what it accepts: case-insensitive, "true", "on", "yes", "1", etc.
     It raises :py:exc:`KeyError` if the value is not recognized.
 
+.. py:function:: toJson(obj):
+
+    :param obj: object
+    :returns: UNIX epoch timestamp
+
+    This function is a helper for json.dump, that allows to convert non-json able objects to json.
+    For now it supports converting datetime.datetime objects to unix timestamp.
+
 .. py:data:: NotABranch
 
     This is a sentinel value used to indicate that no branch is specified.  It
@@ -185,6 +193,14 @@ package.
     :returns: URL with any password component replaced with ``xxxx``
 
     Sanitize a URL; use this before logging or displaying a DB URL.
+
+.. py:function:: join_list(maybe_list)
+
+    :param maybe_list: list, tuple, byte string, or unicode
+    :returns: unicode
+
+    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
+    This is useful for configuration parameters that may be strings or lists of strings.
 
 buildbot.util.lru
 ~~~~~~~~~~~~~~~~~

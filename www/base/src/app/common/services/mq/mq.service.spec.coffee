@@ -23,6 +23,12 @@ describe 'mq service', ->
 
     beforeEach(inject(injected))
 
+    it 'match function should be correct', ->
+        expect(mqService._match("a/b/*", "a/b/c")).toBe(true)
+        expect(mqService._match("a/b/*", "a/b/c/d")).toBe(false)
+        expect(mqService._match("a/b/*/*", "a/b/c/d")).toBe(true)
+        expect(mqService._match("a/b/*/*", "a/b/c/d/e")).toBe(false)
+
     it 'should setup everything in setBaseURL', ->
         expect(es.onopen).toBeUndefined()
         mqService.setBaseUrl("sse/")

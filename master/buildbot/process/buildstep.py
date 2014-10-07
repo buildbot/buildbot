@@ -40,13 +40,11 @@ from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.status import progress
 from buildbot.status import results
-from buildbot.status.logfile import HEADER
-from buildbot.status.logfile import STDERR
-from buildbot.status.logfile import STDOUT
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
+from buildbot.status.results import Results
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
@@ -118,6 +116,11 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # the tricky case of adding data to a log *before* addLog has returned!
     # this also adds the read-only methods such as getText
 
+    # old constants from the status API
+    HEADER = 0
+    STDERR = 1
+    STDOUT = 2
+
     def __init__(self, step, name, addLogDeferred):
         self.step = step
         self.name = name
@@ -171,15 +174,15 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
-        self.chunks.append((STDOUT, data))
+        self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        self.chunks.append((STDERR, data))
+        self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        self.chunks.append((HEADER, data))
+        self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
     def finish(self):
@@ -198,10 +201,10 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         return self.name
 
     def getText(self):
-        return "".join(self.getChunks([STDOUT, STDERR], onlyText=True))
+        return "".join(self.getChunks([self.STDOUT, self.STDERR], onlyText=True))
 
     def readlines(self):
-        alltext = "".join(self.getChunks([STDOUT], onlyText=True))
+        alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
         io = StringIO.StringIO(alltext)
         return io.readlines()
 
@@ -221,6 +224,11 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         d = defer.Deferred()
         self.finishDefereds.append(d)
         self._maybeFinished()
+
+
+class BuildStepStatus(object):
+    # used only for old-style steps
+    pass
 
 
 class BuildStep(results.ResultComputingConfigMixin,
@@ -279,6 +287,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     logEncoding = None
     cmd = None
     rendered = False  # true if attributes are rendered
+    _waitingForLocks = False
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -307,20 +316,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
 
-    def _describe(self, done=False):
-        if self.descriptionDone and done:
-            return self.descriptionDone
-        elif self.description:
-            return self.description
-        return [self.name]
-
-    def describe(self, done=False):
-        assert(self.rendered)
-        desc = self._describe(done)
-        if self.descriptionSuffix:
-            desc = desc + self.descriptionSuffix
-        return desc
-
     def setBuild(self, build):
         self.build = build
         self.master = self.build.master
@@ -338,16 +333,12 @@ class BuildStep(results.ResultComputingConfigMixin,
     def _getStepFactory(self):
         return self._factory
 
-    def setStepStatus(self, step_status):
-        self.step_status = step_status
-
     def setupProgress(self):
         if self.useProgress:
             # XXX this uses self.name, but the name may change when the
             # step is started..
             sp = progress.StepProgress(self.name, self.progressMetrics)
             self.progress = sp
-            self.step_status.setProgress(sp)
             return sp
         return None
 
@@ -356,10 +347,28 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.progress.setProgress(metric, value)
 
     def getCurrentSummary(self):
-        return {u'step': u'running'}
+        if self.description is not None:
+            stepsumm = util.join_list(self.description)
+            if self.descriptionSuffix:
+                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+        else:
+            stepsumm = u'running'
+        return {u'step': stepsumm}
 
     def getResultSummary(self):
-        return {}
+        if self.descriptionDone is not None or self.description is not None:
+            stepsumm = util.join_list(self.descriptionDone or self.description)
+            if self.descriptionSuffix:
+                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+        else:
+            stepsumm = u'finished'
+
+        if self.results != SUCCESS:
+            stepsumm += u' (%s)' % Results[self.results]
+
+        return {u'step': stepsumm}
+
+    # TODO: test those^^
 
     @debounce.method(wait=1)
     @defer.inlineCallbacks
@@ -379,17 +388,15 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         stepResult = summary.get('step', u'finished')
         if not isinstance(stepResult, unicode):
-            raise TypeError("step result must be unicode")
+            raise TypeError("step result string must be unicode (got %r)"
+                            % (stepResult,))
         yield self.master.data.updates.setStepStateStrings(self.stepid,
                                                            [stepResult])
 
         if not self._running:
             buildResult = summary.get('build', None)
             if buildResult and not isinstance(buildResult, unicode):
-                raise TypeError("build result must be unicode")
-            self.step_status.old_setText([stepResult])
-            self.step_status.old_setText2([buildResult] if buildResult else [])
-
+                raise TypeError("build result string must be unicode")
     # updateSummary gets patched out for old-style steps, so keep a copy we can
     # call internally for such steps
     realUpdateSummary = updateSummary
@@ -400,7 +407,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
-        # XXX self.number != self.step_status.number..
         self.stepid, self.number, self.name = yield self.master.data.updates.newStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
@@ -419,8 +425,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
-
-        self.step_status.stepStarted()
 
         try:
             # set up locks
@@ -464,7 +468,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 finally:
                     self._running = False
             else:
-                self.step_status.setSkipped(True)
                 results = SKIPPED
 
         except BuildStepCancelled:
@@ -496,13 +499,12 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
+        self.results = results
         self.realUpdateSummary()
         yield self.realUpdateSummary.stop()
 
         if self.progress:
             self.progress.finish()
-
-        self.step_status.stepFinished(results)
 
         yield self.master.data.updates.finishStep(self.stepid, results)
 
@@ -511,9 +513,12 @@ class BuildStep(results.ResultComputingConfigMixin,
             try:
                 hidden = hidden(results, self)
             except Exception:
+                why = Failure()
+                log.err(why, "hidden callback failed; traceback follows")
+                yield self.addLogWithFailure(why)
                 results = EXCEPTION
                 hidden = False
-        self.step_status.setHidden(hidden)
+        # TODO: hidden
 
         self.releaseLocks()
 
@@ -528,7 +533,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
             if not lock.isAvailable(self, access):
-                self.step_status.setWaitingForLocks(True)
+                self._waitingForLocks = True
                 log.msg("step %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
@@ -537,7 +542,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # all locks are available, claim them all
         for lock, access in self.locks:
             lock.claim(self, access)
-        self.step_status.setWaitingForLocks(False)
+        self._waitingForLocks = False
         return defer.succeed(None)
 
     @defer.inlineCallbacks
@@ -550,11 +555,10 @@ class BuildStep(results.ResultComputingConfigMixin,
             # aren't bothered by any of this equipment
 
             # monkey-patch self.step_status.{setText,setText2} back into
-            # existence for old steps; when these write to the data API,
-            # the monkey patches will stash their deferreds on the unhandled
-            # list
-            self.step_status.setText = self.step_status.old_setText
-            self.step_status.setText2 = self.step_status.old_setText2
+            # existence for old steps, signalling an update to the summary
+            self.step_status = BuildStepStatus()
+            self.step_status.setText = lambda text: self.realUpdateSummary()
+            self.step_status.setText2 = lambda text: self.realUpdateSummary()
 
             # monkey-patch in support for old statistics functions
             self.step_status.setStatistic = self.setStatistic
@@ -575,10 +579,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.updateSummary = updateSummary
 
             results = yield self.start()
-            if results == SKIPPED:
-                self.step_status.setSkipped(True)
-            else:
-                results = yield self._start_deferred
+            if results is not None:
+                self._start_deferred.callback(results)
+            results = yield self._start_deferred
         finally:
             self._start_deferred = None
             unhandled = self._start_unhandled_deferreds
@@ -733,7 +736,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addURL(self, name, url):
         yield self.master.data.updates.addStepURL(self.stepid, unicode(name), unicode(url))
-        self.step_status.addURL(name, url)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
@@ -757,6 +759,21 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setStatistic(self, name, value):
         self.statistics[name] = value
+
+    def _describe(self, done=False):
+        # old-style steps expect this function to exist
+        assert not self.isNewStyle()
+        return []
+
+    def describe(self, done=False):
+        # old-style steps expect this function to exist
+        assert not self.isNewStyle()
+        desc = self._describe(done)
+        if not desc:
+            return []
+        if self.descriptionSuffix:
+            desc = desc + u' ' + util.join_list(self.descriptionSuffix)
+        return desc
 
 
 components.registerAdapter(
@@ -812,7 +829,6 @@ class LoggingBuildStep(BuildStep):
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
-        self.step_status.setText(self.describe(False))
 
         # stdio is the first log
         self.stdio_log = stdio_log = self.addLog("stdio")
@@ -858,7 +874,7 @@ class LoggingBuildStep(BuildStep):
                     local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
-                # tell the BuildStepStatus to add a LogFile
+                # add a LogFile
                 newlog = self.addLog(logname)
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, True)
@@ -868,7 +884,7 @@ class LoggingBuildStep(BuildStep):
         # instead of FAILURE, might make the text a bit more clear.
         # 'reason' can be a Failure, or text
         BuildStep.interrupt(self, reason)
-        if self.step_status.isWaitingForLocks():
+        if self._waitingForLocks:
             self.addCompleteLog(
                 'cancelled while waiting for locks', str(reason))
         else:
@@ -892,9 +908,12 @@ class LoggingBuildStep(BuildStep):
     def evaluateCommand(self, cmd):
         # NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
         if self.log_eval_func:
+            # self.step_status probably doesn't have the desired behaviors, but
+            # those were never well-defined..
             return self.log_eval_func(cmd, self.step_status)
         return cmd.results()
 
+    # TODO: delete
     def getText(self, cmd, results):
         if results == SUCCESS:
             return self.describe(True)
@@ -907,9 +926,11 @@ class LoggingBuildStep(BuildStep):
         else:
             return self.describe(True) + ["failed"]
 
+    # TODO: delete
     def getText2(self, cmd, results):
         return [self.name]
 
+    # TODO: delete
     def maybeGetText2(self, cmd, results):
         if results == SUCCESS:
             # successful steps do not add anything to the build's text
@@ -926,10 +947,7 @@ class LoggingBuildStep(BuildStep):
         return []
 
     def setStatus(self, cmd, results):
-        # this is good enough for most steps, but it can be overridden to
-        # get more control over the displayed text
-        self.step_status.setText(self.getText(cmd, results))
-        self.step_status.setText2(self.maybeGetText2(cmd, results))
+        self.realUpdateSummary()
         return defer.succeed(None)
 
 
@@ -1022,7 +1040,7 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
-        for arg in constructorArgs:
+        for arg in constructorArgs.keys():
             if arg not in BuildStep.parms:
                 bad(arg)
                 del constructorArgs[arg]
@@ -1039,6 +1057,9 @@ class ShellMixin(object):
         if stdioLogName is not None:
             stdio = yield self.addLog(stdioLogName)
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
+
+        # store command away for display
+        self.command = kwargs['command']
 
         # check for the usePTY flag
         if kwargs['usePTY'] != 'slave-config':
@@ -1083,59 +1104,18 @@ class ShellMixin(object):
                     logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
-                # tell the BuildStepStatus to add a LogFile
+                # add a LogFile
                 newlog = yield self.addLog(logname)
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, False)
 
         defer.returnValue(cmd)
 
-    def _describe(self, done=False):
-        try:
-            if done and self.descriptionDone is not None:
-                return self.descriptionDone
-            if self.description is not None:
-                return self.description
-
-            # if self.cmd is set, then use the RemoteCommand's info
-            if self.cmd:
-                command = self.command.command
-            # otherwise, if we were configured with a command, use that
-            elif self.command:
-                command = self.command
-            else:
-                return super(ShellMixin, self)._describe(done)
-
-            words = command
-            if isinstance(words, (str, unicode)):
-                words = words.split()
-
-            try:
-                len(words)
-            except (AttributeError, TypeError):
-                # WithProperties and Property don't have __len__
-                # For old-style classes instances AttributeError raised,
-                # for new-style classes instances - TypeError.
-                return super(ShellMixin, self)._describe(done)
-
-            # flatten any nested lists
-            words = flatten(words, (list, tuple))
-
-            # strip instances and other detritus (which can happen if a
-            # description is requested before rendering)
-            words = [w for w in words if isinstance(w, (str, unicode))]
-
-            if len(words) < 1:
-                return super(ShellMixin, self)._describe(done)
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
-
-        except Exception:
-            log.err(failure.Failure(), "Error describing step")
-            return super(ShellMixin, self)._describe(done)
+    def getResultSummary(self):
+        summary = util.command_to_string(self.command)
+        if not summary:
+            return super(ShellMixin, self).getResultSummary()
+        return {u'step': summary}
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
@@ -1147,7 +1127,7 @@ class ShellMixin(object):
 # NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
 
 
-def regex_log_evaluator(cmd, step_status, regexes):
+def regex_log_evaluator(cmd, _, regexes):
     worst = cmd.results()
     for err, possible_status in regexes:
         # worst_status returns the worse of the two status' passed to it.

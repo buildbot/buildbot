@@ -53,7 +53,8 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST',
                                         usePTY="slave-config")
                             + 0 + Expect.log('stdio make BUILDBOT-TEST'))
-        self.expectOutcome(result=SUCCESS, status_text=["'make", "BUILDBOT-TEST'"])
+        # TODO: need to factor command-summary stuff into a utility method and use it here
+        self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
         return self.runStep()
 
     def createDynamicRun(self, commands):
@@ -63,19 +64,19 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsNone(self):
         self.setupStep(self.createDynamicRun(None))
         self.expectOutcome(result=EXCEPTION,
-                           status_text=['commands == None'])
+                           state_string="finished (exception)")
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsString(self):
         self.setupStep(self.createDynamicRun(["one command"]))
         self.expectOutcome(result=EXCEPTION,
-                           status_text=['one command', 'not', 'ShellArg'])
+                           state_string='finished (exception)')
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
         self.setupStep(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
-                           status_text=[1, 'invalid', 'params'])
+                           state_string='finished (exception)')
         return self.runStep()
 
     def testMultipleCommandsAreRun(self):
@@ -89,7 +90,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
                             ExpectShell(workdir='build', command='deploy p1',
                                         usePTY="slave-config") + 0 +
                             Expect.log('stdio deploy p1'))
-        self.expectOutcome(result=SUCCESS, status_text=["'deploy", "p1'"])
+        self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
     def testSkipWorks(self):
@@ -103,7 +104,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
                                         usePTY="slave-config") + 0,
                             ExpectShell(workdir='build', command='deploy p1',
                                         usePTY="slave-config") + 0)
-        self.expectOutcome(result=SUCCESS, status_text=["'deploy", "p1'"])
+        self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
     def testWarningWins(self):
@@ -118,7 +119,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
                                         usePTY="slave-config") + 1,
                             ExpectShell(workdir='build', command='deploy p1',
                                         usePTY="slave-config") + 0)
-        self.expectOutcome(result=WARNINGS, status_text=["'deploy", "p1'"])
+        self.expectOutcome(result=WARNINGS, state_string="'deploy p1'")
         return self.runStep()
 
     def testSequenceStopsOnHaltOnFailure(self):
@@ -130,5 +131,5 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1',
                                         usePTY="slave-config") + 1)
-        self.expectOutcome(result=FAILURE, status_text=["'make", "p1'"])
+        self.expectOutcome(result=FAILURE, state_string="'make p1'")
         return self.runStep()

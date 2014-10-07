@@ -24,6 +24,9 @@ class _buildsummary extends Controller('common')
         if $scope.condensed
             details = NONE
 
+        $scope.$watch (-> moment().unix()), ->
+            $scope.now = moment().unix()
+
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
 
@@ -58,6 +61,8 @@ class _buildsummary extends Controller('common')
                     onchild: (step) ->
                         $scope.$watch (-> step.complete), ->
                             step.fulldisplay = step.complete == 0 || step.results > 0
+                            if step.complete
+                                step.duration = step.complete_at - step.started_at
                         logs = buildbotService.one("steps", step.stepid).all("logs")
                         logs.bind $scope,
                             dest: step

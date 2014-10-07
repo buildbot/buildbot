@@ -24,8 +24,7 @@ from buildbot.status.results import SUCCESS
 
 class SlaveBuildStep(buildstep.BuildStep):
 
-    def describe(self, done=False):
-        return self.descriptionDone if done else self.description
+    pass
 
 
 class SetPropertiesFromEnv(SlaveBuildStep):
@@ -68,7 +67,6 @@ class SetPropertiesFromEnv(SlaveBuildStep):
                                        runtime=True)
                 log.append("%s = %r" % (variable, value))
         self.addCompleteLog("properties", "\n".join(log))
-        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
 
@@ -78,11 +76,7 @@ class FileExists(SlaveBuildStep):
     Check for the existence of a file on the slave.
     """
     name = 'FileExists'
-    description = 'Checking'
-    descriptionDone = 'Checked'
-
     renderables = ['file']
-
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -102,15 +96,15 @@ class FileExists(SlaveBuildStep):
 
     def commandComplete(self, cmd):
         if cmd.didFail():
-            self.step_status.setText(["File not found."])
+            self.descriptionDone = ["File not found."]
             self.finished(FAILURE)
             return
         s = cmd.updates["stat"][-1]
         if stat.S_ISREG(s[stat.ST_MODE]):
-            self.step_status.setText(["File found."])
+            self.descriptionDone = ["File found."]
             self.finished(SUCCESS)
         else:
-            self.step_status.setText(["Not a file."])
+            self.descriptionDone = ["Not a file."]
             self.finished(FAILURE)
 
 
@@ -160,11 +154,20 @@ class CopyDirectory(SlaveBuildStep):
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        desc = desc[:]
-        desc.extend([self.src, "to", self.dest])
-        return desc
+    # TODO: BuildStep subclasses don't have a describe()....
+    def getResultSummary(self):
+        src = self.src
+        if isinstance(src, str):
+            src = src.decode('ascii', 'replace')
+        dest = self.dest
+        if isinstance(dest, str):
+            dest = dest.decode('ascii', 'replace')
+        copy = u"%s to %s" % (src, dest)
+        if self.results == SUCCESS:
+            rv = u'Copied ' + copy
+        else:
+            rv = u'Copying ' + copy + ' failed.'
+        return {u'step': rv}
 
 
 class RemoveDirectory(SlaveBuildStep):
@@ -200,7 +203,6 @@ class RemoveDirectory(SlaveBuildStep):
             self.step_status.setText(["Delete failed."])
             self.finished(FAILURE)
             return
-        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
 
@@ -237,7 +239,6 @@ class MakeDirectory(SlaveBuildStep):
             self.step_status.setText(["Create failed."])
             self.finished(FAILURE)
             return
-        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
 

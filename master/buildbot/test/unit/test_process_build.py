@@ -482,14 +482,10 @@ class TestBuild(unittest.TestCase):
             b.stopBuild('stop it')
             return retval
         step.acquireLocks = acquireLocks
-        step.setStepStatus = Mock()
-        step.step_status = Mock()
-        step.step_status.getLogs.return_value = []
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
         self.assertEqual(gotLocks, [True])
-        self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)
         self.assertEqual(b.result, CANCELLED)
 
     def testStepDone(self):

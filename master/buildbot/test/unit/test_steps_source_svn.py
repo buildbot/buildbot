@@ -165,7 +165,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_st_xml_corrupt)
             + 0,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_revision_noninteger(self):
@@ -198,7 +198,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml_nonintegerrevision)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
         d = self.runStep()
 
@@ -241,7 +241,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=svn_info_stdout)
             + 0,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -278,7 +278,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -321,7 +321,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -356,7 +356,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -391,7 +391,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -421,7 +421,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -457,7 +457,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -494,7 +494,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -531,7 +531,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -570,7 +570,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_mode_incremental_preferLastChangedRev(self):
@@ -609,7 +609,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '90', 'SVN')
         return self.runStep()
 
@@ -652,7 +652,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=svn_info_stdout)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -681,7 +681,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -713,7 +713,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -756,7 +756,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -798,7 +798,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -843,7 +843,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -890,7 +890,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -931,7 +931,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -974,7 +974,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1003,7 +1003,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1035,7 +1035,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1085,7 +1085,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1133,7 +1133,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1175,7 +1175,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1219,7 +1219,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1260,7 +1260,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1330,7 +1330,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1377,7 +1377,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1421,7 +1421,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1469,7 +1469,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1512,7 +1512,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1555,7 +1555,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', '100', 'SVN')
         return self.runStep()
 
@@ -1588,7 +1588,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_bogus_svnversion(self):
@@ -1624,7 +1624,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout='1x0y0')
             + 0,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_rmdir_fails_clobber(self):
@@ -1642,7 +1642,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'logEnviron': True})
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_rmdir_fails_copy(self):
@@ -1660,7 +1660,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_cpdir_fails_copy(self):
@@ -1696,7 +1696,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'logEnviron': True})
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_rmdir_fails_purge(self):
@@ -1734,7 +1734,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'logEnviron': True})
             + 1,
         )
-        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        self.expectOutcome(result=FAILURE)
         return self.runStep()
 
     def test_slave_connection_lost(self):
@@ -1747,8 +1747,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', '--version'])
             + ('err', error.ConnectionLost()),
         )
-        self.expectOutcome(result=RETRY,
-                           status_text=["update", "exception", "slave", "lost"])
+        self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
 
     def test_empty_password(self):
@@ -1785,7 +1784,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
     def test_omit_password(self):
@@ -1822,7 +1821,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_info_stdout_xml)
             + 0,
         )
-        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
 

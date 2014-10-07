@@ -17,6 +17,7 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.status import results
 from twisted.internet import defer
+from twisted.python import log
 
 
 class ShellArg(results.ResultComputingConfigMixin):
@@ -61,6 +62,7 @@ class ShellArg(results.ResultComputingConfigMixin):
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
+    last_command = None
     renderables = ['commands']
 
     def __init__(self, commands=None, **kwargs):
@@ -78,14 +80,19 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
     def runShellSequence(self, commands):
         terminate = False
         if commands is None:
+            log.msg("After rendering, ShellSequence `commands` is None")
             defer.returnValue(results.EXCEPTION)
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
+                log.msg("After rendering, ShellSequence `commands` list "
+                        "contains something that is not a ShellArg")
                 defer.returnValue(results.EXCEPTION)
             try:
                 arg.validateAttributes()
-            except config.ConfigErrors:
+            except config.ConfigErrors, e:
+                log.msg("After rendering, ShellSequence `commands` is "
+                        "invalid: %s" % (e,))
                 defer.returnValue(results.EXCEPTION)
 
             # handle the command from the arg
@@ -93,8 +100,8 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             if not self.shouldRunTheCommand(command):
                 continue
 
-            # stick the command in self.command so that describe can use it
-            self.command = command
+            # keep the command around so we can describe it
+            self.last_command = command
 
             cmd = yield self.makeRemoteShellCommand(command=command,
                                                     stdioLogName=arg.logfile)

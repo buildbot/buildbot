@@ -22,7 +22,6 @@ import shutil
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process import properties
-from buildbot.status.buildstep import BuildStepStatus
 from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -226,16 +225,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     # methods for the base.Build to invoke
 
-    def addStepWithName(self, name):
-        """The Build is setting up, and has added a new BuildStep to its
-        list. Create a BuildStepStatus object to which it can send status
-        updates."""
-
-        s = BuildStepStatus(self, self.master, len(self.steps))
-        s.setName(name)
-        self.steps.append(s)
-        return s
-
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
 
@@ -287,7 +276,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         for w in watchers:
             w.callback(self)
 
-    # methods called by our BuildStepStatus children
+    # methods previously called by our now-departed BuildStepStatus children
 
     def stepStarted(self, step):
         self.currentStep = step

@@ -22,9 +22,12 @@ from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.status.results import FAILURE
+from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.util import command_to_string
 from buildbot.util import flatten
+from buildbot.util import join_list
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -146,9 +149,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # Set this here, so it gets rendered when we start the step
         self.slaveEnvironment = self.build.slaveEnvironment
 
-    def setStepStatus(self, step_status):
-        buildstep.LoggingBuildStep.setStepStatus(self, step_status)
-
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
         rkw['workdir'] = rkw['workdir'] or workdir
@@ -165,63 +165,64 @@ class ShellCommand(buildstep.LoggingBuildStep):
         self.command = command
 
     def _describe(self, done=False):
-        """Return a list of short strings to describe this step, for the
-        status display. This uses the first few words of the shell command.
-        You can replace this by setting .description in your subclass, or by
-        overriding this method to describe the step better.
+        return None
 
-        @type  done: boolean
-        @param done: whether the command is complete or not, to improve the
-                     way the command is described. C{done=False} is used
-                     while the command is still running, so a single
-                     imperfect-tense verb is appropriate ('compiling',
-                     'testing', ...) C{done=True} is used when the command
-                     has finished, and the default getText() method adds some
-                     text, so a simple noun is appropriate ('compile',
-                     'tests' ...)
-        """
+    def describe(self, done=False):
+        assert(self.rendered)
+        desc = self._describe(done)
+        if not desc:
+            return None
+        if self.descriptionSuffix:
+            desc = desc + u' ' + join_list(self.descriptionSuffix)
+        return desc
+
+    def getCurrentSummary(self):
+        cmdsummary = self._getLegacySummary(False)
+        if cmdsummary:
+            return {u'step': cmdsummary}
+        return super(ShellCommand, self).getCurrentSummary()
+
+    def getResultSummary(self):
+        cmdsummary = self._getLegacySummary(True)
+
+        if cmdsummary:
+            if self.results != SUCCESS:
+                cmdsummary += u' (%s)' % Results[self.results]
+            return {u'step': cmdsummary}
+
+        return super(ShellCommand, self).getResultSummary()
+
+    def _getLegacySummary(self, done):
+        # defer to the describe method, if set
+        description = self.describe(done)
+        if description:
+            return join_list(description)
+
+        # defer to descriptions, if they're set
+        if (not done and self.description) or (done and self.descriptionDone):
+            return None
 
         try:
-            if done and self.descriptionDone is not None:
-                return self.descriptionDone
-            if self.description is not None:
-                return self.description
+            # if self.cmd is set, then use the RemoteCommand's info
+            if self.cmd:
+                command = self.cmd.command
+            # otherwise, if we were configured with a command, use that
+            elif self.command:
+                command = self.command
+            else:
+                return None
 
-            # we may have no command if this is a step that sets its command
-            # name late in the game (e.g., in start())
-            if not self.command:
-                return ["???"]
+            rv = command_to_string(command)
 
-            words = self.command
-            if isinstance(words, (str, unicode)):
-                words = words.split()
+            # add the descriptionSuffix, if one was given
+            if self.descriptionSuffix:
+                rv = rv + u' ' + join_list(self.descriptionSuffix)
 
-            try:
-                len(words)
-            except (AttributeError, TypeError):
-                # WithProperties and Property don't have __len__
-                # For old-style classes instances AttributeError raised,
-                # for new-style classes instances - TypeError.
-                return ["???"]
-
-            # flatten any nested lists
-            words = flatten(words, (list, tuple))
-
-            # strip instances and other detritus (which can happen if a
-            # description is requested before rendering)
-            words = [w for w in words if isinstance(w, (str, unicode))]
-
-            if len(words) < 1:
-                return ["???"]
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
+            return rv
 
         except Exception:
             log.err(failure.Failure(), "Error describing step")
-            return ["???"]
+            return None
 
     def setupEnvironment(self, cmd):
         # merge in anything from slaveEnvironment (which comes from the builder
@@ -277,7 +278,6 @@ class TreeSize(ShellCommand):
     name = "treesize"
     command = ["du", "-s", "-k", "."]
     description = "measuring tree size"
-    descriptionDone = "tree size measured"
     kib = None
 
     def __init__(self, **kwargs):
@@ -300,7 +300,7 @@ class TreeSize(ShellCommand):
             return WARNINGS  # not sure how 'du' could fail, but whatever
         return SUCCESS
 
-    def getText(self, cmd, results):
+    def _describe(self, done=False):
         if self.kib is not None:
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
@@ -351,14 +351,14 @@ class SetPropertyFromCommand(ShellCommand):
                          for k, v in self.property_changes.items()]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
-    def getText(self, cmd, results):
+    def describe(self, done=False):
         if len(self.property_changes) > 1:
             return ["%d properties set" % len(self.property_changes)]
         elif len(self.property_changes) == 1:
             return ["property '%s' set" % self.property_changes.keys()[0]]
         else:
             # let ShellCommand describe
-            return ShellCommand.getText(self, cmd, results)
+            return ShellCommand.describe(self, done)
 
 
 SetProperty = SetPropertyFromCommand
@@ -654,6 +654,8 @@ class Test(WarningCountingShellCommand):
     def describe(self, done=False):
         description = WarningCountingShellCommand.describe(self, done)
         if done:
+            if not description:
+                description = []
             description = description[:]  # make a private copy
             if self.hasStatistic('tests-total'):
                 total = self.getStatistic("tests-total", 0)
