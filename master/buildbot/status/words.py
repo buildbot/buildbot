@@ -941,11 +941,11 @@ class IRCContact(base.StatusReceiver):
 
     def send(self, message):
         if not self.muted:
-            self.bot.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+            self.bot.msgOrNotice(self.dest, message.encode("utf-8", "replace"))
 
     def act(self, action):
         if not self.muted:
-            self.bot.describe(self.dest, action.encode("ascii", "replace"))
+            self.bot.describe(self.dest, action.encode("utf-8", "replace"))
 
     # main dispatchers for incoming messages
 
