@@ -857,13 +857,22 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     avatar_methods={'name': 'gravatar'},
                                     url='http://localhost:20/'))
 
-    def test_load_www_noPortNoBBURL(self):
+    def test_load_www_noPortNumNoBBURL(self):
         w1 = dict(www=dict(port=None))
         self.cfg.load_www(self.filename, w1)
         self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
                                     plugins={},
                                     avatar_methods={'name': 'gravatar'},
                                     url='http://localhost/'))
+
+    def test_load_www_noPortOrBBURL(self):
+        w1 = dict(www=dict())
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://localhost:8080/'))
+
 
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
