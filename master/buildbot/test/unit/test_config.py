@@ -866,8 +866,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     url='http://localhost/'))
 
 
-
-
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
