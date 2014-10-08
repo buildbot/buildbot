@@ -99,7 +99,8 @@ def upgradeFiles(config):
         if not config['quiet']:
             print "creating public_html"
         os.mkdir(webdir)
-        os.mkdir(os.path.join(webdir, "css"))
+        os.mkdir(os.path.join(webdir, "sass"))
+        os.mkdir(os.path.join(webdir, "images"))
 
     templdir = os.path.join(config['basedir'], "templates")
     if not os.path.exists(templdir):
@@ -107,9 +108,9 @@ def upgradeFiles(config):
             print "creating templates"
         os.mkdir(templdir)
 
-    for file in ('bg_gradient.jpg', 'css/default.css',
+    for file in ('images/bg_gradient.jpg', 'sass/default.scss',
                  'robots.txt', 'favicon.ico'):
-        source = util.sibpath(__file__, "../status/web/files/%s" % (file,))
+        source = util.sibpath(__file__, "../../../www/%s" % (file,))
         target = os.path.join(webdir, file)
         try:
             installFile(config, target, source)
