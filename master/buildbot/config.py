@@ -586,6 +586,9 @@ class MasterConfig(util.ComparableMixin):
                     self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
                 else:
                     self.www['url'] = 'http://localhost/'
+        elif 'port' not in www_cfg:
+            if 'buildbotURL' in config_dict:
+                self.www['url'] = config_dict['buildbotURL']
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
