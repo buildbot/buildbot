@@ -871,7 +871,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
                                     plugins={},
                                     avatar_methods={'name': 'gravatar'},
-                                    url='http://realbuildboturl/'))
+                                    url='http://thisurl/'))
 
     def test_load_www_withPortnoBBURLnoURL(self):
         w1 = dict(www=dict(port=20))
