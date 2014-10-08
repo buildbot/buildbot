@@ -899,7 +899,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_www_withPortwithBBURLwithURL(self):
         w1 = dict(www=dict(port=20, url='http://example.com'),
-                           buildbotURL='http://realbuildboturl')
+                  buildbotURL='http://realbuildboturl')
         self.cfg.load_www(self.filename, w1)
         self.assertResults(www=dict(port=20, auth={'name': 'NoAuth'},
                                     plugins={},
