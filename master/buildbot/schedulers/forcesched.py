@@ -542,30 +542,30 @@ class ForceScheduler(base.BaseScheduler):
                          name)
 
         if not self.checkIfListOfType(builderNames, str):
-            config.error("ForceScheduler builderNames must be a list of strings: %r" %
-                         builderNames)
+            config.error("ForceScheduler '%s': builderNames must be a list of strings: %r" %
+                         (name, builderNames))
 
         if self.checkIfType(reason, BaseParameter):
             self.reason = reason
         else:
-            config.error("ForceScheduler reason must be a StringParameter: %r" %
-                         reason)
+            config.error("ForceScheduler '%s': reason must be a StringParameter: %r" %
+                         (name, reason))
 
         if not self.checkIfListOfType(properties, BaseParameter):
-            config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
-                         properties)
+            config.error("ForceScheduler '%s': properties must be a list of BaseParameters: %r" %
+                         (name, properties))
 
         if self.checkIfType(username, BaseParameter):
             self.username = username
         else:
-            config.error("ForceScheduler username must be a StringParameter: %r" %
-                         username)
+            config.error("ForceScheduler '%s': username must be a StringParameter: %r" %
+                         (name, username))
 
         self.forcedProperties = []
 
         if any((branch, revision, repository, project)):
             if codebases:
-                config.error("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters: %r " % (codebases,))
+                config.error("ForceScheduler '%s': Must either specify 'codebases' or the 'branch/revision/repository/project' parameters: %r " % (name, codebases))
 
             codebases = [
                 CodebaseParameter(codebase='',
@@ -580,14 +580,14 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases = [CodebaseParameter(codebase='')]
         elif not codebases:
-            config.error("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (codebases,))
+            config.error("ForceScheduler '%s': 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (name, codebases))
 
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, basestring):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                config.error("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (codebases,))
+                config.error("ForceScheduler '%s': 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (name, codebases))
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(branch='', repository='', revision='')
