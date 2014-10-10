@@ -179,38 +179,33 @@ Source Checkout
 
 .. py:module:: buildbot.steps.source
 
-At the moment, Buildbot contains two implementations of most source steps.  The
-new implementation handles most of the logic on the master side, and has a
-simpler, more unified approach.  The older implementation
-(:ref:`Source-Checkout-Slave-Side`) handles the logic on the slave side, and
-some of the classes have a bewildering array of options.
+At the moment, Buildbot contains two implementations of most source steps:
 
-.. caution:: Master-side source checkout steps are recently developed and not
-    stable yet. If you find any bugs please report them on the `Buildbot Trac
-    <http://trac.buildbot.net/newticket>`_. The older Slave-side described source
-    steps are :ref:`Source-Checkout-Slave-Side`.
+* the new implementation handles most of the logic on the master side, and has a simpler, more unified approach;
+* the older implementation (:ref:`Source-Checkout-Slave-Side`) handles the logic on the slave side, and some of the classes have a bewildering array of options.
+
+.. caution::
+
+    Master-side source checkout steps are recently developed and not stable yet.
+    If you find any bugs please report them on the `Buildbot Trac <http://trac.buildbot.net/newticket>`_.
+    The older Slave-side described source steps are :ref:`Source-Checkout-Slave-Side`.
 
     The old source steps are imported like this::
 
         from buildbot.steps.source import Git
 
-    while new source steps are in separate source-packages for each
-    version-control system::
+    while new source steps are in separate source-packages for each version-control system::
 
         from buildbot.steps.source.git import Git
 
 
-New users should, where possible, use the new implementations.  The old
-implementations will be deprecated in a later release.  Old users should take
-this opportunity to switch to the new implementations while both are supported
-by Buildbot.
+New users should, where possible, use the new implementations.
+The old implementations will be deprecated in a later release.
+Old users should take this opportunity to switch to the new implementations while both are supported by Buildbot.
 
-Some version control systems have not yet been implemented as master-side
-steps.  If you are interested in continued support for such a version control
-system, please consider helping the Buildbot developers to create such an
-implementation.  In particular, version-control systems with proprietary
-licenses will not be supported without access to the version-control system
-for development.
+Some version control systems have not yet been implemented as master-side steps.
+If you are interested in continued support for such a version control system, please consider helping the Buildbot developers to create such an implementation.
+In particular, version-control systems with proprietary licenses will not be supported without access to the version-control system for development.
 
 Common Parameters
 +++++++++++++++++
