@@ -737,29 +737,26 @@ work.
 GitHub hook
 ###########
 
-The GitHub hook is simple and takes no options. ::
+The GitHub hook is simple and takes no options.
+
+::
 
     c['status'].append(html.WebStatus(...,
                        change_hook_dialects={ 'github' : True }))
 
-With this set up, add a Post-Receive URL for the project in the GitHub
-administrative interface, pointing to ``/change_hook/github`` relative to
-the root of the web status.  For example, if the grid URL is
-``http://builds.mycompany.com/bbot/grid``, then point GitHub to
-``http://builds.mycompany.com/bbot/change_hook/github``. To specify a project
-associated to the repository, append ``?project=name`` to the URL.
+With this set up, add a Post-Receive URL for the project in the GitHub administrative interface, pointing to ``/change_hook/github`` relative to the root of the web status.
+For example, if the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point GitHub to ``http://builds.mycompany.com/bbot/change_hook/github``.
+To specify a project associated to the repository, append ``?project=name`` to the URL.
 
-Note that there is a standalone HTTP server available for receiving GitHub
-notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
-useful in cases where you cannot expose the WebStatus for public consumption.
+Note that there is a standalone HTTP server available for receiving GitHub notifications, as well: :file:`contrib/github_buildbot.py`.
+This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
     The incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web status can "fake" a request from
-    GitHub, potentially causing the buildmaster to run arbitrary code.
+    Anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option ::
+To protect URL against unauthorized access you should use ``change_hook_auth`` option::
 
     c['status'].append(html.WebStatus(...,
                                       change_hook_auth=["file:changehook.passwd"]))
