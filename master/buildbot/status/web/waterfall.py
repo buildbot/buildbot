@@ -333,6 +333,8 @@ class WaterfallHelp(HtmlResource):
         current_reload_time = request.args.get("reload", ["none"])
         if current_reload_time:
             current_reload_time = current_reload_time[0]
+        if not current_reload_time.isdigit():
+            current_reload_time = "none"
         if current_reload_time not in [t[0] for t in times]:
             times.insert(0, (current_reload_time, current_reload_time))
 

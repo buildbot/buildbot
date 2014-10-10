@@ -650,7 +650,10 @@ class SlaveJsonResource(JsonResource):
             builds = []
             builder_status = self.status.getBuilder(builderName)
             cache_size = builder_status.master.config.caches['Builds']
-            numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
+            try:
+                numbuilds = int(request.args.get('numbuilds', [cache_size - 1])[0])
+            except ValueError:
+                numbuilds = 10
             for i in range(1, numbuilds):
                 build_status = builder_status.getBuild(-i)
                 if not build_status or not build_status.isFinished():

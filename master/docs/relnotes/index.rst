@@ -23,6 +23,8 @@ Fixes
 
 * The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
 
+* Fixed content spoofing vulnerabilities (#2589)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

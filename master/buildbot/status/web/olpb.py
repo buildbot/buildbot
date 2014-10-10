@@ -55,7 +55,10 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
 
     def content(self, req, cxt):
         status = self.getStatus(req)
-        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        try:
+            numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        except ValueError:
+            numbuilds = 10
         builders = req.args.get("builder", [])
         branches = [b for b in req.args.get("branch", []) if b]
 
@@ -104,7 +107,10 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         self.pageTitle = "Recent Builds of %s" % self.builder_name
 
     def content(self, req, cxt):
-        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        try:
+            numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        except ValueError:
+            numbuilds = 10
         branches = [b for b in req.args.get("branch", []) if b]
 
         # walk backwards through all builds of a single builder
