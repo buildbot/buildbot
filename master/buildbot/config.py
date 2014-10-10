@@ -576,20 +576,19 @@ class MasterConfig(util.ComparableMixin):
                   (', '.join(unknown),))
 
         self.www.update(www_cfg)
+        print self.www
 
         # invent an appropriate URL given the port
-        if 'port' in www_cfg and 'url' not in www_cfg:
-            if 'buildbotURL' in config_dict:
-                self.www['url'] = config_dict['buildbotURL']
-            else:
-                if www_cfg['port']:
-                    self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
-                else:
-                    self.www['url'] = 'http://localhost/'
-        elif 'port' not in www_cfg and 'url' not in www_cfg:
-            if 'buildbotURL' in config_dict:
-                self.www['url'] = config_dict['buildbotURL']
+        port = www_cfg.get('port', None)
+        url = www_cfg.get('url', None)
+        bbURL = config_dict.get('buildbotURL', None)
 
+        if port and not url:
+            self.www['url'] = bbURL if bbURL else 'http://localhost:%d/' % (port,)
+        elif not port and not url:
+            if bbURL:
+                self.www['url'] = bbURL
+                
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
 
