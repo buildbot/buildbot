@@ -588,7 +588,7 @@ class MasterConfig(util.ComparableMixin):
         elif not port and not url:
             if bbURL:
                 self.www['url'] = bbURL
-                
+
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
 
