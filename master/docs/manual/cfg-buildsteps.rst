@@ -182,30 +182,32 @@ Source Checkout
 At the moment, Buildbot contains two implementations of most source steps:
 
 * the new implementation handles most of the logic on the master side, and has a simpler, more unified approach;
-* the older implementation (:ref:`Source-Checkout-Slave-Side`) handles the logic on the slave side, and some of the classes have a bewildering array of options.
+* the older implementation handles the logic on the slave side, and some of the classes have a bewildering array of options.
 
-.. caution::
+.. note::
 
-    Master-side source checkout steps are recently developed and not stable yet.
-    If you find any bugs please report them on the `Buildbot Trac <http://trac.buildbot.net/newticket>`_.
-    The older Slave-side described source steps are :ref:`Source-Checkout-Slave-Side`.
+   Both implementations perform the checkout on the slave side.
+   The difference is where the parameters are processed and where the logic is implemented.
 
-    The old source steps are imported like this::
+The new source steps are in separate source-packages for each version-control system, e.g.::
 
-        from buildbot.steps.source import Git
+    from buildbot.steps.source.git import Git
 
-    while new source steps are in separate source-packages for each version-control system::
+while the old source steps are imported like this::
 
-        from buildbot.steps.source.git import Git
-
+    from buildbot.steps.source import Git
 
 New users should, where possible, use the new implementations.
-The old implementations will be deprecated in a later release.
+The old implementations are deprecated and will be removed in the next major release (0.9.0).
 Old users should take this opportunity to switch to the new implementations while both are supported by Buildbot.
 
-Some version control systems have not yet been implemented as master-side steps.
-If you are interested in continued support for such a version control system, please consider helping the Buildbot developers to create such an implementation.
-In particular, version-control systems with proprietary licenses will not be supported without access to the version-control system for development.
+.. note::
+
+   Some version control systems have not yet been implemented as master-side steps.
+   If you are interested in continued support for such a version control system, please consider helping the Buildbot developers to create such an implementation.
+   In particular, version-control systems with proprietary licenses will not be supported without access to the version-control system for development.
+
+Below are described the master-side steps, the information about slave-side steps you can find in :ref:`Source-Checkout-Slave-Side`.
 
 Common Parameters
 +++++++++++++++++
