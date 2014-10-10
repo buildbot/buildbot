@@ -431,7 +431,8 @@ class LogFile:
             self.watchers.remove(receiver)
 
     def subscribeConsumer(self, consumer):
-        assert not self._isNewStyle, "not available in new-style steps"
+        # NOTE: this method is called by WebStatus, so it must remain available
+        # even for new-style steps
         p = LogFileProducer(self, consumer)
         p.resumeProducing()
 
