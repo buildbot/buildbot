@@ -261,6 +261,9 @@ class LogFile:
         @returns: boolean
         """
         assert not self._isNewStyle, "not available in new-style steps"
+        return self.old_hasContents()
+
+    def old_hasContents(self):
         return os.path.exists(self.getFilename() + '.bz2') or \
             os.path.exists(self.getFilename() + '.gz') or \
             os.path.exists(self.getFilename())

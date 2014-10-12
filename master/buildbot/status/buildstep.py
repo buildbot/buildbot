@@ -308,7 +308,7 @@ class BuildStepStatus(styles.Versioned):
 
     def checkLogfiles(self):
         # filter out logs that have been deleted
-        self.logs = [l for l in self.logs if l.hasContents()]
+        self.logs = [l for l in self.logs if l.old_hasContents()]
 
     def isWaitingForLocks(self):
         return self.waitingForLocks
