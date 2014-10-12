@@ -99,15 +99,17 @@ def upgrade(migrate_engine):
 
     # copy data from old to new, using the mapping
     buildrequest_claims.create()
+    if idmap:
+        case_stmt = sa.cast(
+            sa.case(value=buildrequest_claims_old.c.objectid,
+                    whens=idmap,
+                    else_=None), sa.Integer).label('masterid')
+    else:
+        case_stmt = sa.text('NULL')
     buildrequests_with_masterid = sa.select(
         [buildrequest_claims_old.c.brid,
-         sa.case(value=buildrequest_claims_old.c.objectid,
-                 whens=idmap,
-                 else_=None)
-         # if the idmap is empty, use the default..
-         if idmap else sa.text('NULL'),
-         buildrequest_claims_old.c.claimed_at,
-         ])
+         case_stmt,
+         buildrequest_claims_old.c.claimed_at])
     migrate_engine.execute(sautils.InsertFromSelect(
         buildrequest_claims, buildrequests_with_masterid))
 
