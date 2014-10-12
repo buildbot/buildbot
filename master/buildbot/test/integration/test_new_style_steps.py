@@ -53,3 +53,11 @@ class TestNewStyleSteps(steps.BuildStepIntegrationMixin, unittest.TestCase):
         log_rsrc = logs.TextLog(bs.getSteps()[0].getLogs()[0])
         request = FakeRequest()
         yield request.test_render(log_rsrc)
+
+    @defer.inlineCallbacks
+    def test_check_logs_new_style(self):  # bug 2934
+        self.setupStep(NewStyleStep())
+        bs = yield self.runStep()
+
+        # now ask the build status to check its logs
+        bs.checkLogfiles()
