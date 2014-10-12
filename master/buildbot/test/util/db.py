@@ -85,7 +85,7 @@ class RealDatabaseMixin(object):
                 log.msg("Current schema:")
                 for row in r.fetchall():
                     log.msg(row.sql)
-            raise e
+            raise
 
     def __thd_create_tables(self, conn, table_names):
         all_table_names = set(table_names)
