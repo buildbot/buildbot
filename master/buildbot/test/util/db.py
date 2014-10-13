@@ -76,7 +76,7 @@ class RealDatabaseMixin(object):
             meta = MetaData(bind=conn)
             meta.reflect()
             meta.drop_all()
-        except Exception, e:
+        except Exception:
             # sometimes this goes badly wrong; being able to see the schema
             # can be a big help
             if conn.engine.dialect.name == 'sqlite':
