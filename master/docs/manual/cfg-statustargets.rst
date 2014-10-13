@@ -737,32 +737,49 @@ work.
 GitHub hook
 ###########
 
-The GitHub hook is simple and takes no options. ::
+.. note::
+
+    There is a standalone HTTP server available for receiving GitHub notifications as well: :file:`contrib/github_buildbot.py`.
+    This script may be useful in cases where you cannot expose the WebStatus for public consumption.
+
+The GitHub hook is simple and takes no options:
+
+.. code-block:: python
 
     c['status'].append(html.WebStatus(...,
-                       change_hook_dialects={ 'github' : True }))
+                                      change_hook_dialects={'github': True},
+                                      ...))
 
-With this set up, add a Post-Receive URL for the project in the GitHub
-administrative interface, pointing to ``/change_hook/github`` relative to
-the root of the web status.  For example, if the grid URL is
-``http://builds.mycompany.com/bbot/grid``, then point GitHub to
-``http://builds.mycompany.com/bbot/change_hook/github``. To specify a project
-associated to the repository, append ``?project=name`` to the URL.
+Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
+The parameters are:
 
-Note that there is a standalone HTTP server available for receiving GitHub
-notifications, as well: :file:`contrib/github_buildbot.py`.  This script may be
-useful in cases where you cannot expose the WebStatus for public consumption.
+:guilabel:`Payload URL`
+    This URL should point to ``/change_hook/github`` relative to the root of the web status.
+    For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
+    To specify a project associated to the repository, append ``?project=name`` to the URL.
+
+:guilabel:`Content Type`
+    Specify ``application/x-www-form-urlencoded``.  JSON is not currently not supported.
+
+:guilabel:`Secret`
+    Any value.  Currently this parameter is not supported.
+
+:guilabel:`Which events would you like to trigger this webhook?`
+    Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
+
+And then press the ``Add Webhook`` button.
 
 .. warning::
 
     The incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web status can "fake" a request from
-    GitHub, potentially causing the buildmaster to run arbitrary code.
+    Anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option ::
+To protect URL against unauthorized access you should use ``change_hook_auth`` option::
 
     c['status'].append(html.WebStatus(...,
-                                      change_hook_auth=["file:changehook.passwd"]))
+                                      change_hook_auth=["file:changehook.passwd"],
+                                      ...
+                                     ))
 
 And create a file ``changehook.passwd``
 
@@ -770,11 +787,11 @@ And create a file ``changehook.passwd``
 
     user:password
 
-Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
+Then change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
 
-See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
+See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
 
-Note that not using ``change_hook_auth`` can expose you to security risks.
+Note that not using ``change_hook_auth`` may expose you to security risks.
 
 BitBucket hook
 ##############
