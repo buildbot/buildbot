@@ -16,6 +16,8 @@ Features
 
 * Both the P4 source step and P4 change source support ticket-based authentication.
 
+* Clickable 'categories' links added in 'Waterfall' page (web UI).
+
 Fixes
 ~~~~~
 
