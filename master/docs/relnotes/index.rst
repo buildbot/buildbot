@@ -25,6 +25,8 @@ Fixes
 
 * Fixed content spoofing vulnerabilities (#2589)
 
+* Fixed cross-site scripting in status_json (#2943)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
