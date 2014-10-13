@@ -61,7 +61,7 @@ All update methods are available as attributes of ``master.data.updates``.
         :param unicode external_idstring: arbitrary identifier to recognize this buildset later
         :param int parent_buildid: optional build id that is the parent for this buildset
         :param unicode parent_relationship: relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
-        :returns: (buildset id, dictionary mapping builder names to build request ids) via Deferred
+        :returns: (buildset id, dictionary mapping builder ids to build request ids) via Deferred
 
         .. warning:
 
