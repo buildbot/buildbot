@@ -27,7 +27,9 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         sched = self.attachScheduler(timed.NightlyTriggerable(**kwargs),
-                                     self.SCHEDULERID, overrideBuildsetMethods=True)
+                                     self.SCHEDULERID,
+                                     overrideBuildsetMethods=True,
+                                     createBuilderDB=True)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()

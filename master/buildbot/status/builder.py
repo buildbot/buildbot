@@ -305,6 +305,8 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.slavenames]
 
     def getPendingBuildRequestStatuses(self):
+        # just assert 0 here. According to dustin the whole class will go away soon.
+        assert 0
         db = self.status.master.db
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)

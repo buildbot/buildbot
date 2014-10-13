@@ -32,6 +32,9 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 133
 
+    def setUp(self):
+        self.setUpScheduler()
+
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         return self.attachScheduler(timed.NightlyBase(**kwargs),
                                     self.OBJECTID)

@@ -26,6 +26,7 @@ from buildbot.process import factory
 from buildbot.process import slavebuilder
 from buildbot.status import results
 from buildbot.steps import shell
+from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
@@ -155,7 +156,11 @@ class RunSteps(unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantMq=True, wantDb=True)
+        self.master.db.insertTestData([
+            fakedb.Builder(id=80, name='test'), ])
+
         self.builder = builder.Builder('test', _addServices=False)
+        self.builder._builderid = 80
         self.builder.master = self.master
         yield self.builder.startService()
 
@@ -182,10 +187,10 @@ class RunSteps(unittest.TestCase):
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=[{}], reason=u'x', properties={},
-            builderNames=['test'], waited_for=False)
+            builderids=[80], waited_for=False)
 
         self.brdict = \
-            yield self.master.db.buildrequests.getBuildRequest(brids['test'])
+            yield self.master.db.buildrequests.getBuildRequest(brids[80])
 
         self.buildrequest = \
             yield buildrequest.BuildRequest.fromBrdict(self.master, self.brdict)

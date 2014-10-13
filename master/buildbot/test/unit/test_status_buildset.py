@@ -56,11 +56,14 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             fakedb.Master(id=92),
             fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
-            fakedb.BuildRequest(id=10, buildsetid=99, buildername="Builder0"),
+            fakedb.Builder(id=80, name='Builder0'),
+            fakedb.Builder(id=81, name='Builder1'),
+            fakedb.Builder(id=82, name='Builder2'),
+            fakedb.BuildRequest(id=10, buildsetid=99, builderid=80),
             fakedb.Build(number=0, buildrequestid=10, masterid=92, buildslaveid=13),
-            fakedb.BuildRequest(id=11, buildsetid=99, buildername="Builder1"),
+            fakedb.BuildRequest(id=11, buildsetid=99, builderid=81),
             fakedb.Build(number=0, buildrequestid=11, masterid=92, buildslaveid=13),
-            fakedb.BuildRequest(id=12, buildsetid=99, buildername="Builder2"),
+            fakedb.BuildRequest(id=12, buildsetid=99, builderid=82),
             fakedb.Build(number=0, buildrequestid=12, masterid=92, buildslaveid=13)
         ])
 

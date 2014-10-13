@@ -30,6 +30,8 @@ class CommonStuffMixin(object):
         kwargs = dict(name="tsched", treeStableTimer=60,
                       builderNames=['tbuild'])
         kwargs.update(kwargs_override)
+
+        self.master.db.insertTestData([fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
         sched = self.attachScheduler(klass(**kwargs), self.SCHEDULERID)
 
         # add a Clock to help checking timing issues
@@ -307,6 +309,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                  'b': {'repository': "", 'branch': 'master'}}
 
     def makeFullScheduler(self, **kwargs):
+        self.master.db.insertTestData([fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
         sched = self.attachScheduler(basic.SingleBranchScheduler(**kwargs),
                                      self.SCHEDULERID,
                                      overrideBuildsetMethods=True)

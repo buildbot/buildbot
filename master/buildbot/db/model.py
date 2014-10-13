@@ -60,7 +60,8 @@ class Model(base.DBConnectorComponent):
                              sa.Column('id', sa.Integer, primary_key=True),
                              sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
                                        nullable=False),
-                             sa.Column('buildername', sa.String(length=256), nullable=False),
+                             sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+                                       nullable=False),
                              sa.Column('priority', sa.Integer, nullable=False,
                                        server_default=sa.DefaultClause("0")),
 
@@ -540,7 +541,7 @@ class Model(base.DBConnectorComponent):
     # indexes
 
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
-    sa.Index('buildrequests_buildername', buildrequests.c.buildername)
+    sa.Index('buildrequests_builderid', buildrequests.c.builderid)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
     sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     sa.Index('buildsets_complete', buildsets.c.complete)

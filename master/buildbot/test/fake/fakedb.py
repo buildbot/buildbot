@@ -148,7 +148,8 @@ class BuildRequest(Row):
     defaults = dict(
         id=None,
         buildsetid=None,
-        buildername="bldr",
+        builderid=None,
+        buildername=None,
         priority=0,
         complete=0,
         results=-1,
@@ -1086,7 +1087,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
     @defer.inlineCallbacks
-    def addBuildset(self, sourcestamps, reason, properties, builderNames, waited_for,
+    def addBuildset(self, sourcestamps, reason, properties, builderids, waited_for,
                     external_idstring=None, submitted_at=None,
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
@@ -1101,9 +1102,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         bsid = self._newBsid()
         br_rows = []
-        for buildername in builderNames:
+        for builderid in builderids:
             br_rows.append(
-                BuildRequest(buildsetid=bsid, buildername=buildername, waited_for=waited_for,
+                BuildRequest(buildsetid=bsid, builderid=builderid, waited_for=waited_for,
                              submitted_at=submitted_at))
         self.db.buildrequests.insertTestData(br_rows)
 
@@ -1124,7 +1125,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildset_sourcestamps[bsid] = ssids
 
         defer.returnValue((bsid,
-                           dict([(br.buildername, br.id) for br in br_rows])))
+                           dict([(br.builderid, br.id) for br in br_rows])))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -1482,6 +1483,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 self.claims[row.brid] = row
 
     # component methods
+    @defer.inlineCallbacks
     def getBuildRequest(self, brid):
         row = self.reqs.get(brid)
         if row:
@@ -1493,16 +1495,18 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 row.claimed_by_masterid = claim_row.masterid
             else:
                 row.claimed_at = None
-            return defer.succeed(self._brdictFromRow(row))
+            builder = yield self.db.builders.getBuilder(row.builderid)
+            row.buildername = builder["name"]
+            defer.returnValue(self._brdictFromRow(row))
         else:
-            return defer.succeed(None)
+            defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+    def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None):
         rv = []
         for br in self.reqs.itervalues():
-            if buildername and br.buildername != buildername:
+            if builderid and br.builderid != builderid:
                 continue
             if complete is not None:
                 if complete and not br.complete:
@@ -1543,7 +1547,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                     continue
                 if repository and not any(repository == s['repository'] for s in sourcestamps):
                     continue
-
+            builder = yield self.db.builders.getBuilder(br.builderid)
+            br.buildername = builder["name"]
             rv.append(self._brdictFromRow(br))
         defer.returnValue(rv)
 

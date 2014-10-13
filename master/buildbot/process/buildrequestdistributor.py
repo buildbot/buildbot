@@ -88,11 +88,10 @@ class BuildChooserBase(object):
         # saved at self.unclaimedBrdicts cache. If the cache already
         # exists, this function does nothing. If a refetch is desired, set
         # the self.unclaimedBrdicts to None before calling."""
-
         if self.unclaimedBrdicts is None:
             # TODO: use order of the DATA API
             brdicts = yield self.master.data.get(('builders',
-                                                  self.bldr.name,
+                                                  (yield self.bldr.getBuilderId()),
                                                   'buildrequests'),
                                                  [resultspec.Filter('claimed',
                                                                     'eq',
@@ -507,7 +506,6 @@ class BuildRequestDistributor(service.AsyncService):
     def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
-
         bc = self.createBuildChooser(bldr, self.master)
 
         while True:
@@ -544,7 +542,6 @@ class BuildRequestDistributor(service.AsyncService):
                 self.master.mq.produce(key, msg)
 
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
-
             if not buildStarted:
                 yield self.master.data.updates.unclaimBuildRequests(brids)
 

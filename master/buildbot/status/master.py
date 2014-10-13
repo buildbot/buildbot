@@ -65,7 +65,7 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self._buildset_complete_consumer = yield self.master.mq.startConsuming(
             self.bs_complete_consumer_cb, ('buildsets', None, 'complete'))
         self._br_consumer = yield self.master.mq.startConsuming(
-            self.br_consumer_cb, ('buildrequests', None, None, None, 'new'))
+            self.br_consumer_cb, ('buildrequests', None, 'new'))
         self._change_consumer = yield self.master.mq.startConsuming(
             self.change_consumer_cb, ('changes', None, 'new'))
 
@@ -415,8 +415,15 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             if hasattr(t, 'changeAdded'):
                 t.changeAdded(change)
 
+    @defer.inlineCallbacks
     def br_consumer_cb(self, key, msg):
-        buildername = msg['buildername']
+        builderid = msg['builderid']
+        buildername = None
+        # convert builderid to buildername
+        for b in self.botmaster.builders.values():
+            if builderid == (yield b.getBuilderId()):
+                buildername = b.name
+                break
         if buildername in self._builder_observers:
             brs = buildrequest.BuildRequestStatus(buildername,
                                                   msg['brid'], self)

@@ -48,7 +48,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
             fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
-            fakedb.BuildRequest(id=44, buildsetid=8822, buildername='bbb',
+            fakedb.BuildRequest(id=44, buildsetid=8822, builderid=77,
                                 priority=7, submitted_at=self.SUBMITTED_AT_EPOCH,
                                 waited_for=1),
         ])
@@ -66,7 +66,6 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['buildrequestid'], 44)
         self.assertEqual(buildrequest['complete'], True)
         self.assertEqual(buildrequest['builderid'], 77)
-        self.assertEqual(buildrequest['buildername'], 'bbb')
         self.assertEqual(buildrequest['waited_for'], True)
         self.assertEqual(buildrequest['claimed_at'], self.CLAIMED_AT)
         self.assertEqual(buildrequest['results'], 75)
@@ -101,14 +100,15 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Builder(id=78, name='ccc'),
+            fakedb.Builder(id=79, name='ddd'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
             fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
-            fakedb.BuildRequest(id=44, buildsetid=8822, buildername='bbb',
+            fakedb.BuildRequest(id=44, buildsetid=8822, builderid=77,
                                 priority=7, submitted_at=self.SUBMITTED_AT_EPOCH,
                                 waited_for=1),
-            fakedb.BuildRequest(id=45, buildsetid=8822, buildername='bbb'),
-            fakedb.BuildRequest(id=46, buildsetid=8822, buildername='ccc'),
+            fakedb.BuildRequest(id=45, buildsetid=8822, builderid=77),
+            fakedb.BuildRequest(id=46, buildsetid=8822, builderid=78),
         ])
 
     def tearDown(self):
@@ -122,14 +122,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          [44, 45, 46])
 
     @defer.inlineCallbacks
-    def testGetBuildername(self):
-        buildrequests = yield self.callGet(('builders', 'ccc', 'buildrequests'))
-        [self.validateData(br) for br in buildrequests]
-        self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [46])
-
-    @defer.inlineCallbacks
     def testGetNoBuildRequest(self):
-        buildrequests = yield self.callGet(('builders', 'ddd', 'buildrequests'))
+        buildrequests = yield self.callGet(('builders', 79, 'buildrequests'))
         self.assertEqual(buildrequests, [])
 
     @defer.inlineCallbacks
@@ -149,7 +143,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         yield self.callGet(('buildrequests',))
         getBuildRequestsMock.assert_called_with(
-            buildername=None,
+            builderid=None,
             bsid=None,
             complete=None,
             claimed=None)
@@ -167,7 +161,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ('buildrequests',),
             resultSpec=resultspec.ResultSpec(filters=[f1, f2, f3, f4, f5]))
         getBuildRequestsMock.assert_called_with(
-            buildername=None,
+            builderid=None,
             bsid=55,
             complete=False,
             claimed=True)
@@ -183,7 +177,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ('buildrequests',),
             resultSpec=resultspec.ResultSpec(filters=[f1, f2]))
         getBuildRequestsMock.assert_called_with(
-            buildername=None,
+            builderid=None,
             bsid=None,
             complete=None,
             claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID)

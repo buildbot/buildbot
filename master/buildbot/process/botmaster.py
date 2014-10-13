@@ -145,23 +145,26 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def startService(self):
+        @defer.inlineCallbacks
         def buildRequestAdded(key, msg):
-            self.maybeStartBuildsForBuilder(msg['buildername'])
-        # consume both 'new' and 'unclaimed' build requests
+            builderid = msg['builderid']
+            buildername = None
+            # convert builderid to buildername
+            for builder in self.builders.values():
+                if builderid == (yield builder.getBuilderId()):
+                    buildername = builder.name
+                    break
+            if buildername:
+                self.maybeStartBuildsForBuilder(buildername)
 
-        # TODO: Support for BuildRequest doesn't exist yet
-        # It's a temporary fix in order to wake up the BuildRequestDistributor
-        #
-        # self.buildrequest_consumer_new = self.master.mq.startConsuming(
-        #     buildRequestAdded,
-        #     ('buildrequests', None, None, None, 'new'))
+        # consume both 'new' and 'unclaimed' build requests
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
             buildRequestAdded,
-            ('buildsets', None, 'builders', None, 'buildrequests', None, 'new'))
+            ('buildrequests', None, "new"))
         self.buildrequest_consumer_unclaimed = yield startConsuming(
             buildRequestAdded,
-            ('buildrequests', None, None, None, 'unclaimed'))
+            ('buildrequests', None, 'unclaimed'))
         yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks

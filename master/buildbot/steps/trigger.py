@@ -23,7 +23,6 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.status.results import statusToString
 from buildbot.status.results import worst_status
-from buildbot.util import ascii2unicode
 from twisted.internet import defer
 from twisted.python import log
 
@@ -160,14 +159,14 @@ class Trigger(BuildStep):
                 results, brids = results
 
             if was_cb:  # errors were already logged in worstStatus
-                for buildername, br in brids.iteritems():
+                for builderid, br in brids.iteritems():
+                    builderDict = yield self.master.data.get(("builders", builderid))
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
                     for build in builds:
                         num = build['number']
-                        builderid = yield self.master.data.updates.findBuilderId(ascii2unicode(buildername))
                         url = self.master.status.getURLForBuild(builderid, num)
                         yield self.addURL("%s: %s #%d" % (statusToString(results),
-                                                          buildername, num), url)
+                                                          builderDict["name"], num), url)
 
     @defer.inlineCallbacks
     def run(self):

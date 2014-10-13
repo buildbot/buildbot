@@ -80,6 +80,7 @@ class TestBRDBase(unittest.TestCase):
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
             fakedb.SourceStamp(id=21),
+            fakedb.Builder(id=77, name='A'),
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=11),
         ]
@@ -94,7 +95,7 @@ class TestBRDBase(unittest.TestCase):
             self.addSlaves({'test-slave%d' % i: 1})
             rows.append(fakedb.Buildset(id=100 + i, reason='because'))
             rows.append(fakedb.BuildsetSourceStamp(buildsetid=100 + i, sourcestampid=21))
-            rows.append(fakedb.BuildRequest(id=10 + i, buildsetid=100 + i, buildername="A"))
+            rows.append(fakedb.BuildRequest(id=10 + i, buildsetid=100 + i, builderid=77))
         return rows
 
     def addSlaves(self, slavebuilders):
@@ -106,7 +107,13 @@ class TestBRDBase(unittest.TestCase):
             for bldr in self.builders.values():
                 bldr.slaves.append(sb)
 
-    def createBuilder(self, name):
+    @defer.inlineCallbacks
+    def createBuilder(self, name, builderid=None):
+        if builderid is None:
+            b = fakedb.Builder(name=name)
+            yield self.master.db.insertTestData([b])
+            builderid = b.id
+
         bldr = mock.Mock(name=name)
         bldr.name = name
         self.botmaster.builders[name] = bldr
@@ -123,6 +130,7 @@ class TestBRDBase(unittest.TestCase):
 
         bldr.slaves = []
         bldr.getAvailableSlaves = lambda: [s for s in bldr.slaves if s.isAvailable()]
+        bldr.getBuilderId = lambda: (builderid)
         bldr.config.nextSlave = None
         bldr.config.nextBuild = None
 
@@ -131,13 +139,14 @@ class TestBRDBase(unittest.TestCase):
             return not can or can(*args)
         bldr.canStartBuild = canStartBuild
 
-        return bldr
+        defer.returnValue(bldr)
 
+    @defer.inlineCallbacks
     def addBuilders(self, names):
         self.startedBuilds = []
 
         for name in names:
-            self.createBuilder(name)
+            yield self.createBuilder(name)
 
     def assertMyClaims(self, brids):
         self.assertEqual(self.master.data.updates.claimedBuildRequests,
@@ -377,12 +386,13 @@ class Test(TestBRDBase):
 
 class TestMaybeStartBuilds(TestBRDBase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         TestBRDBase.setUp(self)
 
         self.startedBuilds = []
 
-        self.bldr = self.createBuilder('A')
+        self.bldr = yield self.createBuilder('A', builderid=77)
         self.builders['A'] = self.bldr
 
     def assertBuildsStarted(self, exp):
@@ -411,7 +421,8 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_no_slavebuilders(self):
         rows = [
-            fakedb.BuildRequest(id=11, buildsetid=10, buildername="bldr"),
+            fakedb.Builder(id=78, name='bldr'),
+            fakedb.BuildRequest(id=11, buildsetid=10, builderid=78),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -421,10 +432,10 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
-                                submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
+                                submitted_at=130000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[10], exp_builds=[('test-slave1', [10])])
@@ -436,10 +447,10 @@ class TestMaybeStartBuilds(TestBRDBase):
         # same as "limited_by_slaves" but with rows swapped
         self.addSlaves({'test-slave1': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
-                                submitted_at=135000),
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
+                                submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[10], exp_builds=[('test-slave1', [10])])
@@ -449,9 +460,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 0, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -476,9 +487,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.db.buildrequests.getBuildRequests = longGetBuildRequests
 
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -513,11 +524,11 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1, 'test-slave3': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
-            fakedb.BuildRequest(id=12, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=12, buildsetid=11, builderid=77,
                                 submitted_at=140000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -567,11 +578,11 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1, 'test-slave3': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
-            fakedb.BuildRequest(id=12, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=12, buildsetid=11, builderid=77,
                                 submitted_at=140000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -600,9 +611,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
         self.addSlaves({'test-slave1': 0, 'test-slave2': 1, 'test-slave3': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -616,9 +627,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -639,9 +650,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -664,9 +675,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
 
@@ -688,7 +699,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[11], exp_builds=[('test-slave2', [11])])
@@ -698,7 +709,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextSlave = lambda _1, _2: defer.succeed(None)
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -708,7 +719,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextSlave = lambda _1, _2: defer.succeed(mock.Mock())
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -720,7 +731,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextSlave = nextSlaveRaises
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -730,7 +741,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextBuild = lambda _1, _2: defer.succeed(None)
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -740,7 +751,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextBuild = lambda _1, _2: mock.Mock()
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
@@ -753,7 +764,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextBuild = nextBuildRaises
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
         result = self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                         exp_claims=[], exp_builds=[])
@@ -780,9 +791,9 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),  # will turn out to be claimed!
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A",
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
@@ -795,7 +806,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.bldr.config.nextSlave = nextSlave
         rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="A"),
+            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
 
         if exp_choice is None:
@@ -896,12 +907,13 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextSlave = nth_slave(0)
         # set up all of the data required for a BuildRequest object
         rows = [
+            fakedb.Builder(id=77, name='A'),
             fakedb.SourceStamp(id=234, codebase='A'),
             fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
             fakedb.Buildset(id=30, reason='foo',
                             submitted_at=1300305712, results=-1),
             fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.BuildRequest(id=19, buildsetid=30, buildername='A',
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
                                 priority=13, submitted_at=1300305712, results=-1),
         ]
 
@@ -926,6 +938,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextSlave = nth_slave(0)
         # set up all of the data required for a BuildRequest object
         rows = [
+            fakedb.Builder(id=77, name='A'),
             fakedb.SourceStamp(id=234, codebase='C'),
             fakedb.Buildset(id=30, reason='foo',
                             submitted_at=1300305712, results=-1),
@@ -938,11 +951,11 @@ class TestMaybeStartBuilds(TestBRDBase):
             fakedb.Buildset(id=32, reason='foo',
                             submitted_at=1300305712, results=-1),
             fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
-            fakedb.BuildRequest(id=19, buildsetid=30, buildername='A',
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
                                 priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=20, buildsetid=31, buildername='A',
+            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
                                 priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=21, buildsetid=32, buildername='A',
+            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
                                 priority=13, submitted_at=1300305712, results=-1),
         ]
 

@@ -50,23 +50,22 @@ All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.buildsets.BuildsetResourceType
 
-    .. py:method:: addBuildset(scheduler=None, sourcestamps=[], reason='', properties={}, builderNames=[], external_idstring=None, parent_buildid=None, parent_relationship=None)
+    .. py:method:: addBuildset(scheduler=None, sourcestamps=[], reason='', properties={}, builderids=[], external_idstring=None, parent_buildid=None, parent_relationship=None)
 
         :param string scheduler: the name of the scheduler creating this buildset
         :param list sourcestamps: sourcestamps for the new buildset; see below
         :param unicode reason: the reason for this build
         :param properties: properties to set on this buildset
         :type properties: dictionary with unicode keys and (source, property value) values
-        :param list builderNames: names of the builders for which build requests should be created
+        :param list builderids: names of the builderids for which build requests should be created
         :param unicode external_idstring: arbitrary identifier to recognize this buildset later
         :param int parent_buildid: optional build id that is the parent for this buildset
         :param unicode parent_relationship: relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
-        :returns: (buildset id, dictionary mapping builder names to build request ids) via Deferred
+        :returns: (buildset id, dictionary mapping builder ids to build request ids) via Deferred
 
         .. warning:
 
             The ``scheduler`` parameter will be replaced with a ``schedulerid`` parameter in future releases.
-            The ``builderNames`` parameter will be replaced with a ``builderIds`` parameter in future releases.
 
         Create a new buildset and corresponding buildrequests based on the given parameters.
         This is the low-level interface for scheduling builds.

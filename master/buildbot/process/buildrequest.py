@@ -107,7 +107,9 @@ class BuildRequest(object):
         buildrequest = cls()
         buildrequest.id = brid
         buildrequest.bsid = brdict['buildsetid']
-        buildrequest.buildername = brdict['buildername']
+        builder = yield master.db.builders.getBuilder(brdict['builderid'])
+        buildrequest.buildername = builder['name']
+        buildrequest.builderid = brdict['builderid']
         buildrequest.priority = brdict['priority']
         dt = brdict['submitted_at']
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())

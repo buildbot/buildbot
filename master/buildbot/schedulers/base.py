@@ -256,6 +256,7 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         defer.returnValue((bsid, brids))
 
+    @defer.inlineCallbacks
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
                                    reason='', external_idstring=None, properties=None,
                                    builderNames=None, **kw):
@@ -269,11 +270,18 @@ class BaseScheduler(ClusteredService, StateMixin):
         if not builderNames:
             builderNames = self.builderNames
 
+        # Get the builder id
+        builderids = list()
+        for bldr in (yield self.master.data.get(('builders', ))):
+            if bldr['name'] in builderNames:
+                builderids.append(bldr['builderid'])
+
         # translate properties object into a dict as required by the
         # addBuildset method
         properties_dict = properties.asDict()
 
-        return self.master.data.updates.addBuildset(
+        bsid, brids = yield self.master.data.updates.addBuildset(
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
-            waited_for=waited_for, properties=properties_dict, builderNames=builderNames,
+            waited_for=waited_for, properties=properties_dict, builderids=builderids,
             external_idstring=external_idstring, **kw)
+        defer.returnValue((bsid, brids))

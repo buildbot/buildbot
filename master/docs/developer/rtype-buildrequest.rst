@@ -58,7 +58,7 @@ Endpoints
 
         cancel the buildrequest identified by its ID.
 
-.. bb:rpath:: /builder/:buildername/buildrequest
+.. bb:rpath:: /builders/:buildername/buildrequest
 
     :pathkey string buildername: the name of the builder
 
@@ -67,6 +67,9 @@ Endpoints
         :opt this endpoint supports same options as /buildrequest
 
 .. bb:rpath:: /builder/:builderid/buildrequest
+
+
+.. bb:rpath:: /builders/:builderid/buildrequest
 
     :pathkey integer builderid: the id of the builder
 

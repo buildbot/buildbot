@@ -40,6 +40,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
                       properties={}, codebases={'': {}}):
+        dbBuilder = list()
+        builderid = 0
+        for builderName in builderNames:
+            builderid += 1
+            dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
+
+        self.master.db.insertTestData(dbBuilder)
+
         sched = self.attachScheduler(
             base.BaseScheduler(name=name, builderNames=builderNames,
                                properties=properties, codebases=codebases),
@@ -284,7 +292,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             reason=u'power',
             scheduler=u'n',
             external_idstring=None,
-            builderNames=['b'],
+            builderids=[1],
             properties={
                 u'scheduler': ('n', u'Scheduler'),
             })
@@ -307,7 +315,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             reason=u'power',
             scheduler=u'n',
             external_idstring=None,
-            builderNames=['b'],
+            builderids=[1],
             properties={
                 u'scheduler': ('n', u'Scheduler'),
             })
@@ -323,7 +331,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
-            builderNames=['b'],
+            builderids=[1],
             external_idstring=None,
             properties={
                 u'scheduler': ('n', u'Scheduler'),
@@ -343,7 +351,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
-            builderNames=['c'],
+            builderids=[1],
             external_idstring=None,
             properties={
                 u'scheduler': ('n', u'Scheduler'),
@@ -372,7 +380,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
-            builderNames=['b', 'c'],
+            builderids=[1, 2],
             external_idstring=None,
             properties={
                 u'scheduler': ('n', u'Scheduler'),
@@ -418,7 +426,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=True,
-            builderNames=['b', 'c'],
+            builderids=[1, 2],
             external_idstring=None,
             reason=u'power',
             scheduler=u'n',
@@ -441,7 +449,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
-            builderNames=['b'],
+            builderids=[1],
             external_idstring=None,
             reason=u'whynot',
             scheduler=u'n',
@@ -452,7 +460,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp_explicit_builderNames(self):
-        sched = self.makeScheduler(name='n', builderNames=['b'])
+        sched = self.makeScheduler(name='n', builderNames=['b', 'x', 'y'])
         bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
                                                              waited_for=True,
                                                              sourcestamps=[91, {'sourcestamp': True}],
@@ -460,7 +468,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=True,
-            builderNames=['x', 'y'],
+            builderids=[2, 3],
             external_idstring=None,
             reason=u'whynot',
             scheduler=u'n',
@@ -479,7 +487,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=False,
-            builderNames=['b'],
+            builderids=[1],
             external_idstring=None,
             properties={
                 u'xxx': ('yyy', u'TEST'),
@@ -487,3 +495,40 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             reason=u'whynot',
             scheduler=u'n',
             sourcestamps=[91])
+
+    def test_signature_addBuildsetForChanges(self):
+        sched = self.makeScheduler(builderNames=['xxx'])
+
+        @self.assertArgSpecMatches(
+            sched.addBuildsetForChanges,  # Real
+            self.fake_addBuildsetForChanges,  # Real
+        )
+        def addBuildsetForChanges(self, waited_for=False, reason='',
+                                  external_idstring=None, changeids=[], builderNames=None,
+                                  properties=None,
+                                  **kw):
+            pass
+
+    def test_signature_addBuildsetForSourceStamps(self):
+        sched = self.makeScheduler(builderNames=['xxx'])
+
+        @self.assertArgSpecMatches(
+            sched.addBuildsetForSourceStamps,  # Real
+            self.fake_addBuildsetForSourceStamps,  # Fake
+        )
+        def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
+                                       reason='', external_idstring=None, properties=None,
+                                       builderNames=None, **kw):
+            pass
+
+    def test_signature_addBuildsetForSourceStampsWithDefaults(self):
+        sched = self.makeScheduler(builderNames=['xxx'])
+
+        @self.assertArgSpecMatches(
+            sched.addBuildsetForSourceStampsWithDefaults,  # Real
+            self.fake_addBuildsetForSourceStampsWithDefaults,  # Fake
+        )
+        def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+                                                   waited_for=False, properties=None, builderNames=None,
+                                                   **kw):
+            pass

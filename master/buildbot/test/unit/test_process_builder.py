@@ -28,13 +28,19 @@ from twisted.trial import unittest
 
 class BuilderMixin(object):
 
+    @defer.inlineCallbacks
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
-                    **config_kwargs):
+                    builderid=None, **config_kwargs):
         """Set up C{self.bldr}"""
         self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self.mq = self.master.mq
         self.db = self.master.db
+        if builderid is None:
+            b = fakedb.Builder(name=name)
+            yield self.master.db.insertTestData([b])
+            builderid = b.id
+
         # only include the necessary required config, plus user-requested
         config_args = dict(name=name, slavename="slv", builddir="bdir",
                            slavebuilddir="sbdir", factory=self.factory)
@@ -43,6 +49,8 @@ class BuilderMixin(object):
         self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
+        fbi = self.master.data.updates.findBuilderId = mock.Mock(name='fbi')
+        fbi.side_effect = lambda name: defer.succeed(builderid)
 
         # patch into the _startBuildsFor method
         self.builds_started = []
@@ -63,7 +71,7 @@ class BuilderMixin(object):
         mastercfg = config.MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
-            return self.bldr.reconfigService(mastercfg)
+            defer.returnValue((yield self.bldr.reconfigService(mastercfg)))
 
 
 class TestBuilder(BuilderMixin, unittest.TestCase):
@@ -348,22 +356,24 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
             fakedb.SourceStamp(id=21),
             fakedb.Buildset(id=11, reason='because'),
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
+            fakedb.Builder(id=77, name='bldr1'),
+            fakedb.Builder(id=78, name='bldr2'),
             fakedb.BuildRequest(id=111, submitted_at=1000,
-                                buildername='bldr1', buildsetid=11),
+                                builderid=77, buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
-                                buildername='bldr1', buildsetid=11),
+                                builderid=77, buildsetid=11),
             fakedb.BuildRequestClaim(brid=222, masterid=master_id,
                                      claimed_at=2001),
             fakedb.BuildRequest(id=333, submitted_at=3000,
-                                buildername='bldr1', buildsetid=11),
+                                builderid=77, buildsetid=11),
             fakedb.BuildRequest(id=444, submitted_at=2500,
-                                buildername='bldr2', buildsetid=11),
+                                builderid=78, buildsetid=11),
             fakedb.BuildRequestClaim(brid=444, masterid=master_id,
                                      claimed_at=2501),
         ]
 
     def test_gort_unclaimed(self):
-        d = self.makeBuilder(name='bldr1')
+        d = self.makeBuilder(name='bldr1', builderid=77)
         d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
         d.addCallback(lambda _: self.bldr.getOldestRequestTime())
 
@@ -373,7 +383,7 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         return d
 
     def test_gort_all_claimed(self):
-        d = self.makeBuilder(name='bldr2')
+        d = self.makeBuilder(name='bldr2', builderid=78)
         d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
         d.addCallback(lambda _: self.bldr.getOldestRequestTime())
 

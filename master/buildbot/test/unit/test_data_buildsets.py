@@ -154,6 +154,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             fakedb.SourceStamp(id=234, branch='br', codebase='cb',
                                project='pr', repository='rep', revision='rev',
                                created_at=89834834),
+            fakedb.Builder(id=42, name='bldr1'),
+            fakedb.Builder(id=43, name='bldr1'),
         ])
 
     SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
@@ -165,7 +167,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self.master.data.updates.addBuildset,  # fake
             self.rtype.addBuildset)  # real
         def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
-                        properties={}, builderNames=[], external_idstring=None,
+                        properties={}, builderids=[], external_idstring=None,
                         parent_buildid=None, parent_relationship=None):
             pass
 
@@ -198,13 +200,31 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def _buildRequestMessage(self, brid, bsid, builderid, buildername):
+    def _buildRequestMessageDict(self, brid, bsid, builderid):
+        return {'builderid': builderid,
+                'buildrequestid': brid,
+                'buildsetid': bsid,
+                'claimed': False,
+                'claimed_at': None,
+                'claimed_by_masterid': None,
+                'complete': False,
+                'complete_at': None,
+                'priority': 0,
+                'results': -1,
+                'submitted_at': epoch2datetime(A_TIMESTAMP),
+                'waited_for': True}
+
+    def _buildRequestMessage1(self, brid, bsid, builderid):
         return (
             ('buildsets', str(bsid),
              'builders', str(builderid),
              'buildrequests', str(brid), 'new'),
-            dict(brid=brid, bsid=bsid, builderid=builderid,
-                 buildername=buildername))
+            self._buildRequestMessageDict(brid, bsid, builderid))
+
+    def _buildRequestMessage2(self, brid, bsid, builderid):
+        return (
+            ('buildrequests', str(brid), 'new'),
+            self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildsetMessage(self, bsid, external_idstring=u'extid',
                          reason=u'because', scheduler=u'fakesched', sourcestampids=[234],
@@ -236,11 +256,13 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
                       sourcestamps=[234], external_idstring=u'extid',
-                      builderNames=['a', 'b'], waited_for=True)
-        expectedReturn = (200, dict(a=1000, b=1001))
+                      builderids=[42, 43], waited_for=True)
+        expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
-            self._buildRequestMessage(1000, 200, -1, u'a'),
-            self._buildRequestMessage(1001, 200, -1, u'b'),
+            self._buildRequestMessage1(1000, 200, 42),
+            self._buildRequestMessage2(1000, 200, 42),
+            self._buildRequestMessage1(1001, 200, 43),
+            self._buildRequestMessage2(1001, 200, 43),
             self._buildsetMessage(200),
         ]
         expectedBuildset = dict(reason=u'because',
@@ -309,10 +331,11 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         clock.advance(A_TIMESTAMP)
 
         def mkbr(brid, bsid=72):
-            return fakedb.BuildRequest(id=brid, buildsetid=bsid,
+            return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
                                        complete=buildRequestCompletions.get(brid),
                                        results=buildRequestResults.get(brid, SUCCESS))
         yield self.master.db.insertTestData([
+            fakedb.Builder(id=42, name='bldr1'),
             fakedb.Buildset(id=72,
                             submitted_at=EARLIER,
                             complete=buildsetComplete,

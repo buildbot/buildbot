@@ -41,13 +41,15 @@ class SchedulerMixin(interfaces.InterfaceTests):
     OTHER_MASTER_ID = 93
 
     def setUpScheduler(self):
-        pass
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantDb=True, wantMq=True, wantData=True)
 
     def tearDownScheduler(self):
         pass
 
     def attachScheduler(self, scheduler, objectid,
-                        overrideBuildsetMethods=False):
+                        overrideBuildsetMethods=False,
+                        createBuilderDB=False):
         """Set up a scheduler with a fake master and db; sets self.sched, and
         sets the master's basedir to the absolute path of 'basedir' in the test
         directory.
@@ -67,16 +69,16 @@ class SchedulerMixin(interfaces.InterfaceTests):
         scheduler.objectid = objectid
 
         # set up a fake master
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantDb=True, wantMq=True, wantData=True)
         db = self.db = self.master.db
         self.mq = self.master.mq
         scheduler.master = self.master
 
-        db.insertTestData([
-            fakedb.Object(id=objectid, name=scheduler.name,
-                          class_name='SomeScheduler'),
-        ])
+        rows = [fakedb.Object(id=objectid, name=scheduler.name,
+                              class_name='SomeScheduler')]
+        if createBuilderDB is True:
+            rows.extend([fakedb.Builder(name=bname) for bname in scheduler.builderNames])
+
+        db.insertTestData(rows)
 
         if overrideBuildsetMethods:
             for method in (
@@ -169,12 +171,22 @@ class SchedulerMixin(interfaces.InterfaceTests):
         ch.__dict__.update(kwargs)
         return ch
 
+    @defer.inlineCallbacks
     def _addBuildsetReturnValue(self, builderNames):
         if builderNames is None:
             builderNames = self.sched.builderNames
+        builderids = []
+        builders = yield self.db.builders.getBuilders()
+        for builderName in builderNames:
+            for bldrDict in builders:
+                if builderName == bldrDict["name"]:
+                    builderids.append(bldrDict["id"])
+                    break
+
+        assert len(builderids) == len(builderNames)
         bsid = self._bsidGenerator.next()
-        brids = dict(zip(builderNames, self._bridGenerator))
-        return defer.succeed((bsid, brids))
+        brids = dict(zip(builderids, self._bridGenerator))
+        defer.returnValue((bsid, brids))
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                                     waited_for=False, properties=None,

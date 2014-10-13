@@ -25,6 +25,9 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 23
 
+    def setUp(self):
+        self.setUpScheduler()
+
     def makeScheduler(self, firstBuildDuration=0, exp_branch=None, **kwargs):
         self.sched = sched = timed.Periodic(**kwargs)
         self.attachScheduler(self.sched, self.OBJECTID)

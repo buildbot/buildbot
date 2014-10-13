@@ -25,6 +25,7 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
                                project='world-domination'),
@@ -37,7 +38,7 @@ class TestBuildRequest(unittest.TestCase):
                                     property_value='[1, "X"]'),
             fakedb.BuildsetProperty(buildsetid=539, property_name='y',
                                     property_value='[2, "Y"]'),
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr',
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=77,
                                 priority=13, submitted_at=1200000000),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -66,12 +67,13 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9284', repository='svn://...',
                                project='world-domination'),
             fakedb.Buildset(id=539, reason='triggered'),
             fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr',
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=77,
                                 priority=13, submitted_at=None),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -90,9 +92,10 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=78, name='not important'),
             fakedb.Buildset(id=539, reason='triggered'),
             # buildset has no sourcestamps
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='not important',
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=78,
                                 priority=0, submitted_at=None),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -106,6 +109,7 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..',
                                codebase='A', project='world-domination'),
@@ -126,7 +130,7 @@ class TestBuildRequest(unittest.TestCase):
                                     property_value='[1, "X"]'),
             fakedb.BuildsetProperty(buildsetid=539, property_name='y',
                                     property_value='[2, "Y"]'),
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr',
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=77,
                                 priority=13, submitted_at=1200000000),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
@@ -165,6 +169,7 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=234, branch='trunk',
                                revision='9283', repository='svn://a..', codebase='A',
                                project='world-domination'),
@@ -196,12 +201,12 @@ class TestBuildRequest(unittest.TestCase):
             fakedb.Buildset(id=539, reason='triggered'),
             fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=234),
             fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=235),
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=77),
 
             fakedb.Buildset(id=540, reason='triggered'),
             fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=236),
             fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=237),
-            fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
+            fakedb.BuildRequest(id=289, buildsetid=540, builderid=77),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
@@ -248,6 +253,7 @@ class TestBuildRequest(unittest.TestCase):
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
+            fakedb.Builder(id=77, name='bldr'),
             fakedb.SourceStamp(id=238, branch='trunk',
                                revision='1800', repository='svn://c..',
                                codebase='C', project='world-domination'),
@@ -264,11 +270,11 @@ class TestBuildRequest(unittest.TestCase):
 
             fakedb.Buildset(id=539, reason='triggered'),
             fakedb.BuildsetSourceStamp(buildsetid=539, sourcestampid=238),
-            fakedb.BuildRequest(id=288, buildsetid=539, buildername='bldr'),
+            fakedb.BuildRequest(id=288, buildsetid=539, builderid=77),
 
             fakedb.Buildset(id=540, reason='triggered'),
             fakedb.BuildsetSourceStamp(buildsetid=540, sourcestampid=239),
-            fakedb.BuildRequest(id=289, buildsetid=540, buildername='bldr'),
+            fakedb.BuildRequest(id=289, buildsetid=540, builderid=77),
         ])
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict

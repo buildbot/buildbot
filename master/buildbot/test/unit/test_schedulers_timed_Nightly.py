@@ -38,8 +38,11 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     localtime_offset = time.timezone % 3600
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
+
         sched = self.attachScheduler(timed.Nightly(**kwargs),
                                      self.OBJECTID, overrideBuildsetMethods=True)
+
+        self.master.db.insertTestData([fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()

@@ -43,6 +43,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         reqs_tbl = self.db.model.buildrequests
         claims_tbl = self.db.model.buildrequest_claims
         bsets_tbl = self.db.model.buildsets
+        builder_tbl = self.db.model.builders
         bsss_tbl = self.db.model.buildset_sourcestamps
         sstamps_tbl = self.db.model.sourcestamps
 
@@ -54,9 +55,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                        bsets_tbl.c.id == bsss_tbl.c.buildsetid)
         from_clause = from_clause.join(sstamps_tbl,
                                        bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+        from_clause = from_clause.join(builder_tbl,
+                                       reqs_tbl.c.builderid == builder_tbl.c.id)
 
         return sa.select([reqs_tbl, claims_tbl, sstamps_tbl.c.branch,
-                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase]).select_from(from_clause)
+                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase, builder_tbl.c.name.label('buildername')]).select_from(from_clause)
 
     def getBuildRequest(self, brid):
         def thd(conn):
@@ -72,7 +75,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return rv
         return self.db.pool.do(thd)
 
-    def getBuildRequests(self, buildername=None, complete=None, claimed=None,
+    def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
@@ -91,8 +94,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 else:
                     q = q.where(
                         (claims_tbl.c.masterid == claimed))
-            if buildername is not None:
-                q = q.where(reqs_tbl.c.buildername == buildername)
+            if builderid is not None:
+                q = q.where(reqs_tbl.c.builderid == builderid)
             if complete is not None:
                 if complete:
                     q = q.where(reqs_tbl.c.complete != 0)
@@ -273,7 +276,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed_at = mkdt(claimed_at)
 
         return BrDict(buildrequestid=row.id, buildsetid=row.buildsetid,
-                      buildername=row.buildername, priority=row.priority,
+                      builderid=row.builderid, buildername=row.buildername,
+                      priority=row.priority,
                       claimed=claimed, claimed_at=claimed_at,
                       claimed_by_masterid=claimed_by_masterid,
                       complete=bool(row.complete), results=row.results,
