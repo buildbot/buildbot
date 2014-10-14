@@ -70,7 +70,7 @@ if release == 'latest':
     rst_prolog = textwrap.dedent("""\
     .. caution:: This page documents the latest, unreleased version of
         Buildbot.  For documentation for released versions, see
-        http://buildbot.net/buildbot/docs.
+        http://docs.buildbot.net/.
 
     """)
 
