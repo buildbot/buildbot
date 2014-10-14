@@ -736,6 +736,15 @@ class SingleProjectJsonResource(JsonResource):
             builder = self.status.getBuilder(b)
             self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
 
+    # cleanup the revision information saved by the poller
+    def formatRevisionOutput(self, latestRevisions):
+        for key, value in latestRevisions.iteritems():
+            formated = value['revision'].split(":")
+            if len(formated) > 1:
+                value['revision'] = formated[1]
+
+        return latestRevisions
+
     @defer.inlineCallbacks
     def getLatestRevision(self, codebases):
         latestRevisions = {}
@@ -753,7 +762,7 @@ class SingleProjectJsonResource(JsonResource):
 
             latestRevisions = yield self.status.master.db.state.getObjectStateByKey(selection, 'branch', 'revision')
 
-        defer.returnValue(latestRevisions)
+        defer.returnValue(self.formatRevisionOutput(latestRevisions))
 
     @defer.inlineCallbacks
     def asDict(self, request):
