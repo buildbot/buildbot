@@ -23,7 +23,7 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                 display_repository: "http://rhodecode.hq.unity3d.com/unity/unity",
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/all-unity",
-                revision: "b841045fb3160b1c0044b3b04f40482f685208cf",
+                revision: "b841045fb3160b1c",
                 revision_short: "b841045fb316"
             },
             {
@@ -96,6 +96,25 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
         url: "http://10.45.6.89:8001/buildslaves/mba01",
         version: "0.8.7p1",
         health: 0
+    };
+
+    var projectData = {
+        comparisonURL: "../../../projects/Unity%20-%20Trunk/comparison?builders0=unity%3Dtrunk",
+        builders: builderData,
+        latestRevisions: {
+            "http://mercurial-mirror.hq.unity3d.com/all-unity": {
+                codebase: "unity",
+                display_repository: "https://ono.unity3d.com/unity/unity",
+                branch: "trunk",
+                revision: "b841045fb3160b1c0044b3b04f40482f685208cf"
+            },
+            "http://mercurial-mirror.hq.unity3d.com/fake": {
+                codebase: "unity",
+                display_repository: "https://ono.unity3d.com/fake",
+                branch: "faked",
+                revision: "fakenewone"
+            }
+        }
     };
 
     function rawHTMLToJQuery(html, parentElement) {
@@ -180,6 +199,19 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
                 expect(textParts.length).toEqual(2);
             });
+        });
+
+        iit("shows pending changes", function () {
+            $revisionDict = gt.cell.revision(0, function (data) {
+                return data.latestBuild.sourceStamps;
+            }, true, projectData.latestRevisions);
+            $html = $($revisionDict.mRender(undefined, undefined, builderData));
+
+            var $rows = $html.find("li");
+            expect($rows.length).toEqual(2);
+
+            expect($($rows[0]).find(".pending-changes-icon").length).toEqual(0);
+            expect($($rows[1]).find(".pending-changes-icon").length).toEqual(1);
         });
     });
 

@@ -1,0 +1,16 @@
+@charset "UTF-8";
+.pending-changes-icon {
+    font-style: normal;
+    margin-left: 2px;
+	&:after {
+		color: #918d2e;
+		font-family: "katana_icons";
+	    content: "";
+	    display: inline-block;
+	    padding: 0;
+	    font-weight:normal;
+	    font-size: 15px;
+	    position: relative;
+	    line-height:14px;
+	}
+}

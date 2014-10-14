@@ -1308,6 +1308,8 @@ button.toast-close-button{padding:0;cursor:pointer;background:0 0;border:0;-webk
 @media all and (min-width:240px) and (max-width:479px){#toast-container>div{padding:8px 8px 8px 50px;width:18em}
 #toast-container .toast-close-button{right:-.2em;top:-.2em}}
 @media all and (min-width:480px) and (max-width:767px){#toast-container>div{padding:15px 15px 15px 50px;width:25em}}
+.pending-changes-icon{font-style:normal;margin-left:2px}
+.pending-changes-icon:after{color:#918d2e;font-family:katana_icons;content:"";display:inline-block;padding:0;font-weight:400;font-size:15px;position:relative;line-height:14px}
 .table-holder{display:none}
 .log-main .main-head{font-size:17px;margin:0 0 11px}
 .log-main .main-head.big{color:#FFF;float:left;font-size:18px;margin:3px 0 0 25px;padding:0;text-shadow:none}

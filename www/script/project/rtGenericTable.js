@@ -44,7 +44,7 @@ define(function (require) {
     };
 
     var cellFunc = {
-        revision: function (index, property, hideBranch) {
+        revision: function (index, property, hideBranch, latestRevDict) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
@@ -53,6 +53,22 @@ define(function (require) {
                     var history_build = false;
                     if (full.properties !== undefined) {
                         history_build = privFunc.buildIsHistoric(full.properties);
+                    }
+
+                    if (latestRevDict !== undefined) {
+                        if (Object.prototype.toString.call(latestRevDict) === '[object Function]') {
+                            latestRevDict = latestRevDict();
+                        }
+
+                        if (latestRevDict !== undefined && sourceStamps !== undefined) {
+                            $.each(sourceStamps, function (i, obj) {
+                                var latestRev = latestRevDict[obj.repository];
+                                if (latestRev !== undefined && obj.revision !== null &&
+                                        latestRev.revision.indexOf(obj.revision) === -1) {
+                                    obj.pending_changes = latestRev.revision;
+                                }
+                            });
+                        }
                     }
                     return rtCells({
                         revisionCell: true,

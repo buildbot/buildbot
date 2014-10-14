@@ -19,6 +19,10 @@
             <span class="recent-build-icon tooltip" title="Built from specific revision -- may not be the latest on the branch">
             </span>
         {{/if}}
+        {{#if pending_changes}}
+            <span class="pending-changes-icon tooltip" title="There are pending changes on this sourcestamp latest rev is {{pending_changes}}">
+            </span>
+        {{/if}}
         </li>
     {{/each}}
     </ul>

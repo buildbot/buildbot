@@ -10,7 +10,8 @@ define(function (require) {
         popup = require('ui.popup'),
         hb = require('project/handlebars-extend'),
         $tbSorter,
-        initializedCodebaseOverview = false;
+        initializedCodebaseOverview = false,
+        latestRevDict = {};
 
     require('libs/jquery.form');
 
@@ -28,6 +29,7 @@ define(function (require) {
                 // insert codebase and branch on the builders page
                 helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'), data.comparisonURL);
             }
+            latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
         },
         dataTableInit: function ($tableElem) {
@@ -57,7 +59,7 @@ define(function (require) {
                         return data.latestBuild.sourceStamps;
                     }
                     return undefined;
-                }, helpers.urlHasCodebases()),
+                }, helpers.urlHasCodebases(), function getLatestRevDict() { return latestRevDict; }),
                 rtTable.cell.buildLength(6, function (data) {
                     if (data.latestBuild !== undefined) {
                         return data.latestBuild.times;
