@@ -737,6 +737,20 @@ class SingleProjectJsonResource(JsonResource):
             self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
 
     @defer.inlineCallbacks
+    def getLatestRevision(self, codebases):
+        latestRevisions = {}
+        if codebases:
+            selection = {}
+            for cb in self.project_status.codebases:
+                for key,value in cb.iteritems():
+                    if key in codebases.keys():
+                        selection[value['repository']] = codebases[key]
+
+            latestRevisions = yield self.status.master.db.state.getObjectStateByKey(selection)
+
+        defer.returnValue(latestRevisions)
+
+    @defer.inlineCallbacks
     def asDict(self, request):
         from buildbot.status.web.base import path_to_comparison
         result = {'builders': []}
@@ -744,6 +758,8 @@ class SingleProjectJsonResource(JsonResource):
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
+        result['latestRevisions'] = yield self.getLatestRevision(codebases)
+
         encoding = getRequestCharset(request)
         branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 

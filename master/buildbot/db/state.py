@@ -80,24 +80,48 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
     class Thunk: pass
 
+    def getObjectStateData(self, conn, objects):
+        object_state_tbl = self.db.model.object_state
+        objects_tbl = self.db.model.objects
+        stmt = sa.select([objects_tbl.c.name, object_state_tbl.c.value_json], from_obj=
+        object_state_tbl.join(objects_tbl,
+                              (object_state_tbl.c.objectid == objects_tbl.c.id)),
+                         whereclause=(objects_tbl.c.name.in_(objects)))
+        res = conn.execute(stmt)
+        rows = res.fetchall()
+        res.close()
+        return rows
+
     def getObjectState(self, objects):
+
         def thd(conn):
-            object_state_tbl = self.db.model.object_state
-            objects_tbl = self.db.model.objects
-
-            stmt = sa.select([objects_tbl.c.name, object_state_tbl.c.value_json], from_obj=
-                                 object_state_tbl.join(objects_tbl,
-                                                                (object_state_tbl.c.objectid == objects_tbl.c.id)),
-                             whereclause=(objects_tbl.c.name.in_(objects)))
-
-            res = conn.execute(stmt)
-            rows = res.fetchall()
-            res.close()
+            rows = self.getObjectStateData(conn, objects)
 
             try:
                 object_state = {}
                 for row in rows:
                     object_state[row.name] = json.loads(row.value_json).keys()
+
+                return object_state
+            except:
+                raise TypeError("JSON error loading state value '%s'" %
+                                (objects))
+        return self.db.pool.do(thd)
+
+    # Given an object name, get specific stored value
+    def getObjectStateByKey(self, objects):
+        def thd(conn):
+            rows = self.getObjectStateData(conn, objects.keys())
+
+            try:
+                object_state = {}
+                for row in rows:
+                    selectedObject = row.name
+                    selectedKey = objects[selectedObject]
+                    trackedKeys = json.loads(row.value_json)
+                    if selectedKey in trackedKeys.keys():
+                        storedValue = trackedKeys[selectedKey]
+                        object_state[selectedObject] = {selectedKey: storedValue}
 
                 return object_state
             except:
