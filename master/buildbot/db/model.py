@@ -720,7 +720,7 @@ class Model(base.DBConnectorComponent):
                         version = "0.6"
                 except Exception:
                     version = "0.0"
-            version_tup = tuple(map(int, version.split('.')))
+            version_tup = tuple(map(int, version.split('-', 1)[0].split('.')))
             log.msg("using SQLAlchemy-Migrate version %s" % (version,))
             if version_tup < (0, 6, 1):
                 raise RuntimeError("You are using SQLAlchemy-Migrate %s. "
