@@ -244,7 +244,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         lastRev = self.lastRev.get(branch)
         self.lastRev[branch] = newRev
         if not lastRev:
-            return
+            masterRev = self.lastRev.get('refs/heads/master')
+            if masterRev:
+                mergeBaseArgs = [masterRev, newRev]
+                lastRev = yield self._dovccmd('merge-base', mergeBaseArgs, path=self.workdir)
+            else:
+                return
 
         # get the change list
         revListArgs = [r'--format=%H', '%s..%s' % (lastRev, newRev), '--']
@@ -256,8 +261,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList.reverse()
         self.changeCount = len(revList)
 
-        log.msg('gitpoller: processing %d changes: %s from "%s"'
-                % (self.changeCount, revList, self.repourl))
+        log.msg('gitpoller: processing %d changes: %s from "%s" %s'
+                % (self.changeCount, revList, self.repourl, branch))
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -292,12 +297,18 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         d = utils.getProcessOutputAndValue(self.gitbin,
                                            [command] + args, path=path, env=os.environ)
 
-        def _convert_nonzero_to_failure(res):
+        def _convert_nonzero_to_failure(res,
+                                        command,
+                                        args,
+                                        path):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
             if code != 0:
-                raise EnvironmentError('command on repourl %s failed with exit code %d: %s'
-                                       % (self.repourl, code, stderr))
+                raise EnvironmentError('command %s %s in %s on repourl %s failed with exit code %d: %s'
+                                       % (command, args, path, self.repourl, code, stderr))
             return stdout.strip()
-        d.addCallback(_convert_nonzero_to_failure)
+        d.addCallback(_convert_nonzero_to_failure,
+                      command,
+                      args,
+                      path)
         return d
