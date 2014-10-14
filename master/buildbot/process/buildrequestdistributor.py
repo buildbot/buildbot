@@ -44,8 +44,6 @@ class BuildChooserBase(object):
     # The default implementation of this class implements a default
     # chooseNextBuild() that delegates out to two other functions:
     #   * bc.popNextBuild() - get the next (slave, breq) pair
-    #   * bc.mergeRequests(breq) - perform a merge for this breq and return
-    #       the list of breqs consumed by the merge (including breq itself)
 
     def __init__(self, bldr, master):
         self.bldr = bldr
@@ -62,23 +60,12 @@ class BuildChooserBase(object):
             defer.returnValue((None, None))
             return
 
-        breqs = yield self.mergeRequests(breq)
-        for b in breqs:
-            self._removeBuildRequest(b)
-
-        defer.returnValue((slave, breqs))
+        defer.returnValue((slave, [breq]))
 
     # Must be implemented by subclass
     def popNextBuild(self):
         # Pick the next (slave, breq) pair; note this is pre-merge, so
         # it's just one breq
-        raise NotImplementedError("Subclasses must implement this!")
-
-    # Must be implemented by subclass
-    def mergeRequests(self, breq):
-        # Merge the chosen breq with any other breqs that are compatible
-        # Returns a list of the breqs chosen (and should include the
-        # original breq as well!)
         raise NotImplementedError("Subclasses must implement this!")
 
     # - Helper functions that are generally useful to all subclasses -
@@ -189,8 +176,6 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextBuild = self.bldr.config.nextBuild
 
-        self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
-
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
@@ -230,10 +215,6 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
         defer.returnValue(nextBuild)
-
-    def mergeRequests(self, breq):
-        # TODO: merging is not supported in nine for the moment
-        return defer.succeed([breq])
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):

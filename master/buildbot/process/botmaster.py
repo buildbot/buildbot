@@ -57,10 +57,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # self.locks holds the real Lock instances
         self.locks = {}
 
-        # self.mergeRequests is the callable override for merging build
-        # requests
-        self.mergeRequests = None
-
         self.shuttingDown = False
 
         self.lastSlavePortnum = None

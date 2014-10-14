@@ -126,7 +126,7 @@ class TestBRDBase(unittest.TestCase):
             return d
         bldr.maybeStartBuild = maybeStartBuild
         bldr.canStartWithSlavebuilder = lambda _: True
-        bldr.getMergeRequestsFn = lambda: False
+        bldr.getCollapseRequestsFn = lambda: False
 
         bldr.slaves = []
         bldr.getAvailableSlaves = lambda: [s for s in bldr.slaves if s.isAvailable()]
@@ -429,7 +429,6 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_limited_by_slaves(self):
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
@@ -442,8 +441,6 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_sorted_by_submit_time(self):
-        self.master.config.mergeRequests = False
-
         # same as "limited_by_slaves" but with rows swapped
         self.addSlaves({'test-slave1': 1})
         rows = self.base_rows + [
@@ -457,7 +454,6 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_limited_by_available_slaves(self):
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 0, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
@@ -471,8 +467,6 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_slow_db(self):
         # test what happens if the "getBuildRequests" fetch takes a "long time"
-
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1})
 
         # wrap to simulate a "long" db access
@@ -501,7 +495,6 @@ class TestMaybeStartBuilds(TestBRDBase):
         that limits the possible options."""
 
         self.bldr.config.nextSlave = nth_slave(-1)
-        self.master.config.mergeRequests = False
 
         slaves_attempted = []
 
@@ -554,7 +547,6 @@ class TestMaybeStartBuilds(TestBRDBase):
          * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
 
         self.bldr.config.nextSlave = nth_slave(-1)
-        self.master.config.mergeRequests = False
 
         slaves_attempted = []
 
@@ -601,7 +593,6 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_limited_by_canStartWithSlavebuilder(self):
         self.bldr.config.nextSlave = nth_slave(-1)
-        self.master.config.mergeRequests = False
 
         slaves_attempted = []
 
@@ -624,7 +615,6 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_unlimited(self):
         self.bldr.config.nextSlave = nth_slave(-1)
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
@@ -647,7 +637,6 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(False)
         self.bldr.maybeStartBuild = maybeStartBuild
 
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
@@ -672,7 +661,6 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(ret)
         self.bldr.maybeStartBuild = maybeStartBuild
 
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
@@ -696,7 +684,6 @@ class TestMaybeStartBuilds(TestBRDBase):
     @defer.inlineCallbacks
     def test_limited_by_requests(self):
         self.bldr.config.nextSlave = nth_slave(1)
-        self.master.config.mergeRequests = False
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -852,7 +839,6 @@ class TestMaybeStartBuilds(TestBRDBase):
     def do_test_nextBuild(self, nextBuild, exp_choice=None):
         self.bldr.config.nextSlave = nth_slave(-1)
         self.bldr.config.nextBuild = nextBuild
-        self.master.config.mergeRequests = False
 
         rows = self.make_slaves(4)
 
@@ -899,90 +885,3 @@ class TestMaybeStartBuilds(TestBRDBase):
         result = self.do_test_nextBuild(nextBuild)
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         return result
-
-    # merge tests
-    @defer.inlineCallbacks
-    def test_mergeRequest_no_other_request(self):
-        """ Test if builder test for codebases in requests """
-        self.bldr.config.nextSlave = nth_slave(0)
-        # set up all of the data required for a BuildRequest object
-        rows = [
-            fakedb.Builder(id=77, name='A'),
-            fakedb.SourceStamp(id=234, codebase='A'),
-            fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
-            fakedb.Buildset(id=30, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-        ]
-
-        self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
-
-        def mergeRequests_fn(builder, breq, other):
-            # Allow all requests
-            self.fail("Should never be called")
-            return True
-        self.bldr.getMergeRequestsFn = lambda: mergeRequests_fn
-
-        # check if the request remains the same
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[19],
-                                                     exp_builds=[
-                                                         ('test-slave1', [19]),
-                                                     ])
-
-    @defer.inlineCallbacks
-    def test_mergeRequests_no_merging(self):
-        """ Test if builder test for codebases in requests """
-        self.bldr.config.nextSlave = nth_slave(0)
-        # set up all of the data required for a BuildRequest object
-        rows = [
-            fakedb.Builder(id=77, name='A'),
-            fakedb.SourceStamp(id=234, codebase='C'),
-            fakedb.Buildset(id=30, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.SourceStamp(id=235, codebase='C'),
-            fakedb.Buildset(id=31, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
-            fakedb.SourceStamp(id=236, codebase='C'),
-            fakedb.Buildset(id=32, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
-            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-        ]
-
-        self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
-
-        def mergeRequests_fn(builder, breq, other):
-            # Fail all merge attempts
-            return False
-        self.bldr.getMergeRequestsFn = lambda: mergeRequests_fn
-
-        # check if all are merged
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[19, 20],
-                                                     exp_builds=[
-                                                         ('test-slave1', [19]),
-                                                         ('test-slave2', [20]),
-                                                     ])
-
-    @defer.inlineCallbacks
-    def test_mergeRequests_fails(self):
-        def mergeRequests_fn(*args):
-            raise RuntimeError("xx")
-        self.bldr.getMergeRequestsFn = lambda: mergeRequests_fn
-
-        self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, buildername="bldr"),
-        ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[], exp_builds=[])

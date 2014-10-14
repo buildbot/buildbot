@@ -107,9 +107,9 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 .. index:: Builds; merging
 
-``mergeRequests``
-    Specifies how build requests for this builder should be merged.
-    See :ref:`Merging-Build-Requests`, below.
+``collapseRequests``
+    Specifies how build requests for this builder should be collapsed.
+    See :ref:`Collapsing-Build-Requests`, below.
 
 .. index:: Properties; builder
 
@@ -123,18 +123,18 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 .. index:: Builds; merging
 
-.. _Merging-Build-Requests:
+.. _Collapsing-Build-Requests:
 
-Merging Build Requests
-~~~~~~~~~~~~~~~~~~~~~~
+Collapsing Build Requests
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When more than one build request is available for a builder, Buildbot can "merge" the requests into a single build.
+When more than one build request is available for a builder, Buildbot can "collapse" the requests into a single build.
 This is desirable when build requests arrive more quickly than the available slaves can satisfy them, but has the drawback that separate results for each build are not available.
 
 Requests are only candidated for a merge if both requests have exactly the same :ref:`codebases<Attr-Codebase>`.
 
-This behavior can be controlled globally, using the :bb:cfg:`mergeRequests` parameter, and on a per-:class:`Builder` basis, using the ``mergeRequests`` argument to the :class:`Builder` configuration.
-If ``mergeRequests`` is given, it completely overrides the global configuration.
+This behavior can be controlled globally, using the :bb:cfg:`collapseRequests` parameter, and on a per-:class:`Builder` basis, using the ``collapseRequests`` argument to the :class:`Builder` configuration.
+If ``collapseRequests`` is given, it completely overrides the global configuration.
 
 For either configuration parameter, a value of ``True`` (the default) causes buildbot to merge BuildRequests that have "compatible" source stamps.
 Source stamps are compatible if:
@@ -146,7 +146,7 @@ Source stamps are compatible if:
 A configuration value of ``False`` indicates that requests should never be merged.
 
 The configuration value can also be a callable, specifying a custom merging function.
-See :ref:`Merge-Request-Functions` for details.
+See :ref:`Collapse-Request-Functions` for details.
 
 .. index:: Builds; priority
 

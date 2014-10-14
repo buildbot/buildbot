@@ -191,7 +191,7 @@ class SimpleConfig(dict):
         # Later we can make this smarter and disable merging just changes
         # which are at tags, or enable merging just on builders that are
         # way too slow and don't mind missing a tag
-        self['mergeRequests'] = False
+        self['collapseRequests'] = False
 
         # PORT NUMBERS
         # It's hard to keep port numbers straight for multiple projects,

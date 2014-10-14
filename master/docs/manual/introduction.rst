@@ -137,7 +137,7 @@ Once a :class:`SlaveBuilder` is available, the :class:`Builder` pulls one or mor
 These requests are merged into a single :class:`Build` instance, which includes the :class:`SourceStamp` that describes what exact version of the source code should be used for the build.
 The :class:`Build` is then randomly assigned to a free :class:`SlaveBuilder` and the build begins.
 
-The behaviour when :class:`BuildRequest`\s are merged can be customized, :ref:`Merging-Build-Requests`.
+The behaviour when :class:`BuildRequest`\s are merged can be customized, :ref:`Collapsing-Build-Requests`.
 
 .. _Status-Delivery-Architecture:
 

@@ -155,7 +155,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                                project='pr', repository='rep', revision='rev',
                                created_at=89834834),
             fakedb.Builder(id=42, name='bldr1'),
-            fakedb.Builder(id=43, name='bldr1'),
+            fakedb.Builder(id=43, name='bldr2'),
         ])
 
     SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,

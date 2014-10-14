@@ -88,10 +88,10 @@ described in :ref:`developer-Reconfiguration`.
         A :py:class:`~buildbot.process.properties.Properties` instance
         containing global properties, from :bb:cfg:`properties`.
 
-    .. py:attribute:: mergeRequests
+    .. py:attribute:: collapseRequests
 
-        A callable, or True or False, describing how to merge requests; from
-        :bb:cfg:`mergeRequests`.
+        A callable, or True or False, describing how to collapse requests; from
+        :bb:cfg:`collapseRequests`.
 
     .. py:attribute:: prioritizeBuilders
 
@@ -257,9 +257,9 @@ Builder Configuration
 
         The builder's properties, as a dictionary.
 
-    .. py:attribute:: mergeRequests
+    .. py:attribute:: collapseRequests
 
-        The builder's mergeRequests callable.
+        The builder's collapseRequests callable.
 
     .. py:attribute:: description
 

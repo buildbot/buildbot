@@ -540,26 +540,26 @@ class Builder(config.ReconfigurableServiceMixin,
     # a few utility functions to make the maybeStartBuild a bit shorter and
     # easier to read
 
-    def getMergeRequestsFn(self):
-        """Helper function to determine which mergeRequests function to use
-        from L{_mergeRequests}, or None for no merging"""
+    def getCollapseRequestsFn(self):
+        """Helper function to determine which collapseRequests function to use
+        from L{_collapseRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
-        mergeRequests_fn = self.config.mergeRequests
-        if mergeRequests_fn is None:
-            mergeRequests_fn = self.master.config.mergeRequests
-        if mergeRequests_fn is None:
-            mergeRequests_fn = True
+        collapseRequests_fn = self.config.collapseRequests
+        if collapseRequests_fn is None:
+            collapseRequests_fn = self.master.config.collapseRequests
+        if collapseRequests_fn is None:
+            collapseRequests_fn = True
 
         # then translate False and True properly
-        if mergeRequests_fn is False:
-            mergeRequests_fn = None
-        elif mergeRequests_fn is True:
-            mergeRequests_fn = Builder._defaultMergeRequestFn
+        if collapseRequests_fn is False:
+            collapseRequests_fn = None
+        elif collapseRequests_fn is True:
+            collapseRequests_fn = Builder._defaultCollapseRequestFn
 
-        return mergeRequests_fn
+        return collapseRequests_fn
 
-    def _defaultMergeRequestFn(self, req1, req2):
-        return req1.canBeMergedWith(req2)
+    def _defaultCollapseRequestFn(self, brdict1, brdict2):
+        return buildrequest.BuildRequest.canBeCollapsed(self.master, brdict1, brdict2)
 
 
 class BuilderControl:

@@ -13,10 +13,170 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from buildbot.process import buildrequest
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from twisted.internet import defer
 from twisted.trial import unittest
+
+
+class TestBuildRequestCollapser(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantData=True,
+                                             wantDb=True)
+        self.master.botmaster = mock.Mock(name='botmaster')
+        self.master.botmaster.builders = {}
+        self.builders = {}
+        self.bldr = yield self.createBuilder('A', builderid=77)
+
+    @defer.inlineCallbacks
+    def createBuilder(self, name, builderid=None):
+        if builderid is None:
+            b = fakedb.Builder(name=name)
+            yield self.master.db.insertTestData([b])
+            builderid = b.id
+
+        bldr = mock.Mock(name=name)
+        bldr.name = name
+        bldr.master = self.master
+        self.master.botmaster.builders[name] = bldr
+        self.builders[name] = bldr
+        bldr.getCollapseRequestsFn = lambda: False
+
+        defer.returnValue(bldr)
+
+    def tearDown(self):
+        pass
+
+    @defer.inlineCallbacks
+    def do_request_collapse(self, rows, brids, exp):
+        yield self.master.db.insertTestData(rows)
+        brCollapser = buildrequest.BuildRequestCollapser(self.master, brids)
+        self.assertEqual(exp, (yield brCollapser.collapse()))
+
+    def test_collapseRequests_no_other_request(self):
+
+        def collapseRequests_fn(builder, brdict1, brdict2):
+            # Allow all requests
+            self.fail("Should never be called")
+            return True
+
+        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+            fakedb.SourceStamp(id=234, codebase='A'),
+            fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+            fakedb.Buildset(id=30, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+        ]
+        self.do_request_collapse(rows, [19], [])
+
+    def test_collapseRequests_no_collapse(self):
+
+        def collapseRequests_fn(builder, brdict1, brdict2):
+            # Fail all collapse attempts
+            return False
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+            fakedb.SourceStamp(id=234, codebase='C'),
+            fakedb.Buildset(id=30, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+            fakedb.SourceStamp(id=235, codebase='C'),
+            fakedb.Buildset(id=31, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
+            fakedb.SourceStamp(id=236, codebase='C'),
+            fakedb.Buildset(id=32, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+        ]
+
+        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.do_request_collapse(rows, [21], [])
+
+    def test_collapseRequests_collapse_all(self):
+
+        def collapseRequests_fn(builder, brdict1, brdict2):
+            # collapse all attempts
+            return True
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+            fakedb.SourceStamp(id=234, codebase='C'),
+            fakedb.Buildset(id=30, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+            fakedb.SourceStamp(id=235, codebase='C'),
+            fakedb.Buildset(id=31, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
+            fakedb.SourceStamp(id=236, codebase='C'),
+            fakedb.Buildset(id=32, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+        ]
+
+        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.do_request_collapse(rows, [21], [19, 20])
+
+    def test_collapseRequests_collapse_default(self):
+
+        def collapseRequests_fn(builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+            fakedb.SourceStamp(id=234, codebase='C'),
+            fakedb.Buildset(id=30, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+            fakedb.SourceStamp(id=235, codebase='C'),
+            fakedb.Buildset(id=31, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
+            fakedb.SourceStamp(id=236, codebase='C'),
+            fakedb.SourceStamp(id=237, codebase='A'),
+            fakedb.Buildset(id=32, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
+            fakedb.Buildset(id=33, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=237, buildsetid=33),
+            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+            fakedb.BuildRequest(id=22, buildsetid=33, builderid=77,
+                                priority=13, submitted_at=1300305712, results=-1),
+        ]
+
+        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        self.do_request_collapse(rows, [22], [])
+        self.do_request_collapse(rows, [21], [19, 20])
 
 
 class TestBuildRequest(unittest.TestCase):
@@ -239,7 +399,7 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_canBeMergedWith_different_codebases_raises_error(self):
+    def test_canBeCollapsed_different_codebases_raises_error(self):
         """ This testcase has two buildrequests
             Request Change Codebase   Revision Comment
             ----------------------------------------------------------------------
@@ -249,7 +409,7 @@ class TestBuildRequest(unittest.TestCase):
             Merge cannot be performd and raises error:
               Merging requests requires both requests to have the same codebases
         """
-        brs = []  # list of buildrequests
+        brDicts = []  # list of buildrequests dictionnary
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([
@@ -279,18 +439,14 @@ class TestBuildRequest(unittest.TestCase):
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
         d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
+        d.addCallback(lambda brdict: brDicts.append(brdict))
         d.addCallback(lambda _:
                       master.db.buildrequests.getBuildRequest(289))
-        d.addCallback(lambda brdict:
-                      buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
-        d.addCallback(lambda _: brs[0].canBeMergedWith(brs[1]))
+        d.addCallback(lambda brdict: brDicts.append(brdict))
+        d.addCallback(lambda _: buildrequest.BuildRequest.canBeCollapsed(master, brDicts[0], brDicts[1]))
 
-        def check(canbeMergedWith):
-            self.assertEqual(canbeMergedWith, False)
+        def check(canBeCollapsed):
+            self.assertEqual(canBeCollapsed, False)
 
         d.addCallback(check)
         return d
