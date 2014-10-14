@@ -13,27 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from StringIO import StringIO
 
-from buildbot import config
 from buildbot import util
-from buildbot.buildslave.base import BuildSlave
-from buildbot.process import builder
-from buildbot.process import buildrequest
 from buildbot.process import buildstep
-from buildbot.process import factory
 from buildbot.process import remotecommand
-from buildbot.process import slavebuilder
 from buildbot.status import results
 from buildbot.steps import shell
-from buildbot.test.fake import fakemaster
+from buildbot.test.util import steps
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
-from twisted.spread import pb
 from twisted.trial import unittest
 
 
@@ -150,34 +141,6 @@ class FailingCustomStep(buildstep.LoggingBuildStep):
         raise self.exception()
 
 
-class FakeBot():
-
-    def __init__(self):
-        self.commands = []
-        info = {'basedir': '/sl'}
-        doNothing = lambda *args: defer.succeed(None)
-        self.response = {
-            'getSlaveInfo': lambda: defer.succeed(info),
-            'setMaster': doNothing,
-            'print': doNothing,
-            'startBuild': doNothing,
-        }
-
-    def notifyOnDisconnect(self, cb):
-        pass
-
-    def dontNotifyOnDisconnect(self, cb):
-        pass
-
-    def callRemote(self, command, *args):
-        self.commands.append((command,) + args)
-        response = self.response.get(command)
-        if response:
-            return response(*args)
-        else:
-            return defer.fail(pb.NoSuchMethod(command))
-
-
 class OldBuildEPYDoc(shell.ShellCommand):
 
     command = ['epydoc']
@@ -216,74 +179,13 @@ class OldPerlModuleTest(shell.Test):
         return results.SUCCESS
 
 
-class RunSteps(unittest.TestCase):
+class RunSteps(steps.BuildStepIntegrationMixin, unittest.TestCase):
 
-    @defer.inlineCallbacks
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantDb=True)
-        self.builder = builder.Builder('test', _addServices=False)
-        self.builder.master = self.master
-        yield self.builder.startService()
-
-        self.factory = factory.BuildFactory()  # will have steps added later
-        new_config = config.MasterConfig()
-        new_config.builders.append(
-            config.BuilderConfig(name='test', slavename='testsl',
-                                 factory=self.factory))
-        yield self.builder.reconfigService(new_config)
-
-        self.slave = BuildSlave('bsl', 'pass')
-        self.slave.sendBuilderList = lambda: defer.succeed(None)
-        self.slave.botmaster = mock.Mock()
-        self.slave.botmaster.maybeStartBuildsForSlave = lambda sl: None
-        self.slave.master = self.master
-        self.slave.startService()
-        self.remote = FakeBot()
-        yield self.slave.attached(self.remote)
-
-        sb = self.slavebuilder = slavebuilder.SlaveBuilder()
-        sb.setBuilder(self.builder)
-        yield sb.attached(self.slave, self.remote, {})
-
-        # add the buildset/request
-        sssid = yield self.master.db.sourcestampsets.addSourceStampSet()
-        yield self.master.db.sourcestamps.addSourceStamp(branch='br',
-                                                         revision='1', repository='r://', project='',
-                                                         sourcestampsetid=sssid)
-        self.bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestampsetid=sssid, reason=u'x', properties={},
-            builderNames=['test'])
-
-        self.brdict = \
-            yield self.master.db.buildrequests.getBuildRequest(brids['test'])
-
-        self.buildrequest = \
-            yield buildrequest.BuildRequest.fromBrdict(self.master, self.brdict)
+        return self.setUpBuildStepIntegration()
 
     def tearDown(self):
-        self.slave.stopKeepaliveTimer()
-        return self.builder.stopService()
-
-    @defer.inlineCallbacks
-    def do_test_step(self):
-        # patch builder.buildFinished to signal us with a deferred
-        bfd = defer.Deferred()
-        old_buildFinished = self.builder.buildFinished
-
-        def buildFinished(*args):
-            old_buildFinished(*args)
-            bfd.callback(None)
-        self.builder.buildFinished = buildFinished
-
-        # start the builder
-        self.failUnless((yield self.builder.maybeStartBuild(
-            self.slavebuilder, [self.buildrequest])))
-
-        # and wait for completion
-        yield bfd
-
-        # then get the BuildStatus and return it
-        defer.returnValue(self.master.status.lastBuilderStatus.lastBuildStatus)
+        return self.tearDownBuildStepIntegration()
 
     def assertLogs(self, exp_logs):
         bs = self.master.status.lastBuilderStatus.lastBuildStatus
@@ -295,8 +197,8 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep(self):
-        self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
-        yield self.do_test_step()
+        self.setupStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
+        yield self.runStep()
 
         self.assertLogs({
             u'compl.html': u'<blink>A very short logfile</blink>\n',
@@ -312,15 +214,15 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep_failure(self):
-        self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2, doFail=1))
-        bs = yield self.do_test_step()
+        self.setupStep(OldStyleCustomBuildStep(arg1=1, arg2=2, doFail=1))
+        bs = yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         self.assertEqual(bs.getResults(), results.EXCEPTION)
 
     @defer.inlineCallbacks
     def test_NewStyleCustomBuildStep(self):
-        self.factory.addStep(NewStyleCustomBuildStep())
-        yield self.do_test_step()
+        self.setupStep(NewStyleCustomBuildStep())
+        yield self.runStep()
         self.assertLogs({
             'foo.html': '<head>\n',
             'testlog': 'stdout\nfromcmd\n',
@@ -330,28 +232,28 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_step_raising_buildstepfailed_in_start(self):
-        self.factory.addStep(FailingCustomStep())
-        bs = yield self.do_test_step()
+        self.setupStep(FailingCustomStep())
+        bs = yield self.runStep()
         self.assertEqual(bs.getResults(), results.FAILURE)
 
     @defer.inlineCallbacks
     def test_step_raising_exception_in_start(self):
-        self.factory.addStep(FailingCustomStep(exception=ValueError))
-        bs = yield self.do_test_step()
+        self.setupStep(FailingCustomStep(exception=ValueError))
+        bs = yield self.runStep()
         self.assertEqual(bs.getResults(), results.EXCEPTION)
         # self.expectOutcome(result=EXCEPTION, status_text=["generic", "exception"])
         self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
 
     @defer.inlineCallbacks
     def test_step_raising_connectionlost_in_start(self):
-        self.factory.addStep(FailingCustomStep(exception=error.ConnectionLost))
-        bs = yield self.do_test_step()
+        self.setupStep(FailingCustomStep(exception=error.ConnectionLost))
+        bs = yield self.runStep()
         self.assertEqual(bs.getResults(), results.RETRY)
 
     @defer.inlineCallbacks
     def test_Latin1ProducingCustomBuildStep(self):
-        self.factory.addStep(Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
-        yield self.do_test_step()
+        self.setupStep(Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
+        yield self.runStep()
         self.assertLogs({
             u'xx': u'o\N{CENT SIGN}\n',
         })
@@ -360,13 +262,13 @@ class RunSteps(unittest.TestCase):
     @defer.inlineCallbacks
     def test_OldBuildEPYDoc(self):
         # test old-style calls to log.getText, figuring readlines will be ok
-        self.factory.addStep(OldBuildEPYDoc())
-        bs = yield self.do_test_step()
+        self.setupStep(OldBuildEPYDoc())
+        bs = yield self.runStep()
         self.assertEqual(bs.getResults(), results.FAILURE)
 
     @defer.inlineCallbacks
     def test_OldPerlModuleTest(self):
         # test old-style calls to self.getLog
-        self.factory.addStep(OldPerlModuleTest())
-        bs = yield self.do_test_step()
+        self.setupStep(OldPerlModuleTest())
+        bs = yield self.runStep()
         self.assertEqual(bs.getResults(), results.SUCCESS)

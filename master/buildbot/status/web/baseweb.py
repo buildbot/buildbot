@@ -451,6 +451,15 @@ class WebStatus(service.MultiService):
         return ("<WebStatus on port %s and path %s at %s>" %
                 (self.http_port, self.distrib_port, hex(id(self))))
 
+    def setUpJinja2(self):
+        if self.revlink:
+            revlink = self.revlink
+        else:
+            revlink = self.master.config.revlink
+        self.templates = createJinjaEnv(revlink, self.changecommentlink,
+                                        self.repositories, self.projects,
+                                        self.jinja_loaders, self.master.basedir)
+
     def setServiceParent(self, parent):
         # this class keeps a *separate* link to the buildmaster, rather than
         # just using self.parent, so that when we are "disowned" (and thus
@@ -471,14 +480,7 @@ class WebStatus(service.MultiService):
         rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
 
-        # Set up the jinja templating engine.
-        if self.revlink:
-            revlink = self.revlink
-        else:
-            revlink = self.master.config.revlink
-        self.templates = createJinjaEnv(revlink, self.changecommentlink,
-                                        self.repositories, self.projects,
-                                        self.jinja_loaders, self.master.basedir)
+        self.setUpJinja2()
 
         if not self.site:
 
