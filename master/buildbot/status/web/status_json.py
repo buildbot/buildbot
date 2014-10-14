@@ -744,9 +744,14 @@ class SingleProjectJsonResource(JsonResource):
             for cb in self.project_status.codebases:
                 for key,value in cb.iteritems():
                     if key in codebases.keys():
-                        selection[value['repository']] = codebases[key]
+                        selection[value['repository']] = {
+                            'codebase': key,
+                            'branch' : codebases[key],
+                            'revision' : '',
+                            'display_repository': value['display_repository']
+                            }
 
-            latestRevisions = yield self.status.master.db.state.getObjectStateByKey(selection)
+            latestRevisions = yield self.status.master.db.state.getObjectStateByKey(selection, 'branch', 'revision')
 
         defer.returnValue(latestRevisions)
 

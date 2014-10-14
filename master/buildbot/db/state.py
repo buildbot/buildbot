@@ -109,21 +109,20 @@ class StateConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     # Given an object name, get specific stored value
-    def getObjectStateByKey(self, objects):
+    def getObjectStateByKey(self, objects, filteredKey, storedKey):
         def thd(conn):
             rows = self.getObjectStateData(conn, objects.keys())
 
             try:
-                object_state = {}
                 for row in rows:
                     selectedObject = row.name
-                    selectedKey = objects[selectedObject]
+                    selectedKey = objects[selectedObject][filteredKey]
                     trackedKeys = json.loads(row.value_json)
                     if selectedKey in trackedKeys.keys():
                         storedValue = trackedKeys[selectedKey]
-                        object_state[selectedObject] = {selectedKey: storedValue}
+                        objects[selectedObject][storedKey] = storedValue
 
-                return object_state
+                return objects
             except:
                 raise TypeError("JSON error loading state value '%s'" %
                                 (objects))
