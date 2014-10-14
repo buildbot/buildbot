@@ -175,10 +175,10 @@ class JsonResource(resource.Resource):
             if isinstance(data, unicode):
                 data = data.encode("utf-8")
             request.setHeader("Access-Control-Allow-Origin", "*")
+            request.setHeader("content-type", self.contentType)
             if RequestArgToBool(request, 'as_text', False):
-                request.setHeader("content-type", 'text/plain')
+                request.setHeader("X-Content-Type-Options", "nosniff")
             else:
-                request.setHeader("content-type", self.contentType)
                 request.setHeader("content-disposition",
                                   "attachment; filename=\"%s.json\"" % request.path)
             # Make sure we get fresh pages.
