@@ -63,9 +63,12 @@ define(function (require) {
                         if (latestRevDict !== undefined && sourceStamps !== undefined) {
                             $.each(sourceStamps, function (i, obj) {
                                 var latestRev = latestRevDict[obj.repository];
-                                if (latestRev !== undefined && obj.revision !== null &&
-                                        latestRev.revision.indexOf(obj.revision) === -1) {
-                                    obj.pending_changes = latestRev.revision;
+                                if (latestRev !== undefined && obj.revision !== null) {
+                                    if (!(latestRev.revision.indexOf(obj.revision) === 0 ||
+                                            obj.revision.indexOf(latestRev.revision) === 0)) {
+
+                                        obj.pending_changes = latestRev.revision;
+                                    }
                                 }
                             });
                         }

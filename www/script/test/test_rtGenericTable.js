@@ -145,6 +145,24 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
         expect($overlayDiv.length).toEqual(1);
     }
 
+    function expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData) {
+        $revisionDict = gt.cell.revision(0, function (data) {
+            return data.latestBuild.sourceStamps;
+        }, true, function () { return tmpProjectData.latestRevisions; });
+
+        $html = $($revisionDict.mRender(undefined, undefined, tmpBuilderData));
+
+        var $rows = $html.find("li"),
+            rev = tmpProjectData.latestRevisions["http://mercurial-mirror.hq.unity3d.com/fake"].revision;
+        expect($rows.length).toEqual(2);
+
+        expect($($rows[0]).find(".pending-changes-icon").length).toEqual(0);
+
+        var $pendingChange = $($rows[1]).find(".pending-changes-icon");
+        expect($pendingChange.length).toEqual(1);
+        expect($pendingChange.attr("title")).toContain(rev);
+    }
+
     var $body = $("body");
 
     describe("A revision cell", function () {
@@ -201,17 +219,56 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
             });
         });
 
-        iit("shows pending changes", function () {
-            $revisionDict = gt.cell.revision(0, function (data) {
-                return data.latestBuild.sourceStamps;
-            }, true, projectData.latestRevisions);
-            $html = $($revisionDict.mRender(undefined, undefined, builderData));
+        describe("shows pending changes", function () {
+            var tmpBuildData;
+            var tmpBuilderData;
+            var tmpProjectData;
 
-            var $rows = $html.find("li");
-            expect($rows.length).toEqual(2);
+            beforeEach(function beforeEach() {
+                tmpBuildData = $.extend({}, buildData);
+                tmpBuilderData = $.extend({}, builderData, {latestBuild: tmpBuildData});
+                tmpProjectData = $.extend({}, projectData);
+                $html = undefined;
+                $revisionDict = undefined;
+            });
 
-            expect($($rows[0]).find(".pending-changes-icon").length).toEqual(0);
-            expect($($rows[1]).find(".pending-changes-icon").length).toEqual(1);
+            function setRevision(pass_build, pass_poller, fail_build, fail_poller) {
+                tmpBuildData.sourceStamps[0].revision = pass_build;
+                tmpBuildData.sourceStamps[1].revision = fail_build;
+                tmpProjectData.latestRevisions["http://mercurial-mirror.hq.unity3d.com/all-unity"].revision = pass_poller;
+                tmpProjectData.latestRevisions["http://mercurial-mirror.hq.unity3d.com/fake"].revision = fail_poller;
+            }
+
+            it("when build rev is short and poller rev is short", function () {
+                setRevision("abcdefghi", "abcdefghi", "abcdeZghi", "abcdefghi");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
+            it("when build rev is long and poller rev is short", function () {
+                setRevision("abcdefghijklmnopqrstuvy", "abcdefghi", "abcdeZghijklmnopqrstuvy", "abcdefghi");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
+            it("when build rev is short and poller rev is long", function () {
+                setRevision("abcdefghi", "abcdefghijklmnopqrstuvy", "abcdeZghi", "abcdefghijklmnopqrstuvy");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
+            it("when build rev is long and poller rev is long", function () {
+                setRevision("abcdefghijklmnopqrstuvy", "abcdefghijklmnopqrstuvy", "abcdeZghijklmnopqrstuvy", "abcdefghiZklmnopqrstuvy");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
+            it("when build rev is found in poller rev but not at position 0", function () {
+                setRevision("a", "a", "xyz", "aaaxyz");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
+            it("when poller rev is found in build rev but not at position 0", function () {
+                setRevision("a", "a", "aaaxyz", "xyz");
+                expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData);
+            });
+
         });
     });
 
