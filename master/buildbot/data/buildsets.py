@@ -198,6 +198,7 @@ class Buildset(base.ResourceType):
                 cumulative_results = SKIPPED
             elif brdict['results'] not in (SUCCESS, WARNINGS):
                 cumulative_results = FAILURE
+                break
 
         # get a copy of the buildset
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
