@@ -76,11 +76,13 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c = BuildmasterConfig = {}
                 c['multiMaster'] = True
                 c['schedulers'] = []
+                from buildbot.config import ProjectConfig
+                c['projects'] = [ProjectConfig(name="default")]
                 from buildbot.config import BuilderConfig
                 from buildbot.process.factory import BuildFactory
                 c['builders'] = [
                     BuilderConfig('testbuilder', factory=BuildFactory(),
-                                  slavename='sl'),
+                                  slavename='sl', project='default'),
                 ]
                 from buildbot.buildslave import BuildSlave
                 c['slaves'] = [

@@ -64,6 +64,8 @@ c['schedulers'].append(Scheduler(name="all", branch=None,
                                  builderNames=["buildbot-full"]))
 cvsroot = ":pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot"
 cvsmodule = "buildbot"
+from buildbot.config import ProjectConfig
+c['projects'] = [ProjectConfig(name="default")]
 from buildbot.process import factory
 from buildbot.steps.source import CVS
 from buildbot.steps.shell import Compile
@@ -77,6 +79,7 @@ b1 = {'name': "buildbot-full",
       'slavename': "bot1name",
       'builddir': "full",
       'factory': f1,
+      'project': "default"
       }
 c['builders'] = [b1]
 c['status'] = []
@@ -94,6 +97,8 @@ c['slaves'] = [BuildSlave("bot1name", "bot1passwd")]
 c['slavePortnum'] = 9989
 from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
+from buildbot.config import ProjectConfig
+c['projects'] = [ProjectConfig(name="default")]
 from buildbot.scheduler import Scheduler
 c['schedulers'] = []
 c['schedulers'].append(Scheduler(name="all", branch=None,
@@ -113,6 +118,7 @@ b1 = {'name': "buildbot-full",
       'slavename': "bot1name",
       'builddir': "full",
       'factory': f1,
+      'project': "default"
       }
 c['builders'] = [b1]
 c['status'] = []

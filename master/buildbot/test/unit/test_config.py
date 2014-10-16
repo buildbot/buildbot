@@ -90,6 +90,7 @@ class FakeScheduler(object):
 class FakeBuilder(object):
 
     def __init__(self, **kwargs):
+        self.project = 'default'
         self.__dict__.update(kwargs)
 
 
@@ -178,6 +179,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             schedulers = {},
             builders = [],
             slaves = [],
+            projects = [],
             change_sources = [],
             status = [],
             user_managers = [],
@@ -241,7 +243,8 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 self.basedir, self.filename))
         self.assertEqual(e.errors, ['oh noes!', 'noes too!',
                 'no slaves are configured',
-                'no builders are configured'])
+                'no builders are configured',
+                'no projects are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
@@ -622,13 +625,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
-                        factory=factory.BuildFactory(), slavename='x')
+                        factory=factory.BuildFactory(), slavename='x', project="default")
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
+        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x', project="default")
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
@@ -637,7 +640,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     @compat.usesFlushWarnings
     def test_load_builders_abs_builddir(self):
         bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
-                builddir=os.path.abspath('.'))
+                builddir=os.path.abspath('.'), project='default')
         self.cfg.load_builders(self.filename,
                 dict(builders=[bldr]), self.errors)
         self.assertEqual(
@@ -733,8 +736,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2.name = 'b2'
 
         self.cfg.schedulers = dict(sch=sch)
-        self.cfg.slaves = [ mock.Mock() ]
+        s1 = mock.Mock()
+        s1.slavename = 's1'
+        self.cfg.slaves = [s1]
         self.cfg.builders = [ b1, b2 ]
+        self.cfg.projects = {'default' : mock.Mock()}
 
     def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
         def bldr(name):
@@ -815,6 +821,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
 
     def test_check_builders_unknown_slave(self):
+        self.setup_basic_attrs()
         sl = mock.Mock()
         sl.slavename = 'xyz'
         self.cfg.slaves = [ sl ]
@@ -826,7 +833,18 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                 "builder 'b1' uses unknown slaves 'abc'")
 
+    def test_check_builders_unknown_project(self):
+        self.setup_basic_attrs()
+
+        b1 = FakeBuilder(name='b1', project="zz", builddir="x", slavenames=['s1'])
+        self.cfg.builders = [b1]
+
+        self.cfg.check_builders(self.errors)
+        self.assertConfigError(self.errors,
+                "builder 'b1' uses unknown project 'zz'")
+
     def test_check_builders_duplicate_name(self):
+        self.setup_basic_attrs()
         b1 = FakeBuilder(slavenames=[], name='b1', builddir='1')
         b2 = FakeBuilder(slavenames=[], name='b1', builddir='2')
         self.cfg.builders = [ b1, b2 ]
@@ -836,6 +854,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                 "duplicate builder name 'b1'")
 
     def test_check_builders_duplicate_builddir(self):
+        self.setup_basic_attrs()
         b1 = FakeBuilder(slavenames=[], name='b1', builddir='dir')
         b2 = FakeBuilder(slavenames=[], name='b2', builddir='dir')
         self.cfg.builders = [ b1, b2 ]
@@ -845,13 +864,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                 "duplicate builder builddir 'dir'")
 
     def test_check_builders(self):
-        sl = mock.Mock()
-        sl.slavename = 'a'
-        self.cfg.slaves = [ sl ]
+        self.setup_basic_attrs()
 
-        b1 = FakeBuilder(slavenames=[ 'a' ], name='b1', builddir='dir1')
-        b2 = FakeBuilder(slavenames=[ 'a' ], name='b2', builddir='dir2')
-        self.cfg.builders = [ b1, b2 ]
+        b1 = FakeBuilder(slavenames=['s1'], name='b1', builddir='dir1')
+        b2 = FakeBuilder(slavenames=['s1'], name='b2', builddir='dir2')
+        self.cfg.builders = [b1, b2]
 
         self.cfg.check_builders(self.errors)
         self.assertNoConfigErrors(self.errors)
@@ -919,57 +936,58 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertRaisesConfigError(
             "builder's name is required",
             lambda : config.BuilderConfig(
-                factory=self.factory, slavenames=['a']))
+                factory=self.factory, slavenames=['a'], project="default"))
 
     def test_reserved_name(self):
         self.assertRaisesConfigError(
             "builder names must not start with an underscore: '_a'",
             lambda : config.BuilderConfig(name='_a',
-                factory=self.factory, slavenames=['a']))
+                factory=self.factory, slavenames=['a'], project="default"))
 
     def test_no_factory(self):
         self.assertRaisesConfigError(
             "builder 'a' has no factory",
             lambda : config.BuilderConfig(
-                name='a', slavenames=['a']))
+                name='a', slavenames=['a'], project="default"))
 
     def test_wrong_type_factory(self):
         self.assertRaisesConfigError(
             "builder 'a's factory is not",
             lambda : config.BuilderConfig(
-                factory=[], name='a', slavenames=['a']))
+                factory=[], name='a', slavenames=['a'], project="default"))
 
     def test_no_slavenames(self):
         self.assertRaisesConfigError(
             "builder 'a': at least one slavename is required",
             lambda : config.BuilderConfig(
-                name='a', factory=self.factory))
+                name='a', factory=self.factory, project="default"))
 
     def test_bogus_slavenames(self):
         self.assertRaisesConfigError(
             "slavenames must be a list or a string",
             lambda : config.BuilderConfig(
-                name='a', slavenames={1:2}, factory=self.factory))
+                name='a', slavenames={1:2}, factory=self.factory, project="default"))
 
     def test_bogus_slavename(self):
         self.assertRaisesConfigError(
             "slavename must be a string",
             lambda : config.BuilderConfig(
-                name='a', slavename=1, factory=self.factory))
+                name='a', slavename=1, factory=self.factory, project="default"))
 
     def test_bogus_category(self):
         self.assertRaisesConfigError(
             "category must be a string",
             lambda : config.BuilderConfig(category=13,
-                name='a', slavenames=['a'], factory=self.factory))
+                name='a', slavenames=['a'], factory=self.factory, project="default"))
 
     def test_defaults(self):
         cfg = config.BuilderConfig(
-            name='a b c', slavename='a', factory=self.factory)
+            name='a b c', slavename='a', factory=self.factory, project="default")
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
             name='a b c',
             slavenames=['a'],
+            project="default",
             builddir='a_b_c',
             slavebuilddir='a_b_c',
             category='',
@@ -982,6 +1000,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', slavename='s1', slavenames='s2', builddir='bd',
+            project="default",
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda : 'ns', nextBuild=lambda : 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), mergeRequests='mr')
@@ -997,11 +1016,51 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             properties={'y':20},
             mergeRequests='mr')
 
+    def test_no_project(self):
+        self.assertRaisesConfigError(
+            "builder 'a' has no project",
+            lambda : config.BuilderConfig(
+                name='a', slavenames=['a'], factory=self.factory))
+
+    def test_project(self):
+        cfg = config.BuilderConfig(name="b",
+                  slavenames=["s1"],
+                  project="My Project",
+                  factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg, name='b',
+                              slavenames=['s1'],
+                              project="My Project")
+
+    def test_friendly_name(self):
+        cfg = config.BuilderConfig(name="b",
+                  slavenames=["s1"],
+                  project="default",
+                  friendly_name="my builder",
+                  factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg, name='b',
+                              slavenames=['s1'],
+                              project="default",
+                              friendly_name="my builder")
+
+    def test_no_friendly_name(self):
+        cfg = config.BuilderConfig(name="b",
+                  slavenames=["s1"],
+                  project="default",
+                  factory=self.factory)
+        self.assertIdentical(cfg.factory, self.factory)
+        self.assertAttributes(cfg, name='b',
+                              slavenames=['s1'],
+                              project="default",
+                              friendly_name="b")
+
     def test_getConfigDict(self):
         ns = lambda : 'ns'
         nb = lambda : 'nb'
         cfg = config.BuilderConfig(
             name='b', slavename='s1', slavenames='s2', builddir='bd',
+            project="default",
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), mergeRequests='mr')

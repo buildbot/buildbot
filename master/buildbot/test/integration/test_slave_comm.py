@@ -149,7 +149,7 @@ class TestSlaveComm(unittest.TestCase):
         new_config.slavePortnum = "tcp:0:interface=127.0.0.1"
         new_config.slaves = [ self.buildslave ]
         new_config.builders = [ config.BuilderConfig(name='bldr',
-                slavename='testslave', factory=factory.BuildFactory()) ]
+                slavename='testslave', factory=factory.BuildFactory(), project="default") ]
 
         yield self.botmaster.reconfigService(new_config)
 

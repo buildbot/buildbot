@@ -42,7 +42,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.master = fakemaster.make_master()
         # only include the necessary required config, plus user-requested
         config_args = dict(name="bldr", slavename="slv", builddir="bdir",
-                     slavebuilddir="sbdir", factory=self.factory)
+                     slavebuilddir="sbdir", project='default', factory=self.factory)
         config_args.update(config_kwargs)
         builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(builder_config.name, _addServices=False)
@@ -719,7 +719,7 @@ class TestGetOldestRequestTime(unittest.TestCase):
         # only include the necessary required config
         builder_config = config.BuilderConfig(
                         name=name, slavename="slv", builddir="bdir",
-                        slavebuilddir="sbdir", factory=self.factory)
+                        slavebuilddir="sbdir", project='default', factory=self.factory)
         self.bldr = builder.Builder(builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
@@ -761,7 +761,7 @@ class TestRebuild(unittest.TestCase):
         # only include the necessary required config
         builder_config = config.BuilderConfig(
                         name=name, slavename="slv", builddir="bdir",
-                        slavebuilddir="sbdir", factory=self.factory)
+                        slavebuilddir="sbdir", project='default', factory=self.factory)
         self.bldr = builder.Builder(builder_config.name)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master

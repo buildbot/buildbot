@@ -589,6 +589,9 @@ class MasterConfig(object):
         if not self.builders:
             errors.addError("no builders are configured")
 
+        if not self.projects:
+            errors.addError("no projects are configured")
+
         # check that all builders are implemented on this master
         unscheduled_buildernames = set([ b.name for b in self.builders ])
         for s in self.schedulers.itervalues():
@@ -641,6 +644,8 @@ class MasterConfig(object):
             if unknowns:
                 errors.addError("builder '%s' uses unknown slaves %s" %
                             (b.name, ", ".join(`u` for u in unknowns)))
+            if not self.projects or (b.project not in self.projects.keys()):
+                errors.addError("builder '%s' uses unknown project '%s'" % (b.name, b.project))
             if b.name in seen_names:
                 errors.addError("duplicate builder name '%s'" % b.name)
             seen_names.add(b.name)
@@ -747,6 +752,10 @@ class BuilderConfig:
                 "builder '%s': at least one slavename is required" % (name,))
 
         self.slavenames = slavenames
+
+        if not project:
+            errors.addError(
+                "builder '%s' has no project" % name)
 
         # builddir defaults to name
         if builddir is None:
