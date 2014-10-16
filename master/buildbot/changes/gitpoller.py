@@ -163,6 +163,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                             [self.repourl] + refspecs, path=self.workdir)
 
         revs = {}
+        log.msg('gitpoller: processing changes from "%s"' % (self.repourl,))
         for branch in branches:
             try:
                 revs[branch] = rev = yield self._dovccmd(
@@ -256,8 +257,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList.reverse()
         self.changeCount = len(revList)
 
-        log.msg('gitpoller: processing %d changes: %s from "%s"'
-                % (self.changeCount, revList, self.repourl))
+        if self.changeCount:
+            log.msg('gitpoller: processing %d changes: %s from "%s" branch "%s"'
+                    % (self.changeCount, revList, self.repourl, branch))
 
         for rev in revList:
             dl = defer.DeferredList([
