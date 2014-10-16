@@ -45,30 +45,17 @@ class BuildRequestCollapser(object):
         self.brids = brids
 
     @defer.inlineCallbacks
-    def _getUnclaimedBRDicts(self, builderid):
-        # As soon as a buildset contains at least one claimed buildRequest, then it's too late
-        # to collapse other buildRequests of this buildset.
-        claim_brdicts = yield self.master.data.get(('builders',
-                                                    builderid,
-                                                    'buildrequests'),
-                                                   [resultspec.Filter('claimed',
-                                                                      'eq',
-                                                                      [True])])
-        ign_buildSetIDs = [brdict['buildsetid'] for brdict in claim_brdicts]
-
-        # Retrieve the list of Brdicts for all unclaimed builds which "can" be collapsed
-        unclaim_brdicts = yield self.master.data.get(('builders',
-                                                      builderid,
-                                                      'buildrequests'),
-                                                     [resultspec.Filter('claimed',
-                                                                        'eq',
-                                                                        [False]),
-                                                      resultspec.Filter('buildsetid',
-                                                                        'ne',
-                                                                        ign_buildSetIDs)])
+    def _getUnclaimedBrs(self, builderid):
+        # Retrieve the list of Brs for all unclaimed builds
+        unclaim_brs = yield self.master.data.get(('builders',
+                                                  builderid,
+                                                  'buildrequests'),
+                                                 [resultspec.Filter('claimed',
+                                                                    'eq',
+                                                                    [False])])
         # sort by submitted_at, so the first is the oldest
-        unclaim_brdicts.sort(key=lambda brd: brd['submitted_at'])
-        defer.returnValue(unclaim_brdicts)
+        unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
+        defer.returnValue(unclaim_brs)
 
     @defer.inlineCallbacks
     def collapse(self):
@@ -76,32 +63,32 @@ class BuildRequestCollapser(object):
 
         for brid in self.brids:
             # Get the BuildRequest object
-            brdict = yield self.master.data.get(('buildrequests', brid))
+            br = yield self.master.data.get(('buildrequests', brid))
             # Retreive the buildername
-            builderid = brdict['builderid']
+            builderid = br['builderid']
             bldrdict = yield self.master.data.get(('builders', builderid))
             # Get the builder object
             bldr = self.master.botmaster.builders.get(bldrdict['name'])
             # Get the Collapse BuildRequest function (from the configuration)
             collapseRequestsFn = bldr.getCollapseRequestsFn() if bldr else None
-            unclaim_brDicts = yield self._getUnclaimedBRDicts(builderid)
+            unclaim_brs = yield self._getUnclaimedBrs(builderid)
 
             # short circuit if there is no merging to do
-            if not collapseRequestsFn or not unclaim_brDicts:
+            if not collapseRequestsFn or not unclaim_brs:
                 continue
 
-            for unclaim_brDict in unclaim_brDicts:
-                if unclaim_brDict['buildrequestid'] == brdict['buildrequestid']:
+            for unclaim_br in unclaim_brs:
+                if unclaim_br['buildrequestid'] == br['buildrequestid']:
                     continue
 
-                canCollapse = yield collapseRequestsFn(bldr, brdict, unclaim_brDict)
+                canCollapse = yield collapseRequestsFn(bldr, br, unclaim_br)
 
                 if canCollapse is True:
-                    collapseBRs.append(unclaim_brDict)
+                    collapseBRs.append(unclaim_br)
 
-        brids = [brDict['buildrequestid'] for brDict in collapseBRs]
+        brids = [br['buildrequestid'] for br in collapseBRs]
         if collapseBRs:
-            bsids = list(set([brDict['buildsetid'] for brDict in collapseBRs]))
+            bsids = list(set([br['buildsetid'] for br in collapseBRs]))
             # Claim the buildrequests
             yield self.master.data.updates.claimBuildRequests(brids)
             # complete the buildrequest with result SKIPPED.
@@ -241,22 +228,22 @@ class BuildRequest(object):
 
     @staticmethod
     @defer.inlineCallbacks
-    def canBeCollapsed(master, brdict1, brdict2):
+    def canBeCollapsed(master, br1, br2):
         """
         Returns true if both buildrequest can be merged, via Deferred.
 
         This implements Buildbot's default collapse strategy.
         """
         # short-circuit: if these are for the same buildset, collapse away
-        if brdict1['buildsetid'] == brdict2['buildsetid']:
+        if br1['buildsetid'] == br2['buildsetid']:
             defer.returnValue(True)
             return
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield master.data.get(
-            ('buildsets', str(brdict1['buildsetid'])))
+            ('buildsets', str(br1['buildsetid'])))
         otherBuildsets = yield master.data.get(
-            ('buildsets', str(brdict2['buildsetid'])))
+            ('buildsets', str(br2['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)

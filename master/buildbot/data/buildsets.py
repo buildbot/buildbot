@@ -23,6 +23,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import defer
@@ -190,15 +191,9 @@ class Buildset(base.ResourceType):
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
         # figure out the overall results of the buildset:
-        #  - SUCCESS unless at least one build was not SUCCESS or WARNINGS.
-        #  - Or SKIPPED
         cumulative_results = SUCCESS
         for brdict in brdicts:
-            if brdict['results'] == SKIPPED:
-                cumulative_results = SKIPPED
-            elif brdict['results'] not in (SUCCESS, WARNINGS):
-                cumulative_results = FAILURE
-                break
+            cumulative_results = worst_status(cumulative_results, brdict['results'])
 
         # get a copy of the buildset
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
