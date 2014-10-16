@@ -221,8 +221,9 @@ setup_args = {
         ]),
         ('buildbot.scheduler', [
             ('buildbot.schedulers.basic', [
-                'SingleBranchScheduler', 'AnyBranchScheduler', 'Triggerable']),
+                'SingleBranchScheduler', 'AnyBranchScheduler']),
             ('buildbot.schedulers.dependent', ['Dependent']),
+            ('buildbot.schedulers.triggerable', ['Triggerable']),
             ('buildbot.schedulers.forcesched', ['ForceScheduler']),
             ('buildbot.schedulers.timed', [
                 'Periodic', 'Nightly', 'NightlyTriggerable']),
