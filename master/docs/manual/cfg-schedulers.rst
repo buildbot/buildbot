@@ -650,7 +650,7 @@ Here is a fully-worked example::
                                  builderNames=['nightly'],
                                  hour=3, minute=0)
 
-    mktarball = util.Triggerable(name="mktarball", builderNames=["mktarball"])
+    mktarball = schedulers.Triggerable(name="mktarball", builderNames=["mktarball"])
     build = schedulers.Triggerable(name="build-all-platforms",
                                    builderNames=["build-all-platforms"])
     test = schedulers.Triggerable(name="distributed-test",
