@@ -230,9 +230,7 @@ class FakeUpdates(object):
     def findBuilderId(self, name):
         validation.verifyType(self.testcase, 'builder name', name,
                               validation.StringValidator())
-        if name not in self.builderIds:
-            self.builderIds[name] = max([0] + self.builderIds.values()) + 1
-        return defer.succeed(self.builderIds[name])
+        return self.master.db.builders.findBuilderId(name)
 
     def trySetSchedulerMaster(self, schedulerid, masterid):
         currentMasterid = self.schedulerMasters.get(schedulerid)

@@ -28,19 +28,16 @@ from twisted.trial import unittest
 
 class BuilderMixin(object):
 
-    @defer.inlineCallbacks
-    def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
-                    builderid=None, **config_kwargs):
-        """Set up C{self.bldr}"""
+    def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self.mq = self.master.mq
         self.db = self.master.db
-        if builderid is None:
-            b = fakedb.Builder(name=name)
-            yield self.master.db.insertTestData([b])
-            builderid = b.id
 
+    @defer.inlineCallbacks
+    def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
+                    **config_kwargs):
+        """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
         config_args = dict(name=name, slavename="slv", builddir="bdir",
                            slavebuilddir="sbdir", factory=self.factory)
@@ -49,8 +46,6 @@ class BuilderMixin(object):
         self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
-        fbi = self.master.data.updates.findBuilderId = mock.Mock(name='fbi')
-        fbi.side_effect = lambda name: defer.succeed(builderid)
 
         # patch into the _startBuildsFor method
         self.builds_started = []
@@ -78,6 +73,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     def setUp(self):
         # a collection of rows that would otherwise clutter up every test
+        self.setUpBuilderMixin()
         self.base_rows = [
             fakedb.SourceStamp(id=21),
             fakedb.Buildset(id=11, reason='because'),
@@ -330,6 +326,9 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):
 
+    def setUp(self):
+        self.setUpBuilderMixin()
+
     @defer.inlineCallbacks
     def test_getBuilderId(self):
         # noReconfig because reconfigService calls getBuilderId, and we haven't
@@ -349,7 +348,10 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
+        self.setUpBuilderMixin()
+
         # a collection of rows that would otherwise clutter up every test
         master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
         self.base_rows = [
@@ -358,6 +360,7 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
             fakedb.Builder(id=77, name='bldr1'),
             fakedb.Builder(id=78, name='bldr2'),
+            fakedb.Builder(id=182, name='foo@bar'),
             fakedb.BuildRequest(id=111, submitted_at=1000,
                                 builderid=77, buildsetid=11),
             fakedb.BuildRequest(id=222, submitted_at=2000,
@@ -370,32 +373,37 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
                                 builderid=78, buildsetid=11),
             fakedb.BuildRequestClaim(brid=444, masterid=master_id,
                                      claimed_at=2501),
+            fakedb.BuildRequest(id=555, submitted_at=2800,
+                                builderid=182, buildsetid=11),
         ]
+        yield self.db.insertTestData(self.base_rows)
 
+    @defer.inlineCallbacks
     def test_gort_unclaimed(self):
-        d = self.makeBuilder(name='bldr1', builderid=77)
-        d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
-        d.addCallback(lambda _: self.bldr.getOldestRequestTime())
+        yield self.makeBuilder(name='bldr1')
+        rqtime = yield self.bldr.getOldestRequestTime()
+        self.assertEqual(rqtime, epoch2datetime(1000))
 
-        def check(rqtime):
-            self.assertEqual(rqtime, epoch2datetime(1000))
-        d.addCallback(check)
-        return d
+    @defer.inlineCallbacks
+    def test_gort_bldr_name_not_identifier(self):
+        # this is a regression test for #2940
+        yield self.makeBuilder(name='foo@bar')
+        rqtime = yield self.bldr.getOldestRequestTime()
+        self.assertEqual(rqtime, epoch2datetime(2800))
 
+    @defer.inlineCallbacks
     def test_gort_all_claimed(self):
-        d = self.makeBuilder(name='bldr2', builderid=78)
-        d.addCallback(lambda _: self.db.insertTestData(self.base_rows))
-        d.addCallback(lambda _: self.bldr.getOldestRequestTime())
-
-        def check(rqtime):
-            self.assertEqual(rqtime, None)
-        d.addCallback(check)
-        return d
+        yield self.makeBuilder(name='bldr2')
+        rqtime = yield self.bldr.getOldestRequestTime()
+        self.assertEqual(rqtime, None)
 
 
 class TestReconfig(BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""
+
+    def setUp(self):
+        self.setUpBuilderMixin()
 
     @defer.inlineCallbacks
     def test_reconfig(self):
