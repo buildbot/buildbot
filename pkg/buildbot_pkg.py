@@ -15,11 +15,13 @@
 
 import subprocess
 
+# XXX(sa2ajj): this is an interesting mix of distutils and setuptools.  Needs
+# to be reviewed.
 from distutils.command.build import build
 from distutils.version import LooseVersion
 from setuptools import setup
+from setuptools.command.build_py import build_py
 from setuptools.command.egg_info import egg_info
-from textwrap import dedent
 
 import os
 
@@ -105,11 +107,6 @@ def build_js(cmd):
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
         cmd.spawn(['npm', 'install'])
         cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
-        with open(os.path.join("MANIFEST.in"), "w") as f:
-            f.write(dedent("""
-            include %(package)s/VERSION
-            recursive-include %(package)s/static *
-            """ % dict(package=package)))
 
     cmd.copy_tree(os.path.join(package, 'static'), os.path.join("build", "lib", package, "static"))
 
@@ -135,9 +132,19 @@ class my_egg_info(egg_info):
         build_js(self)
         return egg_info.run(self)
 
-cmdclassforjs = dict(build=my_build, egg_info=my_egg_info)
+
+# XXX(sa2ajj): this class exists only to address https://bitbucket.org/pypa/setuptools/issue/261
+# Once that's fixed, this class should go.
+class my_build_py(build_py):
+
+    def find_data_files(self, package, src_dir):
+        tempo = build_py.find_data_files(self, package, src_dir)
+
+        return [x for x in tempo if os.path.isfile(x)]
 
 
 def setup_www_plugin(**kw):
     package = kw['packages'][0]
-    setup(version=getVersion(os.path.join(package, "__init__.py")), cmdclass=cmdclassforjs, **kw)
+    setup(version=getVersion(os.path.join(package, "__init__.py")),
+          cmdclass=dict(build=my_build, egg_info=my_egg_info, build_py=my_build_py),
+          **kw)
