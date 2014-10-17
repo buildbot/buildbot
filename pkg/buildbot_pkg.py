@@ -60,10 +60,10 @@ def getVersion(init_file):
             v = VERSION_MATCH.search(out)
             if v:
                 version = v.group(1)
-        return version
+                return version
     except OSError:
         pass
-    return "latest"
+    return "999.0-version-not-found"
 
 
 # JS build strategy:
