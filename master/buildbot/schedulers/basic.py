@@ -82,14 +82,9 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
 
-    def preStartConsumingChanges(self):
-        # Hook for subclasses to setup before startConsumingChanges().
-        return defer.succeed(None)
-
     @defer.inlineCallbacks
     def activate(self):
         yield base.BaseScheduler.activate(self)
-        yield self.preStartConsumingChanges()
         yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                          change_filter=self.change_filter,
                                          onlyImportant=self.onlyImportant)

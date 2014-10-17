@@ -290,6 +290,8 @@ Changes for Developers
   These methods are not yet documented, and their interface is not stable.
   Consult the source code for details on the changes.
 
+* The ``preStartConsumingChanges`` and ``startTimedSchedulerService`` hooks have been removed.
+
 * The triggerable schedulers` ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
 
 * The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.

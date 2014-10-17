@@ -99,13 +99,6 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         else:
             yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
 
-        # give subclasses a chance to start up
-        yield self.startTimedSchedulerService()
-
-    def startTimedSchedulerService(self):
-        """Hook for subclasses to participate in the L{activate} process;
-        can return a Deferred"""
-
     @defer.inlineCallbacks
     def deactivate(self):
         yield base.BaseScheduler.deactivate(self)
@@ -353,15 +346,6 @@ class Nightly(NightlyBase):
         self.fileIsImportant = fileIsImportant
         self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)
-
-    def preStartConsumingChanges(self):
-        return defer.succeed(None)
-
-    def startTimedSchedulerService(self):
-        # Keep this for backwards compatibility, subclasses should
-        # override startTimedSchedulerService() instead
-        if self.onlyIfChanged:
-            return self.preStartConsumingChanges()
 
 
 class NightlyTriggerable(NightlyBase):
