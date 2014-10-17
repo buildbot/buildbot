@@ -431,6 +431,9 @@ class BuilderStatus(styles.Versioned):
                     if b is not None:
                         yield b
                         return
+                else:
+                    # Warning: if there is a problem saving the build in the cache the build wont be loaded
+                    return
 
         got = 0
         branches = set(branches)
@@ -672,7 +675,8 @@ class BuilderStatus(styles.Versioned):
             ss = build.getSourceStamps()
             build_keys = []
             for s in ss:
-                build_keys.append(LATEST_BUILD_FORMAT.format(s.codebase, s.branch))
+                if s.codebase and s.branch:
+                    build_keys.append(LATEST_BUILD_FORMAT.format(s.codebase, s.branch))
 
             for k in self.latestBuildCache.keys():
                 found_all_keys = True
