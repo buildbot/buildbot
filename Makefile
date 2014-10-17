@@ -20,7 +20,14 @@ pep8:
 	pep8 --config=common/pep8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
 
 frontend:
+	pip install -e pkg
+	pip install mock
 	for i in www/*/; do pip install -e $$i ; done
+
+frontend_install_tests:
+	pip install -e pkg
+	pip install mock wheel
+	trial pkg/test_buildbot_pkg.py
 
 rmpyc:
 	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
