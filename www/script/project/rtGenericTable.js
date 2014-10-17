@@ -65,7 +65,7 @@ define(function (require) {
                                 var latestRev = latestRevDict[obj.repository];
                                 if (latestRev !== undefined && obj.revision !== null) {
                                     if (!(latestRev.revision.indexOf(obj.revision) === 0 ||
-                                            obj.revision.indexOf(latestRev.revision) === 0)) {
+                                        obj.revision.indexOf(latestRev.revision) === 0)) {
 
                                         obj.pending_changes = latestRev.revision;
                                     }
@@ -97,7 +97,12 @@ define(function (require) {
                 "sClass": className === undefined ? "txt-align-left" : className,
                 "mRender": function (data, type, full) {
                     var build = privFunc.getPropertyOnData(full, property);
+
                     if (build !== undefined) {
+                        if (type === 'sort') {
+                            return build;
+                        }
+
                         if (typeof build.url === "object") {
                             build = $.extend({}, build, {url: build.url.path});
                         }

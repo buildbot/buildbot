@@ -158,9 +158,9 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 priorityOrder = [r.FAILURE, r.DEPENDENCY_FAILURE, r.SUCCESS, r.NOT_REBUILT, r.CANCELED, r.RETRY, r.SKIPPED, r.EXCEPTION];
 
             var sort = function (a, b, reverse) {
-                if (a.latestBuild !== undefined && b.latestBuild !== undefined) {
-                    var aResult = a.latestBuild.results;
-                    var bResult = b.latestBuild.results;
+                if (a !== null && b !== null) {
+                    var aResult = a.results;
+                    var bResult = b.results;
 
                     if (aResult === bResult) {
                         return 0;
@@ -170,7 +170,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                         order = priorityOrder.slice();
 
                     if (reverse === true) {
-                        order = order.reverse();
+                        order.reverse();
                     }
 
                     $.each(order, function (x, item) {
@@ -191,10 +191,10 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return result;
                 }
 
-                if (a.latestBuild === b.latestBuild) {
+                if (a === b) {
                     return 0;
                 }
-                if (a.latestBuild !== undefined) {
+                if (a !== null) {
                     return -1;
                 }
 
@@ -209,6 +209,8 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                     return sort(a, b, true);
                 }
             });
+
+            return sort;
         },
         initNumberIgnoreZeroSort: function initNumberSortMinusZero() {
             var sort = function sort(a, b, reverse) {
