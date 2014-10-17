@@ -157,17 +157,6 @@ class BaseBasicScheduler(CommonStuffMixin,
         d.addCallback(lambda _: sched.deactivate())
         return d
 
-    def test_activate_calls_preStartConsumingChanges(self):
-        sched = self.makeScheduler(self.Subclass)
-        sched.preStartConsumingChanges = mock.Mock(
-            return_value=defer.succeed(None))
-        d = sched.activate()
-
-        @d.addCallback
-        def check(_):
-            sched.preStartConsumingChanges.assert_called_with()
-        return d
-
     def test_gotChange_no_treeStableTimer_unimportant(self):
         sched = self.makeScheduler(
             self.Subclass, treeStableTimer=None, branch='master')
