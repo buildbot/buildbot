@@ -23,7 +23,6 @@ class AbsoluteSourceStampsMixin(object):
 
     @defer.inlineCallbacks
     def getCodebaseDict(self, codebase):
-        assert callable(self.getState)
         assert self.codebases
 
         if self._lastCodebases is None:
@@ -34,8 +33,6 @@ class AbsoluteSourceStampsMixin(object):
 
     @defer.inlineCallbacks
     def recordChange(self, change):
-        assert callable(self.setState)
-
         codebase = yield self.getCodebaseDict(change.codebase)
         lastChange = codebase.get('lastChange', -1)
 
