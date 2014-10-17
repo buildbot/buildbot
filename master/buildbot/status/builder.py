@@ -431,8 +431,6 @@ class BuilderStatus(styles.Versioned):
                     if b is not None:
                         yield b
                         return
-                else:
-                    return
 
         got = 0
         branches = set(branches)
