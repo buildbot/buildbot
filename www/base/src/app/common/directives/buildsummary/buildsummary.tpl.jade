@@ -16,7 +16,7 @@
                        ng-click="step.fulldisplay=!step.fulldisplay")
       span.pull-right(ng-if="step.started_at")
         | {{ step.duration| durationformat:'LLL' }}
-        | &nbsp;{{step.state_strings.join(' ')}}
+        | &nbsp;{{step.state_string}}
       span.badge-status(ng-class="results2class(step, 'pulse')")
         | {{step.number}}
       | &nbsp;

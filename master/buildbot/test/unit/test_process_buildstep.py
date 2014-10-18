@@ -316,8 +316,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = True
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateStrings[13],
-                         [u'C'])
+        self.assertEqual(step.master.data.updates.stepStateString[13], u'C')
 
     def test_updateSummary_running_empty_dict(self):
         step = self.setup_summary_test()
@@ -325,8 +324,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = True
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateStrings[13],
-                         [u'finished'])
+        self.assertEqual(step.master.data.updates.stepStateString[13],
+                         u'finished')
 
     def test_updateSummary_running_not_unicode(self):
         step = self.setup_summary_test()
@@ -349,8 +348,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = False
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateStrings[13],
-                         [u'CS'])
+        self.assertEqual(step.master.data.updates.stepStateString[13], u'CS')
 
     def test_updateSummary_finished_empty_dict(self):
         step = self.setup_summary_test()
@@ -358,8 +356,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = False
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateStrings[13],
-                         [u'finished'])
+        self.assertEqual(step.master.data.updates.stepStateString[13],
+                         u'finished')
 
     def test_updateSummary_finished_not_dict(self):
         step = self.setup_summary_test()

@@ -29,7 +29,7 @@ class Db2DataMixin(object):
             'started_at': dbdict['started_at'],
             'complete': dbdict['complete_at'] is not None,
             'complete_at': dbdict['complete_at'],
-            'state_strings': dbdict['state_strings'],
+            'state_string': dbdict['state_string'],
             'results': dbdict['results'],
             'urls': dbdict['urls'],
         }
@@ -117,7 +117,7 @@ class Step(base.ResourceType):
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
-        state_strings = types.List(of=types.String())
+        state_string = types.String()
         urls = types.List(
             of=types.Dict(
                 name=types.String(),
@@ -134,7 +134,7 @@ class Step(base.ResourceType):
     @defer.inlineCallbacks
     def newStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_strings=[u'pending'])
+            buildid=buildid, name=name, state_string=u'pending')
         yield self.generateEvent(stepid, 'new')
         defer.returnValue((stepid, num, name))
 
@@ -146,9 +146,9 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setStepStateStrings(self, stepid, state_strings):
-        yield self.master.db.steps.setStepStateStrings(
-            stepid=stepid, state_strings=state_strings)
+    def setStepStateString(self, stepid, state_string):
+        yield self.master.db.steps.setStepStateString(
+            stepid=stepid, state_string=state_string)
         yield self.generateEvent(stepid, 'updated')
 
     @base.updateMethod

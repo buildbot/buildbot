@@ -69,7 +69,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'number': 2,
             'results': None,
             'started_at': epoch2datetime(TIME3),
-            'state_strings': [],
+            'state_string': u'',
             'stepid': 72,
             'urls': []})
 
@@ -181,7 +181,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': number,
             'results': None,
             'started_at': None,
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'stepid': stepid,
             'urls': [],
         }
@@ -198,7 +198,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': number,
             'results': None,
             'started_at': None,
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'urls': [],
         })
 
@@ -220,7 +220,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
     def test_startStep(self):
         self.patch(reactor, 'seconds', lambda: TIME1)
         yield self.master.db.steps.addStep(buildid=10, name=u'ten',
-                                           state_strings=[u'pending'])
+                                           state_string=u'pending')
         yield self.rtype.startStep(stepid=100)
 
         msgBody = {
@@ -231,7 +231,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'stepid': 100,
             'urls': [],
         }
@@ -248,22 +248,22 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': epoch2datetime(TIME1),
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'urls': [],
         })
 
-    def test_signature_setStepStateStrings(self):
+    def test_signature_setStepStateString(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.setStepStateStrings,  # fake
-            self.rtype.setStepStateStrings)  # real
-        def setStepStateStrings(self, stepid, state_strings):
+            self.master.data.updates.setStepStateString,  # fake
+            self.rtype.setStepStateString)  # real
+        def setStepStateString(self, stepid, state_string):
             pass
 
     @defer.inlineCallbacks
-    def test_setStepStateStrings(self):
+    def test_setStepStateString(self):
         yield self.master.db.steps.addStep(buildid=10, name=u'ten',
-                                           state_strings=[u'pending'])
-        yield self.rtype.setStepStateStrings(stepid=100, state_strings=[u'hi'])
+                                           state_string=u'pending')
+        yield self.rtype.setStepStateString(stepid=100, state_string=u'hi')
 
         msgBody = {
             'buildid': 10,
@@ -273,7 +273,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
-            'state_strings': [u'hi'],
+            'state_string': u'hi',
             'stepid': 100,
             'urls': [],
         }
@@ -290,7 +290,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
-            'state_strings': [u'hi'],
+            'state_string': u'hi',
             'urls': [],
         })
 
@@ -304,7 +304,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def test_finishStep(self):
         yield self.master.db.steps.addStep(buildid=10, name=u'ten',
-                                           state_strings=[u'pending'])
+                                           state_string=u'pending')
         self.patch(reactor, 'seconds', lambda: TIME1)
         yield self.rtype.startStep(stepid=100)
         self.patch(reactor, 'seconds', lambda: TIME2)
@@ -319,7 +319,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': 9,
             'started_at': epoch2datetime(TIME1),
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'stepid': 100,
             'urls': [],
         }
@@ -336,7 +336,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': 9,
             'started_at': epoch2datetime(TIME1),
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'urls': [],
         })
 
@@ -350,7 +350,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def test_addStepURL(self):
         yield self.master.db.steps.addStep(buildid=10, name=u'ten',
-                                           state_strings=[u'pending'])
+                                           state_string=u'pending')
         yield self.rtype.addStepURL(stepid=100, name=u"foo", url=u"bar")
 
         msgBody = {
@@ -361,7 +361,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'stepid': 100,
             'urls': [{u'name': u'foo', u'url': u'bar'}],
         }
@@ -378,6 +378,6 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'number': 0,
             'results': None,
             'started_at': None,
-            'state_strings': [u'pending'],
+            'state_string': u'pending',
             'urls': [{u'name': u'foo', u'url': u'bar'}],
         })

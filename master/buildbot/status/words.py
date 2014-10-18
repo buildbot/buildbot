@@ -779,7 +779,7 @@ class IRCContact(base.StatusReceiver):
             for build in runningBuilds:
                 step = yield self.getCurrentBuildstep(build)
                 if step:
-                    s = "(%s)" % " ".join(step['state_strings'])
+                    s = "(%s)" % step['state_string']
                 else:
                     s = "(no current step)"
                 buildInfo.append("%d %s" % (build['number'], s))
