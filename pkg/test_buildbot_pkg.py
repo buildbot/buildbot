@@ -23,7 +23,7 @@ from textwrap import dedent
 
 class BuildbotWWWPkg(unittest.TestCase):
     pkgName = "buildbot_www"
-    pkgPaths = ["www"]
+    pkgPaths = ["www", "base"]
     epName = "base"
 
     loadTestScript = dedent("""

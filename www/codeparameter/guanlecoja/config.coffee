@@ -8,10 +8,10 @@ gulp = require("gulp")
 
 gulp.task "copyace", ->
     gulp.src(["libs/ace-builds/src-noconflict/*.js", "!libs/ace-builds/src-noconflict/ace.js"])
-        .pipe(gulp.dest("static"))
+        .pipe(gulp.dest(config.dir.build))
 
 
-module.exports =
+config =
 
     ### ###########################################################################################
     #   Name of the plugin
@@ -57,3 +57,4 @@ module.exports =
     karma:
         # we put tests first, so that we have angular, and fake app defined
         files: ["tests.js", "scripts.js", 'fixtures.js', "mode-python.js"]
+module.exports = config

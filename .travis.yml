@@ -79,7 +79,7 @@ install:
 
   # Determine if current configuration is latest
   - |
-    if [[ $TRAVIS_PYTHON_VERSION == '2.7' && $TWISTED == latest && \
+    if [[ $TWISTED == latest && \
           $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
       export IS_LATEST=true
     else
@@ -95,7 +95,7 @@ install:
 
 # Tests running commands
 script:
-  - "[ $IS_LATEST = false ] || make frontend"
+  - "[ $IS_LATEST = false ] || make frontend_install_tests"
   - trial --reporter=text --rterrors buildbot.test
   - trial --reporter=text --rterrors buildslave.test
 
