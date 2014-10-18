@@ -58,9 +58,8 @@ def getVersion(init_file):
 
         if (not p.returncode) and out:
             v = VERSION_MATCH.search(out)
-            if v:
-                version = v.group(1)
-                return version
+            if v is not None:
+                return v.group(1)
     except OSError:
         pass
     return "999.0-version-not-found"
