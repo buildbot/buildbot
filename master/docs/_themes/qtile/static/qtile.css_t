@@ -185,3 +185,9 @@ ul.screenshots li a {
 p.biglink:first-child {
     margin-top: 0px;
 }
+
+/* Other */
+
+dt tt.literal {
+    font-style: italic;
+}
