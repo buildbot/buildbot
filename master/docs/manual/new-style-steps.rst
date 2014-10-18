@@ -17,15 +17,15 @@ If this method is present, then the step is a new-style step.
 Summary of Changes
 ++++++++++++++++++
 
- * New-style steps have a ``run`` method that is simpler to implement than the old ``start`` method.
- * Many methods are now asynchronous (return Deferreds), as they perform operations on the database.
- * Logs are now implemented by a completely different class.
-   This class supports the same log-writing methods (``addStderr`` and so on), although they are now asynchronous.
-   However, it does not support log-reading methods such as ``getText``.
-   It was never advisable to handle logs as enormous strings.
-   New-style steps should, instead, use a LogObserver or (in Buildbot-0.9.0) fetch log lines bit by bit using the data API.
- * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be used in new-style steps.
-   Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
+* New-style steps have a ``run`` method that is simpler to implement than the old ``start`` method.
+* Many methods are now asynchronous (return Deferreds), as they perform operations on the database.
+* Logs are now implemented by a completely different class.
+  This class supports the same log-writing methods (``addStderr`` and so on), although they are now asynchronous.
+  However, it does not support log-reading methods such as ``getText``.
+  It was never advisable to handle logs as enormous strings.
+  New-style steps should, instead, use a LogObserver or (in Buildbot-0.9.0) fetch log lines bit by bit using the data API.
+* :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be used in new-style steps.
+  Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
 
 Backward Compatibility
 ++++++++++++++++++++++
@@ -72,18 +72,18 @@ Newly Asynchronous Methods
 
 The following methods now return a Deferred:
 
- * :py:meth:`buildbot.process.buildstep.BuildStep.addLog`
- * ``log.addStdout``
- * ``log.addStderr``
- * ``log.addHeader``
- * ``log.finish`` (see "Log Objects", below)
- * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStdout`
- * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStderr`
- * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addHeader`
- * :py:meth:`buildbot.process.remotecommand.RemoteCommand.addToLog`
- * :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog`
- * :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`
- * :py:meth:`buildbot.process.buildstep.BuildStep.addURL`
+* :py:meth:`buildbot.process.buildstep.BuildStep.addLog`
+* ``log.addStdout``
+* ``log.addStderr``
+* ``log.addHeader``
+* ``log.finish`` (see "Log Objects", below)
+* :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStdout`
+* :py:meth:`buildbot.process.remotecommand.RemoteCommand.addStderr`
+* :py:meth:`buildbot.process.remotecommand.RemoteCommand.addHeader`
+* :py:meth:`buildbot.process.remotecommand.RemoteCommand.addToLog`
+* :py:meth:`buildbot.process.buildstep.BuildStep.addCompleteLog`
+* :py:meth:`buildbot.process.buildstep.BuildStep.addHTMLLog`
+* :py:meth:`buildbot.process.buildstep.BuildStep.addURL`
 
 Any custom code in a new-style step that calls these methods must handle the resulting Deferred.
 In some cases, that means that the calling method's signature will change.
@@ -127,19 +127,19 @@ When using :py:meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog` or :p
 The second method is via :py:meth:`buildbot.process.buildstep.BuildStep.addLog`.
 In new-style steps, the returned object (via Deferred) has the following methods to add log content:
 
- * :py:meth:`~buildbot.process.log.StreamLog.addStdout`
- * :py:meth:`~buildbot.process.log.StreamLog.addStderr`
- * :py:meth:`~buildbot.process.log.StreamLog.addHeader`
- * :py:meth:`~buildbot.process.log.Log.finish`
+* :py:meth:`~buildbot.process.log.StreamLog.addStdout`
+* :py:meth:`~buildbot.process.log.StreamLog.addStderr`
+* :py:meth:`~buildbot.process.log.StreamLog.addHeader`
+* :py:meth:`~buildbot.process.log.Log.finish`
 
 All of these methods now return Deferreds.
 None of the old log-reading methods are available on this object:
 
- * ``hasContents``
- * ``getText``
- * ``readLines``
- * ``getTextWithHeaders``
- * ``getChunks``
+* ``hasContents``
+* ``getText``
+* ``readLines``
+* ``getTextWithHeaders``
+* ``getChunks``
 
 If your step uses such methods, consider using a :class:`~buildbot.process.logobserver.LogObserver` instead, or using the Data API to get the required data.
 

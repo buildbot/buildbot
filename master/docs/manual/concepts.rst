@@ -574,20 +574,20 @@ A full build set will specify a source stamp set describing the source to use fo
 
 Configuring all of this takes a coordinated approach.  A complete multiple repository configuration consists of:
 
-- a *codebase generator*
+a *codebase generator*
 
     Every relevant change arriving from a VC must contain a codebase.
     This is done by a :bb:cfg:`codebaseGenerator` that is defined in the configuration.
     Most generators examine the repository of a change to determine its codebase, using project-specific rules.
 
-- some *schedulers*
+some *schedulers*
 
     Each :bb:cfg:`scheduler<schedulers>` has to be configured with a set of all required ``codebases`` to build a product.
     These codebases indicate the set of required source-trees.
     In order for the scheduler to be able to produce a complete set for each build, the configuration can give a default repository, branch, and revision for each codebase.
     When a scheduler must generate a source stamp for a codebase that has received no changes, it applies these default values.
 
-- multiple *source steps* - one for each codebase
+multiple *source steps* - one for each codebase
 
     A :ref:`Builder`'s build factory must include a :ref:`source step<Source-Checkout>` for each codebase.
     Each of the source steps has a ``codebase`` attribute which is used to select an appropriate source stamp from the source stamp set for a build.
