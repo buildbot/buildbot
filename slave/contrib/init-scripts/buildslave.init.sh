@@ -157,7 +157,9 @@ function slave_op () {
 function do_op () {
     errors=0
     for i in $( seq ${#SLAVE_ENABLED[@]} ); do
-        if is_disabled "${SLAVE_ENABLED[$i]}" ; then
+        if [ -n "$4" ] && [ "$4" != "${SLAVE_NAME[$i]}" ] ; then
+            continue
+        elif is_disabled "${SLAVE_ENABLED[$i]}" && [ -z "$4" ] ; then
             continue
         fi
 
@@ -184,19 +186,19 @@ function do_op () {
 
 case "$1" in
     start)
-        do_op "slave_op" "start" "Starting buildslave"
+        do_op "slave_op" "start" "Starting buildslave" "$2"
         exit $?
         ;;
     stop)
-        do_op "slave_op" "stop" "Stopping buildslave"
+        do_op "slave_op" "stop" "Stopping buildslave" "$2"
         exit $?
         ;;
     reload)
-        do_op "slave_op" "reload" "Reloading buildslave"
+        do_op "slave_op" "reload" "Reloading buildslave" "$2"
         exit $?
         ;;
     restart|force-reload)
-        do_op "slave_op" "restart" "Restarting buildslave"
+        do_op "slave_op" "restart" "Restarting buildslave" "$2"
         exit $?
         ;;
     *)
