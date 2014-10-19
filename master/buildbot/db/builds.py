@@ -18,7 +18,6 @@ import sqlalchemy as sa
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 from twisted.internet import reactor
 
 
@@ -59,9 +58,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
-                 state_strings, _reactor=reactor, _race_hook=None):
+                 state_string, _reactor=reactor, _race_hook=None):
         started_at = _reactor.seconds()
-        state_strings_json = json.dumps(state_strings)
 
         def thd(conn):
             tbl = self.db.model.builds
@@ -82,19 +80,19 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                           buildrequestid=buildrequestid,
                                           buildslaveid=buildslaveid, masterid=masterid,
                                           started_at=started_at, complete_at=None,
-                                          state_strings_json=state_strings_json))
+                                          state_string=state_string))
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     new_number += 1
                     continue
                 return r.inserted_primary_key[0], new_number
         return self.db.pool.do(thd)
 
-    def setBuildStateStrings(self, buildid, state_strings):
+    def setBuildStateString(self, buildid, state_string):
         def thd(conn):
             tbl = self.db.model.builds
 
             q = tbl.update(whereclause=(tbl.c.id == buildid))
-            conn.execute(q, state_strings_json=json.dumps(state_strings))
+            conn.execute(q, state_string=state_string)
         return self.db.pool.do(thd)
 
     def finishBuild(self, buildid, results, _reactor=reactor):
@@ -132,5 +130,5 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             masterid=row.masterid,
             started_at=mkdt(row.started_at),
             complete_at=mkdt(row.complete_at),
-            state_strings=json.loads(row.state_strings_json),
+            state_string=row.state_string,
             results=row.results)

@@ -247,7 +247,7 @@ builds
     * ``masterid`` (the ID of the master on which this build was performed)
     * ``started_at`` (datetime at which this build began)
     * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
-    * ``state_strings`` (list of short strings describing the build's state)
+    * ``state_string`` (short string describing the build's state)
     * ``results`` (results of this build; see :ref:`Build-Result-Codes`)
 
     .. py:method:: getBuild(buildid)
@@ -276,22 +276,22 @@ builds
         Get a list of builds, in the format described above.
         Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_strings)
+    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_string)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: build request id
         :param integer slaveid: slave performing the build
         :param integer masterid: master performing the build
-        :param list state_strings: initial state of the build
+        :param unicode state_string: initial state of the build
         :returns: tuple of build ID and build number, via Deferred
 
         Add a new build to the db, recorded as having started at the current time.
         This will invent a new number for the build, unique within the context of the builder.
 
-    .. py:method:: setBuildStateStrings(buildid, state_strings):
+    .. py:method:: setBuildStateString(buildid, state_string):
 
         :param integer buildid: build id
-        :param list state_strings: updated state of the build
+        :param list state_string: updated state of the build
         :returns: Deferred
 
         Update the state strings for the given build.
@@ -383,7 +383,7 @@ steps
     .. py:method:: setStepStateString(stepid, state_string):
 
         :param integer stepid: step ID
-        :param unicode state_string updated state of the step
+        :param unicode state_string: updated state of the step
         :returns: Deferred
 
         Update the state string for the given step.

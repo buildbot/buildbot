@@ -47,13 +47,13 @@ class Tests(interfaces.InterfaceTests):
     ]
     threeBuilds = [
         fakedb.Build(id=50, buildrequestid=42, number=5, masterid=88,
-                     builderid=77, buildslaveid=13, state_strings_json='["test"]',
+                     builderid=77, buildslaveid=13, state_string="test",
                      started_at=TIME1),
         fakedb.Build(id=51, buildrequestid=41, number=6, masterid=88,
-                     builderid=88, buildslaveid=13, state_strings_json='["test"]',
+                     builderid=88, buildslaveid=13, state_string="test",
                      started_at=TIME2),
         fakedb.Build(id=52, buildrequestid=42, number=7, masterid=88,
-                     builderid=77, buildslaveid=13, state_strings_json='["test"]',
+                     builderid=77, buildslaveid=13, state_string="test",
                      started_at=TIME3, complete_at=TIME4, results=5),
     ]
 
@@ -61,18 +61,18 @@ class Tests(interfaces.InterfaceTests):
         50: {'id': 50, 'buildrequestid': 42, 'builderid': 77,
              'masterid': 88, 'number': 5, 'buildslaveid': 13,
              'started_at': epoch2datetime(TIME1),
-             'complete_at': None, 'state_strings': [u'test'],
+             'complete_at': None, 'state_string': 'test',
              'results': None},
         51: {'id': 51, 'buildrequestid': 41, 'builderid': 88,
              'masterid': 88, 'number': 6, 'buildslaveid': 13,
              'started_at': epoch2datetime(TIME2),
-             'complete_at': None, 'state_strings': [u'test'],
+             'complete_at': None, 'state_string': 'test',
              'results': None},
         52: {'id': 52, 'buildrequestid': 42, 'builderid': 77,
              'masterid': 88, 'number': 7, 'buildslaveid': 13,
              'started_at': epoch2datetime(TIME3),
              'complete_at': epoch2datetime(TIME4),
-             'state_strings': [u'test'],
+             'state_string': 'test',
              'results': 5},
     }
 
@@ -96,12 +96,12 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_addBuild(self):
         @self.assertArgSpecMatches(self.db.builds.addBuild)
         def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
-                     state_strings):
+                     state_string):
             pass
 
-    def test_signature_setBuildStateStrings(self):
-        @self.assertArgSpecMatches(self.db.builds.setBuildStateStrings)
-        def setBuildStateStrings(self, buildid, state_strings):
+    def test_signature_setBuildStateString(self):
+        @self.assertArgSpecMatches(self.db.builds.setBuildStateString)
+        def setBuildStateString(self, buildid, state_string):
             pass
 
     def test_signature_finishBuild(self):
@@ -124,7 +124,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_strings=[u'test'], results=None))
+                                     state_string=u'test', results=None))
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -173,13 +173,13 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData)
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, buildslaveid=13, masterid=88,
-                                                   state_strings=[u'test', u'test2'], _reactor=clock)
+                                                   state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'builddict', bdict)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_strings': [u'test', u'test2'],
+                                 'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
@@ -192,28 +192,27 @@ class Tests(interfaces.InterfaceTests):
         ])
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, buildslaveid=13, masterid=88,
-                                                   state_strings=[u'test', u'test2'], _reactor=clock)
+                                                   state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'builddict', bdict)
         self.assertEqual(number, 11)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_strings': [u'test', u'test2'],
+                                 'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
-    def test_setBuildStateStrings(self):
+    def test_setBuildStateString(self):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
-        yield self.db.builds.setBuildStateStrings(buildid=50,
-                                                  state_strings=[u'test', u'test2', u'test3'])
+        yield self.db.builds.setBuildStateString(buildid=50,
+                                                 state_string=u'test test2')
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'builddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_strings=[u'test', u'test2', u'test3'],
-                                     results=None))
+                                     state_string=u'test test2', results=None))
 
     @defer.inlineCallbacks
     def test_finishBuild(self):
@@ -227,7 +226,7 @@ class Tests(interfaces.InterfaceTests):
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
-                                     state_strings=[u'test'],
+                                     state_string=u'test',
                                      results=7))
 
     @defer.inlineCallbacks
@@ -237,7 +236,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds + [
             fakedb.Build(
                 id=54, buildrequestid=40, number=50, masterid=89,
-                builderid=77, buildslaveid=13, state_strings_json='["test"]',
+                builderid=77, buildslaveid=13, state_string="test",
                 started_at=TIME1)
         ])
         yield self.db.builds.finishBuildsFromMaster(masterid=88, results=7, _reactor=clock)
@@ -247,7 +246,7 @@ class Tests(interfaces.InterfaceTests):
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
-                                     state_strings=[u'test'],
+                                     state_string=u'test',
                                      results=7))
         for _id, results in [(50, 7), (51, 7), (52, 5), (54, None)]:
             bdict = yield self.db.builds.getBuild(_id)
@@ -272,11 +271,11 @@ class RealTests(Tests):
             conn.execute(self.db.model.builds.insert(),
                          {'number': numbers.pop(0), 'buildrequestid': 41,
                           'masterid': 88, 'buildslaveid': 13, 'builderid': 77,
-                          'started_at': TIME1, 'state_strings_json': '["hi"]'})
+                          'started_at': TIME1, 'state_string': "hi"})
 
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, buildslaveid=13, masterid=88,
-                                                   state_strings=[u'test', u'test2'], _reactor=clock,
+                                                   state_string=u'test test2', _reactor=clock,
                                                    _race_hook=raceHook)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'builddict', bdict)
@@ -284,7 +283,7 @@ class RealTests(Tests):
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_strings': [u'test', u'test2'],
+                                 'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
 
 

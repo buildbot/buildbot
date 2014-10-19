@@ -454,7 +454,7 @@ class Build(Row):
         masterid=None,
         started_at=1304262222,
         complete_at=None,
-        state_strings_json='["test"]',
+        state_string=u"test",
         results=None)
 
     id_column = 'id'
@@ -1662,7 +1662,7 @@ class FakeBuildsComponent(FakeDBComponent):
             buildslaveid=row['buildslaveid'],
             started_at=_mkdt(row['started_at']),
             complete_at=_mkdt(row['complete_at']),
-            state_strings=json.loads(row['state_strings_json']),
+            state_string=row['state_string'],
             results=row['results'])
 
     def getBuild(self, buildid):
@@ -1690,26 +1690,26 @@ class FakeBuildsComponent(FakeDBComponent):
         return defer.succeed(ret)
 
     def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
-                 state_strings, _reactor=reactor):
-        validation.verifyType(self.t, 'state_strings', state_strings,
-                              validation.ListValidator(validation.StringValidator()))
+                 state_string, _reactor=reactor):
+        validation.verifyType(self.t, 'state_string', state_string,
+                              validation.StringValidator())
         id = self._newId()
         number = max([0] + [r['number'] for r in self.builds.itervalues()
                             if r['builderid'] == builderid]) + 1
         self.builds[id] = dict(id=id, number=number,
                                buildrequestid=buildrequestid, builderid=builderid,
                                buildslaveid=buildslaveid, masterid=masterid,
-                               state_strings_json=unicode(json.dumps(state_strings)),
+                               state_string=state_string,
                                started_at=_reactor.seconds(), complete_at=None,
                                results=None)
         return defer.succeed((id, number))
 
-    def setBuildStateStrings(self, buildid, state_strings):
-        validation.verifyType(self.t, 'state_strings', state_strings,
-                              validation.ListValidator(validation.StringValidator()))
+    def setBuildStateString(self, buildid, state_string):
+        validation.verifyType(self.t, 'state_string', state_string,
+                              validation.StringValidator())
         b = self.builds.get(buildid)
         if b:
-            b['state_strings_json'] = unicode(json.dumps(state_strings))
+            b['state_string'] = state_string
         return defer.succeed(None)
 
     def finishBuild(self, buildid, results, _reactor=reactor):
