@@ -116,8 +116,7 @@ class Model(base.DBConnectorComponent):
                       # start/complete times
                       sa.Column('started_at', sa.Integer, nullable=False),
                       sa.Column('complete_at', sa.Integer),
-                      # a list of strings describing the build's state
-                      sa.Column('state_strings_json', sa.Text, nullable=False),
+                      sa.Column('state_string', sa.Text, nullable=False, server_default=''),
                       sa.Column('results', sa.Integer),
                       )
 

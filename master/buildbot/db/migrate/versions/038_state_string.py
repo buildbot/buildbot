@@ -21,6 +21,7 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     steps_table = sa.Table('steps', metadata, autoload=True)
+    builds_table = sa.Table('builds', metadata, autoload=True)
 
     # no attempt is made here to move data from one table to the other, since
     # there was no released version of Buildbot with a 'steps' table yet.
@@ -28,3 +29,7 @@ def upgrade(migrate_engine):
     col = sa.Column('state_string', sa.Text, nullable=False, server_default='')
     col.create(steps_table)
     steps_table.c.state_strings_json.drop()
+
+    col = sa.Column('state_string', sa.Text, nullable=False, server_default='')
+    col.create(builds_table)
+    builds_table.c.state_strings_json.drop()

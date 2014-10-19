@@ -73,6 +73,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.failUnless(hasattr(steps.c, 'state_string'))
             self.assertIsInstance(steps.c.state_string.type, sa.Text)
 
-            # TODO: also test that data is transferred?  Or just hell with it
+            builds = sa.Table('builds', metadata, autoload=True)
+            self.failIf(hasattr(builds.c, 'state_strings_json'))
+            self.failUnless(hasattr(builds.c, 'state_string'))
+            self.assertIsInstance(builds.c.state_string.type, sa.Text)
 
         return self.do_test_migration(37, 38, setup_thd, verify_thd)
