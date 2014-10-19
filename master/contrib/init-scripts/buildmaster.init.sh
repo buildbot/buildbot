@@ -117,7 +117,7 @@ function master_op () {
 
     ${MASTER_PREFIXCMD[$mi]} \
     su -s /bin/sh \
-    -c "$MASTER_RUNNER $op --quiet ${MASTER_OPTIONS[$mi]} ${MASTER_BASEDIR[$mi]}" \
+    -c "$MASTER_RUNNER $op ${MASTER_OPTIONS[$mi]} ${MASTER_BASEDIR[$mi]} > /dev/null" \
     - ${MASTER_USER[$mi]}
     return $?
 }

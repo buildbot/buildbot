@@ -150,7 +150,7 @@ function slave_op () {
     fi
     ${SLAVE_PREFIXCMD[$mi]} \
     su $suopt - ${SLAVE_USER[$mi]} \
-    -c "$SLAVE_RUNNER $op --quiet ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]}"
+    -c "$SLAVE_RUNNER $op ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]} > /dev/null"
     return $?
 }
 
