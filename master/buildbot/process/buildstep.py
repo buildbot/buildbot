@@ -246,6 +246,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         'alwaysRun',
         'doStepIf',
         'hideStepIf',
+        'description',
+        'descriptionDone',
+        'descriptionSuffix',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
