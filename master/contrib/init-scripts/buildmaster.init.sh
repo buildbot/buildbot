@@ -169,8 +169,12 @@ case "$1" in
         do_op "master_op" "restart" "Restarting buildmaster" "$2"
         exit $?
         ;;
+    upgrade)
+        do_op "master_op" "upgrade-master" "Upgrading buildmaster" "$2"
+        exit $?
+        ;;
     *)
-        echo "Usage: $0 {start|stop|restart|reload|force-reload}"
+        echo "Usage: $0 {start|stop|restart|reload|force-reload|upgrade}"
         exit 1
         ;;
 esac
