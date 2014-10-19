@@ -24,11 +24,11 @@ fi
 
 ## parse options
 
-slow=true  # TODO: switch slow to quick
+quick=false
 no_js=false
 while [ $# -gt 0 ]; do
     case $1 in
-        --quick) slow=false ;;
+        --quick) quick=true ;;
         --no-js) no_js=true ;;
         -*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
         *) REVRANGE="$1..HEAD" ;;
@@ -99,7 +99,7 @@ run_tests() {
 
 if ! git diff --no-ext-diff --quiet --exit-code; then
     not_ok "changed files in working copy"
-    if $slow; then
+    if ! $quick; then
         exit 1
     fi
 fi
@@ -119,7 +119,7 @@ done < ${tempfile}
 echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
-if $slow && ! $no_js; then
+if ! $quick && ! $no_js; then
     for module in www/base www/console_view www/waterfall_view www/codeparameter;
     do
         status "running 'setup.py develop' for $module"
@@ -133,7 +133,7 @@ else
     warning "Skipping JavaScript Tests"
 fi
 
-if $slow; then
+if ! $quick; then
     status "running Python tests"
     run_tests || not_ok "Python tests failed"
 else
