@@ -464,7 +464,7 @@ class TestIrcContactChannel(unittest.TestCase):
                                         started_at=datetime2epoch(build['started_at']),
                                         complete=True,
                                         complete_at=datetime2epoch(build['complete_at']),
-                                        state_strings=[],
+                                        state_string=u'',
                                         results=results,
             ))
 

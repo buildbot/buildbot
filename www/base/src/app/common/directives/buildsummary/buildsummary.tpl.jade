@@ -7,8 +7,8 @@
           | {{(build.complete_at - build.started_at)| durationformat:'LLL' }}
       span(ng-show="!build.complete")
           | {{(now - build.started_at)| durationformat:'LLL' }}
-      span(ng-repeat="s in build.state_strings")
-        | &nbsp;{{s}}&nbsp;
+      span
+        | &nbsp;{{build.state_string}}&nbsp;
       .label(ng-class="results2class(build)")
         | {{results2text(build)}}
   ul.list-group.no-select

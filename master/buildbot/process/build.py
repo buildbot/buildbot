@@ -278,8 +278,8 @@ class Build(properties.PropertiesMixin):
             self.deferred = None
             return
 
-        yield self.master.data.updates.setBuildStateStrings(self.buildid,
-                                                            [u'starting'])
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'starting')
         self.build_status.buildStarted(self)
         yield self.acquireLocks()
 
@@ -290,8 +290,8 @@ class Build(properties.PropertiesMixin):
         finally:
             metrics.MetricCountEvent.log('active_builds', -1)
 
-        yield self.master.data.updates.setBuildStateStrings(self.buildid,
-                                                            [u'finished'])
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'finished')
         yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
         # mark the build as finished
