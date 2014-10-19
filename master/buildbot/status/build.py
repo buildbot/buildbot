@@ -156,14 +156,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     # Afterwards they return None
 
     def getETA(self):
-        if self.finished is not None:
-            return None
-        if not self.progress:
-            return None
-        eta = self.progress.eta()
-        if eta is None:
-            return None
-        return eta - util.now()
+        return None
 
     def getCurrentStep(self):
         return self.currentStep
@@ -205,9 +198,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def sendETAUpdate(self, receiver, updateInterval):
         self.updates[receiver] = None
-        ETA = self.getETA()
-        if ETA is not None:
-            receiver.buildETAUpdate(self, self.getETA())
         # they might have unsubscribed during buildETAUpdate
         if receiver in self.watchers:
             self.updates[receiver] = reactor.callLater(updateInterval,
@@ -442,7 +432,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),
                            self.builder.status.getURLForThing(l)] for l in self.getLogs()]
-        result['eta'] = self.getETA()
+        result['eta'] = None
         result['steps'] = [bss.asDict() for bss in self.steps]
         if self.getCurrentStep():
             result['currentStep'] = self.getCurrentStep().asDict()

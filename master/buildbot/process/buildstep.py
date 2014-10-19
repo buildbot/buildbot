@@ -38,7 +38,6 @@ from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.status import progress
 from buildbot.status import results
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
@@ -334,17 +333,12 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self._factory
 
     def setupProgress(self):
-        if self.useProgress:
-            # XXX this uses self.name, but the name may change when the
-            # step is started..
-            sp = progress.StepProgress(self.name, self.progressMetrics)
-            self.progress = sp
-            return sp
-        return None
+        # this function temporarily does nothing
+        pass
 
     def setProgress(self, metric, value):
-        if self.progress:
-            self.progress.setProgress(metric, value)
+        # this function temporarily does nothing
+        pass
 
     def getCurrentSummary(self):
         if self.description is not None:
@@ -433,10 +427,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.stopped:
                 raise BuildStepCancelled
 
-            # set up progress
-            if self.progress:
-                self.progress.start()
-
             # check doStepIf
             if isinstance(self.doStepIf, bool):
                 doStep = self.doStepIf
@@ -502,9 +492,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.results = results
         self.realUpdateSummary()
         yield self.realUpdateSummary.stop()
-
-        if self.progress:
-            self.progress.finish()
 
         yield self.master.data.updates.finishStep(self.stepid, results)
 

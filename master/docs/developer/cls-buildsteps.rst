@@ -144,10 +144,6 @@ BuildStep
         It is only called if the build has :attr:`useProgress` set.
         There is rarely any reason to override this method.
 
-    .. py:attribute:: progress
-
-        If the step is tracking progress, this is a :class:`~buildbot.status.progress.StepProgress` instance performing that task.
-
     Execution of the step itself is governed by the following methods and attributes.
 
     .. py:method:: startStep(remote)

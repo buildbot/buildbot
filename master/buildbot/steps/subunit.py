@@ -95,19 +95,6 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     expectedTests = 0
     contextLevel = 0
 
-    def progress(self, offset, whence):
-        if not self.contextLevel:
-            if whence == self.PROGRESS_CUR:
-                self.expectedTests += offset
-            elif whence == self.PROGRESS_SET:
-                self.expectedTests = offset
-            self.step.progress.setExpectations({'tests': self.expectedTests})
-        # TODO: properly support PUSH/POP
-        if whence == self.PROGRESS_PUSH:
-            self.contextLevel += 1
-        elif whence == self.PROGRESS_POP:
-            self.contextLevel -= 1
-
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""
         self.seen_tags.update(new_tags)

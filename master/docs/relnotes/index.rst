@@ -292,6 +292,9 @@ Changes for Developers
 
 * The ``buildbot.misc.SerializedInvocation`` class has been removed; use :py:func:`buildbot.util.debounce.method` instead.
 
+* The ``progress`` attributes of both :py:class:`buildbot.process.buildstep.BuildStep`` and :py:class:`buildbot.process.build.Build` have been removed.
+  Subclasses should only be accessing the progress-tracking mechanics via the :py:meth:`buildbot.process.buildstep.BuildStep.setProgress` method.
+
 Slave
 -----
 

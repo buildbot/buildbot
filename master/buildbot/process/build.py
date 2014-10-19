@@ -27,7 +27,6 @@ from buildbot import interfaces
 from buildbot.process import metrics
 from buildbot.process import properties
 from buildbot.status.builder import Results
-from buildbot.status.progress import BuildProgress
 from buildbot.status.results import CANCELLED
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
@@ -82,7 +81,6 @@ class Build(properties.PropertiesMixin):
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
 
-        self.progress = None
         self.currentStep = None
         self.slaveEnvironment = {}
         self.buildid = None
@@ -356,31 +354,15 @@ class Build(properties.PropertiesMixin):
 
             sp = None
             if self.useProgress:
-                # XXX: maybe bail if step.progressMetrics is empty? or skip
-                # progress for that one step (i.e. "it is fast"), or have a
-                # separate "variable" flag that makes us bail on progress
-                # tracking
                 sp = step.setupProgress()
             if sp:
                 sps.append(sp)
-
-        # Create a buildbot.status.progress.BuildProgress object. This is
-        # called once at startup to figure out how to build the long-term
-        # Expectations object, and again at the start of each build to get a
-        # fresh BuildProgress object to track progress for that individual
-        # build. TODO: revisit at-startup call
-
-        if self.useProgress:
-            self.progress = BuildProgress(sps)
-            if self.progress and expectations:
-                self.progress.setExpectationsFrom(expectations)
 
         # we are now ready to set up our BuildStatus.
         # pass all sourcestamps to the buildstatus
         self.build_status.setSourceStamps(self.sources)
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
-        self.build_status.setProgress(self.progress)
 
         # gather owners from build requests
         owners = [r.properties['owner'] for r in self.requests
@@ -544,10 +526,6 @@ class Build(properties.PropertiesMixin):
         self.build_status.setText(text)
         self.build_status.setResults(results)
         self.build_status.buildFinished()
-        if self.progress and results == SUCCESS:
-            # XXX: also test a 'timing consistent' flag?
-            log.msg(" setting expectations for next time")
-            self.builder.setExpectations(self.progress)
         eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None

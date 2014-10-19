@@ -537,11 +537,6 @@ class IBuildStatus(Interface):
     # while the build is running, the following methods make sense.
     # Afterwards they return None
 
-    def getETA():
-        """Returns the number of seconds from now in which the build is
-        expected to finish, or None if we can't make a guess. This guess will
-        be refined over time."""
-
     def getCurrentStep():
         """Return an IBuildStepStatus object representing the currently
         active step."""
