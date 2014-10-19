@@ -368,8 +368,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         return {u'step': stepsumm}
 
-    # TODO: test those^^
-
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
