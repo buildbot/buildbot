@@ -6,7 +6,12 @@ For the most part, such configurations consist of subclasses set up for use in a
 
 This chapter describes some of the more common idioms in advanced Buildbot configurations.
 
-At the moment, this chapter is an unordered set of suggestions; if you'd like to clean it up, fork the project on GitHub and get started!
+At the moment, this chapter is an unordered set of suggestions:
+
+.. contents::
+   :local:
+
+If you'd like to clean it up, fork the project on GitHub and get started!
 
 Programmatic Configuration Generation
 -------------------------------------
@@ -174,7 +179,7 @@ No other sub-projects or branches will be tracked.
 If we want our ChangeSource to follow multiple branches, we have to do two things.
 First we have to change our ``svnurl=`` argument to watch more than just ``amanda/trunk``.
 We will set it to ``amanda`` so that we'll see both the trunk and all the branches.
-Second, we have to tell :bb:chsrc:`SVNPoller` how to split the ``({PROJECT-plus-BRANCH})({FILEPATH})`` strings it gets from the repository out into ``({BRANCH})`` and ``({FILEPATH})```.
+Second, we have to tell :bb:chsrc:`SVNPoller` how to split the :samp:`({PROJECT-plus-BRANCH})({FILEPATH})` strings it gets from the repository out into :samp:`({BRANCH})` and :samp:`({FILEPATH})`.
 
 We do the latter by providing a ``split_file`` function.
 This function is responsible for splitting something like ``branches/3_3/common-src/amanda.h`` into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``.
@@ -254,7 +259,7 @@ The 1.5.x branch version of this file would have a URL of ``http://divmod.org/sv
 The whole Nevow trunk would be checked out with ``http://divmod.org/svn/Divmod/trunk/Nevow``, while the Quotient trunk would be checked out using ``http://divmod.org/svn/Divmod/trunk/Quotient``.
 
 Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about the Nevow trunk.
-This case looks just like the ``{PROJECT}/{BRANCH}`` layout described earlier::
+This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier::
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
