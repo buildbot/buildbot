@@ -107,9 +107,6 @@ class FakeBuilder:
     def setupProperties(self, props):
         pass
 
-    def setExpectations(self, progress):
-        pass
-
 
 class FakeStepFactory(object):
 

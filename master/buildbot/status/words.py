@@ -129,13 +129,10 @@ class IrcBuildRequest:
         if self.timer:
             self.timer.cancel()
             del self.timer
-        eta = s.getETA()
         if self.useRevisions:
             response = "build containing revision(s) [%s] forced" % s.getRevisions()
         else:
             response = "build #%d forced" % s.getNumber()
-        if eta is not None:
-            response = "build forced [ETA %s]" % self.parent.convertTime(eta)
         self.parent.send(response)
         self.parent.send("I'll give a shout when the build finishes")
         d = s.waitUntilFinished()

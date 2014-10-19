@@ -217,7 +217,7 @@ class BuildStepMixin(object):
         @returns: Deferred
         """
         self.conn = mock.Mock(name="SlaveBuilder(connection)")
-        # TODO: self.step.setupProgress()
+        self.step.setupProgress()
         d = self.step.startStep(self.conn)
 
         @d.addCallback

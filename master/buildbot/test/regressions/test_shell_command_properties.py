@@ -50,16 +50,6 @@ class FakeBuildStatus:
         self.progress = p
 
 
-class FakeStepStatus:
-    txt = None
-
-    def setText(self, txt):
-        self.txt = txt
-
-    def setProgress(self, sp):
-        pass
-
-
 class FakeBuildRequest:
 
     def __init__(self, reason, sources, buildername):
