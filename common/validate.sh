@@ -1,5 +1,4 @@
 #! /bin/bash
-REVRANGE="$1..HEAD"
 TEST='buildbot.test buildslave.test'
 
 # some colors
@@ -19,16 +18,28 @@ if [ $# -eq 0 ]; then
     echo "      sphinx, pyflakes, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
+    echo "if --no-js is passed validate will skip tests that require Node and NPM"
     exit 1
 fi
+
+## parse options
+
+slow=true  # TODO: switch slow to quick
+no_js=false
+while [ $# -gt 0 ]; do
+    case $1 in
+        --quick) slow=false ;;
+        --no-js) no_js=true ;;
+        -*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+        *) REVRANGE="$1..HEAD" ;;
+    esac
+    shift
+done
 
 status() {
     echo "${LTCYAN}-- ${*} --${NORM}"
 }
-slow=true
-if [[ $2 == '--quick' ]]; then
-    slow=false
-fi
+
 ok=true
 problem_summary=""
 not_ok() {
@@ -108,7 +119,7 @@ done < ${tempfile}
 echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
-if $slow; then
+if $slow && ! $no_js; then
     for module in www/base www/console_view www/waterfall_view www/codeparameter;
     do
         status "running 'setup.py develop' for $module"
@@ -118,10 +129,15 @@ if $slow; then
             (cd $module; python setup.py develop >/dev/null ) || not_ok "$module/setup.py failed"
         fi
     done
+else
+    warning "Skipping JavaScript Tests"
 fi
+
 if $slow; then
-    status "running tests"
-    run_tests || not_ok "tests failed"
+    status "running Python tests"
+    run_tests || not_ok "Python tests failed"
+else
+    warning "Skipping Python Tests"
 fi
 
 status "checking formatting"
