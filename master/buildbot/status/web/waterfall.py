@@ -194,7 +194,7 @@ class StepBox(components.Adapter):
 
         for num in range(len(logs)):
             name = logs[num].getName()
-            if logs[num].hasContents():
+            if logs[num].old_hasContents():
                 url = urlbase + "/logs/%s" % urllib.quote(name)
             else:
                 url = None
