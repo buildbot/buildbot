@@ -18,7 +18,7 @@
           td {{ change.branch }}
           td {{ change.repository }}
           td {{ change.revision }}
-          td {{ change.when_timestamp | date:'yyyy-MM-dd HH:mm' }}
+          td {{ change.when_timestamp * 1000 | date:'yyyy-MM-dd HH:mm' }}
           td
             ul
               li(data-ng-repeat='file in change.files') {{file}}
