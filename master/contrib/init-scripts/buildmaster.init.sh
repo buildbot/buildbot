@@ -117,7 +117,7 @@ function master_op () {
 
     ${MASTER_PREFIXCMD[$mi]} \
     su -s /bin/sh \
-    -c "$MASTER_RUNNER $op --quiet ${MASTER_OPTIONS[$mi]} ${MASTER_BASEDIR[$mi]}" \
+    -c "$MASTER_RUNNER $op ${MASTER_OPTIONS[$mi]} ${MASTER_BASEDIR[$mi]} > /dev/null" \
     - ${MASTER_USER[$mi]}
     return $?
 }
@@ -125,7 +125,9 @@ function master_op () {
 function do_op () {
     errors=0
     for i in $( seq ${#MASTER_ENABLED[@]} ); do
-        if is_disabled "${MASTER_ENABLED[$i]}" ; then
+        if [ -n "$4" ] && [ "$4" != "${MASTER_NAME[$i]}" ] ; then
+            continue
+        elif is_disabled "${MASTER_ENABLED[$i]}" && [ -z "$4" ] ; then
             continue
         fi
 
@@ -152,23 +154,27 @@ function do_op () {
 
 case "$1" in
     start)
-        do_op "master_op" "start" "Starting buildmaster"
+        do_op "master_op" "start" "Starting buildmaster" "$2"
         exit $?
         ;;
     stop)
-        do_op "master_op" "stop" "Stopping buildmaster"
+        do_op "master_op" "stop" "Stopping buildmaster" "$2"
         exit $?
         ;;
     reload)
-        do_op "master_op" "reconfig" "Reloading buildmaster"
+        do_op "master_op" "reconfig" "Reloading buildmaster" "$2"
         exit $?
         ;;
     restart|force-reload)
-        do_op "master_op" "restart" "Restarting buildmaster"
+        do_op "master_op" "restart" "Restarting buildmaster" "$2"
+        exit $?
+        ;;
+    upgrade)
+        do_op "master_op" "upgrade-master" "Upgrading buildmaster" "$2"
         exit $?
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|reload|force-reload}"
+        echo "Usage: $0 {start|stop|restart|reload|force-reload|upgrade}"
         exit 1
         ;;
 esac
