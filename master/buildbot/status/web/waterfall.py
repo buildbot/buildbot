@@ -572,6 +572,16 @@ class WaterfallStatusResource(HtmlResource):
         if self.get_reload_time(request) is not None:
             ctx['no_reload_page'] = with_args(request, remove_args=["reload"])
 
+        # get alphabetically sorted list of all categories
+        categories = set()
+        builderNames = status.getBuilderNames()
+        for builderName in builderNames:
+            builder = status.getBuilder(builderName)
+            categories.add(builder.category)
+        categories = list(categories)
+        categories.sort()
+        ctx['categories'] = categories
+
         template = request.site.buildbot_service.templates.get_template("waterfall.html")
         data = template.render(**ctx)
         return data

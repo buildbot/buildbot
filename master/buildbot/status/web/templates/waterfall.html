@@ -8,6 +8,14 @@
   <a style="float: right;" href="{{ help_url }}">waterfall help</a>
 </div>
 
+{% if categories|length > 1 %}
+ <p><b>Categories:</b>
+ {% for c in categories %}
+  <a href="/waterfall?category={{ c }}">{{ c }}</a> &nbsp;
+ {% endfor -%}
+ </p>
+{% endif %}
+
 <table border="0" cellspacing="0">
 
 <tr class="LastBuild">
