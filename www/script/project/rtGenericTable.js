@@ -337,8 +337,9 @@ define(function (require) {
                 { "mData": null, "sTitle": "#", "sWidth": "10%" },
                 { "mData": null, "sTitle": "Date", "sWidth": "15%" },
                 { "mData": null, "sTitle": "Revision", "sWidth": "20%" },
-                { "mData": null, "sTitle": "Result", "sWidth": "30%", "sClass": "txt-align-left"},
+                { "mData": null, "sTitle": "Result", "sWidth": "25%", "sClass": "txt-align-left"},
                 { "mData": null, "sTitle": "Build Time", "sWidth": "10%" },
+                { "mData": null, "sTitle": "", "sWidth": "5%", bSortable: false},
                 { "mData": null, "sTitle": "Slave", "sWidth": "15%" }
             ];
 
@@ -356,7 +357,8 @@ define(function (require) {
                 cellFunc.revision(2, "sourceStamps", hideBranches),
                 cellFunc.buildStatus(3),
                 cellFunc.buildLength(4, "times"),
-                cellFunc.slaveName(5, function (data) {
+                cellFunc.buildShortcuts(5),
+                cellFunc.slaveName(6, function (data) {
                     if (data.slave_friendly_name !== undefined) {
                         return data.slave_friendly_name;
                     }
@@ -364,16 +366,18 @@ define(function (require) {
                 }, "slave_url", "txt-align-right")
             ];
 
+
             if (showBuilderName === true) {
                 options.aoColumns[1].sWidth = '10%';
                 options.aoColumns[2].sWidth = '25%';
-                options.aoColumns[3].sWidth = '30%';
+                options.aoColumns[3].sWidth = '25%';
                 options.aoColumns[4].sWidth = '10%';
                 options.aoColumns[5].sWidth = '20%';
                 options.aoColumns[5].sTitle = 'Builder';
+                options.aoColumns[5].bSortable = true;
 
-                options.aoColumnDefs.splice(5, 1);
-                options.aoColumnDefs.push(cellFunc.builderName(5));
+                options.aoColumns.splice(6, 1);
+                options.aoColumnDefs.splice(5, 2, cellFunc.builderName(5));
             }
 
             return dt.initTable($tableElem, options);

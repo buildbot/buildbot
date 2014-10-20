@@ -607,9 +607,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         return result
 
-    def asDict(self, request=None):
+    def asDict(self, request=None, include_artifacts=False):
         from buildbot.status.web.base import getCodebasesArg
-        result = self.asBaseDict(request)
+        result = self.asBaseDict(request, include_artifacts=include_artifacts)
 
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
