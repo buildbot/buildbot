@@ -47,7 +47,7 @@ class StatusResourceBuildStep(HtmlResource):
             # it chops up the step name.  If we quote it and '/'s
             # are not safe, it escapes the / that separates the
             # step name from the log number.
-            logs.append({'has_contents': l.hasContents(),
+            logs.append({'has_contents': l.old_hasContents(),
                          'name': l.getName(),
                          'link': req.childLink("logs/%s" % urllib.quote(l.getName()))})
 
