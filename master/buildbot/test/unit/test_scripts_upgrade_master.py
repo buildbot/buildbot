@@ -166,14 +166,14 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.activeBasedir(extra_lines=['rotateLength="32"'])
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
-        self.assertInStdout('WARNING')
+        self.assertInStdout('ERROR')
         self.assertInStdout('rotateLength')
 
     def test_checkBasedir_invalid_maxRotatedFiles(self):
         self.activeBasedir(extra_lines=['maxRotatedFiles="64"'])
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
-        self.assertInStdout('WARNING')
+        self.assertInStdout('ERROR')
         self.assertInStdout('maxRotatedFiles')
 
     def test_loadConfig(self):
