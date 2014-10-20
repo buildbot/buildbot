@@ -291,7 +291,7 @@ builds
     .. py:method:: setBuildStateString(buildid, state_string):
 
         :param integer buildid: build id
-        :param list state_string: updated state of the build
+        :param unicode state_string: updated state of the build
         :returns: Deferred
 
         Update the state strings for the given build.
@@ -374,7 +374,7 @@ steps
         :param integer buildid: the build to which to add the step
         :param name: the step name
         :type name: 50-character :ref:`identifier <type-identifier>`
-        :param list state_string: the initial state of the step
+        :param unicode state_string: the initial state of the step
         :returns: tuple of step ID, step number, and step name, via Deferred
 
         Add a new step to a build.

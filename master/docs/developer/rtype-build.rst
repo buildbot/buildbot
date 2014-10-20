@@ -89,7 +89,7 @@ All update methods are available as attributes of ``master.data.updates``.
     .. py:method:: setBuildStateString(buildid, state_string)
 
         :param integer buildid: the build to modify
-        :param list state_string: new state string for this build
+        :param unicode state_string: new state string for this build
 
         Replace the existing state strings for a build with a new list.
 
