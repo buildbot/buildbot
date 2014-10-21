@@ -19,10 +19,7 @@ from buildbot.data import base
 from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import types
 from buildbot.process.buildrequest import BuildRequestCollapser
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
 from buildbot.status.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime

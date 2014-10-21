@@ -186,6 +186,20 @@ class BuildRequest(base.ResourceType):
             # because one of the buildrequests has been claimed by another master
             defer.returnValue(False)
         yield self.generateEvent(brids, "complete")
+
+        # check for completed buildsets -- one call for each build request with
+        # a unique bsid
+        seen_bsids = set()
+        for brid in brids:
+            brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
+
+            if brdict:
+                bsid = brdict['buildsetid']
+                if bsid in seen_bsids:
+                    continue
+                seen_bsids.add(bsid)
+                yield self.master.data.updates.maybeBuildsetComplete(bsid)
+
         defer.returnValue(True)
 
     @base.updateMethod

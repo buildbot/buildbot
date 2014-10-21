@@ -473,21 +473,10 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def _notify_completions(self, requests, results, complete_at_epoch):
-        updates = self.master.data.updates
-
         # send a message for each request
         for br in requests:
-            updates.completeBuildRequests([br.id], results,
-                                          epoch2datetime(complete_at_epoch))
-
-        # check for completed buildsets -- one call for each build request with
-        # a unique bsid
-        seen_bsids = set()
-        for br in requests:
-            if br.bsid in seen_bsids:
-                continue
-            seen_bsids.add(br.bsid)
-            yield updates.maybeBuildsetComplete(br.bsid)
+            yield self.master.data.updates.completeBuildRequests([br.id], results,
+                                                                 epoch2datetime(complete_at_epoch))
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

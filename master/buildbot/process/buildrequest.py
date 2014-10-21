@@ -82,21 +82,17 @@ class BuildRequestCollapser(object):
                     continue
 
                 canCollapse = yield collapseRequestsFn(bldr, br, unclaim_br)
-
                 if canCollapse is True:
                     collapseBRs.append(unclaim_br)
 
-        brids = [br['buildrequestid'] for br in collapseBRs]
+        brids = [b['buildrequestid'] for b in collapseBRs]
         if collapseBRs:
-            bsids = list(set([br['buildsetid'] for br in collapseBRs]))
             # Claim the buildrequests
             yield self.master.data.updates.claimBuildRequests(brids)
             # complete the buildrequest with result SKIPPED.
             yield self.master.data.updates.completeBuildRequests(brids,
                                                                  SKIPPED)
-            for bsid in bsids:
-                # Buildset will be complete with result=SKIPPED
-                yield self.master.data.updates.maybeBuildsetComplete(bsid)
+
         defer.returnValue(brids)
 
 
@@ -338,9 +334,6 @@ class BuildRequest(object):
         # references.
         yield self.master.data.updates.completeBuildRequests([self.id],
                                                              FAILURE)
-
-        # and see if the enclosing buildset may be complete
-        yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
 
 
 class BuildRequestControl:
