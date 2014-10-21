@@ -361,9 +361,12 @@ class V2RootResource(resource.Resource):
                 request.write(data)
 
     def reconfigResource(self, new_config):
+        # www['url'] will always ends with a '/', not the Origin header.
+        origin_self = new_config.www['url'].rstrip('/')
         # pre-translate the origin entries in the config
         self.origins = [re.compile(fnmatch.translate(o.lower()))
-                        for o in new_config.www.get('allowed_origins', [])]
+                        for o in new_config.www.get('allowed_origins',
+                                                    [origin_self])]
 
         # and copy some other flags
         self.debug = new_config.www.get('debug')
