@@ -544,7 +544,7 @@ class PastBuildsJsonResource(JsonResource):
                                                               results=results,
                                                               num_builds=self.number))
 
-            return [b.asDict(request, include_artifacts=True) for b in builds]
+            return [b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds]
 
         if self.slave_status is not None:
             n = 0
