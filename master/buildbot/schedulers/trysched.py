@@ -357,7 +357,7 @@ class RemoteBuild(pb.Referenceable):
     def remote_getText(self):
         buildid = self.builddict['buildid']
         builddict = yield self.master.data.get(('builds', buildid))
-        defer.returnValue(builddict['state_strings'])
+        defer.returnValue([builddict['state_string']])
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):

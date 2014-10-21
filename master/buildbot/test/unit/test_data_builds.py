@@ -133,7 +133,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'number': 1,
                        'results': None,
                        'started_at': epoch2datetime(1),
-                       'state_strings': [u'created']}
+                       'state_string': u'created'}
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -169,7 +169,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                         builderid=10, buildrequestid=13, buildslaveid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         buildslaveid=20, masterid=self.master.masterid,
-                                                        state_strings=['created']))
+                                                        state_string=u'created'))
 
     def test_newBuildEvent(self):
         return self.do_test_event(self.rtype.newBuild,
@@ -177,17 +177,17 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event)])
 
-    def test_signature_setBuildStateStrings(self):
+    def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.setBuildStateStrings,  # fake
-            self.rtype.setBuildStateStrings)  # real
-        def setBuildStateStrings(self, buildid, state_strings):
+            self.master.data.updates.setBuildStateString,  # fake
+            self.rtype.setBuildStateString)  # real
+        def setBuildStateString(self, buildid, state_string):
             pass
 
-    def test_setBuildStateStrings(self):
-        return self.do_test_callthrough('setBuildStateStrings',
-                                        self.rtype.setBuildStateStrings,
-                                        buildid=10, state_strings=['a', 'b'])
+    def test_setBuildStateString(self):
+        return self.do_test_callthrough('setBuildStateString',
+                                        self.rtype.setBuildStateString,
+                                        buildid=10, state_string=u'a b')
 
     def test_signature_finishBuild(self):
         @self.assertArgSpecMatches(

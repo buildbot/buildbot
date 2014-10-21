@@ -41,7 +41,7 @@ describe 'buildbot service', ->
         r = buildbotService.one("builds", 1).one("steps", 2)
         r.bind($scope)
         $httpBackend.flush()
-        expect($scope.step.state_strings).toEqual(["mystate_strings"])
+        expect($scope.step.state_string).toEqual("mystate_string")
 
     it 'should query default scope_key to route key', ->
         $httpBackend.expectGET('api/v2/builds/1/steps/2').respond({steps:[{res: "SUCCESS"}]})

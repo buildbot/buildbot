@@ -362,8 +362,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         return {u'step': stepsumm}
 
-    # TODO: test those^^
-
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
@@ -384,8 +382,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not isinstance(stepResult, unicode):
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
-        yield self.master.data.updates.setStepStateStrings(self.stepid,
-                                                           [stepResult])
+        yield self.master.data.updates.setStepStateString(self.stepid,
+                                                          stepResult)
 
         if not self._running:
             buildResult = summary.get('build', None)

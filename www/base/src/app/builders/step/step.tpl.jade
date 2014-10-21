@@ -1,7 +1,7 @@
 .container
   .row
     .col-sm-6
-      | status: {{step.state_strings.join(' ')}}
+      | status: {{step.state_string}}
       ul.unstyled
         li(ng-repeat="log in step.logs")
           a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}

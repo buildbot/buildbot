@@ -13,8 +13,7 @@ Builds
     :attr boolean complete: true if this build is complete
     :attr timestamp complete_at: time at which this build was complete, or None if it's still running
     :attr integer results: the results of the build (see :ref:`Build-Result-Codes`), or None if not complete
-    :attr list state_strings: a list of strings giving progressively more detail on the state of the build.
-        The first is usually one word or phrase; the remainder are sized for one-line display.
+    :attr unicode state_string: a string giving detail on the state of the build.
 
     .. todo::
 
@@ -39,7 +38,7 @@ Builds
 
     .. bb:event:: build.$builderid.$buildid.newstate
 
-        The build's state (``state_strings``) has changed.
+        The build's state (``state_string``) has changed.
 
     .. bb:rpath:: /build
 
@@ -87,10 +86,10 @@ All update methods are available as attributes of ``master.data.updates``.
         Create a new build resource and return its ID.
         The state strings for the new build will be set to 'starting'.
 
-    .. py:method:: setBuildStateStrings(buildid, state_strings)
+    .. py:method:: setBuildStateString(buildid, state_string)
 
         :param integer buildid: the build to modify
-        :param list state_strings: new state strings for this build
+        :param unicode state_string: new state string for this build
 
         Replace the existing state strings for a build with a new list.
 

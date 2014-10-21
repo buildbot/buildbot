@@ -619,7 +619,7 @@ class IRCContact(base.StatusReceiver):
             r = "Hey! build %s #%d is complete: %s" % \
                 (builder_name, buildnum, results[0])
 
-        r += ' [%s]' % maybeColorize(" ".join(build['state_strings']), results[1], self.useColors)
+        r += ' [%s]' % maybeColorize(build['state_string'], results[1], self.useColors)
         self.send(r)
 
         # FIXME: where do we get the base_url? Then do we use the build Link to make the URL?
@@ -766,7 +766,7 @@ class IRCContact(base.StatusReceiver):
                         ago = self.convertTime(int(util.now() - complete_at))
                     else:
                         ago = "??"
-                    status = " ".join(lastBuild['state_strings'])
+                    status = lastBuild['state_string']
                     response += ' last build %s ago: %s' % (ago, status)
             else:
                 response += "offline"
@@ -776,7 +776,7 @@ class IRCContact(base.StatusReceiver):
             for build in runningBuilds:
                 step = yield self.getCurrentBuildstep(build)
                 if step:
-                    s = "(%s)" % " ".join(step['state_strings'])
+                    s = "(%s)" % step['state_string']
                 else:
                     s = "(no current step)"
                 buildInfo.append("%d %s" % (build['number'], s))
@@ -811,7 +811,7 @@ class IRCContact(base.StatusReceiver):
                     ago = self.convertTime(int(util.now() - complete_at))
                 else:
                     ago = "??"
-                status = " ".join(lastBuild['state_strings'])
+                status = lastBuild['state_string']
                 status = 'last build %s ago: %s' % (ago, status)
             self.send("last build [%s]: %s" % (builder['name'], status))
 

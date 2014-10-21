@@ -12,7 +12,7 @@ Steps
     :attr boolean complete: true if this step is complete
     :attr timestamp complete_at: time at which this step was complete, or None if it's still running
     :attr integer results: the results of the step (see :ref:`Build-Result-Codes`), or None if not complete
-    :attr list state_strings: a list of strings giving progressively more detail on the state of the build.
+    :attr unicode state_string: a string giving detail on the state of the build.
         The first is usually one word or phrase; the remainder are sized for one-line display.
     :attr urls: a list of URLs associated with this step.
     :type urls: list of dictionaries with keys `name` and `url`
@@ -93,12 +93,12 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Start the step.
 
-    .. py:method:: setStepStateStrings(stepid, state_strings)
+    .. py:method:: setStepStateString(stepid, state_string)
 
         :param integer stepid: the step to modify
-        :param list state_strings: new state strings for this step
+        :param unicode state_string: new state strings for this step
 
-        Replace the existing state strings for a step with a new list.
+        Replace the existing state string for a step with a new list.
 
     .. py:method:: addStepURL(stepid, name, url):
 

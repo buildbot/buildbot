@@ -155,7 +155,7 @@ class BuildStepMixin(object):
         # expectations
 
         self.exp_result = None
-        self.exp_state_strings = None
+        self.exp_state_string = None
         self.exp_properties = {}
         self.exp_missing_properties = []
         self.exp_logfiles = {}
@@ -184,7 +184,7 @@ class BuildStepMixin(object):
         """
         self.exp_result = result
         if state_string:
-            self.exp_state_strings = [state_string]
+            self.exp_state_string = state_string
 
     def expectProperty(self, property, value, source=None):
         """
@@ -227,12 +227,12 @@ class BuildStepMixin(object):
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
             self.assertEqual(result, self.exp_result, "expected result")
-            if self.exp_state_strings:
-                stepStateStrings = self.master.data.updates.stepStateStrings
-                stepids = stepStateStrings.keys()
+            if self.exp_state_string:
+                stepStateString = self.master.data.updates.stepStateString
+                stepids = stepStateString.keys()
                 assert stepids, "no step state strings were set"
-                self.assertEqual(stepStateStrings[stepids[0]],
-                                 self.exp_state_strings,
+                self.assertEqual(stepStateString[stepids[0]],
+                                 self.exp_state_string,
                                  "expected step state strings")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),

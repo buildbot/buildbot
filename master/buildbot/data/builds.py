@@ -31,7 +31,7 @@ class Db2DataMixin(object):
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],
             'complete': dbdict['complete_at'] is not None,
-            'state_strings': dbdict['state_strings'],
+            'state_string': dbdict['state_string'],
             'results': dbdict['results'],
         }
         return defer.succeed(data)
@@ -124,7 +124,7 @@ class Build(base.ResourceType):
         complete = types.Boolean()
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
-        state_strings = types.List(of=types.String())
+        state_string = types.String()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
@@ -141,7 +141,7 @@ class Build(base.ResourceType):
             buildrequestid=buildrequestid,
             buildslaveid=buildslaveid,
             masterid=self.master.masterid,
-            state_strings=[u'created'])
+            state_string=u'created')
         if res is not None:
             _id, number = res
             yield self.generateEvent(_id, "new")
@@ -149,9 +149,9 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def setBuildStateStrings(self, buildid, state_strings):
-        res = yield self.master.db.builds.setBuildStateStrings(
-            buildid=buildid, state_strings=state_strings)
+    def setBuildStateString(self, buildid, state_string):
+        res = yield self.master.db.builds.setBuildStateString(
+            buildid=buildid, state_string=state_string)
         yield self.generateEvent(buildid, "update")
         defer.returnValue(res)
 
