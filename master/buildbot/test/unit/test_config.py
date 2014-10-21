@@ -841,6 +841,71 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "unknown www configuration parameter(s) foo")
 
+    def test_load_www_noPortnoBBURLnoURL(self):
+        w1 = dict(www=dict())
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://localhost:8080/'))
+
+    def test_load_www_noPortNoBBURLwithURL(self):
+        w1 = dict(www=dict(url='http://thisurl'))
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://thisurl/'))
+
+    def test_load_www_noPortWithBBURLnoURL(self):
+        w1 = dict(www=dict(), buildbotURL='http://thisbuildboturl')
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://thisbuildboturl/'))
+
+    def test_load_www_noPortwithBBURLwithURL(self):
+        w1 = dict(www=dict(url='http://thisurl'), buildbotURL='http://realbuildboturl/')
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=None, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://thisurl/'))
+
+    def test_load_www_withPortnoBBURLnoURL(self):
+        w1 = dict(www=dict(port=20))
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=20, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://localhost:20/'))
+
+    def test_load_www_withPortnoBBURLwithURL(self):
+        w1 = dict(www=dict(port=20, url='http://fakeurl'))
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=20, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://fakeurl/'))
+
+    def test_load_www_withPortwithBBURLnoURL(self):
+        w1 = dict(www=dict(port=20), buildbotURL='http://realbuildboturl')
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=20, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://realbuildboturl/'))
+
+    def test_load_www_withPortwithBBURLwithURL(self):
+        w1 = dict(www=dict(port=20, url='http://example.com'),
+                  buildbotURL='http://realbuildboturl')
+        self.cfg.load_www(self.filename, w1)
+        self.assertResults(www=dict(port=20, auth={'name': 'NoAuth'},
+                                    plugins={},
+                                    avatar_methods={'name': 'gravatar'},
+                                    url='http://example.com/'))
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
