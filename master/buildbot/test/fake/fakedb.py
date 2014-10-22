@@ -89,6 +89,7 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
+        artifactbrid = None
     )
 
     id_column = 'id'
@@ -877,6 +878,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def setUp(self):
         self.reqs = {}
         self.claims = {}
+        self.sourcestamps = {}
 
     def insertTestData(self, rows):
         for row in rows:
@@ -936,6 +938,25 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         for brid in brids:
             self.claims[brid] = BuildRequestClaim(brid=brid,
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
+        return defer.succeed(None)
+
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
+        rv = {}
+        if sourcestamps:
+            for id, br in self.reqs.iteritems():
+                if buildername and buildername in br.buildername:
+                    rv=self._brdictFromRow(br)
+
+        '''
+        if not sourcestamps:
+            defer.succeed(rv)
+        for br in self.reqs.itervalues():
+            if buildername and buildername in br.buildername:
+                rv= self._brdictFromRow(br)
+        '''
+        return defer.succeed(rv)
+
+    def reusePreviousBuild(self, requests, artifactbrid):
         return defer.succeed(None)
 
     def mergePendingBuildRequests(self, brids, claimed_at=None):
