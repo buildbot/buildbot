@@ -277,11 +277,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         metrics.MetricCountEvent.log("num_builders",
                 len(self.builders), absolute=True)
 
-        queued_builds = yield self.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
-        builders = set(b["buildername"] for b in queued_builds if b["buildername"] not in new_set)
-        for builder in builders:
-            self.removeQueuedBuilds(builder)
-
+        # remove unclaimed builds if the builder has been removed from configuration
+        if len(self.master.config.projects) > 1:
+            queued_builds = yield self.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
+            # TODO: if we are running in multimaster mode with multiple instance of katana we need
+            # to check for the project key as well
+            builders = set(b["buildername"] for b in queued_builds if b["buildername"] not in new_set)
+            for builder in builders:
+                self.removeQueuedBuilds(builder)
 
         timer.stop()
 
