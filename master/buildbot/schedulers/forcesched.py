@@ -515,7 +515,7 @@ class CodebaseParameter(NestedParameter):
         for k, v in fields_dict.items():
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
-            if isinstance(branch, basestring):
+            elif isinstance(v, basestring):
                 v = FixedParameter(name=k, value=v)
             fields_dict[k] = v
 
