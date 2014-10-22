@@ -250,7 +250,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                             codebases=[IntParameter('foo')],))
 
         # codebases cannot be empty
-        self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed:",
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use [CodebaseParameter(codebase='', hide=True)] if needed:",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=['bar'],
                                                             codebases=[]))
