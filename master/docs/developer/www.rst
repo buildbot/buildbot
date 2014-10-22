@@ -338,7 +338,7 @@ Client can connect using following endpoints
 
  * ``http[s]://<BB_BASE_URL>/sse/listen/<path>``: Start listening to events on the http connection. Optionally setup a first event filter on ``<path>``. The first message send is a handshake, giving a uuid that can be used to add or remove event filters.
  * ``http[s]://<BB_BASE_URL>/sse/add/<uuid>/<path>``: Configure a sse session to add an event filter
- * ``http[s]://<BB_BASE_URL>/sse/remote/<uuid>/<path>``: Configure a sse session to remove an event filter
+ * ``http[s]://<BB_BASE_URL>/sse/remove/<uuid>/<path>``: Configure a sse session to remove an event filter
 
 Note that if a load balancer is setup as a front end to buildbot web masters, the load balancer must be configured to always use the same master given a client ip address for /sse endpoint.
 
