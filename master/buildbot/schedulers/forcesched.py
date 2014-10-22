@@ -118,6 +118,9 @@ class BaseParameter(object):
         self.tablabel = self.label if tablabel is None else tablabel
         if regex:
             self.regex = re.compile(regex)
+        if 'value' in kw:
+            config.error("Use default='%s' instead of value=... to give a "
+                         "default Parameter value" % kw['value'])
         # all other properties are generically passed via **kw
         self.__dict__.update(kw)
 
@@ -516,7 +519,7 @@ class CodebaseParameter(NestedParameter):
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
             elif isinstance(v, basestring):
-                v = FixedParameter(name=k, value=v)
+                v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
         fields = filter(None, fields_dict.values())
