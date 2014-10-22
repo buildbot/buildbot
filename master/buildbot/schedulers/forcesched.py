@@ -636,7 +636,9 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases = [CodebaseParameter(codebase='')]
         elif not codebases:
-            config.error("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (codebases,))
+            config.error("ForceScheduler: 'codebases' cannot be empty; use [CodebaseParameter(codebase='', hide=True)] if needed: %r " % (codebases,))
+        elif not isinstance(codebases, list):
+            config.error("ForceScheduler: 'codebases' should be a list of strings or CodebaseParameter, not %s" % type(codebases))
 
         codebase_dict = {}
         for codebase in codebases:
