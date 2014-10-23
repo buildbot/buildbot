@@ -599,7 +599,10 @@ class BuildersResource(HtmlResource):
         status = self.getStatus(req)
         encoding = getRequestCharset(req)
 
-        builders = req.args.get("builder", status.getBuilderNames())
+        showCategories = req.args.get("category", [])
+        if showCategories == []:
+            showCategories = None
+        builders = req.args.get("builder", status.getBuilderNames(categories=showCategories))
         branches = [b.decode(encoding)
                     for b in req.args.get("branch", [])
                     if b]
