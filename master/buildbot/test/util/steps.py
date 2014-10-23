@@ -113,13 +113,6 @@ class BuildStepMixin(object):
 
         ss.getLogs = lambda : ss.logs.values()
 
-        def addURL(name, url, results=None):
-            ss.urls[name] = url
-            if results is not None:
-                ss.urls[name] = {'url': url, 'results': results}
-
-        ss.addURL=addURL
-
         self.step_statistics = {}
         ss.setStatistic = self.step_statistics.__setitem__
         ss.getStatistic = self.step_statistics.get
@@ -166,7 +159,7 @@ class BuildStepMixin(object):
         self.exp_missing_properties = []
         self.exp_logfiles = {}
         self.exp_hidden = False
-        self.exp_urls = {}
+        self.exp_urls = None
 
         return step
 
@@ -226,7 +219,8 @@ class BuildStepMixin(object):
             got_outcome = dict(result=result,
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
-            self.assertEqual(self.step_status.urls, self.exp_urls)
+            if self.exp_urls:
+                self.assertEqual(self.step_status.urls, self.exp_urls)
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.failUnless(self.properties.hasProperty(pn),
                         "missing %s" % pn)

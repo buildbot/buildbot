@@ -58,6 +58,13 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
 
         self.build.builder.builder_status.getFriendlyName = lambda: "A"
 
+        def addURL(name, url, results=None):
+            self.step_status.urls[name] = url
+            if results is not None:
+                self.step_status.urls[name] = {'url': url, 'results': results}
+
+        self.step_status.addURL=addURL
+
         fake_br = fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", complete=1, results=0)
         fake_ss = fakedb.SourceStamp(id=1, branch='master', repository='https://url/project',
                                      codebase='c', revision='12', sourcestampsetid=1)
