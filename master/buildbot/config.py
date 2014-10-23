@@ -574,12 +574,24 @@ class MasterConfig(util.ComparableMixin):
         if unknown:
             error("unknown www configuration parameter(s) %s" %
                   (', '.join(unknown),))
+            return
 
         self.www.update(www_cfg)
 
+        print self.www
+        if 'url' not in self.www or not self.www['url']:
+            error("url configuration parameter must be specified.")
+            return
+
         # invent an appropriate URL given the port
-        if 'port' in www_cfg and 'url' not in www_cfg:
-            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
+        if 'port' in www_cfg:
+            if self.www['url']:
+                tmp = self.www['url']
+                if tmp.endswith('/'):
+                    tmp = self.www['url'][:-1]
+                self.www['url'] = tmp + (":%d" % www_cfg['port'])
+            else:
+                self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
