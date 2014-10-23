@@ -59,7 +59,7 @@ define(['jquery', 'rtGlobal', 'toastr', 'helpers', 'timeElements'], function ($,
 
                         if (iReconnectAttempts >= KRT_MAX_RECONNECT) {
                             toastr.error("Your connection to the realtime server has been lost, after multiple retries. " +
-                                    "To attempt to connect again, please close this toast",
+                                    "To attempt to connect again, please close this notification",
                                 "Unable to connect to realtime",
                                 {
                                     timeOut: 0,
