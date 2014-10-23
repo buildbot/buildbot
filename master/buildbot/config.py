@@ -592,7 +592,7 @@ class MasterConfig(util.ComparableMixin):
                         tmplist[2] = str(self.www['port'])
                         tmp = ":".join(tmplist)
                 else:
-                    tmp = self.www['url'] 
+                    tmp = self.www['url']
                 self.www['url'] = tmp
             else:
                 self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
