@@ -38,29 +38,16 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env', 'description', 'descriptionDone', 'descriptionSuffix']
+    renderables = ['command', 'env']
     haltOnFailure = True
     flunkOnFailure = True
 
     def __init__(self, command,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
                  env=None, path=None, usePTY=0, interruptSignal="KILL",
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
         self.command = command
-        if description:
-            self.description = description
-        if isinstance(self.description, str):
-            self.description = [self.description]
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
         self.env = env
         self.path = path
         self.usePTY = usePTY
@@ -164,13 +151,6 @@ class MasterShellCommand(BuildStep):
         else:
             self.step_status.setText(self.describe(done=True))
             self.finished(SUCCESS)
-
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
 
     def interrupt(self, reason):
         try:

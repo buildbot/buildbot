@@ -81,7 +81,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
     name = "shell"
     renderables = [
         'slaveEnvironment', 'remote_kwargs', 'command',
-        'description', 'descriptionDone', 'descriptionSuffix',
         'haltOnFailure', 'flunkOnFailure']
 
     command = None  # set this to a command, or set in kwargs
@@ -94,7 +93,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, workdir=None,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
                  command=None,
                  usePTY="slave-config",
                  **kwargs):
@@ -102,20 +100,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # that we create, but first strip out the ones that we pass to
         # BuildStep (like haltOnFailure and friends), and a couple that we
         # consume ourselves.
-
-        if description:
-            self.description = description
-        if isinstance(self.description, str):
-            self.description = [self.description]
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
 
         if command:
             self.setCommand(command)

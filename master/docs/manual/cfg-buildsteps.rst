@@ -89,15 +89,14 @@ Arguments common to all :class:`BuildStep` subclasses:
 ``description``
     This will be used to describe the command (on the Waterfall display) while the command is still running.
     It should be a single imperfect-tense verb, like `compiling` or `testing`.
-    The preferred form is a list of short strings, which allows the HTML displays to create narrower columns by emitting a <br> tag between each word.
-    You may also provide a single string.
+    The preferred form is a single, short string, but for historical reasons a list of strings is also acceptable.
 
 .. index:: Buildstep Parameter; descriptionDone
 
 ``descriptionDone``
     This will be used to describe the command once it has finished.
     A simple noun like `compile` or `tests` should be used.
-    Like ``description``, this may either be a list of short strings or a single string.
+    Like ``description``, this may either be a string or a list of short strings.
 
     If neither ``description`` nor ``descriptionDone`` are set, the actual command arguments will be used to construct the description.
     This may be a bit too wide to fit comfortably on the Waterfall display.
@@ -107,15 +106,15 @@ Arguments common to all :class:`BuildStep` subclasses:
 
         from buildbot.plugins import steps
         f.addStep(steps.ShellCommand(command=["make", "test"],
-                                     description=["testing"],
-                                     descriptionDone=["tests"]))
+                                     description="testing",
+                                     descriptionDone="tests"))
 
 .. index:: Buildstep Parameter; descriptionSuffix
 
 ``descriptionSuffix``
     This is an optional suffix appended to the end of the description (ie, after ``description`` and ``descriptionDone``).
     This can be used to distinguish between build steps that would display the same descriptions in the waterfall.
-    This parameter may be set to list of short strings, a single string, or ``None``.
+    This parameter may be a string, a list of short strings or ``None``.
 
     For example, a builder might use the ``Compile`` step to build two different codebases.
     The ``descriptionSuffix`` could be set to `projectFoo` and `projectBar`, respectively for each step, which will result in the full descriptions `compiling projectFoo` and `compiling projectBar` to be shown in the waterfall.

@@ -26,6 +26,8 @@ Summary of Changes
   New-style steps should, instead, use a LogObserver or (in Buildbot-0.9.0) fetch log lines bit by bit using the data API.
 * :py:class:`buildbot.process.buildstep.LoggingBuildStep` is deprecated and cannot be used in new-style steps.
   Mix in :py:class:`buildbot.process.buildstep.ShellMixin` instead.
+* Step strings, derived by parameters like ``description``, ``descriptionDone``, and ``descriptionSuffix``, are no longer treated as lists.
+  For backward compatibility, the parameters may still be given as lists, but will be joined with spaces during execution (using :py:func:`~buildbot.util.join_list`).
 
 Backward Compatibility
 ++++++++++++++++++++++
