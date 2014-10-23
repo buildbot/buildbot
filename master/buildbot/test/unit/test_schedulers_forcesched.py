@@ -255,6 +255,12 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                             builderNames=['bar'],
                                                             codebases=[]))
 
+        # codebases cannot be a dictionnary
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' should be a list of strings or CodebaseParameter, not <type 'dict'>",
+                                     lambda: ForceScheduler(name='foo',
+                                                            builderNames=['bar'],
+                                                            codebases={'cb': {'branch': 'trunk'}}))
+
     @defer.inlineCallbacks
     def test_good_codebases(self):
         sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar')])
