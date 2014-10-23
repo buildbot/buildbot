@@ -106,8 +106,6 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                       env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
                                       command='true'))
 
-        self.assertEqual(self.step.describe(), ['x'])
-
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']
         else:
@@ -184,10 +182,6 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                       descriptionSuffix='z',
                                       env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
                                       command='true'))
-
-        # call twice to make sure the suffix doesn't get double added
-        self.assertEqual(self.step.describe(), ['x', 'z'])
-        self.assertEqual(self.step.describe(), ['x', 'z'])
 
         if runtime.platformType == 'win32':
             exp_argv = [r'C:\WINDOWS\system32\cmd.exe', '/c', 'true']

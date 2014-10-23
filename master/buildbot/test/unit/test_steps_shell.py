@@ -55,20 +55,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                            state_string=u"'echo hello' (skipped)")
         return self.runStep()
 
-    def test_constructor_args_strings(self):
-        step = shell.ShellCommand(workdir='build', command="echo hello",
-                                  usePTY=False, description="echoing",
-                                  descriptionDone="echoed")
-        self.assertEqual(step.description, ['echoing'])
-        self.assertEqual(step.descriptionDone, ['echoed'])
-
-    def test_constructor_args_lists(self):
-        step = shell.ShellCommand(workdir='build', command="echo hello",
-                                  usePTY=False, description=["echoing"],
-                                  descriptionDone=["echoed"])
-        self.assertEqual(step.description, ['echoing'])
-        self.assertEqual(step.descriptionDone, ['echoed'])
-
     def test_constructor_args_kwargs(self):
         # this is an ugly way to define an API, but for now check that
         # the RemoteCommand arguments are properly passed on

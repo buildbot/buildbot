@@ -152,13 +152,6 @@ class MasterShellCommand(BuildStep):
             self.step_status.setText(self.describe(done=True))
             self.finished(SUCCESS)
 
-    def describe(self, done=False):
-        desc = self.descriptionDone if done else self.description
-        if self.descriptionSuffix:
-            desc = desc[:]
-            desc.extend(self.descriptionSuffix)
-        return desc
-
     def interrupt(self, reason):
         try:
             self.process.signalProcess(self.interruptSignal)
