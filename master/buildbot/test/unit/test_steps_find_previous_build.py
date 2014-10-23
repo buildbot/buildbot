@@ -5,8 +5,6 @@ from buildbot.status import master
 from buildbot.test.util import steps
 from buildbot.steps import artifact
 from buildbot.test.fake import fakemaster, fakedb
-import mock
-from twisted.internet import defer, reactor
 from buildbot.status.results import SUCCESS
 
 class FakeSourceStamp(object):
@@ -25,9 +23,9 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def setupStep(self, step, sourcestampsInBuild=None, gotRevisionsInBuild=None, *args, **kwargs):
+    def setupStep(self, step, sourcestampsInBuild=None, *args, **kwargs):
         sourcestamps = sourcestampsInBuild or []
-        got_revisions = gotRevisionsInBuild or {}
+        got_revisions = {}
 
         steps.BuildStepMixin.setupStep(self, step, *args, **kwargs)
 
@@ -36,10 +34,14 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
         m.db = fakedb.FakeDBConnector(self)
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
+        m.db.mastersconfig.setupMaster()
 
         if len(sourcestamps) < 1:
-            ss = mock.Mock(name="sourcestamp")
-            ss.sourcestampsetid = 0
+            ss = FakeSourceStamp(codebase='c',
+                                 repository='https://url/project',
+                                 branch='mybranch',
+                                 revision=3,
+                                 sourcestampsetid=3)
             sourcestamps.append(ss)
 
         def getAllSourceStamps():
@@ -54,13 +56,18 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
         self.build.requests = []
         self.build.builder.config.name = "A"
 
+        self.build.builder.builder_status.getFriendlyName = lambda: "A"
+
         fake_br = fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", complete=1, results=0)
-        fake_sset = fakedb.SourceStampSet(id=1)
-        fake_buildset = fakedb.Buildset(id=1, sourcestampsetid=1, complete=1, results=0)
         fake_ss = fakedb.SourceStamp(id=1, branch='master', repository='https://url/project',
                                      codebase='c', revision='12', sourcestampsetid=1)
+        fake_build = fakedb.Build(id=1, number=1, brid=1)
 
-        self.build.builder.botmaster.parent.db.insertTestData([fake_br, fake_sset, fake_buildset, fake_ss])
+        m.db.insertTestData([fake_br, fake_ss, fake_build])
+        m.db.buildrequests.setRelatedSourcestamps(1, [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=1)])
 
     # tests
 
@@ -68,8 +75,6 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(artifact.FindPreviousSuccessfulBuild())
         self.expectOutcome(result=SUCCESS, status_text=['Running build (previous sucessful build not found).'])
         return self.runStep()
-
-
 
     # check build url
     def test_previous_build_found(self):
@@ -81,4 +86,5 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
 
 
         self.expectOutcome(result=SUCCESS, status_text=['Found previous successful build.'])
+        self.expectURLS({'A #1': 'baseurl/builders/A/builds/1'})
         return self.runStep()

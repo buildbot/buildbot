@@ -890,6 +890,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     # component methods
 
+    def setRelatedSourcestamps(self, brid, sourcestamps):
+        self.sourcestamps[brid] = sourcestamps
+
     def getBuildRequest(self, brid):
         try:
             return defer.succeed(self._brdictFromRow(self.reqs[brid]))
@@ -940,20 +943,38 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
+    def compare(self, list1, list2):
+
+        if len(list1) != len(list2):
+            return False
+
+        def compareSourceStamp(ss):
+            for sources in list2:
+                if ss.codebase == sources['b_codebase'] \
+                        and ss.branch == sources['b_branch'] \
+                        and ss.revision == sources['b_revision']:
+                    return True
+
+            return False
+
+        for ss in list1:
+            found = compareSourceStamp(ss)
+            if not found:
+                return False
+
+        return True
+
+
     def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
         rv = {}
+
         if sourcestamps:
             for id, br in self.reqs.iteritems():
-                if buildername and buildername in br.buildername:
+                br_ss = self.sourcestamps.get(id)
+                if self.compare(br_ss, sourcestamps) and\
+                        buildername and buildername in br.buildername:
                     rv=self._brdictFromRow(br)
 
-        '''
-        if not sourcestamps:
-            defer.succeed(rv)
-        for br in self.reqs.itervalues():
-            if buildername and buildername in br.buildername:
-                rv= self._brdictFromRow(br)
-        '''
         return defer.succeed(rv)
 
     def reusePreviousBuild(self, requests, artifactbrid):
@@ -1111,10 +1132,19 @@ class FakeMastersConfigComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, MasterConfig):
-                self.builds[row.id] = row
+                self.mastersconfig[row.id] = row
     
-    def setupMaster(self, buildbotURL, _master_objectid=None):
+    def setupMaster(self, id=1, buildbotURL='baseurl/', _master_objectid=1):
+        self.mastersconfig[id] = MasterConfig(id = id,
+                                                            buildbotURL=buildbotURL,
+                                                            objectid = _master_objectid)
         return defer.succeed(None)
+
+    def getMasterURL(self, brid, id=1):
+        row = self.mastersconfig[id]
+
+        return defer.succeed(dict(id=row.id, buildbotURL=row.buildbotURL, objectid=row.objectid))
+
 
 class FakeUsersComponent(FakeDBComponent):
 

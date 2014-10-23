@@ -17,6 +17,7 @@ import mock
 from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.test.fake import remotecommand, fakebuild
+from buildbot.status.buildstep import BuildStepStatus
 
 
 class BuildStepMixin(object):
@@ -104,12 +105,20 @@ class BuildStepMixin(object):
 
         ss.status_text = None
         ss.logs = {}
+        ss.urls = {}
 
         def ss_setText(strings):
             ss.status_text = strings
         ss.setText = ss_setText
 
         ss.getLogs = lambda : ss.logs.values()
+
+        def addURL(name, url, results=None):
+            ss.urls[name] = url
+            if results is not None:
+                ss.urls[name] = {'url': url, 'results': results}
+
+        ss.addURL=addURL
 
         self.step_statistics = {}
         ss.setStatistic = self.step_statistics.__setitem__
@@ -157,6 +166,7 @@ class BuildStepMixin(object):
         self.exp_missing_properties = []
         self.exp_logfiles = {}
         self.exp_hidden = False
+        self.exp_urls = {}
 
         return step
 
@@ -173,6 +183,9 @@ class BuildStepMixin(object):
         text (a list).
         """
         self.exp_outcome = dict(result=result, status_text=status_text)
+
+    def expectURLS(self, urls):
+        self.exp_urls = urls
 
     def expectProperty(self, property, value, source=None):
         """
@@ -213,6 +226,7 @@ class BuildStepMixin(object):
             got_outcome = dict(result=result,
                         status_text=self.step_status.status_text)
             self.assertEqual(got_outcome, self.exp_outcome)
+            self.assertEqual(self.step_status.urls, self.exp_urls)
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.failUnless(self.properties.hasProperty(pn),
                         "missing %s" % pn)

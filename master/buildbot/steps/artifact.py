@@ -90,11 +90,11 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             self.build.result = SUCCESS
             self.build.setProperty("reusedOldBuild", True)
             self.build.allStepsDone()
-            return
+        else:
+            if len(self.build.requests) > 1:
+                yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
+            self.step_status.setText(["Running build (previous sucessful build not found)."])
 
-        if len(self.build.requests) > 1:
-            yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
-        self.step_status.setText(["Running build (previous sucessful build not found)."])
         self.finished(SUCCESS)
         return
 
