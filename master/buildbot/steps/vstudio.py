@@ -392,6 +392,7 @@ VS2013 = VC12
 class MsBuild4(VisualStudio):
     platform = None
     vcenv_bat = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+    renderables = ['platform']
 
     def __init__(self, platform, **kwargs):
         self.platform = platform
