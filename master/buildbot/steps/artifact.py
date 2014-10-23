@@ -277,9 +277,13 @@ class UploadArtifact(ShellCommand):
         command = ["rsync", "-var", self.artifact, remotelocation]
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
-        self.addURL(self.artifact, self.artifactURL)
         self.setCommand(command)
         ShellCommand.start(self)
+
+    def finished(self, results):
+        if results == SUCCESS:
+            self.addURL(self.artifact, self.artifactURL)
+        ShellCommand.finished(self, results)
 
 class DownloadArtifact(ShellCommand):
     name = "Download Artifact(s)"
