@@ -16,12 +16,84 @@
 import calendar
 
 from buildbot import interfaces
+from buildbot.data import resultspec
 from buildbot.db import buildrequests
 from buildbot.process import properties
 from buildbot.status.results import FAILURE
+from buildbot.status.results import SKIPPED
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implements
+
+
+class BuildRequestCollapser(object):
+    # brids is a list of the new added buildrequests id
+    # This class is called before generated the 'new' event for the buildrequest
+
+    # Before adding new buildset/buildrequests, we must examine each unclaimed
+    # buildrequest.
+    # EG:
+    #  1. get the list of all unclaimed buildrequests:
+    #     - We must exclude all buildsets which have at least 1 claimed buildrequest
+    #  2. For each unclaimed buildrequests, if compatible with the new request
+    #     (sourcestamps match, except for revision) Then:
+    #     2.1. claim it
+    #     2.2. complete it with result SKIPPED
+
+    def __init__(self, master, brids):
+        self.master = master
+        self.brids = brids
+
+    @defer.inlineCallbacks
+    def _getUnclaimedBrs(self, builderid):
+        # Retrieve the list of Brs for all unclaimed builds
+        unclaim_brs = yield self.master.data.get(('builders',
+                                                  builderid,
+                                                  'buildrequests'),
+                                                 [resultspec.Filter('claimed',
+                                                                    'eq',
+                                                                    [False])])
+        # sort by submitted_at, so the first is the oldest
+        unclaim_brs.sort(key=lambda brd: brd['submitted_at'])
+        defer.returnValue(unclaim_brs)
+
+    @defer.inlineCallbacks
+    def collapse(self):
+        collapseBRs = []
+
+        for brid in self.brids:
+            # Get the BuildRequest object
+            br = yield self.master.data.get(('buildrequests', brid))
+            # Retreive the buildername
+            builderid = br['builderid']
+            bldrdict = yield self.master.data.get(('builders', builderid))
+            # Get the builder object
+            bldr = self.master.botmaster.builders.get(bldrdict['name'])
+            # Get the Collapse BuildRequest function (from the configuration)
+            collapseRequestsFn = bldr.getCollapseRequestsFn() if bldr else None
+            unclaim_brs = yield self._getUnclaimedBrs(builderid)
+
+            # short circuit if there is no merging to do
+            if not collapseRequestsFn or not unclaim_brs:
+                continue
+
+            for unclaim_br in unclaim_brs:
+                if unclaim_br['buildrequestid'] == br['buildrequestid']:
+                    continue
+
+                canCollapse = yield collapseRequestsFn(bldr, br, unclaim_br)
+                if canCollapse is True:
+                    collapseBRs.append(unclaim_br)
+
+        brids = [b['buildrequestid'] for b in collapseBRs]
+        if collapseBRs:
+            # Claim the buildrequests
+            yield self.master.data.updates.claimBuildRequests(brids)
+            # complete the buildrequest with result SKIPPED.
+            yield self.master.data.updates.completeBuildRequests(brids,
+                                                                 SKIPPED)
+
+        defer.returnValue(brids)
 
 
 class TempSourceStamp(object):
@@ -52,7 +124,7 @@ class BuildRequest(object):
 
     A rolled-up encapsulation of all of the data relevant to a build request.
 
-    This class is used by the C{nextBuild} and C{mergeRequests} configuration
+    This class is used by the C{nextBuild} and C{collapseRequests} configuration
     parameters, as well as in starting a build.  Construction of a BuildRequest
     object is a heavyweight process involving a lot of database queries, so
     it should be avoided where possible.  See bug #1894.
@@ -150,24 +222,24 @@ class BuildRequest(object):
 
         defer.returnValue(buildrequest)
 
+    @staticmethod
     @defer.inlineCallbacks
-    def canBeMergedWith(self, other):
+    def canBeCollapsed(master, br1, br2):
         """
-        Returns true if both requests can be merged, via Deferred.
+        Returns true if both buildrequest can be merged, via Deferred.
 
-        This implements Buildbot's default merging strategy.
+        This implements Buildbot's default collapse strategy.
         """
-
-        # short-circuit: if these are for the same buildset, merge away
-        if self.bsid == other.bsid:
+        # short-circuit: if these are for the same buildset, collapse away
+        if br1['buildsetid'] == br2['buildsetid']:
             defer.returnValue(True)
             return
 
         # get the buidlsets for each buildrequest
-        selfBuildsets = yield self.master.data.get(
-            ('buildsets', str(self.bsid)))
-        otherBuildsets = yield self.master.data.get(
-            ('buildsets', str(other.bsid)))
+        selfBuildsets = yield master.data.get(
+            ('buildsets', str(br1['buildsetid'])))
+        otherBuildsets = yield master.data.get(
+            ('buildsets', str(br2['buildsetid'])))
 
         # extract sourcestamps, as dictionaries by codebase
         selfSources = dict((ss['codebase'], ss)
@@ -175,7 +247,7 @@ class BuildRequest(object):
         otherSources = dict((ss['codebase'], ss)
                             for ss in otherBuildsets['sourcestamps'])
 
-        # if the sets of codebases do not match, we can't merge
+        # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
             defer.returnValue(False)
             return
@@ -194,7 +266,7 @@ class BuildRequest(object):
             if selfSS['project'] != otherSS['project']:
                 defer.returnValue(False)
                 return
-            # anything with a patch won't be merged
+            # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
                 defer.returnValue(False)
                 return
@@ -262,9 +334,6 @@ class BuildRequest(object):
         # references.
         yield self.master.data.updates.completeBuildRequests([self.id],
                                                              FAILURE)
-
-        # and see if the enclosing buildset may be complete
-        yield self.master.data.updates.maybeBuildsetComplete(self.bsid)
 
 
 class BuildRequestControl:

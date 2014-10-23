@@ -84,7 +84,7 @@ class MasterConfig(util.ComparableMixin):
         self.logMaxSize = None
         self.logMaxTailSize = None
         self.properties = properties.Properties()
-        self.mergeRequests = None
+        self.collapseRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
         self.multiMaster = False
@@ -129,7 +129,7 @@ class MasterConfig(util.ComparableMixin):
         'db', "db_poll_interval", "db_url", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logEncoding",
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
-        "mergeRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
+        "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
         "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
@@ -292,12 +292,12 @@ class MasterConfig(util.ComparableMixin):
         else:
             self.properties.update(properties, filename)
 
-        mergeRequests = config_dict.get('mergeRequests')
-        if (mergeRequests not in (None, True, False)
-                and not callable(mergeRequests)):
-            error("mergeRequests must be a callable, True, or False")
+        collapseRequests = config_dict.get('collapseRequests')
+        if (collapseRequests not in (None, True, False)
+                and not callable(collapseRequests)):
+            error("collapseRequests must be a callable, True, or False")
         else:
-            self.mergeRequests = mergeRequests
+            self.collapseRequests = collapseRequests
 
         codebaseGenerator = config_dict.get('codebaseGenerator')
         if (codebaseGenerator is not None and
@@ -696,7 +696,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
                  builddir=None, slavebuilddir=None, factory=None,
                  tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
-                 properties=None, mergeRequests=None, description=None,
+                 properties=None, collapseRequests=None, description=None,
                  canStartBuild=None):
 
         # name is required, and can't start with '_'
@@ -783,7 +783,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if not isinstance(self.env, dict):
             error("builder's env must be a dictionary")
         self.properties = properties or {}
-        self.mergeRequests = mergeRequests
+        self.collapseRequests = collapseRequests
 
         self.description = description
 
@@ -809,8 +809,8 @@ class BuilderConfig(util_config.ConfiguredMixin):
             rv['env'] = self.env
         if self.properties:
             rv['properties'] = self.properties
-        if self.mergeRequests is not None:
-            rv['mergeRequests'] = self.mergeRequests
+        if self.collapseRequests is not None:
+            rv['collapseRequests'] = self.collapseRequests
         if self.description:
             rv['description'] = self.description
         return rv

@@ -154,8 +154,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertBuildsStarted([('slave', [10])])
 
     @defer.inlineCallbacks
-    def do_test_getMergeRequestsFn(self, builder_param=None,
-                                   global_param=None, expected=0):
+    def do_test_getCollapseRequestsFn(self, builder_param=None,
+                                      global_param=None, expected=0):
         cble = lambda: None
         builder_param = builder_param == 'callable' and cble or builder_param
         global_param = global_param == 'callable' and cble or global_param
@@ -164,38 +164,38 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         if builder_param is None:
             yield self.makeBuilder()
         else:
-            yield self.makeBuilder(mergeRequests=builder_param)
+            yield self.makeBuilder(collapseRequests=builder_param)
 
-        self.master.config.mergeRequests = global_param
+        self.master.config.collapseRequests = global_param
 
-        fn = self.bldr.getMergeRequestsFn()
+        fn = self.bldr.getCollapseRequestsFn()
 
-        if fn == builder.Builder._defaultMergeRequestFn:
+        if fn == builder.Builder._defaultCollapseRequestFn:
             fn = "default"
         elif fn is cble:
             fn = 'callable'
         self.assertEqual(fn, expected)
 
-    def test_getMergeRequestsFn_defaults(self):
-        self.do_test_getMergeRequestsFn(None, None, "default")
+    def test_getCollapseRequestsFn_defaults(self):
+        self.do_test_getCollapseRequestsFn(None, None, "default")
 
-    def test_getMergeRequestsFn_global_True(self):
-        self.do_test_getMergeRequestsFn(None, True, "default")
+    def test_getCollapseRequestsFn_global_True(self):
+        self.do_test_getCollapseRequestsFn(None, True, "default")
 
-    def test_getMergeRequestsFn_global_False(self):
-        self.do_test_getMergeRequestsFn(None, False, None)
+    def test_getCollapseRequestsFn_global_False(self):
+        self.do_test_getCollapseRequestsFn(None, False, None)
 
-    def test_getMergeRequestsFn_global_function(self):
-        self.do_test_getMergeRequestsFn(None, 'callable', 'callable')
+    def test_getCollapseRequestsFn_global_function(self):
+        self.do_test_getCollapseRequestsFn(None, 'callable', 'callable')
 
-    def test_getMergeRequestsFn_builder_True(self):
-        self.do_test_getMergeRequestsFn(True, False, "default")
+    def test_getCollapseRequestsFn_builder_True(self):
+        self.do_test_getCollapseRequestsFn(True, False, "default")
 
-    def test_getMergeRequestsFn_builder_False(self):
-        self.do_test_getMergeRequestsFn(False, True, None)
+    def test_getCollapseRequestsFn_builder_False(self):
+        self.do_test_getCollapseRequestsFn(False, True, None)
 
-    def test_getMergeRequestsFn_builder_function(self):
-        self.do_test_getMergeRequestsFn('callable', None, 'callable')
+    def test_getCollapseRequestsFn_builder_function(self):
+        self.do_test_getCollapseRequestsFn('callable', None, 'callable')
 
     # other methods
 

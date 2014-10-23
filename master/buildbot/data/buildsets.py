@@ -18,9 +18,9 @@ import copy
 from buildbot.data import base
 from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import types
-from buildbot.status.results import FAILURE
+from buildbot.process.buildrequest import BuildRequestCollapser
 from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.status.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import defer
@@ -140,6 +140,8 @@ class Buildset(base.ResourceType):
             submitted_at=epoch2datetime(submitted_at),
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
 
+        yield BuildRequestCollapser(self.master, brids.values()).collapse()
+
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
         sourcestamps = [
@@ -185,12 +187,10 @@ class Buildset(base.ResourceType):
 
         brdicts = yield self.master.db.buildrequests.getBuildRequests(bsid=bsid)
 
-        # figure out the overall results of the buildset: SUCCESS unless
-        # at least one build was not SUCCESS or WARNINGS.
+        # figure out the overall results of the buildset:
         cumulative_results = SUCCESS
         for brdict in brdicts:
-            if brdict['results'] not in (SUCCESS, WARNINGS):
-                cumulative_results = FAILURE
+            cumulative_results = worst_status(cumulative_results, brdict['results'])
 
         # get a copy of the buildset
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)

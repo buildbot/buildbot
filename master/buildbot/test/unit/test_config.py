@@ -53,7 +53,7 @@ global_defaults = dict(
     logMaxTailSize=None,
     logMaxSize=None,
     properties=properties.Properties(),
-    mergeRequests=None,
+    collapseRequests=None,
     prioritizeBuilders=None,
     protocols={},
     multiMaster=False,
@@ -471,18 +471,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                              dict(properties='yes'))
         self.assertConfigError(self.errors, "must be a dictionary")
 
-    def test_load_global_mergeRequests_bool(self):
-        self.do_test_load_global(dict(mergeRequests=False),
-                                 mergeRequests=False)
+    def test_load_global_collapseRequests_bool(self):
+        self.do_test_load_global(dict(collapseRequests=False),
+                                 collapseRequests=False)
 
-    def test_load_global_mergeRequests_callable(self):
+    def test_load_global_collapseRequests_callable(self):
         callable = lambda: None
-        self.do_test_load_global(dict(mergeRequests=callable),
-                                 mergeRequests=callable)
+        self.do_test_load_global(dict(collapseRequests=callable),
+                                 collapseRequests=callable)
 
-    def test_load_global_mergeRequests_invalid(self):
+    def test_load_global_collapseRequests_invalid(self):
         self.cfg.load_global(self.filename,
-                             dict(mergeRequests='yes'))
+                             dict(collapseRequests='yes'))
         self.assertConfigError(self.errors,
                                "must be a callable, True, or False")
 
@@ -1187,7 +1187,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               locks=[],
                               env={},
                               properties={},
-                              mergeRequests=None,
+                              collapseRequests=None,
                               description=None)
 
     def test_unicode_name(self):
@@ -1202,7 +1202,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             name='b', slavename='s1', slavenames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
@@ -1214,7 +1214,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               locks=['l'],
                               env={'x': 10},
                               properties={'y': 20},
-                              mergeRequests='mr',
+                              collapseRequests='cr',
                               description='buzz')
 
     def test_getConfigDict(self):
@@ -1224,7 +1224,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             name='b', slavename='s1', slavenames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, tags=['c'],
             nextSlave=ns, nextBuild=nb, locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
                                                'tags': ['c'],
@@ -1232,7 +1232,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'env': {'x': 10},
                                                'factory': self.factory,
                                                'locks': ['l'],
-                                               'mergeRequests': 'mr',
+                                               'collapseRequests': 'cr',
                                                'name': 'b',
                                                'nextBuild': nb,
                                                'nextSlave': ns,
@@ -1241,12 +1241,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'slavenames': ['s2', 's1'],
                                                })
 
-    def test_getConfigDict_mergeRequests(self):
-        for mr in (False, lambda a, b, c: False):
-            cfg = config.BuilderConfig(name='b', mergeRequests=mr,
+    def test_getConfigDict_collapseRequests(self):
+        for cr in (False, lambda a, b, c: False):
+            cfg = config.BuilderConfig(name='b', collapseRequests=cr,
                                        factory=self.factory, slavename='s1')
             self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
-                                                   'mergeRequests': mr,
+                                                   'collapseRequests': cr,
                                                    'name': 'b',
                                                    'slavebuilddir': 'b',
                                                    'factory': self.factory,

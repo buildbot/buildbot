@@ -336,7 +336,7 @@ The available caches are:
 
     c['buildCacheSize'] = 15
 
-.. bb:cfg:: mergeRequests
+.. bb:cfg:: collapseRequests
 
 .. index:: Builds; merging
 
@@ -345,12 +345,12 @@ Merging Build Requests
 
 .. code-block:: python
 
-   c['mergeRequests'] = True
+   c['collapseRequests'] = True
 
-This is a global default value for builders' :bb:cfg:`mergeRequests` parameter, and controls the merging of build requests.
+This is a global default value for builders' :bb:cfg:`collapseRequests` parameter, and controls the merging of build requests.
 
 This parameter can be overridden on a per-builder basis.
-See :ref:`Merging-Build-Requests` for the allowed values for this parameter.
+See :ref:`Collapsing-Build-Requests` for the allowed values for this parameter.
 
 .. note::
 

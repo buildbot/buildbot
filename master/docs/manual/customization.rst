@@ -31,27 +31,27 @@ For example, the following will generate a builder for each of a range of suppor
                 factory=f,
                 slavenames=pytest_slaves))
 
-.. _Merge-Request-Functions:
+.. _Collapse-Request-Functions:
 
-Merge Request Functions
------------------------
+Collapse Request Functions
+--------------------------
 
-.. index:: Builds; merging
+.. index:: Builds; collapsing
 
 .. warning:
 
     This section is no longer accurate in Buildbot 0.9.x
 
-The logic Buildbot uses to decide which build request can be merged can be customized by providing a Python function (a callable) instead of ``True`` or ``False`` described in :ref:`Merging-Build-Requests`.
+The logic Buildbot uses to decide which build request can be merged can be customized by providing a Python function (a callable) instead of ``True`` or ``False`` described in :ref:`Collapsing-Build-Requests`.
 
 The callable will be invoked with three positional arguments: a :class:`Builder` object and two :class:`BuildRequest` objects.
 It should return true if the requests can be merged, and False otherwise.
 For example::
 
-    def mergeRequests(builder, req1, req2):
+    def collapseRequests(builder, req1, req2):
         "any requests with the same branch can be merged"
         return req1.source.branch == req2.source.branch
-    c['mergeRequests'] = mergeRequests
+    c['collapseRequests'] = collapseRequests
 
 In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
 In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
@@ -61,18 +61,18 @@ Note, in particular, that this function returns a Deferred as of Buildbot-0.9.0.
 ::
 
     @defer.inlineCallbacks
-    def mergeRequests(builder, req1, req2):
+    def collapseRequests(builder, req1, req2):
         if (yield req1.source.canBeMergedWith(req2.source)) and req1.reason == req2.reason:
            defer.returnValue(True)
         else:
            defer.returnValue(False)
-    c['mergeRequests'] = mergeRequests
+    c['collapseRequests'] = collapseRequests
 
-If it's necessary to perform some extended operation to determine whether two requests can be merged, then the ``mergeRequests`` callable may return its result via Deferred.
+If it's necessary to perform some extended operation to determine whether two requests can be merged, then the ``collapseRequests`` callable may return its result via Deferred.
 Note, however, that the number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
 For example::
 
-    def mergeRequests(builder, req1, req2):
+    def collapseRequests(builder, req1, req2):
         d = defer.gatherResults([
             getMergeInfo(req1.source.revision),
             getMergeInfo(req2.source.revision),
@@ -81,7 +81,7 @@ For example::
             return info1 == info2
         d.addCallback(process)
         return d
-    c['mergeRequests'] = mergeRequests
+    c['collapseRequests'] = collapseRequests
 
 .. _Builder-Priority-Functions:
 
