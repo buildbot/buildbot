@@ -98,8 +98,9 @@ install:
 # Tests running commands
 script:
   - "[ $IS_LATEST = false ] || make frontend_install_tests"
-  - trial --reporter=text --rterrors buildbot.test
-  - trial --reporter=text --rterrors buildslave.test
+  # run tests under coverage for latest only (it's slower..)
+  - "[ $IS_LATEST = true ] ||                                            trial  --reporter=text --rterrors buildbot.test buildslave.test"
+  - "[ $IS_LATEST = false ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test"
 
   # Run additional tests only in latest configuration
   - "[ $IS_LATEST = false ] || make pylint"
@@ -111,4 +112,4 @@ notifications:
   email: false
 
 after_success:
-  coveralls
+  - "[ $IS_LATEST = false ] || coveralls"
