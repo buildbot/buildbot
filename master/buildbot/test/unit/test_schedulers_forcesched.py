@@ -585,3 +585,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                             codebases=['bar'], username="foo",
                                                             properties=[BaseParameter(name="test",),
                                                                         4567]))
+
+    def test_novalue_to_parameter(self):
+        self.assertRaisesConfigError("Use default='1234' instead of value=... to give a default Parameter value",
+                                     lambda: BaseParameter(name="test", value="1234"))
