@@ -6,7 +6,7 @@ class D3 extends Service
         d = $q.defer()
 
         # Resolve function
-        $.getScript config.url + 'd3.min.js', ->
+        $.getScript 'd3.min.js', ->
             $rootScope.$apply ->
                 d.resolve(window.d3)
 
