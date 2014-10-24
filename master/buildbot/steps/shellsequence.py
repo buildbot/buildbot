@@ -104,7 +104,9 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
             self.last_command = command
 
             cmd = yield self.makeRemoteShellCommand(command=command,
-                                                    stdioLogName=arg.logfile)
+                                                    stdioLogName=arg.logfile,
+                                                    collectStdout=self.want_stdout,
+                                                    collectStderr=self.want_stderr)
             yield self.runCommand(cmd)
             overall_result, terminate = results.computeResultAndTermination(
                 arg, cmd.results(), overall_result)
