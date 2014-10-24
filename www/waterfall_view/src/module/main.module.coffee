@@ -32,7 +32,7 @@ class Waterfall extends Controller
             minColumnWidth: cfg.minColumnWidth or 40
 
             # Y axis time format (new line: ^)
-            timeFormat: cfg.timeFormat or '%x^%I:%M'
+            timeFormat: cfg.timeFormat or '%x^%H:%M'
 
             # Lazy load limit
             limit: cfg.limit or 40
