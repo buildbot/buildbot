@@ -64,7 +64,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return patchid
         patchid = yield self.db.pool.do(thd)
 
-        ss_hash = self.hashColumns(branch, revision, repository, project,
+        ss_hash = self.hashColumns(branch, repository, project,
                                    codebase, patchid)
         sourcestampid = yield self.findSomethingId(
             tbl=tbl,
