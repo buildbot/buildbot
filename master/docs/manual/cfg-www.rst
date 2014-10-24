@@ -275,8 +275,10 @@ Currently only one provider is available:
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
-        In order to use this module, you need to install the ``python3-ldap`` module:
+        .. note::
 
-        .. code-block:: bash
+            In order to use this module, you need to install the ``python3-ldap`` module:
+
+            .. code-block:: bash
 
                 pip install python3-ldap
