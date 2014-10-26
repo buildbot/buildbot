@@ -370,7 +370,7 @@ class Waterfall extends Controller
             .attr('class', 'id')
             .attr('x', x.rangeBand() / 2)
             .attr('y', -3)
-            .text((build) -> build.buildid)
+            .text((build) -> build.number)
 
         # Add event listeners
         builds
