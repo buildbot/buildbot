@@ -1166,9 +1166,9 @@ A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderabl
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellSequence(commands=[
                                     util.ShellArg(command=['configure']),
-                                    util.ShellArg(command=['make'], log='make'),
-                                    util.ShellArg(command=['make', 'check_warning'], log='warning', warnOnFailure=True),
-                                    util.ShellArg(command=['make', 'install'], log='make install')
+                                    util.ShellArg(command=['make'], logfile='make'),
+                                    util.ShellArg(command=['make', 'check_warning'], logfile='warning', warnOnFailure=True),
+                                    util.ShellArg(command=['make', 'install'], logfile='make install')
                                   ]))
 
 All these commands share the same configuration of ``environment``, ``workdir`` and ``pty`` usage that can be setup the same way as in :bb:step:`ShellCommand`.
