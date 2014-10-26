@@ -38,18 +38,18 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env']
+    renderables = ['command', 'env', 'workdir']
     haltOnFailure = True
     flunkOnFailure = True
 
     def __init__(self, command,
-                 env=None, path=None, usePTY=0, interruptSignal="KILL",
+                 env=None, workdir=None, usePTY=0, interruptSignal="KILL",
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
         self.command = command
         self.env = env
-        self.path = path
+        self.workdir = workdir
         self.usePTY = usePTY
         self.interruptSignal = interruptSignal
 
@@ -136,7 +136,7 @@ class MasterShellCommand(BuildStep):
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                                            path=self.path, usePTY=self.usePTY, env=env)
+                                            path=self.workdir, usePTY=self.usePTY, env=env)
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):

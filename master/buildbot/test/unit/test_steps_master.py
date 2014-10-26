@@ -103,7 +103,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
     def test_constr_args(self):
         self.setupStep(
             master.MasterShellCommand(description='x', descriptionDone='y',
-                                      env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
+                                      env={'a': 'b'}, workdir=['/usr/bin'], usePTY=True,
                                       command='true'))
 
         if runtime.platformType == 'win32':
@@ -180,7 +180,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             master.MasterShellCommand(description='x', descriptionDone='y',
                                       descriptionSuffix='z',
-                                      env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
+                                      env={'a': 'b'}, workdir=['/usr/bin'], usePTY=True,
                                       command='true'))
 
         if runtime.platformType == 'win32':
