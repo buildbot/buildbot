@@ -77,7 +77,7 @@ class SVN(Source):
 
         # if the version is new enough, and the password is set, then obfuscate it
         if self.password is not None:
-            if not self.slaveVersionIsOlderThan('rmdir', '2.16'):
+            if not self.slaveVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
             else:
                 log.msg("Slave does not understand obfuscation; "
