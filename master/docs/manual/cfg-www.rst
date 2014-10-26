@@ -3,12 +3,12 @@
 Web Server
 ----------
 
-Buildbot contains a built-in web server.
-This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
-
 .. note::
 
    As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
+
+Buildbot contains a built-in web server.
+This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
 
 ``port``
     The TCP port on which to serve requests.
@@ -275,8 +275,10 @@ Currently only one provider is available:
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
-        In order to use this module, you need to install the ``python3-ldap`` module:
+        .. note::
 
-        .. code-block:: bash
+            In order to use this module, you need to install the ``python3-ldap`` module:
+
+            .. code-block:: bash
 
                 pip install python3-ldap
