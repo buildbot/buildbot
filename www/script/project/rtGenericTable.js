@@ -44,7 +44,7 @@ define(function (require) {
     };
 
     var cellFunc = {
-        revision: function (index, property, hideBranch, latestRevDict) {
+        revision: function (index, property, hideBranch, latestRevDictFunc) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
@@ -55,9 +55,11 @@ define(function (require) {
                         history_build = privFunc.buildIsHistoric(full.properties);
                     }
 
-                    if (latestRevDict !== undefined) {
-                        if (Object.prototype.toString.call(latestRevDict) === '[object Function]') {
-                            latestRevDict = latestRevDict();
+                    var latestRevDict;
+
+                    if (latestRevDictFunc !== undefined) {
+                        if (Object.prototype.toString.call(latestRevDictFunc) === '[object Function]') {
+                            latestRevDict = latestRevDictFunc();
                         }
 
                         if (latestRevDict !== undefined && sourceStamps !== undefined) {
