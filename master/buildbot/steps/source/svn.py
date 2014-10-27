@@ -163,7 +163,7 @@ class SVN(Source):
 
         checkout_dir = 'source'
         if self.codebase:
-            checkout_dir += '/' + self.codebase
+            checkout_dir = self.build.slave.path_module.join(checkout_dir, self.codebase)
         # temporarily set workdir = checkout_dir and do an incremental checkout
         try:
             old_workdir = self.workdir
