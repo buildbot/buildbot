@@ -228,19 +228,24 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def doOldStyleCustomBuildStep(self, slowDB=False):
+        # patch out newLog to delay until we're ready
+        newLogDeferreds = []
+        oldNewLog = self.master.data.updates.newLog
+
+        def finishNewLog(self):
+            for d in newLogDeferreds:
+                reactor.callLater(0, d.callback, None)
+
+        def delayedNewLog(*args, **kwargs):
+            d = defer.Deferred()
+            d.addCallback(lambda _: oldNewLog(*args, **kwargs))
+            newLogDeferreds.append(d)
+            return d
         if slowDB:
-            oldNewLog = self.master.data.updates.newLog
-
-            def newLog(*args, **kw):
-                d = defer.Deferred()
-
-                def delayed():
-                    r = oldNewLog(*args, **kw)
-                    r.addCallback(d.callback)
-
-                reactor.callLater(.1, delayed)
-                return d
-            self.patch(self.master.data.updates, "newLog", newLog)
+            self.patch(self.master.data.updates,
+                       "newLog", delayedNewLog)
+            self.patch(OldStyleCustomBuildStep,
+                       "_run_finished_hook", finishNewLog)
 
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
         yield self.do_test_step()

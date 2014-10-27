@@ -292,6 +292,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     cmd = None
     rendered = False  # true if attributes are rendered
     _waitingForLocks = False
+    _run_finished_hook = lambda self: None  # for tests
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -574,7 +575,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self._start_deferred.callback(results)
             results = yield self._start_deferred
         finally:
-            # wait all the sync logs have been actually created before finishing
+            # wait until all the sync logs have been actually created before
+            # finishing
+            self._run_finished_hook()
             yield defer.DeferredList(self._sync_addlog_deferreds,
                                      consumeErrors=True)
             self._start_deferred = None
