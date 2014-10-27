@@ -237,6 +237,8 @@ Changes and Removals
 
 * Buildslave info is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
+* The undocumented ``path`` parameter of the ``MasterShellCommand`` buildstep has been renamed ``workdir`` for better consistency with the other steps.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
