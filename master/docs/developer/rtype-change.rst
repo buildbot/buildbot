@@ -4,6 +4,7 @@ Changes
 .. bb:rtype:: change
 
     :attr integer changeid: the ID of this change
+    :attr integer parent_changeid: the ID of the parent
     :attr string author: the author of the change in "name", "name <email>" or just "email" (with @) format
     :attr files: source-code filenames changed
     :type files: list of strings
@@ -28,13 +29,20 @@ Changes
 
         This message indicates the addition of a new change.
 
-    .. bb:rpath:: /change
+    .. bb:rpath:: /changes
 
         This path lists changes.
 
         Consuming from this path selects :bb:event:`change.$changeid.new` events.
 
-    .. bb:rpath:: /change/:changeid
+    .. bb:rpath:: /builds/:buildid/changes
+
+        :pathkey integer buildid: the ID of the build
+        
+        This path lists all changes related to a build
+
+
+    .. bb:rpath:: /changes/:changeid
 
         :pathkey integer changeid: the ID of the change
 

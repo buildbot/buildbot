@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
 from buildbot.test.fake import fakedb
@@ -62,6 +63,7 @@ class Tests(interfaces.InterfaceTests):
 
     change14_dict = {
         'changeid': 14,
+        'parent_changeids': [],
         'author': u'warner',
         'branch': u'warnerdb',
         'category': u'devel',
@@ -120,6 +122,7 @@ class Tests(interfaces.InterfaceTests):
             'branch': u'master',
             'category': None,
             'changeid': changeid,
+            'parent_changeids': [],
             'codebase': u'cb',
             'comments': u'fix spelling',
             'files': [],
@@ -142,6 +145,63 @@ class Tests(interfaces.InterfaceTests):
                 'revision': u'2d6caa52',
                 'created_at': epoch2datetime(SOMETIME),
                 'ssid': ss['ssid'],
+            },
+            'when_timestamp': epoch2datetime(OTHERTIME),
+        })
+
+    @defer.inlineCallbacks
+    def test_addChange_withParent(self):
+        self.insertTestData(self.change14_rows)
+
+        clock = task.Clock()
+        clock.advance(SOMETIME)
+        changeid = yield self.db.changes.addChange(
+            author=u'delanne',
+            files=[],
+            comments=u'child of changeid14',
+            revision=u'50adad56',
+            when_timestamp=epoch2datetime(OTHERTIME),
+            branch=u'warnerdb',
+            category=u'devel',
+            revlink=None,
+            properties={},
+            repository=u'git://warner',
+            codebase=u'mainapp',
+            project=u'Buildbot',
+            _reactor=clock)
+        chdict = yield self.db.changes.getChange(changeid)
+        validation.verifyDbDict(self, 'chdict', chdict)
+        chdict = chdict.copy()
+        ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
+        chdict['sourcestampid'] = ss
+        self.assertEqual(chdict, {
+            'author': u'delanne',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'changeid': changeid,
+            'parent_changeids': [14],
+            'codebase': u'mainapp',
+            'comments': u'child of changeid14',
+            'files': [],
+            'project': u'Buildbot',
+            'properties': {},
+            'repository': u'git://warner',
+            'revision': u'50adad56',
+            'revlink': None,
+            'sourcestampid': {
+                'branch': u'warnerdb',
+                'codebase': u'mainapp',
+                'created_at': epoch2datetime(SOMETIME),
+                'patch_author': None,
+                'patch_body': None,
+                'patch_comment': None,
+                'patch_level': None,
+                'patch_subdir': None,
+                'patchid': None,
+                'project': u'Buildbot',
+                'repository': u'git://warner',
+                'revision': u'50adad56',
+                'ssid': ss['ssid']
             },
             'when_timestamp': epoch2datetime(OTHERTIME),
         })
@@ -329,6 +389,26 @@ class Tests(interfaces.InterfaceTests):
 
         def check(changeid):
             self.assertEqual(changeid, None)
+        d.addCallback(check)
+        return d
+
+    def test_signature_getParentChangeIds(self):
+        @self.assertArgSpecMatches(self.db.changes.getParentChangeIds)
+        def getParentChangeIds(self, branch, repository, project, codebase):
+            pass
+
+    def test_getParentChangeIds(self):
+        d = self.insertTestData(self.change14_rows + self.change13_rows)
+
+        def getParent(_):
+            return self.db.changes.getParentChangeIds(branch='warnerdb',
+                                                      repository='git://warner',
+                                                      project='Buildbot',
+                                                      codebase='mainapp')
+        d.addCallback(getParent)
+
+        def check(changeid):
+            self.assertEqual(changeid, [14])
         d.addCallback(check)
         return d
 
@@ -628,6 +708,120 @@ class RealTests(Tests):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
+    def test_getChangesForBuild(self):
+        defaultChangeKwargs = {
+            'branch': u'master',
+            'category': u'cat',
+            'codebase': u'A',
+            'project': u'proj',
+            'repository': u'repo', }
+
+        rows = [fakedb.Master(id=88, name="bar"),
+                fakedb.Buildslave(id=13, name='one'),
+                fakedb.Builder(id=77, name='A'),
+                fakedb.SourceStamp(id=234, codebase='A', revision="aaa"),
+                fakedb.SourceStamp(id=235, codebase='A', revision="bbb"),
+                fakedb.Change(changeid=12, author='franck', comments='1st commit', revision="a",
+                              sourcestampid=232, when_timestamp=SOMETIME, **defaultChangeKwargs),
+                fakedb.Change(changeid=13, author='alice', comments='2nd commit', revision="b",
+                              sourcestampid=233, parent_changeids=12, when_timestamp=SOMETIME + 10,
+                              **defaultChangeKwargs),
+                fakedb.Change(changeid=14, author='bob', comments='3rd commit', revision="c",
+                              sourcestampid=234, parent_changeids=13, when_timestamp=SOMETIME + 20,
+                              **defaultChangeKwargs),
+                fakedb.Change(changeid=15, author='delanne', comments='4th commit', revision="d",
+                              sourcestampid=235, parent_changeids=14, when_timestamp=SOMETIME + 30,
+                              **defaultChangeKwargs),
+                fakedb.Buildset(id=30, reason='foo',
+                                submitted_at=1300305712, results=-1),
+                fakedb.Buildset(id=29, reason='foo',
+                                submitted_at=1300305012, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=29),
+                fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=18, buildsetid=29, builderid=77,
+                                    priority=13, submitted_at=1300305012, results=-1),
+                fakedb.Build(id=49, buildrequestid=18, number=1, masterid=88,
+                             builderid=77, state_string="test", buildslaveid=13,
+                             started_at=1304262222, results=0),
+                fakedb.Build(id=50, buildrequestid=19, number=2, masterid=88,
+                             builderid=77, state_string="test", buildslaveid=13,
+                             started_at=1304262222), ]
+
+        expected_1stBuild = [{'author': u'alice',
+                              'branch': u'master',
+                              'category': u'cat',
+                              'changeid': 13,
+                              'codebase': u'A',
+                              'comments': u'2nd commit',
+                              'files': [],
+                              'parent_changeids': [12],
+                              'project': u'proj',
+                              'properties': {},
+                              'repository': u'repo',
+                              'revision': u'b',
+                              'revlink': u'http://vc/abcd',
+                              'sourcestampid': 233,
+                              'when_timestamp': epoch2datetime(SOMETIME + 10)},
+                             {'author': u'bob',
+                              'branch': u'master',
+                              'category': u'cat',
+                              'changeid': 14,
+                              'codebase': u'A',
+                              'comments': u'3rd commit',
+                              'files': [],
+                              'parent_changeids': [13],
+                              'project': u'proj',
+                              'properties': {},
+                              'repository': u'repo',
+                              'revision': u'c',
+                              'revlink': u'http://vc/abcd',
+                              'sourcestampid': 234,
+                              'when_timestamp': epoch2datetime(SOMETIME + 20)},
+                             {'author': u'franck',
+                              'branch': u'master',
+                              'category': u'cat',
+                              'changeid': 12,
+                              'codebase': u'A',
+                              'comments': u'1st commit',
+                              'files': [],
+                              'parent_changeids': [],
+                              'project': u'proj',
+                              'properties': {},
+                              'repository': u'repo',
+                              'revision': u'a',
+                              'revlink': u'http://vc/abcd',
+                              'sourcestampid': 232,
+                              'when_timestamp': epoch2datetime(SOMETIME)}]
+
+        expected_2ndBuild = [{'author': u'delanne',
+                              'branch': u'master',
+                              'category': u'cat',
+                              'changeid': 15,
+                              'codebase': u'A',
+                              'comments': u'4th commit',
+                              'files': [],
+                              'parent_changeids': [14],
+                              'project': u'proj',
+                              'properties': {},
+                              'repository': u'repo',
+                              'revision': u'd',
+                              'revlink': u'http://vc/abcd',
+                              'sourcestampid': 235,
+                              'when_timestamp': epoch2datetime(SOMETIME + 30)}]
+
+        self.insertTestData(rows)
+
+        # 1st build (Eg: no previous build)
+        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(49))),
+                         sorted(expected_1stBuild))
+
+        # 2nd build (Eg: with a previous build)
+        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(50))),
+                         sorted(expected_2ndBuild))
+
 
 class TestFakeDB(unittest.TestCase, Tests):
 
@@ -647,13 +841,18 @@ class TestRealDB(unittest.TestCase,
             table_names=['changes', 'change_files',
                          'change_properties', 'scheduler_changes', 'schedulers',
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
-                         'users'])
+                         'users', 'buildsets', 'buildslaves', 'builders', 'masters',
+                         'buildrequests', 'builds', 'buildset_sourcestamps'])
 
         @d.addCallback
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
+            self.db.builds = builds.BuildsConnectorComponent(self.db)
             self.db.sourcestamps = \
                 sourcestamps.SourceStampsConnectorComponent(self.db)
+            self.master = self.db.master
+            self.master.db = self.db
+
         return d
 
     def tearDown(self):

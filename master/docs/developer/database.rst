@@ -267,6 +267,15 @@ builds
         Get a single build, in the format described above, specified by builder and number, rather than build id.
         Returns ``None`` if there is no such build.
 
+    .. py:method:: getPrevSuccessfulBuild(builderid, number, ssBuild)
+
+        :param integer builderid: builder to get builds for
+        :param integer number: the current build number. Previous build will be taken from this number
+        :param list ssBuild: the list of sourcestamps for the current build number
+        :returns: None or a build dictionnary
+
+        Returns the last successful build from the current build number with the same repository/repository/codebase 
+
     .. py:method:: getBuilds(builderid=None, buildrequestid=None)
 
         :param integer builderid: builder to get builds for
@@ -754,6 +763,7 @@ changes
     has the following keys:
 
     * ``changeid`` (the ID of this change)
+    * ``parent_changeids`` (list of ID; change's parents) 
     * ``author`` (unicode; the author of the change)
     * ``files`` (list of unicode; source-code filenames changed)
     * ``comments`` (unicode; user comments)
@@ -773,6 +783,19 @@ changes
     * ``repository`` (unicode string; repository where this change occurred)
     * ``project`` (unicode string; user-defined project to which this change
       corresponds)
+
+    .. py:method:: getParentChangeIds(branch, repository, project, codebase)
+
+        :param branch: the branch of the change
+        :type branch: unicode string 
+        :param repository: the repository in which this change took place
+        :type repository: unicode string
+        :param project: the project this change is a part of
+        :type project: unicode string
+        :param codebase:
+        :type codebase: unicode string
+
+        return the last changeID which matches the repository/project/codebase
 
     .. py:method:: addChange(author=None, files=None, comments=None, is_dir=0, links=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', project='', uid=None)
 
@@ -871,6 +894,20 @@ changes
         Get the most-recently-assigned changeid, or ``None`` if there are no
         changes at all.
 
+
+    .. py:method:: getChangesForBuild(buildid)
+
+        :param buildid: ID of the build
+        :returns: list of dictionaries via Deferred
+
+        Get the "blame" list of changes for a build.
+
+    .. py:method:: getChangeFromSSid(sourcestampid)
+
+        :param sourcestampid: ID of the sourcestampid
+        :returns: chdict via Deferred
+
+        returns the change dictionnary related to the sourcestamp ID.
 
 changesources
 ~~~~~~~~~~~~~
@@ -1140,6 +1177,13 @@ sourcestamps
         Get all sourcestamps in the database.
         You probably don't want to do this!
         This method will be extended to allow appropriate filtering.
+
+    .. py:method:: getSourceStampsForBuild(buildid)
+
+        :param buildid: build ID
+        :returns: list of ssdict, via Deferred
+
+        Get sourcestamps related to a build.
 
 state
 ~~~~~

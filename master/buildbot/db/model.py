@@ -338,7 +338,12 @@ class Model(base.DBConnectorComponent):
 
                        # the sourcestamp this change brought the codebase to
                        sa.Column('sourcestampid', sa.Integer,
-                                 sa.ForeignKey('sourcestamps.id'))
+                                 sa.ForeignKey('sourcestamps.id')),
+
+                       # The parent of the change
+                       # Even if for the moment there's only 1 parent for a change, we use plural here because
+                       # somedays a change will have multiple parent. This way we don't need to change the API
+                       sa.Column('parent_changeids', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=True),
                        )
 
     # sourcestamps
