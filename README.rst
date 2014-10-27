@@ -6,9 +6,9 @@
  The Continuous Integration Framework
 --------------------------------------
 
-:Website: http://buildbot.net
-:Original Author: Brian Warner <warner-buildbot @ lothar . com>
-:Main Maintainer: Dustin J. Mitchell: <dustin@buildbot.net>
+* http://buildbot.net
+* Brian Warner <warner-buildbot @ lothar . com>
+* Dustin J. Mitchell: <dustin@buildbot.net>
 
 |travis-badge|_ |coveralls-badge|_
 
