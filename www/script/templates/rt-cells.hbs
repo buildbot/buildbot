@@ -20,7 +20,7 @@
             </span>
         {{/if}}
         {{#if pending_changes}}
-            <span class="pending-changes-icon tooltip" title="Branch '{{branch}}' has new changes since this build on revision {{revision_short}} (the latest revision on the branch is {{pending_changes}})">
+            <span class="pending-changes-icon tooltip" title="The build shown here for branch {{branch}} is built with revision {{revision_short}}, which is not the latest revision on the branch (the latest revision on the branch is {{pending_changes}}).">
             </span>
         {{/if}}
         </li>
