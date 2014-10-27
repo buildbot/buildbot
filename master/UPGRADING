@@ -1,4 +1,4 @@
 For information on ugprading Buildbot, see the section "Upgrading an Existing
 Buildmaster" in the buildbot documentation.
 
-This may be found locally in docs/installation.texinfo.
+This may be found locally in docs/manual/installation.rst.
