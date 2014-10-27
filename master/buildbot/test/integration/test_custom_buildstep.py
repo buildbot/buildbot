@@ -227,7 +227,21 @@ class RunSteps(unittest.TestCase):
         self.assertEqual(got_logs, exp_logs)
 
     @defer.inlineCallbacks
-    def test_OldStyleCustomBuildStep(self):
+    def doOldStyleCustomBuildStep(self, slowDB=False):
+        if slowDB:
+            oldNewLog = self.master.data.updates.newLog
+
+            def newLog(*args, **kw):
+                d = defer.Deferred()
+
+                def delayed():
+                    r = oldNewLog(*args, **kw)
+                    r.addCallback(d.callback)
+
+                reactor.callLater(.1, delayed)
+                return d
+            self.patch(self.master.data.updates, "newLog", newLog)
+
         self.factory.addStep(OldStyleCustomBuildStep(arg1=1, arg2=2))
         yield self.do_test_step()
 
@@ -239,9 +253,17 @@ class RunSteps(unittest.TestCase):
             # 'stdout\n\xe2\x98\x83\nstderr\n',
             u'ostdout\no\N{SNOWMAN}\nestderr\n',
             u'obs':
+            # if slowDB, the observer wont see anything before the end of this instant step
+            u'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
             u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
         })
+
+    def test_OldStyleCustomBuildStep(self):
+        return self.doOldStyleCustomBuildStep(False)
+
+    def test_OldStyleCustomBuildStepSlowDB(self):
+        return self.doOldStyleCustomBuildStep(True)
 
     @defer.inlineCallbacks
     def test_OldStyleCustomBuildStep_failure(self):
