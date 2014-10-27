@@ -70,7 +70,8 @@ command_version = "2.16"
 #  >= 2.14: RemoveDirectory can delete multiple directories
 #  >= 2.15: 'interruptSignal' option is added to SlaveShellCommand
 #  >= 2.16: 'sigtermTime' option is added to SlaveShellCommand
-#  >= 2.17: listdir command added to read a directory
+#  >= 2.16: runprocess supports obfuscation via tuples (#1748)
+#  >= 2.16: listdir command added to read a directory
 
 
 class Command:
