@@ -473,7 +473,7 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
 
     .. code-block:: none
 
-        --info=svn=jschmo,git='Joe Schmo <joe@schmo.com>'
+        --info=svn=jdoe,git='John Doe <joe@example.com>'
 
     The :option:`info` option can be specified multiple times in the :command:`user` command, as each specified option will be interpreted as a new user.
     Note that :option:`info` is only used with :option:`add` or with :option:`update`, and whenever you use :option:`update` you need to specify the identifier of the user you want to update.
@@ -482,7 +482,7 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
 
     .. code-block:: none
 
-        --info=jschmo:git='Joseph Schmo <joe@schmo.com>'
+        --info=jdoe:git='Joe Doe <joe@example.com>'
 
 Note that :option:`--master`, :option:`--username`, :option:`--passwd`, and :option:`--op` are always required to issue the :command:`user` command.
 

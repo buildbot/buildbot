@@ -87,20 +87,20 @@ This form does not send mail to individual developers (and thus does not need th
 
 If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smptPassword``::
 
-    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+    mn = status.MailNotifier(fromaddr="myuser@example.com",
                              sendToInterestedUsers=False,
                              extraRecipients=["listaddr@example.org"],
-                             relayhost="smtp.gmail.com", smtpPort=587,
-                             smtpUser="myuser@gmail.com",
+                             relayhost="smtp.example.com", smtpPort=587,
+                             smtpUser="myuser@example.com",
                              smtpPassword="mypassword")
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
-    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+    mn = status.MailNotifier(fromaddr="myuser@example.com",
                              sendToInterestedUsers=False,
                              extraRecipients=["listaddr@example.org"],
-                             useTls=True, relayhost="smtp.gmail.com",
-                             smtpPort=587, smtpUser="myuser@gmail.com",
+                             useTls=True, relayhost="smtp.example.com",
+                             smtpPort=587, smtpUser="myuser@example.com",
                              smtpPassword="mypassword")
 
 .. note::
@@ -346,7 +346,7 @@ MailNotifier arguments
 
     Most of the time you can use a simple Domain instance.
     As a shortcut, you can pass as string: this will be treated as if you had provided ``Domain(str)``.
-    For example, ``lookup='twistedmatrix.com'`` will allow mail to be sent to all developers whose SVN usernames match their twistedmatrix.com account names.
+    For example, ``lookup='example.com'`` will allow mail to be sent to all developers whose SVN usernames match their ``example.com`` account names.
     See :file:`buildbot/status/mail.py` for more details.
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
@@ -817,7 +817,7 @@ The GitHub hook is simple and takes no options.
                        change_hook_dialects={ 'github' : True }))
 
 With this set up, add a Post-Receive URL for the project in the GitHub administrative interface, pointing to ``/change_hook/github`` relative to the root of the web status.
-For example, if the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point GitHub to ``http://builds.mycompany.com/bbot/change_hook/github``.
+For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 Note that there is a standalone HTTP server available for receiving GitHub notifications, as well: :file:`contrib/github_buildbot.py`.
@@ -839,7 +839,7 @@ And create a file ``changehook.passwd``
 
     user:password
 
-Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
+Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/github``.
 
 See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
 
@@ -856,7 +856,7 @@ The BitBucket hook is as simple as GitHub one and it also takes no options.
                        change_hook_dialects={ 'bitbucket' : True }))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point BitBucket to ``http://builds.mycompany.com/change_hook/bitbucket``.
+For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 Note that there is a satandalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
@@ -874,7 +874,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
   c['status'].append(html.WebStatus(...,
                                     change_hook_auth=["file:changehook.passwd"]))
 
-Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -950,7 +950,7 @@ The GitLab hook is as simple as GitHub one and it also takes no options.
     ))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point GitLab to ``http://builds.mycompany.com/change_hook/gitlab``.
+For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
 The project and/or codebase can also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
 These parameters will be passed along to the scheduler.
 
@@ -968,7 +968,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     ))
 
-Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitlab``.
+Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -985,7 +985,7 @@ The Gitorious hook is as simple as GitHub one and it also takes no options.
     ))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitorious`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point Gitorious to ``http://builds.mycompany.com/change_hook/gitorious``.
+For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point Gitorious to ``http://builds.example.com/change_hook/gitorious``.
 
 .. warning::
 
@@ -1001,7 +1001,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     ))
 
-Then, create a Gitorious web hook (see http://gitorious.org/gitorious/pages/WebHooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/gitorious``.
+Then, create a Gitorious web hook (see http://gitorious.org/gitorious/pages/WebHooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitorious``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 

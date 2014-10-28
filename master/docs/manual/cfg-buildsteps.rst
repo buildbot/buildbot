@@ -538,14 +538,14 @@ The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_ che
 
     from buildbot.plugins import steps
     factory.addStep(steps.CVS(mode='incremental',
-                    cvsroot=':pserver:me@cvs.sourceforge.net:/cvsroot/myproj',
+                    cvsroot=':pserver:me@cvs.example.net:/cvsroot/myproj',
                     cvsmodule='buildbot'))
 
 This step takes the following arguments:
 
 ``cvsroot``
     (required): specify the CVSROOT value, which points to a CVS repository, probably on a remote machine.
-    For example, if Buildbot was hosted in CVS then the cvsroot value you would use to get a copy of the Buildbot source code might be ``:pserver:anonymous@cvs.sourceforge.net:/cvsroot/buildbot``.
+    For example, if Buildbot was hosted in CVS then the cvsroot value you would use to get a copy of the Buildbot source code might be ``:pserver:anonymous@cvs.example.net:/cvsroot/buildbot``.
 
 ``cvsmodule``
     (required): specify the cvs ``module``, which is generally a subdirectory of the :file:`CVSROOT`.
@@ -829,7 +829,7 @@ For example::
 
     from buildbot.plugins import steps, util
 
-    factory.addStep(steps.Repo(manifestURL='git://mygerrit.org/manifest.git',
+    factory.addStep(steps.Repo(manifestURL='git://gerrit.example.org/manifest.git',
                                repoDownloads=util.FlattenList([
                                     util.RepoDownloadsFromChangeSource(),
                                     util.RepoDownloadsFromProperties("repo_downloads")

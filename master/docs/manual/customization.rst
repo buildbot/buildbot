@@ -775,7 +775,7 @@ For example::
     @defer.inlineCallbacks
     def run(self):
         ... # create and upload report to coverage server
-        url = 'http://coverage.corp.com/reports/%s' % reportname
+        url = 'http://coverage.example.com/reports/%s' % reportname
         yield self.addURL('coverage', url)
 
 Discovering files
