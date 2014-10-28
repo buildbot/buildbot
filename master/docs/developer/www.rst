@@ -22,9 +22,9 @@ Design Overview
 
 The ``www`` service exposes three pieces via HTTP:
 
- * A REST interface wrapping :ref:`Data_API`;
- * HTTP-based messaging protocols wrapping the :ref:`Messaging_and_Queues` interface; and
- * Static resources implementing the client-side UI.
+* A REST interface wrapping :ref:`Data_API`;
+* HTTP-based messaging protocols wrapping the :ref:`Messaging_and_Queues` interface; and
+* Static resources implementing the client-side UI.
 
 The REST interface is a very thin wrapper: URLs are translated directly into Data API paths, and results are returned directly, in JSON format.
 It is based on `JSON API <http://jsonapi.org/>`_.
@@ -46,7 +46,7 @@ URLs
 ~~~~
 
 The Buildbot web interface is rooted at its base URL, as configured by the user.
-It is entirely possible for this base URL to contain path components, e.g., ``http://build.myorg.net/buildbot/``, if hosted behind an HTTP proxy.
+It is entirely possible for this base URL to contain path components, e.g., ``http://build.example.org/buildbot/``, if hosted behind an HTTP proxy.
 To accomplish this, all URLs are generated relative to the base URL.
 
 Overall, the space under the base URL looks like this:
@@ -75,7 +75,7 @@ Getting
 ~~~~~~~
 
 To get data, issue a GET request to the appropriate path.
-For example, with a base URL of ``http://build.myorg.net/buildbot``, the list of masters for builder 9 is available at ``http://build.myorg.net/buildbot/api/v2/builder/9/master``.
+For example, with a base URL of ``http://build.example.org/buildbot``, the list of masters for builder 9 is available at ``http://build.example.org/buildbot/api/v2/builder/9/master``.
 
 Results are formatted in keeping with the `JSON API <http://jsonapi.org/>`_ specification.
 The top level of every response is an object.
@@ -86,7 +86,7 @@ For example::
       "meta": {
         "links": [
           {
-            "href": "http://build.my.org/api/v2/scheduler",
+            "href": "http://build.example.org/api/v2/scheduler",
             "rel": "self"
           }
         ],
@@ -94,17 +94,17 @@ For example::
       },
       "schedulers": [
         {
-          "link": "http://build.my.org/api/v2/scheduler/1",
+          "link": "http://build.example.org/api/v2/scheduler/1",
           "master": null,
           "name": "smoketest",
           "schedulerid": 1
         },
         {
-          "link": "http://build.my.org/api/v2/scheduler/4",
+          "link": "http://build.example.org/api/v2/scheduler/4",
           "master": {
             "active": true,
             "last_active": 1369604067,
-            "link": "http://build.my.org/api/v2/master/1",
+            "link": "http://build.example.org/api/v2/master/1",
             "masterid": 1,
             "name": "master3:/BB/master"
           },
@@ -126,7 +126,7 @@ Field Selection
 If only certain fields of each resource are required, the ``field`` query parameter can be used to select them.
 For example, the following will select just the names and id's of all schedulers:
 
- * ``http://build.my.org/api/v2/scheduler?field=name&field=schedulerid``
+* ``http://build.example.org/api/v2/scheduler?field=name&field=schedulerid``
 
 Field selection can be used for either detail (single-entity) or collection (multi-entity) requests.
 The remaining options only apply to collection requests.
@@ -137,21 +137,21 @@ Filtering
 Collection responses may be filtered on any simple top-level field.
 
 To select records with a specific value use the query parameter ``{field}={value}``.
-For example, ``http://build.my.org/api/v2/scheduler?name=smoketest`` selects the scheduler named "smoketest".
+For example, ``http://build.example.org/api/v2/scheduler?name=smoketest`` selects the scheduler named "smoketest".
 
 Filters can use any of the operators listed below, with query parameters of the form ``{field}__{operator}={value}``.
 
- * ``eq`` - equality, or with the same parameter appearing multiple times, set membership
- * ``ne`` - inequality, or set exclusion
- * ``lt`` - select resources where the field's value is less than ``{value}``
- * ``le`` - select resources where the field's value is less than or equal to ``{value}``
- * ``gt`` - select resources where the field's value is greater than ``{value}``
- * ``ge`` - select resources where the field's value is greater than or equal to ``{value}``
+* ``eq`` - equality, or with the same parameter appearing multiple times, set membership
+* ``ne`` - inequality, or set exclusion
+* ``lt`` - select resources where the field's value is less than ``{value}``
+* ``le`` - select resources where the field's value is less than or equal to ``{value}``
+* ``gt`` - select resources where the field's value is greater than ``{value}``
+* ``ge`` - select resources where the field's value is greater than or equal to ``{value}``
 
 For example:
 
- * ``http://build.my.org/api/v2/builder?name__lt=cccc``
- * ``http://build.my.org/api/v2/buildsets?complete__eq=false``
+* ``http://build.example.org/api/v2/builder?name__lt=cccc``
+* ``http://build.example.org/api/v2/buildsets?complete__eq=false``
 
 Boolean values can be given as ``on``/``off``, ``true``/``false``, ``yes``/``no``, or ``1``/``0``.
 
@@ -163,7 +163,7 @@ This parameter takes a field name to sort on, optionally prefixed with ``-`` to 
 The parameter can appear multiple times, and will be sorted lexically with the fields arranged in the given order.
 For example:
 
- * ``http://build.my.org/api/v2/buildrequest?order=builderid&order=buildrequestid``
+* ``http://build.example.org/api/v2/buildrequest?order=builderid&order=buildrequestid``
 
 Pagination
 ..........
@@ -174,8 +174,8 @@ The limit is the maximum number of results to return.
 Some resource types may impose a maximum on the limit parameter; be sure to check the resulting links to determine whether further data is available.
 For example:
 
- * ``http://build.my.org/api/v2/buildrequest?order=builderid&limit=10``
- * ``http://build.my.org/api/v2/buildrequest?order=builderid&offset=20&limit=10``
+* ``http://build.example.org/api/v2/buildrequest?order=builderid&limit=10``
+* ``http://build.example.org/api/v2/buildrequest?order=builderid&offset=20&limit=10``
 
 Controlling
 ~~~~~~~~~~~
@@ -185,8 +185,8 @@ The JSONRPC "method" is mapped to the data API "action", and the parameters are 
 
 The following parts of the protocol are not supported:
 
- * positional parameters
- * batch requests
+* positional parameters
+* batch requests
 
 Requests are sent as an HTTP POST, containing the request JSON in the body.
 The content-type header is ignored; for compatibility with simple CORS requests (avoiding preflight checks), use ``text/plain``.
@@ -195,7 +195,7 @@ A simple example:
 
 .. code-block:: none
 
-    POST http://build.my.org/api/v2/scheduler/4
+    POST http://build.example.org/api/v2/scheduler/4
     --> {"jsonrpc": "2.0", "method": "force", "params": {"revision": "abcd", "branch": "dev"}, "id": 843}
     <-- {"jsonrpc": "2.0", "result": {"buildsetid": 44}, "id": 843}
 
@@ -209,7 +209,7 @@ The endpoint is available at:
 
 .. code-block:: none
 
-    GET http://build.my.org/api/v2/application.spec
+    GET http://build.example.org/api/v2/application.spec
 
 This metadata is guaranteed to be correct, as this is generated from the spec used in data's unit tests.
 See :ref:`Adding-Fields-to-Resource-Types` for more details on the type system used.
@@ -229,60 +229,59 @@ The type spec encoding can have several forms:
 
 * Entity or Dict
 
-.. code-block:: javascript
+    .. code-block:: javascript
 
-    {
-        ..
-        type_spec: {
-        type: "<type name>"
-        fields: [
-            {
-            name: "<field name>"
-            type: "<field type name>"
-            type_spec: "<field type spec>"
-            }, // [...]
-        ]
+        {
+            ..
+            type_spec: {
+                type: "<type name>"
+                fields: [
+                    {
+                    name: "<field name>"
+                    type: "<field type name>"
+                    type_spec: "<field type spec>"
+                    }, // [...]
+                ]
+            }
         }
-    }
 
 * List
 
-.. code-block:: javascript
+    .. code-block:: javascript
 
-    {
-        ..
-        type_spec: {
-        type: "list"
-        of: {
-
-            type: "<field type name>"
-            type_spec: "<field type spec>"
+        {
+            ..
+            type_spec: {
+            type: "list"
+            of: {
+                type: "<field type name>"
+                type_spec: "<field type spec>"
+            }
         }
-    }
 
 * Links
 
-.. code-block:: javascript
+    .. code-block:: javascript
 
-    {
-        ..
-        type_spec: {
-        type: "link"
-        link_specs: [
-            "<ep1 path>",
-            "<ep2 path>", // [...]
-        ]
-    }
+        {
+            ..
+            type_spec: {
+            type: "link"
+            link_specs: [
+                "<ep1 path>",
+                "<ep2 path>", // [...]
+            ]
+        }
 
 * Other base types
 
-.. code-block:: javascript
+    .. code-block:: javascript
 
-    {
-        ..
-        type_spec: {
-        type: "(string|integer|boolean|binary|identifier|jsonobject|sourced-properties)"
-    }
+        {
+            ..
+            type_spec: {
+            type: "(string|integer|boolean|binary|identifier|jsonobject|sourced-properties)"
+        }
 
 Server-Side Session
 -------------------
@@ -319,13 +318,13 @@ Client can connect using url ``ws[s]://<BB_BASE_URL>/ws``
 
 The client can control which kind of messages he will receive using following message, encoded in json:
 
- * startConsuming: {'req': 'startConsuming', 'options': {}, 'path': ['change']}
-   startConsuming events that match ``path``.
+* startConsuming: {'req': 'startConsuming', 'options': {}, 'path': ['change']}
+  start consuming events that match ``path``.
 
- * stopConsuming: {'req': 'stopConsuming', 'path': ['change']}
-   stopConsuming events that match ``path``
+* stopConsuming: {'req': 'stopConsuming', 'path': ['change']}
+  stop consuming events that match ``path``
 
-Client will receive events as websocket frames encoded in json with following format:
+Client will receive events as websocket frames encoded in json with following format::
 
    {'key':key, 'message':message}
 
@@ -336,9 +335,11 @@ SSE is a simpler protocol than WebSockets and is more REST compliant. It uses th
 
 Client can connect using following endpoints
 
- * ``http[s]://<BB_BASE_URL>/sse/listen/<path>``: Start listening to events on the http connection. Optionally setup a first event filter on ``<path>``. The first message send is a handshake, giving a uuid that can be used to add or remove event filters.
- * ``http[s]://<BB_BASE_URL>/sse/add/<uuid>/<path>``: Configure a sse session to add an event filter
- * ``http[s]://<BB_BASE_URL>/sse/remove/<uuid>/<path>``: Configure a sse session to remove an event filter
+* ``http[s]://<BB_BASE_URL>/sse/listen/<path>``: Start listening to events on the http connection.
+  Optionally setup a first event filter on ``<path>``.
+  The first message send is a handshake, giving a uuid that can be used to add or remove event filters.
+* ``http[s]://<BB_BASE_URL>/sse/add/<uuid>/<path>``: Configure a sse session to add an event filter
+* ``http[s]://<BB_BASE_URL>/sse/remove/<uuid>/<path>``: Configure a sse session to remove an event filter
 
 Note that if a load balancer is setup as a front end to buildbot web masters, the load balancer must be configured to always use the same master given a client ip address for /sse endpoint.
 
@@ -355,7 +356,6 @@ The first event received is a handshake, and is used to inform the client about 
 
   event: handshake
   data: <uuid>
-
 
 JavaScript Application
 ----------------------
@@ -374,33 +374,37 @@ The best place to learn about AngularJS is `its own documentation <http://docs.a
 
 AngularJS strong points are:
 
- * A very powerful `MVC system <http://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when
-   data changes
- * A `Testing Framework and philosophy <http://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
- * A `deferred system <http://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted.
- * A `fast growing community and ecosystem <http://builtwith.angularjs.org/>`_
+* A very powerful `MVC system <http://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when data changes
+* A `Testing Framework and philosophy <http://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
+* A `deferred system <http://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted.
+* A `fast growing community and ecosystem <http://builtwith.angularjs.org/>`_
 
 On top of Angular we use nodeJS tools to ease development
- * gulp buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
-   In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
- * `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
- * `jade template langage <http://jade-lang.com/>`_, adds syntax sugar and readbility to angular html templates.
- * `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
- * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
+
+* gulp buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
+  In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
+* `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
+* `jade template langage <http://jade-lang.com/>`_, adds syntax sugar and readbility to angular html templates.
+* `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
+* `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 modules we may or may not want to include:
- * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
- * `ngGrid <http://angular-ui.github.com/ng-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
- * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
- * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation. Having it inside
-   allows for all kind of hacks we may want to avoid.
+
+* `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
+* `ngGrid <http://angular-ui.github.com/ng-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
+* `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
+* `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
+  Having it inside allows for all kind of hacks we may want to avoid.
 
 Extensibility
 ~~~~~~~~~~~~~
 
-Buildbot UI is designed for extensibility. The base application should be pretty minimal, and only include very basic status pages. Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
+Buildbot UI is designed for extensibility.
+The base application should be pretty minimal, and only include very basic status pages.
+Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
 
-Some Web plugins are maintained inside buildbot's git repository, but this is absolutely not necessary. Unofficial plugins are encouraged, please be creative!
+Some Web plugins are maintained inside buildbot's git repository, but this is absolutely not necessary.
+Unofficial plugins are encouraged, please be creative!
 
 Please look at official plugins for working samples.
 
@@ -417,19 +421,25 @@ Typical plugin source code layout is:
     MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
 
 
-Plugins are packaged as python entry-points for the buildbot.www namespace. The python part is defined in the `buildbot.www.plugin` module. The entrypoint must contain a twisted.web Resource, that is populated in the web server in `/<pluginname>/`.
+Plugins are packaged as python entry-points for the buildbot.www namespace.
+The python part is defined in the `buildbot.www.plugin` module.
+The entrypoint must contain a twisted.web Resource, that is populated in the web server in `/<pluginname>/`.
 
-The front-end part of the plugin system automatically loads `/<pluginname>/scripts.js` and `/<pluginname>/styles.css` into the angular.js application. The scripts.js files can register itself as a dependency to the main "app" module, register some new states to $stateProvider, or new menu items via glMenuProvider.
+The front-end part of the plugin system automatically loads `/<pluginname>/scripts.js` and `/<pluginname>/styles.css` into the angular.js application.
+The scripts.js files can register itself as a dependency to the main "app" module, register some new states to $stateProvider, or new menu items via glMenuProvider.
 
-The entrypoint being a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`. You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
-
+The entrypoint being a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`.
+You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
 
 .. _Routing:
 
 Routing
 ~~~~~~~
 
-AngularJS uses router to match URL and choose which page to display. The router we use is ui.router. Menu is managed by guanlecoja-ui's glMenuProvider. Please look at ui.router, and guanlecoja-ui documentation for details.
+AngularJS uses router to match URL and choose which page to display.
+The router we use is ui.router.
+Menu is managed by guanlecoja-ui's glMenuProvider.
+Please look at ui.router, and guanlecoja-ui documentation for details.
 
 Typically, a route regitration will look like following example.
 
@@ -466,7 +476,6 @@ Typically, a route regitration will look like following example.
 
             $stateProvider.state(state)
 
-
 Directives
 ~~~~~~~~~~
 
@@ -478,7 +487,7 @@ Services
 BuildbotService
 ...............
 
-BuildbotService is the base service for accessing to the buildbot data api.
+BuildbotService is the base service for accessing to the Buildbot data API.
 It uses and is derivated from `restangular <https://github.com/mgonto/restangular/blob/master/README.md>`_.
 Restangular offers nice semantics around nested REST endpoints. Please see restangular documentation for overview on how it works.
 
@@ -498,47 +507,50 @@ object, no additionnal ressource is gathered via http.
 
 Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
 
-    * ``.bind($scope, opts)``
+* ``.bind($scope, opts)``
 
-        bind the api results to the $scope, automatically listening to events on this endpoint, and modifying the $scope object accordingly.
-        This method automatically references the scopes where the data is used, and will remove the reference when the $scope is destoyed.
-        When no scope is referencing the data anymore, the service will wait a configurable amount of time, and stop listening to associated events.
-        As a result, the service will loose real-time track of the underlying data, so any subsequent call to bind() will trigger another http requests to get updated data.
-        This delayed event unregister mechanism enables better user experience. When user is going back and forth between several pages, chances are that the data is still on-track, so the page will be displayed instantly.
+    bind the api results to the $scope, automatically listening to events on this endpoint, and modifying the $scope object accordingly.
+    This method automatically references the scopes where the data is used, and will remove the reference when the $scope is destoyed.
+    When no scope is referencing the data anymore, the service will wait a configurable amount of time, and stop listening to associated events.
+    As a result, the service will loose real-time track of the underlying data, so any subsequent call to bind() will trigger another http requests to get updated data.
+    This delayed event unregister mechanism enables better user experience.
+    When user is going back and forth between several pages, chances are that the data is still on-track, so the page will be displayed instantly.
 
-        ``bind()`` takes several optional parameters in ``opts``:
+    ``bind()`` takes several optional parameters in ``opts``:
 
-        * ``dest`` (defaults to $scope): object where to store the results
+    * ``dest`` (defaults to $scope): object where to store the results
 
-        * ``ismutable``(defaults to always false): ``(elem) ->`` function used to know if the object will not evolve anymore (so no need to register to events)
+    * ``ismutable``(defaults to always false): ``(elem) ->`` function used to know if the object will not evolve anymore (so no need to register to events)
 
-        * ``onchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
-            This can be used to get more data derived from a list. The child received are restangular elements
+    * ``onchild``: ``(child) ->`` function called for each child, at init time, and when new child is detected through events.
+      This can be used to get more data derived from a list. The child received are restangular elements
 
-    * ``.on(eventtype, callback)``
+* ``.on(eventtype, callback)``
 
-        Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
+    Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
 
-    * ``.some(route, queryParams)``
+* ``.some(route, queryParams)``
 
-        like .all(), but allows to specify query parameters
+    like .all(), but allows to specify query parameters
 
-        * ``queryParams`` : query parameters used to filter the results of a list api
+    * ``queryParams`` : query parameters used to filter the results of a list api
 
+* ``.control(method, params)``
 
-    * ``.control(method, params)``
-
-        Call the control data api. This builds up a POST with jsonapi encoded parameters
+    Call the control data api.
+    This builds up a POST with jsonapi encoded parameters
 
 RecentStorage
 .............
+
 The service provides methods for adding, retrieving and clearing recently viewed builders and builds.
-It uses IndexedDB to store data inside the user’s browser. You can see the list of supported browsers here: http://caniuse.com/indexeddb.
+It uses IndexedDB to store data inside the user’s browser.
+You can see the list of supported browsers here: http://caniuse.com/indexeddb.
 
 builder and build object properties:
-    * ``link`` - string: this specifies the builder’s or build’s link
 
-    * ``caption`` - string: this specifies the builder’s or build’s shown caption
+* ``link`` - string: this specifies the builder’s or build’s link
+* ``caption`` - string: this specifies the builder’s or build’s shown caption
 
 Sample:
 
@@ -551,42 +563,35 @@ Sample:
 
 Methods:
 
-    * ``.addBuild(build)``: stores the build passed as argument
+* ``.addBuild(build)``: stores the build passed as argument
+* ``.addBuild(builder)``: stores the builder passed as argument
+* ``.getBuilds()``: returns a promise, the result will be an array of builds when the promise is resolved example:
 
-    * ``.addBuild(builder)``: stores the builder passed as argument
+    .. code-block:: coffeescript
 
-    * ``.getBuilds()``: returns a promise, the result will be an array of builds when the promise is resolved
-        example:
+        recentStorage.getBuilds().then (e) ->
+            $scope.builds = e
 
-        .. code-block:: coffeescript
+* ``.getBuilders()``: returns a promise, the result will be an array of builders when the promise is resolved example:
 
-            recentStorage.getBuilds().then (e) ->
-                $scope.builds = e
+    .. code-block:: coffeescript
 
-    * ``.getBuilders()``: returns a promise, the result will be an array of builders when the promise is resolved
-        example:
+        recentStorage.getBuilders().then (e) ->
+            $scope.builders = e
 
-        .. code-block:: coffeescript
+* ``.getAll()``: returns a promise, the result will be an object with two fields, recent_builds and recent_builders example:
 
-            recentStorage.getBuilders().then (e) ->
-                $scope.builders = e
+    .. code-block:: coffeescript
 
-    * ``.getAll()``: returns a promise, the result will be an object with two fields, recent_builds and recent_builders
-        example:
+        recentStorage.getAll().then (e) ->
+            $scope.builds = e.recent_builds
+            $scope.builders = e.recent_builders
 
-        .. code-block:: coffeescript
+* ``.clearAll()``: removes the stored builds and builders example:
 
-            recentStorage.getAll().then (e) ->
-                $scope.builds = e.recent_builds
-                $scope.builders = e.recent_builders
+    .. code-block:: coffeescript
 
-    * ``.clearAll()``: removes the stored builds and builders
-        example:
-
-        .. code-block:: coffeescript
-
-            recentStorage.clearAll()
-
+        recentStorage.clearAll()
 
 Mocks and testing utils
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -596,17 +601,15 @@ httpMock.coffee
 
 This modules adds ``decorateHttpBackend($httpBackend)`` to the global namespace. This function decorate the $httpBackend with additional functionality:
 
-    * ``.expectDataGET(ep, {nItems:<int or undefined>, override: <fn or undefined>})``
+* ``.expectDataGET(ep, {nItems:<int or undefined>, override: <fn or undefined>})``
 
-       automatically create a GET expectation to the data api, given the data spec
-       Options available are:
+    Automatically create a GET expectation to the data api, given the data spec
+    Available options are:
 
-       * ``nItems``: if defined, this will generate a collection of nItems instead of single value
+    * ``nItems``: if defined, this will generate a collection of nItems instead of single value
+    * ``override``: a custom function to override the resulting generated data
 
-       * ``override``: a custom function to override the resulting generated data
-
-       Example: ``$httpBackend.expectDataGET("change", {nItems:2, override: (val) -> val[1].id=4 })``
-       will create 2 changes, but the id of the second change will be overridden to 4
+    Example: ``$httpBackend.expectDataGET("change", {nItems:2, override: (val) -> val[1].id=4 })`` will create 2 changes, but the id of the second change will be overridden to 4
 
 Linking with Buildbot
 ~~~~~~~~~~~~~~~~~~~~~
@@ -616,7 +619,6 @@ This needs to work in a variety of contexts - Python development, JavaScript dev
 To accomplish this, the grunt build process finishes by bundling all of the static data into a Python distribution tarball, along with a little bit of Python glue.
 The Python glue implements the interface described below, with some care taken to handle multiple contexts.
 The :src:`www/grunt.js`, :src:`www/setup.py`, and :src:`www/buildbot_www.py` scripts are carefully coordinated.
-
 
 Hacking Quick-Start
 -------------------
@@ -630,22 +632,21 @@ Prerequisites
 
 * Install latest release of node.js.
 
-http://nodejs.org/ is a good start for windows and osx.
+    http://nodejs.org/ is a good start for windows and osx.
 
-For linux, as node.js is evolving very fast, distros versions are often too old. For ubuntu, for example, you want to use following ppa:
+    For linux, as node.js is evolving very fast, distros versions are often too old. For ubuntu, for example, you want to use following ppa:
 
-.. code-block:: none
+    .. code-block:: none
 
-    sudo add-apt-repository -y ppa:chris-lea/node.js
+        sudo add-apt-repository -y ppa:chris-lea/node.js
 
-Please feel free to update this documentation for other distros.
-
+    Please feel free to update this documentation for other distros.
 
 * Install gulp globally. Gulp is the build system used for coffeescript development.
 
-.. code-block:: none
+    .. code-block:: none
 
-    sudo npm install -g gulp
+        sudo npm install -g gulp
 
 Hacking the Buildbot JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -676,8 +677,7 @@ Next, install the Buildbot-WWW and Buildbot packages using ``--editable``, which
     make frontend
 
 This will fetch a number of dependencies from pypi, the Python package repository.
-This will also fetch a bunch a bunch of node.js dependencies used for building the web application,
-and a bunch of client side js dependencies, with bower
+This will also fetch a bunch a bunch of node.js dependencies used for building the web application, and a bunch of client side js dependencies, with bower
 
 Now you'll need to create a master instance.
 For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
@@ -689,8 +689,7 @@ For a bit more detail, see the Buildbot tutorial (:ref:`first-run-label`).
     buildbot start sandbox/testmaster
 
 If all goes well, the master will start up and begin running in the background.
-As you just installed www in editable mode (aka 'develop' mode), setup.py did build
-the web site in prod mode, so the everything is minified, making it hard to debug.
+As you just installed www in editable mode (aka 'develop' mode), setup.py did build the web site in prod mode, so the everything is minified, making it hard to debug.
 
 When doing web development, you usually run:
 
@@ -708,27 +707,31 @@ Buildbot's build environment has been factorized for reuse in other projects and
 
 The documentation and meaning of this name is maintained in Guanlecoja's own site. https://github.com/buildbot/guanlecoja/
 
-
 Testing Setup
 -------------
 
-buildbot_www uses `Karma <http://karma-runner.github.io>`_ to run the coffeescript test suite. This is the official test framework made for angular.js
-We dont run the front-end testsuite inside the python 'trial' test suite, because testing python and JS is technically very different.
+buildbot_www uses `Karma <http://karma-runner.github.io>`_ to run the coffeescript test suite.
+This is the official test framework made for angular.js.
+We don't run the front-end testsuite inside the python 'trial' test suite, because testing python and JS is technically very different.
 
-Karma needs a browser to run the unit test in. It supports all the major browsers. Given our current experience, we did not see any bugs yet that would only happen on a particular browser this is the reason that at the moment, only headless browser "PhantomJS" is used for testing.
+Karma needs a browser to run the unit test in.
+It supports all the major browsers.
+Given our current experience, we did not see any bugs yet that would only happen on a particular browser this is the reason that at the moment, only headless browser "PhantomJS" is used for testing.
 
-We enforce that the tests are run all the time after build. This does not impact the build time by a great factor, and simplify the workflow.
+We enforce that the tests are run all the time after build.
+This does not impact the build time by a great factor, and simplify the workflow.
 
-In some case, this might not be desirable, for example if you run the build on headless system, without X. PhantomJS, even if it is headless needs a X server like xvfb. In the case where you are having difficulties to run Phantomjs, you can build without the tests using the command:
+In some case, this might not be desirable, for example if you run the build on headless system, without X.
+PhantomJS, even if it is headless needs a X server like xvfb.
+In the case where you are having difficulties to run Phantomjs, you can build without the tests using the command:
 
 .. code-block:: none
 
     gulp prod --notests
 
-
 Debug with karma
 ~~~~~~~~~~~~~~~~
-``console.log`` is available via karma. In order to debug the unit tests, you can
-also use the global variable ``dump``, which dumps any object for inspection in the console.
-this can be handy to be sure that you dont let debug logs in your code to always use ``dump``
 
+``console.log`` is available via karma.
+In order to debug the unit tests, you can also use the global variable ``dump``, which dumps any object for inspection in the console.
+This can be handy to be sure that you dont let debug logs in your code to always use ``dump``
