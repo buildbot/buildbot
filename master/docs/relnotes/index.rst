@@ -155,6 +155,9 @@ Fixes
 
 * Missing "name" and "email" properties received from Gerrit are now handled properly
 
+* Fixed bug which made it impossible to specify the project when using the
+  BitBucket dialect.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
