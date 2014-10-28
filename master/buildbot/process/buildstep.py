@@ -129,6 +129,8 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         self.finished = False
         self.finishDeferreds = []
 
+        self.step._sync_addlog_deferreds.append(addLogDeferred)
+
         @addLogDeferred.addCallback
         def gotAsync(log):
             self.asyncLogfile = log
@@ -290,6 +292,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     cmd = None
     rendered = False  # true if attributes are rendered
     _waitingForLocks = False
+    _run_finished_hook = lambda self: None  # for tests
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
@@ -537,6 +540,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def run(self):
         self._start_deferred = defer.Deferred()
         unhandled = self._start_unhandled_deferreds = []
+        self._sync_addlog_deferreds = []
         try:
             # here's where we set things up for backward compatibility for
             # old-style steps, using monkey patches so that new-style steps
@@ -571,6 +575,13 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self._start_deferred.callback(results)
             results = yield self._start_deferred
         finally:
+            # hook for tests
+            # assert so that it is only run in non optimized mode
+            assert self._run_finished_hook() is None
+            # wait until all the sync logs have been actually created before
+            # finishing
+            yield defer.DeferredList(self._sync_addlog_deferreds,
+                                     consumeErrors=True)
             self._start_deferred = None
             unhandled = self._start_unhandled_deferreds
             self._start_unhandled_deferreds = None
