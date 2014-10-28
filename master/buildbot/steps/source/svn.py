@@ -161,10 +161,13 @@ class SVN(Source):
     def copy(self):
         yield self.runRmdir(self.workdir)
 
-        # temporarily set workdir = 'source' and do an incremental checkout
+        checkout_dir = 'source'
+        if self.codebase:
+            checkout_dir = self.build.path_module.join(checkout_dir, self.codebase)
+        # temporarily set workdir = checkout_dir and do an incremental checkout
         try:
             old_workdir = self.workdir
-            self.workdir = 'source'
+            self.workdir = checkout_dir
             yield self.incremental(None)
         finally:
             self.workdir = old_workdir
@@ -173,7 +176,7 @@ class SVN(Source):
         # if we're copying, copy; otherwise, export from source to build
         if self.method == 'copy':
             cmd = remotecommand.RemoteCommand('cpdir',
-                                              {'fromdir': 'source', 'todir': self.workdir,
+                                              {'fromdir': checkout_dir, 'todir': self.workdir,
                                                'logEnviron': self.logEnviron})
         else:
             export_cmd = ['svn', 'export']
@@ -185,7 +188,7 @@ class SVN(Source):
                 export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
-            export_cmd.extend(['source', self.workdir])
+            export_cmd.extend([checkout_dir, self.workdir])
 
             cmd = remotecommand.RemoteShellCommand('', export_cmd,
                                                    env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)

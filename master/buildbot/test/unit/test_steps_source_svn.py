@@ -1140,7 +1140,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_copy(self):
         self.setupStep(
             svn.SVN(repourl='http://svn.local/app/trunk',
-                    mode='full', method='copy'))
+                    mode='full', method='copy',
+                    codebase='app'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -1151,21 +1152,21 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
             + 0,
-            Expect('stat', dict(file='source/.svn',
+            Expect('stat', dict(file='source/app/.svn',
                                 logEnviron=True))
             + 0,
-            ExpectShell(workdir='source',
+            ExpectShell(workdir='source/app',
                         command=['svn', 'info', '--xml',
                                  '--non-interactive',
                                  '--no-auth-cache'])
             + ExpectShell.log('stdio',
                               stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
             + 0,
-            ExpectShell(workdir='source',
+            ExpectShell(workdir='source/app',
                         command=['svn', 'update', '--non-interactive',
                                  '--no-auth-cache'])
             + 0,
-            Expect('cpdir', {'fromdir': 'source',
+            Expect('cpdir', {'fromdir': 'source/app',
                              'todir': 'wkdir',
                              'logEnviron': True})
             + 0,
@@ -1176,7 +1177,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', '100', 'SVN')
+        self.expectProperty('got_revision', {'app': '100'}, 'SVN')
         return self.runStep()
 
     def test_mode_full_copy_given_revision(self):
