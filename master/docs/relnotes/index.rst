@@ -31,6 +31,9 @@ Fixes
 
 * :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
 
+* Fixed bug which made it impossible to specify the project when using the
+  BitBucket dialect.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
