@@ -2092,9 +2092,9 @@ In this example, the step renames a tarball based on the day of the week.
 
     f.addStep(steps.FileUpload(slavesrc="widgetsoft.tar.gz",
                          masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
-    f.addStep(steps.MasterShellCommand(command="""
-        cd /var/buildoutputs;
-        mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz"""))
+    f.addStep(steps.MasterShellCommand(
+        command="mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz",
+        workdir="/var/buildoutputs"))
 
 .. note::
 
@@ -2114,6 +2114,9 @@ Variables that don't exist on the master will be replaced by ``""``.
 
 Note that environment values must be strings (or lists that are turned into strings).
 In particular, numeric properties such as ``buildnumber`` must be substituted using :ref:`Interpolate`.
+
+``workdir``
+   (optional) The directory from which the command will be ran.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
