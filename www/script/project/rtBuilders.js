@@ -38,7 +38,7 @@ define(function (require) {
             options.iFilterCol = 0;
 
             options.aoColumns = [
-                { "mData": null, "sWidth": "20%" },
+                { "mData": null, "sWidth": "20%", "sType": "builder-name" },
                 { "mData": null, "sWidth": "10%" },
                 { "mData": null, "sWidth": "15%", "sType": "number-ignore-zero" },
                 { "mData": null, "sWidth": "15%", "sType": "builder-status" },
