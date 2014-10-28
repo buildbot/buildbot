@@ -38,8 +38,7 @@ def getChanges(request, options=None):
     payload = json.loads(request.args['payload'][0])
     repo_url = '%s%s' % (
         payload['canon_url'], payload['repository']['absolute_url'])
-    raw_project = request.args.get('project', None)
-    project = raw_project[0] if raw_project is not None else ''
+    project = request.args.get('project', [''])[0]
 
     changes = []
     for commit in payload['commits']:

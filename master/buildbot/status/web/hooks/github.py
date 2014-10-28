@@ -37,8 +37,7 @@ def getChanges(request, options=None):
     user = payload['repository']['owner']['name']
     repo = payload['repository']['name']
     repo_url = payload['repository']['url']
-    raw_project = request.args.get('project', None)
-    project = raw_project[0] if raw_project is not None else ''
+    project = request.args.get('project', [''])[0]
     # This field is unused:
     # private = payload['repository']['private']
     changes = process_change(payload, user, repo, repo_url, project)
