@@ -575,9 +575,11 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self._start_deferred.callback(results)
             results = yield self._start_deferred
         finally:
+            # hook for tests
+            # assert so that it is only run in non optimized mode
+            assert self._run_finished_hook() is None
             # wait until all the sync logs have been actually created before
             # finishing
-            self._run_finished_hook()
             yield defer.DeferredList(self._sync_addlog_deferreds,
                                      consumeErrors=True)
             self._start_deferred = None
