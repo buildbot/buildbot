@@ -47,7 +47,7 @@ There are several common arguments for schedulers, although not all are availabl
 
         sched = Scheduler(...,
             properties = {
-                'owner': ['zorro@company.com', 'silver@company.com']
+                'owner': ['zorro@example.com', 'silver@example.com']
             })
 
 ``fileIsImportant``

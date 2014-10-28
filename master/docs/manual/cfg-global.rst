@@ -60,7 +60,7 @@ MySQL
 
 .. code-block:: python
 
-   c['db_url'] = "mysql://user:pass@somehost.com/database_name?max_idle=300"
+   c['db_url'] = "mysql://user:pass@example.com/database_name?max_idle=300"
 
 The ``max_idle`` argument for MySQL connections is unique to Buildbot, and should be set to something less than the ``wait_timeout`` configured for your server.
 This controls the SQLAlchemy ``pool_recycle`` parameter, which defaults to no timeout.
