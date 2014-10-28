@@ -6,7 +6,7 @@ Metrics
 New in buildbot 0.8.4 is support for tracking various performance
 metrics inside the buildbot master process. Currently these are logged
 periodically according to the ``log_interval`` configuration
-setting of the @ref{Metrics Options} configuration.
+setting of the :bb:cfg:`Metrics Option <metrics>` configuration.
 
 The metrics subsystem is implemented in
 :mod:`buildbot.process.metrics`. It makes use of twisted's logging
