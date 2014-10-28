@@ -20,7 +20,7 @@ class Logviewer extends Directive
                 if num_lines > self.num_lines
                     for i in [self.num_lines..num_lines - 1]
                         self.lines.push
-                            content: ".\n"
+                            content: "."
                             class: "log_o"
                     self.num_lines = num_lines
                     if self.auto_scroll
