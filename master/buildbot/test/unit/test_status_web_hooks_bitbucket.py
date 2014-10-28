@@ -250,3 +250,20 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         request.setResponseCode.assert_called_with(
             500, 'Error processing changes.')
         self.assertEqual(len(self.flushLoggedErrors()), 1)
+
+    @inlineCallbacks
+    def testGitWithChangeAndProject(self):
+        change_dict = {
+            'payload': [gitJsonPayload],
+            'project': ['project-name']}
+
+        request = FakeRequest(change_dict)
+        request.uri = '/change_hook/bitbucket'
+        request.method = 'POST'
+
+        yield request.test_render(self.change_hook)
+
+        self.assertEqual(len(request.addedChanges), 1)
+        commit = request.addedChanges[0]
+
+        self.assertEqual(commit['project'], 'project-name')
