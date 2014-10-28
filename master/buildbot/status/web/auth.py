@@ -165,9 +165,15 @@ class LDAPAuth(AuthBase):
     implements(IAuth)
     """ Implement authentication against an LDAP server"""
 
-    def __init__(self, server, base_dn):
+    def __init__(self, server, base_dn, bind_user, bind_password, filter):
         self.server = server
         self.base_dn = base_dn
+        self.bind_user = bind_user
+        self.bind_password = bind_password
+        self.filter = filter
+        self.uid = "uid"
+        self.user_filter = "uid={user},cn=users"
+
         try:
             import ldap
             ldap.set_option(ldap.OPT_TIMEOUT, 5.0)
@@ -182,9 +188,18 @@ class LDAPAuth(AuthBase):
             l = ldap.initialize(self.server)
 
             try:
-                l.simple_bind_s("uid=%s,cn=users,%s" % (user, self.base_dn), passwd)
-                dn = l.whoami_s()
-                if dn:
+                bind_filter = ",".join([self.user_filter.replace("{user}", user), self.base_dn])
+                l.simple_bind_s(bind_filter, passwd)
+                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, self.filter.replace("{user}", user), [self.uid])
+                l.unbind()
+
+                found_user = None
+                if len(ldap_result) > 0 and len(ldap_result[0]) > 1:
+                    ldap_dict = ldap_result[0][1]
+                    if self.uid in ldap_dict.keys():
+                        found_user = ldap_dict[self.uid][0]
+
+                if found_user == user:
                     return True
 
                 return False
@@ -199,20 +214,21 @@ class LDAPAuth(AuthBase):
         try:
             import ldap
             l = ldap.initialize(self.server)
-            attr = ["cn", "mail"]
-            filter_str = "uid=%s" % user
+            attr = [self.uid, "mail"]
 
             try:
-                l.simple_bind_s()
-                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, filterstr=filter_str, attrlist=attr)
+                bind_filter = ",".join([self.user_filter.replace("{user}", self.bind_user), self.base_dn])
+                l.simple_bind_s(bind_filter, self.bind_password)
+                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE,
+                                         filterstr=self.filter.replace("{user}", user), attrlist=attr)
                 l.unbind()
 
                 fullname = user
                 email = None
-                if ldap_result > 0 and ldap_result[0] > 1:
+                if len(ldap_result) > 0 and len(ldap_result[0]) > 1:
                     ldap_dict = ldap_result[0][1]
-                    if 'cn' in ldap_dict.keys():
-                        fullname = ldap_dict['cn'][0]
+                    if self.uid in ldap_dict.keys():
+                        fullname = ldap_dict[self.uid][0]
                         email = ldap_dict['mail'][0]
 
                 if email is not None:
@@ -231,6 +247,15 @@ class LDAPAuth(AuthBase):
                 return False
         except ImportError:
             return False
+
+
+class ADAuth(LDAPAuth):
+    """ Implement authentication against an AD server"""
+
+    def __init__(self, server, base_dn, bind_user, bind_password, filter):
+        LDAPAuth.__init__(self, server, base_dn, bind_user, bind_password, filter)
+        self.uid = "sAMAccountName"
+        self.user_filter = "cn={user},cn=users"
 
 
 class UsersAuth(AuthBase):
