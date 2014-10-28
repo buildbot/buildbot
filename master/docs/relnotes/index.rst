@@ -29,6 +29,8 @@ Fixes
 
 * Fixed cross-site scripting in status_json (#2943)
 
+* :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
