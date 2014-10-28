@@ -1669,7 +1669,10 @@ GerritStatusPush
 
 .. py:class:: buildbot.status.status_gerrit.GerritStatusPush
 
-::
+:class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
+GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
+
+An example usage::
 
     from buildbot.status.status_gerrit import GerritStatusPush
     from buildbot.status.builder import Results, SUCCESS, RETRY
@@ -1734,23 +1737,39 @@ GerritStatusPush
                                         summaryCB=gerritSummaryCB,
                                         summaryArg=c['buildbotURL']))
 
-GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
-optionally also sending a message when a build is started. GerritStatusPush
-can send a separate review for each build that completes, or a single review
-summarizing the results for all of the builds. By default, a single summary
-review is sent; that is, a default summaryCB is provided, but no reviewCB or
-startCB.
+Parameters:
 
-``reviewCB``, if specified, determines the message and score to give when
-sending a review for each separate build. It should return a tuple of
-(message, verified, reviewed).
+``server`` (string)
+    Gerrit SSH server's address to use for push event notifications.
 
-If ``startCB`` is specified, it should return a message. This message will be
-sent to the Gerrit server when each build is started.
+``username`` (string)
+    Gerrit SSH server's username.
 
-``summaryCB``, if specified, determines the message and score to give when
-sending a single review summarizing all of the builds. It should return a
-tuple of (message, verified, reviewed).
+``identity_file`` (string, optional)
+    Gerrit SSH identity file.
+
+``port`` (int, optional)
+    Gerrit SSH server's port (default: 29418)
+
+``reviewCB``
+    If specified, determines the message and score to give when sending a review for each separate build.
+    It should return a tuple of :samp:`({message}, {verified}, {reviewed})`.
+
+``startCB``
+    If specified, it should return a message.
+    This message will be sent to the Gerrit server when each build is started.
+
+``summaryCB``
+    If specified, determines the message and score to give when sending a single review summarizing all of the builds.
+    It should return a tuple of :samp:`({message}, {verified}, {reviewed})`.
+
+.. note::
+
+   By default, a single summary review is sent; that is, a default :py:func:`summaryCB` is provided, but no :py:func:`reviewCB` or :py:func:`startCB`.
+
+.. seealso::
+
+   :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:status:`GerritStatusPush`.
 
 .. bb:status:: GitHubStatus
 
