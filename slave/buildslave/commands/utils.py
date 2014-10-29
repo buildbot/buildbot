@@ -43,7 +43,7 @@ def getCommand(name):
 if runtime.platformType != 'win32':
     WindowsError = RuntimeError
 
-if runtime.platformType == 'win32':
+if runtime.platformType == 'win32':  # pragma: no cover
     def rmdirRecursive(dir):
         """This is a replacement for shutil.rmtree that works better under
         windows. Thanks to Bear at the OSAF for the code."""
