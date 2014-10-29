@@ -106,6 +106,10 @@ class BuildbotService extends Factory
                             elem.on("*", onUpdate).then (unsub) ->
                                 events.push(unsub)
                         return res
+                    , (res) ->
+                        elem.value = null
+                        bound = false
+                        return $q.reject(res)
                 elem.value = p
                 return p
 
