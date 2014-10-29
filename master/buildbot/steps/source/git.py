@@ -574,7 +574,7 @@ class Git(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        if self.slaveVersionIsOlderThan('listdir', '2.17'):
+        if self.slaveVersionIsOlderThan('listdir', '2.16'):
             d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
 
             def checkWithPathExists(exists):

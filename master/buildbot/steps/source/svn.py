@@ -75,6 +75,14 @@ class SVN(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
+        # if the version is new enough, and the password is set, then obfuscate it
+        if self.password is not None:
+            if not self.slaveVersionIsOlderThan('shell', '2.16'):
+                self.password = ('obfuscated', self.password, 'XXXXXX')
+            else:
+                log.msg("Slave does not understand obfuscation; "
+                        "svn password will be logged")
+
         d = self.checkSvn()
 
         def checkInstall(svnInstalled):
@@ -185,7 +193,7 @@ class SVN(Source):
             if self.username:
                 export_cmd.extend(['--username', self.username])
             if self.password is not None:
-                export_cmd.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
+                export_cmd.extend(['--password', self.password])
             if self.extra_args:
                 export_cmd.extend(self.extra_args)
             export_cmd.extend([checkout_dir, self.workdir])
@@ -215,7 +223,7 @@ class SVN(Source):
         if self.username:
             command.extend(['--username', self.username])
         if self.password is not None:
-            command.extend(['--password', ('obfuscated', self.password, 'XXXXXX')])
+            command.extend(['--password', self.password])
         if self.depth:
             command.extend(['--depth', self.depth])
         if self.extra_args:
