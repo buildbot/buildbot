@@ -5,6 +5,8 @@ class Build extends Controller
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
+            if not build.number? and buildnumber > 1
+                $state.go('build', builder:builderid, build:buildnumber - 1)
             breadcrumb = [
                     caption: "Builders"
                     sref: "builders"
@@ -21,11 +23,16 @@ class Build extends Controller
                     sref: "build({build:#{buildnumber - 1}})"
 
             glBreadcrumbService.setBreadcrumb(breadcrumb)
-            buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild").then ->
-                breadcrumb.push
-                    caption: '→'
-                    sref: "build({build:#{buildnumber + 1}})"
 
+            unwatch = $scope.$watch 'nextbuild.number', (n, o) ->
+                if n?
+                    breadcrumb.push
+                        caption: '→'
+                        sref: "build({build:#{buildnumber + 1}})"
+                    glBreadcrumbService.setBreadcrumb(breadcrumb)
+                    unwatch()
+
+            buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->
@@ -35,6 +42,3 @@ class Build extends Controller
                 recentStorage.addBuild
                     link: "#/builders/#{$scope.builder.builderid}/build/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
-        , ->
-            if buildnumber > 1
-                $state.go('build', builder:builderid, build:buildnumber - 1)

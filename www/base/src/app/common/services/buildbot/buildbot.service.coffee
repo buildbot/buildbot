@@ -79,7 +79,7 @@ class BuildbotService extends Factory
                                         e[k] = v
                                     return
                             if not _.isArray(l)
-                                debugger
+                                throw Error("Collection value is not an array!")
                             value["id"] = value[idkey]
                             value["_raw_data"] = angular.copy(value)
                             # restangularize the object before putting it in
@@ -106,6 +106,21 @@ class BuildbotService extends Factory
                             elem.on("*", onUpdate).then (unsub) ->
                                 events.push(unsub)
                         return res
+                    , (res) ->  # got error
+                        elem.value = null
+                        if res.status == 404
+                            # It does not exist yet. That might be the case later
+                            # we still 'define' it will all attributes 'undefined'
+                            # and register to update events
+                            # this allows controllers to watch until the value is defined
+                            elem.value = {}
+                            elem.on("*", onUpdate).then (unsub) ->
+                                events.push(unsub)
+                            return elem.value
+                        # if not 404, we say it is unbound, to maybe retry later, and reject the promise
+                        else
+                            bound = false
+                        return $q.reject(res)
                 elem.value = p
                 return p
 
