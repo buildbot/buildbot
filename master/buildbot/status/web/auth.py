@@ -217,8 +217,11 @@ class LDAPAuth(AuthBase):
             attr = [self.uid, "mail"]
 
             try:
-                bind_filter = ",".join([self.user_filter.replace("{user}", self.bind_user), self.base_dn])
-                l.simple_bind_s(bind_filter, self.bind_password)
+                if self.bind_user is None and self.bind_password is None:
+                    l.simple_bind()
+                else:
+                    bind_filter = ",".join([self.user_filter.replace("{user}", self.bind_user), self.base_dn])
+                    l.simple_bind_s(bind_filter, self.bind_password)
                 ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE,
                                          filterstr=self.filter.replace("{user}", user), attrlist=attr)
                 l.unbind()
