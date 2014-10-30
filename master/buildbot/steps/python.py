@@ -205,12 +205,12 @@ class PyLint(ShellCommand):
 
     def __init__(self, **kwargs):
         ShellCommand.__init__(self, **kwargs)
+        self.counts = {}
+        self.summaries = {}
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def logConsumer(self):
-        self.counts = {}
-        self.summaries = {}
         for m in self.MESSAGES:
             self.counts[m] = 0
             self.summaries[m] = []
