@@ -841,6 +841,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "unknown www configuration parameter(s) foo")
 
+    def test_load_www_no_url(self):
+        self.cfg.load_www(self.filename,
+                          dict(www=dict(url=None)))
+        self.assertConfigError(self.errors,
+                               "url configuration parameter must be specified")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
