@@ -23,15 +23,16 @@ class Build extends Controller
                     sref: "build({build:#{buildnumber - 1}})"
 
             glBreadcrumbService.setBreadcrumb(breadcrumb)
-            buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
 
-            $scope.$watch 'nextbuild.number', (n, o) ->
-                if not o? and n?
+            unwatch = $scope.$watch 'nextbuild.number', (n, o) ->
+                if n?
                     breadcrumb.push
                         caption: '→'
                         sref: "build({build:#{buildnumber + 1}})"
                     glBreadcrumbService.setBreadcrumb(breadcrumb)
+                    unwatch()
 
+            buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->
