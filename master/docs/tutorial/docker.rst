@@ -27,7 +27,7 @@ Installation
 
   .. code-block:: bash
 
-          sudo docker run -i busybox /bin/echo Success
+    docker run -i busybox /bin/echo Success
 
 Building and running Buildbot
 -----------------------------
@@ -38,10 +38,10 @@ Building and running Buildbot
   wget https://raw.github.com/buildbot/buildbot/master/master/contrib/Dockerfile
 
   # Build the Buildbot container (it will take a few minutes to download packages)
-  sudo docker build -t buildbot - < Dockerfile
+  docker build -t buildbot - < Dockerfile
 
   # Run buildbot
-  CONTAINER_ID=$(sudo docker run -d -p 127.0.0.1:8010:8010 buildbot)
+  CONTAINER_ID=$(docker run -d -p 8010:8010 -p 22 buildbot)
 
 
 You should now be able to go to http://localhost:8010 and see a web page similar to:
@@ -61,9 +61,15 @@ Playing with your Buildbot container
 If you've come this far, you have a Buildbot environment that you can freely experiment with.
 You can access your container using ssh (username: admin, password: admin):
 
-.. code-block:: bash
+First, you need the local ssh port we published during container creation (note the part
+after the ``:``)::
 
-  ssh -p $(sudo docker port $CONTAINER_ID 22) admin@localhost
+  docker port $CONTAINER_ID 22
+  
+Using that port, you can now ssh onto your new buildbot install (replace ``<port>`` with the
+number from the previous command), the password is ``admin``::
+
+  ssh -p <port> admin@localhost
 
 
 You've got a taste now, but you're probably curious for more.
