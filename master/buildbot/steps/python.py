@@ -230,8 +230,8 @@ class PyLint(ShellCommand):
             if mo:
                 msgtype = mo.group(self._re_groupname)
                 assert msgtype in self.MESSAGES
-            self.summaries[msgtype].append(line)
-            self.counts[msgtype] += 1
+                self.summaries[msgtype].append(line)
+                self.counts[msgtype] += 1
 
     def createSummary(self, log):
         counts, summaries = self.counts, self.summaries
@@ -239,7 +239,7 @@ class PyLint(ShellCommand):
         for msg, fullmsg in self.MESSAGES.items():
             if counts[msg]:
                 self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
-                self.addCompleteLog(fullmsg, "".join(summaries[msg]))
+                self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))
             self.setProperty("pylint-%s" % fullmsg, counts[msg])
         self.setProperty("pylint-total", sum(counts.values()))
 
