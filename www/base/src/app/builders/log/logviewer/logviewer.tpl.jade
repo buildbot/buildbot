@@ -3,7 +3,7 @@
     .input-group
       input.form-control(type="text", ng-model="searchText")
       span.input-group-addon
-        i.fa.fa-search
+        i.fa.fa-filter
   pre.row.log(ng-show="log.type!='h'")
     span(ng-if="log.type=='t'", ng-bind="content")
     span.no-wrap(ng-repeat="line in lines | filter:searchText", class="{{line.class}}",  ng-if="log.type=='s'")
