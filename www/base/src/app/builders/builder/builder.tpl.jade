@@ -4,7 +4,7 @@
       li.pull-right(ng-repeat='sch in forceschedulers')
         a.btn.btn-default(href="#/builders/{{builder.id}}/force/{{sch.name}}", ng-init="sch.toggle=false") {{sch.name}}
   .row(ng-show='builder.description')
-    h4 Descrition:
+    h4 Description:
     | {{ builder.description }}
   .row
     h4 Buildrequests:
