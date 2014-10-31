@@ -436,10 +436,13 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests):
+    def _maybeBuildsetsComplete(self, requests, requestRemoved=False):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
             yield self.master.maybeBuildsetComplete(br.bsid)
+            # notify the master that the buildrequest was remove from queue
+            if requestRemoved:
+                self.master.buildRequestRemoved(br.bsid, br.id, self.name)
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
@@ -617,7 +620,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     try:
                         log.msg("merge finished buildresquest %s with %s" % (finished_br, merged_brids))
                         yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br, merged_brids)
-                        yield self._maybeBuildsetsComplete(merged_breqs)
+                        yield self._maybeBuildsetsComplete(merged_breqs, requestRemoved=True)
                         self.removeFromUnclaimRequestsList(merged_brdicts, unclaimed_requests)
                     except:
                         unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
