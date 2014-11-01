@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
 import random
 
 from buildbot.data import base
@@ -155,6 +156,12 @@ class ResultSpec(unittest.TestCase):
         # note that the REST interface catches this with a nicer error message
         self.assertRaises(KeyError, lambda:
                           resultspec.ResultSpec(fields=['fn'], order=['ln']).apply(data))
+
+    def test_sort_null_datetimefields(self):
+        data = mklist(('fn', 'ln'),
+                      ('cedric', None),
+                      ('albert', datetime.datetime(1, 1, 1)))
+        resultspec.ResultSpec(order=['ln']).apply(data)
 
     def do_test_pagination(self, bareList):
         data = mklist('x', *range(101, 131))
