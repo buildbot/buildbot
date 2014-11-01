@@ -4,12 +4,21 @@
 First Buildbot run with Docker
 ==============================
 
+.. warning::
+    The instructions in this document are based on an *old* Dockerfile, not
+    complying with the state-of-the-art best practices (all components in one
+    container, access via sshd, ...).
+
+    If this means something to you, look at the ``Dockerfiles`` directory
+    under ``master/contrib`` in the git repository, and use the files there.
+    They contain a few lines of instructions.
+
 Docker_ is a tool that makes building and deploying custom environments a breeze.
 It uses lightweight linux containers (LXC) and performs quickly, making it a great instrument for the testing community.
 The next section includes a Docker pre-flight check.
 If it takes more that 3 minutes to get the 'Success' message for you, try the Buildbot pip-based :ref:`first run <getting-code-label>` instead.
 
-.. _Docker: http://www.docker.io
+.. _Docker: https://www.docker.com
 
 Current Docker dependencies
 ---------------------------
