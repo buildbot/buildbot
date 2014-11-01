@@ -129,6 +129,5 @@ def upgrade(migrate_engine):
     add_new_schema_parts(migrate_engine)
     # migrate the data to new tables
     migrate_data(migrate_engine)
-
     # Finally remove the buildername column
     remove_buildername(migrate_engine)
