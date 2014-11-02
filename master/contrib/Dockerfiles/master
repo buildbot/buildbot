@@ -5,11 +5,14 @@
 #
 #     docker build --tag=master - < master
 #
-# Start it with::
+# It's handy to give your master's container a name for later reference by the
+# slave's one.
+# Start the master with::
 #
-#     docker run --name master -d -p 8010:8010 master start --nodaemon
+#     docker run --name master -d -p 8010:8010 master
 #
-# ``docker ps`` should be able to confirm that it's running.
+# ``docker ps`` should be able to confirm that it's running, and tell you its
+# actual name.
 
 FROM debian:stable
 
@@ -19,8 +22,7 @@ RUN apt-get update && apt-get install -y \
    python-dev \
    python-pip
 
-# buildmaster instructions
-
+# Create the buildmaster
 RUN pip install buildbot
 
 RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
@@ -31,6 +33,7 @@ USER buildbot
 
 WORKDIR /buildbot
 
+# Use the sample config unchanged
 RUN buildbot create-master . && mv master.cfg.sample master.cfg
 
 # web interface

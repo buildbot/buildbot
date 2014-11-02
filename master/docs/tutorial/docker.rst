@@ -68,17 +68,9 @@ Playing with your Buildbot container
 ------------------------------------
 
 If you've come this far, you have a Buildbot environment that you can freely experiment with.
-You can access your container using ssh (username: admin, password: admin):
+You can access your container using ssh, the password is ``admin``::
 
-First, you need the local ssh port we published during container creation (note the part
-after the ``:``)::
-
-  docker port $CONTAINER_ID 22
-  
-Using that port, you can now ssh onto your new buildbot install (replace ``<port>`` with the
-number from the previous command), the password is ``admin``::
-
-  ssh -p <port> admin@localhost
+  ssh -p $(docker port $CONTAINER_ID 22 | cut -d: -f 2) admin@localhost
 
 
 You've got a taste now, but you're probably curious for more.

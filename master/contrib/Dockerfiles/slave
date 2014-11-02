@@ -4,9 +4,12 @@
 #
 #     docker build --tag=slave - < slave
 #
-# Start it with (be sure the master is already running)::
+# Make sure that the master is running with the name ``master`` (or replace
+# the first occurence of ``master`` with the actual name of your master).
 #
-#     docker run --link master:master -d slave start --nodaemon
+# Start the slave with::
+#
+#     docker run --link master:master -d slave
 #
 # ``docker ps`` should confirm that a second container is running, and the web
 # interface of the master should also show that the slave is attached.
@@ -19,7 +22,11 @@ RUN apt-get update && apt-get install -y \
    python-dev \
    python-pip
 
-# buildmaster instructions
+# Replace git in the following command with your build dependencies
+RUN apt-get update && apt-get install -y \
+   git
+
+# Create a buildslave
 
 RUN pip install buildbot-slave
 
@@ -31,6 +38,9 @@ USER buildbot
 
 WORKDIR /buildslave
 
+# The link with the master will be done via Docker's link.
+# ``example-slave`` is your slave's name
+# ``pass`` is your slave's password.
 RUN buildslave create-slave . master example-slave pass  
 
 ENTRYPOINT ["/usr/local/bin/buildslave"]
