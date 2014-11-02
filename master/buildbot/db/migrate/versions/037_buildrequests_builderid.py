@@ -86,33 +86,14 @@ def remove_buildername(migrate_engine):
 
     sa.Table('builders', metadata, autoload=True)
     sa.Table('buildsets', metadata, autoload=True)
+    buildrequests = sa.Table('buildrequests', metadata, autoload=True)
 
     # Specify what the new table should look like
-    buildrequests = sa.Table('buildrequests', metadata,
-                             sa.Column('id', sa.Integer, primary_key=True),
-                             sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
-                                       nullable=False),
-                             sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
-                                       nullable=False),
-                             sa.Column('priority', sa.Integer, nullable=False,
-                                       server_default=sa.DefaultClause("0")),
-                             sa.Column('complete', sa.Integer,
-                                       server_default=sa.DefaultClause("0")),
-                             sa.Column('results', sa.SmallInteger),
-                             sa.Column('submitted_at', sa.Integer, nullable=False),
-                             sa.Column('complete_at', sa.Integer),
-                             sa.Column('waited_for', sa.SmallInteger,
-                                       server_default=sa.DefaultClause("0")),
-                             )
-    changeset.drop_column(
-        sa.Column('buildername', sa.String(length=256), nullable=False),
-        table=buildrequests,
-        metadata=metadata,
-        engine=migrate_engine)
+    buildrequests.c.buildername.drop()
 
     changeset.alter_column(
         sa.Column('builderid', sa.Integer, sa.ForeignKey("builders.id"), nullable=False),
-        table='buildrequests',
+        table=buildrequests,
         metadata=metadata,
         engine=migrate_engine)
 
