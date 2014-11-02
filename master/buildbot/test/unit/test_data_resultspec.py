@@ -159,9 +159,16 @@ class ResultSpec(unittest.TestCase):
 
     def test_sort_null_datetimefields(self):
         data = mklist(('fn', 'ln'),
-                      ('cedric', None),
-                      ('albert', datetime.datetime(1, 1, 1)))
-        resultspec.ResultSpec(order=['ln']).apply(data)
+                      ('albert', datetime.datetime(1, 1, 1)),
+                      ('cedric', None))
+
+        exp = mklist(('fn', 'ln'),
+                     ('cedric', None),
+                     ('albert', datetime.datetime(1, 1, 1)))
+
+        self.assertListResultEqual(
+            resultspec.ResultSpec(order=['ln']).apply(data),
+            base.ListResult(exp, total=2))
 
     def do_test_pagination(self, bareList):
         data = mklist('x', *range(101, 131))
@@ -254,3 +261,21 @@ class ResultSpec(unittest.TestCase):
         rs = resultspec.ResultSpec(fields=['foo', 'bar'])
         self.assertFalse(rs.popField('nosuch'))
         self.assertEqual(rs.fields, ['foo', 'bar'])
+
+
+class NoneCmp(unittest.TestCase):
+
+    def test_nonecmp(self):
+        nonecmp = resultspec.nonecmp
+        self.assertEqual(nonecmp(None, datetime.datetime(1, 1, 1)),
+                         -1)
+        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), None),
+                         1)
+        self.assertEqual(nonecmp(None, None),
+                         0)
+        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 1)),
+                         0)
+        self.assertEqual(nonecmp(datetime.datetime(1, 1, 2), datetime.datetime(1, 1, 1)),
+                         1)
+        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 2)),
+                         -1)
