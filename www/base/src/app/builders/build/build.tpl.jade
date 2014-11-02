@@ -1,4 +1,10 @@
 .container
+  nav
+    ul.pager
+      li.previous(ng-class="{'disabled': build.number == 1}")
+        a(ui-sref="build({build:build.number - 1})") &larr; Previous
+      li.next(ng-class="{'disabled': last_build}")
+        a(ui-sref="build({build:build.number + 1})") Next &rarr;
   .row
     ul.breadcrumb
       li.pull-right
