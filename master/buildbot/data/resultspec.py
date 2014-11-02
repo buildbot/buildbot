@@ -51,6 +51,18 @@ class Filter(object):
         return (d for d in data if f(d[fld], v))
 
 
+def nonecmp(a, b):
+    # Some fields are nullable, and could raise TypeException, when REST is requesting sorting
+    # I order to fix that, we create a custom cmp function which treats None as smaller than anything
+    if a is None and b is None:
+        return 0
+    if a is None:
+        return -1
+    if b is None:
+        return 1
+    return cmp(a, b)
+
+
 class ResultSpec(object):
 
     __slots__ = ['filters', 'fields', 'order', 'limit', 'offset']
@@ -147,9 +159,9 @@ class ResultSpec(object):
 
             # precompute the ordering functions and sort
             if self.order:
-                order = [(lambda a, b, k=k[1:]: cmp(b[k], a[k]))
+                order = [(lambda a, b, k=k[1:]: nonecmp(b[k], a[k]))
                          if k[0] == '-' else
-                         (lambda a, b, k=k: cmp(a[k], b[k]))
+                         (lambda a, b, k=k: nonecmp(a[k], b[k]))
                          for k in self.order]
 
                 def cmpFunc(a, b):
