@@ -14,148 +14,149 @@ In this tutorial no configuration or code changes are done.
 
 This tutorial assumes that you are running on Unix, but might be adaptable easily to Windows.
 
-For the :ref:`fastest way through in Linux <first-run-docker-label>`, you can use Docker, the Linux container engine. Docker automates all the deployment steps for you.
+Thanks to virtualenv_, installing buildbot in a standalone environment is very easy.
+For those more familiar with Docker_, there also exists a :ref:`docker version of these instructions <first-run-docker-label>`.
 
-For a more manual approach, you should be able to cut and paste each shell block from this tutorial directly into a terminal.
+You should be able to cut and paste each shell block from this tutorial directly into a terminal.
+
+.. _Docker: https://docker.com
 
 .. _getting-code-label:
 
-Getting the code
-----------------
+Getting ready
+-------------
 
 There are many ways to get the code on your machine.
-For this tutorial, we will use easy_install to install and run buildbot.
-While this isn't the preferred method to install buildbot, it is the simplest one to use for the purposes of this tutorial because it should work on all systems.
-(The preferred method would be to install buildbot via ``pip``.)
+We will use here the easiest one: via ``pip`` in a virtualenv_.
+It has the advantage of not polluting your operating system, as everything will be contained in the virtualenv.
 
 To make this work, you will need the following installed:
 
 * Python_ and the development packages for it
 * virtualenv_
-* Git_
 
-.. _Python: http://www.python.org/
-.. _virtualenv: http://pypi.python.org/pypi/virtualenv/
-.. _Git: http://git-scm.com/
+.. _Python: https://www.python.org/
+.. _virtualenv: https://pypi.python.org/pypi/virtualenv
 
-Preferably, use your package installer to install these.
+Preferably, use your distribution package manager to install these.
 
-You will also need a working Internet connection, as virtualenv and
-easy_install will need to download other projects from the Internet.
+You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet.
 
 .. note::
 
-    Buildbot does not require root access.  Run the commands in this tutorial
-    as a normal, unprivileged user.
+    Buildbot does not require root access.
+    Run the commands in this tutorial as a normal, unprivileged user.
 
 Let's dive in by typing at the terminal:
 
 .. code-block:: bash
 
   cd
-  mkdir -p tmp/buildbot
-  cd tmp/buildbot
-  virtualenv --no-site-packages sandbox
-  source sandbox/bin/activate
-  easy_install sqlalchemy==0.7.10
-  easy_install buildbot
-
-.. note::
-
-    The requirement to install SQLAlchemy-0.7.10 is due to a conflict between newer versions of SQLAlchemy and SQLAlchemy-Migrate.
+  mkdir tmp
+  cd tmp
+  virtualenv --no-site-packages buildbot
+  cd buildbot
 
 Creating a master
 -----------------
 
-At the terminal, type:
+Now that we are ready, we need to install buildbot.
+From the same directory (``tmp/buildbot``), run the following command:
 
 .. code-block:: bash
 
-  buildbot create-master master
+  ./bin/pip install buildbot
+
+Now that buildbot is installed, it's time to create the master:
+
+.. code-block:: bash
+
+  ./bin/buildbot create-master master
+ 
+Buildbot's activity is controlled by a configuration file.
+We will use the sample configuration file unchanged:
+
+.. code-block:: bash
+ 
   mv master/master.cfg.sample master/master.cfg
 
-Now start it:
+Finally, start the master:
 
 .. code-block:: bash
 
-  buildbot start master
-  tail -f master/twistd.log
+  ./bin/buildbot start master
 
-You will now see all of the log information from the master in this terminal.
-You should see lines like this:
+You will now see some log information from the master in this terminal.
+It should ends with lines like this:
 
 .. code-block:: none
 
-    2011-12-04 10:04:40-0600 [-] Starting factory <buildbot.status.web.baseweb.RotateLogSite instance at 0x2e36638>
-    2011-12-04 10:04:40-0600 [-] Setting up http.log rotating 10 files of 10000000 bytes each
-    2011-12-04 10:04:40-0600 [-] WebStatus using (/home/dustin/tmp/buildbot/master/public_html)
-    2011-12-04 10:04:40-0600 [-] removing 0 old schedulers, updating 0, and adding 1
-    2011-12-04 10:04:40-0600 [-] adding 1 new changesources, removing 0
-    2011-12-04 10:04:40-0600 [-] gitpoller: using workdir '/home/dustin/tmp/buildbot/master/gitpoller-workdir'
-    2011-12-04 10:04:40-0600 [-] gitpoller: initializing working dir from git://github.com/buildbot/pyflakes.git
-    2011-12-04 10:04:40-0600 [-] configuration update complete
-    2011-12-04 10:04:41-0600 [-] gitpoller: checking out master
-    2011-12-04 10:04:41-0600 [-] gitpoller: finished initializing working dir from git://github.com/buildbot/pyflakes.git at rev 1a4af6ec1dbb724b884ea14f439b272f30439e4d
+    2014-11-01 15:52:55+0100 [-] BuildMaster is running
+    The buildmaster appears to have (re)started correctly.
+
+From now on, feel free to visit the web status page running on the port 8010: http://localhost:8010/
+
+Our master now needs (at least) a slave to execute its commands.
+For that, heads on to the next section !
 
 Creating a slave
 ----------------
 
-Open a new terminal and enter the same sandbox you created before:
+The buildslave will be executing the commands sent by the master.
+In this tutorial, we are using the pyflakes project as an example.
+As a consequence of this, your slave will need access to the git_ command in order to checkout some code.
+Be sure that it is installed, or the builds will fail.
+
+To save some time, we will use the same sandbox we created before.
+It would however be completely ok to do this in a separate sandbox, or even on another computer - as long as the *slave* computer is able to connect to the *master* one:
 
 .. code-block:: bash
 
   cd
   cd tmp/buildbot
-  source sandbox/bin/activate
 
 Install the ``buildslave`` command:
 
 .. code-block:: bash
 
-   easy_install buildbot-slave
+   ./bin/pip install buildbot-slave
 
 Now, create the slave:
 
 .. code-block:: bash
 
-  buildslave create-slave slave localhost:9989 example-slave pass
+  ./bin/buildslave create-slave slave localhost example-slave pass
 
-The user:host pair, username, and password should be the same as the ones in
-master.cfg; verify this is the case by looking at the section for ``c['slaves']``
-and ``c['slavePortnum']``:
+.. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
+
+The username (``example-slave``), and password (``pass``) should be the same as those in :file:`master/master.cfg`; verify this is the case by looking at the section for ``c['slaves']``:
 
 .. code-block:: bash
 
   cat master/master.cfg
 
-Now, start the slave:
+And finally, start the slave:
 
 .. code-block:: bash
 
-  buildslave start slave
+  ./bin/buildslave start slave
 
-Check the slave's log:
-
-.. code-block:: bash
-
-  tail -f slave/twistd.log
-
-You should see lines like the following at the end of the worker log:
+Check the slave's output.
+It should end with lines like these:
 
 .. code-block:: none
 
-  2009-07-29 20:59:18+0200 [Broker,client] message from master: attached
-  2009-07-29 20:59:18+0200 [Broker,client] SlaveBuilder.remote_print(buildbot-full): message from master: attached
-  2009-07-29 20:59:18+0200 [Broker,client] sending application-level keepalives every 600 seconds
+  2014-11-01 15:56:51+0100 [-] Connecting to localhost:9989
+  2014-11-01 15:56:51+0100 [Broker,client] message from master: attached
+  The buildslave appears to have (re)started correctly.
 
-Meanwhile, in the other terminal, in the master log, if you tail the log you should see lines like this:
+Meanwhile, from the other terminal, in the master log (:file:``twisted.log`` in the master directory), you should see lines like these:
 
 .. code-block:: none
 
-  2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] slave 'example-slave' attaching from IPv4Address(TCP, '127.0.0.1', 41306)
-  2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] Got slaveinfo from 'example-slave'
-  2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] bot attached
-  2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] Buildslave example-slave attached to runtests
+  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] slave 'example-slave' attaching from IPv4Address(TCP, '127.0.0.1', 54015)
+  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] Got slaveinfo from 'example-slave'
+  2014-11-01 15:56:51+0100 [-] bot attached
 
 You should now be able to go to http://localhost:8010, where you will see a web page similar to:
 
@@ -167,12 +168,15 @@ Click on the `Waterfall Display link <http://localhost:8010/waterfall>`_ and you
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
 
-That's the end of the first tutorial.
-A bit underwhelming, you say?
-Well, that was the point!
+Your master is now quietly waiting for new commits to Pyflakes.
+This doesn't happen very often though.
+In the next section, we'll see how to manually start a build.
+
 We just wanted to get you to dip your toes in the water.
 It's easy to take your first steps, but this is about as far as we can go without touching the configuration.
 
 You've got a taste now, but you're probably curious for more.
 Let's step it up a little in the second tutorial by changing the configuration and doing an actual build.
 Continue on to :ref:`quick-tour-label`.
+
+.. _git: http://git-scm.com/
