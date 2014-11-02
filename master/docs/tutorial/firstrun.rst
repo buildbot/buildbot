@@ -47,21 +47,21 @@ You will also need a working Internet connection, as virtualenv and pip will nee
     Buildbot does not require root access.
     Run the commands in this tutorial as a normal, unprivileged user.
 
-Let's dive in by typing at the terminal:
+Creating a master
+-----------------
+
+The first necessary step is to create a virtualenv for our master.
+All our operations will happen in this directory:
 
 .. code-block:: bash
 
   cd
   mkdir tmp
   cd tmp
-  virtualenv --no-site-packages buildbot
-  cd buildbot
+  virtualenv --no-site-packages bb-master
+  cd bb-master
 
-Creating a master
------------------
-
-Now that we are ready, we need to install buildbot.
-From the same directory (``tmp/buildbot``), run the following command:
+Now that we are ready, we need to install buildbot:
 
 .. code-block:: bash
 
@@ -87,7 +87,7 @@ Finally, start the master:
   ./bin/buildbot start master
 
 You will now see some log information from the master in this terminal.
-It should ends with lines like this:
+It should ends with lines like these:
 
 .. code-block:: none
 
@@ -107,13 +107,15 @@ In this tutorial, we are using the pyflakes project as an example.
 As a consequence of this, your slave will need access to the git_ command in order to checkout some code.
 Be sure that it is installed, or the builds will fail.
 
-To save some time, we will use the same sandbox we created before.
-It would however be completely ok to do this in a separate sandbox, or even on another computer - as long as the *slave* computer is able to connect to the *master* one:
+Same as we did for our master, we will create a virtualenv for our slave next to the other one.
+It would however be completely ok to do this on another computer - as long as the *slave* computer is able to connect to the *master* one:
 
 .. code-block:: bash
 
   cd
-  cd tmp/buildbot
+  cd tmp
+  virtualenv --no-site-packages bb-slave
+  cd bb-slave
 
 Install the ``buildslave`` command:
 
