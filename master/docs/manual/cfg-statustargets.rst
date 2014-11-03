@@ -471,23 +471,23 @@ IRC Bot
 .. py:class:: buildbot.status.words.IRC
 
 
-The :class:`buildbot.status.words.IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
+The :bb:status:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 ::
 
     from buildbot.plugins import status
-    irc = status.words.IRC("irc.example.org", "botnickname",
-                           useColors=False,
-                           channels=[{"channel": "#example1"},
-                                     {"channel": "#example2",
-                                      "password": "somesecretpassword"}],
-                           password="mysecretnickservpassword",
-                           notify_events={
-                             'exception': 1,
-                             'successToFailure': 1,
-                             'failureToSuccess': 1,
-                           })
+    irc = status.IRC("irc.example.org", "botnickname",
+                     useColors=False,
+                     channels=[{"channel": "#example1"},
+                               {"channel": "#example2",
+                                "password": "somesecretpassword"}],
+                     password="mysecretnickservpassword",
+                     notify_events={
+                       'exception': 1,
+                       'successToFailure': 1,
+                       'failureToSuccess': 1,
+                     })
     c['status'].append(irc)
 
 Take a look at the docstring for :class:`words.IRC` for more details on configuring this service.
