@@ -237,7 +237,7 @@ class Trigger(LoggingBuildStep):
                             else:
                                 friendly_name = None
                             num = build['number']
-                            url = master.status.getURLForBuild(bn, num, friendly_name)
+                            url = master.status.getURLForBuild(bn, num, friendly_name, self.sourceStamps)
                             self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
 
             builddicts = [master.db.builds.getBuildsAndResultForRequest(br) for br in brids.values()]

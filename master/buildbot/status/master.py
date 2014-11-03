@@ -143,13 +143,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         return builder_path
 
-    def getURLForBuild(self, builder_name, build_number, friendly_name=None):
+    def getURLForBuild(self, builder_name, build_number, friendly_name=None, sourcestamps=None):
         if friendly_name is None:
             friendly_name = builder_name
 
         url = {}
         prefix = self.getBuildbotURL()
-        url['path'] = prefix + self.getBuildersPath(builder_name, build_number)
+        url['path'] = prefix + self.getBuildersPath(builder_name, build_number) \
+                      + getCodebasesArg(sourcestamps=sourcestamps)
         url['text'] = self.getURLText(friendly_name, build_number)
         return url
 
@@ -171,12 +172,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
-            args = ''
 
-            if sourcestamps is not None:
-                args = getCodebasesArg(None, sourcestamps=sourcestamps)
-
-            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number) + args
+            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number) \
+                          + getCodebasesArg(sourcestamps=sourcestamps)
             url['text'] = self.getURLText(name, build_number)
             return url
         d.addCallback(getMasterURL, builder_name, build_number)

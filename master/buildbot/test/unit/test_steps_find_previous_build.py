@@ -93,5 +93,5 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
 
 
         self.expectOutcome(result=SUCCESS, status_text=['Found previous successful build.'])
-        self.expectURLS({'A #1': 'baseurl/builders/A/builds/1'})
+        self.expectURLS({'A #1': 'baseurl/builders/A/builds/1?c_branch=master'})
         return self.runStep()
