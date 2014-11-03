@@ -15,10 +15,7 @@
 
 import sqlalchemy as sa
 
-import datetime
-
 from buildbot.test.util import migration
-from buildbot.util import datetime2epoch
 from twisted.trial import unittest
 
 
@@ -36,45 +33,45 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
 
             builders = sa.Table(
-                    'builders', metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('name', sa.Text, nullable=False),
-                    sa.Column('name_hash', sa.String(40), nullable=False),
-                    )
+                'builders', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('name', sa.Text, nullable=False),
+                sa.Column('name_hash', sa.String(40), nullable=False),
+                )
             builders.create()
 
             buildsets = sa.Table(
-                    'buildsets', metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('external_idstring', sa.String(256)),
-                    sa.Column('reason', sa.String(256)),
-                    sa.Column('submitted_at', sa.Integer, nullable=False),
-                    sa.Column('complete', sa.SmallInteger, nullable=False,
-                            server_default=sa.DefaultClause("0")),
-                    sa.Column('complete_at', sa.Integer),
-                    sa.Column('results', sa.SmallInteger),
-                    sa.Column('parent_buildid', sa.Integer),
-                    sa.Column('parent_relationship', sa.Text),
-                    )
+                'buildsets', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('external_idstring', sa.String(256)),
+                sa.Column('reason', sa.String(256)),
+                sa.Column('submitted_at', sa.Integer, nullable=False),
+                sa.Column('complete', sa.SmallInteger, nullable=False,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('complete_at', sa.Integer),
+                sa.Column('results', sa.SmallInteger),
+                sa.Column('parent_buildid', sa.Integer),
+                sa.Column('parent_relationship', sa.Text),
+                )
             buildsets.create()
 
             buildrequests = sa.Table(
-                    'buildrequests', metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('buildsetid', sa.Integer,
-                        sa.ForeignKey("buildsets.id"), nullable=False),
-                    sa.Column('buildername', sa.String(length=256),
-                        nullable=False),
-                    sa.Column('priority', sa.Integer, nullable=False,
-                        server_default=sa.DefaultClause("0")),
-                    sa.Column('complete', sa.Integer,
-                        server_default=sa.DefaultClause("0")),
-                    sa.Column('results', sa.SmallInteger),
-                    sa.Column('submitted_at', sa.Integer, nullable=False),
-                    sa.Column('complete_at', sa.Integer),
-                    sa.Column('waited_for', sa.SmallInteger,
-                            server_default=sa.DefaultClause("0")),
-                    )
+                'buildrequests', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('buildsetid', sa.Integer,
+                          sa.ForeignKey("buildsets.id"), nullable=False),
+                sa.Column('buildername', sa.String(length=256),
+                          nullable=False),
+                sa.Column('priority', sa.Integer, nullable=False,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('complete', sa.Integer,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('results', sa.SmallInteger),
+                sa.Column('submitted_at', sa.Integer, nullable=False),
+                sa.Column('complete_at', sa.Integer),
+                sa.Column('waited_for', sa.SmallInteger,
+                          server_default=sa.DefaultClause("0")),
+                )
             buildrequests.create()
 
             idx = sa.Index('buildrequests_buildsetid',
@@ -114,21 +111,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertTrue(hasattr(buildrequests.c, 'builderid'))
 
             self.assertEqual(
-                    sorted([i.name for i in buildrequests.indexes]), [
-                        'buildrequests_builderid',
-                        'buildrequests_buildsetid',
-                        'buildrequests_complete',
+                sorted([i.name for i in buildrequests.indexes]), [
+                    'buildrequests_builderid',
+                    'buildrequests_buildsetid',
+                    'buildrequests_complete',
                     ])
 
             # get the new builderid
             bldr2_id = conn.execute(
-                    sa.select(
-                        [builders.c.id],
-                        whereclause=(builders.c.name == 'bldr2'))).first()[0]
+                sa.select(
+                    [builders.c.id],
+                    whereclause=(builders.c.name == 'bldr2'))).first()[0]
             res = conn.execute(
-                    sa.select([buildrequests.c.id, buildrequests.c.builderid]))
+                sa.select([buildrequests.c.id, buildrequests.c.builderid]))
             self.assertEqual(sorted(map(tuple, res)),
-                [(30, 20), (31, 20), (32, bldr2_id)])
+                             [(30, 20), (31, 20), (32, bldr2_id)])
 
         return self.do_test_migration(36, 37, setup_thd, verify_thd)
-
