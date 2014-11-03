@@ -32,15 +32,15 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata.bind = conn
 
         builders = sa.Table('builders', metadata,
-                        sa.Column('id', sa.Integer, primary_key=True),
-                        # builder's name
-                        sa.Column('name', sa.Text, nullable=False),
-                        # sha1 of name; used for a unique index
-                        sa.Column('name_hash', sa.String(40), nullable=False),
-                        )
+                            sa.Column('id', sa.Integer, primary_key=True),
+                            # builder's name
+                            sa.Column('name', sa.Text, nullable=False),
+                            # sha1 of name; used for a unique index
+                            sa.Column('name_hash', sa.String(40), nullable=False),)
         builders.create()
 
-    # tests
+        conn.execute(builders.insert(), [
+            dict(name='bname', name_hash='dontcare')])
 
     def test_update(self):
         def setup_thd(conn):
@@ -52,5 +52,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             builders = sa.Table('builders', metadata, autoload=True)
             self.assertIsInstance(builders.c.description.type, sa.Text)
+
+            q = sa.select([builders.c.name, builders.c.description])
+            num_rows = 0
+            for row in conn.execute(q):
+                # verify that the default value was set correctly
+                self.assertEqual(row.description, None)
+                num_rows += 1
+            self.assertEqual(num_rows, 1)
 
         return self.do_test_migration(38, 39, setup_thd, verify_thd)
