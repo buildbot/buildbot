@@ -3,6 +3,7 @@ class Build extends Controller
         builderid = _.parseInt($stateParams.builder)
         buildnumber = _.parseInt($stateParams.build)
 
+        $scope.last_build = true
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
             if not build.number? and buildnumber > 1
@@ -17,19 +18,12 @@ class Build extends Controller
                     caption: build.number
                     sref: "build({build:#{buildnumber}})"
             ]
-            if buildnumber > 1
-                breadcrumb.splice 0,0,
-                    caption: '←'
-                    sref: "build({build:#{buildnumber - 1}})"
 
             glBreadcrumbService.setBreadcrumb(breadcrumb)
 
             unwatch = $scope.$watch 'nextbuild.number', (n, o) ->
                 if n?
-                    breadcrumb.push
-                        caption: '→'
-                        sref: "build({build:#{buildnumber + 1}})"
-                    glBreadcrumbService.setBreadcrumb(breadcrumb)
+                    $scope.last_build = false
                     unwatch()
 
             buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
