@@ -468,16 +468,16 @@ Log information
 IRC Bot
 ~~~~~~~
 
-.. py:class:: buildbot.status.words.IRC
+.. py:class:: buildbot.status.IRC
 
 
-The :class:`buildbot.status.words.IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
+The :class:`buildbot.status.IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 ::
 
     from buildbot.plugins import status
-    irc = status.words.IRC("irc.example.org", "botnickname",
+    irc = status.IRC("irc.example.org", "botnickname",
                            useColors=False,
                            channels=[{"channel": "#example1"},
                                      {"channel": "#example2",
