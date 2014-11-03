@@ -210,6 +210,9 @@ class FakeUpdates(object):
         self.builderNames = builderNames
         return defer.succeed(None)
 
+    def updateBuilderDescription(self, builderid, description):
+        yield self.master.db.builders.updateBuilderDescription(builderid, description)
+
     def masterDeactivated(self, masterid):
         return defer.succeed(None)
 

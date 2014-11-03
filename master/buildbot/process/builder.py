@@ -111,7 +111,9 @@ class Builder(config.ReconfigurableServiceMixin,
         # allocate  builderid now, so that the builder is visible in the web
         # UI; without this, the bulider wouldn't appear until it preformed a
         # build.
-        yield self.getBuilderId()
+        builderid = yield self.getBuilderId()
+
+        self.master.data.updates.updateBuilderDescription(builderid, builder_config.description)
 
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setTags(builder_config.tags)

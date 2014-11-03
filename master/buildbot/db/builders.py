@@ -30,6 +30,14 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 name_hash=self.hashColumns(name),
             ))
 
+    def updateBuilderDescription(self, builderid, description):
+        def thd(conn):
+            tbl = self.db.model.builders
+
+            q = tbl.update(whereclause=(tbl.c.id == builderid))
+            conn.execute(q, description=description)
+        return self.db.pool.do(thd)
+
     def getBuilder(self, builderid):
         d = self.getBuilders(_builderid=builderid)
 
@@ -72,7 +80,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 j = j.join(limiting_bm_tbl,
                            onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
-                [bldr_tbl.c.id, bldr_tbl.c.name, bm_tbl.c.masterid],
+                [bldr_tbl.c.id, bldr_tbl.c.name, bldr_tbl.c.description, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:
@@ -86,7 +94,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             last = None
             for row in conn.execute(q).fetchall():
                 if not last or row['id'] != last['id']:
-                    last = dict(id=row.id, name=row.name, masterids=[])
+                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description)
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])
