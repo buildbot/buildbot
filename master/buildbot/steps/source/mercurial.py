@@ -142,7 +142,7 @@ class Mercurial(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            res = yield self._dovccmd(['clone', '--uncompressed', self.repourl, '.'])
+            res = yield self._dovccmd(['clone', '--uncompressed', self.repourl, '.', '--noupdate'])
             yield self._checkBranchChange(res)
 
         elif self.method == 'clean':
