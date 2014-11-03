@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
 from buildbot import config, interfaces, util
+from buildbot.status.web.base import getCodebasesArg
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -160,7 +161,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             text += " (Canceled)"
         return text
 
-    def getURLForBuildRequest(self, brid, builder_name, build_number, builder_friendly_name=None):
+    def getURLForBuildRequest(self, brid, builder_name, build_number, builder_friendly_name=None, sourcestamps=None):
         d = self.master.db.mastersconfig.getMasterURL(brid)
 
         if builder_friendly_name is None:
@@ -170,7 +171,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
-            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number)
+            args = ''
+
+            if sourcestamps is not None:
+                args = getCodebasesArg(None, sourcestamps=sourcestamps)
+
+            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number) + args
             url['text'] = self.getURLText(name, build_number)
             return url
         d.addCallback(getMasterURL, builder_name, build_number)

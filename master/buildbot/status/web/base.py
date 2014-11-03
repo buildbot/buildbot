@@ -144,10 +144,11 @@ def path_to_buildqueue(request):
 def path_to_buildqueue_json(request):
     return path_to_root(request) + "json/buildqueue"
 
+
 def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     codebases_arg=''
 
-    def addURLParam(url, key, val):
+    def add_url_param(url, key, val):
         if len(url) > 0:
             url += "&"
         else:
@@ -160,12 +161,26 @@ def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
         for key, val in request.args.iteritems():
             if '_branch' in key:
                 codebases[key[0:key.find('_')]] = ''.join(val)
-                codebases_arg = addURLParam(codebases_arg, key, val)
+                codebases_arg = add_url_param(codebases_arg, key, val)
 
     if sourcestamps is not None:
         for ss in sourcestamps:
-            if request is None or ss.codebase + "_branch" not in request.args:
-                codebases_arg = addURLParam(codebases_arg, ss.codebase + "_branch", ss.branch)
+            if isinstance(ss, dict):
+                if 'b_codebase' in ss:
+                    # Dictionary from previous build step
+                    codebase = ss['b_codebase']
+                    branch = ss['b_branch']
+                else:
+                    # Dictionary from trigger step
+                    codebase = ss['codebase']
+                    branch = ss['branch']
+            else:
+                # Sourcestamp object
+                codebase = ss.codebase
+                branch = ss.branch
+
+            if request is None or codebase + "_branch" not in request.args:
+                codebases_arg = add_url_param(codebases_arg, codebase + "_branch", branch)
     return codebases_arg
 
 

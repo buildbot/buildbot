@@ -395,13 +395,7 @@ class BuildStepStatus(styles.Versioned):
             self.build.builder.status.getURLForThing(l) + args]
                 for l in self.getLogs()]
 
-        #Collect URLs and attach branch params onto the end
-        urls = copy.deepcopy(self.getURLs())
-        for name in urls.keys():
-            if isinstance(urls[name], dict) and urls[name].has_key("url"):
-                urls[name]["url"] += args
-
-        result["urls"] = urls
+        result["urls"] = self.getURLs()
 
 
         if request is not None:

@@ -220,7 +220,8 @@ class Trigger(LoggingBuildStep):
                             else:
                                 friendly_name = None
                             num = build['number']
-                            url = yield master.status.getURLForBuildRequest(build['brid'], bn, num, friendly_name)
+                            url = yield master.status.getURLForBuildRequest(build['brid'], bn, num,
+                                                                            friendly_name, self.sourceStamps)
                             self.step_status.addURL(url['text'], url['path'], *getBuildResults(build))
             
             def add_links(res):
