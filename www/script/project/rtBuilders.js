@@ -48,6 +48,10 @@ define(function (require) {
                 { "mData": null, "sWidth": "5%", "bSortable": false }
             ];
 
+            options.aaSorting = [
+                [0, "asc"]
+            ];
+
             options.aoColumnDefs = [
                 rtTable.cell.builderName(0, "txt-align-left"),
                 rtTable.cell.buildProgress(1, false),
