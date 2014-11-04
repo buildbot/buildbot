@@ -58,22 +58,29 @@ class Tests(interfaces.InterfaceTests):
         def getBuilders(self, masterid=None):
             pass
 
-    def test_signature_updateBuilderDescription(self):
-        @self.assertArgSpecMatches(self.db.builders.updateBuilderDescription)
-        def updateBuilderDescription(self, builderid, description):
+    def test_signature_updateBuilderInfo(self):
+        @self.assertArgSpecMatches(self.db.builders.updateBuilderInfo)
+        def updateBuilderInfo(self, builderid, description, tags):
             pass
 
     @defer.inlineCallbacks
-    def test_updateBuilderDescription(self):
+    def test_updateBuilderInfo(self):
         yield self.insertTestData([
-            fakedb.Builder(id=7, name='some:builder'),
+            fakedb.Builder(id=7, name='some:builder7'),
+            fakedb.Builder(id=8, name='some:builder8'),
         ])
 
-        yield self.db.builders.updateBuilderDescription(7, u'a string which describe the builder')
-        builderdict = yield self.db.builders.getBuilder(7)
-        validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+        yield self.db.builders.updateBuilderInfo(7, u'a string which describe the builder', [u'cat1', u'cat2'])
+        yield self.db.builders.updateBuilderInfo(8, u'a string which describe the builder', None)
+        builderdict7 = yield self.db.builders.getBuilder(7)
+        validation.verifyDbDict(self, 'builderdict', builderdict7)
+        self.assertEqual(builderdict7,
+                         dict(id=7, name='some:builder7', tags=['cat1', 'cat2'],
+                              masterids=[], description='a string which describe the builder'))
+        builderdict8 = yield self.db.builders.getBuilder(8)
+        validation.verifyDbDict(self, 'builderdict', builderdict8)
+        self.assertEqual(builderdict8,
+                         dict(id=8, name='some:builder8', tags=[],
                               masterids=[], description='a string which describe the builder'))
 
     @defer.inlineCallbacks
@@ -81,7 +88,7 @@ class Tests(interfaces.InterfaceTests):
         id = yield self.db.builders.findBuilderId('some:builder')
         builderdict = yield self.db.builders.getBuilder(id)
         self.assertEqual(builderdict,
-                         dict(id=id, name='some:builder',
+                         dict(id=id, name='some:builder', tags=[],
                               masterids=[], description=None))
 
     @defer.inlineCallbacks
@@ -104,7 +111,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+                         dict(id=7, name='some:builder', tags=[],
                               masterids=[9, 10], description=None))
 
     @defer.inlineCallbacks
@@ -119,7 +126,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+                         dict(id=7, name='some:builder', tags=[],
                               masterids=[9], description=None))
 
     @defer.inlineCallbacks
@@ -135,7 +142,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+                         dict(id=7, name='some:builder', tags=[],
                               masterids=[10], description=None))
 
     @defer.inlineCallbacks
@@ -146,7 +153,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+                         dict(id=7, name='some:builder', tags=[],
                               masterids=[], description=None))
 
     @defer.inlineCallbacks
@@ -161,7 +168,7 @@ class Tests(interfaces.InterfaceTests):
         builderdict = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(builderdict,
-                         dict(id=7, name='some:builder',
+                         dict(id=7, name='some:builder', tags=[],
                               masterids=[3, 4], description=None))
 
     @defer.inlineCallbacks
@@ -185,9 +192,9 @@ class Tests(interfaces.InterfaceTests):
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
-            dict(id=7, name='some:builder', masterids=[3], description=None),
-            dict(id=8, name='other:builder', masterids=[3, 4], description=None),
-            dict(id=9, name='third:builder', masterids=[], description=None),
+            dict(id=7, name='some:builder', masterids=[3], tags=[], description=None),
+            dict(id=8, name='other:builder', masterids=[3, 4], tags=[], description=None),
+            dict(id=9, name='third:builder', masterids=[], tags=[], description=None),
         ]))
 
     @defer.inlineCallbacks
@@ -206,8 +213,8 @@ class Tests(interfaces.InterfaceTests):
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
         self.assertEqual(sorted(builderlist), sorted([
-            dict(id=7, name='some:builder', masterids=[3], description=None),
-            dict(id=8, name='other:builder', masterids=[3, 4], description=None),
+            dict(id=7, name='some:builder', masterids=[3], tags=[], description=None),
+            dict(id=8, name='other:builder', masterids=[3, 4], tags=[], description=None),
         ]))
 
     @defer.inlineCallbacks

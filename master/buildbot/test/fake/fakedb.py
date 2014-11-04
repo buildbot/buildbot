@@ -533,6 +533,7 @@ class Builder(Row):
         name='some:builder',
         name_hash=None,
         description=None,
+        tags=None,
     )
 
     id_column = 'id'
@@ -2135,7 +2136,8 @@ class FakeBuildersComponent(FakeDBComponent):
                 self.builders[row.id] = dict(
                     id=row.id,
                     name=row.name,
-                    description=row.description)
+                    description=row.description,
+                    tags=row.tags if row.tags else [])
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
                     (row.builderid, row.masterid)
@@ -2148,7 +2150,8 @@ class FakeBuildersComponent(FakeDBComponent):
         self.builders[id] = dict(
             id=id,
             name=name,
-            description=None)
+            description=None,
+            tags=[])
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
@@ -2194,9 +2197,10 @@ class FakeBuildersComponent(FakeDBComponent):
             Builder(id=builderid, name=name),
         ])
 
-    def updateBuilderDescription(self, builderid, description):
+    def updateBuilderInfo(self, builderid, description, tags):
         if builderid in self.builders:
             self.builders[builderid]['description'] = description
+            self.builders[builderid]['tags'] = tags if tags else []
 
 
 class FakeDBConnector(object):

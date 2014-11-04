@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+import json
+
 from buildbot.db import base
 
 
@@ -30,12 +32,11 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 name_hash=self.hashColumns(name),
             ))
 
-    def updateBuilderDescription(self, builderid, description):
+    def updateBuilderInfo(self, builderid, description, tags):
         def thd(conn):
             tbl = self.db.model.builders
-
             q = tbl.update(whereclause=(tbl.c.id == builderid))
-            conn.execute(q, description=description)
+            conn.execute(q, description=description, tags=json.dumps(tags if tags else []))
         return self.db.pool.do(thd)
 
     def getBuilder(self, builderid):
@@ -80,7 +81,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 j = j.join(limiting_bm_tbl,
                            onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
-                [bldr_tbl.c.id, bldr_tbl.c.name, bldr_tbl.c.description, bm_tbl.c.masterid],
+                [bldr_tbl.c.id, bldr_tbl.c.name, bldr_tbl.c.description,
+                 bldr_tbl.c.tags, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:
@@ -94,7 +96,9 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             last = None
             for row in conn.execute(q).fetchall():
                 if not last or row['id'] != last['id']:
-                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description)
+                    last = dict(id=row.id, name=row.name, masterids=[],
+                                description=row.description,
+                                tags=json.loads(row.tags) if row.tags else [])
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])
