@@ -234,7 +234,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
-    def test_regex_text_0_24(self):
+    def test_regex_text_131(self):
         # at least pylint 1.3.1 prints out space padded column offsets when using text format
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
@@ -341,6 +341,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-convention', 1)
         self.expectProperty('pylint-total', 2)
         return self.runStep()
+
 
 class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
 
