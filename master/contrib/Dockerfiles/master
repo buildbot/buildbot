@@ -1,0 +1,47 @@
+# Dockerfile to setup a buildmaster
+# Should be started before the buildslave.
+#
+# Build it with::
+#
+#     docker build --tag=master - < master
+#
+# It's handy to give your master's container a name for later reference by the
+# slave's one.
+# Start the master with::
+#
+#     docker run --name master -d -p 8010:8010 master
+#
+# ``docker ps`` should be able to confirm that it's running, and tell you its
+# actual name.
+
+FROM debian:stable
+
+MAINTAINER Benoît Allard <benoit.allard@gmx.de>
+
+RUN apt-get update && apt-get install -y \
+   python-dev \
+   python-pip
+
+# Create the buildmaster
+RUN pip install buildbot
+
+RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
+
+RUN mkdir /buildbot && chown buildbot:buildbot /buildbot
+
+USER buildbot
+
+WORKDIR /buildbot
+
+# Use the sample config unchanged
+RUN buildbot create-master . && mv master.cfg.sample master.cfg
+
+# web interface
+EXPOSE 8010:8010
+# slave port
+EXPOSE 9989
+
+ENTRYPOINT ["/usr/local/bin/buildbot"]
+
+CMD ["start", "--nodaemon"]
+

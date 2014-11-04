@@ -1,0 +1,49 @@
+# Dockerfile to setup a buildslave
+#
+# Build it with::
+#
+#     docker build --tag=slave - < slave
+#
+# Make sure that the master is running with the name ``master`` (or replace
+# the first occurence of ``master`` with the actual name of your master).
+#
+# Start the slave with::
+#
+#     docker run --link master:master -d slave
+#
+# ``docker ps`` should confirm that a second container is running, and the web
+# interface of the master should also show that the slave is attached.
+
+FROM debian:stable
+
+MAINTAINER Benoît Allard <benoit.allard@gmx.de>
+
+RUN apt-get update && apt-get install -y \
+   python-dev \
+   python-pip
+
+# Replace git in the following command with your build dependencies
+RUN apt-get update && apt-get install -y \
+   git
+
+# Create a buildslave
+
+RUN pip install buildbot-slave
+
+RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
+
+RUN mkdir /buildslave && chown buildbot:buildbot /buildslave
+
+USER buildbot
+
+WORKDIR /buildslave
+
+# The link with the master will be done via Docker's link.
+# ``example-slave`` is your slave's name
+# ``pass`` is your slave's password.
+RUN buildslave create-slave . master example-slave pass  
+
+ENTRYPOINT ["/usr/local/bin/buildslave"]
+
+CMD ["start", "--nodaemon"]
+
