@@ -6,7 +6,7 @@ First Buildbot run with Docker
 
 .. warning::
     The instruction in this document are based on an *old* Dockerfile, not complying with the state-of-the-art best practices (all components in one container, access via ssh, ...).
-    This is not the recommended way to deploy a buildbot farm.
+    This is not the recommended way to deploy a Buildbot farm.
     However, it offers an easy way to get a first-hand experience.
 
 Docker_ is a tool that makes building and deploying custom environments a breeze.
