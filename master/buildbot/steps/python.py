@@ -199,9 +199,9 @@ class PyLint(ShellCommand):
     _msgtypes_re_str = '(?P<%s>[%s])' % (
         _re_groupname, ''.join(MESSAGES.keys()))
     _default_line_re = re.compile(
-        r'^%s(\d{4})?: *\d+(,\d+)?:.+' % _msgtypes_re_str)
+        r'^%s(\d{4})?: *\d+(, *\d+)?:.+' % _msgtypes_re_str)
     _parseable_line_re = re.compile(
-        r'[^:]+:\d+: \[%s(\d{4})?[,\]] .+' % _msgtypes_re_str)
+        r'[^:]+:\d+: \[%s(\d{4})?(\([a-z-]+\))?[,\]] .+' % _msgtypes_re_str)
 
     def __init__(self, **kwargs):
         ShellCommand.__init__(self, **kwargs)

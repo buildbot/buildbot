@@ -234,6 +234,24 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-total', 2)
         return self.runStep()
 
+    def test_regex_text_131(self):
+        # at least pylint 1.3.1 prints out space padded column offsets when using text format
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('W: 11, 0: Bad indentation. Found 6 spaces, expected 4\n'
+                        'C:  3,10:foo123: Missing docstring\n'))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           state_string='pylint convention=1 warning=1 (warnings)')
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
     def test_regex_text_ids(self):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
@@ -295,6 +313,27 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
                 'stdio',
                 stdout=('test.py:9: [W] Bad indentation.\n'
                         'test.py:3: [C, foo123] Missing docstring\n'))
+            + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
+        self.expectOutcome(result=WARNINGS,
+                           state_string='pylint convention=1 warning=1 (warnings)')
+        self.expectProperty('pylint-warning', 1)
+        self.expectProperty('pylint-convention', 1)
+        self.expectProperty('pylint-total', 2)
+        return self.runStep()
+
+    def test_regex_parseable_131(self):
+        """ In pylint 1.3.1, output parseable is deprecated, but looks like
+        that, this is also the new recommended format string:
+            --msg-template={path}:{line}: [{msg_id}({symbol}), {obj}] {msg}
+        """
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout=('test.py:9: [W0311(bad-indentation), ] Bad indentation. Found 6 spaces, expected 4\n'
+                        'test.py:3: [C0111(missing-docstring), myFunc] Missing function docstring\n'))
             + (python.PyLint.RC_WARNING | python.PyLint.RC_CONVENTION))
         self.expectOutcome(result=WARNINGS,
                            state_string='pylint convention=1 warning=1 (warnings)')

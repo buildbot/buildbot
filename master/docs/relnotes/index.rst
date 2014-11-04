@@ -158,6 +158,8 @@ Fixes
 * Fixed bug which made it impossible to specify the project when using the
   BitBucket dialect.
 
+* The :bb:step:`PyLint` step has been updated to understand newer output.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -240,7 +242,7 @@ Changes and Removals
 
 * Buildslave info is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
 
-* The undocumented ``path`` parameter of the ``MasterShellCommand`` buildstep has been renamed ``workdir`` for better consistency with the other steps.
+* The undocumented ``path`` parameter of the :bb:step:`MasterShellCommand` buildstep has been renamed ``workdir`` for better consistency with the other steps.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
