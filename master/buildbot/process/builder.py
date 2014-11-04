@@ -462,9 +462,6 @@ class Builder(config.ReconfigurableServiceMixin,
             brids = [br.id for br in build.requests]
 
             d = self.master.data.updates.completeBuildRequests(brids, results, complete_at=complete_at)
-            d.addCallback(lambda _:
-                          self._notify_completions(build.requests, results,
-                                                   complete_at_epoch))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
@@ -473,13 +470,6 @@ class Builder(config.ReconfigurableServiceMixin,
             sb.slave.releaseLocks()
 
         self.updateBigStatus()
-
-    @defer.inlineCallbacks
-    def _notify_completions(self, requests, results, complete_at_epoch):
-        # send a message for each request
-        for br in requests:
-            yield self.master.data.updates.completeBuildRequests([br.id], results,
-                                                                 epoch2datetime(complete_at_epoch))
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
