@@ -473,6 +473,11 @@ class Builder(config.ReconfigurableServiceMixin,
         unclaimed_requests.sort(key=lambda brd : brd['submitted_at'])
         defer.returnValue(unclaimed_requests)
 
+    # notify the master that the buildrequests were removed from queue
+    def notifyRequestsRemoved(self, buildrequests):
+        for br in buildrequests:
+            self.master.buildRequestRemoved(br.bsid, br.id, self.name)
+
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brdicts, brids, breqs):
         # check only the first br others will be compatible to merge
@@ -488,6 +493,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     raise
 
                 log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
+                self.notifyRequestsRemoved(breqs)
                 defer.returnValue(True)
                 return
         defer.returnValue(False)
