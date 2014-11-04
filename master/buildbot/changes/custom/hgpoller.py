@@ -177,7 +177,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     @defer.inlineCallbacks
     def _processBranches(self, output):
 
-        search = '(-{0}): and head() and not closed() or bookmark()'.format(self.commits_checked)
+        search = 'last(:tip,{0}) and head() and not closed() or bookmark()'.format(self.commits_checked)
         args = ['log', '-r', search, '--template', '{branch} {bookmarks} {rev}:{node|short}\n']
 
         results = yield utils.getProcessOutput(self.hgbin, args,
