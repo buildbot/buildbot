@@ -316,7 +316,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                                value_json='{"b": {"branch": "master", "repository": "B", "revision": "1234:abc",  "lastChange": 2}}')])
 
         yield self.do_test_iterations_onlyIfChanged_test(fII,
-                                                   (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True))
+                                                         (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True))
 
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
