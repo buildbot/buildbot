@@ -41,6 +41,8 @@ class Tests(interfaces.InterfaceTests):
         # set up a sourcestamp with id 234 for use below
         return self.insertTestData([
             fakedb.SourceStamp(id=234),
+            fakedb.Builder(id=1, name='bldr1'),
+            fakedb.Builder(id=2, name='bldr2'),
         ])
 
     def test_signature_addBuildset(self):
@@ -461,7 +463,7 @@ class RealTests(Tests):
         d = defer.succeed(None)
         d.addCallback(lambda _:
                       self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                                                    properties={}, builderids=[42], external_idstring='extid',
+                                                    properties={}, builderids=[2], external_idstring='extid',
                                                     waited_for=True, _reactor=self.clock))
 
         def check(xxx_todo_changeme):
@@ -486,7 +488,7 @@ class RealTests(Tests):
                                   u'complete', u'results', u'submitted_at',
                                   u'complete_at', u'waited_for'])
                 self.assertEqual(r.fetchall(),
-                                 [(bsid, brids[42], 42, 0, 0,
+                                 [(bsid, brids[2], 2, 0, 0,
                                    -1, self.now, None, 1)])
 
                 # one buildset_sourcestamps row
@@ -502,7 +504,7 @@ class RealTests(Tests):
         d = defer.succeed(None)
         d.addCallback(lambda _:
                       self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                                                    waited_for=False, properties=props, builderids=[11, 12]))
+                                                    waited_for=False, properties=props, builderids=[1, 2]))
 
         def check(xxx_todo_changeme1):
             (bsid, brids) = xxx_todo_changeme1
@@ -539,7 +541,7 @@ class RealTests(Tests):
                 # we don't know which of the brids is assigned to which
                 # buildername, but either one will do
                 self.assertEqual(sorted(rows),
-                                 [(bsid, brids[11], 11), (bsid, brids[12], 12)])
+                                 [(bsid, brids[1], 1), (bsid, brids[2], 2)])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
@@ -570,7 +572,7 @@ class TestRealDB(unittest.TestCase,
         d = self.setUpConnectorComponent(
             table_names=['patches', 'buildsets', 'buildset_properties',
                          'objects', 'buildrequests', 'sourcestamps',
-                         'buildset_sourcestamps'])
+                         'buildset_sourcestamps', 'builders'])
 
         @d.addCallback
         def finish_setup(_):
