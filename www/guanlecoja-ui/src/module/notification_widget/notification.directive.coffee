@@ -20,7 +20,3 @@ class _glNotification extends Controller
         @glNotificationService.dismiss(id)
         e.stopPropagation()
         null
-    toggle: ->
-        @$scope.isOpen = true
-        @dropdownService.open(@$scope)
-        null

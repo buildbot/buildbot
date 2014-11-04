@@ -1,7 +1,10 @@
 # I intercept the http errors and put them in the notification service
-class AddInterceptor extends Config
-    constructor: ($httpProvider) ->
-        $httpProvider.responseInterceptors.push('glHttpInterceptor')
+# in order to enable it, please add following code in you config:
+
+#class AddInterceptor extends Config
+#    constructor: ($httpProvider) ->
+#        $httpProvider.responseInterceptors.push('glHttpInterceptor')
+
 
 class glHttpInterceptor extends Factory
     constructor: (glNotificationService, $q, $timeout) ->

@@ -1,5 +1,5 @@
-li.dropdown.notifications(ng-class="{ active: isOpen }")
-    a(ng-click="n.toggle()")
+li.dropdown.notifications
+    a.dropdown-toggle
         i.fa.fa-bell-o.fa-lg(ng-class="{'fa-ringing': n.notifications.length > 0 }")
     ul.dropdown-menu.dropdown-menu-right
         li.dropdown-header

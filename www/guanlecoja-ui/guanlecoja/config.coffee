@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.2.0"
+ANGULAR_TAG = "~1.3.0"
 
 gulp = require("gulp")
 require("shelljs/global")
@@ -16,7 +16,7 @@ gulp.task "publish", ['default'], ->
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.2.3"
+        version: "1.3.0"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
