@@ -276,7 +276,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         l = []
         for name in self.botmaster.builderNames:
             bldr = self.botmaster.builders[name]
-            if projectName in bldr.config.project:
+            if projectName == bldr.config.project:
                 l.append(name)
         return util.naturalSort(l)
 
