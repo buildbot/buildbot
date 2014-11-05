@@ -243,8 +243,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_off_branch_changes(self):
         yield self.do_test_iterations_onlyIfChanged(
-            (60, self.makeFakeChange(branch='testing'), True),
-            (1700, self.makeFakeChange(branch='staging'), True))
+            (60, self.makeFakeChange(number=1, branch='testing'), True),
+            (1700, self.makeFakeChange(number=2, branch='staging'), True))
         self.assertEqual(self.addBuildsetCalls, [])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)

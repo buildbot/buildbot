@@ -29,21 +29,6 @@ from twisted.internet import reactor
 from twisted.python import log
 
 
-def convertBranchParameter(kwargs):
-    # convert kwargs in place
-    branch = kwargs.pop('branch', None)
-    if branch:
-        if 'codebases' in kwargs:
-            config.error("The 'branch' parameter cannot be combined with the "
-                         "'codebases' parameter")
-        kwargs['codebases'] = {'': {
-            'repository': '',
-            'branch': branch,
-            'project': '',
-            'revision': ''
-        }}
-
-
 class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     """
@@ -52,12 +37,17 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     before the service stops.
     """
 
-    compare_attrs = ('reason', 'createAbsoluteSourceStamps', 'onlyIfChanged')
+    compare_attrs = ('reason', 'createAbsoluteSourceStamps', 'onlyIfChanged',
+                     'branch', 'fileIsImportant', 'change_filter', 'onlyImportant')
     reason = ''
+
+    class NoBranch:
+        pass
 
     def __init__(self, name, builderNames, properties={}, reason='',
                  createAbsoluteSourceStamps=False, onlyIfChanged=False,
-                 **kwargs):
+                 branch=NoBranch, change_filter=None, fileIsImportant=None,
+                 onlyImportant=False, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
@@ -72,10 +62,16 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         self.actuateAtTimer = None
 
         self.reason = util.ascii2unicode(reason % {'name': name})
-
+        self.branch = branch
+        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(change_filter=change_filter)
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.onlyIfChanged = onlyIfChanged
-
+        if fileIsImportant and not callable(fileIsImportant):
+            config.error(
+                "fileIsImportant must be a callable")
+        self.fileIsImportant = fileIsImportant
+        # If True, only important changes will be added to the buildset.
+        self.onlyImportant = onlyImportant
         self._reactor = reactor  # patched by tests
 
     @defer.inlineCallbacks
@@ -126,12 +122,8 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         # we will include all such changes in any buildsets we start.  Note
         # that we must check the branch here because it is not included in the
         # change filter.
-        if change.codebase in self.codebases:
-            cb_branch = self.codebases[change.codebase].get('branch')
-            if change.branch and change.branch != cb_branch:
-                return defer.succeed(None)  # don't care about this change
-        else:
-            return defer.succeed(None)
+        if self.branch is not Timed.NoBranch and change.branch != self.branch:
+            return defer.succeed(None)  # don't care about this change
 
         d = self.master.db.schedulers.classifyChanges(
             self.objectid, {change.number: important})
@@ -266,7 +258,6 @@ class Periodic(Timed):
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        convertBranchParameter(kwargs)
         Timed.__init__(self, name=name, builderNames=builderNames,
                        reason=reason, **kwargs)
         if periodicBuildTimer <= 0:
@@ -323,29 +314,14 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase):
-    compare_attrs = ('fileIsImportant', 'change_filter', 'onlyImportant',)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 fileIsImportant=None,
-                 change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        convertBranchParameter(kwargs)
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
                              reason=reason, **kwargs)
-
-        # If True, only important changes will be added to the buildset.
-        self.onlyImportant = onlyImportant
-
-        if fileIsImportant and not callable(fileIsImportant):
-            config.error(
-                "fileIsImportant must be a callable")
-
-        self.fileIsImportant = fileIsImportant
-        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(
-            change_filter=change_filter)
 
 
 class NightlyTriggerable(NightlyBase):
