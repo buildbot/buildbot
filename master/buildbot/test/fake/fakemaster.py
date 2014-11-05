@@ -136,6 +136,9 @@ class FakeBuilderStatus(object):
     def addPointEvent(self, text):
         pass
 
+class FakeLogRotation(object):
+    rotateLength = 42
+    maxRotatedFiles = 42
 
 class FakeMaster(object):
 
@@ -159,6 +162,7 @@ class FakeMaster(object):
         self.name = 'fake:/master'
         self.masterid = master_id
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
+        self.log_rotation = FakeLogRotation()
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
