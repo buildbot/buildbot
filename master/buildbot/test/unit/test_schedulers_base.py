@@ -79,15 +79,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors,
                           lambda: self.makeScheduler(codebases=codebases))
 
-    @defer.inlineCallbacks
     def test_getCodebaseDict(self):
         sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
-        cbd = yield sched.getCodebaseDict('lib')
-        self.assertEqual(cbd, {'repository': 'librepo'})
+        self.assertEqual(sched.getCodebaseDict('lib'),
+                         {'repository': 'librepo'})
 
     def test_getCodebaseDict_not_found(self):
         sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
-        return self.assertFailure(sched.getCodebaseDict('app'), KeyError)
+        self.assertRaises(KeyError, lambda: sched.getCodebaseDict('app'))
 
     def test_listBuilderNames(self):
         sched = self.makeScheduler(builderNames=['x', 'y'])

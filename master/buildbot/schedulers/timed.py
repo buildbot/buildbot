@@ -17,19 +17,18 @@ from zope.interface import implements
 
 from buildbot import config
 from buildbot import util
-from buildbot.changes.filter import ChangeFilter
+from buildbot.changes import filter
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util import croniter
-from buildbot.util.codebase import AbsoluteSourceStampsMixin
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
 
-class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
+class Timed(base.BaseScheduler):
 
     """
     Parent class for timed schedulers.  This takes care of the (surprisingly
@@ -37,17 +36,10 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     before the service stops.
     """
 
-    compare_attrs = ('reason', 'createAbsoluteSourceStamps', 'onlyIfChanged',
-                     'branch', 'fileIsImportant', 'change_filter', 'onlyImportant')
+    compare_attrs = ('reason',)
     reason = ''
 
-    class NoBranch:
-        pass
-
-    def __init__(self, name, builderNames, properties={}, reason='',
-                 createAbsoluteSourceStamps=False, onlyIfChanged=False,
-                 branch=NoBranch, change_filter=None, fileIsImportant=None,
-                 onlyImportant=False, **kwargs):
+    def __init__(self, name, builderNames, properties={}, reason='', **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
@@ -62,38 +54,33 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         self.actuateAtTimer = None
 
         self.reason = util.ascii2unicode(reason % {'name': name})
-        self.branch = branch
-        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(change_filter=change_filter)
-        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
-        self.onlyIfChanged = onlyIfChanged
-        if fileIsImportant and not callable(fileIsImportant):
-            config.error(
-                "fileIsImportant must be a callable")
-        self.fileIsImportant = fileIsImportant
-        # If True, only important changes will be added to the buildset.
-        self.onlyImportant = onlyImportant
+
         self._reactor = reactor  # patched by tests
 
-    @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.activate(self)
+        d = base.BaseScheduler.activate(self)
 
-        # no need to lock this
-        # nothing else can run before the service is started
+        # no need to lock this; nothing else can run before the service is started
         self.actuateOk = True
 
         # get the scheduler's last_build time (note: only done at startup)
-        self.lastActuated = yield self.getState('last_build', None)
+        d.addCallback(lambda _:
+                      self.getState('last_build', None))
+
+        def set_last(lastActuated):
+            self.lastActuated = lastActuated
+        d.addCallback(set_last)
 
         # schedule the next build
-        yield self.scheduleNextBuild()
+        d.addCallback(lambda _: self.scheduleNextBuild())
 
-        if self.onlyIfChanged or self.createAbsoluteSourceStamps:
-            yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                             change_filter=self.change_filter,
-                                             onlyImportant=self.onlyImportant)
-        else:
-            yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
+        # give subclasses a chance to start up
+        d.addCallback(lambda _: self.startTimedSchedulerService())
+        return d
+
+    def startTimedSchedulerService(self):
+        """Hook for subclasses to participate in the L{activate} process;
+        can return a Deferred"""
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -117,59 +104,12 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         # estimate
         return [self.actuateAt]
 
-    def gotChange(self, change, important):
-        # both important and unimportant changes on our branch are recorded, as
-        # we will include all such changes in any buildsets we start.  Note
-        # that we must check the branch here because it is not included in the
-        # change filter.
-        if self.branch is not Timed.NoBranch and change.branch != self.branch:
-            return defer.succeed(None)  # don't care about this change
-
-        d = self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
-
-        if self.createAbsoluteSourceStamps:
-            d.addCallback(lambda _: self.recordChange(change))
-
-        return d
-
-    @defer.inlineCallbacks
-    def startBuild(self):
-        # use the collected changes to start a build
-        scheds = self.master.db.schedulers
-        classifications = yield scheds.getChangeClassifications(self.objectid)
-
-        # if onlyIfChanged is True, then we will skip this build if no
-        # important changes have occurred since the last invocation
-        if self.onlyIfChanged and not any(classifications.itervalues()):
-            log.msg(("%s scheduler <%s>: skipping build " +
-                     "- No important changes on configured branch") %
-                    (self.__class__.__name__, self.name))
-            return
-
-        changeids = sorted(classifications.keys())
-
-        if changeids:
-            max_changeid = changeids[-1]  # (changeids are sorted)
-            yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=changeids)
-            yield scheds.flushChangeClassifications(self.objectid,
-                                                    less_than=max_changeid + 1)
-        else:
-            # There are no changes, but onlyIfChanged is False, so start
-            # a build of the latest revision, whatever that is
-            sourcestamps = [dict(codebase=cb) for cb in self.codebases.keys()]
-            yield self.addBuildsetForSourceStampsWithDefaults(
-                reason=self.reason,
-                sourcestamps=sourcestamps)
-
-    def getCodebaseDict(self, codebase):
-        if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
-        else:
-            return self.codebases[codebase]
-
     # Timed methods
+
+    def startBuild(self):
+        """The time has come to start a new build.  Returns a Deferred.
+        Override in subclasses."""
+        raise NotImplementedError
 
     def getNextBuildTime(self, lastActuation):
         """
@@ -216,9 +156,8 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
             if actuateAt is not None:
                 untilNext = self.actuateAt - now
                 if untilNext == 0:
-                    log.msg(("%s scheduler <%s>: missed scheduled build time"
-                             " - building immediately") %
-                            (self.__class__.__name__, self.name))
+                    log.msg(("%s: missed scheduled build time, so building "
+                             "immediately") % self.name)
                 self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                               self._actuate)
         d.addCallback(set_timer)
@@ -253,17 +192,19 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
 
 class Periodic(Timed):
-    compare_attrs = ('periodicBuildTimer',)
+    compare_attrs = ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
-                 **kwargs):
+                 branch=None, properties={}, onlyImportant=False,
+                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                       reason=reason, **kwargs)
+                       properties=properties, reason=reason, codebases=codebases)
         if periodicBuildTimer <= 0:
             config.error(
                 "periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
+        self.branch = branch
 
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
@@ -271,15 +212,19 @@ class Periodic(Timed):
         else:
             return defer.succeed(lastActuated + self.periodicBuildTimer)
 
+    def startBuild(self):
+        return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
+
 
 class NightlyBase(Timed):
     compare_attrs = ('minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek')
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 **kwargs):
+                 reason='NightlyBase(%(name)s)',
+                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         Timed.__init__(self, name=name, builderNames=builderNames,
-                       **kwargs)
+                       reason=reason, properties=properties, codebases=codebases)
 
         self.minute = minute
         self.hour = hour
@@ -314,14 +259,132 @@ class NightlyBase(Timed):
 
 
 class Nightly(NightlyBase):
+    compare_attrs = ('branch', 'onlyIfChanged', 'fileIsImportant',
+                     'change_filter', 'onlyImportant', 'createAbsoluteSourceStamps',)
+
+    class NoBranch:
+        pass
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
+                 branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
+                 createAbsoluteSourceStamps=False,
+                 properties={}, change_filter=None, onlyImportant=False,
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
-                 **kwargs):
+                 codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
                              minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
-                             reason=reason, **kwargs)
+                             properties=properties, codebases=codebases, reason=reason)
+
+        # If True, only important changes will be added to the buildset.
+        self.onlyImportant = onlyImportant
+
+        if fileIsImportant and not callable(fileIsImportant):
+            config.error(
+                "fileIsImportant must be a callable")
+
+        if branch is Nightly.NoBranch:
+            config.error(
+                "Nightly parameter 'branch' is required")
+
+        if createAbsoluteSourceStamps and not onlyIfChanged:
+            config.error(
+                "createAbsoluteSourceStamps can only be used with onlyIfChanged")
+
+        self._lastCodebases = {}
+        self.branch = branch
+        self.onlyIfChanged = onlyIfChanged
+        self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
+        self.fileIsImportant = fileIsImportant
+        self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
+            change_filter=change_filter)
+
+    def startTimedSchedulerService(self):
+        if self.onlyIfChanged:
+            d = self.preStartConsumingChanges()
+
+            d.addCallback(lambda _:
+                          self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                                     change_filter=self.change_filter,
+                                                     onlyImportant=self.onlyImportant))
+            return d
+        else:
+            return self.master.db.schedulers.flushChangeClassifications(self.objectid)
+
+    def preStartConsumingChanges(self):
+        if self.createAbsoluteSourceStamps:
+            # load saved codebases
+            d = self.getState("lastCodebases", {})
+
+            def setLast(lastCodebases):
+                self._lastCodebases = lastCodebases
+            d.addCallback(setLast)
+            return d
+        else:
+            return defer.succeed(None)
+
+    def gotChange(self, change, important):
+        # both important and unimportant changes on our branch are recorded, as
+        # we will include all such changes in any buildsets we start.  Note
+        # that we must check the branch here because it is not included in the
+        # change filter.
+        if change.branch != self.branch:
+            return defer.succeed(None)  # don't care about this change
+
+        d = self.master.db.schedulers.classifyChanges(
+            self.objectid, {change.number: important})
+
+        if self.createAbsoluteSourceStamps:
+            self._lastCodebases.setdefault(change.codebase, {})
+            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+
+            codebaseDict = dict(repository=change.repository,
+                                branch=change.branch,
+                                revision=change.revision,
+                                lastChange=change.number)
+
+            if change.number > lastChange:
+                self._lastCodebases[change.codebase] = codebaseDict
+                d.addCallback(lambda _:
+                              self.setState('lastCodebases', self._lastCodebases))
+
+        return d
+
+    def getCodebaseDict(self, codebase):
+        if self.createAbsoluteSourceStamps:
+            return self._lastCodebases.get(codebase, self.codebases[codebase])
+        else:
+            return self.codebases[codebase]
+
+    @defer.inlineCallbacks
+    def startBuild(self):
+        scheds = self.master.db.schedulers
+        # if onlyIfChanged is True, then we will skip this build if no
+        # important changes have occurred since the last invocation
+        if self.onlyIfChanged:
+            classifications = \
+                yield scheds.getChangeClassifications(self.objectid)
+
+            # see if we have any important changes
+            for imp in classifications.itervalues():
+                if imp:
+                    break
+            else:
+                log.msg(("Nightly Scheduler <%s>: skipping build " +
+                         "- No important changes on configured branch") % self.name)
+                return
+
+            changeids = sorted(classifications.keys())
+            yield self.addBuildsetForChanges(reason=self.reason,
+                                             changeids=changeids)
+
+            max_changeid = changeids[-1]  # (changeids are sorted)
+            yield scheds.flushChangeClassifications(self.objectid,
+                                                    less_than=max_changeid + 1)
+        else:
+            # start a build of the latest revision, whatever that is
+            yield self.addBuildsetForLatest(reason=self.reason,
+                                            branch=self.branch)
 
 
 class NightlyTriggerable(NightlyBase):
@@ -330,10 +393,10 @@ class NightlyTriggerable(NightlyBase):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
-                 **kwargs):
+                 properties={}, codebases=base.BaseScheduler.DEFAULT_CODEBASES):
         NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                             dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, reason=reason,
-                             **kwargs)
+                             dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, properties=properties, reason=reason,
+                             codebases=codebases)
 
         self._lastTrigger = None
 
@@ -346,15 +409,11 @@ class NightlyTriggerable(NightlyBase):
             try:
                 if isinstance(lastTrigger[0], list):
                     self._lastTrigger = (lastTrigger[0],
-                                         properties.Properties.fromDict(lastTrigger[1]),
-                                         lastTrigger[2],
-                                         lastTrigger[3])
+                                         properties.Properties.fromDict(lastTrigger[1]))
                 # handle state from before Buildbot-0.9.0
                 elif isinstance(lastTrigger[0], dict):
                     self._lastTrigger = (lastTrigger[0].values(),
-                                         properties.Properties.fromDict(lastTrigger[1]),
-                                         None,
-                                         None)
+                                         properties.Properties.fromDict(lastTrigger[1]))
             except Exception:
                 pass
             # If the lastTrigger isn't of the right format, ignore it
@@ -364,41 +423,34 @@ class NightlyTriggerable(NightlyBase):
                     "could not load previous state; starting fresh",
                     scheduler=self.name)
 
-    def trigger(self, waited_for, sourcestamps=None, set_props=None,
-                parent_buildid=None, parent_relationship=None):
+    def trigger(self, sourcestamps, set_props=None):
         """Trigger this scheduler with the given sourcestamp ID. Returns a
         deferred that will fire when the buildset is finished."""
         assert isinstance(sourcestamps, list), \
             "trigger requires a list of sourcestamps"
 
-        self._lastTrigger = (sourcestamps,
-                             set_props,
-                             parent_buildid,
-                             parent_relationship)
+        self._lastTrigger = (sourcestamps, set_props)
 
+        # record the trigger in the db
         if set_props:
             propsDict = set_props.asDict()
         else:
             propsDict = {}
-
-        # record the trigger in the db
-        d = self.setState('lastTrigger', (sourcestamps,
-                                          propsDict,
-                                          parent_buildid,
-                                          parent_relationship))
+        d = self.setState('lastTrigger',
+                          (sourcestamps, propsDict))
 
         # Trigger expects a callback with the success of the triggered
         # build, if waitForFinish is True.
         # Just return SUCCESS, to indicate that the trigger was succesful,
-        # don't wait for the nightly to run.
-        return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
+        # don't want for the nightly to run.
+        return d.addCallback(lambda _: buildstep.SUCCESS)
 
     @defer.inlineCallbacks
     def startBuild(self):
         if self._lastTrigger is None:
-            return
+            defer.returnValue(None)
 
-        (sourcestamps, set_props, parent_buildid, parent_relationship) = self._lastTrigger
+        (sourcestamps, set_props) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
 
@@ -409,9 +461,5 @@ class NightlyTriggerable(NightlyBase):
         if set_props:
             props.updateFromProperties(set_props)
 
-        yield self.addBuildsetForSourceStampsWithDefaults(
-            reason=self.reason,
-            sourcestamps=sourcestamps,
-            properties=props,
-            parent_buildid=parent_buildid,
-            parent_relationship=parent_relationship)
+        yield self.addBuildsetForSourceStampsWithDefaults(reason=self.reason,
+                                                          sourcestamps=sourcestamps, properties=props)

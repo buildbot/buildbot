@@ -4,17 +4,12 @@
 First Buildbot run with Docker
 ==============================
 
-.. warning::
-    The instruction in this document are based on an *old* Dockerfile, not complying with the state-of-the-art best practices (all components in one container, access via ssh, ...).
-    This is not the recommended way to deploy a Buildbot farm.
-    However, it offers an easy way to get a first-hand experience.
-
 Docker_ is a tool that makes building and deploying custom environments a breeze.
 It uses lightweight linux containers (LXC) and performs quickly, making it a great instrument for the testing community.
 The next section includes a Docker pre-flight check.
 If it takes more that 3 minutes to get the 'Success' message for you, try the Buildbot pip-based :ref:`first run <getting-code-label>` instead.
 
-.. _Docker: https://www.docker.com
+.. _Docker: http://www.docker.io
 
 Current Docker dependencies
 ---------------------------
@@ -32,7 +27,7 @@ Installation
 
   .. code-block:: bash
 
-    sudo docker run -i busybox /bin/echo Success
+          sudo docker run -i busybox /bin/echo Success
 
 Building and running Buildbot
 -----------------------------
@@ -43,10 +38,10 @@ Building and running Buildbot
   wget https://raw.github.com/buildbot/buildbot/master/master/contrib/Dockerfile
 
   # Build the Buildbot container (it will take a few minutes to download packages)
-  docker build -t buildbot - < Dockerfile
+  sudo docker build -t buildbot - < Dockerfile
 
   # Run buildbot
-  CONTAINER_ID=$(docker run -d -p 8010:8010 -p 22 buildbot)
+  CONTAINER_ID=$(sudo docker run -d -p 127.0.0.1:8010:8010 buildbot)
 
 
 You should now be able to go to http://localhost:8010 and see a web page similar to:
@@ -64,11 +59,11 @@ Playing with your Buildbot container
 ------------------------------------
 
 If you've come this far, you have a Buildbot environment that you can freely experiment with.
-You can access your container using ssh, the password is ``admin``:
+You can access your container using ssh (username: admin, password: admin):
 
 .. code-block:: bash
 
-  ssh -p $(docker port $CONTAINER_ID 22 | cut -d: -f 2) admin@localhost
+  ssh -p $(sudo docker port $CONTAINER_ID 22) admin@localhost
 
 
 You've got a taste now, but you're probably curious for more.

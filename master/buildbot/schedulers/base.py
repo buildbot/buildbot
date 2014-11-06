@@ -213,10 +213,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does
         # not have a change associated with it.
-        try:
-            return defer.succeed(self.codebases[codebase])
-        except KeyError:
-            return defer.fail()
+        return self.codebases[codebase]
 
     @defer.inlineCallbacks
     def addBuildsetForChanges(self, waited_for=False, reason='',
@@ -238,8 +235,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
-                cb = yield self.getCodebaseDict(codebase)
-
+                cb = self.getCodebaseDict(codebase)
                 ss = {
                     'codebase': codebase,
                     'repository': cb['repository'],

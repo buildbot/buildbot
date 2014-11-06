@@ -120,8 +120,7 @@ class MasterConfig(util.ComparableMixin):
             url='http://localhost:8080/',
             plugins=dict(),
             auth=auth.NoAuth(),
-            avatar_methods=avatar.AvatarGravatar(),
-            logfileName='http.log',
+            avatar_methods=avatar.AvatarGravatar()
         )
 
     _known_config_keys = set([
@@ -570,8 +569,7 @@ class MasterConfig(util.ComparableMixin):
         www_cfg = config_dict['www']
         allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins', 'auth', 'avatar_methods', 'logfileName',
-                       'logRotateLength', 'maxRotatedFiles'])
+                       'plugins', 'auth', 'avatar_methods'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %

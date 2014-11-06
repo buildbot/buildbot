@@ -38,11 +38,9 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
         # keep track of builds in self.events
         self.events = []
 
-        def addBuildsetForSourceStampsWithDefaults(reason, sourcestamps,
-                                                   waited_for=False, properties=None, builderNames=None,
-                                                   **kw):
+        def addBuildsetForLatest(reason=None, branch=None):
             self.assertIn('Periodic scheduler named', reason)
-            # TODO: check branch
+            self.assertEqual(branch, exp_branch)
             isFirst = (self.events == [])
             self.events.append('B@%d' % self.clock.seconds())
             if isFirst and firstBuildDuration:
@@ -51,7 +49,7 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
                 return d
             else:
                 return defer.succeed(None)
-        sched.addBuildsetForSourceStampsWithDefaults = addBuildsetForSourceStampsWithDefaults
+        sched.addBuildsetForLatest = addBuildsetForLatest
 
         # handle state locally
         self.state = {}

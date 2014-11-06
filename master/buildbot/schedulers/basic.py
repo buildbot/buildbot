@@ -16,11 +16,10 @@
 from buildbot import config
 from buildbot import util
 from buildbot.changes import changes
-from buildbot.changes.filter import ChangeFilter
+from buildbot.changes import filter
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
-from buildbot.util.codebase import AbsoluteSourceStampsMixin
 from collections import defaultdict
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -82,24 +81,34 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getChangeFilter(self, branch, branches, change_filter, categories):
         raise NotImplementedError
 
-    @defer.inlineCallbacks
+    def preStartConsumingChanges(self):
+        # Hook for subclasses to setup before startConsumingChanges().
+        return defer.succeed(None)
+
     def activate(self):
-        yield base.BaseScheduler.activate(self)
-        yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
-                                         change_filter=self.change_filter,
-                                         onlyImportant=self.onlyImportant)
+        d = base.BaseScheduler.activate(self)
+        d.addCallback(lambda _:
+                      self.preStartConsumingChanges())
+        d.addCallback(lambda _:
+                      self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                                 change_filter=self.change_filter,
+                                                 onlyImportant=self.onlyImportant))
 
-        # if we have a treeStableTimer, if there are classified changes
-        # out there, start their timers again
-        if self.treeStableTimer:
-            yield self.scanExistingClassifiedChanges()
-
-        # otherwise, we don't care about classified
+        # if treeStableTimer is False, then we don't care about classified
         # changes, so get rid of any hanging around from previous
         # configurations
+        if not self.treeStableTimer:
+            d.addCallback(lambda _:
+                          self.master.db.schedulers.flushChangeClassifications(
+                              self.objectid))
+
+        # otherwise, if there are classified changes out there, start their
+        # treeStableTimers again
         else:
-            yield self.master.db.schedulers.flushChangeClassifications(
-                self.objectid)
+            d.addCallback(lambda _:
+                          self.scanExistingClassifiedChanges())
+
+        return d
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -127,11 +136,16 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         timer_name = self.getTimerNameForChange(change)
 
-        # if we have a treeStableTimer
+        # if we have a treeStableTimer, then record the change's importance
+        # and:
         # - for an important change, start the timer
         # - for an unimportant change, reset the timer if it is running
+        d = self.master.db.schedulers.classifyChanges(
+            self.objectid, {change.number: important})
 
-        if important or self._stable_timers[timer_name]:
+        def fix_timer(_):
+            if not important and not self._stable_timers[timer_name]:
+                return
             if self._stable_timers[timer_name]:
                 self._stable_timers[timer_name].cancel()
 
@@ -140,10 +154,8 @@ class BaseBasicScheduler(base.BaseScheduler):
                 d.addErrback(log.err, "while firing stable timer")
             self._stable_timers[timer_name] = self._reactor.callLater(
                 self.treeStableTimer, fire_timer)
-
-        # record the change's importance
-        return self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
+        d.addCallback(fix_timer)
+        return d
 
     @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
@@ -178,10 +190,12 @@ class BaseBasicScheduler(base.BaseScheduler):
     @util.deferredLocked('_stable_timers_lock')
     @defer.inlineCallbacks
     def stableTimerFired(self, timer_name):
-        # delete this now-fired timer, if the service has already been stopped
-        # then just bail out
-        if not self._stable_timers.pop(timer_name, None):
+        # if the service has already been stopped then just bail out
+        if not self._stable_timers[timer_name]:
             return
+
+        # delete this now-fired timer
+        del self._stable_timers[timer_name]
 
         classifications = \
             yield self.getChangeClassificationsForTimer(self.objectid,
@@ -205,22 +219,49 @@ class BaseBasicScheduler(base.BaseScheduler):
         return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
 
 
-class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
+class SingleBranchScheduler(BaseBasicScheduler):
 
     def __init__(self, name, createAbsoluteSourceStamps=False, **kwargs):
+        self._lastCodebases = {}
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         BaseBasicScheduler.__init__(self, name, **kwargs)
 
-    @defer.inlineCallbacks
-    def gotChange(self, change, important):
+    def preStartConsumingChanges(self):
         if self.createAbsoluteSourceStamps:
-            yield self.recordChange(change)
+            # load saved codebases
+            d = self.getState("lastCodebases", {})
 
-        yield BaseBasicScheduler.gotChange(self, change, important)
+            def setLast(lastCodebases):
+                self._lastCodebases = lastCodebases
+            d.addCallback(setLast)
+            return d
+        else:
+            return defer.succeed(None)
+
+    def gotChange(self, change, important):
+        d = defer.succeed(None)
+
+        if self.createAbsoluteSourceStamps:
+            self._lastCodebases.setdefault(change.codebase, {})
+            lastChange = self._lastCodebases[change.codebase].get('lastChange', -1)
+
+            codebaseDict = dict(repository=change.repository,
+                                branch=change.branch,
+                                revision=change.revision,
+                                lastChange=change.number)
+
+            if change.number > lastChange:
+                self._lastCodebases[change.codebase] = codebaseDict
+                d.addCallback(lambda _:
+                              self.setState('lastCodebases', self._lastCodebases))
+
+        d.addCallback(lambda _:
+                      BaseBasicScheduler.gotChange(self, change, important))
+        return d
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
+            return self._lastCodebases.get(codebase, self.codebases[codebase])
         else:
             return self.codebases[codebase]
 
@@ -234,7 +275,7 @@ class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
                 "the 'branches' argument is not allowed for " +
                 "SingleBranchScheduler")
 
-        return ChangeFilter.fromSchedulerConstructorArgs(
+        return filter.ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter, branch=branch,
             categories=categories)
 
@@ -262,7 +303,7 @@ class AnyBranchScheduler(BaseBasicScheduler):
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         assert branch is NotABranch
-        return ChangeFilter.fromSchedulerConstructorArgs(
+        return filter.ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter, branch=branches,
             categories=categories)
 
