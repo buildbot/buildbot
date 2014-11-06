@@ -125,7 +125,8 @@ define(["jquery", "ui.popup"], function ($, popup) {
                     url: "base/script/test/test_data.html",
                     animate: false,
                     onShow: function () {
-                        done();
+                        // Wait for popup to initialize close first
+                        setTimeout(done, 2);
                     }
                 });
 

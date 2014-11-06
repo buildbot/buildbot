@@ -25,6 +25,7 @@ define(function (require) {
             var privateFunc = {
                 init: function () {
                     privateFunc.clear();
+                    privateFunc.createID();
                     if (privateFunc.createHTML()) {
                         opts.onCreate($elem);
 
@@ -34,6 +35,26 @@ define(function (require) {
                             });
                         }
                     }
+                },
+                createID: function createID() {
+                    if ($elem.popupID === undefined) {
+                        var id = "",
+                            possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+                            i;
+
+                        for (i = 0; i < 5; i += 1) {
+                            id += possible.charAt(Math.floor(Math.random() * possible.length));
+                        }
+
+                        $elem.popupID = id;
+                    }
+                },
+                getID: function getID() {
+                    return $elem.popupID;
+                },
+                getCloseClickEvent: function getCloseClickEvent() {
+                    var id = privateFunc.getID();
+                    return "click.katana.popup" + id + " touchstart.katana.popup" + id;
                 },
                 createHTML: function () {
                     $elem.addClass("more-info-box more-info-box-js").
@@ -65,10 +86,11 @@ define(function (require) {
                             $elem.remove();
                             delete opts.title;
                             delete opts.html;
-                            $elem = null;
 
-                            $(document).off("click.katana.popup touchstart.katana.popup");
+                            $(document).off(privateFunc.getCloseClickEvent());
                             $(window).off("resize.katana.popup");
+
+                            $elem = null;
                         } else {
                             $elem.empty();
                         }
@@ -78,12 +100,14 @@ define(function (require) {
 
                     //Delay these things slightly so the DOM has time to update
                     setTimeout(function () {
-                        privateFunc.initCloseButton();
-                        helpers.jCenter($elem);
-                        if (opts.center) {
-                            $(window).on("resize.katana.popup", function () {
-                                helpers.jCenter($elem);
-                            });
+                        if ($elem !== null) {
+                            privateFunc.initCloseButton();
+                            helpers.jCenter($elem);
+                            if (opts.center) {
+                                $(window).on("resize.katana.popup", function () {
+                                    helpers.jCenter($elem);
+                                });
+                            }
                         }
                     }, 1);
 
@@ -98,7 +122,7 @@ define(function (require) {
                 },
                 hidePopup: function () {
                     //Remove event handlers
-                    $(document).off("click.katana.popup touchstart.katana.popup");
+                    $(document).off(privateFunc.getCloseClickEvent());
                     $(window).off("resize.katana.popup");
 
                     if (opts.animate) {
@@ -114,7 +138,7 @@ define(function (require) {
                     }
                 },
                 initCloseButton: function () {
-                    $(document).on("click.katana.popup touchstart.katana.popup", function (e) {
+                    $(document).on(privateFunc.getCloseClickEvent(), function (e) {
                         if ((!$elem.is(e.target) && $elem.has(e.target).length === 0) || $elem.find(".close-btn").is(e.target)) {
                             if ($elem.is(":visible")) {
                                 privateFunc.hidePopup();
