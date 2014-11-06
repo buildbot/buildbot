@@ -110,7 +110,8 @@ class BBRefTargetDirective(Directive):
         try:
             todocname, targetname = targets[target]
         except KeyError:
-            print "MISSING BB REFERENCE: bb:%s:%s" % (cls.ref_type, target)
+            env.warn(fromdocname, "Missing BB reference: bb:%s:%s" % (cls.ref_type, target),
+                     node.line)
             return None
 
         return make_refnode(builder, fromdocname,
