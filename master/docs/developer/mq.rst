@@ -156,7 +156,7 @@ Unit tests should be used to ensure this resiliency.
 
 Some related messages are sent at approximately the same time.
 Due to the non-blocking nature of message delivery, consumers should *not* assume that subsequent messages in a sequence remain queued.
-For example, upon receipt of a :bb:msg:`buildset.$bsid.new` message, it is already too late to try to subscribe to the associated build requests messages, as they may already have been consumed.
+For example, upon receipt of a :bb:event:`buildset.$bsid.new` message, it is already too late to try to subscribe to the associated build requests messages, as they may already have been consumed.
 
 Schema Changes
 ~~~~~~~~~~~~~~
