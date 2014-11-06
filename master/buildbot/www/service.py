@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from buildbot import config
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
@@ -24,6 +26,7 @@ from buildbot.www import sse
 from buildbot.www import ws
 from twisted.application import strports
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web import server
 
 
@@ -139,7 +142,38 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         root.putChild('sse', sse.EventResource(self.master))
 
         self.root = root
-        self.site = server.Site(root)
+
+        def either(a, b):  # a if a else b for py2.4
+            if a:
+                return a
+            else:
+                return b
+
+        rotateLength = either(new_config.www.get('logRotateLength'), self.master.log_rotation.rotateLength)
+        maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
+
+        class RotateLogSite(server.Site):
+            """ A Site that logs to a separate file: http.log, and rotate its logs """
+
+            def _openLogFile(self, path):
+                try:
+                    from twisted.python.logfile import LogFile
+                    log.msg("Setting up http.log rotating %s files of %s bytes each" %
+                            (maxRotatedFiles, rotateLength))
+                    if hasattr(LogFile, "fromFullPath"):  # not present in Twisted-2.5.0
+                        return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
+                    else:
+                        log.msg("WebStatus: rotated http logs are not supported on this version of Twisted")
+                except ImportError, e:
+                    log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
+
+                # if all else fails, just call the parent method
+                return server.Site._openLogFile(self, path)
+
+        httplog = None
+        if new_config.www['logfileName']:
+            httplog = os.path.abspath(os.path.join(self.master.basedir, new_config.www['logfileName']))
+        self.site = RotateLogSite(root, logPath=httplog)
 
         # todo: need to store session infos in the db for multimaster
         # rough examination, it looks complicated, as all the session APIs are sync
