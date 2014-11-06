@@ -26,9 +26,10 @@
     &.active:not(.pinned) .sidebar{
         transform: translate(180px, 0px);
         -webkit-transform: translate(180px, 0px);
-       .sidebar ul {
-            overflow-y: auto;
-        }
+    }
+    /* add scrollbar if the menu is open */
+    &.active .sidebar ul {
+        overflow-y: auto;
     }
     &:not(.active){
 
