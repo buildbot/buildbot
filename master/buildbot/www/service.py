@@ -170,7 +170,9 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 # if all else fails, just call the parent method
                 return server.Site._openLogFile(self, path)
 
-        httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
+        httplog = None
+        if new_config.www['logfileName']:
+            httplog = os.path.abspath(os.path.join(self.master.basedir, new_config.www['logfileName']))
         self.site = RotateLogSite(root, logPath=httplog)
 
         # todo: need to store session infos in the db for multimaster

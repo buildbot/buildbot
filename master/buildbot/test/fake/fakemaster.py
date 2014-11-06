@@ -136,9 +136,11 @@ class FakeBuilderStatus(object):
     def addPointEvent(self, text):
         pass
 
+
 class FakeLogRotation(object):
     rotateLength = 42
     maxRotatedFiles = 42
+
 
 class FakeMaster(object):
 
