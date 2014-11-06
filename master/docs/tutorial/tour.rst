@@ -88,7 +88,12 @@ Configuration Errors
 
 It is very common to make a mistake when configuring buildbot, so you might as well see now what happens in that case and what you can do to fix the error.
 
-Open up the config again and introduce a syntax error by removing the first single quote in the two lines you changed, so they read::
+Open up the config again and introduce a syntax error by removing the first single quote in the two lines you changed, so they read:
+
+..
+    Format a `none` since this is not a valid Python code
+
+.. code-block:: none
 
   c[title'] = "Pyflakes"
   c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
