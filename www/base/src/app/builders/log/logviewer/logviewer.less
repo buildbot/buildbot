@@ -2,10 +2,19 @@
     width:100%;
 }
 pre.log {
+    .padding {
+        background: #ddd;
+
+    }
+    .linenumber {
+        width: 50px;
+        float:left;
+    }
     // It is much more difficult to do autoscroll if line wrap is enabled.
     // For now we just disable it. There is space for some smarter algorithm
     .no-wrap {
         white-space: pre;
+        word-wrap: normal;
     }
   overflow: auto;
 }
@@ -14,5 +23,5 @@ pre.log {
   width: 200px;
   margin-top: 0px;
   position: absolute;
-  right:15px;
+  right:30px;
 }
