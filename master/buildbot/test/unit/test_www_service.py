@@ -43,7 +43,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def makeConfig(self, **kwargs):
         pwd = os.getcwd()
-        w = dict(url='h:/', port=None, public_html=pwd, auth=auth.NoAuth())
+        w = dict(url='h:/', port=None, public_html=pwd, auth=auth.NoAuth(), logfileName='l')
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w

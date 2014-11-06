@@ -77,7 +77,8 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             debug=True,
             auth=auth.NoAuth(),
             url="not yet known",
-            avatar_methods=[])
+            avatar_methods=[],
+            logfileName='http.log')
         master.www = wwwservice.WWWService(master)
         yield master.www.startService()
         yield master.www.reconfigService(master.config)
