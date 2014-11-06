@@ -28,13 +28,18 @@ lr = require 'gulp-livereload'
 cssmin = require 'gulp-minify-css'
 less = require 'gulp-less'
 fixtures2js = require 'gulp-fixtures2js'
+gulp_help = require 'gulp-help'
 
 # dependencies for webserver
 connect = require('connect')
 
 module.exports =  (gulp) ->
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
-
+    gulp = gulp_help gulp, afterPrintCallback: (tasks) ->
+        console.log(gutil.colors.underline("Options:"))
+        console.log(gutil.colors.cyan("  --coverage") + " Runs the test with coverage reports")
+        console.log(gutil.colors.cyan("  --notests") + "  Skip running the tests")
+        console.log("")
 
     # in prod mode, we uglify. in dev mode, we create sourcemaps
     # that should be the only difference, to minimize risk on difference between prod and dev builds
@@ -68,7 +73,7 @@ module.exports =  (gulp) ->
         config.testtasks = ["notests"]
 
     error_handler = (e) ->
-        error = gutil.colors.bold.red;
+        error = gutil.colors.bold.red
         if e.fileName?
             gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
         else
@@ -97,8 +102,9 @@ module.exports =  (gulp) ->
 
     # main scripts task.
     # if coffee_coverage, we only pre-process ngclassify, and karma will do the rest
-    # in other cases, we have a more complex setup, if order to enable joining all the sources (vendors, scripts, and templates)
-    gulp.task 'scripts', ->
+    # in other cases, we have a more complex setup, if order to enable joining all
+    # the sources (vendors, scripts, and templates)
+    gulp.task 'scripts', false, ->
         if coverage and config.coffee_coverage
             return gulp.src script_sources
                 .pipe(ngClassify(config.ngclassify(config)).on('error', error_handler))
@@ -130,7 +136,7 @@ module.exports =  (gulp) ->
             .pipe gif(dev, lr())
 
     # concat vendors apart
-    gulp.task 'vendors', ->
+    gulp.task 'vendors', false, ->
         unless config.vendors_apart and bower.deps.length > 0
             return
         gulp.src bower.deps
@@ -143,7 +149,7 @@ module.exports =  (gulp) ->
             .pipe gif(dev, lr())
 
     # build and concat templates apart
-    gulp.task 'templates', ->
+    gulp.task 'templates', false, ->
         unless config.templates_apart
             return
         gulp.src config.files.templates
@@ -161,7 +167,7 @@ module.exports =  (gulp) ->
             .pipe gulp.dest config.dir.build
 
     # the tests files produce another file
-    gulp.task 'tests', ->
+    gulp.task 'tests', false, ->
         src = bower.testdeps.concat(config.files.tests)
         gulp.src src
             .pipe cached('tests')
@@ -176,10 +182,10 @@ module.exports =  (gulp) ->
 
 
     # a customizable task that generates fixtures from external tool
-    gulp.task 'generatedfixtures', config.generatedfixtures
+    gulp.task 'generatedfixtures', false, config.generatedfixtures
 
     # a task to compile json fixtures into constants that sits on window.FIXTURES
-    gulp.task 'fixtures', ->
+    gulp.task 'fixtures', false, ->
         gulp.src config.files.fixtures, base: process.cwd()
             # fixtures
             .pipe rename dirname:""
@@ -189,7 +195,7 @@ module.exports =  (gulp) ->
             .pipe gulp.dest config.dir.build
 
     # a task to compile less files
-    gulp.task 'styles', ->
+    gulp.task 'styles', false, ->
         gulp.src config.files.less
             .pipe cached('styles')
             .pipe less().on('error', error_handler)
@@ -200,24 +206,24 @@ module.exports =  (gulp) ->
             .pipe gif(dev, lr())
 
     # just copy fonts and imgs to the output dir
-    gulp.task 'fonts', ->
+    gulp.task 'fonts', false, ->
         gulp.src config.files.fonts
             .pipe rename dirname:""
             .pipe gulp.dest path.join(config.dir.build, "fonts")
 
-    gulp.task 'imgs', ->
+    gulp.task 'imgs', false, ->
         gulp.src config.files.images
             .pipe rename dirname:""
             .pipe gulp.dest path.join(config.dir.build, "img")
 
     # index.jade build
-    gulp.task 'index', ->
+    gulp.task 'index', false, ->
         gulp.src config.files.index
             .pipe jade().on('error', error_handler)
             .pipe gulp.dest config.dir.build
 
     # Run server.
-    gulp.task 'server', ['index'], (next) ->
+    gulp.task 'server', false, ['index'], (next) ->
         if config.devserver?
             connect()
             .use(connect.static(config.dir.build))
@@ -225,7 +231,7 @@ module.exports =  (gulp) ->
         else
             next()
 
-    gulp.task "watch", ->
+    gulp.task "watch", false, ->
         # karma own watch mode is used. no need to restart karma
         gulp.watch(script_sources, ["scripts"])
         gulp.watch(config.files.templates, ["templates"])
@@ -235,7 +241,7 @@ module.exports =  (gulp) ->
         null
 
     # karma configuration, we build a lot of the config file automatically
-    gulp.task "karma", ->
+    gulp.task "karma", false, ->
         karmaconf =
             basePath: config.dir.build
             action: if dev then 'watch' else 'run'
@@ -250,9 +256,9 @@ module.exports =  (gulp) ->
         if coverage
             karmaconf.reporters.push("coverage")
             karmaconf.preprocessors = {
-              '**/scripts.js': ['sourcemap', 'coverage']
-              '**/tests.js': ['sourcemap']
-              '**/*.coffee': ['coverage']
+                '**/scripts.js': ['sourcemap', 'coverage']
+                '**/tests.js': ['sourcemap']
+                '**/*.coffee': ['coverage']
             }
             for r in karmaconf.coverageReporter.reporters
                 if r.dir == "coverage"
@@ -271,17 +277,24 @@ module.exports =  (gulp) ->
         gulp.src karmaconf.files
             .pipe karma(karmaconf)
 
-    gulp.task "notests", ->
+    gulp.task "notests", false, ->
         null
 
-    gulp.task "default", (callback) ->
-        run_sequence config.preparetasks, config.buildtasks, config.testtasks,
-            callback
+    defaultHelp = "Build and test the code once, without minification"
+    if argv.help or argv.h
+        # we replace default task when help is requested
+        gulp.task "default", defaultHelp, ['help'], ->
+    else
+        gulp.task "default", defaultHelp, (callback) ->
+            run_sequence config.preparetasks, config.buildtasks, config.testtasks,
+                callback
+    devHelp = "Run needed tasks for development:
+        build,
+        tests,
+        watch and rebuild. This task only ends when you hit CTRL-C!"
+    if config.devserver
+        devHelp += "\nAlso runs the dev server"
 
-    gulp.task "dev", ['default', 'watch', "server"]
-
-    # prod is a fake task, which enables minification and
-    gulp.task "prod", ['default']
-
+    gulp.task "dev", devHelp, ['default', 'watch', "server"]
     # prod is a fake task, which enables minification
-    gulp.task "prod", ['default']
+    gulp.task "prod", "Run production build (minified)", ['default']

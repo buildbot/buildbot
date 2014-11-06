@@ -1,5 +1,5 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
+  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   run_sequence = require('run-sequence');
@@ -52,10 +52,20 @@
 
   fixtures2js = require('gulp-fixtures2js');
 
+  gulp_help = require('gulp-help');
+
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, config, coverage, dev, error_handler, notests, prod, script_sources, _ref;
+    var buildConfig, config, coverage, defaultHelp, dev, devHelp, error_handler, notests, prod, script_sources, _ref;
+    gulp = gulp_help(gulp, {
+      afterPrintCallback: function(tasks) {
+        console.log(gutil.colors.underline("Options:"));
+        console.log(gutil.colors.cyan("  --coverage") + " Runs the test with coverage reports");
+        console.log(gutil.colors.cyan("  --notests") + "  Skip running the tests");
+        return console.log("");
+      }
+    });
     prod = __indexOf.call(argv._, "prod") >= 0;
     dev = __indexOf.call(argv._, "dev") >= 0;
     coverage = argv.coverage;
@@ -105,7 +115,7 @@
     if (!config.templates_apart) {
       script_sources = script_sources.concat(config.files.templates);
     }
-    gulp.task('scripts', function() {
+    gulp.task('scripts', false, function() {
       if (coverage && config.coffee_coverage) {
         return gulp.src(script_sources).pipe(ngClassify(config.ngclassify(config)).on('error', error_handler)).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
       }
@@ -121,13 +131,13 @@
         module: config.name
       }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
-    gulp.task('vendors', function() {
+    gulp.task('vendors', false, function() {
       if (!(config.vendors_apart && bower.deps.length > 0)) {
         return;
       }
       return gulp.src(bower.deps).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(concat("vendors.js")).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
-    gulp.task('templates', function() {
+    gulp.task('templates', false, function() {
       if (!config.templates_apart) {
         return;
       }
@@ -143,13 +153,13 @@
         module: config.name
       }))).pipe(concat("templates.js")).pipe(gulp.dest(config.dir.build));
     });
-    gulp.task('tests', function() {
+    gulp.task('tests', false, function() {
       var src;
       src = bower.testdeps.concat(config.files.tests);
       return gulp.src(src).pipe(cached('tests')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify(config.ngclassify))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(remember('tests')).pipe(concat("tests.js")).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build));
     });
-    gulp.task('generatedfixtures', config.generatedfixtures);
-    gulp.task('fixtures', function() {
+    gulp.task('generatedfixtures', false, config.generatedfixtures);
+    gulp.task('fixtures', false, function() {
       return gulp.src(config.files.fixtures, {
         base: process.cwd()
       }).pipe(rename({
@@ -160,30 +170,30 @@
         }
       })).pipe(gulp.dest(config.dir.build));
     });
-    gulp.task('styles', function() {
+    gulp.task('styles', false, function() {
       return gulp.src(config.files.less).pipe(cached('styles')).pipe(less().on('error', error_handler)).pipe(remember('styles')).pipe(concat("styles.css")).pipe(gif(prod, cssmin())).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
-    gulp.task('fonts', function() {
+    gulp.task('fonts', false, function() {
       return gulp.src(config.files.fonts).pipe(rename({
         dirname: ""
       })).pipe(gulp.dest(path.join(config.dir.build, "fonts")));
     });
-    gulp.task('imgs', function() {
+    gulp.task('imgs', false, function() {
       return gulp.src(config.files.images).pipe(rename({
         dirname: ""
       })).pipe(gulp.dest(path.join(config.dir.build, "img")));
     });
-    gulp.task('index', function() {
+    gulp.task('index', false, function() {
       return gulp.src(config.files.index).pipe(jade().on('error', error_handler)).pipe(gulp.dest(config.dir.build));
     });
-    gulp.task('server', ['index'], function(next) {
+    gulp.task('server', false, ['index'], function(next) {
       if (config.devserver != null) {
         return connect().use(connect["static"](config.dir.build)).listen(config.devserver.port, next);
       } else {
         return next();
       }
     });
-    gulp.task("watch", function() {
+    gulp.task("watch", false, function() {
       gulp.watch(script_sources, ["scripts"]);
       gulp.watch(config.files.templates, ["templates"]);
       gulp.watch(config.files.tests, ["tests"]);
@@ -191,7 +201,7 @@
       gulp.watch(config.files.index, ["index"]);
       return null;
     });
-    gulp.task("karma", function() {
+    gulp.task("karma", false, function() {
       var classified, karmaconf, r, scripts_index, _i, _len, _ref1;
       karmaconf = {
         basePath: config.dir.build,
@@ -232,15 +242,23 @@
       }
       return gulp.src(karmaconf.files).pipe(karma(karmaconf));
     });
-    gulp.task("notests", function() {
+    gulp.task("notests", false, function() {
       return null;
     });
-    gulp.task("default", function(callback) {
-      return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);
-    });
-    gulp.task("dev", ['default', 'watch', "server"]);
-    gulp.task("prod", ['default']);
-    return gulp.task("prod", ['default']);
+    defaultHelp = "Build and test the code once, without minification";
+    if (argv.help || argv.h) {
+      gulp.task("default", defaultHelp, ['help'], function() {});
+    } else {
+      gulp.task("default", defaultHelp, function(callback) {
+        return run_sequence(config.preparetasks, config.buildtasks, config.testtasks, callback);
+      });
+    }
+    devHelp = "Run needed tasks for development: build, tests, watch and rebuild. This task only ends when you hit CTRL-C!";
+    if (config.devserver) {
+      devHelp += "\nAlso runs the dev server";
+    }
+    gulp.task("dev", devHelp, ['default', 'watch', "server"]);
+    return gulp.task("prod", "Run production build (minified)", ['default']);
   };
 
 }).call(this);

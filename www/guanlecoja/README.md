@@ -171,6 +171,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.3.2: add help screen
 * 0.3.1: add --notests option
 * 0.2.11: fix issue when karma is not specified in config.coffee
 * 0.2.10: fix issue with tests.js first in karma.files
