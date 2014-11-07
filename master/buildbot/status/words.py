@@ -185,8 +185,8 @@ class IRCContact(base.StatusReceiver):
             reactor.callLater(when, self.send, r)
             when += 2.5
 
-    def builderMatchesAnyTag(self, builder, tags):
-        return builder.get('tags', []) and any(tag for tag in builder.get('tags', []) if tag in self.bot.tags)
+    def builderMatchesAnyTag(self, builder_tags):
+        return any(tag for tag in builder_tags if tag in self.bot.tags)
 
     @defer.inlineCallbacks
     def getBuilder(self, buildername=None, builderid=None):
@@ -481,7 +481,7 @@ class IRCContact(base.StatusReceiver):
 
         # only notify about builders we are interested in
         if (self.bot.tags is not None and
-                not self.builderMatchesAnyTag(builder, self.bot.tags)):
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
@@ -513,7 +513,7 @@ class IRCContact(base.StatusReceiver):
 
         # only notify about builders we are interested in
         if (self.bot.tags is not None and
-                not self.builderMatchesAnyTag(builder, self.bot.tags)):
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
@@ -584,7 +584,7 @@ class IRCContact(base.StatusReceiver):
 
         # only notify about builders we are interested in
         if (self.bot.tags is not None and
-                not self.builderMatchesAnyTag(builder, self.bot.tags)):
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
