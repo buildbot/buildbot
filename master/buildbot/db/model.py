@@ -447,8 +447,6 @@ class Model(base.DBConnectorComponent):
                         sa.Column('name', sa.Text, nullable=False),
                         # builder's description
                         sa.Column('description', sa.Text, nullable=True),
-                        # builder's tags
-                        sa.Column('tags', sa.Text, nullable=True),
                         # sha1 of name; used for a unique index
                         sa.Column('name_hash', sa.String(40), nullable=False),
                         )

@@ -113,9 +113,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # build.
         builderid = yield self.getBuilderId()
 
-        self.master.data.updates.updateBuilderInfo(builderid,
-                                                   builder_config.description,
-                                                   builder_config.tags)
+        self.master.data.updates.updateBuilderDescription(builderid, builder_config.description)
 
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setTags(builder_config.tags)
