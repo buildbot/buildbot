@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot.db import builders
+from buildbot.db import tags
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
@@ -233,8 +234,9 @@ class RealTests(Tests):
 class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self.master, self)
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        # self.db = fakedb.FakeDBConnector(self.master, self)
+        self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 
@@ -245,11 +247,16 @@ class TestRealDB(unittest.TestCase,
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['builders', 'masters', 'builder_masters'])
+            table_names=['builders', 'masters', 'builder_masters',
+                         'builders_tags', 'tags'])
 
         @d.addCallback
         def finish_setup(_):
             self.db.builders = builders.BuildersConnectorComponent(self.db)
+            self.db.tags = tags.TagsConnectorComponent(self.db)
+            self.master = self.db.master
+            self.master.db = self.db
+
         return d
 
     def tearDown(self):
