@@ -62,47 +62,45 @@ Here we're assuming the repository is SVN, but again the concepts are the same w
 Now, to automate this, we create a builder where each step is one of the commands we typed above.
 A step can be a shell command object, or a dedicated object that checks out the source code (there are various types for different repositories, see the docs for more info), or yet something else::
 
-    from buildbot.process.factory import BuildFactory
-    from buildbot.steps.source import SVN
-    from buildbot.steps.shell import ShellCommand
+    from buildbot.plugins import *
 
     # first, let's create the individual step objects
 
     # step 1: make clean; this fails if the slave has no local copy, but
     # is harmless and will only happen the first time
-    makeclean = ShellCommand(name = "make clean",
-                             command = ["make", "clean"],
-                             description = "make clean")
+    makeclean = step.ShellCommand(name = "make clean",
+                                  command = ["make", "clean"],
+                                  description = "make clean")
 
     # step 2: svn update (here updates trunk, see the docs for more
     # on how to update a branch, or make it more generic).
-    checkout = SVN(baseURL = 'svn://myrepo/projects/coolproject/trunk',
-                   mode = "update",
-                   username = "foo",
-                   password = "bar",
-                   haltOnFailure = True )
+    checkout = step.SVN(baseURL = 'svn://myrepo/projects/coolproject/trunk',
+                        mode = "update",
+                        username = "foo",
+                        password = "bar",
+                        haltOnFailure = True )
 
     # step 3: make all
-    makeall = ShellCommand(name = "make all",
-                           command = ["make", "all"],
-                           haltOnFailure = True,
-                           description = "make all")
+    makeall = step.ShellCommand(name = "make all",
+                                command = ["make", "all"],
+                                haltOnFailure = True,
+                                description = "make all")
 
     # step 4: make packages
-    makepackages = ShellCommand(name = "make packages",
-                                command = ["make", "packages"],
-                                haltOnFailure = True,
-                                description = "make packages")
+    makepackages = step.ShellCommand(name = "make packages",
+                                     command = ["make", "packages"],
+                                     haltOnFailure = True,
+                                     description = "make packages")
 
     # step 5: upload packages to central server. This needs passwordless ssh
     # from the slave to the server (set it up in advance as part of slave setup)
-    uploadpackages = ShellCommand(name = "upload packages",
-                                  description = "upload packages",
-                                  command = "scp packages/*.rpm packages/*.deb packages/*.tgz someuser@somehost:/repository",
-                                  haltOnFailure = True)
+    uploadpackages = step.ShellCommand(name = "upload packages",
+                                       description = "upload packages",
+                                       command = "scp packages/*.rpm packages/*.deb packages/*.tgz someuser@somehost:/repository",
+                                       haltOnFailure = True)
 
     # create the build factory and add the steps to it
-    f_simplebuild = BuildFactory()
+    f_simplebuild = factory.BuildFactory()
     f_simplebuild.addStep(makeclean)
     f_simplebuild.addStep(checkout)
     f_simplebuild.addStep(makeall)
@@ -139,12 +137,12 @@ So a scheduler needs to be configured with two main pieces of information: on on
 A simple type of scheduler may be a periodic scheduler: when a configurable amount of time has passed, run a certain builder (or builders).
 In our example, that's how we would trigger a build every hour::
 
-    from buildbot.schedulers.timed import Periodic
+    from buildbot.plugins import *
 
     # define the periodic scheduler
-    hourlyscheduler = Periodic(name = "hourly",
-                               builderNames = ["simplebuild"],
-                               periodicBuildTimer = 3600)
+    hourlyscheduler = scheduler.Periodic(name = "hourly",
+                                         builderNames = ["simplebuild"],
+                                         periodicBuildTimer = 3600)
 
     # define the available schedulers
     c['schedulers'] = [ hourlyscheduler ]
@@ -158,14 +156,13 @@ Other types of schedulers exist; in particular, there are schedulers that can be
 The typical dynamic scheduler is one that learns about changes in a source repository (generally because some developer checks in some change), and triggers one or more builders in response to those changes.
 Let's assume for now that the scheduler "magically" learns about changes in the repository (more about this later); here's how we would define it::
 
-    from buildbot.schedulers.basic import SingleBranchScheduler
-    from buildbot.changes import filter
+    from buildbot.plugins import *
 
     # define the dynamic scheduler
-    trunkchanged = SingleBranchScheduler(name = "trunkchanged",
-                                         change_filter = filter.ChangeFilter(branch = None),
-                                         treeStableTimer = 300,
-                                         builderNames = ["simplebuild"])
+    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
+                                                   change_filter = util.ChangeFilter(branch = None),
+                                                   treeStableTimer = 300,
+                                                   builderNames = ["simplebuild"])
 
     # define the available schedulers
     c['schedulers'] = [ trunkchanged ]
@@ -178,20 +175,19 @@ The ``treeStableTimer`` helps in those situations where commits tend to happen i
 What if we want to act on two branches (say, trunk and 7.2)?
 First we create two builders, one for each branch (see the builders paragraph above), then we create two dynamic schedulers::
 
-    from buildbot.schedulers.basic import SingleBranchScheduler
-    from buildbot.changes import filter
+    from buildbot.plugins import *
 
     # define the dynamic scheduler for trunk
-    trunkchanged = SingleBranchScheduler(name = "trunkchanged",
-                                         change_filter = filter.ChangeFilter(branch = None),
-                                         treeStableTimer = 300,
-                                         builderNames = ["simplebuild-trunk"])
+    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
+                                                   change_filter = util.ChangeFilter(branch = None),
+                                                   treeStableTimer = 300,
+                                                   builderNames = ["simplebuild-trunk"])
 
     # define the dynamic scheduler for the 7.2 branch
-    branch72changed = SingleBranchScheduler(name = "branch72changed",
-                                            change_filter = filter.ChangeFilter(branch = 'branches/7.2'),
-                                            treeStableTimer = 300,
-                                            builderNames = ["simplebuild-72"])
+    branch72changed = scheduler.SingleBranchScheduler(name = "branch72changed",
+                                                      change_filter = util.ChangeFilter(branch = 'branches/7.2'),
+                                                      treeStableTimer = 300,
+                                                      builderNames = ["simplebuild-72"])
 
     # define the available schedulers
     c['schedulers'] = [ trunkchanged, branch72changed ]
@@ -216,13 +212,13 @@ The manual again has the details.
 
 To complete our example, here's a change source that polls a SVN repository every 2 minutes::
 
-    from buildbot.changes.svnpoller import SVNPoller, split_file_branches
+    from buildbot.plugins import *
 
-    svnpoller = SVNPoller(svnurl = "svn://myrepo/projects/coolproject",
-                          svnuser = "foo",
-                          svnpasswd = "bar",
-                          pollinterval = 120,
-                          split_file = split_file_branches)
+    svnpoller = changes.SVNPoller(svnurl = "svn://myrepo/projects/coolproject",
+                                  svnuser = "foo",
+                                  svnpasswd = "bar",
+                                  pollinterval = 120,
+                                  split_file = util.split_file_branches)
 
     c['change_source'] = svnpoller
 
@@ -240,17 +236,17 @@ to watch only a specific branch.
 To watch another project, you need to create another change source -- and you need to filter changes by project.
 For instance, when you add a change source watching project 'superproject' to the above example, you need to change::
 
-    trunkchanged = SingleBranchScheduler(name = "trunkchanged",
-                                         change_filter = filter.ChangeFilter(branch = None),
-                                         # ...
-                                         )
+    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
+                                                   change_filter = filter.ChangeFilter(branch = None),
+                                                   # ...
+                                                   )
 
 to e.g.::
 
-    trunkchanged = SingleBranchScheduler(name = "trunkchanged",
-                                         change_filter = filter.ChangeFilter(project = "coolproject", branch = None),
-                                         # ...
-                                         )
+    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
+                                                   change_filter = filter.ChangeFilter(project = "coolproject", branch = None),
+                                                   # ...
+                                                   )
 
 else coolproject will be built when there's a change in superproject.
 
@@ -272,12 +268,12 @@ They are described fairly well in the manual.
 
 One thing I've found useful is the ability to pass a domain name as the lookup argument to a ``mailNotifier``, which allows to take an unqualified username as it appears in the SVN change and create a valid email address by appending the given domain name to it::
 
-    from buildbot.status import mail
+    from buildbot.plugins import *
 
     # if jsmith commits a change, mail for the build is sent to jsmith@example.org
-    notifier = mail.MailNotifier(fromaddr = "buildbot@example.org",
-                                 sendToInterestedUsers = True,
-                                 lookup = "example.org")
+    notifier = status.MailNotifier(fromaddr = "buildbot@example.org",
+                                   sendToInterestedUsers = True,
+                                   lookup = "example.org")
     c['status'].append(notifier)
 
 The mail notifier can be customized at will by means of the ``messageFormatter`` argument, which is a function that buildbot calls to format the body of the email, and to which it makes available lots of information about the build.
