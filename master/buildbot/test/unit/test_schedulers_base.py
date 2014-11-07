@@ -286,8 +286,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             waited_for=False,
             sourcestamps=[
                 {'repository': 'svn://B..', 'branch': 'stable',
-                    'revision': 'BB', 'codebase': 'cbB'},
-                {'repository': 'svn://A..', 'branch': 'AA',
+                    'revision': 'BB', 'codebase': 'cbB', 'project': ''},
+                {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
                     'revision': '13579', 'codebase': 'cbA'},
             ],
             reason=u'power',
@@ -310,8 +310,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=True,
             sourcestamps=[
-                {'revision': 'BB', 'codebase': 'cbB'},
-                {'branch': 'AA', 'codebase': 'cbA'},
+                {'revision': 'BB', 'codebase': 'cbB', 'project': ''},
+                {'branch': 'AA', 'codebase': 'cbA', 'project': ''},
             ],
             reason=u'power',
             scheduler=u'n',
