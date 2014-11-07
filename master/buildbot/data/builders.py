@@ -80,7 +80,7 @@ class Builder(base.ResourceType):
         builderid = types.Integer()
         name = types.Identifier(20)
         description = types.NoneOk(types.String())
-        tags = types.NoneOk(types.List(of=types.String()))
+        tags = types.List(of=types.String())
     entityType = EntityType(name)
 
     def __init__(self, master):
