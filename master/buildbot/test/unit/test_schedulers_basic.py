@@ -159,17 +159,6 @@ class BaseBasicScheduler(CommonStuffMixin,
         d.addCallback(lambda _: sched.deactivate())
         return d
 
-    def test_activate_calls_preStartConsumingChanges(self):
-        sched = self.makeScheduler(self.Subclass)
-        sched.preStartConsumingChanges = mock.Mock(
-            return_value=defer.succeed(None))
-        d = sched.activate()
-
-        @d.addCallback
-        def check(_):
-            sched.preStartConsumingChanges.assert_called_with()
-        return d
-
     def test_gotChange_no_treeStableTimer_unimportant(self):
         sched = self.makeScheduler(
             self.Subclass, treeStableTimer=None, branch='master')
@@ -392,49 +381,6 @@ class SingleBranchScheduler(CommonStuffMixin,
         d.addCallback(lambda _: sched.deactivate())
 
     @defer.inlineCallbacks
-    def test_preStartConsumingChanges_empty(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases,
-                                       createAbsoluteSourceStamps=True)
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {})
-
-    @defer.inlineCallbacks
-    def test_preStartConsumingChanges_no_createAbsoluteSourceStamps(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases)
-
-        self.db.insertTestData([
-            fakedb.Object(id=self.OBJECTID, name='test',
-                          class_name='SingleBranchScheduler'),
-            fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
-                               value_json='{"a": {"branch": "master"}}')])
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {})
-
-    @defer.inlineCallbacks
-    def test_preStartConsumingChanges_existing(self):
-        sched = self.makeFullScheduler(name='test', builderNames=['test'],
-                                       treeStableTimer=None, branch='master',
-                                       codebases=self.codebases,
-                                       createAbsoluteSourceStamps=True)
-
-        self.db.insertTestData([
-            fakedb.Object(id=self.OBJECTID, name='test',
-                          class_name='SingleBranchScheduler'),
-            fakedb.ObjectState(objectid=self.OBJECTID, name='lastCodebases',
-                               value_json='{"a": {"branch": "master", "repository": "A", '
-                               '"revision": "1234:abc",  "lastChange": 13}}')])
-
-        yield sched.preStartConsumingChanges()
-        self.assertEqual(sched._lastCodebases, {
-            'a': {'branch': 'master', 'lastChange': 13,
-                  'repository': 'A', 'revision': '1234:abc'}})
-
     def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
         # check codebase is stored after receiving change.
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -444,22 +390,18 @@ class SingleBranchScheduler(CommonStuffMixin,
         self.db.insertTestData([
             fakedb.Object(id=self.OBJECTID, name='test', class_name='SingleBranchScheduler')])
 
-        d = sched.activate()
+        yield sched.activate()
 
-        d.addCallback(lambda _:
-                      sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True))
-        d.addCallback(lambda _:
-                      sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True))
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=0), True)
+        yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True)
 
-        def check(_):
-            self.db.state.assertState(self.OBJECTID, lastCodebases={
-                'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
-                'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
-        d.addCallback(check)
+        self.db.state.assertState(self.OBJECTID, lastCodebases={
+            'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
+            'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
 
-        d.addCallback(lambda _: sched.deactivate())
-        return d
+        yield sched.deactivate()
 
+    @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_older_change(self):
         # check codebase is not stored if it's older than the most recent
         sched = self.makeFullScheduler(name='test', builderNames=['test'],
@@ -473,22 +415,16 @@ class SingleBranchScheduler(CommonStuffMixin,
                                value_json='{"a": {"branch": "master", "repository": "A", '
                                '"revision": "5555:def",  "lastChange": 20}}')])
 
-        d = sched.activate()
+        yield sched.activate()
 
-        d.addCallback(lambda _:
-                      # this change is not recorded, since it's older than
-                      # change 20
-                      sched.gotChange(self.mkch(codebase='a', revision='1234:abc',
-                                                repository='A', number=10), True))
+        # this change is not recorded, since it's older than
+        # change 20
+        yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=10), True)
 
-        def check(_):
-            self.db.state.assertState(self.OBJECTID,
-                                      lastCodebases={'a': dict(branch='master', repository='A',
-                                                               revision=u'5555:def', lastChange=20)})
-        d.addCallback(check)
+        self.db.state.assertState(self.OBJECTID, lastCodebases={
+            'a': dict(branch='master', repository='A', revision=u'5555:def', lastChange=20)})
 
-        d.addCallback(lambda _: sched.deactivate())
-        return d
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):

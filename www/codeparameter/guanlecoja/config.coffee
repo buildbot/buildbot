@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.2.0"
+ANGULAR_TAG = "~1.3.0"
 gulp = require("gulp")
 
 gulp.task "copyace", ->
