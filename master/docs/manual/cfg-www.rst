@@ -72,6 +72,19 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     For use of corporate pictures, you can use LdapUserInfo, which can also acts as an avatar provider.
     See :ref:`Web-Authentication`.
 
+``logfileName``
+    Filename used for http access logs, relative to the master directory.
+    If set to ``None`` or the empty string, the content of the logs will land in the main :file:`twisted.log` log file.
+    (Default to ``http.log``)
+
+``logRotateLength``
+    The amount of bytes after which the :file:`http.log` file will be rotated.
+    (Default to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
+
+``maxRotatedFiles``
+    The amount of log files that will be kept when rotating
+    (Default to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
+
 .. _Web-Authentication:
 
 Authentication plugins

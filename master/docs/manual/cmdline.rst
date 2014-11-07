@@ -374,12 +374,12 @@ It requires that you have a :class:`PBChangeSource` (:bb:chsrc:`PBChangeSource`)
     buildbot sendchange --master {MASTERHOST}:{PORT} --auth {USER}:{PASS}
             --who {USER} {FILENAMES..}
 
-The :option:`auth` option specifies the credentials to use to connect to the master, in the form ``user:pass``.
+The :option:`--auth` option specifies the credentials to use to connect to the master, in the form ``user:pass``.
 If the password is omitted, then sendchange will prompt for it.
 If both are omitted, the old default (username "change" and password "changepw") will be used.
 Note that this password is well-known, and should not be used on an internet-accessible port.
 
-The :option:`master` and :option:`username` arguments can also be given in the options file (see :ref:`buildbot-config-directory`).
+The :option:`--master` and :option:`--username` arguments can also be given in the options file (see :ref:`buildbot-config-directory`).
 There are other (optional) arguments which can influence the ``Change`` that gets submitted:
 
 --branch
@@ -440,7 +440,7 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
 
 --master
     The :command:`user` command can be run virtually anywhere provided a location of the running buildmaster.
-    The :option:`master` argument is of the form :samp:`{MASTERHOST}:{PORT}`.
+    The :option:`--master` argument is of the form :samp:`{MASTERHOST}:{PORT}`.
 
 --username
     PB connection authentication that should match the arguments to `CommandlineUserManager`.
@@ -449,35 +449,35 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
     PB connection authentication that should match the arguments to `CommandlineUserManager`.
 
 --op
-    There are four supported values for the :option:`op` argument: :option:`add`, :option:`update`, :option:`remove`, and :option:`get`.
+    There are four supported values for the :option:`--op` argument: ``add``, ``update``, ``remove``, and ``get``.
     Each are described in full in the following sections.
 
 --bb_username
-    Used with the :option:`update` option, this sets the user's username for web authentication in the database.
-    It requires :option:`bb_password` to be set along with it.
+    Used with the :option:`--op=update` option, this sets the user's username for web authentication in the database.
+    It requires :option:`--bb_password` to be set along with it.
 
 --bb_password
-    Also used with the :option:`update` option, this sets the password portion of a user's web authentication credentials into the database.
+    Also used with the :option:`--op=update` option, this sets the password portion of a user's web authentication credentials into the database.
     The password is first encrypted prior to storage for security reasons.
 
 --ids
     When working with users, you need to be able to refer to them by unique identifiers to find particular users in the database.
-    The :option:`ids` option lets you specify a comma separated list of these identifiers for use with the :command:`user` command.
+    The :option:`--ids` option lets you specify a comma separated list of these identifiers for use with the :command:`user` command.
 
-    The :option:`ids` option is used only when using :option:`remove` or :option:`show`.
+    The :option:`--ids` option is used only when using :option:`--op=remove` or :option:`--op=get`.
 
 --info
     Users are known in buildbot as a collection of attributes tied together by some unique identifier (see :ref:`Concepts-Users`).
-    These attributes are specified in the form ``{TYPE}={VALUE}`` when using the :option:`info` option.
+    These attributes are specified in the form ``{TYPE}={VALUE}`` when using the :option:`--info` option.
     These ``{TYPE}={VALUE}`` pairs are specified in a comma separated list, so for example:
 
     .. code-block:: none
 
         --info=svn=jdoe,git='John Doe <joe@example.com>'
 
-    The :option:`info` option can be specified multiple times in the :command:`user` command, as each specified option will be interpreted as a new user.
-    Note that :option:`info` is only used with :option:`add` or with :option:`update`, and whenever you use :option:`update` you need to specify the identifier of the user you want to update.
-    This is done by prepending the :option:`info` arguments with ``{ID:}``.
+    The :option:`--info` option can be specified multiple times in the :command:`user` command, as each specified option will be interpreted as a new user.
+    Note that :option:`--info` is only used with :option:`--op=add` or with :option:`--op=update`, and whenever you use :option:`--op=update` you need to specify the identifier of the user you want to update.
+    This is done by prepending the :option:`--info` arguments with ``{ID:}``.
     If we were to update ``'jschmo'`` from the previous example, it would look like this:
 
     .. code-block:: none
@@ -486,13 +486,13 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
 
 Note that :option:`--master`, :option:`--username`, :option:`--passwd`, and :option:`--op` are always required to issue the :command:`user` command.
 
-The :option:`--master`, :option:`--username`, and :option:`--passwd` options can be specified in the option file with keywords :option:`user_master`, :option:`user_username`, and :option:`user_passwd`, respectively.
-If :option:`user_master` is not specified, then :option:`master` from the options file will be used instead.
+The :option:`--master`, :option:`--username`, and :option:`--passwd` options can be specified in the option file with keywords ``user_master``, ``user_username``, and ``user_passwd``, respectively.
+If ``user_master`` is not specified, then :option:`--master` from the options file will be used instead.
 
 Below are examples of how each command should look.
 Whenever a :command:`user` command is successful, results will be shown to whoever issued the command.
 
-For :option:`add`:
+For :option:`--op=add`:
 
 .. code-block:: none
 
@@ -500,7 +500,7 @@ For :option:`add`:
             --username={USER} --passwd={USERPW} \
             --info={TYPE}={VALUE},...
 
-For :option:`update`:
+For :option:`--op=update`:
 
 .. code-block:: none
 
@@ -508,7 +508,7 @@ For :option:`update`:
             --username={USER} --passwd={USERPW} \
             --info={ID}:{TYPE}={VALUE},...
 
-For :option:`remove`:
+For :option:`--op=remove`:
 
 .. code-block:: none
 
@@ -516,7 +516,7 @@ For :option:`remove`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-For :option:`get`:
+For :option:`--op=get`:
 
 .. code-block:: none
 
@@ -524,7 +524,7 @@ For :option:`get`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-A note on :option:`update`: when updating the :option:`bb_username` and :option:`bb_password`, the :option:`info` doesn't need to have additional ``{TYPE}={VALUE}`` pairs to update and can just take the ``{ID}`` portion.
+A note on :option:`--op=update`: when updating the :option:`--bb_username` and :option:`--bb_password`, the :option:`--info` doesn't need to have additional ``{TYPE}={VALUE}`` pairs to update and can just take the ``{ID}`` portion.
 
 .. _buildbot-config-directory:
 

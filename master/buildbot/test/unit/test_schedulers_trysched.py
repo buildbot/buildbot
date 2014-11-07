@@ -533,7 +533,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=['buildera', 'builderb'],
                     external_idstring=u'extid',
                     properties={},
@@ -586,7 +586,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=['buildera'],
                     external_idstring=u'extid',
                     properties={},
@@ -614,7 +614,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=['buildera', 'builderb'],
                     external_idstring=u'extid',
                     properties={'foo': ('bar', u'try build')},
@@ -688,7 +688,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=['a'],
                     external_idstring=None,
                     properties={'pr': ('op', u'try build')},
@@ -717,7 +717,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
 
         def check(_):
             self.assertEqual(self.addBuildsetCalls, [
-                ('addBuildsetForSourceStamp', dict(
+                ('addBuildsetForSourceStamps', dict(
                     builderNames=['a'],
                     external_idstring=None,
                     properties={'pr': ('op', u'try build')},

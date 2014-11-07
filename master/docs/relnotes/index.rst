@@ -222,6 +222,12 @@ Changes and Removals
   - Configuring ``codebases`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
   - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
 
+* :bb:sched:`Periodic`, :bb:sched:`Nightly` and :bb:sched:`NightlyTriggerable` have the following changes:
+
+  - The ``Periodic`` and ``Nightly`` schedulers can now consume changes and use ``onlyIfChanged`` and ``createAbsoluteTimestamps``.
+  - All "timed" schedulers now handle ``codebases`` the same way. Configuring ``codebases`` is strongly recommended.
+    Using the ``branch`` parameter is discouraged.
+
 * Logs are now stored as Unicode strings, and thus must be decoded properly from the bytestrings provided by shell commands.
   By default this encoding is assumed to be UTF-8, but the :bb:cfg:`logEncoding` parameter can be used to select an alternative.
   Steps and individual logfiles can also override the global default.
@@ -283,6 +289,8 @@ Changes for Developers
   It is equivalent to ``addBuildsetForSourceStampDetails`` with ``sourcestamps=None``.
   These methods are not yet documented, and their interface is not stable.
   Consult the source code for details on the changes.
+
+* The ``preStartConsumingChanges`` and ``startTimedSchedulerService`` hooks have been removed.
 
 * The triggerable schedulers` ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
 
