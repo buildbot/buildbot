@@ -442,7 +442,6 @@ class TestIrcContactChannel(unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_watch_builder0_get_notifications(self):
         # (continue from the prior test)
-        self.bot.tags = None
         yield self.test_command_watch_builder0()
         del self.sent[:]
 
@@ -640,20 +639,58 @@ class TestIrcContactChannel(unittest.TestCase):
         yield self.do_test_command('last', args='args\'', exp_UsageError=True)
         yield self.do_test_command('help', args='args\'', exp_UsageError=True)
 
-    @defer.inlineCallbacks
     def test_buildStarted(self):
-        self.setupSomeBuilds()
+        class MockChange(object):
+
+            def __init__(self, revision):
+                self.revision = revision
+
+        def get_name():
+            return "dummy"
+
         self.patch_send()
-        build = yield self.master.db.builds.getBuild(13)
+
+        build = mock.Mock()
+        build.getNumber = lambda: 42
+        build.getName = get_name
+
+        builder = mock.Mock()
+        builder.getName = get_name
+        build.getBuilder = lambda: builder
 
         self.bot.tags = None
         self.contact.notify_for = lambda _: True
         self.contact.useRevisions = False
 
-        self.contact.buildStarted(build)
+        # we have no information on included changes
+        build.getChanges = lambda: []
+        self.contact.buildStarted("dummy", build)
         self.assertEqual(
             self.sent.pop(),
-            "build #3 of builder1 started")
+            "build #42 of dummy started")
+
+        # we have one change included
+        build.getChanges = lambda: [MockChange("1")]
+        self.contact.buildStarted("dummy", build)
+        self.assertEqual(
+            self.sent.pop(),
+            "build #42 of dummy started (including [1])")
+
+        # we have two changes included (all revisions are printed)
+        build.getChanges = lambda: [MockChange("1"), MockChange("2")]
+        self.contact.buildStarted("dummy", build)
+        self.assertEqual(
+            self.sent.pop(),
+            "build #42 of dummy started (including [1, 2])")
+
+        # we have three changes included (not all revisions are printed)
+        build.getChanges = lambda: [
+            MockChange("1"), MockChange("2"), MockChange("3")
+        ]
+        self.contact.buildStarted("dummy", build)
+        self.assertEqual(
+            self.sent.pop(),
+            "build #42 of dummy started (including [1, 2] and 1 more)")
 
 
 class FakeContact(object):

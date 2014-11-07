@@ -40,8 +40,7 @@ class BuilderEndpoint(base.Endpoint):
         defer.returnValue(
             dict(builderid=builderid,
                  name=bdict['name'],
-                 description=bdict['description'],
-                 tags=bdict['tags']))
+                 description=bdict['description']))
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -60,8 +59,7 @@ class BuildersEndpoint(base.Endpoint):
         defer.returnValue([
             dict(builderid=bd['id'],
                  name=bd['name'],
-                 description=bd['description'],
-                 tags=bd['tags'])
+                 description=bd['description'])
             for bd in bdicts])
 
     def startConsuming(self, callback, options, kwargs):
@@ -80,7 +78,6 @@ class Builder(base.ResourceType):
         builderid = types.Integer()
         name = types.Identifier(20)
         description = types.NoneOk(types.String())
-        tags = types.NoneOk(types.List(of=types.String()))
     entityType = EntityType(name)
 
     def __init__(self, master):
@@ -91,8 +88,8 @@ class Builder(base.ResourceType):
         return self.master.db.builders.findBuilderId(name)
 
     @base.updateMethod
-    def updateBuilderInfo(self, builderid, description, tags):
-        return self.master.db.builders.updateBuilderInfo(builderid, description, tags)
+    def updateBuilderDescription(self, builderid, description):
+        return self.master.db.builders.updateBuilderDescription(builderid, description)
 
     @base.updateMethod
     @defer.inlineCallbacks

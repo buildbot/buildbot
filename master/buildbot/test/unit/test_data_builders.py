@@ -159,9 +159,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.builders.findBuilderId = mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.findBuilderId('foo'), rv)
 
-    def test_signature_updateBuilderInfo(self):
-        @self.assertArgSpecMatches(self.master.data.updates.updateBuilderInfo)
-        def updateBuilderInfo(self, builderid, description, tags):
+    def test_signature_updateBuilderDescription(self):
+        @self.assertArgSpecMatches(self.master.data.updates.updateBuilderDescription)
+        def updateBuilderDescription(self, builderid, description):
             pass
 
     def test_signature_updateBuilderList(self):
@@ -178,7 +178,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
                              dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
+                                  name='somebuilder', description=None),
                          ]))
         self.master.mq.assertProductions([(('builders', '1', 'started'),
                                            {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'})])
@@ -188,9 +188,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
                              dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
+                                  name='somebuilder', description=None),
                              dict(id=2, masterids=[13],
-                                  name='another', description=None, tags=[]),
+                                  name='another', description=None),
                          ]))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 13, 'name': u'another'})])
@@ -200,9 +200,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
                              dict(id=1, masterids=[13],
-                                  name='somebuilder', description=None, tags=[]),
+                                  name='somebuilder', description=None),
                              dict(id=2, masterids=[13, 14],
-                                  name='another', description=None, tags=[]),
+                                  name='another', description=None),
                          ]))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
                                            {'builderid': 2, 'masterid': 14, 'name': u'another'})])
@@ -211,8 +211,8 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.updateBuilderList(13, [])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
-                             dict(id=1, masterids=[], name='somebuilder', description=None, tags=[]),
-                             dict(id=2, masterids=[14], name='another', description=None, tags=[]),
+                             dict(id=1, masterids=[], name='somebuilder', description=None),
+                             dict(id=2, masterids=[14], name='another', description=None),
                          ]))
         self.master.mq.assertProductions([
             (('builders', '1', 'stopped'),
