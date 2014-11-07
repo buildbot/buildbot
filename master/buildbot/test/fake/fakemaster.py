@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import os.path
 import weakref
 
@@ -165,10 +164,6 @@ class FakeMaster(object):
 
     def subscribeToBuildRequests(self, callback):
         pass
-
-    # work around http://code.google.com/p/mock/issues/detail?id=105
-    def _get_child_mock(self, **kw):
-        return mock.Mock(**kw)
 
 
 # Leave this alias, in case we want to add more behavior later
