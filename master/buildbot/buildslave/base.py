@@ -430,23 +430,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         def _disconnected(rref):
             eventually(d.callback, None)
         conn.notifyOnDisconnect(_disconnected)
-        tport = slave.broker.transport
-        # this is the polite way to request that a socket be closed
-        tport.loseConnection()
-        try:
-            # but really we don't want to wait for the transmit queue to
-            # drain. The remote end is unlikely to ACK the data, so we'd
-            # probably have to wait for a (20-minute) TCP timeout.
-            # tport._closeSocket()
-            # however, doing _closeSocket (whether before or after
-            # loseConnection) somehow prevents the notifyOnDisconnect
-            # handlers from being run. Bummer.
-            tport.offset = 0
-            tport.dataBuffer = ""
-        except Exception:
-            # however, these hacks are pretty internal, so don't blow up if
-            # they fail or are unavailable
-            log.msg("failed to accelerate the shutdown process")
+        conn.loseConnection()
         log.msg("waiting for slave to finish disconnecting")
 
         return d

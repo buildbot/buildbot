@@ -107,7 +107,23 @@ class Connection(base.Connection, pb.Avatar):
 
     def loseConnection(self):
         self.stopKeepaliveTimer()
-        self.mind.broker.transport.loseConnection()
+        tport = self.mind.broker.transport
+        # this is the polite way to request that a socket be closed
+        tport.loseConnection()
+        try:
+            # but really we don't want to wait for the transmit queue to
+            # drain. The remote end is unlikely to ACK the data, so we'd
+            # probably have to wait for a (20-minute) TCP timeout.
+            # tport._closeSocket()
+            # however, doing _closeSocket (whether before or after
+            # loseConnection) somehow prevents the notifyOnDisconnect
+            # handlers from being run. Bummer.
+            tport.offset = 0
+            tport.dataBuffer = ""
+        except Exception:
+            # however, these hacks are pretty internal, so don't blow up if
+            # they fail or are unavailable
+            log.msg("failed to accelerate the shutdown process")
 
     # keepalive handling
 
