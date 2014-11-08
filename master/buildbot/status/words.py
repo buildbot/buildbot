@@ -44,6 +44,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 
+
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
 try:
     from twisted.internet import ssl
@@ -184,6 +185,9 @@ class IRCContact(base.StatusReceiver):
             reactor.callLater(when, self.send, r)
             when += 2.5
 
+    def builderMatchesAnyTag(self, builder_tags):
+        return any(tag for tag in builder_tags if tag in self.bot.tags)
+
     @defer.inlineCallbacks
     def getBuilder(self, buildername=None, builderid=None):
         if buildername:
@@ -205,6 +209,9 @@ class IRCContact(base.StatusReceiver):
                 which = 'number %s' % builderid
             raise UsageError("no such builder '%s'" % which)
         defer.returnValue(bdict)
+
+    def getPreviousBuild(self, build):
+        return self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
 
     def getControl(self, which):
         # TODO in nine: there's going to be a better way to do all this.
@@ -332,17 +339,20 @@ class IRCContact(base.StatusReceiver):
                 return True
         return False
 
+    @defer.inlineCallbacks
     def subscribe_to_build_events(self):
+        startConsuming = self.master.mq.startConsuming
 
-        # FIXME:
-        #  -- builderAdded
-        #  -- builderRemoved
-        #  -- builderStarted
-        #  -- buildFinished
+        def buildStarted(key, msg):
+            return self.buildStarted(msg)
 
-        handle = True  # self.master.data.startConsuming(watchForCompleteEvent, {},
-        #                               (build['link'].path))
-        self.subscribed.append(handle)
+        def buildFinished(key, msg):
+            return self.buildFinished(msg)
+
+        for e, f in (("new", buildStarted),             # BuilderStarted
+                     ("finished", buildFinished)):      # BuilderFinished
+            handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
+            self.subscribed.append(handle)
 
     def unsubscribe_from_build_events(self):
         # Cancel all the subscriptions we have
@@ -462,32 +472,16 @@ class IRCContact(base.StatusReceiver):
             self.send(r)
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
-    # OLD_STYLE
-    def builderAdded(self, builderName, builder):
-        # FIXME: NEED TO THINK ABOUT!
-        if (self.bot.tags is not None and
-                not builder.matchesAnyTag(tags=self.bot.tags)):
-            return
-
-        log.msg('[Contact] Builder %s added' % (builderName))
-        builder.subscribe(self)
-
-    # OLD_STYLE
-    def builderRemoved(self, builderName):
-        # FIXME: NEED TO THINK ABOUT!
-        log.msg('[Contact] Builder %s removed' % (builderName))
-
-    # OLD_STYLE
     @defer.inlineCallbacks
-    def buildStarted(self, builderName, build):
-        # FIXME: NEED TO THINK ABOUT!
-        builder = build.getBuilder()
-        log.msg('[Contact] Builder %r started' % (builder,))
+    def buildStarted(self, build):
+        builder = yield self.getBuilder(builderid=build['builderid'])
+        builderName = builder['name']
+        buildNumber = build['number']
+        log.msg('[Contact] Builder %s started' % (builder['name'],))
 
         # only notify about builders we are interested in
-
         if (self.bot.tags is not None and
-                not builder.matchesAnyTag(tags=self.bot.tags)):
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
@@ -497,28 +491,59 @@ class IRCContact(base.StatusReceiver):
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
             r = "build containing revision(s) [%s] on %s started" % \
-                (','.join(revisions), builder.getName())
+                (','.join(revisions), builderName)
         else:
             # Abbreviate long lists of changes to simply two
             # revisions, and the number of additional changes.
-            changes = [str(c.revision) for c in build.getChanges()][:2]
+            # TODO: We can't get the list of the changes related to a build in nine
             changes_str = ""
 
-            if len(build.getChanges()) > 0:
-                changes_str = "including [%s]" % ', '.join(changes)
-
-                if len(build.getChanges()) > 2:
-                    # Append number of truncated changes
-                    changes_str += " and %d more" % (len(build.getChanges()) - 2)
-
-            r = "build #%d of %s started" % (
-                build.getNumber(),
-                builder.getName())
-
+            r = "build #%d of %s started" % (buildNumber, builderName)
             if changes_str:
                 r += " (%s)" % changes_str
 
         self.send(r)
+
+    @defer.inlineCallbacks
+    def buildFinished(self, build):
+        builder = yield self.getBuilder(builderid=build['builderid'])
+        builderName = builder['name']
+        buildNumber = build['number']
+        buildResult = build['results']
+
+        # only notify about builders we are interested in
+        if (self.bot.tags is not None and
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
+            log.msg('Not notifying for a build that does not match any tags')
+            return
+
+        if not self.notify_for_finished(build):
+            return
+
+        if not self.shouldReportBuild(builderName, buildNumber):
+            return
+
+        results = self.getResultsDescriptionAndColor(buildResult)
+
+        if self.useRevisions:
+            revisions = yield self.getRevisionsForBuild(build)
+            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+                (builderName, ','.join(revisions), results[0])
+        else:
+            r = "Hey! build %s #%d is complete: %s" % \
+                (builderName, buildNumber, results[0])
+
+        r += ' [%s]' % maybeColorize(build['state_string'], results[1], self.useColors)
+        self.send(r)
+
+        # FIXME: where do we get the list of changes for a build ?
+        # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
+        #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+
+        # FIXME: where do we get the base_url? Then do we use the build Link to make the URL?
+        buildurl = None  # self.bot.status.getBuildbotURL() + build
+        if buildurl:
+            self.send("Build details are at %s" % buildurl)
 
     results_descriptions = {
         SUCCESS: ("Success", 'GREEN'),
@@ -532,61 +557,20 @@ class IRCContact(base.StatusReceiver):
     def getResultsDescriptionAndColor(self, results):
         return self.results_descriptions.get(results, ("??", 'RED'))
 
-    # OLD_STYLE
-    def buildFinished(self, builderName, build, results):
-        # FIXME: NEED TO THINK ABOUT!
-        builder = build.getBuilder()
-
-        if (self.bot.tags is not None and
-                not builder.matchesAnyTag(tags=self.bot.tags)):
-            return
-
-        if not self.notify_for_finished(build):
-            return
-
-        builder_name = builder.getName()
-        buildnum = build.getNumber()
-
-        results = self.getResultsDescriptionAndColor(build.getResults())
-        if not self.shouldReportBuild(builder_name, buildnum):
-            return
-
-        bdict = None  # ???
-        if self.useRevisions:
-            revisions = yield self.getRevisionsForBuild(bdict)
-            r = "build containing revision(s) [%s] on %s is complete: %s" % \
-                (','.join(revisions), builder_name, results[0])
-        else:
-            r = "build #%d of %s is complete: %s" % \
-                (buildnum, builder_name, results[0])
-
-        r += ' [%s]' % maybeColorize(" ".join(build.getText()), results[1], self.useColors)
-        buildurl = self.bot.status.getURLForThing(build)
-        if buildurl:
-            r += "  Build details are at %s" % buildurl
-
-        if self.bot.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-            r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
-
-        self.send(r)
-
     def notify_for_finished(self, build):
-        # FIXME: NEED TO THINK ABOUT!
-        results = build.getResults()
-
         if self.notify_for('finished'):
             return True
 
-        if self.notify_for(lower(self.results_descriptions.get(results)[0])):
+        if self.notify_for(lower(self.results_descriptions.get(build['results'])[0])):
             return True
 
-        prevBuild = build.getPreviousBuild()
+        prevBuild = self.getPreviousBuild(build)
         if prevBuild:
-            prevResult = prevBuild.getResults()
+            prevResult = prevBuild['results']
 
             required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)[0]),
                                                          'To',
-                                                         capitalize(self.results_descriptions.get(results)[0])),
+                                                         capitalize(self.results_descriptions.get(build['results'])[0])),
                                                         '')
 
             if (self.notify_for(required_notification_control_string)):
@@ -598,11 +582,11 @@ class IRCContact(base.StatusReceiver):
     def watchedBuildFinished(self, build):
         builder = yield self.getBuilder(builderid=build['builderid'])
 
-        # FIXME: NEED TO THINK ABOUT!
         # only notify about builders we are interested in
-        # if (self.bot.tags is not None and
-        #         not builder.matchesAnyTag(tags=self.bot.tags)):
-        #     return
+        if (self.bot.tags is not None and
+                not self.builderMatchesAnyTag(builder.get('tags', []))):
+            log.msg('Not notifying for a build that does not match any tags')
+            return
 
         builder_name = builder['name']
         buildnum = build['number']
@@ -1157,6 +1141,9 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.showBlameList = showBlameList
         self.useColors = useColors
         self.allowShutdown = allowShutdown
+
+        if categories:
+            log.msg("WARNING: categories are deprecated and should be replaced with 'tags=[cat]'")
 
     def __getstate__(self):
         d = self.__dict__.copy()
