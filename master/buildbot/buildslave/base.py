@@ -873,14 +873,14 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             if not slist:
                 return
             dl = []
-            for name, remote in slist.items():
+            for name in slist:
                 # use get() since we might have changed our mind since then.
                 # we're checking on the builder in addition to the
                 # slavebuilders out of a bit of paranoia.
                 b = self.botmaster.builders.get(name)
                 sb = self.slavebuilders.get(name)
                 if b and sb:
-                    d1 = sb.attached(self, remote, self.slave_commands)
+                    d1 = sb.attached(self, self.slave_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
 
