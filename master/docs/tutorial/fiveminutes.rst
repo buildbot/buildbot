@@ -62,7 +62,7 @@ Here we're assuming the repository is SVN, but again the concepts are the same w
 Now, to automate this, we create a builder where each step is one of the commands we typed above.
 A step can be a shell command object, or a dedicated object that checks out the source code (there are various types for different repositories, see the docs for more info), or yet something else::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import step, factory
 
     # first, let's create the individual step objects
 
@@ -137,7 +137,7 @@ So a scheduler needs to be configured with two main pieces of information: on on
 A simple type of scheduler may be a periodic scheduler: when a configurable amount of time has passed, run a certain builder (or builders).
 In our example, that's how we would trigger a build every hour::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import scheduler
 
     # define the periodic scheduler
     hourlyscheduler = scheduler.Periodic(name = "hourly",
@@ -156,7 +156,7 @@ Other types of schedulers exist; in particular, there are schedulers that can be
 The typical dynamic scheduler is one that learns about changes in a source repository (generally because some developer checks in some change), and triggers one or more builders in response to those changes.
 Let's assume for now that the scheduler "magically" learns about changes in the repository (more about this later); here's how we would define it::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import scheduler
 
     # define the dynamic scheduler
     trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
@@ -175,7 +175,7 @@ The ``treeStableTimer`` helps in those situations where commits tend to happen i
 What if we want to act on two branches (say, trunk and 7.2)?
 First we create two builders, one for each branch (see the builders paragraph above), then we create two dynamic schedulers::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import scheduler
 
     # define the dynamic scheduler for trunk
     trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
@@ -212,7 +212,7 @@ The manual again has the details.
 
 To complete our example, here's a change source that polls a SVN repository every 2 minutes::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import changes
 
     svnpoller = changes.SVNPoller(svnurl = "svn://myrepo/projects/coolproject",
                                   svnuser = "foo",
@@ -268,7 +268,7 @@ They are described fairly well in the manual.
 
 One thing I've found useful is the ability to pass a domain name as the lookup argument to a ``mailNotifier``, which allows to take an unqualified username as it appears in the SVN change and create a valid email address by appending the given domain name to it::
 
-    from buildbot.plugins import *
+    from buildbot.plugins import status
 
     # if jsmith commits a change, mail for the build is sent to jsmith@example.org
     notifier = status.MailNotifier(fromaddr = "buildbot@example.org",
