@@ -137,12 +137,12 @@ So a scheduler needs to be configured with two main pieces of information: on on
 A simple type of scheduler may be a periodic scheduler: when a configurable amount of time has passed, run a certain builder (or builders).
 In our example, that's how we would trigger a build every hour::
 
-    from buildbot.plugins import scheduler
+    from buildbot.plugins import schedulers
 
     # define the periodic scheduler
-    hourlyscheduler = scheduler.Periodic(name = "hourly",
-                                         builderNames = ["simplebuild"],
-                                         periodicBuildTimer = 3600)
+    hourlyscheduler = schedulers.Periodic(name = "hourly",
+                                          builderNames = ["simplebuild"],
+                                          periodicBuildTimer = 3600)
 
     # define the available schedulers
     c['schedulers'] = [ hourlyscheduler ]
@@ -156,13 +156,13 @@ Other types of schedulers exist; in particular, there are schedulers that can be
 The typical dynamic scheduler is one that learns about changes in a source repository (generally because some developer checks in some change), and triggers one or more builders in response to those changes.
 Let's assume for now that the scheduler "magically" learns about changes in the repository (more about this later); here's how we would define it::
 
-    from buildbot.plugins import scheduler
+    from buildbot.plugins import schedulers
 
     # define the dynamic scheduler
-    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
-                                                   change_filter = util.ChangeFilter(branch = None),
-                                                   treeStableTimer = 300,
-                                                   builderNames = ["simplebuild"])
+    trunkchanged = schedulers.SingleBranchScheduler(name = "trunkchanged",
+                                                    change_filter = util.ChangeFilter(branch = None),
+                                                    treeStableTimer = 300,
+                                                    builderNames = ["simplebuild"])
 
     # define the available schedulers
     c['schedulers'] = [ trunkchanged ]
@@ -175,19 +175,19 @@ The ``treeStableTimer`` helps in those situations where commits tend to happen i
 What if we want to act on two branches (say, trunk and 7.2)?
 First we create two builders, one for each branch (see the builders paragraph above), then we create two dynamic schedulers::
 
-    from buildbot.plugins import scheduler
+    from buildbot.plugins import schedulers
 
     # define the dynamic scheduler for trunk
-    trunkchanged = scheduler.SingleBranchScheduler(name = "trunkchanged",
-                                                   change_filter = util.ChangeFilter(branch = None),
-                                                   treeStableTimer = 300,
-                                                   builderNames = ["simplebuild-trunk"])
+    trunkchanged = schedulers.SingleBranchScheduler(name = "trunkchanged",
+                                                    change_filter = util.ChangeFilter(branch = None),
+                                                    treeStableTimer = 300,
+                                                    builderNames = ["simplebuild-trunk"])
 
     # define the dynamic scheduler for the 7.2 branch
-    branch72changed = scheduler.SingleBranchScheduler(name = "branch72changed",
-                                                      change_filter = util.ChangeFilter(branch = 'branches/7.2'),
-                                                      treeStableTimer = 300,
-                                                      builderNames = ["simplebuild-72"])
+    branch72changed = schedulers.SingleBranchScheduler(name = "branch72changed",
+                                                       change_filter = util.ChangeFilter(branch = 'branches/7.2'),
+                                                       treeStableTimer = 300,
+                                                       builderNames = ["simplebuild-72"])
 
     # define the available schedulers
     c['schedulers'] = [ trunkchanged, branch72changed ]
