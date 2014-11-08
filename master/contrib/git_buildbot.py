@@ -25,6 +25,7 @@
 
 import commands
 import logging
+import subprocess
 import os
 import re
 import sys
@@ -238,7 +239,10 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
     logging.info("Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
 
-    baserev = commands.getoutput("git merge-base %s %s" % (oldrev, newrev))
+    mergebasecommand = subprocess.Popen("git merge-base %s %s" % (oldrev, newrev), stdout=subprocess.PIPE);
+    (baserev, err) = mergebasecommand.communicate()
+    baserev = baserev.strip() # remove newline
+    
     logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
         c = {'revision': baserev,
@@ -334,6 +338,7 @@ def process_changes():
     # Read branch updates from stdin and generate Change events
     while True:
         line = sys.stdin.readline()
+        line = line.rstrip()
         if not line:
             break
 
