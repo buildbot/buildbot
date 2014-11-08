@@ -9,5 +9,8 @@ Indices and Tables
 * :bb:index:`status`
 * :bb:index:`cmdline`
 * :bb:index:`msg`
+* :bb:index:`event`
+* :bb:index:`rtype`
+* :bb:index:`rpath`
 * :ref:`modindex`
 * :ref:`search`
