@@ -99,7 +99,7 @@ Change Sources
     Which create a Change object each time something is modified in the VC repository.
     Most :class:`ChangeSource`\s listen for messages from a hook script of some sort.
     Some sources actively poll the repository on a regular basis.
-    All :class:`Change`\s are fed to the :class:`Scheduler`\s.
+    All :class:`Change`\s are fed to the schedulers.
 
 Schedulers
     Which decide when builds should be performed.
@@ -175,7 +175,7 @@ A day in the life of the buildbot:
   This notification might arrive via email, or over a network connection (either initiated by the buildmaster as it *subscribes* to changes, or by the commit trigger as it pushes :class:`Change`\s towards the buildmaster).
   The :class:`Change` contains information about who made the change, what files were modified, which revision contains the change, and any checkin comments.
 
-* The buildmaster distributes this change to all of its configured :class:`Scheduler`\s.
+* The buildmaster distributes this change to all of its configured schedulers.
   Any ``important`` changes cause the ``tree-stable-timer`` to be started, and the :class:`Change` is added to a list of those that will go into a new :class:`Build`.
   When the timer expires, a :class:`Build` is started on each of a set of configured Builders, all compiling/testing the same source code.
   Unless configured otherwise, all :class:`Build`\s run in parallel on the various buildslaves.

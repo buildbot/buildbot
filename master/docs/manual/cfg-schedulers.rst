@@ -20,8 +20,8 @@ Configuring Schedulers
 
 .. bb:cfg:: schedulers
 
-The :bb:cfg:`schedulers` configuration parameter gives a list of Scheduler instances, each of which causes builds to be started on a particular set of Builders.
-The two basic Scheduler classes you are likely to start with are :class:`SingleBranchScheduler` and :class:`Periodic`, but you can write a customized subclass to implement more complicated build scheduling.
+The :bb:cfg:`schedulers` configuration parameter gives a list of scheduler instances, each of which causes builds to be started on a particular set of Builders.
+The two basic scheduler classes you are likely to start with are :bb:sched:`SingleBranchScheduler` and :bb:sched:`Periodic`, but you can write a customized subclass to implement more complicated build scheduling.
 
 Scheduler arguments should always be specified by name (as keyword arguments), to allow for future expansion::
 
@@ -97,8 +97,8 @@ There are several common arguments for schedulers, although not all are availabl
     When ``True``, it uses the last seen revision for each codebase that does not have a change.
     When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
 
-The remaining subsections represent a catalog of the available Scheduler types.
-All these Schedulers are defined in modules under :mod:`buildbot.schedulers`, and the docstrings there are the best source of documentation on the arguments taken by each one.
+The remaining subsections represent a catalog of the available scheduler types.
+All these schedulers are defined in modules under :mod:`buildbot.schedulers`, and the docstrings there are the best source of documentation on the arguments taken by each one.
 
 Scheduler Resiliency
 ~~~~~~~~~~~~~~~~~~~~
@@ -208,7 +208,7 @@ SingleBranchScheduler
 This is the original and still most popular scheduler class.
 It follows exactly one branch, and starts a configurable tree-stable-timer after each change on that branch.
 When the timer expires, it starts a build on some set of Builders.
-The Scheduler accepts a :meth:`fileIsImportant` function which can be used to ignore some Changes if they do not affect any *important* files.
+This scheduler accepts a :meth:`fileIsImportant` function which can be used to ignore some Changes if they do not affect any *important* files.
 
 If ``treeStableTimer`` is not set, then this scheduler starts a build for every Change that matches its ``change_filter`` and statsfies :meth:`fileIsImportant`.
 If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
@@ -280,10 +280,16 @@ Example::
 
 In this example, the two *quick* builders are triggered 60 seconds after the tree has been changed.
 The *full* builds do not run quite so quickly (they wait 5 minutes), so hopefully if the quick builds fail due to a missing file or really simple typo, the developer can discover and fix the problem before the full builds are started.
-Both Schedulers only pay attention to the default branch: any changes on other branches are ignored by these schedulers.
+Both schedulers only pay attention to the default branch: any changes on other branches are ignored.
 Each scheduler triggers a different set of Builders, referenced by name.
 
-The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of the more accurate name ``buildbot.schedulers.basic.SingleBranchScheduler``.
+.. note::
+
+   The old names for this scheduler, ``buildbot.scheduler.Scheduler`` and ``buildbot.schedulers.basic.Scheduler``, are deprecated in favor of using :mod:`buildbot.plugins`::
+
+        from buildbot.plugins import schedulers
+
+   However if you must use a fully qualified name, it is ``buildbot.schedulers.basic.SingleBranchScheduler``.
 
 .. bb:sched:: AnyBranchScheduler
 
@@ -338,16 +344,16 @@ You could put the packaging step in the same Build as the compile and testing st
 Another example is if you want to skip the *full* builds after a failing *quick* build of the same source code.
 Or, if one Build creates a product (like a compiled library) that is used by some other Builder, you'd want to make sure the consuming Build is run *after* the producing one.
 
-You can use *Dependencies* to express this relationship to the Buildbot.
-There is a special kind of scheduler named :class:`scheduler.Dependent` that will watch an *upstream* scheduler for builds to complete successfully (on all of its Builders).
+You can use *dependencies* to express this relationship to the Buildbot.
+There is a special kind of scheduler named :bb:sched:`Dependent` that will watch an *upstream* scheduler for builds to complete successfully (on all of its Builders).
 Each time that happens, the same source code (i.e. the same ``SourceStamp``) will be used to start a new set of builds, on a different set of Builders.
 This *downstream* scheduler doesn't pay attention to Changes at all.
 It only pays attention to the upstream scheduler.
 
 If the build fails on any of the Builders in the upstream set, the downstream builds will not fire.
-Note that, for SourceStamps generated by a :class:`scheduler.Dependent`, the ``revision`` is ``None``, meaning HEAD.
+Note that, for SourceStamps generated by a :bb:sched:`Dependent` scheduler, the ``revision`` is ``None``, meaning HEAD.
 If any changes are committed between the time the upstream scheduler begins its build and the time the dependent scheduler begins its build, then those changes will be included in the downstream build.
-See the :ref:`Triggerable-Scheduler` for a more flexible dependency mechanism that can avoid this problem.
+See the :bb:sched:`Triggerable` scheduler for a more flexible dependency mechanism that can avoid this problem.
 
 The keyword arguments to this scheduler are:
 
@@ -624,13 +630,13 @@ See :mod:`twisted.application.strports` for details.
 Triggerable Scheduler
 :::::::::::::::::::::
 
-The :class:`Triggerable` scheduler waits to be triggered by a Trigger step (see :ref:`Triggering-Schedulers`) in another build.
+The :bb:sched:`Triggerable` scheduler waits to be triggered by a :bb:step:`Trigger` step (see :ref:`Triggering-Schedulers`) in another build.
 That step can optionally wait for the scheduler's builds to complete.
-This provides two advantages over Dependent schedulers.
+This provides two advantages over :bb:sched:`Dependent` schedulers.
 First, the same scheduler can be triggered from multiple builds.
-Second, the ability to wait for a Triggerable's builds to complete provides a form of "subroutine call", where one or more builds can "call" a scheduler to perform some work for them, perhaps on other buildslaves.
-The Triggerable-Scheduler supports multiple codebases.
-The scheduler filters out all codebases from Trigger steps that are not configured in the scheduler.
+Second, the ability to wait for :bb:sched:`Triggerable`'s builds to complete provides a form of "subroutine call", where one or more builds can "call" a scheduler to perform some work for them, perhaps on other buildslaves.
+The :bb:sched:`Triggerable` scheduler supports multiple codebases.
+The scheduler filters out all codebases from :bb:step:`Trigger` steps that are not configured in the scheduler.
 
 The parameters are just the basics:
 
@@ -643,7 +649,7 @@ The parameters are just the basics:
 ``codebases``
     See :ref:`Configuring-Schedulers`.
 
-This class is only useful in conjunction with the :class:`Trigger` step.
+This class is only useful in conjunction with the :bb:step:`Trigger` step.
 Here is a fully-worked example::
 
     from buildbot.plugins import schedulers, util, steps
@@ -691,9 +697,9 @@ NightlyTriggerable Scheduler
 
 .. py:class:: buildbot.schedulers.timed.NightlyTriggerable
 
-The :class:`NightlyTriggerable` scheduler is a mix of the :class:`Nightly` and :class:`Triggerable` schedulers.
-This scheduler triggers builds at a particular time of day, week, or year, exactly as the :class:`Nightly` scheduler.
-However, the source stamp set that is used that provided by the last :class:`Trigger` step that targeted this scheduler.
+The :bb:sched:`NightlyTriggerable` scheduler is a mix of the :bb:sched:`Nightly` and :bb:sched:`Triggerable` schedulers.
+This scheduler triggers builds at a particular time of day, week, or year, exactly as the :bb:sched:`Nightly` scheduler.
+However, the source stamp set that is used that provided by the last :bb:step:`Trigger` step that targeted this scheduler.
 
 The parameters are just the basics:
 
@@ -717,8 +723,8 @@ The parameters are just the basics:
 ``dayOfWeek``
     See :bb:sched:`Nightly`.
 
-This class is only useful in conjunction with the :class:`Trigger` step.
-Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this scheduler.
+This class is only useful in conjunction with the :bb:step:`Trigger` step.
+Note that ``waitForFinish`` is ignored by :bb:step:`Trigger` steps targeting this scheduler.
 
 Here is a fully-worked example::
 
@@ -751,9 +757,9 @@ Here is a fully-worked example::
 ForceScheduler Scheduler
 ::::::::::::::::::::::::
 
-The :class:`ForceScheduler` scheduler is the way you can configure a force build form in the web UI.
+The :bb:sched:`ForceScheduler` scheduler is the way you can configure a force build form in the web UI.
 
-In the ``builder/<builder-name>`` web page, you will see one form for each ForceScheduler scheduler that was configured for this builder.
+In the ``builder/<builder-name>`` web page, you will see one form for each :bb:sched:`ForceScheduler` scheduler that was configured for this builder.
 
 This allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
 
@@ -863,10 +869,10 @@ Here is an example of code on how you can define which user has which right::
 
 .. _ForceScheduler-Parameters:
 
-ForceSched Parameters
-.....................
+ForceScheduler Parameters
+.........................
 
-Most of the arguments to ``ForceScheduler`` are "parameters".
+Most of the arguments to :bb:sched:`ForceScheduler` are "parameters".
 Several classes of parameters are available, each describing a different kind of input from a force-build form.
 
 All parameter types have a few common arguments:
