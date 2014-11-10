@@ -62,8 +62,10 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
     def _image_exists(self, client):
         # Make sure the container exists
-        for container in client.images():
-            for tag in container['RepoTags']:
+        for image in client.images():
+            for tag in image['RepoTags']:
+                if ':' in self.image and tag == self.image:
+                    return True
                 if tag.startswith(self.image+':'):
                     return True
         return False
