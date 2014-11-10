@@ -410,13 +410,13 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         case we disconnect the older connection.
         """
 
-        if not self.slave:
+        if self.conn is None:
             return defer.succeed(None)
         log.msg("disconnecting old slave %s now" % self.slavename)
         # When this Deferred fires, we'll be ready to accept the new slave
-        return self._disconnect(self.slave)
+        return self._disconnect(self.conn)
 
-    def _disconnect(self, slave):
+    def _disconnect(self, conn):
         # all kinds of teardown will happen as a result of
         # loseConnection(), but it happens after a reactor iteration or
         # two. Hook the actual disconnect so we can know when it is safe
@@ -429,24 +429,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # RemoteReference being disconnected.
         def _disconnected(rref):
             eventually(d.callback, None)
-        slave.notifyOnDisconnect(_disconnected)
-        tport = slave.broker.transport
-        # this is the polite way to request that a socket be closed
-        tport.loseConnection()
-        try:
-            # but really we don't want to wait for the transmit queue to
-            # drain. The remote end is unlikely to ACK the data, so we'd
-            # probably have to wait for a (20-minute) TCP timeout.
-            # tport._closeSocket()
-            # however, doing _closeSocket (whether before or after
-            # loseConnection) somehow prevents the notifyOnDisconnect
-            # handlers from being run. Bummer.
-            tport.offset = 0
-            tport.dataBuffer = ""
-        except Exception:
-            # however, these hacks are pretty internal, so don't blow up if
-            # they fail or are unavailable
-            log.msg("failed to accelerate the shutdown process")
+        conn.notifyOnDisconnect(_disconnected)
+        conn.loseConnection()
         log.msg("waiting for slave to finish disconnecting")
 
         return d
@@ -676,7 +660,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_deferred = defer.Deferred()
             self.substantiation_build = build
-            if self.slave is None:
+            if self.conn is None:
                 d = self._substantiate(build)  # start up instance
                 d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
@@ -820,7 +804,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             self.substantiation_build = None
             log.msg("Substantiation complete, immediately terminating.")
 
-        if self.slave is not None:
+        if self.conn is not None:
             # this could be called when the slave needs to shut down, such as
             # in BotMaster.removeSlave, *or* when a new slave requests a
             # connection when we already have a slave. It's not clear what to
@@ -849,7 +833,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def stopService(self):
         res = defer.maybeDeferred(AbstractBuildSlave.stopService, self)
-        if self.slave is not None:
+        if self.conn is not None:
             d = self._soft_disconnect()
             res = defer.DeferredList([res, d])
         return res
@@ -873,14 +857,14 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             if not slist:
                 return
             dl = []
-            for name, remote in slist.items():
+            for name in slist:
                 # use get() since we might have changed our mind since then.
                 # we're checking on the builder in addition to the
                 # slavebuilders out of a bit of paranoia.
                 b = self.botmaster.builders.get(name)
                 sb = self.slavebuilders.get(name)
                 if b and sb:
-                    d1 = sb.attached(self, remote, self.slave_commands)
+                    d1 = sb.attached(self, self.slave_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
 
