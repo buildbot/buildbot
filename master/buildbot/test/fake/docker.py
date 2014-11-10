@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+
 class Client(object):
 
     def __init__(self, base_url):
@@ -43,4 +44,4 @@ class Client(object):
 
     def create_container(self, image, *args, **kwargs):
         return {'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
-                 'Warnings': None}
+                'Warnings': None}

@@ -66,7 +66,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             for tag in image['RepoTags']:
                 if ':' in self.image and tag == self.image:
                     return True
-                if tag.startswith(self.image+':'):
+                if tag.startswith(self.image + ':'):
                     return True
         return False
 
@@ -75,8 +75,10 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         found = self._image_exists(docker_client)
         if (not found) and (self.dockerfile is not None):
-            log.msg("Image '%s' not found, building it from scratch" % self.image)
-            for line in docker_client.build(fileobj=BytesIO(self.dockerfile), tag=self.image):
+            log.msg("Image '%s' not found, building it from scratch" %
+                    self.image)
+            for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
+                                            tag=self.image):
                 log.msg(line)
 
         if not self._image_exists(docker_client):
@@ -91,8 +93,8 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             try:
                 volume = volume_string.split(":")[1]
             except IndexError:
-                log.error("Invalid volume definition for docker "
-                             "{0}. Skipping...".format(volume_string))
+                log.err("Invalid volume definition for docker "
+                        "{0}. Skipping...".format(volume_string))
                 continue
             volumes[volume] = {}
 

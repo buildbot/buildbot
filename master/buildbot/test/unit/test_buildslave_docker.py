@@ -20,6 +20,7 @@ from buildbot import interfaces
 from buildbot.buildslave import docker as dockerbuildslave
 from buildbot.test.fake import docker
 
+
 class TestDockerLatentBuildSlave(unittest.TestCase):
 
     class ConcreteBuildSlave(dockerbuildslave.DockerLatentBuildSlave):

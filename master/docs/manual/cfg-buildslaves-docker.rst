@@ -16,7 +16,7 @@ This document will guide you through the setup of such slaves.
 
 .. _Docker: https://docker.com
 
-Docker installation
+Docker Installation
 -------------------
 
 An easy way to try Docker is through installation of dedicated Virtual machines.
@@ -61,7 +61,7 @@ boot2docker is one of the fastest ways to boot to Docker.
 As it is meant to be used from outside of the Virtual Machine, the socket is already exposed.
 Please follow the installation instructions on how to find the address of your socket.
 
-Image creation
+Image Creation
 --------------
 
 Our build master will need the name of an image to perform its builds.
@@ -105,7 +105,7 @@ When your Dockerfile is ready, you can build your first image using the followin
 
     docker build -t myslavename - < Dockerfile
 
-master setup
+Master Setup
 ------------
 
 We will rely on docker-py to connect our master with docker.
@@ -114,15 +114,15 @@ Now is the time to install it in your master environment.
 Before adding the slave to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
 To do this, enter the following lines in a python prompt where docker-py is installed::
 
-    >>> from docker import client
+    >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
-    >>> c = client.Client(base_url=docker_socket)
+    >>> client = docker.client.Client(base_url=docker_socket)
     >>> slave_image = 'my_project_slave'
-    >>> i = c.create_container(slave_image)
-    >>> c.start(i['Id'])
+    >>> container = client.create_container(slave_image)
+    >>> client.start(container['Id'])
     >>> # Optionally examine the logs of the master
-    >>> c.stop(i['Id'])
-    >>> c.wait(i['Id'])
+    >>> client.stop(container['Id'])
+    >>> client.wait(container['Id'])
     0
 
 It is now time to add the new build slave to the master configuration under :bb:cfg:`slaves`.
