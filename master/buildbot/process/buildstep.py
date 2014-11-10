@@ -567,7 +567,7 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.setWaitingForLocks(False)
         return defer.succeed(None)
 
-    def getDoStepDefer(self, func):
+    def getDoStepIfDefer(self, func):
         if isinstance(func, bool):
             doStep = defer.succeed(func)
         else:
@@ -585,10 +585,10 @@ class BuildStep(object, properties.PropertiesMixin):
         dl = []
         if isinstance(self.doStepIf, list):
             for func in self.doStepIf:
-                doStep = self.getDoStepDefer(func)
+                doStep = self.getDoStepIfDefer(func)
                 dl.append(doStep)
         else:
-            dl = [self.getDoStepDefer(self.doStepIf)]
+            dl = [self.getDoStepIfDefer(self.doStepIf)]
 
         renderables = []
         accumulateClassList(self.__class__, 'renderables', renderables)
