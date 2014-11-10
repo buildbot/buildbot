@@ -330,7 +330,9 @@ See that module's description for details.
 
         If true, then this endpoint returns raw resource.
 
-        Raw resources are used to get the data not encoded in JSON via the rest API. In the REST principles, this should be done via another endpoint, and not via a query parameter. The get() method from endpoint should return following data structure::
+        Raw resources are used to get the data not encoded in JSON via the rest API.
+        In the REST principles, this should be done via another endpoint, and not via a query parameter.
+        The get() method from endpoint should return following data structure::
 
             {
                 "raw": u"raw data to be sent to the http client",
