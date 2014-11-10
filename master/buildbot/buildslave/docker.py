@@ -11,8 +11,9 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# Portions Copyright Buildbot Team Members
-import logging
+# Copyright Buildbot Team Members
+
+from io import BytesIO
 
 from twisted.internet import defer, threads
 from twisted.python import log
@@ -33,7 +34,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     def __init__(self, name, password, docker_host, image=None, command=None,
                  max_builds=None, notify_on_missing=None,
                  missing_timeout=(60 * 20), build_wait_timeout=(60 * 10),
-                 properties={}, locks=None, volumes=None):
+                 properties={}, locks=None, volumes=None, dockerfile=None):
 
         if not client:
             config.error("The python module 'docker-py' is needed "
@@ -52,14 +53,35 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         self.command = command or []
 
         self.volumes = volumes or []
+        self.dockerfile = dockerfile
 
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
         return threads.deferToThread(self._start_instance)
 
+    def _image_exists(self, client):
+        # Make sure the container exists
+        for container in client.images():
+            for tag in container['RepoTags']:
+                if tag.startswith(self.image+':'):
+                    return True
+        return False
+
     def _start_instance(self):
         docker_client = client.Client(base_url=self.docker_host)
+
+        found = self._image_exists(docker_client)
+        if (not found) and (self.dockerfile is not None):
+            log.msg("Image '%s' not found, building it from scratch" % self.image)
+            for line in docker_client.build(fileobj=BytesIO(self.dockerfile), tag=self.image):
+                log.msg(line)
+
+        if not self._image_exists(docker_client):
+            log.msg("Image '%s' not found" % self.image)
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                'Image "%s" not found on docker host.' % self.image
+            )
 
         volumes = {}
         binds = {}
@@ -80,16 +102,17 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             self.command,
             volumes=volumes,
         )
-        if instance.get('Id') is not None:
-            log.msg('Container created, Id: %s...' % instance['Id'][:6])
-            self.instance = instance
-            docker_client.start(instance['Id'], binds=binds)
-            return [instance['Id'], self.image]
-        else:
+
+        if instance.get('Id') is None:
             log.msg('Failed to create the container')
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                 'Failed to start container'
             )
+
+        log.msg('Container created, Id: %s...' % instance['Id'][:6])
+        self.instance = instance
+        docker_client.start(instance['Id'], binds=binds)
+        return [instance['Id'], self.image]
 
     def stop_instance(self, fast=False):
         if self.instance is None:
