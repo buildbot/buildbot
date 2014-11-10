@@ -26,10 +26,14 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = logchunks.LogChunkEndpoint
     resourceTypeClass = logchunks.LogChunk
+    endpointname = "contents"
+    log60Lines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
+                  'another line', 'yet another line']
+    log61Lines = ['%08d' % i for i in range(100)]
 
     def setUp(self):
         self.setUpEndpoint()
@@ -68,10 +72,6 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                        num_lines=0),
             # logid 62 is empty
         ])
-
-    log60Lines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
-                  'another line', 'yet another line']
-    log61Lines = ['%08d' % i for i in range(100)]
 
     def tearDown(self):
         self.tearDownEndpoint()
@@ -122,35 +122,38 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             None)
 
     def test_get_logid_60(self):
-        return self.do_test_chunks(('logs', 60, 'contents'), 60,
+        return self.do_test_chunks(('logs', 60, self.endpointname), 60,
                                    self.log60Lines)
 
     def test_get_logid_61(self):
-        return self.do_test_chunks(('logs', 61, 'contents'), 61,
+        return self.do_test_chunks(('logs', 61, self.endpointname), 61,
                                    self.log61Lines)
+
+
+class LogChunkEndpoint(LogChunkEndpointBase):
 
     @defer.inlineCallbacks
     def test_get_missing(self):
-        logchunk = yield self.callGet(('logs', 99, 'contents'))
+        logchunk = yield self.callGet(('logs', 99, self.endpointname))
         self.assertEqual(logchunk, None)
 
     @defer.inlineCallbacks
     def test_get_empty(self):
-        logchunk = yield self.callGet(('logs', 62, 'contents'))
+        logchunk = yield self.callGet(('logs', 62, self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['content'], '')
 
     @defer.inlineCallbacks
     def test_get_by_stepid(self):
         logchunk = yield self.callGet(
-            ('steps', 50, 'logs', 'errors', 'contents'))
+            ('steps', 50, 'logs', 'errors', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
         logchunk = yield self.callGet(
-            ('builds', 13, 'steps', 9, 'logs', 'stdio', 'contents'))
+            ('builds', 13, 'steps', 9, 'logs', 'stdio', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 60)
 
@@ -158,7 +161,7 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_by_builder(self):
         logchunk = yield self.callGet(
             ('builders', 77, 'builds', 3, 'steps', 9,
-             'logs', 'errors', 'contents'))
+             'logs', 'errors', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
 
@@ -166,9 +169,35 @@ class LogChunkEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_by_builder_step_name(self):
         logchunk = yield self.callGet(
             ('builders', 77, 'builds', 3, 'steps', 'make',
-             'logs', 'errors', 'contents'))
+             'logs', 'errors', self.endpointname))
         self.validateData(logchunk)
         self.assertEqual(logchunk['logid'], 61)
+
+
+class RawLogChunkEndpoint(LogChunkEndpointBase):
+
+    endpointClass = logchunks.RawLogChunkEndpoint
+    endpointname = "raw"
+
+    def validateData(self, data):
+        self.assertIsInstance(data['raw'], unicode)
+        self.assertIsInstance(data['mime-type'], unicode)
+        self.assertIsInstance(data['filename'], unicode)
+
+    @defer.inlineCallbacks
+    def do_test_chunks(self, path, logid, expLines):
+        # get the whole thing in one go
+        logchunk = yield self.callGet(path)
+        self.validateData(logchunk)
+        if logid == 60:
+            expContent = u'\n'.join([line[1:] for line in expLines])
+            expFilename = "stdio"
+        else:
+            expContent = u'\n'.join(expLines) + '\n'
+            expFilename = "errors"
+
+        self.assertEqual(logchunk,
+                         {'filename': expFilename, 'mime-type': u"text/plain", 'raw': expContent})
 
 
 class LogChunk(interfaces.InterfaceTests, unittest.TestCase):

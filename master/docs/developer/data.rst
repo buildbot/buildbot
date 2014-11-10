@@ -324,6 +324,20 @@ See that module's description for details.
 
         If true, then this endpoint returns collections of resources.
 
+    .. py:attribute:: isRaw
+
+        :type: boolean
+
+        If true, then this endpoint returns raw resource.
+
+        Raw resources are used to get the data not encoded in JSON via the rest API. In the REST principles, this should be done via another endpoint, and not via a query parameter. The get() method from endpoint should return following data structure::
+
+            {
+                "raw": u"raw data to be sent to the http client",
+                "mime-type": u"<mime-type>",
+                "filename": u"filename_to_be_used_in_content_disposition_attachement_header"
+            }
+
     .. py:method:: get(options, resultSpec, kwargs)
 
         :param dict options: model-specific options
