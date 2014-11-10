@@ -1,0 +1,173 @@
+.. index::
+    Docker
+    Buildslaves; Docker
+
+Docker latent BuildSlave
+========================
+
+Docker_ is an open-source project that automates the deployment of applications inside software containers.
+Using the Docker latent BuildSlave, a fresh image will be instantiated upon each build, assuring consistency of the environment between builds.
+
+This document will guide you through the setup of such slaves.
+
+.. contents::
+   :depth: 1
+   :local:
+
+.. _Docker: https://docker.com
+
+Docker installation
+-------------------
+
+An easy way to try Docker is through installation of dedicated Virtual machines.
+Two of them stands out:
+
+- CoreOS_
+- boot2docker_
+
+Beside, it is always possible to install Docker next to the buildmaster.
+This offers less isolation between process though.
+
+.. note::
+    It is not necessary to install Docker in the same environment as your master as we will make use to the Docker API through docker-py_.
+    More in `master setup`_.
+
+.. _CoreOS: https://coreos.com/
+.. _boot2docker: http://boot2docker.io/
+.. _docker-py: https://pypi.python.org/pypi/docker-py
+
+CoreOS
+......
+
+CoreOS is targeted at building infrastructure and distributed systems.
+In order to get the latent BuildSlave working with CoreOS, it is necessary to `expose the docker socket`_ outside of the Virtual Machine.
+If you installed it via Vagrant_, it is also necessary to uncomment the following line in your :file:`config.rb` file:
+
+.. code-block:: ruby
+
+    $expose_docker_tcp=2375
+
+The following command should allow you to confirm that your Docker socket is now available via the network::
+
+    docker -H tcp://127.0.0.1:2375 ps
+
+.. _`expose the docker socket`: https://coreos.com/docs/launching-containers/building/customizing-docker/
+.. _Vagrant: https://coreos.com/docs/running-coreos/platforms/vagrant/
+
+boot2docker
+...........
+
+boot2docker is one of the fastest ways to boot to Docker.
+As it is meant to be used from outside of the Virtual Machine, the socket is already exposed.
+Please follow the installation instructions on how to find the address of your socket.
+
+Image creation
+--------------
+
+Our build master will need the name of an image to perform its builds.
+Each time a new build will be requested, the same base image will be used again and again, actually discarding the result of the previous build.
+If you need some persistant storage between builds, you can `use Volumes <setting up volumes>`_.
+
+Each Docker image has a single purpose.
+Our buildslave image will be running a buildbot slave.
+
+Docker uses ``Dockerfile``\s to describe the steps necessary to build an image.
+The following example will build a minimal buildslave.
+Don't forget to add your dependencies in there to get a succesfull build !
+
+.. code-block:: Docker
+    :linenos:
+    :emphasize-lines: 11
+
+    FROM debian:stable
+    RUN apt-get update && apt-get install -y \
+       python-dev \
+       python-pip
+    RUN pip install buildbot-slave
+    RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
+    RUN mkdir /buildslave && chown buildbot:buildbot /buildslave
+    # Install your build-dependencies here ...
+    USER buildbot
+    WORKDIR /buildslave
+    RUN buildslave create-slave . <master-hostname> <slavename> <slavepassword>
+    ENTRYPOINT ["/usr/local/bin/buildslave"]
+    CMD ["start", "--nodaemon"]
+
+On line 11, the hostname for your master instance, as well as the slave name and password is setup.
+Don't forget to replace those values with some valid ones for your project.
+
+It is a good practice to set the ``ENTRYPOINT`` to the buildslave executable, and the ``CMD`` to ``["start", "--nodaemon"]``.
+This way, no parameter will be required when starting the image.
+
+When your Dockerfile is ready, you can build your first image using the following command (replace *myslavename* with a relevant name for your case):
+
+.. code-block:: bash
+
+    docker build -t myslavename - < Dockerfile
+
+master setup
+------------
+
+We will rely on docker-py to connect our master with docker.
+Now is the time to install it in your master environment.
+
+Before adding the slave to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
+To do this, enter the following lines in a python prompt where docker-py is installed::
+
+    >>> from docker import client
+    >>> docker_socket = 'tcp://localhost:2375'
+    >>> c = client.Client(base_url=docker_socket)
+    >>> slave_image = 'my_project_slave'
+    >>> i = c.create_container(slave_image)
+    >>> c.start(i['Id'])
+    >>> # Optionally examine the logs of the master
+    >>> c.stop(i['Id'])
+    >>> c.wait(i['Id'])
+    0
+
+It is now time to add the new build slave to the master configuration under :bb:cfg:`slaves`.
+
+The following example will add a Docker latent slave for docker running at the following adress: ``tcp://localhost:2375``, the slave name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_slave``::
+
+    from buildbot.plugins import buildslave
+    c['slaves'] = [
+        buildslave.DockerLatentBuildSlave('minion1', 'sekrit',
+                                          docker_host='tcp://localhost:2375',
+                                          image='my_project_slave')
+    ]
+
+In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class:`DockerLatentBuildSlave` will accept the following extra ones:
+
+``docker_host``
+    (mandatory)
+    This is the adress the master will use to connect with a running Docker instance.
+
+``image``
+    (mandatory)
+    This is the name of the image that will be started by the build master. It should start a buildslave.
+
+``command``
+    (optional)
+    This will override the command setup during image creation.
+
+``volumes``
+    (optional)
+    See `Setting up Volumes`_
+
+``dockerfile``
+    (optional)
+    This is the content of the Dockerfile that will be used to build the specified image if the image is not found by Docker.
+    It should be a multiline string.
+
+    .. note:: This parameter will be used only once as the next times the image will already be available.
+
+    .. note:: No attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
+
+Setting up Volumes
+..................
+
+The ``volume`` parameter allows to share directory between containers, or between a container and the host system.
+Refer to Docker documentation for more information about Volumes.
+
+The format of that variable has to be an array of string.
+Each string specify a volume in the following format: :samp:`{volumename}:{bindname}`.
