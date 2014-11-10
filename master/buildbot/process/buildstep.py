@@ -567,6 +567,13 @@ class BuildStep(object, properties.PropertiesMixin):
         self.step_status.setWaitingForLocks(False)
         return defer.succeed(None)
 
+    def getDoStepDefer(self, func):
+        if isinstance(func, bool):
+            doStep = defer.succeed(func)
+        else:
+            doStep = defer.maybeDeferred(func, self)
+        return doStep
+
     def _startStep_2(self, res):
         if self.stopped:
             self.finished(EXCEPTION)
@@ -575,10 +582,13 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.start()
 
-        if isinstance(self.doStepIf, bool):
-            doStep = defer.succeed(self.doStepIf)
+        dl = []
+        if isinstance(self.doStepIf, list):
+            for func in self.doStepIf:
+                doStep = self.getDoStepDefer(func)
+                dl.append(doStep)
         else:
-            doStep = defer.maybeDeferred(self.doStepIf, self)
+            dl = [self.getDoStepDefer(self.doStepIf)]
 
         renderables = []
         accumulateClassList(self.__class__, 'renderables', renderables)
@@ -586,7 +596,6 @@ class BuildStep(object, properties.PropertiesMixin):
         def setRenderable(res, attr):
             setattr(self, attr, res)
 
-        dl = [ doStep ]
         for renderable in renderables:
             d = self.build.render(getattr(self, renderable))
             d.addCallback(setRenderable, renderable)
@@ -598,7 +607,10 @@ class BuildStep(object, properties.PropertiesMixin):
 
     @defer.inlineCallbacks
     def _startStep_3(self, doStep):
-        doStep = doStep[0]
+        gatherDoStepIfResults = all([s == True for s in doStep if s is not None])
+
+        doStep = gatherDoStepIfResults
+
         try:
             if doStep:
                 result = yield defer.maybeDeferred(self.start)
