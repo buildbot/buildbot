@@ -41,6 +41,20 @@ class TestsEndpoint(base.Endpoint):
         return defer.succeed(sorted(testData.values(), key=lambda v: v['id']))
 
 
+class RawTestsEndpoint(base.Endpoint):
+    isCollection = False
+    isRaw = True
+    pathPatterns = "/rawtest"
+
+    def get(self, resultSpec, kwargs):
+        # results are sorted by ID for test stability
+        return defer.succeed({
+            "filename": "test.txt",
+            "mime-type": "text/test",
+            'raw': 'value'
+        })
+
+
 class FailEndpoint(base.Endpoint):
     isCollection = False
     pathPatterns = "/test/fail"
@@ -67,7 +81,7 @@ class TestEndpoint(base.Endpoint):
 class Test(base.ResourceType):
     name = "test"
     plural = "tests"
-    endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint]
+    endpoints = [TestsEndpoint, TestEndpoint, FailEndpoint, RawTestsEndpoint]
 
     class EntityType(types.Entity):
         id = types.Integer()

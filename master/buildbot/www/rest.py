@@ -289,7 +289,6 @@ class V2RootResource(resource.Resource):
                           data['mime-type'].encode() + '; charset=utf-8')
         request.setHeader("content-disposition",
                           'attachment; filename=' + data['filename'].encode())
-        print repr(data['raw'].encode('utf-8'))
         request.write(data['raw'].encode('utf-8'))
         return
 
