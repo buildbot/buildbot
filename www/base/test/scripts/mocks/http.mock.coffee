@@ -38,7 +38,7 @@ window.decorateHttpBackend = ($httpBackend) ->
                 return valueFromSpec(spec, hint)
             hint ?= "mystring"
             if not spec.name?
-                throw Error("no type: #{ spec } #{ tip }")
+                throw Error("no type: #{ JSON.stringify(spec) } #{ hint }")
             type = spec.name
             switch type
                 when "string"
