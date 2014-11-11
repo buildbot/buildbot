@@ -1421,12 +1421,23 @@ Cppcheck
 ++++++++
 
 This step runs ``cppcheck``, analyse its output, and set the outcome in :ref:`Properties`.
-All arguments are identical to :bb:step:`ShellCommand`.
 
 ::
 
     from buildbot.plugins import steps
     f.addStep(steps.Cppcheck())
+
+This class adds the following arguments:
+
+``source``
+    (Optional, default to ``['.']``)
+    This is the list of paths for the sources to be checked by this step.
+
+``extra_args``
+    (Optional, default to ``['--enable=all', '--inconclusive']``)
+    This is the list of extra arguments to be given to the cppcheck command.
+
+All other arguments are identical to :bb:step:`ShellCommand`.
 
 .. bb:step:: Robocopy
 

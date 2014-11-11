@@ -25,7 +25,7 @@ from buildbot.steps.shell import ShellCommand
 class Cppcheck(ShellCommand):
     # Highly inspirated from the Pylint step.
     name = "cppcheck"
-    command = ["cppcheck", "--enable=all", "--inconclusive", "."]
+    command = ["cppcheck"]
     description = ["running", "cppcheck"]
     descriptionDone = ["cppcheck"]
     flunkingIssues = ('error',)
@@ -34,9 +34,21 @@ class Cppcheck(ShellCommand):
         'error', 'warning', 'style', 'performance', 'portability', 'information')
 
     def __init__(self, *args, **kwargs):
+        self.source = ['.']
+        if 'source' in kwargs:
+            self.source = kwargs['source']
+            del kwargs['source']
+        self.extra_args = ['--enable=all', '--inconclusive']
+        if 'extra_args' in kwargs:
+            self.extra_args = kwargs['extra_args']
+            del kwargs['extra_args']
         ShellCommand.__init__(self, *args, **kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
+
+        self.command = self.command[:]
+        self.command.extend(self.source)
+        self.command.extend(self.extra_args)
 
         counts = self.counts = {}
         summaries = self.summaries = {}
