@@ -72,18 +72,21 @@ module.exports =  (gulp) ->
     if notests
         config.testtasks = ["notests"]
 
-    error_handler = (e) ->
-        error = gutil.colors.bold.red
-        if e.fileName?
-            gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
-        else
-            gutil.log(error("#{e.plugin}:#{e.name}"))
-        gutil.log(error(e.message))
-        gutil.beep()
-        @.end()
-        @emit("end")
-        if not dev
-            throw e
+    catch_errors = (s) ->
+        s.on "error", (e) ->
+            error = gutil.colors.bold.red
+            if e.fileName?
+                gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
+            else
+                gutil.log(error("#{e.plugin}:#{e.name}"))
+            gutil.log(error(e.message))
+            gutil.beep()
+            s.end()
+            s.emit("end")
+            if not dev
+                throw e
+            return null
+        s
 
     # if coverage, we need to put vendors and templates apart
     if coverage
@@ -107,17 +110,17 @@ module.exports =  (gulp) ->
     gulp.task 'scripts', false, ->
         if coverage and config.coffee_coverage
             return gulp.src script_sources
-                .pipe(ngClassify(config.ngclassify(config)).on('error', error_handler))
+                .pipe(catch_errors(ngClassify(config.ngclassify(config))))
                 .pipe gulp.dest path.join(config.dir.coverage, "src")
 
         gulp.src script_sources
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
             # coffee build
-            .pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler)))
-            .pipe(gif("*.coffee", coffee().on('error', error_handler)))
+            .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify(config)))))
+            .pipe(catch_errors(gif("*.coffee", coffee())))
             # jade build
-            .pipe(gif("*.jade", jade().on('error', error_handler)))
+            .pipe(catch_errors(gif("*.jade", jade())))
             .pipe gif "*.html", rename (p) ->
                 if config.name? and config.name isnt 'app'
                     p.dirname = path.join(config.name, "views")
@@ -154,7 +157,7 @@ module.exports =  (gulp) ->
             return
         gulp.src config.files.templates
             # jade build
-            .pipe(gif("*.jade", jade().on('error', error_handler)))
+            .pipe(catch_errors(gif("*.jade", jade())))
             .pipe gif "*.html", rename (p) ->
                 if config.name? and config.name isnt 'app'
                     p.dirname = path.join(config.name, "views")
@@ -173,8 +176,8 @@ module.exports =  (gulp) ->
             .pipe cached('tests')
             .pipe gif(dev, sourcemaps.init())
             # coffee build
-            .pipe(gif("*.coffee", ngClassify(config.ngclassify)))
-            .pipe(gif("*.coffee", coffee().on('error', error_handler)))
+            .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify))))
+            .pipe(catch_errors(gif("*.coffee", coffee())))
             .pipe remember('tests')
             .pipe concat("tests.js")
             .pipe gif(dev, sourcemaps.write("."))
@@ -198,7 +201,7 @@ module.exports =  (gulp) ->
     gulp.task 'styles', false, ->
         gulp.src config.files.less
             .pipe cached('styles')
-            .pipe less().on('error', error_handler)
+            .pipe catch_errors(less())
             .pipe remember('styles')
             .pipe concat("styles.css")
             .pipe gif(prod, cssmin())
@@ -219,7 +222,7 @@ module.exports =  (gulp) ->
     # index.jade build
     gulp.task 'index', false, ->
         gulp.src config.files.index
-            .pipe jade().on('error', error_handler)
+            .pipe catch_errors(jade())
             .pipe gulp.dest config.dir.build
 
     # Run server.
