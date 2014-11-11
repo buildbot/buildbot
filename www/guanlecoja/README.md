@@ -171,6 +171,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.3.3: fix error handling due to api change from gulp-if
 * 0.3.2: add help screen
 * 0.3.1: add --notests option
 * 0.2.11: fix issue when karma is not specified in config.coffee
