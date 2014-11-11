@@ -57,7 +57,7 @@
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, config, coverage, defaultHelp, dev, devHelp, error_handler, notests, prod, script_sources, _ref;
+    var buildConfig, catch_errors, config, coverage, defaultHelp, dev, devHelp, notests, prod, script_sources, _ref;
     gulp = gulp_help(gulp, {
       afterPrintCallback: function(tasks) {
         console.log(gutil.colors.underline("Options:"));
@@ -88,21 +88,25 @@
     if (notests) {
       config.testtasks = ["notests"];
     }
-    error_handler = function(e) {
-      var error;
-      error = gutil.colors.bold.red;
-      if (e.fileName != null) {
-        gutil.log(error("" + e.plugin + ":" + e.name + ": " + e.fileName + " +" + e.lineNumber));
-      } else {
-        gutil.log(error("" + e.plugin + ":" + e.name));
-      }
-      gutil.log(error(e.message));
-      gutil.beep();
-      this.end();
-      this.emit("end");
-      if (!dev) {
-        throw e;
-      }
+    catch_errors = function(s) {
+      s.on("error", function(e) {
+        var error;
+        error = gutil.colors.bold.red;
+        if (e.fileName != null) {
+          gutil.log(error("" + e.plugin + ":" + e.name + ": " + e.fileName + " +" + e.lineNumber));
+        } else {
+          gutil.log(error("" + e.plugin + ":" + e.name));
+        }
+        gutil.log(error(e.message));
+        gutil.beep();
+        s.end();
+        s.emit("end");
+        if (!dev) {
+          throw e;
+        }
+        return null;
+      });
+      return s;
     };
     if (coverage) {
       config.vendors_apart = true;
@@ -117,9 +121,9 @@
     }
     gulp.task('scripts', false, function() {
       if (coverage && config.coffee_coverage) {
-        return gulp.src(script_sources).pipe(ngClassify(config.ngclassify(config)).on('error', error_handler)).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
+        return gulp.src(script_sources).pipe(catch_errors(ngClassify(config.ngclassify(config)))).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
       }
-      return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(gif("*.coffee", ngClassify(config.ngclassify(config)).on('error', error_handler))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
+      return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify(config))))).pipe(catch_errors(gif("*.coffee", coffee()))).pipe(catch_errors(gif("*.jade", jade()))).pipe(gif("*.html", rename(function(p) {
         if ((config.name != null) && config.name !== 'app') {
           p.dirname = path.join(config.name, "views");
         } else {
@@ -141,7 +145,7 @@
       if (!config.templates_apart) {
         return;
       }
-      return gulp.src(config.files.templates).pipe(gif("*.jade", jade().on('error', error_handler))).pipe(gif("*.html", rename(function(p) {
+      return gulp.src(config.files.templates).pipe(catch_errors(gif("*.jade", jade()))).pipe(gif("*.html", rename(function(p) {
         if ((config.name != null) && config.name !== 'app') {
           p.dirname = path.join(config.name, "views");
         } else {
@@ -156,7 +160,7 @@
     gulp.task('tests', false, function() {
       var src;
       src = bower.testdeps.concat(config.files.tests);
-      return gulp.src(src).pipe(cached('tests')).pipe(gif(dev, sourcemaps.init())).pipe(gif("*.coffee", ngClassify(config.ngclassify))).pipe(gif("*.coffee", coffee().on('error', error_handler))).pipe(remember('tests')).pipe(concat("tests.js")).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build));
+      return gulp.src(src).pipe(cached('tests')).pipe(gif(dev, sourcemaps.init())).pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify)))).pipe(catch_errors(gif("*.coffee", coffee()))).pipe(remember('tests')).pipe(concat("tests.js")).pipe(gif(dev, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('generatedfixtures', false, config.generatedfixtures);
     gulp.task('fixtures', false, function() {
@@ -171,7 +175,7 @@
       })).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('styles', false, function() {
-      return gulp.src(config.files.less).pipe(cached('styles')).pipe(less().on('error', error_handler)).pipe(remember('styles')).pipe(concat("styles.css")).pipe(gif(prod, cssmin())).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
+      return gulp.src(config.files.less).pipe(cached('styles')).pipe(catch_errors(less())).pipe(remember('styles')).pipe(concat("styles.css")).pipe(gif(prod, cssmin())).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });
     gulp.task('fonts', false, function() {
       return gulp.src(config.files.fonts).pipe(rename({
@@ -184,7 +188,7 @@
       })).pipe(gulp.dest(path.join(config.dir.build, "img")));
     });
     gulp.task('index', false, function() {
-      return gulp.src(config.files.index).pipe(jade().on('error', error_handler)).pipe(gulp.dest(config.dir.build));
+      return gulp.src(config.files.index).pipe(catch_errors(jade())).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('server', false, ['index'], function(next) {
       if (config.devserver != null) {
