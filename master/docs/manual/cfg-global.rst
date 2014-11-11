@@ -352,10 +352,6 @@ This is a global default value for builders' :bb:cfg:`collapseRequests` paramete
 This parameter can be overridden on a per-builder basis.
 See :ref:`Collapsing-Build-Requests` for the allowed values for this parameter.
 
-.. note::
-
-    This feature is currently not working in buildbot nine: http://trac.buildbot.net/ticket/2645
-
 .. index:: Builders; priority
 
 .. bb:cfg:: prioritizeBuilders
