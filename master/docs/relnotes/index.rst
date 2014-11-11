@@ -88,6 +88,8 @@ Features
 
 * OpenStack latent slaves now support block devices as a bootable volume.
 
+* Add new :bb:step:`Cppcheck` step.
+
 Fixes
 ~~~~~
 

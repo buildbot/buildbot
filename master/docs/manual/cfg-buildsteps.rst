@@ -1415,6 +1415,19 @@ Here is a similar example using "MsBuild12"::
                 workdir="trunk"))
 
 
+.. bb:step:: Cppcheck
+
+Cppcheck
+++++++++
+
+This step runs ``cppcheck``, analyse its output, and set the outcome in :ref:`Properties`.
+All arguments are identical to :bb:step:`ShellCommand`.
+
+::
+
+    from buildbot.plugins import steps
+    f.addStep(steps.Cppcheck())
+
 .. bb:step:: Robocopy
 
 Robocopy
