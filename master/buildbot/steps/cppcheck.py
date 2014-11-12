@@ -16,7 +16,6 @@
 import re
 
 from buildbot.process import logobserver
-from buildbot.process.properties import WithProperties
 from buildbot.status.results import FAILURE
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import SUCCESS
