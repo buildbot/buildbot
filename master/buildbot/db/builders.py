@@ -41,7 +41,6 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 ssConnector = self.master.db.tags
                 return ssConnector.findTagId(tag)
 
-        tags = tags if tags else []
         tagsids = [r[1] for r in (yield defer.DeferredList(
             [toTagid(tag) for tag in tags],
             fireOnOneErrback=True,

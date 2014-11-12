@@ -72,7 +72,7 @@ class Tests(interfaces.InterfaceTests):
         ])
 
         yield self.db.builders.updateBuilderInfo(7, u'a string which describe the builder', [u'cat1', u'cat2'])
-        yield self.db.builders.updateBuilderInfo(8, u'a string which describe the builder', None)
+        yield self.db.builders.updateBuilderInfo(8, u'a string which describe the builder', [])
         builderdict7 = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict7)
         self.assertEqual(builderdict7,
@@ -235,7 +235,6 @@ class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, testcase=self)
-        # self.db = fakedb.FakeDBConnector(self.master, self)
         self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
