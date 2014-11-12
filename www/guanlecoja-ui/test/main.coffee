@@ -48,9 +48,26 @@ m.config ($stateProvider, glMenuServiceProvider, $urlRouterProvider) ->
                         caption: _.string.humanize(item.name)
                 $stateProvider.state(state)
 
-m.controller "dummyController", ($scope, $state, glBreadcrumbService, glNotificationService) ->
+m.controller "dummyController", ($scope, $state, glBreadcrumbService, glNotificationService,
+                                 glTopbarContextualActionsService) ->
+
+    # You can set different actions given the route
+    glTopbarContextualActionsService.setContextualActions([
+        caption: "Download Doc"
+        icon: "download"
+        action: -> document.location = 'Readme.md'
+    ,
+        caption: "View on Github"
+        icon: "github"
+        help: "Go to the github page of guanleoja-ui"
+        action: -> document.location = README
+    ,
+        icon: "google-plus"
+        action: -> document.location = "https://plus.google.com"
+        ])
     $scope.stateName = $state.current.name
-    glNotificationService.notify(msg:"You just transitioned to #{$scope.stateName}!", title:"State transitions", group:"state")
+    glNotificationService.notify(msg:"You just transitioned to #{$scope.stateName}!",
+                                title:"State transitions", group:"state")
 
     glBreadcrumbService.setBreadcrumb [
         caption: _.string.humanize($state.current.data.group)

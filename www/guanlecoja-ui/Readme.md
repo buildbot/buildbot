@@ -44,6 +44,13 @@ The directive takes no argument and is configured via `glBreadcrumbService`, `$s
 
 The directive is transcluded. The childrens are included inside bootstrap3's ul.nav.navbar-nav.pull-right. It is made for contextual widgets like glNotification, or an authentication menu (not included).
 
+### glTopbarContextualActions
+
+Implements buttons on the topbar for implementing contextual actions.
+It automatically generate buttons given the configuration. The configuration is reset at each $state change.
+
+The directive takes no argument and is configured via `glTopbarContextualActionsService`
+
 ## Services
 ### glMenuServiceProvider
 
@@ -90,6 +97,19 @@ breadcrumb_list is a list of objects containing following attributes:
 
 Dont put both `sref` and `href` argument, this does not make sense and is not supported.
 
+### glTopbarContextualActionsService
+
+Set the contextual actions of glTopMenuContextualActions. You must instantiate the gl-topbar-contextual-actions directive inside a gl-topbar
+
+#### `glTopbarContextualActionsService.setContextualActions(action_list)`
+
+action_list is a list of objects containing following attributes:
+
+* `caption`: text of the button item
+* `help`: text for the help tooltip
+* `icon`: optional icon for the button
+* `action`: function called when the button is clicked
+
 ### glNotificationService
 
 API for storing notifications. glNotification directive uses this service to display the notifications.
@@ -122,6 +142,7 @@ The stored list of notifications.
 
 ChangeLog:
 
+1.4.0: add topbar-contextual-actions directive and associated service
 1.3.1: Fix auto scrollbar on sidebar menu
 1.3.0: Switch to angularJS 1.3.1
 1.2.3: Initial Release
@@ -129,4 +150,3 @@ Credits
 =======
 Original Design by Elliot Hesp:
 https://github.com/Ehesp/Responsive-Dashboard
-
