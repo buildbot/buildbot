@@ -1,5 +1,7 @@
 class Build extends Controller
-    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService, $state) ->
+    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService,
+                $state) ->
+
         builderid = _.parseInt($stateParams.builder)
         buildnumber = _.parseInt($stateParams.build)
 
