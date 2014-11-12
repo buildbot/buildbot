@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.process.properties import WithProperties
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
@@ -69,4 +70,17 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
             + 0)
         self.expectOutcome(result=FAILURE,
                            state_string="cppcheck error=2 style=1 (failure)")
+        return self.runStep()
+
+    def test_renderables(self):
+        P = WithProperties
+        self.setupStep(cppcheck.Cppcheck(
+            binary=P('a'), source=[P('.'), P('f.c')], extra_args=[P('--p'), P('--p')]))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['a', '.', 'f.c', '--p', '--p'], usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                stdout='Checking file1.c...')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string="cppcheck")
         return self.runStep()

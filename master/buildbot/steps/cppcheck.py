@@ -33,7 +33,7 @@ class Cppcheck(ShellCommand):
     MESSAGES = (
         'error', 'warning', 'style', 'performance', 'portability', 'information')
 
-    renderables = ('binary', 'source', 'enable', 'extra_args')
+    renderables = ('binary', 'source', 'extra_args')
 
     def __init__(self, *args, **kwargs):
 
@@ -54,7 +54,7 @@ class Cppcheck(ShellCommand):
         command = [self.binary]
         command.extend(self.source)
         if self.enable:
-            command.append(WithProperties('--enable=%s' % ','.join(self.enable)))
+            command.append('--enable=%s' % ','.join(self.enable))
         if self.inconclusive:
             command.append('--inconclusive')
         command.extend(self.extra_args)
