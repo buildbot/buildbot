@@ -126,13 +126,14 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
-        self._stop_instance(instance, fast)
+        return threads.deferToThread(self._stop_instance, instance, fast)
 
     def _stop_instance(self, instance, fast):
         docker_client = client.Client(self.docker_host)
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
-        docker_client.wait(instance['Id'])
+        if not fast:
+            docker_client.wait(instance['Id'])
 
     def buildFinished(self, sb):
         self.insubstantiate()
