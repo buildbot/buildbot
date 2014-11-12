@@ -16,6 +16,7 @@
 import re
 
 from buildbot.process import logobserver
+from buildbot.process.properties import WithProperties
 from buildbot.status.results import FAILURE
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import SUCCESS
@@ -25,7 +26,6 @@ from buildbot.steps.shell import ShellCommand
 class Cppcheck(ShellCommand):
     # Highly inspirated from the Pylint step.
     name = "cppcheck"
-    command = ["cppcheck"]
     description = ["running", "cppcheck"]
     descriptionDone = ["cppcheck"]
     flunkingIssues = ('error',)
@@ -33,22 +33,32 @@ class Cppcheck(ShellCommand):
     MESSAGES = (
         'error', 'warning', 'style', 'performance', 'portability', 'information')
 
+    renderables = ('binary', 'source', 'enable', 'extra_args')
+
     def __init__(self, *args, **kwargs):
-        self.source = ['.']
-        if 'source' in kwargs:
-            self.source = kwargs['source']
-            del kwargs['source']
-        self.extra_args = ['--enable=all', '--inconclusive']
-        if 'extra_args' in kwargs:
-            self.extra_args = kwargs['extra_args']
-            del kwargs['extra_args']
+
+        for name, default in [('binary', 'cppcheck'),
+                              ('source', ['.']),
+                              ('enable', []),
+                              ('inconclusive', False),
+                              ('extra_args', [])]:
+            setattr(self, name, default)
+            if name in kwargs:
+                setattr(self, name, kwargs[name])
+                del kwargs[name]
+
         ShellCommand.__init__(self, *args, **kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-        self.command = self.command[:]
-        self.command.extend(self.source)
-        self.command.extend(self.extra_args)
+        command = [self.binary]
+        command.extend(self.source)
+        if self.enable:
+            command.append(WithProperties('--enable=%s' % ','.join(self.enable)))
+        if self.inconclusive:
+            command.append('--inconclusive')
+        command.extend(self.extra_args)
+        self.setCommand(command)
 
         counts = self.counts = {}
         summaries = self.summaries = {}

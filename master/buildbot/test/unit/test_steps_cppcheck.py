@@ -31,7 +31,7 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_success(self):
-        self.setupStep(cppcheck.Cppcheck())
+        self.setupStep(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', '.', '--enable=all', '--inconclusive'], usePTY='slave-config')
@@ -41,10 +41,10 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_warnings(self):
-        self.setupStep(cppcheck.Cppcheck(source=['file1.c']))
+        self.setupStep(cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
-                        'cppcheck', 'file1.c', '--enable=all', '--inconclusive'], usePTY='slave-config')
+                        'cppcheck', 'file1.c', '--enable=warning,performance'], usePTY='slave-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('Checking file1.c...\n'
@@ -56,10 +56,10 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_errors(self):
-        self.setupStep(cppcheck.Cppcheck(extra_args=['--enable=style']))
+        self.setupStep(cppcheck.Cppcheck(extra_args=['--my-param=5']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
-                        'cppcheck', '.', '--enable=style'], usePTY='slave-config')
+                        'cppcheck', '.', '--my-param=5'], usePTY='slave-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('Checking file1.c...\n'
