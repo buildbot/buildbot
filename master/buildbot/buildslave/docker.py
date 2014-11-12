@@ -58,7 +58,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._start_instance)
+        return threads.deferToThread(self._thd_start_instance)
 
     def _image_exists(self, client):
         # Make sure the container exists
@@ -70,7 +70,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     return True
         return False
 
-    def _start_instance(self):
+    def _thd_start_instance(self):
         docker_client = client.Client(base_url=self.docker_host)
 
         found = self._image_exists(docker_client)
@@ -126,9 +126,9 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             return defer.succeed(None)
         instance = self.instance
         self.instance = None
-        return threads.deferToThread(self._stop_instance, instance, fast)
+        return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
-    def _stop_instance(self, instance, fast):
+    def _thd_stop_instance(self, instance, fast):
         docker_client = client.Client(self.docker_host)
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
