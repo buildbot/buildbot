@@ -19,6 +19,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.buildslave import docker as dockerbuildslave
 from buildbot.test.fake import docker
+from twisted.internet import defer
 
 
 class TestDockerLatentBuildSlave(unittest.TestCase):
@@ -44,29 +45,44 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.image, 'slave')
         self.assertEqual(bs.command, ['bin/bash'])
 
+    @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
-        id, name = bs._start_instance()
+        id, name = yield bs.start_instance(None)
         self.assertEqual(name, 'busybox')
 
+    @defer.inlineCallbacks
     def test_start_instance_image_right_version(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
-        id, name = bs._start_instance()
+        id, name = yield bs.start_instance(None)
         self.assertEqual(name, 'busybox:latest')
 
+    @defer.inlineCallbacks
     def test_start_instance_image_wrong_version(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox:previous', ['bin/bash'])
-        self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate, bs._start_instance)
+        try:
+            id, name = yield bs.start_instance(None)
+        except interfaces.LatentBuildSlaveFailedToSubstantiate:
+            pass
 
+    @defer.inlineCallbacks
     def test_start_instance_noimage_nodockerfile(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
-        self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate, bs._start_instance)
+        try:
+            id, name = yield bs.start_instance(None)
+        except interfaces.LatentBuildSlaveFailedToSubstantiate:
+            pass
 
+    @defer.inlineCallbacks
     def test_start_instance_noimage_dockefilefails(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='BUG')
-        self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate, bs._start_instance)
+        try:
+            id, name = yield bs.start_instance(None)
+        except interfaces.LatentBuildSlaveFailedToSubstantiate:
+            pass
 
+    @defer.inlineCallbacks
     def test_start_instance_noimage_gooddockerfile(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='FROM debian:wheezy')
-        id, name = bs._start_instance()
+        id, name = yield bs.start_instance(None)
         self.assertEqual(name, 'slave')
