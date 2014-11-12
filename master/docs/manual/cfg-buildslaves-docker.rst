@@ -26,7 +26,7 @@ Two of them stands out:
 - boot2docker_
 
 Beside, it is always possible to install Docker next to the buildmaster.
-This offers less isolation between process though.
+Beware that in this case, overall performance will depend on how many builds the computer where you have your buildmaster can handle as everything will happen on the same one.
 
 .. note::
     It is not necessary to install Docker in the same environment as your master as we will make use to the Docker API through docker-py_.
