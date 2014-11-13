@@ -25,8 +25,10 @@ from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED
-from buildbot.steps.artifact import AcquireBuildLocks
-from buildbot.steps.trigger import Trigger
+
+# Avoid doing an import since it creates circular reference
+TriggerType = "<class 'buildbot.steps.trigger.Trigger'>"
+AcquireBuildLocksType = "<class 'buildbot.steps.artifact.AcquireBuildLocks'>"
 
 
 class BuildStatus(styles.Versioned, properties.PropertiesMixin):
@@ -168,7 +170,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 
             for s in self.steps:
                 step_type = s.getStepType()
-                if step_type == str(AcquireBuildLocks) or step_type == str(Trigger):
+                if step_type == AcquireBuildLocksType or step_type == TriggerType:
                     times = s.getTimes()
                     if times[0] is not None and times[1] is not None:
                         rawBuildTime -= (times[1] - times[0])
