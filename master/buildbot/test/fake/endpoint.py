@@ -47,7 +47,6 @@ class RawTestsEndpoint(base.Endpoint):
     pathPatterns = "/rawtest"
 
     def get(self, resultSpec, kwargs):
-        # results are sorted by ID for test stability
         return defer.succeed({
             "filename": "test.txt",
             "mime-type": "text/test",
