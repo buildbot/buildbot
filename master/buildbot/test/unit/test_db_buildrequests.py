@@ -675,3 +675,52 @@ class TestBuildsetsConnectorComponent(
             lambda : self.db.buildrequests.unclaimBuildRequests(to_unclaim),
             [44, 45, 47, 48])
 
+    def buildRequestWithSources(self):
+        return self.insertTestData([
+            fakedb.BuildRequest(id=44, buildsetid=1, buildername="builder",
+                                complete=1, results=0,
+                                submitted_at=self.SUBMITTED_AT_EPOCH,
+                                complete_at=self.COMPLETE_AT_EPOCH),
+            fakedb.Buildset(id=1, sourcestampsetid=1),
+            fakedb.SourceStampSet(id=1),
+            fakedb.SourceStamp(id=1, revision='a', codebase='1',
+                               sourcestampsetid=1, branch='master', repository='z'),
+            fakedb.SourceStamp(id=2, revision='b', codebase='2', sourcestampsetid=1,
+                               branch='staging', repository='w')])
+
+    def test_previousSuccessFullBuildRequestFound(self):
+        # add build request
+        d = self.buildRequestWithSources()
+
+        sources = [
+                {'b_codebase': '1', 'b_revision': 'a', 'b_sourcestampsetid': 2, 'b_branch': 'master'},
+                {'b_codebase': '2', 'b_revision': 'b', 'b_sourcestampsetid': 2, 'b_branch': 'staging'}
+                ]
+
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequestBySourcestamps(buildername='builder', sourcestamps = sources))
+        def check(brdict):
+            self.assertEqual(brdict,
+                    dict(artifactbrid=None, brid=44, buildername="builder", buildsetid=1,
+                        complete=True, complete_at=self.COMPLETE_AT, priority=0,
+                        results=0, submitted_at=self.SUBMITTED_AT
+                        ))
+        d.addCallback(check)
+        return d
+
+    def test_previousSuccessFullBuildRequestNotFound(self):
+        # add build request
+        d = self.buildRequestWithSources()
+
+        sources = [
+                {'b_codebase': '1', 'b_revision': 'z', 'b_sourcestampsetid': 2, 'b_branch': 'master'},
+                {'b_codebase': '2', 'b_revision': 'b', 'b_sourcestampsetid': 2, 'b_branch': 'dev'}
+                ]
+
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequestBySourcestamps(buildername='builder', sourcestamps = sources))
+        def check(brdict):
+            self.assertEqual(brdict, None)
+        d.addCallback(check)
+        return d
+
