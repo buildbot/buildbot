@@ -238,6 +238,7 @@ setup_args = {
         ]),
         ('buildbot.step', [
             ('buildbot.process.buildstep', ['BuildStep']),
+            ('buildbot.steps.cppcheck', ['Cppcheck']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
                 'OPTIONS']),
