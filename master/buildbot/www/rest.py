@@ -284,6 +284,14 @@ class V2RootResource(resource.Resource):
 
         return rspec
 
+    def encodeRaw(self, data, request):
+        request.setHeader("content-type",
+                          data['mime-type'].encode() + '; charset=utf-8')
+        request.setHeader("content-disposition",
+                          'attachment; filename=' + data['filename'].encode())
+        request.write(data['raw'].encode('utf-8'))
+        return
+
     @defer.inlineCallbacks
     def renderRest(self, request):
         def writeError(msg, errcode=404, jsonrpccode=None):
@@ -301,6 +309,11 @@ class V2RootResource(resource.Resource):
             if data is None:
                 writeError("not found", errcode=404)
                 return
+
+            if ep.isRaw:
+                self.encodeRaw(data, request)
+                return
+
             # post-process any remaining parts of the resultspec
             data = rspec.apply(data)
 

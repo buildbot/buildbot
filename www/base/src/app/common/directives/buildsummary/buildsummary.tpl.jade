@@ -25,6 +25,9 @@
       div.anim-stepdetails(ng-show="step.fulldisplay")
         ul
           li(ng-repeat="log in step.logs")
+            a(href="api/v2/logs/{{log.id}}/raw")
+                i.fa.fa-download
+            | &nbsp;
             a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
       ul
