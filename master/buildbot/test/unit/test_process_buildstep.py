@@ -20,7 +20,7 @@ from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
-from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION
+from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, SKIPPED
 from buildbot.test.fake import fakebuild, remotecommand
 from buildbot.test.util import steps, compat
 
@@ -95,9 +95,10 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
 
     # support
 
-    def _setupWaterfallTest(self, hideStepIf, expect, expectedResult=SUCCESS):
-        self.setupStep(TestBuildStep.FakeBuildStep(hideStepIf=hideStepIf))
-        self.expectOutcome(result=expectedResult, status_text=["generic"])
+    def _setupWaterfallTest(self, doStepIf=True, hideStepIf=False, expect=False,
+                            expectedResult=SUCCESS, status_text=["generic"]):
+        self.setupStep(TestBuildStep.FakeBuildStep(hideStepIf=hideStepIf, doStepIf=doStepIf))
+        self.expectOutcome(result=expectedResult, status_text=status_text)
         self.expectHidden(expect)
 
     # tests
@@ -121,11 +122,11 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         props.setProperty.assert_called_with("x", "abc", "test", runtime=True)
 
     def test_hideStepIf_False(self):
-        self._setupWaterfallTest(False, False)
+        self._setupWaterfallTest(hideStepIf=False, expect=False)
         return self.runStep()
 
     def test_hideStepIf_True(self):
-        self._setupWaterfallTest(True, True)
+        self._setupWaterfallTest(doStepIf=True)
         return self.runStep()
 
     def test_hideStepIf_Callable_False(self):
@@ -136,7 +137,7 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
             self.assertEquals(result, SUCCESS)
             return False
 
-        self._setupWaterfallTest(shouldHide, False)
+        self._setupWaterfallTest(hideStepIf=shouldHide, expect=False)
 
         d = self.runStep()
         d.addCallback(lambda _ : self.assertTrue(called[0]))
@@ -150,7 +151,7 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
             self.assertEquals(result, SUCCESS)
             return True
 
-        self._setupWaterfallTest(shouldHide, True)
+        self._setupWaterfallTest(hideStepIf=shouldHide, expect=True)
 
         d = self.runStep()
         d.addCallback(lambda _ : self.assertTrue(called[0]))
@@ -158,7 +159,7 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
 
     def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
-        self._setupWaterfallTest(lambda : 0/0, False, expectedResult=EXCEPTION)
+        self._setupWaterfallTest(hideStepIf=lambda : 0/0, expect=False, expectedResult=EXCEPTION)
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
@@ -188,6 +189,80 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         d.addCallback(lambda _ : self.assertTrue(called[0]))
         return d
 
+    def test_doStepIf_True(self):
+        self._setupWaterfallTest(doStepIf=True)
+        return self.runStep()
+
+    def test_doStepIf_False(self):
+        self._setupWaterfallTest(doStepIf=False, expectedResult=SKIPPED, status_text=['generic', 'skipped'])
+        return self.runStep()
+
+    def test_doStepIf_Callable_True(self):
+        called = [False]
+
+        def shouldRun(step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            return True
+
+        self._setupWaterfallTest(doStepIf=shouldRun)
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        return d
+
+    def test_doStepIf_Callable_False(self):
+        called = [False]
+
+        def shouldRun(step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            return False
+
+        self._setupWaterfallTest(doStepIf=shouldRun, expectedResult=SKIPPED, status_text=['generic', 'skipped'])
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0]))
+        return d
+
+    def test_doStepIf_Multiple_Callables_True(self):
+        called = [False, False]
+
+        def shouldRun1(step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            return True
+
+        def shouldRun2(step):
+            called[1] = True
+            self.assertTrue(step is self.step)
+            return True
+
+        self._setupWaterfallTest(doStepIf=[shouldRun1, shouldRun2])
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0] and called[1]))
+        return d
+
+    def test_doStepIf_Multiple_Callables_False(self):
+        called = [False, False]
+
+        def shouldRun1(step):
+            called[0] = True
+            self.assertTrue(step is self.step)
+            return False
+
+        def shouldRun2(step):
+            called[1] = True
+            self.assertTrue(step is self.step)
+            return True
+
+        self._setupWaterfallTest(doStepIf=[shouldRun1, shouldRun2], expectedResult=SKIPPED,
+                                 status_text=['generic', 'skipped'])
+
+        d = self.runStep()
+        d.addCallback(lambda _ : self.assertTrue(called[0] and called[1]))
+        return d
 
 class TestLoggingBuildStep(unittest.TestCase):
 
