@@ -210,3 +210,38 @@ class TestSourceStampsConnectorComponent(
             self.assertEqual(ssdict, None)
         d.addCallback(check)
         return d
+
+    def test_updateSourceStamps(self):
+        d = self.insertTestData([
+            fakedb.SourceStampSet(id=1),
+            fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='b1', revision= None,
+                repository='rep', codebase='c1'),
+            fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='b2', revision= None,
+                repository='rep2', codebase='c2'),
+        ])
+
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.getSourceStamp(1))
+
+        def checkRevision(ssdict, codebase='', revision=None):
+            self.assertEqual(ssdict['codebase'], codebase)
+            self.assertEqual(ssdict['revision'], revision)
+
+        d.addCallback(checkRevision, codebase='c1')
+
+        sourcestamps = [{'b_codebase': 'c1', 'b_revision': 'r1', 'b_sourcestampsetid': 1},
+                        {'b_codebase': 'c2', 'b_revision': 'r2', 'b_sourcestampsetid': 1}]
+
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.updateSourceStamps(sourcestamps))
+
+        def checkUpdate(rowsupdated):
+            self.assertEqual(rowsupdated, 2)
+
+        d.addCallback(checkUpdate)
+        d.addCallback(lambda _: self.db.sourcestamps.getSourceStamp(1))
+        d.addCallback(checkRevision, codebase='c1', revision='r1')
+        d.addCallback(lambda _: self.db.sourcestamps.getSourceStamp(2))
+        d.addCallback(checkRevision, codebase='c2', revision='r2')
+
+        return d
