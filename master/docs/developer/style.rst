@@ -222,8 +222,8 @@ Here the deferred list will wait for both ``rev_parse_d`` and ``log_d`` to
 fire, or for one of them to fail. You may attach callbacks and errbacks to a
 ``DeferredList`` just as for a deferred.
 
-Functions running outside of the main-thread
+Functions running outside of the main thread
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is very important in Twisted to be able to distinguish functions that runs in the main-thread and functions that don't, as reactors and deferreds can only be used in the main thread.
-To make this distinction clearer, every functions meant to be started in a secondary thread should be prefixed with ``thd_``.
+It is very important in Twisted to be able to distinguish functions that runs in the main thread and functions that don't, as reactors and deferreds can only be used in the main thread.
+To make this distinction clearer, every functions meant to be started in a secondary thread must be prefixed with ``thd_``.
