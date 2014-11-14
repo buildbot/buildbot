@@ -203,8 +203,9 @@ class BaseScheduler(ClusteredService, StateMixin):
             # apply info from passed sourcestamps onto the configured default
             # sourcestamp attributes for this codebase.
             ss.update(stampsByCodebase[codebase])
+            if ss.get('project') is None:
+                ss['project'] = ''
             stampsWithDefaults.append(ss)
-
         return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
                                                reason=reason, waited_for=waited_for, properties=properties,
                                                builderNames=builderNames,
