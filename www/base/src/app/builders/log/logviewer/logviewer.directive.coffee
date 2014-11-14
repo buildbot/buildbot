@@ -9,11 +9,11 @@ class Logviewer extends Directive
             auto_scroll: true
 
             setHeight: (elm) ->
-                height = $window.height() - elm.offset().top - 20
+                height = $window.height() - elm.offset().top
                 elm.css({height: height + "px"})
 
             lines:
-                get: (index, count, success) ->
+                get: (index, count) ->
                     self.log_p.then (log) ->
                         if index < 0
                             count += index
@@ -35,10 +35,6 @@ class Logviewer extends Directive
                                     class: "log_" + logclass
                                 offset += 1
                             ret
-                        , ->
-                            # in case of error, call success with empty list (eof or bof)
-                            []
-
             updateLog: ->
                 unwatch = self.scope.$watch "logid", (n, o) ->
                     if n?
@@ -48,6 +44,7 @@ class Logviewer extends Directive
                 self.log_p.then (log) ->
                     log.bind(self.scope)
                     .then (log) ->
+                        self.scope.raw_url = "/api/v2/logs/#{log.id}/raw"
                         if log.type == 'h'
                             log.all('contents').getList().then (content) ->
                                 self.scope.content = $sce.trustAs($sce.HTML, content[0].content)

@@ -25,7 +25,7 @@ class ScrollViewport extends Directive
         }
 
 class Scroll extends Directive
-    constructor: ($log, $injector, $rootScope, $timeout, $window) ->
+    constructor: ($log, $injector, $rootScope, $timeout, $window, $animate) ->
         return {
             require: ['?^scrollViewport']
             transclude: 'element'
@@ -35,6 +35,7 @@ class Scroll extends Directive
                 ($scope, element, $attr, controllers) ->
 
                     log = $log.debug || $log.log
+                    $animate.enabled(false, element)
 
                     match = $attr.scroll.match(/^\s*(\w+)\s+in\s+([\w\.]+)\s*$/)
                     if !match
@@ -62,6 +63,7 @@ class Scroll extends Directive
                     viewport = null  # viewport is the parent element which contains the scrolled vieweport
                     padding = null   # padding is a function which creates padding element of a certain size
                     isLoading = false # whether we are fetching data
+                    loadAll = false  # should we load the whole log
 
                     # Buffer is a sparse array containing list of rows that are already instanciated into dom
                     # or padding. padding have the class .padding, and potencially following buffer elements are
@@ -79,7 +81,16 @@ class Scroll extends Directive
                         rowHeight = template.height()
                         padding = (height) ->
                             result = angular.element("<#{repeaterType} class='padding'></#{repeaterType}>")
-                            result.height(height * rowHeight)
+                            result.set_height = (height) ->
+                                # we use _height as a cache that holds the height of the padding
+                                # using jquery.height() is terribly slow, as it internally re-style the item
+                                result._height = height
+                                if not result._height_changing
+                                    $timeout ->
+                                        result.height(result._height * rowHeight)
+                                        result._height_changing = false
+                                result._height_changing = true
+                            result.set_height(height)
                             result
 
                         tempScope.$destroy()
@@ -93,7 +104,7 @@ class Scroll extends Directive
                     if angular.isDefined ($attr.isLoading)
                         loading = (value) ->
                             isLoading = value
-                            viewportScope[$attr.isLoading] = value
+                            viewportScope[$attr.isLoading] = isLoading
                             datasource.loading(value) if datasource.loading
                     else
                         loading = (value) ->
@@ -102,7 +113,7 @@ class Scroll extends Directive
 
                     insertItem = (beforePos, pos, item) ->
                         # dont overwritte already loaded dom
-                        if buffer[pos]? and not buffer[pos].hasClass('padding')
+                        if buffer[pos]? and not buffer[pos]._height?
                             return
 
                         itemScope = $scope.$new()
@@ -110,10 +121,10 @@ class Scroll extends Directive
                         itemScope.$index = pos
                         linker itemScope, (clone) ->
                             afterPadding = 0
-                            if buffer[beforePos].hasClass('padding')
-                                afterPadding = Math.floor(buffer[beforePos].height() / rowHeight)
+                            if buffer[beforePos]._height?
+                                afterPadding = buffer[beforePos]._height
                                 afterPadding -= (pos - beforePos + 1)
-                                buffer[beforePos].height((pos - beforePos) * rowHeight)
+                                buffer[beforePos].set_height(pos - beforePos)
 
                             buffer[beforePos].after(clone)
                             if beforePos == pos
@@ -125,7 +136,7 @@ class Scroll extends Directive
                                 if buffer[pos + 1]? or (pos + 1 == buffer.length)
                                     buffer[pos].remove()
                                 else
-                                    buffer[pos].height(buffer[pos].height() - rowHeight)
+                                    buffer[pos].set_height(buffer[pos]._height - 1)
                                     buffer[pos + 1] = buffer[pos]
                             else if pos < buffer.length - 1 and not buffer[pos + 1]?
                                 buffer[pos + 1] = padding(afterPadding)
@@ -134,21 +145,25 @@ class Scroll extends Directive
 
                     # calculate what rows to load given the scroll viewport
                     updateView = ->
-                        topIndex = Math.floor(viewport.scrollTop() / rowHeight)
-                        numIndex = Math.floor(viewport.outerHeight() / rowHeight)
-                        topIndex -= numIndex
-                        endIndex  = topIndex + numIndex * 3
-                        if topIndex > buffer.length - 1
-                            topIndex = buffer.length - 1
-                        if topIndex < 0
+                        if loadAll
                             topIndex = 0
-                        if endIndex > buffer.length
                             endIndex = buffer.length
+                        else
+                            topIndex = Math.floor(viewport.scrollTop() / rowHeight)
+                            numIndex = Math.floor(viewport.outerHeight() / rowHeight)
+                            topIndex -= numIndex
+                            endIndex  = topIndex + numIndex * 3
+                            if topIndex > buffer.length - 1
+                                topIndex = buffer.length - 1
+                            if topIndex < 0
+                                topIndex = 0
+                            if endIndex > buffer.length
+                                endIndex = buffer.length
                         loadView(topIndex, endIndex)
 
                     # load some lines to the DOM using the data source, making sure it is not already loaded
                     loadView = (topIndex, endIndex) ->
-                        fetched = (b) -> not b.hasClass("padding")
+                        fetched = (b) -> not b._height?
                         while buffer[topIndex]? && fetched(buffer[topIndex]) && topIndex < endIndex
                             topIndex++
 
@@ -188,8 +203,8 @@ class Scroll extends Directive
                         if newSize > buffer.length
                             lastElementIndex = findElement(buffer.length - 1)
                             lastElement = buffer[lastElementIndex]
-                            if lastElement.hasClass("padding")
-                                lastElement.height((newSize - lastElementIndex) * rowHeight)
+                            if lastElement._height?
+                                lastElement.set_height(newSize - lastElementIndex)
                             buffer[newSize - 1] = undefined
 
                             $timeout -> maybeUpdateView()
@@ -202,7 +217,7 @@ class Scroll extends Directive
                         $timeout ->
                             viewport.scrollTop(pos * rowHeight)
                             maybeUpdateView()
-                        , 100
+                        , 500
 
 
                     $(window).bind 'resize', maybeUpdateView
@@ -211,9 +226,14 @@ class Scroll extends Directive
                     $scope.$watch $attr.totalSize, (n) ->
                         updateTotalSize(n)
 
-                    $scope.$watch $attr.scrollPosition, (n, o) ->
+                    $scope.$watch $attr.scrollPosition, (n) ->
                         if n?
                             setScrollPosition(n)
+
+                    $scope.$watch $attr.loadAll, (n) ->
+                        if n
+                            loadAll = true
+                            $timeout(maybeUpdateView)
 
                     $scope.$on '$destroy', ->
                         $(window).unbind 'resize', maybeUpdateView
