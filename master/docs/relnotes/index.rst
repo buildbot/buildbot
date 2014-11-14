@@ -90,6 +90,8 @@ Features
 
 * Add new :bb:step:`Cppcheck` step.
 
+* Add a new :doc:`Docker latent BuildSlave </manual/cfg-buildslaves-docker>`.
+
 Fixes
 ~~~~~
 

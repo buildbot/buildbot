@@ -153,6 +153,7 @@ As of time of writing, Buildbot supports the following latent buildslaves:
    cfg-buildslaves-ec2.rst
    cfg-buildslaves-libvirt.rst
    cfg-buildslaves-openstack.rst
+   cfg-buildslaves-docker.rst
 
 Dangers with Latent Buildslaves
 +++++++++++++++++++++++++++++++
