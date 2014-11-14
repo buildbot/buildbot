@@ -264,62 +264,71 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @defer.inlineCallbacks
-    def test_addBuildsetForSourceStampsWithDefaults(self):
-        codebases = {'cbA': dict(
-            repository='svn://A..',
-            branch='stable',
-            revision='13579'),
-            'cbB': dict(
-                repository='svn://B..',
-                branch='stable',
-                revision='24680')
-        }
+    def do_addBuildsetForSourceStampsWithDefaults(self, codebases,
+                                                  sourcestamps,
+                                                  exp_sourcestamps):
         sched = self.makeScheduler(name='n', builderNames=['b'],
                                    codebases=codebases)
         bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
-            reason=u'power', sourcestamps=[
-                {'codebase': 'cbA', 'branch': 'AA'},
-                {'codebase': 'cbB', 'revision': 'BB'},
-            ], waited_for=False)
+            reason=u'power', sourcestamps=sourcestamps, waited_for=False)
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
-        self.master.data.updates.addBuildset.assert_called_with(
-            waited_for=False,
-            sourcestamps=[
-                {'repository': 'svn://B..', 'branch': 'stable',
-                    'revision': 'BB', 'codebase': 'cbB', 'project': ''},
-                {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
-                    'revision': '13579', 'codebase': 'cbA'},
-            ],
-            reason=u'power',
-            scheduler=u'n',
-            external_idstring=None,
-            builderids=[1],
-            properties={
-                u'scheduler': ('n', u'Scheduler'),
-            })
+        call = self.master.data.updates.addBuildset.mock_calls[0]
+        self.assertEqual(sorted(call[2]['sourcestamps']),
+                         sorted(exp_sourcestamps))
 
-    @defer.inlineCallbacks
-    def test_addBuildsetForSourceStamps_unknown(self):
-        sched = self.makeScheduler(name='n', builderNames=['b'])
-        bsid, brids = yield sched.addBuildsetForSourceStampsWithDefaults(
-            reason=u'power', sourcestamps=[
-                {'codebase': 'cbA', 'branch': 'AA'},
-                {'codebase': 'cbB', 'revision': 'BB'},
-            ], waited_for=True)
-        self.assertEqual((bsid, brids), self.exp_bsid_brids)
-        self.master.data.updates.addBuildset.assert_called_with(
-            waited_for=True,
-            sourcestamps=[
-                {'revision': 'BB', 'codebase': 'cbB', 'project': ''},
-                {'branch': 'AA', 'codebase': 'cbA', 'project': ''},
-            ],
-            reason=u'power',
-            scheduler=u'n',
-            external_idstring=None,
-            builderids=[1],
-            properties={
-                u'scheduler': ('n', u'Scheduler'),
-            })
+    def test_addBuildsetForSourceStampsWithDefaults(self):
+        codebases = {
+            'cbA': dict(repository='svn://A..', branch='stable',
+                        revision='13579'),
+            'cbB': dict(repository='svn://B..', branch='stable',
+                        revision='24680')
+        }
+        sourcestamps=[
+            {'codebase': 'cbA', 'branch': 'AA'},
+            {'codebase': 'cbB', 'revision': 'BB'},
+        ]
+        exp_sourcestamps=[
+            {'repository': 'svn://B..', 'branch': 'stable',
+                'revision': 'BB', 'codebase': 'cbB', 'project': ''},
+            {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
+                'revision': '13579', 'codebase': 'cbA'},
+        ]
+        return self.do_addBuildsetForSourceStampsWithDefaults(
+                codebases, sourcestamps, exp_sourcestamps)
+
+    def test_addBuildsetForSourceStampsWithDefaults_fill_in_codebases(self):
+        codebases = {
+            'cbA': dict(repository='svn://A..', branch='stable',
+                        revision='13579'),
+            'cbB': dict(repository='svn://B..', branch='stable',
+                        revision='24680')
+        }
+        sourcestamps = [
+            {'codebase': 'cbA', 'branch': 'AA'},
+        ]
+        exp_sourcestamps = [
+            {'repository': 'svn://B..', 'branch': 'stable',
+                'revision': '24680', 'codebase': 'cbB', 'project': ''},
+            {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
+                'revision': '13579', 'codebase': 'cbA'},
+        ]
+        return self.do_addBuildsetForSourceStampsWithDefaults(
+                codebases, sourcestamps, exp_sourcestamps)
+
+    def test_addBuildsetForSourceStamps_unknown_codbases(self):
+        codebases = {}
+        sourcestamps = [
+            {'codebase': 'cbA', 'branch': 'AA'},
+            {'codebase': 'cbB', 'revision': 'BB'},
+        ]
+        exp_sourcestamps = [
+            {'branch': None, 'revision': 'BB', 'codebase': 'cbB',
+             'project': '', 'repository': None},
+            {'branch': 'AA', 'revision': None, 'codebase': 'cbA',
+             'project': '', 'repository': None},
+        ]
+        return self.do_addBuildsetForSourceStampsWithDefaults(
+                codebases, sourcestamps, exp_sourcestamps)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):
