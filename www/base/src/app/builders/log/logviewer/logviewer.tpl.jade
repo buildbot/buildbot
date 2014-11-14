@@ -9,7 +9,7 @@
     span(ng-if="log.type=='s' || log.type=='t'")
         div(scroll="line in lines", scroll-position="log.num_lines", load-all="loadAll", is-loading="isLoading", total-size="log.num_lines", style="height:20px")
             span.linenumber {{::$index}}
-            span.no-wrap {{::line.content + '\n'}}
+            span.no-wrap(class="{{::line.class}}") {{::line.content}}
   div.panel(ng-if="log.type=='h'", ng-class="log.name=='err.html' && 'panel-danger' || 'panel-default'")
     div.panel-heading
         h4.panel-title {{log.name}}

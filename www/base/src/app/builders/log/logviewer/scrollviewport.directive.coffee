@@ -12,6 +12,16 @@ This scroll directive uses ui.scroll base, but replace the whole DOM manipulatio
 - row height is fixed (or you cannot make geometric calculation to determine the positions of arbitrary elements)
 
 This directive uses JQuery for DOM manipulation
+
+Performance considerations:
+
+Having to deal with huge logs is not uncommon thing we buildbot, we need to deal with them as fast as possible.
+AngularJS does a lot of things with the DOM, and is not as fast as we can do.
+
+This is why using angularJS's linker is avoided. We rather use lodash template(), that is configured to
+simulate angularjs 1.3 "bindonce" templating.
+
+With this technic, we can load 20k lines log in 2 seconds.
 ###
 class ScrollViewport extends Directive
     constructor: ($log) ->
@@ -25,7 +35,7 @@ class ScrollViewport extends Directive
         }
 
 class Scroll extends Directive
-    constructor: ($log, $injector, $rootScope, $timeout, $window, $animate) ->
+    constructor: ($log, $injector, $rootScope, $timeout, $window) ->
         return {
             require: ['?^scrollViewport']
             transclude: 'element'
@@ -35,7 +45,6 @@ class Scroll extends Directive
                 ($scope, element, $attr, controllers) ->
 
                     log = $log.debug || $log.log
-                    $animate.enabled(false, element)
 
                     match = $attr.scroll.match(/^\s*(\w+)\s+in\s+([\w\.]+)\s*$/)
                     if !match
@@ -79,6 +88,15 @@ class Scroll extends Directive
                         viewport = controllers[0].viewport
                         viewport.css({'overflow-y': 'auto', 'display': 'block'})
                         rowHeight = template.height()
+
+                        # Replace angularjs linker by _.template, which is much faster
+                        rowTemplate = "<#{repeaterType} style='height:#{rowHeight}px;'>" +
+                            "#{template[0].innerHTML}</#{repeaterType}>"
+                        rowTemplate = _.template(rowTemplate,null, interpolate: /\{\{::(.+?)\}\}/g )
+                        linker = (scope, cb) ->
+                            cb(angular.element(rowTemplate(scope)))
+
+
                         padding = (height) ->
                             result = angular.element("<#{repeaterType} class='padding'></#{repeaterType}>")
                             result.set_height = (height) ->
@@ -116,7 +134,7 @@ class Scroll extends Directive
                         if buffer[pos]? and not buffer[pos]._height?
                             return
 
-                        itemScope = $scope.$new()
+                        itemScope = {}
                         itemScope[itemName] = item
                         itemScope.$index = pos
                         linker itemScope, (clone) ->

@@ -44,7 +44,7 @@ describe 'page with sidebar', ->
         rootScope = $rootScope
         elmBody = angular.element(
             '<div scroll-viewport style="height:50px">'+
-            '<div style="height:10px" total-size="1000" scroll="item in items">{{::$index}}a{{item.v}}'+
+            '<div style="height:10px" total-size="1000" scroll="item in items">{{::$index}}a{{::item.v}}'+
             '</div></div>'
         )
         scope = $rootScope.$new()

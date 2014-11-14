@@ -27,7 +27,7 @@ class Logviewer extends Directive
                                 lines.pop()
                             for line in lines
                                 logclass = "o"
-                                if line.length > 0 and log.type == 's'
+                                if line.length > 0 and (self.scope.log.type == 's')
                                     logclass = line[0]
                                     line = line[1..]
                                 ret.push
