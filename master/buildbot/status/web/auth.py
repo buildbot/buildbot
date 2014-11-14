@@ -173,6 +173,7 @@ class LDAPAuth(AuthBase):
         self.filter = filter
         self.uid = "uid"
         self.user_filter = "uid={user},cn=users"
+        self.cn = "cn"
 
         try:
             import ldap
@@ -182,22 +183,41 @@ class LDAPAuth(AuthBase):
         except ImportError:
             log.msg("LDAP module missing authentications will fail")
 
+    def get_user_cn(self, ldap_dict):
+        if self.uid in ldap_dict.keys():
+            return ldap_dict[self.uid][0]
+
+        return None
+
     def authenticate(self, user, passwd):
         try:
             import ldap
             l = ldap.initialize(self.server)
 
             try:
-                bind_filter = ",".join([self.user_filter.replace("{user}", user), self.base_dn])
-                l.simple_bind_s(bind_filter, passwd)
-                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, self.filter.replace("{user}", user), [self.uid])
-                l.unbind()
+                if self.bind_user is None and self.bind_password is None:
+                    l.simple_bind()
+                else:
+                    bind_filter = ",".join([self.user_filter.replace("{user}", self.bind_user), self.base_dn])
+                    l.simple_bind_s(bind_filter, self.bind_password)
+
+                ldap_result = l.search_s(self.base_dn, ldap.SCOPE_SUBTREE, self.filter.replace("{user}", user), [self.uid, self.cn])
 
                 found_user = None
+                user_cn = None
                 if len(ldap_result) > 0 and len(ldap_result[0]) > 1:
                     ldap_dict = ldap_result[0][1]
                     if self.uid in ldap_dict.keys():
                         found_user = ldap_dict[self.uid][0]
+                    user_cn = self.get_user_cn(ldap_dict)
+
+                if user_cn is None:
+                    return False
+
+                bind_filter = ",".join([self.user_filter.replace("{user}", user_cn), self.base_dn])
+                l.simple_bind_s(bind_filter, passwd)
+
+                l.unbind()
 
                 if found_user == user:
                     return True
@@ -260,6 +280,11 @@ class ADAuth(LDAPAuth):
         self.uid = "sAMAccountName"
         self.user_filter = "cn={user},cn=users"
 
+    def get_user_cn(self, ldap_dict):
+        if self.cn in ldap_dict.keys():
+            return ldap_dict[self.cn][0]
+
+        return None
 
 class UsersAuth(AuthBase):
     """Implement authentication against users in database"""
