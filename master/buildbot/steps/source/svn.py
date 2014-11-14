@@ -27,7 +27,6 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
@@ -87,7 +86,7 @@ class SVN(Source):
 
         def checkInstall(svnInstalled):
             if not svnInstalled:
-                raise BuildSlaveTooOldError("SVN is not installed on slave")
+                raise buildstep.BuildStepFailed("SVN is not installed on slave")
             return 0
         d.addCallback(checkInstall)
 
