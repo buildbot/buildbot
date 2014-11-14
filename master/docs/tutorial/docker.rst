@@ -4,10 +4,17 @@
 First Buildbot run with Docker
 ==============================
 
+.. note::
+
+    Docker can be tricky to get working correctly if you haven't used it before.
+    If you're having trouble, first determine whether it is a Buildbot issue or a Docker issue by running docker run ubuntu:12.04 apt-get update.
+    If that fails, look for help with your Docker install.
+    On the other hand, if that succeeds, then you may have better luck getting help from members of the Buildbot community.
+
 .. warning::
+
     The instruction in this document are based on an *old* Dockerfile, not complying with the state-of-the-art best practices (all components in one container, access via ssh, ...).
-    This is not the recommended way to deploy a Buildbot farm.
-    However, it offers an easy way to get a first-hand experience.
+    While this approach provides an easy way to get first-hand experience with Buildbot, this is not the recommended way to deploy Buildbot in production.
 
 Docker_ is a tool that makes building and deploying custom environments a breeze.
 It uses lightweight linux containers (LXC) and performs quickly, making it a great instrument for the testing community.
