@@ -27,7 +27,7 @@ class Logviewer extends Directive
                                 lines.pop()
                             for line in lines
                                 logclass = "o"
-                                if line.length > 0
+                                if line.length > 0 and log.type == 's'
                                     logclass = line[0]
                                     line = line[1..]
                                 ret.push
@@ -48,12 +48,9 @@ class Logviewer extends Directive
                 self.log_p.then (log) ->
                     log.bind(self.scope)
                     .then (log) ->
-                        if log.type != 's'
-                            self.log.all('contents').getList().then (content) ->
-                                if log.type == 'h'
-                                    self.scope.content = $sce.trustAs($sce.HTML, content[0].content)
-                                else
-                                    self.scope.content = content[0].content
+                        if log.type == 'h'
+                            log.all('contents').getList().then (content) ->
+                                self.scope.content = $sce.trustAs($sce.HTML, content[0].content)
 
             # controller is called first and need to setup the scope for ui-scroll to find lines
             controller: ($scope) ->

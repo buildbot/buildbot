@@ -5,8 +5,8 @@
             span.input-group-addon
                 i.fa.fa-list-ol
   pre.row.log(ng-show="log.type!='h'", scroll-viewport)
-    span(ng-if="log.type=='t'", ng-bind="content")
-    span(ng-if="log.type=='s'")
+    //span(ng-if="log.type=='t'", ng-bind="content")
+    span(ng-if="log.type=='s' || log.type=='t'")
         div(scroll="line in lines", scroll-position="log.num_lines", total-size="log.num_lines", style="height:20px")
             span.linenumber {{::$index}}
             span.no-wrap(ng-class="line.class") {{::line.content + '\n'}}
