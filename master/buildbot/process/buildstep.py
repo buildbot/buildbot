@@ -34,6 +34,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
@@ -470,6 +471,10 @@ class BuildStep(results.ResultComputingConfigMixin,
         except BuildStepFailed:
             results = FAILURE
             # fall through to the end
+
+        except BuildSlaveTooOldError:
+            # no need to log this error
+            results = EXCEPTION
 
         except error.ConnectionLost:
             results = RETRY
