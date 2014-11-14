@@ -768,6 +768,9 @@ class BuilderConfig(util_config.ConfiguredMixin):
             bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
             if bad_tags:
                 error("builder '%s': tags list contains something that is not a string" % (name,))
+        else:
+            tags = []
+
         self.tags = tags
 
         self.nextSlave = nextSlave

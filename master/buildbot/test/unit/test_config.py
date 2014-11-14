@@ -1196,7 +1196,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               slavenames=['a'],
                               builddir='a_b_c',
                               slavebuilddir='a_b_c',
-                              tags=None,
+                              tags=[],
                               nextSlave=None,
                               locks=[],
                               env={},
