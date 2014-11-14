@@ -1422,7 +1422,7 @@ Cppcheck
 
 This step runs ``cppcheck``, analyse its output, and set the outcome in :ref:`Properties`.
 
-::
+.. code-block:: python
 
     from buildbot.plugins import steps
     f.addStep(steps.Cppcheck(enable=['all'], inconclusive=True]))

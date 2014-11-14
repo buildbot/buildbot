@@ -47,7 +47,10 @@ If you installed it via Vagrant_, it is also necessary to uncomment the followin
 
     $expose_docker_tcp=2375
 
-The following command should allow you to confirm that your Docker socket is now available via the network::
+The following command should allow you to confirm that your Docker socket is now available via the network:
+
+
+.. code-block:: bash
 
     docker -H tcp://127.0.0.1:2375 ps
 
@@ -75,7 +78,10 @@ Docker uses ``Dockerfile``\s to describe the steps necessary to build an image.
 The following example will build a minimal buildslave.
 Don't forget to add your dependencies in there to get a succesfull build !
 
-.. code-block:: Docker
+..
+    XXX(sa2ajj): with Pygments 2.0 or better the following 'none' can be replaced with Docker to get proper syntax highlighting.
+
+.. code-block:: none
     :linenos:
     :emphasize-lines: 11
 
