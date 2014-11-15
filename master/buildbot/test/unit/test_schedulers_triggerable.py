@@ -51,12 +51,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.tearDownScheduler()
         self.clock_patch.stop()
 
-    def makeScheduler(self, **kwargs):
+    def makeScheduler(self, overrideBuildsetMethods=False, **kwargs):
         self.master.db.insertTestData([fakedb.Builder(id=77, name='b')])
 
         sched = self.attachScheduler(
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
-            self.OBJECTID)
+            self.OBJECTID, overrideBuildsetMethods=overrideBuildsetMethods)
         sched._updateWaiters._reactor = self.clock
 
         return sched
@@ -271,29 +271,53 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # subscription should be cancelled
         self.assertEqual(sched.master.mq.qrefs, [])
 
+    @defer.inlineCallbacks
     def test_trigger_with_sourcestamp(self):
-        # Test a scheduler with 2 repositories.
-        # Trigger the scheduler with a sourcestamp that is unknown to the scheduler
-        # Expected Result:
-        #    sourcestamp 1 for repository 1 based on configured sourcestamp
-        #    sourcestamp 2 for repository 2 based on configured sourcestamp
-        sched = self.makeScheduler()
+        # Test triggering a scheduler with a sourcestamp, and see that
+        # sourcestamp handed to addBuildsetForSourceStampsWithDefaults.
+        sched = self.makeScheduler(overrideBuildsetMethods=True)
 
         waited_for = False
         ss = {'repository': 'r3', 'codebase': 'cb3', 'revision': 'fixrev3',
               'branch': 'default', 'project': 'p'}
         idsDeferred = sched.trigger(waited_for, sourcestamps=[ss])[0]
+        yield idsDeferred
 
-        self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[ss])
+        self.assertEqual(self.addBuildsetCalls,  [
+            ('addBuildsetForSourceStampsWithDefaults', {
+                'builderNames': None,
+                'properties': {'scheduler': ('n', 'Scheduler')},
+                'reason': "The Triggerable scheduler named 'n' triggered "
+                          "this build",
+                'sourcestamps': [{
+                    'branch': 'default',
+                    'codebase': 'cb3',
+                    'project': 'p',
+                    'repository': 'r3',
+                    'revision': 'fixrev3'},
+                ],
+                'waited_for': False}),
+            ])
 
+
+    @defer.inlineCallbacks
     def test_trigger_without_sourcestamps(self):
-        # Test a scheduler with 2 repositories.
-        # Trigger the scheduler without a sourcestamp; this should translate to
-        # a call to addBuildsetForSourceStampsWithDefaults with no sourcestamps
+        # Test triggering *without* sourcestamps, and see that nothing is passed
+        # to addBuildsetForSourceStampsWithDefaults
         waited_for = True
-        sched = self.makeScheduler()
+        sched = self.makeScheduler(overrideBuildsetMethods=True)
         idsDeferred = sched.trigger(waited_for, sourcestamps=[])[0]
-        self.assertTriggeredBuildset(idsDeferred, waited_for, sourcestamps=[])
+        yield idsDeferred
+
+        self.assertEqual(self.addBuildsetCalls,  [
+            ('addBuildsetForSourceStampsWithDefaults', {
+                'builderNames': None,
+                'properties': {'scheduler': ('n', 'Scheduler')},
+                'reason': "The Triggerable scheduler named 'n' triggered "
+                          "this build",
+                'sourcestamps': [],
+                'waited_for': True}),
+            ])
 
     @defer.inlineCallbacks
     def test_startService_stopService(self):
