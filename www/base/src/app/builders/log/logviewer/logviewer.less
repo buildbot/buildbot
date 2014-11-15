@@ -1,18 +1,37 @@
-.logcontainer{
+.logcontainer {
     width:100%;
+    padding:0px;
+    margin-top:-20px;
+    pre {
+        margin:0px;
+    }
 }
 pre.log {
+    .padding {
+        background: #ddd;
+
+    }
+    .linenumber {
+        display: inline-block;
+        width: 50px;
+    }
     // It is much more difficult to do autoscroll if line wrap is enabled.
     // For now we just disable it. There is space for some smarter algorithm
     .no-wrap {
         white-space: pre;
+        word-wrap: normal;
     }
   overflow: auto;
 }
 
 .logoptions {
-  width: 200px;
   margin-top: 0px;
   position: absolute;
-  right:15px;
+  right: 17px;
+}
+.loading {
+  margin-top: -40px;
+  position: absolute;
+  right: 17px;
+  z-index:10000;
 }
