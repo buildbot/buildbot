@@ -15,7 +15,6 @@
 
 import stat
 
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.status.results import EXCEPTION
@@ -127,13 +126,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
                        slave_version=dict())
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
-        d = self.runStep()
-
-        def check(_):
-            self.assertEqual(
-                len(self.flushLoggedErrors(BuildSlaveTooOldError)), 1)
-        d.addCallback(check)
-        return d
+        return self.runStep()
 
 
 class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
