@@ -1,6 +1,6 @@
 # developer utilities
 
-.PHONY: docs apidocs pylint
+.PHONY: docs apidocs pylint artifacts
 
 docs:
 	$(MAKE) -C master/docs
@@ -18,3 +18,10 @@ pyflakes:
 
 pep8:
 	pep8 --config=common/pep8rc master slave
+
+# XXX(sa2ajj): make it a non-phony target
+artifacts: DEST_DIR := $(CURDIR)/dist
+artifacts:
+	@rm -rf $(DEST_DIR)
+	@mkdir -p $(DEST_DIR)
+	@for name in master slave; do (rm -f $$name/MANIFEST; cd $$name; python setup.py sdist --formats gztar,zip -d $(DEST_DIR)); done
