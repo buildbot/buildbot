@@ -283,18 +283,18 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             'cbB': dict(repository='svn://B..', branch='stable',
                         revision='24680')
         }
-        sourcestamps=[
+        sourcestamps = [
             {'codebase': 'cbA', 'branch': 'AA'},
             {'codebase': 'cbB', 'revision': 'BB'},
         ]
-        exp_sourcestamps=[
+        exp_sourcestamps = [
             {'repository': 'svn://B..', 'branch': 'stable',
                 'revision': 'BB', 'codebase': 'cbB', 'project': ''},
             {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
                 'revision': '13579', 'codebase': 'cbA'},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-                codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps)
 
     def test_addBuildsetForSourceStampsWithDefaults_fill_in_codebases(self):
         codebases = {
@@ -313,7 +313,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                 'revision': '13579', 'codebase': 'cbA'},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-                codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps)
 
     def test_addBuildsetForSourceStamps_unknown_codbases(self):
         codebases = {}
@@ -328,7 +328,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
              'project': '', 'repository': None},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
-                codebases, sourcestamps, exp_sourcestamps)
+            codebases, sourcestamps, exp_sourcestamps)
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_one_change(self):

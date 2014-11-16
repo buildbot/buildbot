@@ -283,7 +283,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         idsDeferred = sched.trigger(waited_for, sourcestamps=[ss])[0]
         yield idsDeferred
 
-        self.assertEqual(self.addBuildsetCalls,  [
+        self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'properties': {'scheduler': ('n', 'Scheduler')},
@@ -299,7 +299,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'waited_for': False}),
             ])
 
-
     @defer.inlineCallbacks
     def test_trigger_without_sourcestamps(self):
         # Test triggering *without* sourcestamps, and see that nothing is passed
@@ -309,7 +308,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         idsDeferred = sched.trigger(waited_for, sourcestamps=[])[0]
         yield idsDeferred
 
-        self.assertEqual(self.addBuildsetCalls,  [
+        self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'properties': {'scheduler': ('n', 'Scheduler')},

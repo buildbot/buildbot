@@ -227,9 +227,9 @@ class BaseScheduler(ClusteredService, StateMixin):
             stampsWithDefaults.append(ss)
 
         rv = yield self.addBuildsetForSourceStamps(
-                sourcestamps=stampsWithDefaults, reason=reason,
-                waited_for=waited_for, properties=properties,
-                builderNames=builderNames, **kw)
+            sourcestamps=stampsWithDefaults, reason=reason,
+            waited_for=waited_for, properties=properties,
+            builderNames=builderNames, **kw)
         defer.returnValue(rv)
 
     def getCodebaseDict(self, codebase):
