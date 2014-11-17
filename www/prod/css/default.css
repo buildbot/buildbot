@@ -1270,6 +1270,7 @@ pre.code{padding-left:15px;white-space:pre-line;text-shadow:0 1px 0 #fff}
 #slaveInfo{padding-bottom:15px}
 .col-padding-top{padding-top:10px}
 .builder-filters{margin-bottom:10px}
+div#slave-status{display:inline}
 .toast-title{font-weight:700}
 .toast-message{-ms-word-wrap:break-word;word-wrap:break-word}
 .toast-message a,.toast-message label{color:#fff}

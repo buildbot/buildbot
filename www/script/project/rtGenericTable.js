@@ -169,7 +169,7 @@ define(function (require) {
                         statusTxt = type.runningBuilds.length + ' build(s) ';
                         isRunning = true;
                     }
-                    return rtCells({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
+                    return hb.partials.slave["slave:slaveStatus"]({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
                     if (oData.connected === undefined) {

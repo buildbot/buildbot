@@ -1,5 +1,6 @@
 <h3>{{ name }}</h3>
 <ul class="list">
+    <li><strong>Status:</strong> <div id="slave-status"></div></li>
     <li><strong>Hostname:</strong> {{ name }}.hq.unity3d.com</li>
     <li><strong>Health:</strong> {{> slave:health }}</li>
     <li><strong>Builders:</strong> {{> slave:buildersPopup }}</li>

@@ -45,11 +45,17 @@ define(function (require) {
                     $input.prop("checked", checked);
                 });
             });
+        },
+        renderSlaveStatus: function renderSlaveStatus($slaveInfo, data) {
+            var statusCell = $slaveInfo.find('#slave-status'),
+                cellDict = rtTable.cell.slaveStatus(0);
+
+            statusCell.html(cellDict.mRender(undefined, undefined, data));
         }
     };
 
     rtBuildSlaveDetail = {
-        init: function () {
+        init: function init() {
             $tbCurrentBuildsTable = rtBuildSlaveDetail.currentBuildsTableInit($('#rtCurrentBuildsTable'));
             $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'), true);
             $slaveInfo = $('#slaveInfo');
@@ -68,6 +74,7 @@ define(function (require) {
                 data.showEID = true;
             }
             $slaveInfo.html(hbBuildSlaveDetail(data));
+            privFunc.renderSlaveStatus($slaveInfo, data)
 
             var $jsonPopup = $slaveInfo.find('a.popup-btn-json-js');
             popup.initJSONPopup($jsonPopup, {showBuilders: data});

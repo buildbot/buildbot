@@ -44,18 +44,6 @@
     {{/if}}
 {{/slaveName}}
 
-{{#slaveStatus}}
-	{{#showSpinIcon}}
-		<a class="more-info popup-btn-json-js" href="#">
-			{{showStatusTxt}}
-		</a>
-		<span title="Running" class="spin-icon animate-spin pull-bottom"></span>
-	{{/showSpinIcon}}
-	{{^showSpinIcon}}
-		{{showStatusTxt}}
-	{{/showSpinIcon}}
-{{/slaveStatus}}
-
 {{#buildProgress}}
 	{{#if currentBuilds}}
 	    <ul class="list current-job-js building">
