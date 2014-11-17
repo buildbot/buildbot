@@ -114,7 +114,7 @@ Other :class:`ChangeSource`\s adapt the concept as necessary.
 
 Many :class:`ChangeSource`\s allow you to specify a project, as well.
 This attribute is useful when building from several distinct codebases in the same buildmaster: the project string can serve to differentiate the different codebases.
-:class:`Scheduler`\s can filter on project, so you can configure different builders to run for each project.
+Schedulers can filter on project, so you can configure different builders to run for each project.
 
 .. _Mail-parsing-ChangeSources:
 
@@ -127,7 +127,7 @@ Humans can subscribe to this list to stay informed about what's happening to the
 
 The Buildbot can also be subscribed to a `-commits` mailing list, and can trigger builds in response to Changes that it hears about.
 The buildmaster admin needs to arrange for these email messages to arrive in a place where the buildmaster can find them, and configure the buildmaster to parse the messages correctly.
-Once that is in place, the email parser will create Change objects and deliver them to the Schedulers (see :ref:`Schedulers`) just like any other ChangeSource.
+Once that is in place, the email parser will create Change objects and deliver them to the schedulers (see :ref:`Schedulers`) just like any other ChangeSource.
 
 There are two components to setting up an email-based ChangeSource.
 The first is to route the email messages to the buildmaster, which is done by dropping them into a `maildir`.
@@ -135,7 +135,7 @@ The second is to actually parse the messages, which is highly dependent upon the
 Each VC system has a collection of favorite change-emailing tools, and each has a slightly different format, so each has a different parsing function.
 There is a separate ChangeSource variant for each parsing function.
 
-Once you've chosen a maildir location and a parsing function, create the change source and put it in ``change_source``::
+Once you've chosen a maildir location and a parsing function, create the change source and put it in :bb:cfg:`change_source`::
 
     from buildbot.plugins import changes
     c['change_source'] = changes.CVSMaildirSource("~/maildir-buildbot",
@@ -1084,7 +1084,7 @@ GerritChangeFilter
 ~~~~~~~~~~~~~~~~~~
 .. py:class:: buildbot.changes.gerritchangesource.GerritChangeFilter
 
-GerritChangeFilter is a ready to use ChangeFilter you can pass to AnyBranchScheduler in order to filter changes, to create pre-commit builders or post-commit schedulers.
+:class:`GerritChangeFilter` is a ready to use :class:`ChangeFilter` you can pass to :bb:sched:`AnyBranchScheduler` in order to filter changes, to create pre-commit builders or post-commit schedulers.
 It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additionnal `eventtype` set of filter (can as well be specified as value, list, regular expression or callable)
 
 An example is following::

@@ -1165,7 +1165,7 @@ state
 
         :param objectid: objectid on which the state should be checked
         :param name: name of the value to retrieve
-        :param default: (optional) value to return if C{name} is not present
+        :param default: (optional) value to return if ``name`` is not present
         :returns: state value via a Deferred
         :raises KeyError: if ``name`` is not present and no default is given
         :raises: TypeError if JSON parsing fails

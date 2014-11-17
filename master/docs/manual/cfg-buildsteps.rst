@@ -2272,7 +2272,7 @@ For previous versions, no environment variables are available (the slave environ
 Triggering Schedulers
 ---------------------
 
-The counterpart to the Triggerable described in section :bb:Sched:`Triggerable` is the :bb:step:`Trigger` build step::
+The counterpart to the :bb:Sched:`Triggerable` scheduler is the :bb:step:`Trigger` build step::
 
     from buildbot.plugins import steps
     f.addStep(steps.Trigger(schedulerNames=['build-prep'],

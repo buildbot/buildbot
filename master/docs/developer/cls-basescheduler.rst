@@ -54,8 +54,8 @@ BaseScheduler
 
         :param fileIsImportant: a callable provided by the user to distinguish important and unimportant changes
         :type fileIsImportant: callable
-        :param change_filter: a filter to determine which changes are even considered by this scheduler, or C{None} to consider all changes
-        :type change_filter: L{buildbot.changes.filter.ChangeFilter} instance
+        :param change_filter: a filter to determine which changes are even considered by this scheduler, or ``None`` to consider all changes
+        :type change_filter: :py:class:`buildbot.changes.filter.ChangeFilter` instance
         :param onlyImportant: If True, only important changes, as specified by fileIsImportant, will be added to the buildset.
         :type onlyImportant: boolean
         :return: Deferred

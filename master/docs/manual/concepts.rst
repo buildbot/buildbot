@@ -143,7 +143,7 @@ Files
 ~~~~~
 
 It also has a list of :attr:`files`, which are just the tree-relative filenames of any files that were added, deleted, or modified for this :class:`Change`.
-These filenames are used by the :func:`fileIsImportant` function (in the :class:`Scheduler`) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in::
+These filenames are used by the :func:`fileIsImportant` function (in the scheduler) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in::
 
     def has_C_files(change):
         for name in change.files:
@@ -222,7 +222,7 @@ Branches
 
 The Change might also have a :attr:`branch` attribute.
 This indicates that all of the Change's files are in the same named branch.
-The Schedulers get to decide whether the branch should be built or not.
+The schedulers get to decide whether the branch should be built or not.
 
 For VC systems like CVS,  Git and Monotone the :attr:`branch` name is unrelated to the filename.
 (That is, the branch name and the filename inhabit unrelated namespaces.)
@@ -260,9 +260,9 @@ Properties are discussed in detail in the :ref:`Build-Properties` section.
 Scheduling Builds
 -----------------
 
-Each Buildmaster has a set of :class:`Scheduler` objects, each of which gets a copy of every incoming :class:`Change`.
+Each Buildmaster has a set of scheduler objects, each of which gets a copy of every incoming :class:`Change`.
 The Schedulers are responsible for deciding when :class:`Build`\s should be run.
-Some Buildbot installations might have a single :class:`Scheduler`, while others may have several, each for a different purpose.
+Some Buildbot installations might have a single scheduler, while others may have several, each for a different purpose.
 
 For example, a *quick* scheduler might exist to give immediate feedback to developers, hoping to catch obvious problems in the code that can be detected quickly.
 These typically do not run the full test suite, nor do they run on a wide variety of platforms.
@@ -284,12 +284,12 @@ Schedulers can also filter on the branch to which a commit was made.
 There is some support for configuring dependencies between builds - for example, you may want to build packages only for revisions which pass all of the unit tests.
 This support is under active development in Buildbot, and is referred to as "build coordination".
 
-Periodic builds (those which are run every N seconds rather than after new Changes arrive) are triggered by a special :class:`Periodic` Scheduler subclass.
+Periodic builds (those which are run every N seconds rather than after new Changes arrive) are triggered by a special :bb:sched:`Periodic` scheduler.
 
-Each Scheduler creates and submits :class:`BuildSet` objects to the :class:`BuildMaster`, which is then responsible for making sure the individual :class:`BuildRequests` are delivered to the target :class:`Builder`\s.
+Each scheduler creates and submits :class:`BuildSet` objects to the :class:`BuildMaster`, which is then responsible for making sure the individual :class:`BuildRequests` are delivered to the target :class:`Builder`\s.
 
-:class:`Scheduler` instances are activated by placing them in the ``c['schedulers']`` list in the buildmaster config file.
-Each :class:`Scheduler` has a unique name.
+Scheduler instances are activated by placing them in the :bb:cfg:`schedulers` list in the buildmaster config file.
+Each scheduler must have a unique name.
 
 .. _BuildSet:
 
@@ -313,12 +313,12 @@ There are a couple of different likely values for the ``SourceStamp``:
 
 :samp:`(revision=None, changes=None, patch=None)`
     This builds the most recent code on the default branch.
-    This is the sort of :class:`SourceStamp` that would be used on a :class:`Build` that was triggered by a user request, or a :class:`Periodic` scheduler.
+    This is the sort of :class:`SourceStamp` that would be used on a :class:`Build` that was triggered by a user request, or a :bb:sched:`Periodic` scheduler.
     It is also possible to configure the VC Source Step to always check out the latest sources rather than paying attention to the :class:`Change`\s in the :class:`SourceStamp`, which will result in same behavior as this.
 
 :samp:`(branch={BRANCH}, revision=None, changes=None, patch=None)`
     This builds the most recent code on the given *BRANCH*.
-    Again, this is generally triggered by a user request or :class:`Periodic` build.
+    Again, this is generally triggered by a user request or a :bb:sched:`Periodic` scheduler.
 
 :samp:`(revision={REV}, changes=None, patch=({LEVEL}, {DIFF}, {SUBDIR_ROOT}))`
     This checks out the tree at the given revision *REV*, then applies a patch (using ``patch -pLEVEL <DIFF``) from inside the relative directory *SUBDIR_ROOT*.

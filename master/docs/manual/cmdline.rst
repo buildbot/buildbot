@@ -390,7 +390,7 @@ There are other (optional) arguments which can influence the ``Change`` that get
 --category
     (or option ``category``) This provides the (string) category specifier.
     If omitted, it defaults to ``None``, indicating ``no category``.
-    The category property can be used by :class:`Scheduler`\s to filter what changes they listen to.
+    The category property can be used by schedulers to filter what changes they listen to.
 
 --project
     (or option ``project``) This provides the (string) project to which this change applies, and defaults to ''.
