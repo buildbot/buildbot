@@ -483,7 +483,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             dict['currentStep'] = self.getCurrentStep().asDict()
 
             step_type = self.getCurrentStep().getStepType()
-            if step_type == str(AcquireBuildLocks) or step_type == str(Trigger):
+            if step_type == str(AcquireBuildLocksType) or step_type == str(TriggerType):
                 dict['isWaiting'] = True
         else:
             dict['currentStep'] = None
