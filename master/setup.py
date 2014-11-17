@@ -235,7 +235,7 @@ setup_args = {
             ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
             ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
             ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave'])
+            ('buildbot.buildslave.bdocker', ['DockerLatentBuildSlave'])
         ]),
         ('buildbot.step', [
             ('buildbot.process.buildstep', ['BuildStep']),
