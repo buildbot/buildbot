@@ -123,6 +123,7 @@ class MasterConfig(util.ComparableMixin):
             avatar_methods=avatar.AvatarGravatar(),
             logfileName='http.log',
         )
+        self.services = {}
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -132,7 +133,7 @@ class MasterConfig(util.ComparableMixin):
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
+        "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
     compare_attrs = list(_known_config_keys)
@@ -226,6 +227,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
             config.load_www(filename, config_dict)
+            config.load_services(filename, config_dict)
 
             # run some sanity checks
             config.check_single_master()
@@ -585,6 +587,16 @@ class MasterConfig(util.ComparableMixin):
 
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
+
+    def load_services(self, filename, config_dict):
+        if 'services' not in config_dict:
+            return
+        self.services = {}
+        for serviceFactory in config_dict['services']:
+            if not isinstance(serviceFactory, service.CustomServiceFactory):
+                error("%r should be an instance of buildbot.config.CustomServiceFactory" %
+                      (service))
+            self.services[serviceFactory.name] = serviceFactory
 
     def check_single_master(self):
         # check additional problems that are only valid in a single-master

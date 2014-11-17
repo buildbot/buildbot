@@ -252,6 +252,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
             yield self.doMasterHouseKeeping(self.masterid)
 
+            for serviceFactory in self.config.services.values():
+                yield serviceFactory.createService(self)
+
             # call the parent method
             yield service.AsyncMultiService.startService(self)
 

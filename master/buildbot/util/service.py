@@ -202,3 +202,43 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return service.startService()
         else:
             return defer.succeed(None)
+
+
+class CustomService(AsyncMultiService):
+
+    def __init__(self, name):
+        self.name = name
+
+    def reconfigService(self, new_config):
+
+        factory = new_config.services[self.name]
+        return factory.configureService(self)
+
+    def setServiceParent(self, parent):
+        self.master = parent
+        return AsyncService.setServiceParent(parent)
+
+    def configureService(self, *argv, **kwargs):
+        return defer.success(None)
+
+# example usage
+#
+# c['services'] = [
+#    util.CustomServiceFactory("myservice", mymodule.MyService, useHttps=True)
+# ]
+
+
+class CustomServiceFactory(object):
+
+    def __init__(self, name, klass, *config_argv, **config_kwargs):
+        self.name = name
+        self.klass = klass
+        self.config_argv = config_argv
+        self.config_kwargs = config_kwargs
+
+    def createService(self, master):
+        service = self.klass(self.name, master, self.klass())
+        return service.setServiceParent(master)
+
+    def configureService(self, service, master):
+        return service.configureService(master, *self.config_argv, **self.config_kwargs)
