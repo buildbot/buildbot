@@ -93,3 +93,18 @@ class TestStatus(unittest.TestCase):
         self.assertIdentical(sr0.master, None)
         self.assertIdentical(sr1.master, None)
         self.assertIdentical(sr2.master, None)
+
+    @defer.inlineCallbacks
+    def test_getURLForBuildRequest(self):
+        s = self.makeStatus()
+        sourcestamps = [{'b_codebase': 'c1', 'b_revision': 'r1', 'b_branch': 'b1','b_sourcestampsetid': 1},
+                        {'b_codebase': 'c2', 'b_revision': 'r2', 'b_branch': 'b2','b_sourcestampsetid': 1}]
+
+        s.master.db.mastersconfig.setupMaster()
+        s.botmaster.builders = []
+
+        url = yield s.getURLForBuildRequest(1, "buildername", 1, "buildername",
+                                                             sourcestamps)
+
+        self.assertEqual(url['text'], 'buildername #1')
+        self.assertEqual(url['path'], 'baseurl/builders/buildername/builds/1?c1_branch=b1&c2_branch=b2')
