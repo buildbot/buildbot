@@ -107,6 +107,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         instance = docker_client.create_container(
             self.image,
             self.command,
+            name='%s_%s' % (self.slavename, id(self)),
             volumes=volumes,
         )
 
@@ -137,6 +138,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         docker_client.stop(instance['Id'])
         if not fast:
             docker_client.wait(instance['Id'])
+        docker_client.remove_container(instance['Id'], v=True, force=True)
 
     def buildFinished(self, sb):
         self.insubstantiate()
