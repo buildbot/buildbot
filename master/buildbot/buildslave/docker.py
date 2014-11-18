@@ -82,7 +82,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     self.image)
             for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
                                             tag=self.image):
-                log.msg(line)
+                log.msg(line.rstrip())
 
         if not self._image_exists(docker_client):
             log.msg("Image '%s' not found" % self.image)
