@@ -110,3 +110,20 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='FROM debian:wheezy')
         id, name = yield bs.start_instance(None)
         self.assertEqual(name, 'slave')
+
+class testDockerPyStreamLogs(unittest.TestCase):
+
+    def compare(self, result, log):
+        self.assertEquals(result,
+                          list(dockerbuildslave.handle_stream_line(log)))
+
+
+    def testEmpty(self):
+        self.compare([], '{"stream":"\\n"}\r\n')
+
+    def testOneLine(self):
+        self.compare([" ---> Using cache"], '{"stream":" ---\\u003e Using cache\\n"}\r\n')
+
+    def testMultipleLines(self):
+        self.compare(["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
+                     '{"stream":"Fetched 8298 kB in 3s (2096 kB/s)\\nReading package lists..."}\r\n')

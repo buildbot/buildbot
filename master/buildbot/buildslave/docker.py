@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 
 from io import BytesIO
+import json
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -31,6 +32,18 @@ try:
     _hush_pyflakes = [client]
 except ImportError:
     client = None
+
+def handle_stream_line(line):
+    """\
+    Input is the json representation of: {'stream': "Content\ncontent"}
+    Output is a generator yield "Content", and then "content"
+    """
+    # XXX This necessary processing is probably a bug from docker-py,
+    # hence, might break if the bug is fixed ...
+    line = json.loads(line)
+    for streamline in line['stream'].split('\n'):
+        if streamline:
+            yield streamline
 
 
 class DockerLatentBuildSlave(AbstractLatentBuildSlave):
@@ -110,7 +123,8 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     self.image)
             for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
                                             tag=self.image):
-                log.msg(line.rstrip())
+                for streamline in handle_stream_line(line):
+                    log.msg(streamline)
 
         if not self._image_exists(docker_client):
             log.msg("Image '%s' not found" % self.image)
