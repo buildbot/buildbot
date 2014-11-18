@@ -175,6 +175,12 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     (optional, default to the higher version known by docker-py)
     This will indicates wich API version must be used to communicate with Docker.
 
+``tls``
+    (optional)
+    This allow to use TLS when connecting with the Docker socket.
+    This should be a ``docker.tls.TLSConfig`` object.
+    See `docker-py's own documentation <http://docker-py.readthedocs.org/en/latest/tls/>`_ for more details on how to initialise this object.
+
 Setting up Volumes
 ..................
 

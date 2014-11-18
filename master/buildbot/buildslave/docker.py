@@ -40,7 +40,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                  max_builds=None, notify_on_missing=None,
                  missing_timeout=(60 * 20), build_wait_timeout=0,
                  properties={}, locks=None, volumes=None, dockerfile=None,
-                 version=None):
+                 version=None, tls=None):
 
         if not client:
             config.error("The python module 'docker-py' is needed "
@@ -76,6 +76,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         self.dockerfile = dockerfile
         self.version = version
+        self.tls = tls
 
     def start_instance(self, build):
         if self.instance is not None:
@@ -92,11 +93,16 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     return True
         return False
 
-    def _thd_start_instance(self):
+    def _get_client_params(self):
         kwargs = {'base_url': self.docker_host}
         if self.version is not None:
             kwargs['version'] = self.version
-        docker_client = client.Client(**kwargs)
+        if self.tls is not None:
+            kwargs['tls'] = self.tls
+        return kwargs
+
+    def _thd_start_instance(self):
+        docker_client = client.Client(**self._get_client_params())
 
         found = self._image_exists(docker_client)
         if (not found) and (self.dockerfile is not None):
@@ -141,7 +147,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
     def _thd_stop_instance(self, instance, fast):
-        docker_client = client.Client(self.docker_host)
+        docker_client = client.Client(**self._get_client_params())
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
         if not fast:

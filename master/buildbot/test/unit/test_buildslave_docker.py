@@ -57,6 +57,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.version, '1.9')
         self.assertEqual(bs.volumes, [])
         self.assertEqual(bs.binds, {})
+        self.assertEqual(bs.tls, None)
 
     def test_rw_volume(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
