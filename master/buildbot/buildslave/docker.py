@@ -18,11 +18,13 @@ from __future__ import absolute_import
 
 from io import BytesIO
 
-from twisted.internet import defer, threads
+from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
 
+from buildbot import config
+from buildbot import interfaces
 from buildbot.buildslave import AbstractLatentBuildSlave
-from buildbot import config, interfaces
 
 try:
     from docker import client
