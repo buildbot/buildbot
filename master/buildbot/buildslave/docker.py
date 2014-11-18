@@ -139,6 +139,3 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         if not fast:
             docker_client.wait(instance['Id'])
         docker_client.remove_container(instance['Id'], v=True, force=True)
-
-    def buildFinished(self, sb):
-        self.insubstantiate()
