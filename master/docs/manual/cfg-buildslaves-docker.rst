@@ -151,7 +151,7 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     This is the adress the master will use to connect with a running Docker instance.
 
 ``image``
-    (mandatory)
+    (optional if ``dockerfile`` is given)
     This is the name of the image that will be started by the build master. It should start a buildslave.
 
 ``command``
@@ -163,13 +163,11 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     See `Setting up Volumes`_
 
 ``dockerfile``
-    (optional)
+    (optional if ``image`` is given)
     This is the content of the Dockerfile that will be used to build the specified image if the image is not found by Docker.
     It should be a multiline string.
 
-    .. note:: This parameter will be used only once as the next times the image will already be available.
-
-    .. note:: No attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
+    .. note:: In case ``image`` and ``dockerfile`` are given, no attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
 
 ``version``
     (optional, default to the higher version known by docker-py)

@@ -34,8 +34,18 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.patch(dockerbuildslave, 'client', None)
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave, 'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
 
-    def test_constructor_noimage(self):
+    def test_constructor_noimage_nodockerfile(self):
         self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave, 'bot', 'pass', 'http://localhost:2375')
+
+    def test_constructor_noimage_dockerfile(self):
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu")
+        self.assertEqual(bs.dockerfile, "FROM ubuntu")
+        self.assertEqual(bs.image, None)
+
+    def test_constructor_image_nodockerfile(self):
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'http://localhost:2375', image="myslave")
+        self.assertEqual(bs.dockerfile, None)
+        self.assertEqual(bs.image, 'myslave')
 
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
