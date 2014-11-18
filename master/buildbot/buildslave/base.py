@@ -425,9 +425,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # notifyOnDisconnect handlers have had a chance to run.
         d = defer.Deferred()
 
-        # notifyOnDisconnect runs the callback with one argument, the
-        # RemoteReference being disconnected.
-        def _disconnected(rref):
+        # notifyOnDisconnect runs the callback
+        def _disconnected():
             eventually(d.callback, None)
         conn.notifyOnDisconnect(_disconnected)
         conn.loseConnection()
