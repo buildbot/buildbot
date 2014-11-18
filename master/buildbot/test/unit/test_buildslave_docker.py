@@ -46,6 +46,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.command, ['bin/bash'])
 
     def test_constructor_all_docker_parameters(self):
+        # Volumes have their own tests
         bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9')
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
@@ -54,6 +55,18 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.command, ['/bin/sh'])
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.version, '1.9')
+        self.assertEqual(bs.volumes, [])
+        self.assertEqual(bs.binds, {})
+
+    def test_rw_volume(self):
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
+        self.assertEqual(bs.volumes, ['/src/webapp'])
+        self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
+
+    def test_rw_ro_volume(self):
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['~/.bash_history:/.bash_history', '/src/webapp:/opt/webapp:ro'])
+        self.assertEqual(bs.volumes, ['~/.bash_history', '/src/webapp'])
+        self.assertEqual(bs.binds, {'~/.bash_history': {'bind': '/.bash_history', 'ro': False}, '/src/webapp': {'bind': '/opt/webapp', 'ro': True}})
 
     @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):

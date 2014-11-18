@@ -183,3 +183,6 @@ Refer to Docker documentation for more information about Volumes.
 
 The format of that variable has to be an array of string.
 Each string specify a volume in the following format: :samp:`{volumename}:{bindname}`.
+The volume name has to be appended with ``:ro`` if the volume should be mounted *read-only*.
+
+.. note:: This is the same format as when specifying volumes on the command line for docker's own ``-v`` option.

@@ -49,6 +49,22 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             config.error("DockerLatentBuildSlave: You need to specify an"
                          " image name")
 
+        self.volumes = []
+        self.binds = {}
+        for volume_string in (volumes or []):
+            try:
+                volume, bind = volume_string.split(":", 1)
+            except ValueError:
+                config.error("Invalid volume definition for docker "
+                             "{0}. Skipping...".format(volume_string))
+            self.volumes.append(volume)
+
+            ro = False
+            if bind.endswith(':ro'):
+                bind = bind[:-3]
+                ro = True
+            self.binds[volume] = {'bind': bind, 'ro': ro}
+
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds,
                                           notify_on_missing or [],
                                           missing_timeout, build_wait_timeout,
@@ -58,7 +74,6 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         self.image = image
         self.command = command or []
 
-        self.volumes = volumes or []
         self.dockerfile = dockerfile
         self.version = version
 
@@ -97,25 +112,11 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                 'Image "%s" not found on docker host.' % self.image
             )
 
-        volumes = {}
-        binds = {}
-        for volume_string in self.volumes:
-            try:
-                volume = volume_string.split(":")[1]
-            except IndexError:
-                log.err("Invalid volume definition for docker "
-                        "{0}. Skipping...".format(volume_string))
-                continue
-            volumes[volume] = {}
-
-            volume, bind = volume_string.split(':', 1)
-            binds[volume] = bind
-
         instance = docker_client.create_container(
             self.image,
             self.command,
             name='%s_%s' % (self.slavename, id(self)),
-            volumes=volumes,
+            volumes=self.volumes,
         )
 
         if instance.get('Id') is None:
@@ -126,7 +127,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         log.msg('Container created, Id: %s...' % instance['Id'][:6])
         self.instance = instance
-        docker_client.start(instance['Id'], binds=binds)
+        docker_client.start(instance['Id'], binds=self.binds)
         return [instance['Id'], self.image]
 
     def stop_instance(self, fast=False):
