@@ -6,7 +6,9 @@ Docker latent BuildSlave
 ========================
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
-Using the Docker latent BuildSlave, a fresh image will be instantiated upon each build, assuring consistency of the environment between builds.
+Using the Docker latent BuildSlave, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+Each image will be discarded once the slave finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Buildslaves-Options>` to change this behavior.
 
 This document will guide you through the setup of such slaves.
 

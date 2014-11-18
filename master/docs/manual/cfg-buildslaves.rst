@@ -131,6 +131,8 @@ Thanks to services such as Amazon Web Services' Elastic Compute Cloud ("AWS EC2"
 The buildslaves that are started on-demand are called "latent" buildslaves.
 As of this writing, buildbot ships with an abstract base class for building latent buildslaves, and a concrete implementation for AWS EC2 and for libvirt.
 
+.. _Common-Latent-Buildslaves-Options:
+
 Common Options
 ++++++++++++++
 

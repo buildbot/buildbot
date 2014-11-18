@@ -38,7 +38,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  max_builds=None, notify_on_missing=None,
-                 missing_timeout=(60 * 20), build_wait_timeout=(60 * 10),
+                 missing_timeout=(60 * 20), build_wait_timeout=0,
                  properties={}, locks=None, volumes=None, dockerfile=None,
                  version=None):
 
