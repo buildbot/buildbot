@@ -18,11 +18,13 @@ from __future__ import absolute_import
 
 from io import BytesIO
 
-from twisted.internet import defer, threads
+from twisted.internet import defer
+from twisted.internet import threads
 from twisted.python import log
 
+from buildbot import config
+from buildbot import interfaces
 from buildbot.buildslave import AbstractLatentBuildSlave
-from buildbot import config, interfaces
 
 try:
     from docker import client
@@ -82,7 +84,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     self.image)
             for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
                                             tag=self.image):
-                log.msg(line)
+                log.msg(line.rstrip())
 
         if not self._image_exists(docker_client):
             log.msg("Image '%s' not found" % self.image)
@@ -107,6 +109,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         instance = docker_client.create_container(
             self.image,
             self.command,
+            name='%s_%s' % (self.slavename, id(self)),
             volumes=volumes,
         )
 
@@ -137,6 +140,4 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         docker_client.stop(instance['Id'])
         if not fast:
             docker_client.wait(instance['Id'])
-
-    def buildFinished(self, sb):
-        self.insubstantiate()
+        docker_client.remove_container(instance['Id'], v=True, force=True)
