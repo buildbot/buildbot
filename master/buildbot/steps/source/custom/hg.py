@@ -12,16 +12,17 @@ class Hg(Mercurial):
 
     @defer.inlineCallbacks
     def parseChanges(self, _):
+        sourcestamps_updated = self.build.build_status.getAllGotRevisions()
+
         buildLatestRev = self.build.getProperty("buildLatestRev", False)
         if type(buildLatestRev) != bool:
             buildLatestRev = (buildLatestRev.lower() == "true")
 
         if buildLatestRev == False:
+            self.updateBuildSourceStamps(sourcestamps_updated)
             defer.returnValue(0)
 
         self.master = self.build.builder.botmaster.parent
-
-        sourcestamps_updated = self.build.build_status.getAllGotRevisions()
 
         # calculate rev ranges
         lastRev = yield self.master.db.sourcestamps.findLastBuildRev(self.build.builder.name,
@@ -50,22 +51,11 @@ class Hg(Mercurial):
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
-            changelist.append(Change(who=author, files=None, comments=comments, when=timestamp, repository=self.repourl, branch=self.update_branch, revision=node, codebase= self.codebase))
+            changelist.append(Change(who=author, files=None, comments=comments, when=timestamp,
+                                     repository=self.repourl, branch=self.update_branch, revision=node,
+                                     codebase= self.codebase))
 
-        sourcestamps = self.build.build_status.getSourceStamps()
-
-        for ss in sourcestamps:
-            if ss.codebase == self.codebase:
-                ss.changes = changelist
-                ss.revision = sourcestamps_updated[self.codebase]
-                break
-
-        # update buildrequest revision
-        self.build.requests[0].sources[self.codebase].revision = sourcestamps_updated[self.codebase]
-
-        if len(sourcestamps_updated) > 0:
-            ss = [{'b_codebase': self.codebase, 'b_revision': sourcestamps_updated[self.codebase], 'b_sourcestampsetid': sourcestamps[0].sourcestampsetid}]
-            result = yield self.master.db.sourcestamps.updateSourceStamps(ss)
+        self.updateBuildSourceStamps(sourcestamps_updated, changelist)
 
         defer.returnValue(0)
 

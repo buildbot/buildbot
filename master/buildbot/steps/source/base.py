@@ -17,6 +17,7 @@
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
+from twisted.internet import defer
 
 class Source(LoggingBuildStep):
     """This is a base class to generate a source tree in the buildslave.
@@ -154,6 +155,25 @@ class Source(LoggingBuildStep):
              "Sourcestep %s does not have a codebase, other sourcesteps do" \
              % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
+
+    @defer.inlineCallbacks
+    def updateBuildSourceStamps(self, sourcestamps_updated, changes=[]):
+        sourcestamps = self.build.build_status.getSourceStamps()
+
+        for ss in sourcestamps:
+            if ss.codebase == self.codebase:
+                ss.changes = changes
+                ss.revision = sourcestamps_updated[self.codebase]
+                break
+
+        # update buildrequest revision
+        self.build.build_status.updateSourceStamps()
+
+        if len(sourcestamps_updated) > 0:
+            ss = [{'b_codebase': self.codebase, 'b_revision': sourcestamps_updated[self.codebase],
+                   'b_sourcestampsetid': sourcestamps[0].sourcestampsetid}]
+            master = self.build.builder.botmaster.parent
+            result = yield master.db.sourcestamps.updateSourceStamps(ss)
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)

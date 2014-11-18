@@ -13,28 +13,15 @@ def mkdt(epoch):
     if epoch:
         return epoch2datetime(epoch)
 
-@defer.inlineCallbacks
-def updateSourceStamps(master, build, build_sourcestamps):
+def getBuildSourceStamps(build, build_sourcestamps):
     # every build will generate at least one sourcestamp
     sourcestamps = build.build_status.getSourceStamps()
-
-    build_sourcestampsetid = sourcestamps[0].sourcestampsetid
-
-    sourcestamps_updated = build.build_status.getAllGotRevisions()
-    build.build_status.updateSourceStamps()
-
-    if len(sourcestamps_updated) > 0:
-        update_ss = []
-        for key, value in sourcestamps_updated.iteritems():
-            update_ss.append(
-                {'b_codebase': key, 'b_revision': value, 'b_sourcestampsetid': build_sourcestampsetid})
-
-        rowsupdated = yield master.db.sourcestamps.updateSourceStamps(update_ss)
 
     # when running rebuild or passing revision as parameter
     for ss in sourcestamps:
         build_sourcestamps.append(
-            {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,'b_sourcestampsetid': ss.sourcestampsetid})
+            {'b_codebase': ss.codebase, 'b_revision': ss.revision, 'b_branch': ss.branch,
+             'b_sourcestampsetid': ss.sourcestampsetid})
 
 class FindPreviousSuccessfulBuild(LoggingBuildStep):
     name = "Find Previous Successful Build"
@@ -51,7 +38,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
-        yield updateSourceStamps(self.master, self.build, self.build_sourcestamps)
+        yield getBuildSourceStamps(self.build, self.build_sourcestamps)
 
         force_rebuild = self.build.getProperty("force_rebuild", False)
         if type(force_rebuild) != bool:
@@ -170,7 +157,7 @@ class CheckArtifactExists(ShellCommand):
         if self.master is None:
             self.master = self.build.builder.botmaster.parent
 
-        yield updateSourceStamps(self.master, self.build, self.build_sourcestamps)
+        yield getBuildSourceStamps(self.build, self.build_sourcestamps)
 
         force_rebuild = self.build.getProperty("force_rebuild", False)
         if type(force_rebuild) != bool:
