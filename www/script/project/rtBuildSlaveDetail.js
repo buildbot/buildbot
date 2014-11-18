@@ -73,11 +73,14 @@ define(function (require) {
             if (data.eid !== -1) {
                 data.showEID = true;
             }
-            $slaveInfo.html(hbBuildSlaveDetail(data));
-            privFunc.renderSlaveStatus($slaveInfo, data)
 
+            $slaveInfo.html(hbBuildSlaveDetail(data));
             var $jsonPopup = $slaveInfo.find('a.popup-btn-json-js');
             popup.initJSONPopup($jsonPopup, {showBuilders: data});
+
+            privFunc.renderSlaveStatus($slaveInfo, data);
+            var $slaveStatusPopup = $slaveInfo.find('div#slave-status a.popup-btn-json-js');
+            popup.initJSONPopup($slaveStatusPopup, {showRunningBuilds: data});
 
             if (data.runningBuilds !== undefined) {
                 rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data.runningBuilds);
