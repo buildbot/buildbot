@@ -39,7 +39,8 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     def __init__(self, name, password, docker_host, image=None, command=None,
                  max_builds=None, notify_on_missing=None,
                  missing_timeout=(60 * 20), build_wait_timeout=(60 * 10),
-                 properties={}, locks=None, volumes=None, dockerfile=None):
+                 properties={}, locks=None, volumes=None, dockerfile=None,
+                 version=None):
 
         if not client:
             config.error("The python module 'docker-py' is needed "
@@ -59,6 +60,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         self.volumes = volumes or []
         self.dockerfile = dockerfile
+        self.version = version
 
     def start_instance(self, build):
         if self.instance is not None:
@@ -76,7 +78,10 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         return False
 
     def _thd_start_instance(self):
-        docker_client = client.Client(base_url=self.docker_host)
+        kwargs = {'base_url': self.docker_host}
+        if self.version is not None:
+            kwargs['version'] = self.version
+        docker_client = client.Client(**kwargs)
 
         found = self._image_exists(docker_client)
         if (not found) and (self.dockerfile is not None):

@@ -45,6 +45,16 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.image, 'slave')
         self.assertEqual(bs.command, ['bin/bash'])
 
+    def test_constructor_all_docker_parameters(self):
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9')
+        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.password, 'pass')
+        self.assertEqual(bs.docker_host, 'unix:///var/run/docker.sock')
+        self.assertEqual(bs.image, 'slave_img')
+        self.assertEqual(bs.command, ['/bin/sh'])
+        self.assertEqual(bs.dockerfile, "FROM ubuntu")
+        self.assertEqual(bs.version, '1.9')
+
     @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
