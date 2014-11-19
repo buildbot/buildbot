@@ -569,8 +569,11 @@ class ForceScheduler(base.BaseScheduler):
         properties.setProperty("reason", reason, "Force Build Form")
         properties.setProperty("owner", owner, "Force Build Form")
 
-        if kwargs.has_key('selected_slave') and kwargs['selected_slave'][0] != 'default':
+        if 'selected_slave' in kwargs and kwargs['selected_slave'][0] != 'default':
             properties.setProperty("selected_slave", kwargs['selected_slave'][0], "Force Build Form")
+
+        if 'priority' in kwargs:
+            properties.setProperty("priority", kwargs['priority'][0], "Force Build Form")
 
         ssdict = sourcestamps.values()
         buildLatestRev = all((ss['revision'].strip()=='' or ss['revision'] is None) for ss in ssdict)

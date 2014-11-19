@@ -128,11 +128,16 @@ class Authz(object):
         else:
             defer.returnValue(self.defaultUserSettings)
 
-    def getUserAttr(self, request, attr):
+    @defer.inlineCallbacks
+    def getUserAttr(self, request, attr, default=None):
         s = self.getUserInfo(self.getUsername(request))
         if s:
             userdb = request.site.buildbot_service.master.db.users
-            return userdb.get_user_prop(s['uid'], attr)
+            val = yield userdb.get_user_prop(s['uid'], attr)
+            if val is not None:
+                defer.returnValue(val)
+
+        defer.returnValue(default)
 
     def setUserAttr(self, request, attr_type, attr_data):
         s = self.getUserInfo(self.getUsername(request))

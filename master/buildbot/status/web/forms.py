@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import urllib
 from urlparse import urlunparse, urlparse
+from twisted.internet import defer
 from twisted.web._responses import INTERNAL_SERVER_ERROR
 from twisted.web.resource import ErrorPage
 
@@ -40,6 +41,7 @@ class ForceBuildDialogPage(HtmlResource):
     def decodeFromURL(self, value, encoding):
         return urllib.unquote(value).decode(encoding)
 
+    @defer.inlineCallbacks
     def content(self, request, cxt):
         status = self.getStatus(request)
 
@@ -86,14 +88,16 @@ class ForceBuildDialogPage(HtmlResource):
             url_parts[2] += "/force"
             url_parts[4] += return_page
             force_url = urlunparse(url_parts)
-
             cxt['force_url'] = force_url
+
+            authz = self.getAuthz(request)
+            cxt['is_admin'] = yield authz.getUserAttr(request, 'is_admin', 0)
             cxt['rt_update'] = args
             request.args = args
 
             template = request.site.buildbot_service.templates.get_template("force_build_dialog.html")
-            return template.render(**cxt)
+            defer.returnValue(template.render(**cxt))
 
         else:
             page = ErrorPage(INTERNAL_SERVER_ERROR, "Missing parameters", "Not all parameters were given")
-            return page.render(request)
+            defer.returnValue(page.render(request))

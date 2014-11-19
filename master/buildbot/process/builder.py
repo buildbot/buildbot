@@ -718,7 +718,8 @@ class Builder(config.ReconfigurableServiceMixin,
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        for b in buildrequests:
+        sorted_requests = sorted(buildrequests, key=lambda br: br.get('priority', 0), reverse=True)
+        for b in sorted_requests:
             d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
             brdict = d[0].brdict
             if self.buildRequestHasSelectedSlave(brdict):
