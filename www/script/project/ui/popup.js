@@ -1,4 +1,4 @@
-/*global define, requirejs, jQuery*/
+/*global define, requirejs, jQuery, confirm*/
 define(function (require) {
 
     "use strict";
@@ -8,7 +8,8 @@ define(function (require) {
         hb = require('project/handlebars-extend'),
         timeElements = require('timeElements'),
         toastr = require('toastr'),
-        popups = hb.popups;
+        popups = hb.popups,
+        rtGlobal = require('rtGlobal');
 
     require('libs/jquery.form');
 
@@ -412,6 +413,12 @@ define(function (require) {
                                         beforeSubmit: function () {
                                             $elem.hidePopup();
                                             $("#preloader").preloader("hidePreloader");
+
+                                            if (rtGlobal.isKatanaLoaded()) {
+                                                return confirm('The build load is currently very high, if possible ' +
+                                                    'please wait until the build load goes down. \n\nAre you sure ' +
+                                                    'you want to request this build?');
+                                            }
                                         },
                                         success: function (data) {
                                             if (redirectToBuilder) {
