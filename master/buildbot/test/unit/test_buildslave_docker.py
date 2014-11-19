@@ -48,26 +48,25 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.image, 'myslave')
 
     def test_constructor_minimal(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
+        # Minimal set of parameters
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave')
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.docker_host, 'tcp://1234:2375')
+        self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
         self.assertEqual(bs.image, 'slave')
-        self.assertEqual(bs.command, ['bin/bash'])
+        self.assertEqual(bs.command, [])
 
     def test_constructor_all_docker_parameters(self):
         # Volumes have their own tests
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9')
+        bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9', tls=True)
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
-        self.assertEqual(bs.docker_host, 'unix:///var/run/docker.sock')
         self.assertEqual(bs.image, 'slave_img')
         self.assertEqual(bs.command, ['/bin/sh'])
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
-        self.assertEqual(bs.version, '1.9')
         self.assertEqual(bs.volumes, [])
         self.assertEqual(bs.binds, {})
-        self.assertEqual(bs.tls, None)
+        self.assertEqual(bs.client_args, {'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
 
     def test_rw_volume(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
@@ -121,12 +120,12 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         id, name = yield bs.start_instance(None)
         self.assertEqual(name, 'slave')
 
+
 class testDockerPyStreamLogs(unittest.TestCase):
 
     def compare(self, result, log):
         self.assertEquals(result,
                           list(dockerbuildslave.handle_stream_line(log)))
-
 
     def testEmpty(self):
         self.compare([], '{"stream":"\\n"}\r\n')

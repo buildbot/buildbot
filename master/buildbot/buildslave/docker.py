@@ -16,8 +16,9 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
-from io import BytesIO
 import json
+
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -32,6 +33,7 @@ try:
     _hush_pyflakes = [client]
 except ImportError:
     client = None
+
 
 def handle_stream_line(line):
     """\
@@ -87,13 +89,16 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                                           missing_timeout, build_wait_timeout,
                                           properties, locks)
 
-        self.docker_host = docker_host
         self.image = image
         self.command = command or []
-
         self.dockerfile = dockerfile
-        self.version = version
-        self.tls = tls
+
+        # Prepare the parameters for the Docker Client object.
+        self.client_args = {'base_url': docker_host}
+        if version is not None:
+            self.client_args['version'] = version
+        if tls is not None:
+            self.client_args['tls'] = tls
 
     def start_instance(self, build):
         if self.instance is not None:
@@ -103,7 +108,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     def _image_exists(self, client, name=None):
         if name is None:
             name = self.image
-        # Make sure the container exists
+        # Make sure the image exists
         for image in client.images():
             for tag in image['RepoTags']:
                 if ':' in name and tag == name:
@@ -112,16 +117,8 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     return True
         return False
 
-    def _get_client_params(self):
-        kwargs = {'base_url': self.docker_host}
-        if self.version is not None:
-            kwargs['version'] = self.version
-        if self.tls is not None:
-            kwargs['tls'] = self.tls
-        return kwargs
-
     def _thd_start_instance(self):
-        docker_client = client.Client(**self._get_client_params())
+        docker_client = client.Client(**self.client_args)
 
         found = False
         if self.image is not None:
@@ -174,7 +171,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
     def _thd_stop_instance(self, instance, fast):
-        docker_client = client.Client(**self._get_client_params())
+        docker_client = client.Client(**self.client_args)
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
         if not fast:
