@@ -12,7 +12,7 @@
 MANIFEST
 _trial_temp*
 dist
-build
+/build
 .build
 *.egg-info
 master/docs/buildbot.html
