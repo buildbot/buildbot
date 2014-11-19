@@ -216,7 +216,7 @@ class SVN(Source):
         d.addCallback(self.finished)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, abandonOnFailure=True):
+    def _dovccmd(self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True):
         assert command, "No command specified"
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
@@ -232,7 +232,8 @@ class SVN(Source):
                                                env=self.env,
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout,
-                                               collectStdout=collectStdout)
+                                               collectStdout=collectStdout,
+                                               collectStderr=collectStderr)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -240,8 +241,12 @@ class SVN(Source):
             if cmd.didFail() and abandonOnFailure:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
-            if collectStdout:
+            if collectStdout and collectStderr:
+                return (cmd.stdout, cmd.stderr)
+            elif collectStdout:
                 return cmd.stdout
+            elif collectStderr:
+                return cmd.stderr
             else:
                 return cmd.rc
         d.addCallback(lambda _: evaluateCommand(cmd))
@@ -264,7 +269,12 @@ class SVN(Source):
             return
 
         # then run 'svn info --xml' to check that the URL matches our repourl
-        stdout = yield self._dovccmd(['info', '--xml'], collectStdout=True)
+        stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True, collectStderr=True, abandonOnFailure=False)
+
+        # svn: E155037: Previous operation has not finished; run 'cleanup' if it was interrupted
+        if 'E155037:' in stderr:
+            defer.returnValue(False)
+            return
 
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
