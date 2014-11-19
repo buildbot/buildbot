@@ -41,7 +41,11 @@ def handle_stream_line(line):
     # XXX This necessary processing is probably a bug from docker-py,
     # hence, might break if the bug is fixed ...
     line = json.loads(line)
-    for streamline in line['stream'].split('\n'):
+    if 'error' in line:
+        content = "ERROR: " + line['error']
+    else:
+        content = line.get('stream', '')
+    for streamline in content.split('\n'):
         if streamline:
             yield streamline
 
@@ -127,16 +131,16 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             image = '%s_%s_image' % (self.slavename, id(self))
         if (not found) and (self.dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
-                    self.image)
+                    image)
             for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
                                             tag=image):
                 for streamline in handle_stream_line(line):
                     log.msg(streamline)
 
         if (not self._image_exists(docker_client, image)):
-            log.msg("Image '%s' not found" % self.image)
+            log.msg("Image '%s' not found" % image)
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                'Image "%s" not found on docker host.' % self.image
+                'Image "%s" not found on docker host.' % image
             )
 
         instance = docker_client.create_container(
@@ -177,4 +181,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             docker_client.wait(instance['Id'])
         docker_client.remove_container(instance['Id'], v=True, force=True)
         if self.image is None:
-            docker_client.remove_image(image=instance['image'])
+            try:
+                docker_client.remove_image(image=instance['image'])
+            except docker.errors.APIError as e:
+                log.msg('Error while removing the image: %s', e)

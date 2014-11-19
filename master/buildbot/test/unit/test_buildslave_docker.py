@@ -137,3 +137,7 @@ class testDockerPyStreamLogs(unittest.TestCase):
     def testMultipleLines(self):
         self.compare(["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
                      '{"stream":"Fetched 8298 kB in 3s (2096 kB/s)\\nReading package lists..."}\r\n')
+
+    def testError(self):
+        self.compare(["ERROR: The command [/bin/sh -c apt-get update && apt-get install -y    python-dev    python-pip] returned a non-zero code: 127"],
+                     '{"errorDetail": {"message": "The command [/bin/sh -c apt-get update && apt-get install -y    python-dev    python-pip] returned a non-zero code: 127"}, "error": "The command [/bin/sh -c apt-get update && apt-get install -y    python-dev    python-pip] returned a non-zero code: 127"}\r\n')
