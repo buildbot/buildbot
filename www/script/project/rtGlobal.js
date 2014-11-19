@@ -7,7 +7,9 @@ define(['jquery', 'helpers', 'datatables-extend', 'extend-moment'], function ($,
         $buildLoadBox = $('#buildLoad'),
         infoSpan = $buildLoadBox.find('span'),
         minBuildsPerSlave = 1, // The amount of builds each agent is allowed to have before we get yellow build load
-        maxBuildsPerSlave = 2; // The amount of builds each agent is allowed to have before we get red build load
+        maxBuildsPerSlave = 2, // The amount of builds each agent is allowed to have before we get red build load
+        buildLoad = 0,
+        bKatanaLoaded = false;
 
     var rtGlobal = {
         init: function () {
@@ -19,10 +21,12 @@ define(['jquery', 'helpers', 'datatables-extend', 'extend-moment'], function ($,
         },
         processGlobalInfo: function (data) {
             extendMoment.setServerTime(data.utc);
+            buildLoad = data.build_load;
 
-            var buildLoad = data.build_load,
-                buildLoadPerSlave = buildLoad / data.slaves_count,
+            var buildLoadPerSlave = buildLoad / data.slaves_count,
                 statusColorClass = buildLoadPerSlave <= minBuildsPerSlave ? 'green' : buildLoadPerSlave <= maxBuildsPerSlave ? 'yellow' : 'red';
+
+            bKatanaLoaded = buildLoadPerSlave > maxBuildsPerSlave;
 
             buildQueueTotal.show();
             buildSlavesTotal.show();
@@ -51,6 +55,12 @@ define(['jquery', 'helpers', 'datatables-extend', 'extend-moment'], function ($,
             $.each($table, function (i, elem) {
                 dt.initTable($(elem), {});
             });
+        },
+        getBuildLoad: function getBuildLoad() {
+            return buildLoad;
+        },
+        isKatanaLoaded: function isKatanaLoaded() {
+            return bKatanaLoaded;
         }
     };
 

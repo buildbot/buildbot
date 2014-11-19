@@ -1,8 +1,15 @@
 /*global define, describe, it, expect, beforeEach, afterEach, spyOn*/
-define(["jquery", "realtimePages"], function ($, rt) {
+define(["jquery", "realtimePages", "rtGlobal"], function ($, rt, rtGlobal) {
     "use strict";
 
-    var $body = $("body");
+    var $body = $("body"),
+        rtGlobalData = {
+            slaves_count: 5,
+            build_load: 13,
+            slaves_busy: 0,
+            running_builds: 0,
+            utc: 1416384891200
+        };
 
     describe("An instant JSON", function () {
 
@@ -163,6 +170,24 @@ define(["jquery", "realtimePages"], function ($, rt) {
 
             expect(sock.send).toHaveBeenCalled();
             expect(sock.send).toHaveBeenCalledWith(JSON.stringify({cmd: "test", data: testData}));
+        });
+    });
+
+    describe("The build load", function () {
+        it("is not loaded when build load is not high", function () {
+            var customData = $.extend({}, rtGlobalData, {build_load: 2});
+            rtGlobal.processGlobalInfo(customData);
+            var isLoaded = rtGlobal.isKatanaLoaded();
+
+            expect(isLoaded).toBeFalsy();
+        });
+
+        it("becomes loaded when build load is high", function () {
+            var customData = $.extend({}, rtGlobalData, {build_load: 50});
+            rtGlobal.processGlobalInfo(customData);
+            var isLoaded = rtGlobal.isKatanaLoaded();
+
+            expect(isLoaded).toBeTruthy();
         });
     });
 });
