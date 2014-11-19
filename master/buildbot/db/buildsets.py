@@ -32,6 +32,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def addBuildset(self, sourcestampsetid, reason, properties, triggeredbybrid=None,
                     builderNames=None, external_idstring=None,  _reactor=reactor):
         def thd(conn):
+            priority = 0
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
 
@@ -52,6 +53,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # add any properties
             if properties:
                 bs_props_tbl = self.db.model.buildset_properties
+                if 'priority' in properties:
+                    priority = properties.get('priority')[0]
 
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,
@@ -85,7 +88,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             for buildername in builderNames:
                 self.check_length(br_tbl.c.buildername, buildername)
                 res = conn.execute(ins,
-                    dict(buildsetid=bsid, buildername=buildername, priority=0,
+                    dict(buildsetid=bsid, buildername=buildername, priority=priority,
                         claimed_at=0, claimed_by_name=None,
                         claimed_by_incarnation=None, complete=0, results=-1,
                         submitted_at=submitted_at, complete_at=None,
