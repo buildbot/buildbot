@@ -775,3 +775,31 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(checkBuildRequests, artifactbrid=1)
 
         return d
+
+    def test_updateMergedBuildRequest(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder"),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder")]
+
+        d = self.insertTestData(breqs)
+
+        def checkBuildRequests(brlist, artifactbrid=None):
+            self.assertEqual(brlist[0]['artifactbrid'], None)
+            self.assertTrue(all([br['artifactbrid'] == artifactbrid for br in brlist[1:]]))
+
+        def check(rowupdated):
+            self.assertEqual(rowupdated, 3)
+
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getBuildRequests(brids=[1, 2, 3, 4]))
+        d.addCallback(checkBuildRequests)
+        d.addCallback(lambda _:
+                      self.db.buildrequests.updateMergedBuildRequest(breqs))
+
+        d.addCallback(check)
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getBuildRequests(brids=[1, 2, 3, 4]))
+        d.addCallback(checkBuildRequests, 1)
+
+        return d
