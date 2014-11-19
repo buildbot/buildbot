@@ -677,7 +677,7 @@ class TestBuildsetsConnectorComponent(
 
     def buildRequestWithSources(self):
         return self.insertTestData([
-            fakedb.BuildRequest(id=44, buildsetid=1, buildername="builder",
+            fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder",
                                 complete=1, results=0,
                                 submitted_at=self.SUBMITTED_AT_EPOCH,
                                 complete_at=self.COMPLETE_AT_EPOCH),
@@ -701,7 +701,7 @@ class TestBuildsetsConnectorComponent(
                 self.db.buildrequests.getBuildRequestBySourcestamps(buildername='builder', sourcestamps = sources))
         def check(brdict):
             self.assertEqual(brdict,
-                    dict(artifactbrid=None, brid=44, buildername="builder", buildsetid=1,
+                    dict(artifactbrid=None, brid=1, buildername="builder", buildsetid=1,
                         complete=True, complete_at=self.COMPLETE_AT, priority=0,
                         results=0, submitted_at=self.SUBMITTED_AT
                         ))
@@ -747,5 +747,31 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(brids=[2,3]))
         d.addCallback(checkBuildRequest, value=[1, 1])
+
+        return d
+
+    def test_reusePreviousBuild(self):
+        d = self.buildRequestWithSources()
+        breqs = [fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder"),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder")]
+
+        def check(rowupdated):
+            self.assertEqual(rowupdated, 3)
+
+        def checkBuildRequests(brlist, artifactbrid=None):
+            self.assertTrue(all([br['artifactbrid'] == artifactbrid for br in brlist]))
+
+        d.addCallback(lambda _ : self.insertTestData(breqs))
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getBuildRequests(brids=[2, 3, 4]))
+        d.addCallback(checkBuildRequests)
+        d.addCallback(lambda _ :
+                      self.db.buildrequests.reusePreviousBuild(breqs, 1))
+
+        d.addCallback(check)
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getBuildRequests(brids=[2, 3, 4]))
+        d.addCallback(checkBuildRequests, artifactbrid=1)
 
         return d
