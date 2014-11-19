@@ -170,7 +170,7 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     .. note:: In case ``image`` and ``dockerfile`` are given, no attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
 
 ``version``
-    (optional, default to the higher version known by docker-py)
+    (optional, default to the highest version known by docker-py)
     This will indicates wich API version must be used to communicate with Docker.
 
 ``tls``
