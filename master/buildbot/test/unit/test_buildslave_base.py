@@ -135,7 +135,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
                                              testcase=self)
         self.botmaster = botmaster.FakeBotMaster(self.master)
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self.master)
-
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)

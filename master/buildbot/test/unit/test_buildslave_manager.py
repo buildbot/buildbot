@@ -46,8 +46,8 @@ class FakeBuildSlave2(FakeBuildSlave):
 class TestBuildSlaveManager(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master(testcase=self, wantMq=True,wantData=True)
-
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantMq=True,wantData=True)
         self.master.mq = self.master.mq
         self.buildslaves = bslavemanager.BuildslaveManager(self.master)
         # slaves expect a botmaster as well as a manager.

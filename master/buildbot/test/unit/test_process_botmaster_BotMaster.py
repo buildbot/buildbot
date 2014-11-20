@@ -16,15 +16,11 @@
 import mock
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
 from buildbot.test.fake import fakemaster
-from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
-
 
 class TestCleanShutdown(unittest.TestCase):
 
