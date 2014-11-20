@@ -105,7 +105,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=self.logEnviron))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=self.logEnviron))
+                                 logEnviron=self.logEnviron, timeout=1200))
             + 0,
             Expect('mkdir', dict(dir='wkdir',
                                  logEnviron=self.logEnviron))
@@ -246,7 +246,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                 command=['tar', '-z', '-xvf', '/tarball.tgz']) + 1,
             self.ExpectShell(command=['rm', '-f', '/tarball.tgz']) + 1,
             Expect('rmdir', dict(dir='wkdir/.repo',
-                                 logEnviron=False))
+                                 logEnviron=False, timeout=1200))
             + 1)
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.tgz'])
@@ -309,7 +309,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                 command=['rm', '-f', '/tarball.tar']) + 0,
             Expect(
                 'rmdir', dict(dir='wkdir/.repo',
-                              logEnviron=False))
+                              logEnviron=False, timeout=1200))
             + 0)
         self.expectRepoSync()
         self.expectCommands(self.ExpectShell(command=['stat', '-c%Y', '/tarball.' + suffix])

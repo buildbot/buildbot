@@ -169,7 +169,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])

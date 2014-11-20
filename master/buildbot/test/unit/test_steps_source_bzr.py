@@ -262,7 +262,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'version-info', '--custom', "--template='{revno}"])
@@ -347,7 +347,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -375,21 +375,21 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -418,7 +418,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -447,7 +447,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -476,7 +476,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',
@@ -504,7 +504,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='build',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.bzr',
                                 logEnviron=True))
@@ -628,7 +628,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'http://bzr.squid-cache.org/bzr/squid3/trunk', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['bzr', 'checkout',

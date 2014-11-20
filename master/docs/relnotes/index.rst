@@ -37,6 +37,8 @@ Fixes
 * Fixed SVN master-side source step: if a SVN operation fails, the repository end up in a situation when a manual intervention is required.
   Now if SVN reports such a situation during initial check, the checkout will be clobbered.
 
+* Fixed master-side source steps to respect the specified timeout when removing files.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

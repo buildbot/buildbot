@@ -132,12 +132,7 @@ class Darcs(Source):
             yield self._dovccmd(command)
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
+        d = self.runRmdir(self.workdir, abandonOnFailure=False)
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
 

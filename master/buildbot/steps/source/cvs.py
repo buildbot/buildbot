@@ -116,22 +116,8 @@ class CVS(Source):
             raise ValueError("Unknown method, check your configuration")
         defer.returnValue(rv)
 
-    def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        def checkRemoval(res):
-            if res != 0:
-                raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
-        return d
-
     def clobber(self):
-        d = self._clobber()
+        d = self.runRmdir(self.workdir)
         d.addCallback(lambda _: self.doCheckout(self.workdir))
         return d
 
@@ -146,11 +132,7 @@ class CVS(Source):
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        d = self.runRmdir(self.workdir, abandonOnFailure=False)
         old_workdir = self.workdir
         self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
@@ -213,8 +195,7 @@ class CVS(Source):
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
-                df.addCallback(lambda _: self._clobber())
-                df.addCallback(lambda _: self.doCheckout(self.workdir))
+                df.addCallback(lambda _: self.clobber())
                 reactor.callLater(delay, df.callback, None)
                 return df
             return res

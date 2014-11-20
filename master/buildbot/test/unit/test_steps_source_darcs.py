@@ -63,7 +63,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -248,7 +248,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['darcs', 'changes', '--max-count=1'])
@@ -272,21 +272,21 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', 'http://localhost/darcs'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
@@ -315,7 +315,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(_FileReader),

@@ -125,29 +125,13 @@ class Bzr(Source):
         else:
             raise ValueError("Unknown method, check your configuration")
 
-    def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        def checkRemoval(res):
-            if res != 0:
-                raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
-        return d
-
     def clobber(self):
-        d = self._clobber()
+        d = self.runRmdir(self.workdir)
         d.addCallback(lambda _: self._doFull())
         return d
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': 'build',
-                                                'logEnviron': self.logEnviron, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        d = self.runRmdir('build', abandonOnFailure=False)
         d.addCallback(lambda _: self.incremental())
 
         def copy(_):
@@ -197,8 +181,7 @@ class Bzr(Source):
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
-                df.addCallback(lambda _: self._clobber())
-                df.addCallback(lambda _: self._doFull())
+                df.addCallback(lambda _: self.clobber())
                 reactor.callLater(delay, df.callback, None)
                 return df
             return res
