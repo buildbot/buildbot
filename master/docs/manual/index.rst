@@ -5,7 +5,7 @@ Buildbot Manual
 
 .. toctree::
    :maxdepth: 2
-   
+
    introduction
    installation
    concepts
@@ -16,3 +16,4 @@ Buildbot Manual
    resources
    optimization
    plugins
+   deploy
