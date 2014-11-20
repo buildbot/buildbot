@@ -395,7 +395,7 @@ class HttpStatusPush(StatusPush):
         self.chunkSize = chunkSize
         self.lastPushWasSuccessful = True
         self.maxHttpRequestSize = maxHttpRequestSize
-        if maxDiskItems != 0:
+        if maxDiskItems and maxDiskItems != 0:
             # The queue directory is determined by the server url.
             path = ('events_' +
                     urlparse.urlparse(self.serverUrl)[1].split(':')[0])
