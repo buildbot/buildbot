@@ -258,36 +258,38 @@ Buildmaster Options
 This section lists options to the ``create-master`` command.
 You can also type ``buildbot create-master --help`` for an up-to-the-moment summary.
 
-``--force``
+.. program:: buildbot create-master
 
-    With this option, @command{create-master} will re-use an existing master directory.
+.. option:: --force
 
-``--no-logrotate``
+    This option will allow to re-use an existing directory.
+
+.. option:: --no-logrotate
 
     This disables internal buildslave log management mechanism.
     With this option buildslave does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
 
-``--relocatable``
+.. option:: --relocatable
 
     This creates a "relocatable" buildbot.tac, which uses relative paths instead of absolute paths, so that the buildmaster directory can be moved about.
 
-``--config``
+.. option:: --config
 
     The name of the configuration file to use.
     This configuration file need not reside in the buildmaster directory.
 
-``--log-size``
+.. option:: --log-size
 
     This is the size in bytes when to rotate the Twisted log files.
     The default is 10MiB.
 
-``--log-count``
+.. option:: --log-count
 
     This is the number of log rotations to keep around.
-    You can either specify a number or ``None`` to keep all @file{twistd.log} files around.
+    You can either specify a number or ``None`` to keep all :file:`twistd.log` files around.
     The default is 10.
 
-``--db``
+.. option:: --db
 
     The database that the Buildmaster should use.
     Note that the same value must be added to the configuration file.
