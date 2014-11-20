@@ -29,8 +29,9 @@ from buildbot import interfaces
 from buildbot.buildslave import AbstractLatentBuildSlave
 
 try:
+    import docker
     from docker import client
-    _hush_pyflakes = [client]
+    _hush_pyflakes = [docker, client]
 except ImportError:
     client = None
 
