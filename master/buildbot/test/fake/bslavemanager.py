@@ -30,6 +30,13 @@ class FakeBuildslaveManager(service.AsyncMultiService):
         # connection objects keyed by buildslave name
         self.connections = {}
 
+        # self.slaves contains a ready BuildSlave instance for each
+        # potential buildslave, i.e. all the ones listed in the config file.
+        # If the slave is connected, self.slaves[slavename].slave will
+        # contain a RemoteReference to their Bot instance. If it is not
+        # connected, that attribute will hold None.
+        self.slaves = {}  # maps slavename to BuildSlave
+
     def register(self, buildslave):
         buildslaveName = buildslave.slavename
         reg = FakeBuildslaveRegistration(buildslave)

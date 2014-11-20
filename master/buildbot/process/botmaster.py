@@ -169,7 +169,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         timer.start()
 
         # reconfigure slaves
-        yield self.reconfigServiceSlaves(new_config)
+        # yield self.reconfigServiceSlaves(new_config)
 
         # reconfigure builders
         yield self.reconfigServiceBuilders(new_config)
