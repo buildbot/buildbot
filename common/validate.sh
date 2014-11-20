@@ -11,30 +11,36 @@ LTCYAN="$_ESC[1;36m"
 YELLOW="$_ESC[1;33m"
 NORM="$_ESC[0;0m"
 
-if [ $# -eq 0 ]; then
-    echo "USAGE: common/validate.sh oldrev [--quick]"
+## parse options
+
+quick=false
+no_js=false
+help=false
+while [ $# -gt 0 ]; do
+    case $1 in
+        --quick) quick=true ;;
+        --no-js) no_js=true ;;
+        --help) help=true ;;
+        -*) echo "$0: error - unrecognized option $1" 1>&2; help=true ;;
+        *) REVRANGE="$1..HEAD" ;;
+    esac
+    shift
+done
+
+if $help; then
+    echo "USAGE: common/validate.sh [oldrev] [--quick] [--no-js] [--help]"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
     echo "      sphinx, pyflakes, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
     echo "if --no-js is passed validate will skip tests that require Node and NPM"
+    echo "if --help is passed validate will output this message and exit"
+    echo "if no oldrev is passed validate will assume master...HEAD"
     exit 1
 fi
 
-## parse options
-
-quick=false
-no_js=false
-while [ $# -gt 0 ]; do
-    case $1 in
-        --quick) quick=true ;;
-        --no-js) no_js=true ;;
-        -*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
-        *) REVRANGE="$1..HEAD" ;;
-    esac
-    shift
-done
+[ -z "$REVRANGE" ] && REVRANGE="master..HEAD"
 
 status() {
     echo "${LTCYAN}-- ${*} --${NORM}"

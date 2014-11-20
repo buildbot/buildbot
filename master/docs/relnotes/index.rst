@@ -88,6 +88,10 @@ Features
 
 * OpenStack latent slaves now support block devices as a bootable volume.
 
+* Add new :bb:step:`Cppcheck` step.
+
+* Add a new :doc:`Docker latent BuildSlave </manual/cfg-buildslaves-docker>`.
+
 Fixes
 ~~~~~
 
@@ -219,12 +223,12 @@ Changes and Removals
 * :bb:sched:`ForceScheduler` has the following changes:
 
   - The default configuration no longer contains four ``AnyPropertyParameter`` instances.
-  - Configuring ``codebases`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in ForceScheduler
+  - Configuring ``codebases`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in :bb:sched:`ForceScheduler`
   - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
 
 * :bb:sched:`Periodic`, :bb:sched:`Nightly` and :bb:sched:`NightlyTriggerable` have the following changes:
 
-  - The ``Periodic`` and ``Nightly`` schedulers can now consume changes and use ``onlyIfChanged`` and ``createAbsoluteTimestamps``.
+  - The :bb:sched:`Periodic` and :bb:sched:`Nightly` schedulers can now consume changes and use ``onlyIfChanged`` and ``createAbsoluteTimestamps``.
   - All "timed" schedulers now handle ``codebases`` the same way. Configuring ``codebases`` is strongly recommended.
     Using the ``branch`` parameter is discouraged.
 

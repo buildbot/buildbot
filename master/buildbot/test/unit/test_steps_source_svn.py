@@ -136,6 +136,16 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                           svn.SVN(repourl='http://svn.local/app/trunk',
                                   method='invalid'))
 
+    def test_svn_not_installed(self):
+        self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
     def test_corrupt_xml(self):
         self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
         self.expectCommands(

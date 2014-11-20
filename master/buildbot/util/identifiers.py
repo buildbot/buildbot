@@ -19,7 +19,7 @@ from buildbot import util
 
 ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
 initial_re = re.compile('^[^a-zA-Z_-]')
-subsequent_re = re.compile('[^a-zA-Z-1-9_-]')
+subsequent_re = re.compile('[^a-zA-Z-0-9_-]')
 trailing_digits_re = re.compile('_([0-9]+)$')
 
 

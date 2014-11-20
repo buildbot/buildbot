@@ -36,40 +36,84 @@ Logchunks
 
             There will be no new chunk event, the log rtype will be updated when new chunk is created, and the ui will call the data api to get actual data. This avoids to flood the mq with logchunk data.
 
-    .. bb:rpath:: /log/:logid/content
+    .. bb:rpath:: /log/:logid/contents
 
         :pathkey integer logid: the ID of the log
 
-    .. bb:rpath:: /step/:stepid/log/:log_slug/content
+    .. bb:rpath:: /step/:stepid/log/:log_slug/contents
 
         :pathkey integer stepid: the ID of the step
         :pathkey integer log_slug: the slug of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_slug/content
+    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_slug/contents
 
         :pathkey integer buildid: the ID of the build
         :pathkey identifier step_name: the name of the step within the build
         :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_slug/content
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_slug/contents
 
         :pathkey integer buildid: the ID of the build
         :pathkey integer step_number: the number of the step within the build
         :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_slug/content
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_slug/contents
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
         :pathkey identifier name: the name of the step within the build
         :pathkey identifier log_slug: the slug of the log
 
-    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_slug/content
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_slug/contents
 
         :pathkey integer builderid: the ID of the builder
         :pathkey integer build_number: the number of the build within the builder
         :pathkey integer step_number: the number of the step within the build
         :pathkey identifier log_slug: the slug of the log
+
+Raw endpoints
+-------------
+    Following endpoints allow to get the raw logs for downloading into a file.
+    Those endpoints do not provide paging capabilities.
+    For stream log types, the type line header characters are dropped.
+    'text/plain' is used as the mime type except for html logs, where 'text/html' is used.
+    The 'slug' is used as the filename for the resulting download. Some browsers are appending ".txt" or ".html" to this filename according to the mime-type.
+
+    .. bb:rpath:: /log/:logid/raw
+
+        :pathkey integer logid: the ID of the log
+
+    .. bb:rpath:: /step/:stepid/log/:log_slug/raw
+
+        :pathkey integer stepid: the ID of the step
+        :pathkey integer log_slug: the slug of the log
+
+    .. bb:rpath:: /build/:buildid/step/:step_name/log/:log_slug/raw
+
+        :pathkey integer buildid: the ID of the build
+        :pathkey identifier step_name: the name of the step within the build
+        :pathkey identifier log_slug: the slug of the log
+
+    .. bb:rpath:: /build/:buildid/step/:step_number/log/:log_slug/raw
+
+        :pathkey integer buildid: the ID of the build
+        :pathkey integer step_number: the number of the step within the build
+        :pathkey identifier log_slug: the slug of the log
+
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:name/log/:log_slug/raw
+
+        :pathkey integer builderid: the ID of the builder
+        :pathkey integer build_number: the number of the build within the builder
+        :pathkey identifier name: the name of the step within the build
+        :pathkey identifier log_slug: the slug of the log
+
+    .. bb:rpath:: /builder/:builderid/build/:build_number/step/:step_number/log/:log_slug/raw
+
+        :pathkey integer builderid: the ID of the builder
+        :pathkey integer build_number: the number of the build within the builder
+        :pathkey integer step_number: the number of the step within the build
+        :pathkey identifier log_slug: the slug of the log
+
 
 Update Methods
 --------------

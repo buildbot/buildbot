@@ -408,17 +408,22 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        self.builder_config.description = "New"
-        self.builder_config.tags = ["NewTag"]
+        config_args = dict(name='bldr', slavename="slv", builddir="bdir",
+                           slavebuilddir="sbdir", factory=self.factory,
+                           description='Noe', tags=['NewTag'])
+        new_builder_config = config.BuilderConfig(**config_args)
+        new_builder_config.description = "New"
+        new_builder_config.tags = ["NewTag"]
 
         mastercfg = config.MasterConfig()
-        mastercfg.builders = [self.builder_config]
+        mastercfg.builders = [new_builder_config]
         yield self.bldr.reconfigService(mastercfg)
         self.assertEqual(
             dict(description=self.bldr.builder_status.getDescription(),
                  tags=self.bldr.builder_status.getTags()),
             dict(description="New",
                  tags=["NewTag"]))
+        self.assertIdentical(self.bldr.config, new_builder_config)
 
         # check that the reconfig grabbed a buliderid
         self.assertNotEqual(self.bldr._builderid, None)

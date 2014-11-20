@@ -34,6 +34,7 @@ from buildbot.db import schedulers
 from buildbot.db import sourcestamps
 from buildbot.db import state
 from buildbot.db import steps
+from buildbot.db import tags
 from buildbot.db import users
 from buildbot.util import service
 from twisted.application import internet
@@ -91,6 +92,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)
         self.steps = steps.StepsConnectorComponent(self)
+        self.tags = tags.TagsConnectorComponent(self)
         self.logs = logs.LogsConnectorComponent(self)
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,

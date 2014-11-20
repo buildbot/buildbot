@@ -462,6 +462,26 @@ class Model(base.DBConnectorComponent):
                                          nullable=False),
                                )
 
+    # tags
+    tags = sa.Table('tags', metadata,
+                    sa.Column('id', sa.Integer, primary_key=True),
+                    # tag's name
+                    sa.Column('name', sa.Text, nullable=False),
+                    # sha1 of name; used for a unique index
+                    sa.Column('name_hash', sa.String(40), nullable=False),
+                    )
+
+    # a many-to-may relationship between builders and tags
+    builders_tags = sa.Table('builders_tags', metadata,
+                             sa.Column('id', sa.Integer, primary_key=True),
+                             sa.Column('builderid', sa.Integer,
+                                       sa.ForeignKey('builders.id'),
+                                       nullable=False),
+                             sa.Column('tagid', sa.Integer,
+                                       sa.ForeignKey('tags.id'),
+                                       nullable=False),
+                             )
+
     # objects
 
     # This table uniquely identifies objects that need to maintain state across
@@ -568,6 +588,13 @@ class Model(base.DBConnectorComponent):
     sa.Index('builder_masters_masterid', builder_masters.c.masterid)
     sa.Index('builder_masters_identity',
              builder_masters.c.builderid, builder_masters.c.masterid,
+             unique=True)
+    sa.Index('tag_name_hash', tags.c.name_hash, unique=True)
+    sa.Index('builders_tags_builderid',
+             builders_tags.c.builderid)
+    sa.Index('builders_tags_unique',
+             builders_tags.c.builderid,
+             builders_tags.c.tagid,
              unique=True)
     sa.Index('configured_slaves_buildmasterid',
              configured_buildslaves.c.buildermasterid)

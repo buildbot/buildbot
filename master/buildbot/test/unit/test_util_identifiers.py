@@ -65,6 +65,11 @@ class Tests(unittest.TestCase):
             identifiers.forceIdentifier(100, '9 pictures of cats.html'),
             u'__pictures_of_cats_html')
 
+    def test_forceIdentifier_digits(self):
+        self.assertEqualUnicode(
+            identifiers.forceIdentifier(100, 'warnings(2000)'),
+            u'warnings_2000_')
+
     def test_incrementIdentifier_simple(self):
         self.assertEqualUnicode(
             identifiers.incrementIdentifier(100, u'aaa'),

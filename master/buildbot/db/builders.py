@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db import base
+from twisted.internet import defer
 
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
@@ -30,13 +31,41 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 name_hash=self.hashColumns(name),
             ))
 
-    def updateBuilderDescription(self, builderid, description):
-        def thd(conn):
-            tbl = self.db.model.builders
+    @defer.inlineCallbacks
+    def updateBuilderInfo(self, builderid, description, tags):
+        # convert to tag IDs first, as necessary
+        def toTagid(tag):
+            if isinstance(tag, type(1)):
+                return defer.succeed(tag)
+            else:
+                ssConnector = self.master.db.tags
+                return ssConnector.findTagId(tag)
 
-            q = tbl.update(whereclause=(tbl.c.id == builderid))
+        tagsids = [r[1] for r in (yield defer.DeferredList(
+            [toTagid(tag) for tag in tags],
+            fireOnOneErrback=True,
+            consumeErrors=True))]
+
+        def thd(conn):
+            builders_tbl = self.db.model.builders
+            builders_tags_tbl = self.db.model.builders_tags
+            transaction = conn.begin()
+
+            q = builders_tbl.update(whereclause=(builders_tbl.c.id == builderid))
             conn.execute(q, description=description)
-        return self.db.pool.do(thd)
+            # remove previous builders_tags
+            conn.execute(builders_tags_tbl.delete(
+                whereclause=((builders_tags_tbl.c.builderid == builderid))))
+
+            # add tag ids
+            if tagsids:
+                conn.execute(builders_tags_tbl.insert(),
+                             [dict(builderid=builderid, tagid=tagid)
+                              for tagid in tagsids])
+
+            transaction.commit()
+
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def getBuilder(self, builderid):
         d = self.getBuilders(_builderid=builderid)
@@ -94,9 +123,25 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             last = None
             for row in conn.execute(q).fetchall():
                 if not last or row['id'] != last['id']:
-                    last = dict(id=row.id, name=row.name, masterids=[], description=row.description)
+                    last = self._thd_row2dict(conn, row)
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])
             return rv
         return self.db.pool.do(thd)
+
+    def _thd_row2dict(self, conn, row):
+        # get tags
+        builders_tags = self.db.model.builders_tags
+        tags = self.db.model.tags
+        from_clause = tags
+        from_clause = from_clause.join(builders_tags)
+        q = sa.select([tags.c.name],
+                      (builders_tags.c.builderid == row.id)).select_from(from_clause)
+
+        tags = [r.name for r in
+                conn.execute(q).fetchall()]
+
+        return dict(id=row.id, name=row.name, masterids=[],
+                    description=row.description,
+                    tags=tags)

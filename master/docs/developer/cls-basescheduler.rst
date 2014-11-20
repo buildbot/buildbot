@@ -54,8 +54,8 @@ BaseScheduler
 
         :param fileIsImportant: a callable provided by the user to distinguish important and unimportant changes
         :type fileIsImportant: callable
-        :param change_filter: a filter to determine which changes are even considered by this scheduler, or C{None} to consider all changes
-        :type change_filter: L{buildbot.changes.filter.ChangeFilter} instance
+        :param change_filter: a filter to determine which changes are even considered by this scheduler, or ``None`` to consider all changes
+        :type change_filter: :py:class:`buildbot.changes.filter.ChangeFilter` instance
         :param onlyImportant: If True, only important changes, as specified by fileIsImportant, will be added to the buildset.
         :type onlyImportant: boolean
         :return: Deferred
@@ -113,6 +113,7 @@ BaseScheduler
         The ``sourcestamps`` parameter is a list of source stamp dictionaries, giving the required parameters.
         Any unspecified values, including sourcestamps from unspecified codebases, will be filled in from the scheduler's configuration.
         If ``sourcestamps`` is None, then only the defaults will be used.
+        If ``sourcestamps`` includes sourcestamps for codebases not configured on the scheduler, they will be included anyway, although this is probably a sign of an incorrect configuration.
 
     .. py:method:: addBuildsetForChanges(reason='', external_idstring=None, changeids=[], builderNames=None, properties=None)
 

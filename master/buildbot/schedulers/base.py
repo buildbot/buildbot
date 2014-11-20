@@ -180,6 +180,7 @@ class BaseScheduler(ClusteredService, StateMixin):
 
     # starting builds
 
+    @defer.inlineCallbacks
     def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
                                                waited_for=False, properties=None, builderNames=None,
                                                **kw):
@@ -198,17 +199,38 @@ class BaseScheduler(ClusteredService, StateMixin):
         # Merge codebases with the passed list of sourcestamps
         # This results in a new sourcestamp for each codebase
         stampsWithDefaults = []
-        for codebase in stampsByCodebase:
-            ss = self.codebases.get(codebase, {}).copy()
+        for codebase in self.codebases:
+            cb = yield self.getCodebaseDict(codebase)
+            ss = {
+                'codebase': codebase,
+                'repository': cb.get('repository', None),
+                'branch': cb.get('branch', None),
+                'revision': cb.get('revision', None),
+                'project': '',
+            }
             # apply info from passed sourcestamps onto the configured default
             # sourcestamp attributes for this codebase.
-            ss.update(stampsByCodebase[codebase])
+            ss.update(stampsByCodebase.get(codebase, {}))
             stampsWithDefaults.append(ss)
 
-        return self.addBuildsetForSourceStamps(sourcestamps=stampsWithDefaults,
-                                               reason=reason, waited_for=waited_for, properties=properties,
-                                               builderNames=builderNames,
-                                               **kw)
+        # fill in any supplied sourcestamps that aren't for a codebase in the
+        # scheduler's codebase dictionary
+        for codebase in set(stampsByCodebase) - set(self.codebases):
+            cb = stampsByCodebase[codebase]
+            ss = {
+                'codebase': codebase,
+                'repository': cb.get('repository', None),
+                'branch': cb.get('branch', None),
+                'revision': cb.get('revision', None),
+                'project': '',
+            }
+            stampsWithDefaults.append(ss)
+
+        rv = yield self.addBuildsetForSourceStamps(
+            sourcestamps=stampsWithDefaults, reason=reason,
+            waited_for=waited_for, properties=properties,
+            builderNames=builderNames, **kw)
+        defer.returnValue(rv)
 
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does

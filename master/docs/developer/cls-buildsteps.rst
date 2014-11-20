@@ -412,6 +412,22 @@ BuildStep
 
         See :ref:`Adding-LogObservers` for more information on log observers.
 
+    .. py:method:: addLogWithFailure(why, logprefix='')
+
+        :param Failure why: the failure to log
+        :param logprefix: prefix for the log name
+        :returns: Deferred
+
+        Add log files displaying the given failure, named ``<logprefix>err.text`` and ``<logprefix>err.html``.
+
+    .. py:method:: addLogWithException(why, logprefix='')
+
+        :param Exception why: the exception to log
+        :param logprefix: prefix for the log name
+        :returns: Deferred
+
+        Similar to ``addLogWithFailure``, but for an Exception instead of a Failure.
+
     Along with logs, build steps have an associated set of links that can be used to provide additional information for developers.
     Those links are added during the build with this method:
 

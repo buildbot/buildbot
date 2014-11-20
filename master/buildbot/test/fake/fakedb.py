@@ -552,6 +552,33 @@ class BuilderMaster(Row):
     required_columns = ('builderid', 'masterid')
 
 
+class Tag(Row):
+    table = "tags"
+
+    defaults = dict(
+        id=None,
+        name='some:tag',
+        name_hash=None,
+    )
+
+    id_column = 'id'
+    hashedColumns = [('name_hash', ('name',))]
+
+
+class BuildersTags(Row):
+    table = "builders_tags"
+
+    defaults = dict(
+        id=None,
+        builderid=None,
+        tagid=None,
+    )
+
+    foreignKeys = ('builderid', 'tagid')
+    required_columns = ('builderid', 'tagid', )
+    id_column = 'id'
+
+
 class ConnectedBuildslave(Row):
     table = "connected_buildslaves"
 
@@ -2128,6 +2155,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def setUp(self):
         self.builders = {}
         self.builder_masters = {}
+        self.builders_tags = {}
 
     def insertTestData(self, rows):
         for row in rows:
@@ -2139,6 +2167,10 @@ class FakeBuildersComponent(FakeDBComponent):
             if isinstance(row, BuilderMaster):
                 self.builder_masters[row.id] = \
                     (row.builderid, row.masterid)
+            if isinstance(row, BuildersTags):
+                assert row.builderid in self.builders
+                self.builders_tags.setdefault(row.builderid,
+                                              []).append(row.tagid)
 
     def findBuilderId(self, name, _reactor=reactor):
         for m in self.builders.itervalues():
@@ -2148,7 +2180,8 @@ class FakeBuildersComponent(FakeDBComponent):
         self.builders[id] = dict(
             id=id,
             name=name,
-            description=None)
+            description=None,
+            tags=[])
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
@@ -2171,7 +2204,7 @@ class FakeBuildersComponent(FakeDBComponent):
                          if bm[0] == builderid]
             bldr = self.builders[builderid].copy()
             bldr['masterids'] = sorted(masterids)
-            return defer.succeed(bldr)
+            return defer.succeed(self._row2dict(bldr))
         return defer.succeed(None)
 
     def getBuilders(self, masterid=None):
@@ -2181,7 +2214,7 @@ class FakeBuildersComponent(FakeDBComponent):
                          if bm[0] == builderid]
             bldr = bldr.copy()
             bldr['masterids'] = sorted(masterids)
-            rv.append(bldr)
+            rv.append(self._row2dict(bldr))
         if masterid is not None:
             rv = [bd for bd in rv
                   if masterid in bd['masterids']]
@@ -2194,9 +2227,47 @@ class FakeBuildersComponent(FakeDBComponent):
             Builder(id=builderid, name=name),
         ])
 
-    def updateBuilderDescription(self, builderid, description):
+    @defer.inlineCallbacks
+    def updateBuilderInfo(self, builderid, description, tags):
         if builderid in self.builders:
+            tags = tags if tags else []
             self.builders[builderid]['description'] = description
+
+            # add tags
+            tagids = []
+            for tag in tags:
+                if not isinstance(tag, type(1)):
+                    tag = yield self.db.tags.findTagId(tag)
+                tagids.append(tag)
+            self.builders_tags[builderid] = tagids
+
+    def _row2dict(self, row):
+        row = row.copy()
+        row['tags'] = [self.db.tags.tags[tagid]['name'] for tagid in self.builders_tags.get(row['id'], [])]
+        return row
+
+
+class FakeTagsComponent(FakeDBComponent):
+
+    def setUp(self):
+        self.tags = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Tag):
+                self.tags[row.id] = dict(
+                    id=row.id,
+                    name=row.name)
+
+    def findTagId(self, name, _reactor=reactor):
+        for m in self.tags.itervalues():
+            if m['name'] == name:
+                return defer.succeed(m['id'])
+        id = len(self.tags) + 1
+        self.tags[id] = dict(
+            id=id,
+            name=name)
+        return defer.succeed(id)
 
 
 class FakeDBConnector(object):
@@ -2244,6 +2315,8 @@ class FakeDBConnector(object):
         self.masters = comp = FakeMastersComponent(self, testcase)
         self._components.append(comp)
         self.builders = comp = FakeBuildersComponent(self, testcase)
+        self._components.append(comp)
+        self.tags = comp = FakeTagsComponent(self, testcase)
         self._components.append(comp)
 
     def setup(self):

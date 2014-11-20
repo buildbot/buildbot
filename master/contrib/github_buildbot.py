@@ -55,15 +55,9 @@ class GitHubBuildBot(resource.Resource):
             request
                 the http request object
         """
-        event_type = request.getHeader("X-GitHub-Event")
 
-        # Reject non-push events
-        if event_type != "push":
-            logging.info(
-                "Rejecting request.  Expected a push even got %r instead.",
-                event_type)
-            request.setResponseCode(BAD_REQUEST)
-            return json.dumps({"error": "Bad Request."})
+        # All responses are application/json
+        request.setHeader("Content-Type", "application/json")
 
         content = request.content.read()
 
@@ -103,8 +97,36 @@ class GitHubBuildBot(resource.Resource):
                     request.setResponseCode(BAD_REQUEST)
                     return json.dumps({"error": "Bad Request."})
 
+        event_type = request.getHeader("X-GitHub-Event")
+        logging.debug("X-GitHub-Event: %r", event_type)
+
+        if event_type == "ping":
+            request.setResponseCode(OK)
+            return json.dumps({"result": "pong"})
+
+        # Reject non-push, non-ping events
+        if event_type != "push":
+            logging.info(
+                "Rejecting request.  Expected a push event but received %r instead.",
+                event_type)
+            request.setResponseCode(BAD_REQUEST)
+            return json.dumps({"error": "Bad Request."})
+
         try:
-            payload = json.loads(content)
+
+            content_type = request.getHeader("Content-Type")
+
+            if content_type == "application/json":
+                payload = json.loads(content)
+            elif content_type == "application/x-www-form-urlencoded":
+                payload = json.loads(request.args["payload"][0])
+            else:
+                logging.info(
+                    "Rejecting request.  Unknown 'Content-Type', received %r",
+                    content_type)
+                request.setResponseCode(BAD_REQUEST)
+                return json.dumps({"error": "Bad Request."})
+
             logging.debug("Payload: %r", payload)
             user = payload['pusher']['name']
             repo = payload['repository']['name']

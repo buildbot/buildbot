@@ -256,6 +256,15 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             responseCode=400)
 
     @defer.inlineCallbacks
+    def test_raw(self):
+        yield self.render_resource(self.rsrc, '/rawtest')
+        self.assertRequest(
+            content="value",
+            contentType='text/test; charset=utf-8',
+            responseCode=200,
+            headers={"content-disposition": ['attachment; filename=test.txt']})
+
+    @defer.inlineCallbacks
     def test_api_head(self):
         get = yield self.render_resource(self.rsrc, '/test', method='GET')
         head = yield self.render_resource(self.rsrc, '/test', method='HEAD')

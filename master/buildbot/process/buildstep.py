@@ -34,6 +34,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
@@ -458,62 +459,63 @@ class BuildStep(results.ResultComputingConfigMixin,
             if doStep:
                 try:
                     self._running = True
-                    results = yield self.run()
+                    self.results = yield self.run()
                 finally:
                     self._running = False
             else:
-                results = SKIPPED
+                self.results = SKIPPED
 
+        # NOTE: all of these `except` blocks must set self.results immediately!
         except BuildStepCancelled:
-            results = CANCELLED
+            self.results = CANCELLED
 
         except BuildStepFailed:
-            results = FAILURE
-            # fall through to the end
+            self.results = FAILURE
+
+        except BuildSlaveTooOldError:
+            self.results = EXCEPTION
 
         except error.ConnectionLost:
-            results = RETRY
+            self.results = RETRY
 
         except Exception:
+            self.results = EXCEPTION
             why = Failure()
             log.err(why, "BuildStep.failed; traceback follows")
             yield self.addLogWithFailure(why)
 
-            results = EXCEPTION
-
-        if self.stopped and results != RETRY:
+        if self.stopped and self.results != RETRY:
             # We handle this specially because we don't care about
             # the return code of an interrupted command; we know
             # that this should just be exception due to interrupt
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
             # due to slave lost
-            if results != CANCELLED:
-                results = EXCEPTION
+            if self.results != CANCELLED:
+                self.results = EXCEPTION
 
         # update the summary one last time, make sure that completes,
         # and then don't update it any more.
-        self.results = results
         self.realUpdateSummary()
         yield self.realUpdateSummary.stop()
 
-        yield self.master.data.updates.finishStep(self.stepid, results)
+        yield self.master.data.updates.finishStep(self.stepid, self.results)
 
         hidden = self.hideStepIf
         if callable(hidden):
             try:
-                hidden = hidden(results, self)
+                hidden = hidden(self.results, self)
             except Exception:
                 why = Failure()
                 log.err(why, "hidden callback failed; traceback follows")
                 yield self.addLogWithFailure(why)
-                results = EXCEPTION
+                self.results = EXCEPTION
                 hidden = False
         # TODO: hidden
 
         self.releaseLocks()
 
-        defer.returnValue(results)
+        defer.returnValue(self.results)
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
