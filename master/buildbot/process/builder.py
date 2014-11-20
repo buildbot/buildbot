@@ -911,11 +911,11 @@ class BuilderControl:
             defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestControls(self):
+    def getPendingBuildRequestControls(self, brids=None):
         master = self.original.master
         brdicts = yield master.db.buildrequests.getBuildRequests(
                 buildername=self.original.name,
-                claimed=False)
+                claimed=False, brids=brids)
 
         # convert those into BuildRequest objects
         buildrequests = [ ]

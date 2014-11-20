@@ -32,6 +32,14 @@
         {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build') }}
           <div class="divider"></div>
       {% endif %}
+
+      {% if authz.advertiseAction('stopAllBuilds', request) %}
+        <h2 class="head-2">
+          Stop Entire Build Chain
+        </h2>
+                {{ forms.stop_build(build_url+"/stopchain"+codebases_arg, authz, on_all=True, short=False, label='Entire Build Chain') }}
+          <div class="divider"></div>
+      {% endif %}
   {% else %}
       <div class="divider"></div>
       {% if b.getTestResults() %}
