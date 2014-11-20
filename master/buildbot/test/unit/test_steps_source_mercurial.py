@@ -252,7 +252,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         initialStdin='patch')
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'parents',
@@ -364,7 +364,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -483,14 +483,14 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'http://hg.mozilla.org', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -568,7 +568,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'http://hg.mozilla.org', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -612,7 +612,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'http://hg.mozilla.org/stable'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',
@@ -740,7 +740,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='foo\nbar/baz\n')
             + 1,
             Expect('rmdir', dict(dir=['wkdir/foo', 'wkdir/bar/baz'],
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
@@ -785,10 +785,10 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='foo\nbar/baz\n')
             + 1,
             Expect('rmdir', dict(dir='wkdir/foo',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('rmdir', dict(dir='wkdir/bar/baz',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'update', '--clean',
@@ -873,7 +873,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio', stdout='default')
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', 'clone', '--noupdate',

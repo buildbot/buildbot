@@ -258,11 +258,7 @@ class Git(Source):
         yield self._cleanSubmodule()
 
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        d = self.runRmdir(self.workdir, abandonOnFailure=False)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
@@ -508,18 +504,7 @@ class Git(Source):
 
     def _doClobber(self):
         """Remove the work directory"""
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,
-                                                'timeout': self.timeout, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        def checkRemoval(res):
-            if res != 0:
-                raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
-        return d
+        return self.runRmdir(self.workdir)
 
     def computeSourceRevision(self, changes):
         if not changes:

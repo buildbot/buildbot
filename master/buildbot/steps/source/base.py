@@ -242,16 +242,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         d = _downloadFile(diff, ".buildbot-diff")
         d.addCallback(lambda _: _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
-                                                'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d.addCallback(lambda _: self.runCommand(cmd))
 
-        def evaluateCommand(cmd):
-            if cmd.didFail():
-                raise buildstep.BuildStepFailed()
-            return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
+        def removePatch(_):
+            return self.runRmdir(self.build.path_module.join(self.workdir, ".buildbot-diff"),
+                                 evaluateCommand=lambda cmd: cmd.rc)
+
+        d.addCallback(removePatch)
         return d
 
     def sourcedirIsPatched(self):

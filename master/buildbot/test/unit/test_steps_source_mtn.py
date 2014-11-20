@@ -142,7 +142,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['mtn', 'automate', 'select', 'w:'])
@@ -210,7 +210,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unitte
                                  '--force', '--forward', '-i', '.buildbot-diff'])
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])

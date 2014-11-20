@@ -167,11 +167,7 @@ class Mercurial(Source):
         return d
 
     def _clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        return d
+        return self.runRmdir(self.workdir, abandonOnFailure=False)
 
     def clobber(self):
         d = self._clobber()
@@ -303,12 +299,7 @@ class Mercurial(Source):
                 if self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
-                                                            'logEnviron':
-                                                            self.logEnviron, })
-                    cmd.useLog(self.stdio_log, False)
-                    d = self.runCommand(cmd)
-                    d.addCallback(lambda _: cmd.rc)
+                    d = self.runRmdir(files, abandonOnFailure=False)
             return d
         d.addCallback(parseAndRemove)
         d.addCallback(self._update)
@@ -317,12 +308,9 @@ class Mercurial(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
-                                                    'logEnviron': self.logEnviron, })
-            cmd.useLog(self.stdio_log, False)
-            yield self.runCommand(cmd)
-            if cmd.rc != 0:
-                defer.returnValue(cmd.rc)
+            res = yield self.runRmdir(filename, abandonOnFailure=False)
+            if res:
+                defer.returnValue(res)
                 return
         defer.returnValue(0)
 
