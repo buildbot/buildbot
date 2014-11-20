@@ -87,8 +87,6 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def reconfigService(self, new_config):
 
-        # TODO: make buildslaves child services to this object instead of
-        # BotMaster, so they no longer need to register
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfig any newly-added change sources, as well as existing

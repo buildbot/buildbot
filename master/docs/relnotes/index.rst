@@ -257,6 +257,9 @@ Changes and Removals
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* Botmaster no longer service parent for buildslaves. Service parent functionality has been transferred to BuildslaveManager.
+  It should be noted Botmaster no longer has a ``slaves`` field as it was moved to BuildslaveManager.
+
 * The sourcestamp DB connector now returns a ``patchid`` field.
 
 * Buildbot no longer polls the database for jobs.
