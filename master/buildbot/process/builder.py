@@ -581,7 +581,7 @@ class BuilderControl:
         properties = Properties()
         # Don't include runtime-set properties in a rebuild request
         properties.updateFromPropertiesNoRuntime(bs.getProperties())
-        if extraProperties is None:
+        if extraProperties is not None:
             properties.updateFromProperties(extraProperties)
 
         properties_dict = dict((k, (v, s)) for (k, v, s) in properties.asList())
