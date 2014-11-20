@@ -15,7 +15,6 @@
 
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.process import metrics
@@ -25,7 +24,6 @@ from buildbot.util import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
-from twisted.python import reflect
 
 
 class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
