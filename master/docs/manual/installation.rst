@@ -228,6 +228,13 @@ Twisted has a tool called ``twistd`` which can use this .tac file to create and 
 Twistd takes care of logging and daemonization (running the program in the background).
 :file:`/usr/bin/buildbot` is a front end which runs `twistd` for you.)
 
+Your master will need a database to store the various information about your builds, and its configuration.
+By default, the ``sqlite3`` backend will be used.
+This needs no configuration, neither extra software.
+All information will be stored in the file :file:`state.sqlite`.
+Buildbot however supports multiple backends.
+See :ref:`Database-Server` for more options.
+
 Buildmaster Options
 ~~~~~~~~~~~~~~~~~~~
 

@@ -3,6 +3,11 @@ Deployment
 
 This page aims at describing the common pitfalls and best practices when deploying buildbot.
 
+.. contents::
+    :depth: 1
+    :local:
+
+.. _Database-Server:
 
 Using A Database Server
 -----------------------
