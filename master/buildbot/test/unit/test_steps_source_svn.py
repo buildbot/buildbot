@@ -409,7 +409,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -439,13 +439,13 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -482,7 +482,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio',  # expecting ../trunk/app
                               stdout="""<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>""")
             + 0,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -668,7 +668,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
@@ -699,7 +699,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout',
@@ -774,19 +774,19 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
@@ -879,7 +879,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file2'],
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -992,7 +992,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
@@ -1023,7 +1023,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True})
+            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
@@ -1070,11 +1070,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', {'dir':
                              'wkdir/svn_external_path/unversioned_file1',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             Expect('rmdir', {'dir':
                              'wkdir/svn_external_path/unversioned_file2',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -1122,7 +1122,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file1',
                               'wkdir/svn_external_path/unversioned_file2'],
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update',
@@ -1149,7 +1149,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1193,7 +1193,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1235,7 +1235,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1285,10 +1285,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
                                       'wkdir/svn_external_path/unversioned_file2'],
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1348,7 +1348,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1395,7 +1395,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1438,7 +1438,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1639,7 +1639,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', {'dir': 'wkdir',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
@@ -1657,7 +1657,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
@@ -1675,7 +1675,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                 logEnviron=True))
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True, timeout=1200))
             + 0,
             Expect('stat', dict(file='source/.svn',
                                 logEnviron=True))
@@ -1731,7 +1731,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file2'],
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 1,
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])

@@ -421,7 +421,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
                         + ['sync', '#none'])
             + 0,
 
-            Expect('rmdir', {'dir': workdir, 'logEnviron': True})
+            Expect('rmdir', {'dir': workdir, 'logEnviron': True, 'timeout': 1200})
             + 0,
 
             ExpectShell(workdir=workdir,
