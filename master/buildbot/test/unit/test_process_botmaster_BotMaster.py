@@ -22,6 +22,7 @@ from buildbot.test.fake import fakemaster
 from twisted.internet import defer
 from twisted.trial import unittest
 
+
 class TestCleanShutdown(unittest.TestCase):
 
     def setUp(self):
@@ -105,6 +106,7 @@ class TestCleanShutdown(unittest.TestCase):
 
         # and the BuildRequestDistributor should be, as well
         self.assertTrue(self.botmaster.brd.running)
+
 
 class TestBotMaster(unittest.TestCase):
 

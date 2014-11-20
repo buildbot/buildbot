@@ -94,13 +94,14 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
         # reconfig any newly-added change sources, as well as existing
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                                 new_config)
+
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):
 
         timer = metrics.Timer("BuildSlaveManager.reconfigServiceSlaves")
         timer.start()
 
-                # arrange slaves by name
+        # arrange slaves by name
         old_by_name = dict([(s.slavename, s)
                             for s in list(self)
                             if interfaces.IBuildSlave.providedBy(s)])

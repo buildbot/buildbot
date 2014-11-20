@@ -43,11 +43,12 @@ class FakeBuildSlave(config.ReconfigurableServiceMixin, service.AsyncService):
 class FakeBuildSlave2(FakeBuildSlave):
     pass
 
+
 class TestBuildSlaveManager(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True,wantData=True)
+                                             wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.buildslaves = bslavemanager.BuildslaveManager(self.master)
         # slaves expect a botmaster as well as a manager.
@@ -123,4 +124,3 @@ class TestBuildSlaveManager(unittest.TestCase):
 
         # sl *was* replaced (different class)
         self.assertIdentical(self.buildslaves.slaves['sl1'], sl_new)
-
