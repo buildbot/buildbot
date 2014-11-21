@@ -11,6 +11,30 @@ module.exports =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'static'
+        <% if (!coffee) { %>
+
+    ### ###########################################################################################
+    #   This is a collection of file patterns
+    ### ###########################################################################################
+    files:
+
+        app: [
+            'src/**/*.module.js'
+        ]
+
+        # scripts (could be coffee or js)
+        scripts: [
+            'src/**/*.js'
+            '!src/**/*.spec.js'
+        ]
+
+        # Javascript tests
+        tests: [
+            'test/**/*.js'
+            'src/**/*.spec.js'
+        ]
+        <% } %>
+
 
     ### ###########################################################################################
     #   This is a collection of file patterns
@@ -35,4 +59,3 @@ module.exports =
             "angular-mocks":
                 version: "~1.2.22"
                 files: "angular-mocks.js"
-

@@ -1,6 +1,6 @@
 {
   "name": "generator-guanlecoja",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A yeoman generator for guanlecoja, aka gulp-angularJS-less-coffeescript",
   "repository": {
     "type": "git",

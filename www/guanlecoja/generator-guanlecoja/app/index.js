@@ -10,6 +10,7 @@ var GeneratorGenerator = module.exports = yeomanG.Base.extend({
   initializing: function () {
     this.pkg = require('../package.json');
     this.currentYear = (new Date()).getFullYear();
+    this.config.defaults({'coffee': true});
   },
 
   prompting: {
@@ -26,12 +27,14 @@ var GeneratorGenerator = module.exports = yeomanG.Base.extend({
         name: 'coffee',
         type: 'confirm',
         message: 'Do you want to use coffeescript',
+        default: this.config.get('coffee')
       }
     ];
 
       this.prompt(prompts, function (props) {
         this.appname = props.appname;
         this.coffee = props.coffee;
+        this.config.set('coffee', props.coffee);
 
         done();
       }.bind(this));
