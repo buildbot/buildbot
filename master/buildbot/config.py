@@ -26,6 +26,7 @@ from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
+from buildbot.util import service as util_service
 from buildbot.www import auth
 from buildbot.www import avatar
 from twisted.application import service
@@ -593,9 +594,15 @@ class MasterConfig(util.ComparableMixin):
             return
         self.services = {}
         for serviceFactory in config_dict['services']:
-            if not isinstance(serviceFactory, service.CustomServiceFactory):
-                error("%r should be an instance of buildbot.config.CustomServiceFactory" %
-                      (service))
+            if not isinstance(serviceFactory, util_service.CustomServiceFactory):
+                error("%r object should be an instance of buildbot.util.service.CustomServiceFactory" %
+                      (type(serviceFactory)))
+                continue
+
+            if not issubclass(serviceFactory.klass, util_service.CustomService):
+                error("%r should be an instance of buildbot.util.service.CustomService" %
+                      (serviceFactory.klass))
+                continue
             self.services[serviceFactory.name] = serviceFactory
 
     def check_single_master(self):

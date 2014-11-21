@@ -228,13 +228,19 @@ class CustomService(AsyncMultiService):
 # ]
 
 
-class CustomServiceFactory(object):
+class CustomServiceFactory(util.config.ConfiguredMixin):
 
     def __init__(self, name, klass, *config_argv, **config_kwargs):
         self.name = name
         self.klass = klass
         self.config_argv = config_argv
         self.config_kwargs = config_kwargs
+
+    def getConfigDict(self):
+        return {'name': self.name,
+                'class': self.klass.__module__ + "." + self.klass.__name__,
+                'argv': self.config_argv,
+                'kwargs': self.config_kwargs}
 
     def createService(self, master):
         service = self.klass(self.name, master, self.klass())

@@ -855,6 +855,39 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "unknown www configuration parameter(s) foo")
 
+    def test_load_services_nominal(self):
+
+        class MyService(service.CustomService):
+
+            def configureService(foo=None):
+                self.foo = foo
+        myServiceFactory = service.CustomServiceFactory("foo", MyService, foo="bar")
+        self.cfg.load_services(self.filename, dict(
+            services=[myServiceFactory]))
+        self.assertResults(services={"foo": myServiceFactory})
+
+    def test_load_services_badservice(self):
+
+        class MyService(object):
+            pass
+        myServiceFactory = service.CustomServiceFactory("foo", MyService, foo="bar")
+        self.cfg.load_services(self.filename, dict(
+            services=[myServiceFactory]))
+        self.assertConfigError(self.errors,
+                               "<class 'buildbot.test.unit.test_config.MyService'> "
+                               "should be an instance of buildbot.util.service.CustomService")
+
+    def test_load_services_badservicefactory(self):
+
+        class MyService(object):
+            pass
+        myServiceFactory = MyService()
+        self.cfg.load_services(self.filename, dict(
+            services=[myServiceFactory]))
+        self.assertConfigError(self.errors,
+                               "<class 'buildbot.test.unit.test_config.MyService'> object "
+                               "should be an instance of buildbot.util.service.CustomServiceFactory")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
