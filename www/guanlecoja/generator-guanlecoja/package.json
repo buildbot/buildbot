@@ -1,0 +1,26 @@
+{
+  "name": "generator-guanlecoja",
+  "version": "0.1.0",
+  "description": "A yeoman generator for guanlecoja, aka gulp-angularJS-less-coffeescript",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/buildbot/guanlecoja.git"
+  },
+  "keywords": [
+    "yeoman-generator",
+    "gulp",
+    "angular",
+    "less",
+    "coffeescript"
+  ],
+  "author": "tardyp@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/buildbot/guanlecoja/issues"
+  },
+  "homepage": "https://github.com/buildbot/guanlecoja",
+  "dependencies": {
+    "yeoman-generator": "^0.17.7",
+    "yosay": "^1.0.0"
+  }
+}

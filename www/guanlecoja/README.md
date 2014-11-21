@@ -22,12 +22,17 @@ This is why it defines the languages and framework you use, and the organization
 
 Guanlecoja best practices are well described in https://medium.com/@dickeyxxx/266c1a4a6917
 
-### yo
+### QuickStart
 
-Well known tool Yeoman has similar goals, but it does not provide automatic update of the tools.
-Only templates and boilerplate generation is done, with no way of upgrading your project.
+Yeoman generator is created to easily bootstrap a guanlecoja app
 
-yo templates using Guanlecoja maybe created in the future
+    npm install -g generator-guanlecoja
+    yo guanlecoja
+    # answer questions..
+    gulp dev
+
+Advantage compared with other yeoman generators is that build system is managed in an external npm module
+so it will be upgraded automatically when new versions are coming using normal npm commands
 
 ### Why the name ``guanlecoja``
 

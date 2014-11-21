@@ -1,0 +1,9 @@
+{
+   "version" : "0.1.0",
+   "devDependencies" : {
+      "guanlecoja" : "latest"
+   },
+   "name" : "<%= _.slugify(appname) %>",
+   "dependencies" : {},
+   "description" : "<%= appname %>"
+}
