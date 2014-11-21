@@ -82,6 +82,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
         # these are set when the service is started
         self.botmaster = None
+        self.manager = None
         self.master = None
         self.buildslaveid = None
 
@@ -191,8 +192,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
-        self.botmaster = parent
+
+        self.manager = parent
         self.master = parent.master
+        self.botmaster = parent.master.botmaster
         return service.AsyncMultiService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks

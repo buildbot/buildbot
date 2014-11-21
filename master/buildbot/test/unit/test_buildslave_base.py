@@ -107,9 +107,12 @@ class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self.botmaster = botmaster.FakeBotMaster(self.master)
+        self.buildslaves = bslavemanager.FakeBuildslaveManager(self.master)
         self.master.botmaster = self.botmaster
+        self.master.buildslaves = self.buildslaves
         self.sl.master = self.master
         self.sl.botmaster = self.botmaster
+        self.sl.manager = self.buildslaves
         self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
         return self.sl.attached(self.conn)
 
@@ -131,7 +134,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = botmaster.FakeBotMaster(self.master)
-
+        self.buildslaves = bslavemanager.FakeBuildslaveManager(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
@@ -140,6 +143,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = ConcreteBuildSlave(name, password, **kwargs)
         slave.master = self.master
         slave.botmaster = self.botmaster
+        slave.manager = self.buildslaves
         if attached:
             slave.conn = fakeprotocol.FakeConnection(self.master, slave)
         return slave
@@ -291,10 +295,15 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_setServiceParent_started(self):
         master = self.master
         bm = botmaster.FakeBotMaster(master)
+        bsmanager = bslavemanager.FakeBuildslaveManager(master)
+        master.botmaster = bm
+        master.buildslaves = bsmanager
         bm.startService()
+        bsmanager.startService()
         bs = ConcreteBuildSlave('bot', 'pass')
-        bs.setServiceParent(bm)
-        self.assertEqual(bs.botmaster, bm)
+        bs.setServiceParent(bsmanager)
+        self.assertEqual(bs.manager, bsmanager)
+        self.assertEqual(bs.parent, bsmanager)
         self.assertEqual(bs.master, master)
 
     def test_setServiceParent_masterLocks(self):
@@ -303,10 +312,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
         """
         master = self.master
         bm = botmaster.FakeBotMaster(master)
+        bsmanager = bslavemanager.FakeBuildslaveManager(master)
+        master.botmaster = bm
+        master.buildslaves = bsmanager
         bm.startService()
+        bsmanager.startService()
         lock = locks.MasterLock('masterlock')
         bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bm)
+        bs.setServiceParent(bsmanager)
 
     def test_setServiceParent_slaveLocks(self):
         """
@@ -314,10 +327,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
         """
         master = self.master
         bm = botmaster.FakeBotMaster(master)
+        bsmanager = bslavemanager.FakeBuildslaveManager(master)
+        master.botmaster = bm
+        master.buildslaves = bsmanager
         bm.startService()
+        bsmanager.startService()
         lock = locks.SlaveLock('lock')
         bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
-        bs.setServiceParent(bm)
+        bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
     def test_startService_getSlaveInfo_empty(self):

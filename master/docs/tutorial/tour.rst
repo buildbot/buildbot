@@ -334,7 +334,7 @@ After restarting the master, you can ssh into the master and get an interactive 
 
 If you wanted to check which slaves are connected and what builders those slaves are assigned to you could do::
 
-  >>> master.botmaster.slaves
+  >>> master.buildslaves.slaves
   {'example-slave': <BuildSlave 'example-slave', current builders: runtests>}
 
 Objects can be explored in more depth using `dir(x)` or the helper function `show(x)`.

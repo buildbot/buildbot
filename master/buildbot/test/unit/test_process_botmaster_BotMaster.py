@@ -16,14 +16,11 @@
 import mock
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
 from buildbot.test.fake import fakemaster
-from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
 
 
 class TestCleanShutdown(unittest.TestCase):
@@ -111,24 +108,6 @@ class TestCleanShutdown(unittest.TestCase):
         self.assertTrue(self.botmaster.brd.running)
 
 
-class FakeBuildSlave(config.ReconfigurableServiceMixin, service.AsyncService):
-
-    implements(interfaces.IBuildSlave)
-
-    reconfig_count = 0
-
-    def __init__(self, slavename):
-        self.slavename = slavename
-
-    def reconfigService(self, new_config):
-        self.reconfig_count += 1
-        return defer.succeed(None)
-
-
-class FakeBuildSlave2(FakeBuildSlave):
-    pass
-
-
 class TestBotMaster(unittest.TestCase):
 
     def setUp(self):
@@ -143,11 +122,8 @@ class TestBotMaster(unittest.TestCase):
         return self.botmaster.stopService()
 
     def test_reconfigService(self):
-        # check that reconfigServiceSlaves and reconfigServiceBuilders are
-        # both called; they will be tested invidually below
+        # check that reconfigServiceBuilders is called.
         self.patch(self.botmaster, 'reconfigServiceBuilders',
-                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
-        self.patch(self.botmaster, 'reconfigServiceSlaves',
                    mock.Mock(side_effect=lambda c: defer.succeed(None)))
         self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
                    mock.Mock())
@@ -159,60 +135,9 @@ class TestBotMaster(unittest.TestCase):
         def check(_):
             self.botmaster.reconfigServiceBuilders.assert_called_with(
                 new_config)
-            self.botmaster.reconfigServiceSlaves.assert_called_with(
-                new_config)
             self.assertTrue(
                 self.botmaster.maybeStartBuildsForAllBuilders.called)
         return d
-
-    @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_add_remove(self):
-        sl = FakeBuildSlave('sl1')
-        self.new_config.slaves = [sl]
-
-        yield self.botmaster.reconfigServiceSlaves(self.new_config)
-
-        self.assertIdentical(sl.parent, self.botmaster)
-        self.assertEqual(self.botmaster.slaves, {'sl1': sl})
-
-        self.new_config.slaves = []
-
-        yield self.botmaster.reconfigServiceSlaves(self.new_config)
-
-        self.assertIdentical(sl.parent, None)
-        self.assertIdentical(sl.master, None)
-
-    @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_reconfig(self):
-        sl = FakeBuildSlave('sl1')
-        self.botmaster.slaves = dict(sl1=sl)
-        sl.setServiceParent(self.botmaster)
-        sl.master = self.master
-        sl.botmaster = self.botmaster
-
-        sl_new = FakeBuildSlave('sl1')
-        self.new_config.slaves = [sl_new]
-
-        yield self.botmaster.reconfigServiceSlaves(self.new_config)
-
-        # sl was not replaced..
-        self.assertIdentical(self.botmaster.slaves['sl1'], sl)
-
-    @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_class_changes(self):
-        sl = FakeBuildSlave('sl1')
-        self.botmaster.slaves = dict(sl1=sl)
-        sl.setServiceParent(self.botmaster)
-        sl.master = self.master
-        sl.botmaster = self.botmaster
-
-        sl_new = FakeBuildSlave2('sl1')
-        self.new_config.slaves = [sl_new]
-
-        yield self.botmaster.reconfigServiceSlaves(self.new_config)
-
-        # sl *was* replaced (different class)
-        self.assertIdentical(self.botmaster.slaves['sl1'], sl_new)
 
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
