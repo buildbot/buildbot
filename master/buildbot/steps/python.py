@@ -135,12 +135,12 @@ class PyFlakes(ShellCommand):
 
         # we log 'misc' as syntax-error
         if self.hasSyntaxError:
-            self.addCompleteLog("syntax-error", "".join(summaries['misc']))
+            self.addCompleteLog("syntax-error", "\n".join(summaries['misc']))
         else:
             for m in self.MESSAGES:
                 if counts[m]:
                     self.descriptionDone.append("%s=%d" % (m, counts[m]))
-                    self.addCompleteLog(m, "".join(summaries[m]))
+                    self.addCompleteLog(m, "\n".join(summaries[m]))
                 self.setProperty("pyflakes-%s" % m, counts[m], "pyflakes")
             self.setProperty("pyflakes-total", sum(counts.values()),
                              "pyflakes")
