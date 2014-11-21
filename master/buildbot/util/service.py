@@ -208,15 +208,15 @@ class CustomService(AsyncMultiService):
 
     def __init__(self, name):
         self.name = name
+        AsyncMultiService.__init__(self)
 
     def reconfigService(self, new_config):
-
         factory = new_config.services[self.name]
         return factory.configureService(self)
 
     def setServiceParent(self, parent):
         self.master = parent
-        return AsyncService.setServiceParent(parent)
+        return AsyncService.setServiceParent(self, parent)
 
     def configureService(self, *argv, **kwargs):
         return defer.success(None)
@@ -243,8 +243,7 @@ class CustomServiceFactory(util.config.ConfiguredMixin):
                 'kwargs': self.config_kwargs}
 
     def createService(self, master):
-        service = self.klass(self.name, master, self.klass())
-        return service.setServiceParent(master)
+        return self.klass(self.name).setServiceParent(master)
 
     def configureService(self, service, master):
         return service.configureService(master, *self.config_argv, **self.config_kwargs)
