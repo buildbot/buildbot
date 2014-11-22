@@ -12,8 +12,8 @@ This page aims at describing the common pitfalls and best practices when deployi
 Using A Database Server
 -----------------------
 
-Buildbot uses by default the sqlite3 database backend.
-If you plan to host a lots of data, you can however decide to use a *real* database server.
+Buildbot uses the sqlite3 database backend by default.
+If you plan to host a lot of data, you may consider using a more suitable database server.
 
 If you want to use a database server (e.g., MySQL or Postgres) as the database backend for your Buildbot, use :option:`buildbot create-master --db` to specify the :ref:`connection string <Database-Specification>` for the database, and make sure that the same URL appears in the ``db_url`` of the :bb:cfg:`db` parameter in your configuration file.
 
