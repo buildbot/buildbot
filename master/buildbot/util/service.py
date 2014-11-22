@@ -19,6 +19,28 @@ from twisted.internet import task
 from twisted.python import log
 
 from buildbot import util
+from buildbot.util import config
+
+
+class ReconfigurableServiceMixin:
+
+    reconfig_priority = 128
+
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        if not service.IServiceCollection.providedBy(self):
+            return
+
+        # get a list of child services to reconfigure
+        reconfigurable_services = [svc
+                                   for svc in self
+                                   if isinstance(svc, ReconfigurableServiceMixin)]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
+
+        for svc in reconfigurable_services:
+            yield svc.reconfigService(new_config)
 
 
 class ClusteredService(service.Service, util.ComparableMixin):
@@ -204,31 +226,26 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return defer.succeed(None)
 
 
-class CustomService(AsyncMultiService):
+class CustomService(AsyncMultiService, ReconfigurableServiceMixin):
 
     def __init__(self, name):
         self.name = name
         AsyncMultiService.__init__(self)
 
     def reconfigService(self, new_config):
+        print "reconfiguring"
         factory = new_config.services[self.name]
-        return factory.configureService(self)
+        return factory.reconfigCustomService(self)
 
     def setServiceParent(self, parent):
         self.master = parent
         return AsyncService.setServiceParent(self, parent)
 
-    def configureService(self, *argv, **kwargs):
-        return defer.success(None)
-
-# example usage
-#
-# c['services'] = [
-#    util.CustomServiceFactory("myservice", mymodule.MyService, useHttps=True)
-# ]
+    def reconfigCustomService(self, *argv, **kwargs):
+        return defer.succeed(None)
 
 
-class CustomServiceFactory(util.config.ConfiguredMixin):
+class CustomServiceFactory(config.ConfiguredMixin, ReconfigurableServiceMixin):
 
     def __init__(self, name, klass, *config_argv, **config_kwargs):
         self.name = name
@@ -245,5 +262,5 @@ class CustomServiceFactory(util.config.ConfiguredMixin):
     def createService(self, master):
         return self.klass(self.name).setServiceParent(master)
 
-    def configureService(self, service, master):
-        return service.configureService(master, *self.config_argv, **self.config_kwargs)
+    def reconfigCustomService(self, service):
+        return service.reconfigCustomService(*self.config_argv, **self.config_kwargs)

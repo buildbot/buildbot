@@ -27,6 +27,7 @@ from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.util.service import ReconfigurableServiceMixin
 from buildbot.www import auth
 from buildbot.www import avatar
 from twisted.application import service
@@ -838,24 +839,3 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if self.description:
             rv['description'] = self.description
         return rv
-
-
-class ReconfigurableServiceMixin:
-
-    reconfig_priority = 128
-
-    @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        if not service.IServiceCollection.providedBy(self):
-            return
-
-        # get a list of child services to reconfigure
-        reconfigurable_services = [svc
-                                   for svc in self
-                                   if isinstance(svc, ReconfigurableServiceMixin)]
-
-        # sort by priority
-        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
-
-        for svc in reconfigurable_services:
-            yield svc.reconfigService(new_config)

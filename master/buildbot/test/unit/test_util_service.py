@@ -17,6 +17,7 @@ import mock
 
 from buildbot.test.util import compat
 from buildbot.util import service
+from buildbot import config
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -533,3 +534,30 @@ class ClusteredService(unittest.TestCase):
 
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
+
+
+class CustomServiceFactory(unittest.TestCase):
+    def setUp(self):
+        class fakeMaster(service.AsyncMultiService, config.ReconfigurableServiceMixin):
+            pass
+        self.master = fakeMaster()
+
+    @defer.inlineCallbacks
+    def test_nominal(self):
+
+        class MyService(service.CustomService):
+            def reconfigCustomService(self, *argv, **kwargs):
+                self.config = argv, kwargs
+                return defer.succeed(None)
+
+        class fakeConfig(object):
+            pass
+
+        self.master.config = fakeConfig()
+        factory = service.CustomServiceFactory("basic", MyService, 1, a=2)
+        self.master.config.services = {"basic": factory}
+        yield factory.createService(self.master)
+        yield self.master.startService()
+        yield self.master.reconfigService(self.master.config)
+
+        self.failUnlessEqual(self.master.namedServices["basic"].config, ((1,), dict(a=2)))
