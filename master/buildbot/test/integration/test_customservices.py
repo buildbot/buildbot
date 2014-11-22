@@ -74,30 +74,29 @@ def masterConfig():
     from buildbot.steps.shell import ShellCommand
     from buildbot.util.service import CustomService, CustomServiceFactory
 
-    c['schedulers'] = [
-        ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
     class MyShellCommand(ShellCommand):
 
         def getResultSummary(self):
             service = self.master.namedServices['myService']
             return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
 
-    f = BuildFactory()
-    f.addStep(MyShellCommand(command='echo hei'))
-    c['builders'] = []
-    c['builders'].append(
-        BuilderConfig(name="testy",
-                      slavenames=["local1"],
-                      factory=f))
-
     class MyService(CustomService):
 
         def reconfigCustomService(self, num_reconfig):
             self.num_reconfig = num_reconfig
             return defer.succeed(None)
+
+    c['schedulers'] = [
+        ForceScheduler(
+            name="force",
+            builderNames=["testy"])]
+
+    f = BuildFactory()
+    f.addStep(MyShellCommand(command='echo hei'))
+    c['builders'] = [
+        BuilderConfig(name="testy",
+                      slavenames=["local1"],
+                      factory=f)]
 
     c['services'] = [CustomServiceFactory("myService", MyService, num_reconfig=num_reconfig)]
     return c

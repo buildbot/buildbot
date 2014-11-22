@@ -929,3 +929,63 @@ For example, a particular daily scheduler could be configured on multiple master
         This will only be called on an instance that successfully claimed the service and has been activated
         and after its ``deactivate`` has been called. Therefore, in this method it is safe to reassign
         the "active" status to another instance. This method may return a Deferred.
+
+
+.. class:: CustomService
+
+    This class is provided for advanced users as an interface to insert their own  :py:class:`buildbot.util.service.AsyncMultiService` in a buildbot master.
+    Such services are singletons accessible in nearly every objects of buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService'].
+    As such, they can be used to factorize access to external services, available e.g using a REST api. Having a single service will help with caching, and rate-limiting access of those APIs.
+
+    .. method:: reconfigCustomService(*args, **kwargs)
+
+        This method is called at buildbot startup, and buildbot reconfig.
+        `*args` and `**kwargs` are the configuration arguments passed to `CustomServiceFactory` in master.cfg.
+        Returns a defered that should fire when the service is ready.
+        Builds are not started until all services are configured.
+
+        CustomServices must be aware that during reconfiguration, their methods can still be called by running builds.
+        So they should atomically switch old configuration and new configuration, so that the service is always available.
+
+.. class:: CustomServiceFactory
+
+    This class is the interface used to configure a CustomService.
+    It is designed to be used in a master.cfg, with code similar to::
+
+        class MyShellCommand(ShellCommand):
+
+            def getResultSummary(self):
+                # access the service attribute
+                service = self.master.namedServices['myService']
+                return dict(step=u"arg value: %d" % (service.arg1,))
+
+        class MyService(CustomService):
+
+            def reconfigCustomService(self, arg1):
+                self.arg1 = arg1
+                return defer.succeed(None)
+
+        c['schedulers'] = [
+            ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(MyShellCommand(command='echo hei'))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          slavenames=["local1"],
+                          factory=f)]
+
+        c['services'] = [CustomServiceFactory("myService", MyService, arg1="foo")]
+
+
+    It has the responsability of instantiating and configuring the custom services.
+    Upon master startup, the service is instantiated, and configured.
+    Upon master reconfiguration, the service is just reconfigured.
+
+    .. method:: __init__(service_name, service_class, *args, **kwargs)
+
+        * `service_name`: configure the unique name which is used to access the service using `self.master.namedServices[service_name]`
+        * `service_class`: subclass of py:class`buildbot.util.service.CustomService`, that will be instanciated
+        * `args, kwargs`: parameters used to configure the custom service
