@@ -233,7 +233,6 @@ class CustomService(AsyncMultiService, ReconfigurableServiceMixin):
         AsyncMultiService.__init__(self)
 
     def reconfigService(self, new_config):
-        print "reconfiguring"
         factory = new_config.services[self.name]
         return factory.reconfigCustomService(self)
 

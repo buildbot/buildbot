@@ -18,7 +18,6 @@ import os
 
 import textwrap
 
-from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -47,11 +46,26 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         return self.tearDownDirs()
 
     @defer.inlineCallbacks
+    def do_force_build(self):
+
+        # force a build, and wait until it is finished
+        d = defer.Deferred()
+        consumer = yield self.master.mq.startConsuming(
+            lambda e, data: d.callback(data),
+            ('builds', None, 'finished'))
+
+        yield self.master.allSchedulers()[0].force("me")
+        b = yield d
+        consumer.stopConsuming()
+
+        b["steps"] = yield self.master.data.get(("builds", b['buildid'], "steps"))
+        defer.returnValue(b)
+
+    @defer.inlineCallbacks
     def do_test_master(self):
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
-        m.config = config.MasterConfig.loadConfig(
-            self.basedir, self.configfile)
+        self.master = m
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -75,15 +89,19 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
         s.setServiceParent(m)
 
-        d = defer.Deferred()
-        yield m.mq.startConsuming(lambda e, data: d.callback(data), ('buildsets', None, None))
+        build = yield self.do_force_build()
 
-        yield m.allSchedulers()[0].force("me")
+        self.failUnlessEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
 
-        yield d
+        myService = m.namedServices['myService']
+        self.failUnlessEqual(myService.num_reconfig, 1)
 
-        # myService = m.namedServices['myService']
-        # print myService.num_reconfig
+        yield m.reconfig()
+
+        build = yield self.do_force_build()
+
+        self.failUnlessEqual(myService.num_reconfig, 2)
+        self.failUnlessEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
 
         # stop the service
         yield m.stopService()
@@ -116,6 +134,7 @@ def masterConfig():
     from buildbot.schedulers.forcesched import ForceScheduler
     from buildbot.steps.shell import ShellCommand
     from buildbot.util.service import CustomService, CustomServiceFactory
+
     c['slaves'] = [BuildSlave("local1", "localpw")]
     c['protocols'] = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
     c['change_source'] = []
@@ -124,7 +143,14 @@ def masterConfig():
         name="force",
         builderNames=["testy"]))
     f1 = BuildFactory()
-    f1.addStep(ShellCommand(command='echo hi'))
+
+    class MyShellCommand(ShellCommand):
+
+        def getResultSummary(self):
+            service = self.master.namedServices['myService']
+            return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
+
+    f1.addStep(MyShellCommand(command='exit 2', flunkOnFailure=True, haltOnFailure=True))
     c['builders'] = []
     c['builders'].append(
         BuilderConfig(name="testy",
@@ -140,8 +166,9 @@ def masterConfig():
 
     class MyService(CustomService):
 
-        def configureService(self, _num_reconfig):
-            self.num_reconfig = _num_reconfig
+        def reconfigCustomService(self, num_reconfig):
+            self.num_reconfig = num_reconfig
+            return defer.succeed(None)
 
     c['services'] = [CustomServiceFactory("myService", MyService, num_reconfig=num_reconfig)]
     return c

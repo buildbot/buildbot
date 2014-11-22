@@ -120,7 +120,6 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         for key, plugin in new_config.www.get('plugins', {}).items():
             if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
-            print "putChild", key, self.apps.get(key).resource
             root.putChild(key, self.apps.get(key).resource)
 
         # /
@@ -153,6 +152,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
 
         class RotateLogSite(server.Site):
+
             """ A Site that logs to a separate file: http.log, and rotate its logs """
 
             def _openLogFile(self, path):
