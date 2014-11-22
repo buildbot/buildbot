@@ -6,7 +6,9 @@ Docker latent BuildSlave
 ========================
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
-Using the Docker latent BuildSlave, a fresh image will be instantiated upon each build, assuring consistency of the environment between builds.
+Using the Docker latent BuildSlave, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+Each image will be discarded once the slave finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Buildslaves-Options>` to change this behavior.
 
 This document will guide you through the setup of such slaves.
 
@@ -149,7 +151,7 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     This is the adress the master will use to connect with a running Docker instance.
 
 ``image``
-    (mandatory)
+    (optional if ``dockerfile`` is given)
     This is the name of the image that will be started by the build master. It should start a buildslave.
 
 ``command``
@@ -161,13 +163,21 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     See `Setting up Volumes`_
 
 ``dockerfile``
-    (optional)
+    (optional if ``image`` is given)
     This is the content of the Dockerfile that will be used to build the specified image if the image is not found by Docker.
     It should be a multiline string.
 
-    .. note:: This parameter will be used only once as the next times the image will already be available.
+    .. note:: In case ``image`` and ``dockerfile`` are given, no attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
 
-    .. note:: No attempt is made to compare the image with the content of the Dockerfile parameter if the image is found.
+``version``
+    (optional, default to the highest version known by docker-py)
+    This will indicates wich API version must be used to communicate with Docker.
+
+``tls``
+    (optional)
+    This allow to use TLS when connecting with the Docker socket.
+    This should be a ``docker.tls.TLSConfig`` object.
+    See `docker-py's own documentation <http://docker-py.readthedocs.org/en/latest/tls/>`_ for more details on how to initialise this object.
 
 Setting up Volumes
 ..................
@@ -177,3 +187,6 @@ Refer to Docker documentation for more information about Volumes.
 
 The format of that variable has to be an array of string.
 Each string specify a volume in the following format: :samp:`{volumename}:{bindname}`.
+The volume name has to be appended with ``:ro`` if the volume should be mounted *read-only*.
+
+.. note:: This is the same format as when specifying volumes on the command line for docker's own ``-v`` option.
