@@ -41,7 +41,8 @@ def handle_stream_line(line):
     Output is a generator yield "Content", and then "content"
     """
     # XXX This necessary processing is probably a bug from docker-py,
-    # hence, might break if the bug is fixed ...
+    # hence, might break if the bug is fixed, i.e. we should get decoded JSON
+    # directly from the API.
     line = json.loads(line)
     if 'error' in line:
         content = "ERROR: " + line['error']
@@ -56,10 +57,8 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     instance = None
 
     def __init__(self, name, password, docker_host, image=None, command=None,
-                 max_builds=None, notify_on_missing=None,
-                 missing_timeout=(60 * 20), build_wait_timeout=0,
-                 properties={}, locks=None, volumes=None, dockerfile=None,
-                 version=None, tls=None):
+                 volumes=None, dockerfile=None, version=None, tls=None,
+                 **kwargs):
 
         if not client:
             config.error("The python module 'docker-py' is needed to use a"
@@ -79,15 +78,16 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             self.volumes.append(volume)
 
             ro = False
-            if bind.endswith(':ro'):
+            if bind.endswith(':ro') or bind.endswith(':rw'):
+                ro = bind[-2:] == 'ro'
                 bind = bind[:-3]
-                ro = True
             self.binds[volume] = {'bind': bind, 'ro': ro}
 
-        AbstractLatentBuildSlave.__init__(self, name, password, max_builds,
-                                          notify_on_missing or [],
-                                          missing_timeout, build_wait_timeout,
-                                          properties, locks)
+        # Set build_wait_timeout to 0 if not explicitely set: Starting a
+        # container is almost immediate, we can affort doing so for each build.
+        if 'build_wait_timeout' not in kwargs:
+            kwargs['build_wait_timeout'] = 0
+        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
 
         self.image = image
         self.command = command or []
