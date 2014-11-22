@@ -393,7 +393,7 @@ class TestRebuild(BuilderMixin, unittest.TestCase):
         control.master = self.master
         self.bldrctrl = builder.BuilderControl(self.bldr, control)
 
-        yield self.bldrctrl.rebuildBuild(self.bstatus, reason='unit test', extraProperties={})
+        yield self.bldrctrl.rebuildBuild(self.bstatus, reason='unit test', extraProperties=None)
 
     @defer.inlineCallbacks
     def test_rebuild_with_no_sourcestamps(self):
