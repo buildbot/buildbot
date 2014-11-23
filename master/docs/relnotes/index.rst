@@ -257,6 +257,8 @@ Changes and Removals
 
 * The undocumented ``path`` parameter of the :bb:step:`MasterShellCommand` buildstep has been renamed ``workdir`` for better consistency with the other steps.
 
+* The name and source of a Property have to be unicode or ascii string.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
