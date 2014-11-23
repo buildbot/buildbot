@@ -36,7 +36,7 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 
 
-class AbstractBuildSlave(config.ReconfigurableServiceMixin,
+class AbstractBuildSlave(service.ReconfigurableServiceMixin,
                          service.AsyncMultiService, object):
 
     """This is the master-side representative for a remote buildbot slave.
@@ -250,8 +250,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin,
         # which is why the reconfig_priority is set low in this class.
         yield self.updateSlave()
 
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
     @defer.inlineCallbacks
     def stopService(self):

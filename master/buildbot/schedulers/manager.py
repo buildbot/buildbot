@@ -13,16 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import config
 from buildbot import util
 from buildbot.process import metrics
+from buildbot.util import service as util_service
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import reflect
 
 
-class SchedulerManager(config.ReconfigurableServiceMixin,
+class SchedulerManager(util_service.ReconfigurableServiceMixin,
                        service.MultiService):
 
     def __init__(self, master):
@@ -93,7 +93,7 @@ class SchedulerManager(config.ReconfigurableServiceMixin,
                                      absolute=True)
 
         # reconfig any newly-added schedulers, as well as existing
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield util_service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                      new_config)
 
         timer.stop()

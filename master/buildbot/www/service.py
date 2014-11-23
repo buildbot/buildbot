@@ -15,7 +15,6 @@
 
 import os
 
-from buildbot import config
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
 from buildbot.www import auth
@@ -30,7 +29,7 @@ from twisted.python import log
 from twisted.web import server
 
 
-class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
@@ -105,8 +104,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
                 yield self.port_service.setServiceParent(self)
 
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a

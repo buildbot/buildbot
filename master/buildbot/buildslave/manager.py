@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.buildslave.protocols import pb as bbpb
 from buildbot.process import metrics
 from buildbot.util import misc
+from buildbot.util.service import ReconfigurableServiceMixin
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
@@ -57,7 +57,7 @@ class BuildslaveRegistration(object):
         return self.pbReg.getPort()
 
 
-class BuildslaveManager(config.ReconfigurableServiceMixin,
+class BuildslaveManager(ReconfigurableServiceMixin,
                         service.MultiService):
 
     name = "buildslaves"
@@ -91,8 +91,8 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfig any newly-added change sources, as well as existing
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield ReconfigurableServiceMixin.reconfigService(self,
+                                                         new_config)
 
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):

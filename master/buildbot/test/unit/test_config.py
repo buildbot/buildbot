@@ -1301,7 +1301,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    })
 
 
-class FakeService(config.ReconfigurableServiceMixin,
+class FakeService(service.ReconfigurableServiceMixin,
                   service.AsyncService):
 
     succeed = True
@@ -1310,7 +1310,7 @@ class FakeService(config.ReconfigurableServiceMixin,
     def reconfigService(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
         if not self.succeed:
             @d.addCallback
             def fail(_):
@@ -1318,12 +1318,12 @@ class FakeService(config.ReconfigurableServiceMixin,
         return d
 
 
-class FakeMultiService(config.ReconfigurableServiceMixin,
+class FakeMultiService(service.ReconfigurableServiceMixin,
                        service.AsyncMultiService):
 
     def reconfigService(self, new_config):
         self.called = True
-        d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
         return d
 
 

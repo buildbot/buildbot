@@ -861,7 +861,7 @@ The first two classes are more robust implementations of two Twisted classes, an
     This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores failures in the ``stopService`` process.
     With :py:class:`AsyncMultiService`, any errors in a child's ``stopService`` will be propagated to the parent's ``stopService`` method.
 
-.. class:: AsyncService
+.. py:class:: AsyncService
 
     This class is similar to :py:class:`twisted.application.service.Service`, except that its ``setServiceParent`` method will return a Deferred.
     That Deferred will fire after the ``startService`` method has completed, if the service was started because the new parent was already running.
@@ -874,7 +874,7 @@ In a multiple-master configuration, some arbitration is required to ensure that 
 
 For example, a particular daily scheduler could be configured on multiple masters, but only one of them should actually trigger the required builds.
 
-.. class:: ClusteredService
+.. py:class:: ClusteredService
 
     A base class for a service that must have only one "active" instance in a buildbot configuration.
 
@@ -930,12 +930,13 @@ For example, a particular daily scheduler could be configured on multiple master
         and after its ``deactivate`` has been called. Therefore, in this method it is safe to reassign
         the "active" status to another instance. This method may return a Deferred.
 
-
-.. class:: CustomService
+.. _CustomServices:
+.. py:class:: CustomService
 
     This class is provided for advanced users as an interface to insert their own  :py:class:`buildbot.util.service.AsyncMultiService` in a buildbot master.
     Such services are singletons accessible in nearly every objects of buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService'].
-    As such, they can be used to factorize access to external services, available e.g using a REST api. Having a single service will help with caching, and rate-limiting access of those APIs.
+    As such, they can be used to factorize access to external services, available e.g using a REST api.
+    Having a single service will help with caching, and rate-limiting access of those APIs.
 
     .. method:: reconfigCustomService(*args, **kwargs)
 
@@ -947,7 +948,7 @@ For example, a particular daily scheduler could be configured on multiple master
         CustomServices must be aware that during reconfiguration, their methods can still be called by running builds.
         So they should atomically switch old configuration and new configuration, so that the service is always available.
 
-.. class:: CustomServiceFactory
+.. py:class:: CustomServiceFactory
 
     This class is the interface used to configure a CustomService.
     It is designed to be used in a master.cfg, with code similar to::
@@ -980,7 +981,7 @@ For example, a particular daily scheduler could be configured on multiple master
         c['services'] = [CustomServiceFactory("myService", MyService, arg1="foo")]
 
 
-    It has the responsability of instantiating and configuring the custom services.
+    It has the responsibility of instantiating and configuring the custom services.
     Upon master startup, the service is instantiated, and configured.
     Upon master reconfiguration, the service is just reconfigured.
 

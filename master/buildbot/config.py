@@ -27,11 +27,8 @@ from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
-from buildbot.util.service import ReconfigurableServiceMixin
 from buildbot.www import auth
 from buildbot.www import avatar
-from twisted.application import service
-from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 

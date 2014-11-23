@@ -15,9 +15,9 @@
 
 import mock
 
-from buildbot import config
 from buildbot.schedulers import base
 from buildbot.schedulers import manager
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -72,14 +72,14 @@ class SchedulerManager(unittest.TestCase):
             d.addCallback(still_set)
             return d
 
-    class ReconfigSched(config.ReconfigurableServiceMixin, Sched):
+    class ReconfigSched(service.ReconfigurableServiceMixin, Sched):
 
         def reconfigService(self, new_config):
             self.reconfig_count += 1
             new_sched = new_config.schedulers[self.name]
             self.attr = new_sched.attr
-            return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                     new_config)
+            return service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                      new_config)
 
     class ReconfigSched2(ReconfigSched):
         pass

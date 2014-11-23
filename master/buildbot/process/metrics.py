@@ -35,8 +35,8 @@ Basic architecture:
 """
 from collections import deque
 
-from buildbot import config
 from buildbot import util
+from buildbot.util import service as util_service
 from collections import defaultdict
 from twisted.application import service
 from twisted.internet import reactor
@@ -370,7 +370,7 @@ def periodicCheck(_reactor=reactor):
         log.err(None, "while collecting VM metrics")
 
 
-class MetricLogObserver(config.ReconfigurableServiceMixin,
+class MetricLogObserver(util_service.ReconfigurableServiceMixin,
                         service.MultiService):
     _reactor = reactor
 
@@ -428,8 +428,8 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
                     self.periodic_task.start(periodic_interval)
 
         # upcall
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        return util_service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                       new_config)
 
     def stopService(self):
         self.disable()

@@ -33,12 +33,16 @@ class CustomServiceMaster(RunMasterBase):
             lambda e, data: d.callback(data),
             ('builds', None, 'finished'))
 
-        yield self.master.allSchedulers()[0].force("me")
-        b = yield d
+        # use data api to force a build
+        yield self.master.data.control("force", {}, ("forceschedulers", "force"))
+
+        # wait until we receive the build finished event
+        build = yield d
         consumer.stopConsuming()
 
-        b["steps"] = yield self.master.data.get(("builds", b['buildid'], "steps"))
-        defer.returnValue(b)
+        # enrich the build result, with the step results
+        build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
+        defer.returnValue(build)
 
     @defer.inlineCallbacks
     def test_customService(self):

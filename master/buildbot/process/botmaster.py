@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot import config
 from buildbot import locks
 from buildbot import util
 from buildbot.process import metrics
@@ -26,7 +25,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 
-class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
     It provides them with BuildSlaves, and distributes build requests to
@@ -164,8 +163,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case

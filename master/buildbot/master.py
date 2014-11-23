@@ -67,7 +67,7 @@ class LogRotation(object):
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
@@ -379,8 +379,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        return service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                  new_config)
 
     # informational methods
     def allSchedulers(self):

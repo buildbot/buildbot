@@ -17,7 +17,6 @@ import mock
 
 from buildbot.test.util import compat
 from buildbot.util import service
-from buildbot import config
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -537,8 +536,9 @@ class ClusteredService(unittest.TestCase):
 
 
 class CustomServiceFactory(unittest.TestCase):
+
     def setUp(self):
-        class fakeMaster(service.AsyncMultiService, config.ReconfigurableServiceMixin):
+        class fakeMaster(service.AsyncMultiService, service.ReconfigurableServiceMixin):
             pass
         self.master = fakeMaster()
 
@@ -546,6 +546,7 @@ class CustomServiceFactory(unittest.TestCase):
     def test_nominal(self):
 
         class MyService(service.CustomService):
+
             def reconfigCustomService(self, *argv, **kwargs):
                 self.config = argv, kwargs
                 return defer.succeed(None)

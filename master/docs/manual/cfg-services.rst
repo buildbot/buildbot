@@ -3,7 +3,8 @@
 Custom Services
 ---------------
 
-For advanced users or plugins writers, the 'services' key is available, and holds a list of py:class:`buildbot.util.service.CustomServiceFactories`.
+For advanced users or plugins writers, the 'services' key is available, and holds a list of :py:class:`buildbot.util.service.CustomServiceFactories`.
 As this feature for advanced users, it is described in the developer section of the manual.
+See :ref:`Custom Services<CustomServices>`, the doc for :py:class:`CustomServiceFactories` and :py:class:`CustomService`.
 
 This section will grow as soon as ready-to-use services are created.

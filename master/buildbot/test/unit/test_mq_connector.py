@@ -15,14 +15,14 @@
 
 import mock
 
-from buildbot import config
 from buildbot.mq import base
 from buildbot.mq import connector
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class FakeMQ(config.ReconfigurableServiceMixin, base.MQBase):
+class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     new_config = "not_called"
 
