@@ -16,8 +16,6 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
-import json
-
 from io import BytesIO
 
 from twisted.internet import defer
@@ -27,6 +25,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot import interfaces
 from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot.util import json
 
 try:
     import docker
