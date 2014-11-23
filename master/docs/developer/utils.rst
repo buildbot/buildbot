@@ -930,7 +930,6 @@ For example, a particular daily scheduler could be configured on multiple master
         and after its ``deactivate`` has been called. Therefore, in this method it is safe to reassign
         the "active" status to another instance. This method may return a Deferred.
 
-.. _CustomServices:
 .. py:class:: CustomService
 
     This class is provided for advanced users as an interface to insert their own  :py:class:`buildbot.util.service.AsyncMultiService` in a buildbot master.
