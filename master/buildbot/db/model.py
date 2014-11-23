@@ -799,6 +799,7 @@ class Model(base.DBConnectorComponent):
                 # do some tests before getting started
                 test_unicode(engine)
 
+                log.msg("Initializing empty database")
                 Model.metadata.create_all(engine)
                 repo = migrate.versioning.repository.Repository(self.repo_path)
 
