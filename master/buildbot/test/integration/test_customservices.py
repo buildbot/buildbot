@@ -76,7 +76,7 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.schedulers.forcesched import ForceScheduler
     from buildbot.steps.shell import ShellCommand
-    from buildbot.util.service import CustomService, CustomServiceFactory
+    from buildbot.util.service import ReconfigurableService
 
     class MyShellCommand(ShellCommand):
 
@@ -84,9 +84,10 @@ def masterConfig():
             service = self.master.namedServices['myService']
             return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
 
-    class MyService(CustomService):
+    class MyService(ReconfigurableService):
+        name = "myService"
 
-        def reconfigCustomService(self, num_reconfig):
+        def reconfigServiceWithConstructorArgs(self, num_reconfig):
             self.num_reconfig = num_reconfig
             return defer.succeed(None)
 
@@ -102,5 +103,5 @@ def masterConfig():
                       slavenames=["local1"],
                       factory=f)]
 
-    c['services'] = [CustomServiceFactory("myService", MyService, num_reconfig=num_reconfig)]
+    c['services'] = [MyService(num_reconfig=num_reconfig)]
     return c

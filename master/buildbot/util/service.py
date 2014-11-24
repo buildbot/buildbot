@@ -226,40 +226,42 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return defer.succeed(None)
 
 
-class CustomService(AsyncMultiService, ReconfigurableServiceMixin):
+class ReconfigurableService(AsyncMultiService, config.configuredMixin,
+                            ReconfigurableServiceMixin, util.ComparableMixin):
+    compare_attrs = ('name', 'config', 'config_attr')
+    config_attr = "services"
+    name = None
 
-    def __init__(self, name):
-        self.name = name
-        AsyncMultiService.__init__(self)
+    def __init__(self, name=None, *args, **kwargs):
+        if name is not None:
+            self.name = name
+        if self.name is None:
+            config.error("%s: should pass a name to constructor" % (type(self),))
+            return
+        self.config_args = args
+        self.config_kwargs = kwargs
+
+    def getConfigDict(self):
+        _type = type(self)
+        return {'name': self.name,
+                'class': _type.__module__ + "." + _type.__name__,
+                'args': self.config_args,
+                'kwargs': self.config_kwargs}
 
     def reconfigService(self, new_config):
-        factory = new_config.services[self.name]
-        return factory.reconfigCustomService(self)
+        # get from the config object its sibling config
+        config_sibling = getattr(new_config, self.config_attr)[self.name]
+
+        # only reconfigure if different as ComparableMixin says.
+        if config_sibling != self:
+            return self.reconfigServiceWithConstructorArgs(*self.config_args, **self.config_kwargs)
 
     def setServiceParent(self, parent):
         self.master = parent
         return AsyncService.setServiceParent(self, parent)
 
-    def reconfigCustomService(self, *argv, **kwargs):
+    def checkConfig(self, *args, **kwargs):
+        return defer.succeed(True)
+
+    def reconfigServiceWithConstructorArgs(self, *args, **kwargs):
         return defer.succeed(None)
-
-
-class CustomServiceFactory(config.ConfiguredMixin, ReconfigurableServiceMixin):
-
-    def __init__(self, name, klass, *config_argv, **config_kwargs):
-        self.name = name
-        self.klass = klass
-        self.config_argv = config_argv
-        self.config_kwargs = config_kwargs
-
-    def getConfigDict(self):
-        return {'name': self.name,
-                'class': self.klass.__module__ + "." + self.klass.__name__,
-                'argv': self.config_argv,
-                'kwargs': self.config_kwargs}
-
-    def createService(self, master):
-        return self.klass(self.name).setServiceParent(master)
-
-    def reconfigCustomService(self, service):
-        return service.reconfigCustomService(*self.config_argv, **self.config_kwargs)
