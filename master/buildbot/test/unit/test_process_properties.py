@@ -995,11 +995,9 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props.getProperty('x'), 24)
         self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
 
-    @compat.usesFlushWarnings
     def test_setProperty_notJsonable(self):
-        self.props.setProperty("project", ConstantRenderable('testing'), "test")
-        self.props.setProperty("project", object, "test")
-        self.assertEqual(len(self.flushWarnings([self.test_setProperty_notJsonable])), 2)
+        self.assertRaises(TypeError, self.props.setProperty, "project", ConstantRenderable('testing'), "test")
+        self.assertRaises(TypeError, self.props.setProperty, "project", object, "test")
 
     # IProperties methods
 

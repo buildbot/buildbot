@@ -136,13 +136,7 @@ class Properties(util.ComparableMixin):
 
     def setProperty(self, name, value, source, runtime=False):
         name = util.ascii2unicode(name)
-        try:
-            json.dumps(value)
-        except TypeError:
-            warnings.warn(
-                "Non jsonable properties are not explicitly supported and" +
-                "will be explicitly disallowed in a future version.",
-                DeprecationWarning, stacklevel=2)
+        json.dumps(value)  # Let the exception propagate ...
         source = util.ascii2unicode(source)
 
         self.properties[name] = (value, source)
