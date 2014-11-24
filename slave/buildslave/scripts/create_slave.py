@@ -55,6 +55,7 @@ keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
+maxcpus = %(maxcpus)s
 allow_shutdown = %(allow-shutdown)s
 
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,

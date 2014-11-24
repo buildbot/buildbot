@@ -488,6 +488,7 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         "log-count": 8,
         "keepalive": 4,
         "maxdelay": 2,
+        "maxcpus": 4,
 
         # arguments
         "host": "masterhost",
