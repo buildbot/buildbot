@@ -15,7 +15,6 @@
 
 import collections
 import re
-import warnings
 import weakref
 
 from buildbot import config

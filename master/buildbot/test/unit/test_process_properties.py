@@ -28,7 +28,6 @@ from buildbot.process.properties import _Lookup
 from buildbot.process.properties import _SourceStampDict
 from buildbot.process.properties import renderer
 from buildbot.test.fake.fakebuild import FakeBuild
-from buildbot.test.util import compat
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
 from twisted.internet import defer
