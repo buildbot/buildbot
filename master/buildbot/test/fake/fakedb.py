@@ -462,6 +462,19 @@ class Build(Row):
     required_columns = ('buildrequestid', 'masterid', 'buildslaveid')
 
 
+class BuildProperties(Row):
+    table = "build_properties"
+    defaults = dict(
+        buildid=None,
+        name='prop',
+        value=42,
+        source='fakedb'
+    )
+
+    foreignKeys = ('buildid',)
+    required_columns = ('buildid',)
+
+
 class Step(Row):
     table = "steps"
 

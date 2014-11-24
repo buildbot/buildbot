@@ -98,6 +98,16 @@ class Model(base.DBConnectorComponent):
 
     # builds
 
+    # This table contains the build properties
+    build_properties = sa.Table('build_properties', metadata,
+                                sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id'),
+                                          nullable=False),
+                                sa.Column('name', sa.String(256), nullable=False),
+                                # JSON encoded value
+                                sa.Column('value', sa.Text, nullable=False),
+                                sa.Column('source', sa.String(256), nullable=False),
+                                )
+
     # This table contains basic information about each build.
     builds = sa.Table('builds', metadata,
                       sa.Column('id', sa.Integer, primary_key=True),
@@ -565,6 +575,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid)
     sa.Index('buildrequests_builderid', buildrequests.c.builderid)
     sa.Index('buildrequests_complete', buildrequests.c.complete)
+    sa.Index('build_properties_buildid', build_properties.c.buildid)
     sa.Index('builds_buildrequestid', builds.c.buildrequestid)
     sa.Index('buildsets_complete', buildsets.c.complete)
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
