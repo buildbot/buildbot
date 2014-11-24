@@ -17,8 +17,8 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.buildslave.protocols import pb as bbpb
-from buildbot.util import misc
 from buildbot.process import metrics
+from buildbot.util import misc
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
