@@ -317,6 +317,26 @@ builds
         Mark the unfinished builds from a given master as finished, with ``complete_at`` set to the current time.
         This is part of the housekeeping done when a master is lost.
 
+    .. py:method:: getBuildProperties(buildid)
+
+        :param buildid: build ID
+        :returns: dictionary mapping property name to ``value, source``, via Deferred
+
+        Return the properties for a build, in the same format they were given to :py:meth:`addBuild`.
+
+        Note that this method does not distinguish a non-existent build from a build with no properties, and returns ``{}`` in either case.
+
+    .. py:method:: setBuildProperty(buildid, name, value, source)
+
+        :param integer buildid: build ID
+        :param string name: Name of the property to set
+        :param value: Value of the property
+        :param string source: Source of the Property to set
+        :returns: Deferred
+
+        Set a build property.
+        If no property with that name existed in that build, a new property will be created.
+
 steps
 ~~~~~
 
