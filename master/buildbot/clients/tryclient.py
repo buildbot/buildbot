@@ -622,11 +622,17 @@ class Try(pb.Referenceable):
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
+            ssh_commands = which("ssh")
+            if not ssh_commands:
+                raise RuntimeError("couldn't find ssh executable, make sure "
+                                   "it is available in the PATH")
+
+            ssh_command = ssh_commands[0]
             if tryuser:
-                argv = ["ssh", "-l", tryuser, tryhost,
+                argv = [ssh_command, "-l", tryuser, tryhost,
                         buildbotbin, "tryserver", "--jobdir", trydir]
             else:
-                argv = ["ssh", tryhost,
+                argv = [ssh_command, tryhost,
                         buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)
             reactor.spawnProcess(pp, argv[0], argv, os.environ)
