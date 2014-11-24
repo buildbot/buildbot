@@ -226,20 +226,23 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return defer.succeed(None)
 
 
-class ReconfigurableService(AsyncMultiService, config.configuredMixin,
+class ReconfigurableService(AsyncMultiService, config.ConfiguredMixin,
                             ReconfigurableServiceMixin, util.ComparableMixin):
     compare_attrs = ('name', 'config', 'config_attr')
     config_attr = "services"
     name = None
+    configured = False
 
     def __init__(self, name=None, *args, **kwargs):
         if name is not None:
             self.name = name
         if self.name is None:
-            config.error("%s: should pass a name to constructor" % (type(self),))
+            config.error("%s: must pass a name to constructor" % (type(self),))
             return
         self.config_args = args
         self.config_kwargs = kwargs
+
+        AsyncMultiService.__init__(self)
 
     def getConfigDict(self):
         _type = type(self)
@@ -253,8 +256,11 @@ class ReconfigurableService(AsyncMultiService, config.configuredMixin,
         config_sibling = getattr(new_config, self.config_attr)[self.name]
 
         # only reconfigure if different as ComparableMixin says.
-        if config_sibling != self:
-            return self.reconfigServiceWithConstructorArgs(*self.config_args, **self.config_kwargs)
+        if self.configured and config_sibling == self:
+            return defer.succeed(None)
+        self.configured = True
+        return self.reconfigServiceWithConstructorArgs(*config_sibling.config_args,
+                                                       **config_sibling.config_kwargs)
 
     def setServiceParent(self, parent):
         self.master = parent

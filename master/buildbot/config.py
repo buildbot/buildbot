@@ -591,17 +591,13 @@ class MasterConfig(util.ComparableMixin):
         if 'services' not in config_dict:
             return
         self.services = {}
-        for serviceFactory in config_dict['services']:
-            if not isinstance(serviceFactory, util_service.CustomServiceFactory):
-                error("%r object should be an instance of buildbot.util.service.CustomServiceFactory" %
-                      (type(serviceFactory)))
+        for _service in config_dict['services']:
+            if not isinstance(_service, util_service.ReconfigurableService):
+                error("%r object should be an instance of buildbot.util.service.ReconfigurableService" %
+                      (type(_service)))
                 continue
 
-            if not issubclass(serviceFactory.klass, util_service.CustomService):
-                error("%r should be an instance of buildbot.util.service.CustomService" %
-                      (serviceFactory.klass))
-                continue
-            self.services[serviceFactory.name] = serviceFactory
+            self.services[_service.name] = _service
 
     def check_single_master(self):
         # check additional problems that are only valid in a single-master

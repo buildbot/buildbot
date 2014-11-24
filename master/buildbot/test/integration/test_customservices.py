@@ -62,6 +62,20 @@ class CustomServiceMaster(RunMasterBase):
         self.failUnlessEqual(myService.num_reconfig, 2)
         self.failUnlessEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
 
+        yield m.reconfig()
+
+        myService2 = m.namedServices['myService2']
+
+        self.failUnlessEqual(myService2.num_reconfig, 3)
+        self.failUnlessEqual(myService.num_reconfig, 3)
+
+        yield m.reconfig()
+
+        # second service removed
+        self.failIfIn('myService2', m.namedServices)
+        self.failUnlessEqual(myService2.num_reconfig, 3)
+        self.failUnlessEqual(myService.num_reconfig, 4)
+
 
 # master configuration
 
@@ -104,4 +118,6 @@ def masterConfig():
                       factory=f)]
 
     c['services'] = [MyService(num_reconfig=num_reconfig)]
+    if num_reconfig == 3:
+        c['services'].append(MyService(name="myService2", num_reconfig=num_reconfig))
     return c

@@ -253,7 +253,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             yield self.doMasterHouseKeeping(self.masterid)
 
             for serviceFactory in self.config.services.values():
-                yield serviceFactory.createService(self)
+                yield serviceFactory.setServiceParent(self)
 
             # call the parent method
             yield service.AsyncMultiService.startService(self)
@@ -342,10 +342,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         changes_made = False
         failed = False
         try:
+            old_config = self.config
             new_config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
             changes_made = True
             self.config = new_config
+            for name in old_config.services.keys():
+                if name not in new_config.services:
+                    self.namedServices[name].disownServiceParent()
+
+            for name in new_config.services.keys():
+                if name not in old_config.services:
+                    new_config.services[name].setServiceParent(self)
+
             yield self.reconfigService(new_config)
 
         except config.ConfigErrors, e:
