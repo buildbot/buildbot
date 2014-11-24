@@ -310,12 +310,11 @@ builds
 
     .. py:method:: finishBuildsFromMaster(masterid, results)
 
-        :param integer buildid: master id
+        :param integer masterid: master id
         :param integer results: build result
         :returns: Deferred
 
-        Mark the unfinished build from a given master as finished, with ``complete_at``
-        set to the current time.
+        Mark the unfinished builds from a given master as finished, with ``complete_at`` set to the current time.
         This is part of the housekeeping done when a master is lost.
 
 steps
