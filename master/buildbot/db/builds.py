@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util import json
 from twisted.internet import reactor
 
 
@@ -114,6 +115,45 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q,
                          complete_at=_reactor.seconds(),
                          results=results)
+        return self.db.pool.do(thd)
+
+    def getBuildProperties(self, bid):
+        def thd(conn):
+            bp_tbl = self.db.model.build_properties
+            q = sa.select(
+                [bp_tbl.c.name, bp_tbl.c.value, bp_tbl.c.source],
+                whereclause=(bp_tbl.c.buildid == bid))
+            props = []
+            for row in conn.execute(q):
+                try:
+                    prop = (json.loads(row.value), row.source)
+                except ValueError:
+                    continue
+                props.append((row.name, prop))
+            return dict(props)
+        return self.db.pool.do(thd)
+
+    def setBuildProperty(self, bid, name, value, source):
+        """ A kind of create_or_update, that's between one or two queries per
+        call """
+        def thd(conn):
+            bp_tbl = self.db.model.build_properties
+            self.checkLength(bp_tbl.c.name, name)
+            self.checkLength(bp_tbl.c.source, source)
+            whereclause = sa.and_(bp_tbl.c.buildid == bid,
+                                  bp_tbl.c.name == name)
+            q = sa.select(
+                [bp_tbl.c.value, bp_tbl.c.source],
+                whereclause=whereclause)
+            prop = conn.execute(q).fetchone()
+            value_js = json.dumps(value)
+            if prop is None:
+                conn.execute(bp_tbl.insert(),
+                             dict(buildid=bid, name=name, value=value_js,
+                                  source=source))
+            elif (prop.value != value_js) or (prop.source != source):
+                conn.execute(bp_tbl.update(whereclause=whereclause),
+                             dict(value=value_js, source=source))
         return self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):

@@ -1683,7 +1683,8 @@ class FakeBuildsComponent(FakeDBComponent):
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Build):
-                self.builds[row.id] = row.values.copy()
+                build = self.builds[row.id] = row.values.copy()
+                build['properties'] = {}
 
     # component methods
 
@@ -1767,6 +1768,17 @@ class FakeBuildsComponent(FakeDBComponent):
             if row['masterid'] == masterid and row['results'] == None:
                 row['complete_at'] = now
                 row['results'] = results
+        return defer.succeed(None)
+
+    def getBuildProperties(self, bid):
+        if bid in self.builds:
+            return defer.succeed(self.builds[bid]['properties'])
+        else:
+            return defer.succeed({})
+
+    def setBuildProperty(self, bid, name, value, source):
+        assert bid in self.builds
+        self.builds[bid]['properties'][name] = (value, source)
         return defer.succeed(None)
 
 

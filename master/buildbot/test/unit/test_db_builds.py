@@ -114,6 +114,16 @@ class Tests(interfaces.InterfaceTests):
         def finishBuildsFromMaster(self, masterid, results):
             pass
 
+    def test_signature_getBuildProperties(self):
+        @self.assertArgSpecMatches(self.db.builds.getBuildProperties)
+        def getBuildProperties(self, bid):
+            pass
+
+    def test_signature_setBuildProperty(self):
+        @self.assertArgSpecMatches(self.db.builds.setBuildProperty)
+        def setBuildProperty(self, bid, name, value, source):
+            pass
+
     # method tests
 
     @defer.inlineCallbacks
@@ -253,6 +263,41 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'builddict', bdict)
             self.assertEqual(bdict['results'], results)
 
+    @defer.inlineCallbacks
+    def testgetBuildPropertiesEmpty(self):
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        for buildid in (50, 51, 52):
+            props = yield self.db.builds.getBuildProperties(buildid)
+            self.assertEquals(0, len(props))
+
+    @defer.inlineCallbacks
+    def testsetandgetProperties(self):
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'prop': (42, 'test')})
+
+    @defer.inlineCallbacks
+    def testsetgetsetProperties(self):
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {})
+        yield self.db.builds.setBuildProperty(50, 'prop', 42, 'test')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'prop': (42, 'test')})
+        # set a new value
+        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'prop': (45, 'test')})
+        # set a new source
+        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'prop': (45, 'test_source')})
+        # set the same
+        yield self.db.builds.setBuildProperty(50, 'prop', 45, 'test_source')
+        props = yield self.db.builds.getBuildProperties(50)
+        self.assertEqual(props, {'prop': (45, 'test_source')})
+
 
 class RealTests(Tests):
 
@@ -303,7 +348,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests',
-                         'buildsets', 'buildslaves'])
+                         'buildsets', 'buildslaves', 'build_properties'])
 
         @d.addCallback
         def finish_setup(_):
