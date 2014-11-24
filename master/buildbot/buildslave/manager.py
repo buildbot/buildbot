@@ -62,6 +62,7 @@ class BuildslaveManager(config.ReconfigurableServiceMixin,
 
     name = "buildslaves"
     PING_TIMEOUT = 10
+    reconfig_priority = 127
 
     def __init__(self, master):
         service.MultiService.__init__(self)
