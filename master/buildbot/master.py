@@ -347,13 +347,14 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                                                         self.configFileName)
             changes_made = True
             self.config = new_config
-            for name in old_config.services.keys():
+            for name in old_config.services:
                 if name not in new_config.services:
-                    self.namedServices[name].disownServiceParent()
+                    serv = self.namedServices[name]
+                    yield serv.disownServiceParent()
 
-            for name in new_config.services.keys():
+            for name in new_config.services:
                 if name not in old_config.services:
-                    new_config.services[name].setServiceParent(self)
+                    yield new_config.services[name].setServiceParent(self)
 
             yield self.reconfigService(new_config)
 

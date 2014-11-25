@@ -46,35 +46,39 @@ class CustomServiceMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_customService(self):
-        m = self.master
 
         build = yield self.doForceBuild()
 
-        self.failUnlessEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
+        self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
 
-        myService = m.namedServices['myService']
-        self.failUnlessEqual(myService.num_reconfig, 1)
+        myService = self.master.namedServices['myService']
+        self.assertEqual(myService.num_reconfig, 1)
+        self.assertTrue(myService.running)
 
-        yield m.reconfig()
+        # We do several reconfig, and make sure the service
+        # are reconfigured as expected
+        yield self.master.reconfig()
 
         build = yield self.doForceBuild()
 
-        self.failUnlessEqual(myService.num_reconfig, 2)
-        self.failUnlessEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
+        self.assertEqual(myService.num_reconfig, 2)
+        self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
 
-        yield m.reconfig()
+        yield self.master.reconfig()
 
-        myService2 = m.namedServices['myService2']
+        myService2 = self.master.namedServices['myService2']
 
-        self.failUnlessEqual(myService2.num_reconfig, 3)
-        self.failUnlessEqual(myService.num_reconfig, 3)
+        self.assertTrue(myService2.running)
+        self.assertEqual(myService2.num_reconfig, 3)
+        self.assertEqual(myService.num_reconfig, 3)
 
-        yield m.reconfig()
+        yield self.master.reconfig()
 
         # second service removed
-        self.failIfIn('myService2', m.namedServices)
-        self.failUnlessEqual(myService2.num_reconfig, 3)
-        self.failUnlessEqual(myService.num_reconfig, 4)
+        self.assertNotIn('myService2', self.master.namedServices)
+        self.assertFalse(myService2.running)
+        self.assertEqual(myService2.num_reconfig, 3)
+        self.assertEqual(myService.num_reconfig, 4)
 
 
 # master configuration
