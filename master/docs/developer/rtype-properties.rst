@@ -11,6 +11,10 @@ Properties
 
         This path lists properties for a given buildset.
 
+    .. bb:rpath:: /builds/:buildid/properties
+
+        This path list properties for a given build.
+
 Update Methods
 --------------
 

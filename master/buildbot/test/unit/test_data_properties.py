@@ -55,6 +55,35 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
+class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+
+    endpointClass = properties.BuildPropertiesEndpoint
+    resourceTypeClass = properties.Properties
+
+    def setUp(self):
+        self.setUpEndpoint()
+        self.db.insertTestData([
+            fakedb.Buildset(id=28),
+            fakedb.BuildRequest(id=5, buildsetid=28),
+            fakedb.Master(id=3),
+            fakedb.Buildslave(id=42, name="Friday"),
+            fakedb.Build(id=786, buildrequestid=5, masterid=3, buildslaveid=42),
+            fakedb.BuildProperty(buildid=786, name="year", value=1651, source="Wikipedia"),
+            fakedb.BuildProperty(buildid=786, name="island_name", value="despair", source="Book"),
+        ])
+
+    def tearDown(self):
+        self.tearDownEndpoint()
+
+    def test_get_properties(self):
+        d = self.callGet(('builds', 786, 'properties'))
+
+        @d.addCallback
+        def check(props):
+            self.assertEqual(props, {u'year': (1651, u'Wikipedia'), u'island_name': ("despair", u'Book')})
+        return d
+
+
 class Properties(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
