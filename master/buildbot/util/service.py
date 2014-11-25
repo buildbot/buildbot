@@ -226,30 +226,30 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return defer.succeed(None)
 
 
-class ReconfigurableService(AsyncMultiService, config.ConfiguredMixin,
-                            ReconfigurableServiceMixin, util.ComparableMixin):
-    compare_attrs = ('name', 'config', 'config_attr')
+class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
+                      ReconfigurableServiceMixin, util.ComparableMixin):
+    compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
     config_attr = "services"
     name = None
     configured = False
 
-    def __init__(self, name=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        name = kwargs.pop("name", None)
         if name is not None:
             self.name = name
         if self.name is None:
-            config.error("%s: must pass a name to constructor" % (type(self),))
-            return
-        self.config_args = args
-        self.config_kwargs = kwargs
-
+            raise ValueError("{0}: must pass a name to constructor".format(type(self)))
+        self.checkConfig(*args, **kwargs)
+        self._config_args = args
+        self._config_kwargs = kwargs
         AsyncMultiService.__init__(self)
 
     def getConfigDict(self):
         _type = type(self)
         return {'name': self.name,
                 'class': _type.__module__ + "." + _type.__name__,
-                'args': self.config_args,
-                'kwargs': self.config_kwargs}
+                'args': self._config_args,
+                'kwargs': self._config_kwargs}
 
     def reconfigService(self, new_config):
         # get from the config object its sibling config
@@ -259,8 +259,8 @@ class ReconfigurableService(AsyncMultiService, config.ConfiguredMixin,
         if self.configured and config_sibling == self:
             return defer.succeed(None)
         self.configured = True
-        return self.reconfigServiceWithConstructorArgs(*config_sibling.config_args,
-                                                       **config_sibling.config_kwargs)
+        return self.reconfigServiceWithConstructorArgs(*config_sibling._config_args,
+                                                       **config_sibling._config_kwargs)
 
     def setServiceParent(self, parent):
         self.master = parent

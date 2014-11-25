@@ -857,36 +857,26 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_services_nominal(self):
 
-        class MyService(service.CustomService):
+        class MyService(service.BuildbotService):
 
-            def configureService(foo=None):
+            def reconfigServiceWithConstructorArgs(foo=None):
                 self.foo = foo
-        myServiceFactory = service.CustomServiceFactory("foo", MyService, foo="bar")
+        myService = MyService(foo="bar", name="foo")
+
         self.cfg.load_services(self.filename, dict(
-            services=[myServiceFactory]))
-        self.assertResults(services={"foo": myServiceFactory})
+            services=[myService]))
+        self.assertResults(services={"foo": myService})
 
     def test_load_services_badservice(self):
 
         class MyService(object):
             pass
-        myServiceFactory = service.CustomServiceFactory("foo", MyService, foo="bar")
+        myService = MyService()
         self.cfg.load_services(self.filename, dict(
-            services=[myServiceFactory]))
+            services=[myService]))
         self.assertConfigError(self.errors,
                                "<class 'buildbot.test.unit.test_config.MyService'> "
-                               "should be an instance of buildbot.util.service.CustomService")
-
-    def test_load_services_badservicefactory(self):
-
-        class MyService(object):
-            pass
-        myServiceFactory = MyService()
-        self.cfg.load_services(self.filename, dict(
-            services=[myServiceFactory]))
-        self.assertConfigError(self.errors,
-                               "<class 'buildbot.test.unit.test_config.MyService'> object "
-                               "should be an instance of buildbot.util.service.CustomServiceFactory")
+                               "object should be an instance of buildbot.util.service.BuildbotService")
 
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):

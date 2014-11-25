@@ -592,9 +592,9 @@ class MasterConfig(util.ComparableMixin):
             return
         self.services = {}
         for _service in config_dict['services']:
-            if not isinstance(_service, util_service.ReconfigurableService):
-                error("{1} object should be an instance of"
-                      "buildbot.util.service.ReconfigurableService".format(type(_service)))
+            if not isinstance(_service, util_service.BuildbotService):
+                error("{0} object should be an instance of "
+                      "buildbot.util.service.BuildbotService".format(type(_service)))
 
                 continue
 
