@@ -682,6 +682,12 @@ class Model(base.DBConnectorComponent):
         ('buildsets',
             dict(unique=False, column_names=['parent_buildid'],
                  name='parent_buildid')),
+        ('builders_tags',
+            dict(unique=False, column_names=['tagid'],
+                 name='tagid')),
+        ('changes',
+            dict(unique=False, column_names=['parent_changeids'],
+                 name='parent_changeids')),
     ]
 
     #
