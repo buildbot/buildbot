@@ -79,7 +79,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                                                   (tbl.c.results == 0)),
                                                      offset=offset,
                                                      limit=10)
-            if len(prevBuilds) == 0:
+            if not prevBuilds:
                 break
             for prevBuild in prevBuilds:
                 prevssBuild = [{"repository": ss['repository'],

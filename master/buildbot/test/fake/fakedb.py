@@ -794,9 +794,9 @@ class FakeChangesComponent(FakeDBComponent):
         if self.changes:
             for changeid, change in self.changes.iteritems():
                 if (change['branch'] == branch and
-                        change['repository'] == repository and
-                        change['project'] == project and
-                        change['codebase'] == codebase):
+                    change['repository'] == repository and
+                    change['project'] == project and
+                    change['codebase'] == codebase):
                     return defer.succeed([change['changeid']])
         return defer.succeed([])
 
