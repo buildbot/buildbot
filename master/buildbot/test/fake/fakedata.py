@@ -278,6 +278,19 @@ class FakeUpdates(object):
                               validation.IntValidator())
         return defer.succeed(None)
 
+    def setBuildProperty(self, buildid, name, value, source):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                              validation.IntValidator())
+        validation.verifyType(self.testcase, 'name', name,
+                              validation.StringValidator())
+        try:
+            json.dumps(value)
+        except (TypeError, ValueError):
+            self.testcase.fail("Value for %s is not JSON-able" % name)
+        validation.verifyType(self.testcase, 'source', source,
+                              validation.StringValidator())
+        return defer.succeed(None)
+
     def newStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())

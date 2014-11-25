@@ -49,3 +49,8 @@ class Properties(base.ResourceType):
     keyFields = []
 
     entityType = types.SourcedProperties()
+
+    @base.updateMethod
+    def setBuildProperty(self, buildid, name, value, source):
+        return self.master.db.builds.setBuildProperty(
+            buildid, name, value, source)

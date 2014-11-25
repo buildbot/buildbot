@@ -13,9 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from buildbot.data import properties
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
+from buildbot.test.util import interfaces
+from twisted.internet import defer
 from twisted.trial import unittest
 
 
@@ -48,3 +53,34 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         def check(props):
             self.assertEqual(props, {u'prop': (22, u'fakedb')})
         return d
+
+
+class Properties(interfaces.InterfaceTests, unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self,
+                                             wantMq=False, wantDb=True, wantData=True)
+        self.rtype = properties.Properties(self.master)
+
+    @defer.inlineCallbacks
+    def do_test_callthrough(self, dbMethodName, method, exp_args=None,
+                            exp_kwargs=None, *args, **kwargs):
+        rv = (1, 2)
+        m = mock.Mock(return_value=defer.succeed(rv))
+        # XXX: Does this really belongs here ? (``db.builds``)
+        setattr(self.master.db.builds, dbMethodName, m)
+        res = yield method(*args, **kwargs)
+        self.assertIdentical(res, rv)
+        m.assert_called_with(*(exp_args or args), **((exp_kwargs is None) and kwargs or exp_kwargs))
+
+    def test_signature_setBuildProperty(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.setBuildProperty,  # fake
+            self.rtype.setBuildProperty)  # real
+        def setBuildProperty(self, buildid, name, value, source):
+            pass
+
+    def test_setBuildProperty(self):
+        return self.do_test_callthrough('setBuildProperty', self.rtype.setBuildProperty,
+                                        buildid=1234, name='property', value=[42, 45], source='testsuite',
+                                        exp_args=(1234, 'property', [42, 45], 'testsuite'), exp_kwargs={})
