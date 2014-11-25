@@ -1686,6 +1686,11 @@ class FakeBuildsComponent(FakeDBComponent):
                 build = self.builds[row.id] = row.values.copy()
                 build['properties'] = {}
 
+        for row in rows:
+            if isinstance(row, BuildProperty):
+                assert row.buildid in self.builds
+                self.builds[row.buildid]['properties'][row.name] = (row.value, row.source)
+
     # component methods
 
     def _newId(self):
