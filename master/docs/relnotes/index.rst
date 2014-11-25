@@ -59,8 +59,10 @@ Minor Python Packages
 Features
 ~~~~~~~~
 
-..
-    TODO: talk about big new Nine features
+Buildbot-0.9.0 introduces the :ref:`Data-API`, a consistent and scalable method for accessing and updating the state of the Buildbot system.
+This API replaces the existing, ill-defined Status API, which has been removed.
+All Buildbot code that interacted with the Status API (a substantial portion!) has been rewritten to use the Data API.
+Individual features and improvements to the Data API are not described on this page.
 
 * Both the P4 source step and P4 change source support ticket-based authentication.
 * Buildbot now supports plugins.
