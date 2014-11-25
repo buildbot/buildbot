@@ -59,9 +59,6 @@ Minor Python Packages
 Features
 ~~~~~~~~
 
-..
-    TODO: talk about big new Nine features
-
 * Both the P4 source step and P4 change source support ticket-based authentication.
 * Buildbot now supports plugins.
   They allow Buildbot to be extended by using components distributed independently from the main code.
