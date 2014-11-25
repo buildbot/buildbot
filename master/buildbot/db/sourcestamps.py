@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import base64
+import sqlalchemy as sa
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
@@ -93,6 +94,33 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             ssdict = self._rowToSsdict_thd(conn, row)
             res.close()
             return ssdict
+        return self.db.pool.do(thd)
+
+    def getSourceStampsForBuild(self, buildid):
+        assert buildid > 0
+
+        def thd(conn):
+            # Get SourceStamps for the build
+            builds_tbl = self.db.model.builds
+            reqs_tbl = self.db.model.buildrequests
+            bsets_tbl = self.db.model.buildsets
+            bsss_tbl = self.db.model.buildset_sourcestamps
+            sstamps_tbl = self.db.model.sourcestamps
+
+            from_clause = builds_tbl.join(reqs_tbl,
+                                          builds_tbl.c.buildrequestid == reqs_tbl.c.id)
+            from_clause = from_clause.join(bsets_tbl,
+                                           reqs_tbl.c.buildsetid == bsets_tbl.c.id)
+            from_clause = from_clause.join(bsss_tbl,
+                                           bsets_tbl.c.id == bsss_tbl.c.buildsetid)
+            from_clause = from_clause.join(sstamps_tbl,
+                                           bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
+
+            q = sa.select([sstamps_tbl]).select_from(from_clause).where(builds_tbl.c.id == buildid)
+            res = conn.execute(q)
+            return [self._rowToSsdict_thd(conn, row)
+                    for row in res.fetchall()]
+
         return self.db.pool.do(thd)
 
     def getSourceStamps(self):

@@ -217,6 +217,7 @@ class Change(Row):
         codebase=u'',
         project=u'proj',
         sourcestampid=92,
+        parent_changeids=None,
     )
 
     lists = ('files', 'uids')
@@ -759,8 +760,11 @@ class FakeChangesComponent(FakeDBComponent):
             revision=revision, branch=branch, repository=repository,
             codebase=codebase, project=project, _reactor=_reactor)
 
+        parent_changeids = yield self.getParentChangeIds(branch, repository, project, codebase)
+
         self.changes[changeid] = ch = dict(
             changeid=changeid,
+            parent_changeids=parent_changeids,
             author=author,
             comments=comments,
             revision=revision,
@@ -785,6 +789,16 @@ class FakeChangesComponent(FakeDBComponent):
         if self.changes:
             return defer.succeed(max(self.changes.iterkeys()))
         return defer.succeed(None)
+
+    def getParentChangeIds(self, branch, repository, project, codebase):
+        if self.changes:
+            for changeid, change in self.changes.iteritems():
+                if (change['branch'] == branch and
+                        change['repository'] == repository and
+                        change['project'] == project and
+                        change['codebase'] == codebase):
+                    return defer.succeed([change['changeid']])
+        return defer.succeed([])
 
     def getChange(self, key, no_cache=False):
         try:
@@ -813,9 +827,15 @@ class FakeChangesComponent(FakeDBComponent):
     def getChangesCount(self):
         return len(self.changes)
 
+    def getChangesForBuild(self, buildid):
+        pass
+
     def _chdict(self, row):
         chdict = row.copy()
         del chdict['uids']
+        if chdict['parent_changeids'] is None:
+            chdict['parent_changeids'] = []
+
         chdict['when_timestamp'] = _mkdt(chdict['when_timestamp'])
         return chdict
 
@@ -826,6 +846,15 @@ class FakeChangesComponent(FakeDBComponent):
         del row_only['files']
         del row_only['properties']
         del row_only['uids']
+        if not row_only['parent_changeids']:
+            # Convert [] to None
+            # None is the value stored in the DB.
+            # We need this kind of conversion, because for the moment we only support
+            # 1 parent for a change.
+            # When we will support multiple parent for change, then we will have a
+            # table parent_changes with at least 2 col: "changeid", "parent_changeid"
+            # And the col 'parent_changeids' of the table changes will be dropped
+            row_only['parent_changeids'] = None
         self.t.assertEqual(row_only, row.values)
 
     def assertChangeUsers(self, changeid, expectedUids):
@@ -1091,6 +1120,14 @@ class FakeSourceStampsComponent(FakeDBComponent):
             return ssdict
         else:
             return None
+
+    @defer.inlineCallbacks
+    def getSourceStampsForBuild(self, buildid):
+        build = yield self.db.builds.getBuild(buildid)
+        breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])
+        bset = yield self.db.buildsets.getBuildset(breq['buildsetid'])
+
+        defer.returnValue([(yield self.getSourceStamp(ssid)) for ssid in bset['sourcestamps']])
 
 
 class FakeBuildsetsComponent(FakeDBComponent):

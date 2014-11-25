@@ -260,6 +260,118 @@ class Tests(interfaces.InterfaceTests):
             self.assertEqual(sourcestamps, [])
         return d
 
+    def test_signature_getSourceStampsForBuild(self):
+        @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStampsForBuild)
+        def getSourceStampsForBuild(self, buildid):
+            pass
+
+    def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
+        d = self.insertTestData(rows)
+
+        d.addCallback(lambda _:
+                      self.db.sourcestamps.getSourceStampsForBuild(buildid))
+
+        @d.addCallback
+        def check(sourcestamps):
+            self.assertEqual(sorted(sourcestamps), sorted(expected))
+        return d
+
+    def test_getSourceStampsForBuild_OneCodeBase(self):
+        rows = [fakedb.Master(id=88, name="bar"),
+                fakedb.Buildslave(id=13, name='one'),
+                fakedb.Builder(id=77, name='A'),
+                fakedb.SourceStamp(id=234, codebase='A', created_at=CREATED_AT,
+                                   revision="aaa"),
+                # fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+                fakedb.Buildset(id=30, reason='foo',
+                                submitted_at=1300305712, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.Build(id=50, buildrequestid=19, number=5, masterid=88,
+                             builderid=77, state_string="test", buildslaveid=13,
+                             started_at=1304262222), ]
+
+        expected = [{
+            'branch': u'master',
+            'codebase': u'A',
+            'created_at': epoch2datetime(CREATED_AT),
+            'patch_author': None,
+            'patch_body': None,
+            'patch_comment': None,
+            'patch_level': None,
+            'patch_subdir': None,
+            'patchid': None,
+            'project': u'proj',
+            'repository': u'repo',
+            'revision': u'aaa',
+            'ssid': 234}]
+
+        return self.do_test_getSourceStampsForBuild(rows, 50, expected)
+
+    def test_getSourceStampsForBuild_3CodeBases(self):
+        rows = [fakedb.Master(id=88, name="bar"),
+                fakedb.Buildslave(id=13, name='one'),
+                fakedb.Builder(id=77, name='A'),
+                fakedb.SourceStamp(id=234, codebase='A', created_at=CREATED_AT,
+                                   revision="aaa"),
+                fakedb.SourceStamp(id=235, codebase='B', created_at=CREATED_AT + 10,
+                                   revision="bbb"),
+                fakedb.SourceStamp(id=236, codebase='C', created_at=CREATED_AT + 20,
+                                   revision="ccc"),
+                # fakedb.Change(changeid=14, codebase='A', sourcestampid=234),
+                fakedb.Buildset(id=30, reason='foo',
+                                submitted_at=1300305712, results=-1),
+                fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=30),
+                fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=30),
+                fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                                    priority=13, submitted_at=1300305712, results=-1),
+                fakedb.Build(id=50, buildrequestid=19, number=5, masterid=88,
+                             builderid=77, state_string="test", buildslaveid=13,
+                             started_at=1304262222), ]
+
+        expected = [{'branch': u'master',
+                     'codebase': u'A',
+                     'created_at': epoch2datetime(CREATED_AT),
+                     'patch_author': None,
+                     'patch_body': None,
+                     'patch_comment': None,
+                     'patch_level': None,
+                     'patch_subdir': None,
+                     'patchid': None,
+                     'project': u'proj',
+                     'repository': u'repo',
+                     'revision': u'aaa',
+                     'ssid': 234},
+                    {'branch': u'master',
+                     'codebase': u'B',
+                     'created_at': epoch2datetime(CREATED_AT + 10),
+                     'patch_author': None,
+                     'patch_body': None,
+                     'patch_comment': None,
+                     'patch_level': None,
+                     'patch_subdir': None,
+                     'patchid': None,
+                     'project': u'proj',
+                     'repository': u'repo',
+                     'revision': u'bbb',
+                     'ssid': 235},
+                    {'branch': u'master',
+                     'codebase': u'C',
+                     'created_at': epoch2datetime(CREATED_AT + 20),
+                     'patch_author': None,
+                     'patch_body': None,
+                     'patch_comment': None,
+                     'patch_level': None,
+                     'patch_subdir': None,
+                     'patchid': None,
+                     'project': u'proj',
+                     'repository': u'repo',
+                     'revision': u'ccc',
+                     'ssid': 236}]
+        return self.do_test_getSourceStampsForBuild(rows, 50, expected)
+
 
 class RealTests(Tests):
 
@@ -281,7 +393,15 @@ class TestRealDB(unittest.TestCase,
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['sourcestamps', 'patches'])
+            table_names=['sourcestamps',
+                         'patches',
+                         'masters',
+                         'buildslaves',
+                         'buildsets',
+                         'builders',
+                         'buildrequests',
+                         'buildset_sourcestamps',
+                         'builds'])
 
         def finish_setup(_):
             self.db.sourcestamps = \

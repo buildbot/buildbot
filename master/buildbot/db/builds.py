@@ -19,6 +19,8 @@ from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 from buildbot.util import json
+
+from twisted.internet import defer
 from twisted.internet import reactor
 
 
@@ -45,6 +47,51 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         return self._getBuild(
             (self.db.model.builds.c.builderid == builderid)
             & (self.db.model.builds.c.number == number))
+
+    def _getRecentBuilds(self, whereclause, offset=0, limit=1):
+        def thd(conn):
+            tbl = self.db.model.builds
+
+            q = tbl.select(whereclause=whereclause,
+                           order_by=[sa.desc(tbl.c.complete_at)],
+                           offset=offset,
+                           limit=limit)
+
+            res = conn.execute(q)
+            return list([self._builddictFromRow(row)
+                         for row in res.fetchall()])
+
+        return self.db.pool.do(thd)
+
+    @defer.inlineCallbacks
+    def getPrevSuccessfulBuild(self, builderid, number, ssBuild):
+        gssfb = self.master.db.sourcestamps.getSourceStampsForBuild
+        rv = None
+        tbl = self.db.model.builds
+        offset = 0
+        matchssBuild = [{"repository": ss['repository'],
+                         "branch": ss['branch'],
+                         "codebase": ss['codebase']} for ss in ssBuild]
+        while True:
+            # Get some recent successfull builds on the same builder
+            prevBuilds = yield self._getRecentBuilds(whereclause=((tbl.c.builderid == builderid) &
+                                                                  (tbl.c.number < number) &
+                                                                  (tbl.c.results == 0)),
+                                                     offset=offset,
+                                                     limit=10)
+            if not prevBuilds:
+                break
+            for prevBuild in prevBuilds:
+                prevssBuild = [{"repository": ss['repository'],
+                                "branch": ss['branch'],
+                                "codebase": ss['codebase']} for ss in (yield gssfb(prevBuild['id']))]
+                if sorted(prevssBuild) == sorted(matchssBuild):
+                    # A successful build with the same repository/branch/codebase was found !
+                    rv = prevBuild
+
+            offset += 10
+
+        defer.returnValue(rv)
 
     def getBuilds(self, builderid=None, buildrequestid=None):
         def thd(conn):

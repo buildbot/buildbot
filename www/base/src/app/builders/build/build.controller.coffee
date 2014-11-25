@@ -29,6 +29,7 @@ class Build extends Controller
                     unwatch()
 
             buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
+            buildbotService.one('builds', build.id).all('changes').bind($scope)
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->

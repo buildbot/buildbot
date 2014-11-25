@@ -473,6 +473,7 @@ message['changes'].add(None,
                            events=['new'],
                            messageValidator=DictValidator(
                                changeid=IntValidator(),
+                               parent_changeids=ListValidator(IntValidator()),
                                author=StringValidator(),
                                files=ListValidator(StringValidator()),
                                comments=StringValidator(),
@@ -505,6 +506,7 @@ dbdict['chdict'] = DictValidator(
     project=StringValidator(),
     codebase=StringValidator(),
     sourcestampid=IntValidator(),
+    parent_changeids=ListValidator(IntValidator()),
 )
 
 # changesources

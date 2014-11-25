@@ -60,12 +60,18 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
     isCollection = True
     pathPatterns = """
         /changes
+        /builds/n:buildid/changes
     """
     rootLinkName = 'change'
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        changes = yield self.master.db.changes.getChanges()
+        buildid = kwargs.get('buildid')
+        if buildid is None:
+            changes = yield self.master.db.changes.getChanges()
+        else:
+            changes = yield self.master.db.changes.getChangesForBuild(buildid)
+
         changes = [(yield self._fixChange(ch)) for ch in changes]
         defer.returnValue(changes)
 
@@ -85,6 +91,7 @@ class Change(base.ResourceType):
 
     class EntityType(types.Entity):
         changeid = types.Integer()
+        parent_changeids = types.List(of=types.Integer())
         author = types.String()
         files = types.List(of=types.String())
         comments = types.String()
