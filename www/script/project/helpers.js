@@ -295,11 +295,11 @@ define(function (require) {
                 }
             });
         },
-        codeBaseBranchOverview: function (El, compareURL) {
+        codeBaseBranchOverview: function (El, compareURL, tags) {
             if (El !== undefined && location.search.length > 0) {
                 var KT = require('precompiled.handlebars'),
                     args = queryString.parse(location.search),
-                    branches = {compareURL: compareURL, codebases: []};
+                    branches = {compareURL: compareURL, codebases: [], tags: tags};
 
                 // Fix up the data so it can be consumed by handlebars
                 var count = 0;

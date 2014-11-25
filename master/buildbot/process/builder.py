@@ -95,6 +95,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setCacheSize(new_config.caches['Builds'])
         self.builder_status.setProject(builder_config.project)
         self.builder_status.setFriendlyName(builder_config.friendly_name)
+        self.builder_status.setTags(builder_config.tags)
 
         return defer.succeed(None)
 
@@ -718,7 +719,7 @@ class Builder(config.ReconfigurableServiceMixin,
         @param buildrequests: sorted list of build request dictionaries
         @returns: a build request dictionary or None via Deferred
         """
-        sorted_requests = sorted(buildrequests, key=lambda br: br.get('priority', 0), reverse=True)
+        sorted_requests = sorted(buildrequests, key=lambda br: (-br["priority"], br["submitted_at"]))
         for b in sorted_requests:
             d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
             brdict = d[0].brdict
