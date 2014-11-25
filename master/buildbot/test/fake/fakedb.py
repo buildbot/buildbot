@@ -462,7 +462,7 @@ class Build(Row):
     required_columns = ('buildrequestid', 'masterid', 'buildslaveid')
 
 
-class BuildProperties(Row):
+class BuildProperty(Row):
     table = "build_properties"
     defaults = dict(
         buildid=None,
