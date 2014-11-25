@@ -125,10 +125,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 whereclause=(bp_tbl.c.buildid == bid))
             props = []
             for row in conn.execute(q):
-                try:
-                    prop = (json.loads(row.value), row.source)
-                except ValueError:
-                    continue
+                prop = (json.loads(row.value), row.source)
                 props.append((row.name, prop))
             return dict(props)
         return self.db.pool.do(thd)

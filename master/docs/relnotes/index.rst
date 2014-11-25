@@ -259,6 +259,8 @@ Changes and Removals
 
 * The name and source of a Property have to be unicode or ascii string.
 
+* Property values must be serializable in JSON.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
