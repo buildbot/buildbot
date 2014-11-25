@@ -95,6 +95,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setCacheSize(new_config.caches['Builds'])
         self.builder_status.setProject(builder_config.project)
         self.builder_status.setFriendlyName(builder_config.friendly_name)
+        self.builder_status.setTags(builder_config.tags)
 
         return defer.succeed(None)
 

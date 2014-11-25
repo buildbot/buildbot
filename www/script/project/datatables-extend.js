@@ -11,6 +11,7 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
             dataTables.initBuilderStatusSort();
             dataTables.initNumberIgnoreZeroSort();
             dataTables.initBuilderNameSort();
+            dataTables.initStringIgnoreEmptySort();
 
             //Datatable Defaults
             $.extend($.fn.dataTable.defaults, {
@@ -272,7 +273,13 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
 
             return sort;
         },
-        initNumberIgnoreZeroSort: function initNumberSortMinusZero() {
+        initNumberIgnoreZeroSort: function initNumberIgnoreZeroSort() {
+            dataTables.initIgnoreValueSort("number-ignore-zero", 0);
+        },
+        initStringIgnoreEmptySort: function initStringIgnoreEmptySort() {
+            dataTables.initIgnoreValueSort("string-ignore-empty", "");
+        },
+        initIgnoreValueSort: function initIgnoreValueSort(name, ignoreValue) {
             var sort = function sort(a, b, reverse) {
                 var result = -1;
 
@@ -281,10 +288,10 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 }
 
                 // Push 0 results always to the bottom
-                if (a === 0) {
+                if (a === ignoreValue) {
                     return 1;
                 }
-                if (b === 0) {
+                if (b === ignoreValue) {
                     return -1;
                 }
 
@@ -302,14 +309,16 @@ define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], fun
                 return result;
             };
 
-            $.extend($.fn.dataTableExt.oSort, {
-                "number-ignore-zero-asc": function (a, b) {
-                    return sort(a, b, false);
-                },
-                "number-ignore-zero-desc": function (a, b) {
-                    return sort(a, b, true);
-                }
-            });
+            var sortDict = {};
+            sortDict[name + "-asc"] = function (a, b) {
+                return sort(a, b, false);
+            };
+
+            sortDict[name + "-desc"] = function (a, b) {
+                return sort(a, b, true);
+            };
+
+            $.extend($.fn.dataTableExt.oSort, sortDict);
         },
         initSingleColumnFilter: function initSingleColumnFilter(index) {
             $.fn.dataTableExt.afnFiltering.push(

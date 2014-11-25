@@ -134,6 +134,18 @@ define(function (require) {
                 }
             };
         },
+        builderTags: function (index) {
+            return {
+                "aTargets": [index],
+                "sClass": "txt-align-center",
+                "mRender": function (data, type, full) {
+                    if (type === "filter") {
+                        return full.tags;
+                    }
+                    return hb.partials.cells["cells:builderTags"](full);
+                }
+            };
+        },
         shortTime: function (index, property) {
             return {
                 "aTargets": [index],

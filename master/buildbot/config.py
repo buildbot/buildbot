@@ -686,7 +686,7 @@ class BuilderConfig:
     def __init__(self, name=None, slavename=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
-            properties=None, mergeRequests=False, project=None, friendly_name=None):
+            properties=None, mergeRequests=False, project=None, friendly_name=None, tags=[]):
 
         errors = ConfigErrors([])
 
@@ -769,6 +769,7 @@ class BuilderConfig:
         self.properties = properties or {}
         self.mergeRequests = mergeRequests
         self.project = project
+        self.tags = tags
 
         if errors:
             raise errors
