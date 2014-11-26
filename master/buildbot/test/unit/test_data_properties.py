@@ -96,7 +96,6 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
                             exp_kwargs=None, *args, **kwargs):
         rv = (1, 2)
         m = mock.Mock(return_value=defer.succeed(rv))
-        # XXX: Does this really belongs here ? (``db.builds``)
         setattr(self.master.db.builds, dbMethodName, m)
         res = yield method(*args, **kwargs)
         self.assertIdentical(res, rv)
