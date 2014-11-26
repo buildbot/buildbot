@@ -636,10 +636,13 @@ class TestBuild(unittest.TestCase):
     @defer.inlineCallbacks
     def testflushProperties(self):
         b = self.build
+
         class FakeBuildStatus(Mock):
             implements(interfaces.IProperties)
         b.build_status = FakeBuildStatus()
+
         class Properties(Mock):
+
             def asList(self):
                 return [(u'p', 5, u'fake'),
                         (u'p2', ['abc', 9], u'mock')]
