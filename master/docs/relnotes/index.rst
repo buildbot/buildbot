@@ -94,6 +94,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add a new :doc:`Docker latent BuildSlave </manual/cfg-buildslaves-docker>`.
 
+* Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
+
 Fixes
 ~~~~~
 

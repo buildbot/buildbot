@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot import config
 from buildbot.test.util import compat
 from buildbot.util import service
 from twisted.internet import defer
@@ -533,3 +534,96 @@ class ClusteredService(unittest.TestCase):
 
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
+
+
+class MyService(service.BuildbotService):
+
+    def checkConfig(self, foo, a=None):
+        if a is None:
+            config.error("a must be specified")
+        return defer.succeed(True)
+
+    def reconfigServiceWithConstructorArgs(self, *argv, **kwargs):
+        self.config = argv, kwargs
+        return defer.succeed(None)
+
+
+class fakeConfig(object):
+    pass
+
+
+class fakeMaster(service.AsyncMultiService, service.ReconfigurableServiceMixin):
+    pass
+
+
+class BuildbotService(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakeMaster()
+
+    @defer.inlineCallbacks
+    def prepareService(self):
+        self.master.config = fakeConfig()
+        serv = MyService(1, a=2, name="basic")
+        self.master.config.services = {"basic": serv}
+        yield serv.setServiceParent(self.master)
+        yield self.master.startService()
+        yield self.master.reconfigService(self.master.config)
+        defer.returnValue(serv)
+
+    @defer.inlineCallbacks
+    def testNominal(self):
+        yield self.prepareService()
+        self.assertEqual(self.master.namedServices["basic"].config, ((1,), dict(a=2)))
+
+    @defer.inlineCallbacks
+    def testConfigDict(self):
+        serv = yield self.prepareService()
+        self.assertEqual(serv.getConfigDict(), {
+            'args': (1,),
+            'class': 'buildbot.test.unit.test_util_service.MyService',
+            'kwargs': {'a': 2},
+            'name': 'basic'})
+
+    @defer.inlineCallbacks
+    def testReconfigNoChange(self):
+        serv = yield self.prepareService()
+        serv.config = None  # 'de-configure' the service
+        # reconfigure with the same config
+        serv2 = MyService(1, a=2, name="basic")
+        self.master.config.services = {"basic": serv2}
+
+        # reconfigure the master
+        yield self.master.reconfigService(self.master.config)
+        # the first service is still used
+        self.assertIdentical(self.master.namedServices["basic"], serv)
+        # the second service is not used
+        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
+
+        # reconfigServiceWithConstructorArgs was not called
+        self.assertEqual(serv.config, None)
+
+    @defer.inlineCallbacks
+    def testReconfigWithChanges(self):
+        serv = yield self.prepareService()
+        serv.config = None  # 'de-configure' the service
+
+        # reconfigure with the differnt config
+        serv2 = MyService(1, a=4, name="basic")
+        self.master.config.services = {"basic": serv2}
+
+        # reconfigure the master
+        yield self.master.reconfigService(self.master.config)
+        # the first service is still used
+        self.assertIdentical(self.master.namedServices["basic"], serv)
+        # the second service is not used
+        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
+
+        # reconfigServiceWithConstructorArgs was called with new config
+        self.assertEqual(serv.config, ((1,), dict(a=4)))
+
+    def testNoName(self):
+        self.assertRaises(ValueError, lambda: MyService(1, a=2))
+
+    def testChecksDone(self):
+        self.assertRaises(config.ConfigErrors, lambda: MyService(1, name="foo"))

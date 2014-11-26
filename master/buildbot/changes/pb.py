@@ -20,6 +20,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.pbutil import NewCredPerspective
+from buildbot.util import service
 
 
 class ChangePerspective(NewCredPerspective):
@@ -95,7 +96,7 @@ class ChangePerspective(NewCredPerspective):
         return d
 
 
-class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
+class PBChangeSource(service.ReconfigurableServiceMixin, base.ChangeSource):
     compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None,
@@ -143,7 +144,7 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
             yield self._unregister()
             self._register(port)
 
-        yield config.ReconfigurableServiceMixin.reconfigService(
+        yield service.ReconfigurableServiceMixin.reconfigService(
             self, new_config)
 
     def activate(self):

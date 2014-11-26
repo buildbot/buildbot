@@ -15,7 +15,6 @@
 
 import os
 
-from buildbot import config
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
 from buildbot.www import auth
@@ -30,7 +29,7 @@ from twisted.python import log
 from twisted.web import server
 
 
-class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
@@ -105,8 +104,8 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
                 yield self.port_service.setServiceParent(self)
 
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a
@@ -120,7 +119,6 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         for key, plugin in new_config.www.get('plugins', {}).items():
             if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
-            print "putChild", key, self.apps.get(key).resource
             root.putChild(key, self.apps.get(key).resource)
 
         # /
@@ -153,6 +151,7 @@ class WWWService(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
 
         class RotateLogSite(server.Site):
+
             """ A Site that logs to a separate file: http.log, and rotate its logs """
 
             def _openLogFile(self, path):

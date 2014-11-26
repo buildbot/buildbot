@@ -16,7 +16,6 @@
 
 import weakref
 
-from buildbot import config
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.process import buildrequest
@@ -26,6 +25,7 @@ from buildbot.process.slavebuilder import BUILDING
 from buildbot.status.builder import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
+from buildbot.util import service as util_service
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -45,7 +45,7 @@ def enforceChosenSlave(bldr, slavebuilder, breq):
     return True
 
 
-class Builder(config.ReconfigurableServiceMixin,
+class Builder(util_service.ReconfigurableServiceMixin,
               pb.Referenceable,
               service.MultiService):
 

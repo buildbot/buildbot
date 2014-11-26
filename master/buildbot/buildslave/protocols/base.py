@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import config
 from buildbot.util import service
 from buildbot.util import subscription
 
 
-class Listener(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)

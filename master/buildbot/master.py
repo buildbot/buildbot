@@ -67,7 +67,7 @@ class LogRotation(object):
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
@@ -252,6 +252,9 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
 
             yield self.doMasterHouseKeeping(self.masterid)
 
+            for serviceFactory in self.config.services.values():
+                yield serviceFactory.setServiceParent(self)
+
             # call the parent method
             yield service.AsyncMultiService.startService(self)
 
@@ -339,10 +342,20 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         changes_made = False
         failed = False
         try:
+            old_config = self.config
             new_config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
             changes_made = True
             self.config = new_config
+            for name in old_config.services:
+                if name not in new_config.services:
+                    serv = self.namedServices[name]
+                    yield serv.disownServiceParent()
+
+            for name in new_config.services:
+                if name not in old_config.services:
+                    yield new_config.services[name].setServiceParent(self)
+
             yield self.reconfigService(new_config)
 
         except config.ConfigErrors, e:
@@ -376,8 +389,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.AsyncMultiService):
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        return service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                  new_config)
 
     # informational methods
     def allSchedulers(self):

@@ -26,10 +26,9 @@ from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
+from buildbot.util import service as util_service
 from buildbot.www import auth
 from buildbot.www import avatar
-from twisted.application import service
-from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 
@@ -123,6 +122,7 @@ class MasterConfig(util.ComparableMixin):
             avatar_methods=avatar.AvatarGravatar(),
             logfileName='http.log',
         )
+        self.services = {}
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -132,7 +132,7 @@ class MasterConfig(util.ComparableMixin):
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "slavePortnum", "slaves", "status", "title", "titleURL",
+        "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
     compare_attrs = list(_known_config_keys)
@@ -226,6 +226,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
             config.load_www(filename, config_dict)
+            config.load_services(filename, config_dict)
 
             # run some sanity checks
             config.check_single_master()
@@ -586,6 +587,19 @@ class MasterConfig(util.ComparableMixin):
         if not self.www['url'].endswith('/'):
             self.www['url'] += '/'
 
+    def load_services(self, filename, config_dict):
+        if 'services' not in config_dict:
+            return
+        self.services = {}
+        for _service in config_dict['services']:
+            if not isinstance(_service, util_service.BuildbotService):
+                error("{0} object should be an instance of "
+                      "buildbot.util.service.BuildbotService".format(type(_service)))
+
+                continue
+
+            self.services[_service.name] = _service
+
     def check_single_master(self):
         # check additional problems that are only valid in a single-master
         # installation
@@ -819,24 +833,3 @@ class BuilderConfig(util_config.ConfiguredMixin):
         if self.description:
             rv['description'] = self.description
         return rv
-
-
-class ReconfigurableServiceMixin:
-
-    reconfig_priority = 128
-
-    @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        if not service.IServiceCollection.providedBy(self):
-            return
-
-        # get a list of child services to reconfigure
-        reconfigurable_services = [svc
-                                   for svc in self
-                                   if isinstance(svc, ReconfigurableServiceMixin)]
-
-        # sort by priority
-        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
-
-        for svc in reconfigurable_services:
-            yield svc.reconfigService(new_config)

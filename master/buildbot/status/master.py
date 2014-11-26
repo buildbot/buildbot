@@ -18,7 +18,6 @@ from __future__ import with_statement
 import os
 import urllib
 
-from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.changes import changes
@@ -35,7 +34,7 @@ from twisted.python import log
 from zope.interface import implements
 
 
-class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
 
     def __init__(self, master):
@@ -93,8 +92,8 @@ class Status(config.ReconfigurableServiceMixin, service.AsyncMultiService):
             yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        yield config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
     def stopService(self):
         if self._buildset_complete_consumer:

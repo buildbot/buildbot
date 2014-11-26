@@ -15,18 +15,17 @@
 
 import mock
 
-from buildbot import config
 from buildbot import interfaces
-from buildbot.test.fake import fakemaster
-from buildbot.util import service
 from buildbot.buildslave import manager as bslavemanager
 from buildbot.process import botmaster
+from buildbot.test.fake import fakemaster
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
 
 
-class FakeBuildSlave(config.ReconfigurableServiceMixin, service.AsyncService):
+class FakeBuildSlave(service.ReconfigurableServiceMixin, service.AsyncService):
 
     implements(interfaces.IBuildSlave)
 

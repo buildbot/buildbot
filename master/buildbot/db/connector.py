@@ -15,7 +15,6 @@
 
 import textwrap
 
-from buildbot import config
 from buildbot import util
 from buildbot.db import builders
 from buildbot.db import buildrequests
@@ -53,7 +52,7 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
+class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -129,8 +128,8 @@ class DBConnector(config.ReconfigurableServiceMixin, service.AsyncMultiService):
         # double-check -- the master ensures this in config checks
         assert self.configured_url == new_config.db['db_url']
 
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        return service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                  new_config)
 
     def _doCleanup(self):
         """

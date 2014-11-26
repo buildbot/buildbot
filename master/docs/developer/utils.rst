@@ -861,7 +861,7 @@ The first two classes are more robust implementations of two Twisted classes, an
     This class also fixes a bug with Twisted's implementation of ``stopService`` which ignores failures in the ``stopService`` process.
     With :py:class:`AsyncMultiService`, any errors in a child's ``stopService`` will be propagated to the parent's ``stopService`` method.
 
-.. class:: AsyncService
+.. py:class:: AsyncService
 
     This class is similar to :py:class:`twisted.application.service.Service`, except that its ``setServiceParent`` method will return a Deferred.
     That Deferred will fire after the ``startService`` method has completed, if the service was started because the new parent was already running.
@@ -874,7 +874,7 @@ In a multiple-master configuration, some arbitration is required to ensure that 
 
 For example, a particular daily scheduler could be configured on multiple masters, but only one of them should actually trigger the required builds.
 
-.. class:: ClusteredService
+.. py:class:: ClusteredService
 
     A base class for a service that must have only one "active" instance in a buildbot configuration.
 
@@ -929,3 +929,78 @@ For example, a particular daily scheduler could be configured on multiple master
         This will only be called on an instance that successfully claimed the service and has been activated
         and after its ``deactivate`` has been called. Therefore, in this method it is safe to reassign
         the "active" status to another instance. This method may return a Deferred.
+
+.. py:class:: BuildbotService
+
+    This class is the combinations of all `Service` classes implemented in buildbot.
+    It is Async, MultiService, and Reconfigurable, and designed to be eventually the base class for all buildbot services.
+    This class makes it easy to manage configured service singletons
+
+    .. py:method:: __init__(self, *args, **kwargs)
+
+        Constructor of the service.
+        The constructor initialize the service, and store the config arguments in private attributes.
+        This should not be overriden by subclasses, as they should rather override checkConfig
+
+    .. py:method:: reconfigService(self, new_config)
+
+        Internal method that finds configuration sibling in the master config object.
+        At the time of master start, the object in the configuration is the one used as the service.
+        But reconfig happens while services might be in use, so we cannot just stop the service and replace with  the service instance configured in `master.cfg`.
+        We want to reuse the service started at master startup and just reconfigure it.
+        This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigServiceWithConstructorArgs()
+
+    .. py:method:: checkConfig(self, *args, **kwargs)
+
+        Please override this method to check the parameters of your config.
+        Please use :py:func:`buildbot.config.error` for error reporting
+        This method is synchronous, and executed in the context of the master.cfg.
+        Please don't block, or use deferreds in this method.
+
+    .. py:method:: reconfigServiceWithConstructorArgs(*args, **kwargs)
+
+        This method is called at buildbot startup, and buildbot reconfig.
+        `*args` and `**kwargs` are the configuration arguments passed to the constructor in master.cfg.
+
+        Returns a deferred that should fire when the service is ready.
+        Builds are not started until all services are configured.
+
+        BuildbotServices must be aware that during reconfiguration, their methods can still be called by running builds.
+        So they should atomically switch old configuration and new configuration, so that the service is always available.
+
+
+    Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
+
+    Such services are singletons accessible in nearly every objects of buildbot (buildsteps, status, changesources, etc) using self.master.namedServices['<nameOfYourService'].
+
+    As such, they can be used to factorize access to external services, available e.g using a REST api.
+    Having a single service will help with caching, and rate-limiting access of those APIs.
+
+    Here is an example on how you would integrate and configure a simple service in your `master.cfg`::
+
+        class MyShellCommand(ShellCommand):
+
+            def getResultSummary(self):
+                # access the service attribute
+                service = self.master.namedServices['myService']
+                return dict(step=u"arg value: %d" % (service.arg1,))
+
+        class MyService(BuildbotService):
+            name = "myService"
+            def reconfigServiceWithConstructorArgs(self, arg1):
+                self.arg1 = arg1
+                return defer.succeed(None)
+
+        c['schedulers'] = [
+            ForceScheduler(
+                name="force",
+                builderNames=["testy"])]
+
+        f = BuildFactory()
+        f.addStep(MyShellCommand(command='echo hei'))
+        c['builders'] = [
+            BuilderConfig(name="testy",
+                          slavenames=["local1"],
+                          factory=f)]
+
+        c['services'] = [MyService(arg1="foo")]

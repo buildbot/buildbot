@@ -19,6 +19,28 @@ from twisted.internet import task
 from twisted.python import log
 
 from buildbot import util
+from buildbot.util import config
+
+
+class ReconfigurableServiceMixin:
+
+    reconfig_priority = 128
+
+    @defer.inlineCallbacks
+    def reconfigService(self, new_config):
+        if not service.IServiceCollection.providedBy(self):
+            return
+
+        # get a list of child services to reconfigure
+        reconfigurable_services = [svc
+                                   for svc in self
+                                   if isinstance(svc, ReconfigurableServiceMixin)]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
+
+        for svc in reconfigurable_services:
+            yield svc.reconfigService(new_config)
 
 
 class ClusteredService(service.Service, util.ComparableMixin):
@@ -202,3 +224,50 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return service.startService()
         else:
             return defer.succeed(None)
+
+
+class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
+                      ReconfigurableServiceMixin, util.ComparableMixin):
+    compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
+    config_attr = "services"
+    name = None
+    configured = False
+
+    def __init__(self, *args, **kwargs):
+        name = kwargs.pop("name", None)
+        if name is not None:
+            self.name = name
+        if self.name is None:
+            raise ValueError("{0}: must pass a name to constructor".format(type(self)))
+        self.checkConfig(*args, **kwargs)
+        self._config_args = args
+        self._config_kwargs = kwargs
+        AsyncMultiService.__init__(self)
+
+    def getConfigDict(self):
+        _type = type(self)
+        return {'name': self.name,
+                'class': _type.__module__ + "." + _type.__name__,
+                'args': self._config_args,
+                'kwargs': self._config_kwargs}
+
+    def reconfigService(self, new_config):
+        # get from the config object its sibling config
+        config_sibling = getattr(new_config, self.config_attr)[self.name]
+
+        # only reconfigure if different as ComparableMixin says.
+        if self.configured and config_sibling == self:
+            return defer.succeed(None)
+        self.configured = True
+        return self.reconfigServiceWithConstructorArgs(*config_sibling._config_args,
+                                                       **config_sibling._config_kwargs)
+
+    def setServiceParent(self, parent):
+        self.master = parent
+        return AsyncService.setServiceParent(self, parent)
+
+    def checkConfig(self, *args, **kwargs):
+        return defer.succeed(True)
+
+    def reconfigServiceWithConstructorArgs(self, *args, **kwargs):
+        return defer.succeed(None)

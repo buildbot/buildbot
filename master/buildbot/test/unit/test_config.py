@@ -855,6 +855,29 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors,
                                "unknown www configuration parameter(s) foo")
 
+    def test_load_services_nominal(self):
+
+        class MyService(service.BuildbotService):
+
+            def reconfigServiceWithConstructorArgs(foo=None):
+                self.foo = foo
+        myService = MyService(foo="bar", name="foo")
+
+        self.cfg.load_services(self.filename, dict(
+            services=[myService]))
+        self.assertResults(services={"foo": myService})
+
+    def test_load_services_badservice(self):
+
+        class MyService(object):
+            pass
+        myService = MyService()
+        self.cfg.load_services(self.filename, dict(
+            services=[myService]))
+        self.assertConfigError(self.errors,
+                               "<class 'buildbot.test.unit.test_config.MyService'> "
+                               "object should be an instance of buildbot.util.service.BuildbotService")
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
@@ -1268,7 +1291,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    })
 
 
-class FakeService(config.ReconfigurableServiceMixin,
+class FakeService(service.ReconfigurableServiceMixin,
                   service.AsyncService):
 
     succeed = True
@@ -1277,7 +1300,7 @@ class FakeService(config.ReconfigurableServiceMixin,
     def reconfigService(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
         if not self.succeed:
             @d.addCallback
             def fail(_):
@@ -1285,12 +1308,12 @@ class FakeService(config.ReconfigurableServiceMixin,
         return d
 
 
-class FakeMultiService(config.ReconfigurableServiceMixin,
+class FakeMultiService(service.ReconfigurableServiceMixin,
                        service.AsyncMultiService):
 
     def reconfigService(self, new_config):
         self.called = True
-        d = config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
         return d
 
 
