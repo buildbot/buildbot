@@ -19,6 +19,7 @@ from __future__ import with_statement
 import os
 import random
 import re
+import string
 import sys
 import time
 
@@ -622,18 +623,33 @@ class Try(pb.Referenceable):
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
-            ssh_commands = which("ssh")
-            if not ssh_commands:
-                raise RuntimeError("couldn't find ssh executable, make sure "
-                                   "it is available in the PATH")
+            ssh_command = self.getopt("ssh")
+            if not ssh_command:
+                ssh_commands = which("ssh")
+                if not ssh_commands:
+                    raise RuntimeError("couldn't find ssh executable, make sure "
+                                       "it is available in the PATH")
 
-            ssh_command = ssh_commands[0]
-            if tryuser:
-                argv = [ssh_command, "-l", tryuser, tryhost,
-                        buildbotbin, "tryserver", "--jobdir", trydir]
+                argv = [ssh_commands[0]]
             else:
-                argv = [ssh_command, tryhost,
-                        buildbotbin, "tryserver", "--jobdir", trydir]
+                # Split the string on whitespace to allow passing options in
+                # ssh command too, but preserving whitespace inside quotes to
+                # allow using paths with spaces in them which is common under
+                # Windows. And because Windows uses backslashes in paths, we
+                # can't just use shlex.split here as it would interpret them
+                # specially, so do it by hand.
+                #
+                # Note that regex here matches the arguments, not the
+                # separators, as it's simpler to do it like this. And then we
+                # just need to get all of them together using the slice and
+                # also remove the quotes from those that were quoted.
+                argv = [string.strip(a, '"') for a in
+                        re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+
+            if tryuser:
+                argv += ["-l", tryuser]
+
+            argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)
             reactor.spawnProcess(pp, argv[0], argv, os.environ)
             d = pp.d
