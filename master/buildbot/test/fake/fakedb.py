@@ -463,7 +463,7 @@ class Build(Row):
     required_columns = ('buildrequestid', 'masterid', 'buildslaveid')
 
 
-class BuildProperties(Row):
+class BuildProperty(Row):
     table = "build_properties"
     defaults = dict(
         buildid=None,
@@ -1722,6 +1722,11 @@ class FakeBuildsComponent(FakeDBComponent):
             if isinstance(row, Build):
                 build = self.builds[row.id] = row.values.copy()
                 build['properties'] = {}
+
+        for row in rows:
+            if isinstance(row, BuildProperty):
+                assert row.buildid in self.builds
+                self.builds[row.buildid]['properties'][row.name] = (row.value, row.source)
 
     # component methods
 
