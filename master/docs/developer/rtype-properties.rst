@@ -11,8 +11,25 @@ Properties
 
         This path lists properties for a given buildset.
 
+    .. bb:rpath:: /builds/:buildid/properties
+
+        This path lists properties for a given build.
+
 Update Methods
 --------------
 
 All update methods are available as attributes of ``master.data.updates``.
+
+.. py:class:: buildbot.data.properties.Properties
+
+    .. py:method:: setBuildProperty(buildid, name, value, source)
+
+        :param integer buildid: build ID
+        :param unicode name: Name of the property to set
+        :param value: Value of the property
+        :type value: Any JSON-able type is accepted (lists, dicts, strings and numbers)
+        :param unicode source: Source of the property to set
+
+        Set a build property.
+        If no property with that name exists in that build, a new property will be created.
 

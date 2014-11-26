@@ -36,8 +36,6 @@ class BuildPropertiesEndpoint(base.Endpoint):
     """
 
     def get(self, resultSpec, kwargs):
-        # its not really implemented db.getBuildProperties is TBD
-        # this code is kept here as a placeholder (so its not yet documented)
         return self.master.db.builds.getBuildProperties(kwargs['buildid'])
 
 
@@ -49,3 +47,8 @@ class Properties(base.ResourceType):
     keyFields = []
 
     entityType = types.SourcedProperties()
+
+    @base.updateMethod
+    def setBuildProperty(self, buildid, name, value, source):
+        return self.master.db.builds.setBuildProperty(
+            buildid, name, value, source)
