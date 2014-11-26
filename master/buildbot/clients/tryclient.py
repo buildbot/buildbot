@@ -589,8 +589,11 @@ class Try(pb.Referenceable):
 
     def _createJob_1(self, ss):
         self.sourcestamp = ss
+        patchlevel, diff = ss.patch
+        if diff is None:
+            raise RuntimeError("There is no patch to try, diff is empty.")
+
         if self.connect == "ssh":
-            patchlevel, diff = ss.patch
             revspec = ss.revision
             if revspec is None:
                 revspec = ""
