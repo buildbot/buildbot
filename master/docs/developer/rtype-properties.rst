@@ -13,7 +13,7 @@ Properties
 
     .. bb:rpath:: /builds/:buildid/properties
 
-        This path list properties for a given build.
+        This path lists properties for a given build.
 
 Update Methods
 --------------
