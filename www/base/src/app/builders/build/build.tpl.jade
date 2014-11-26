@@ -12,8 +12,18 @@
       buildsummary(ng-if="build", buildid="build.buildid")
     .col-sm-7
       tabset
-          tab(heading="buildrequest properties")
-              rawdata(data="properties")
+          tab(heading="properties")
+            table.table.table-hover.table-striped.table-condensed
+              thead
+                tr
+                  th Name
+                  th Value
+                  th Source
+              tbody
+                tr(ng-repeat="(name, value) in properties[0]._raw_data")
+                  td {{ name }}
+                  td {{ value[0] }}
+                  td {{ value[1] }}
           tab(heading="{{buildslave.name}}")
               rawdata(data="buildslave")
           tab(heading="changes")
