@@ -395,7 +395,7 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
         self.getHandler(MetricCountEvent).addWatcher(
             AttachedSlavesWatcher(self))
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # first, enable or disable
         if new_config.metrics is None:
             self.disable()
@@ -428,8 +428,8 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
                     self.periodic_task.start(periodic_interval)
 
         # upcall
-        return util_service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                       new_config)
+        return util_service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                         new_config)
 
     def stopService(self):
         self.disable()

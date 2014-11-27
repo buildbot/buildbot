@@ -28,7 +28,7 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
         self.master = master
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # this is easy - kick out all of the old managers, and add the
         # new ones.
 
@@ -42,5 +42,5 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
             yield mgr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        yield util_service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                      new_config)
+        yield util_service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                        new_config)

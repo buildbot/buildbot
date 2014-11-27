@@ -210,7 +210,7 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
         yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # Given a new BuildSlave, configure this one identically.  Because
         # BuildSlave objects are remotely referenced, we can't replace them
         # without disconnecting the slave, yet there's no reason to do that.
@@ -250,8 +250,8 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
         # which is why the reconfig_priority is set low in this class.
         yield self.updateSlave()
 
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
     @defer.inlineCallbacks
     def stopService(self):

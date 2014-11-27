@@ -27,7 +27,7 @@ class ReconfigurableServiceMixin:
     reconfig_priority = 128
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         if not service.IServiceCollection.providedBy(self):
             return
 
@@ -40,7 +40,7 @@ class ReconfigurableServiceMixin:
         reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
-            yield svc.reconfigService(new_config)
+            yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
 class ClusteredService(service.Service, util.ComparableMixin):
@@ -251,7 +251,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
                 'args': self._config_args,
                 'kwargs': self._config_kwargs}
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # get from the config object its sibling config
         config_sibling = getattr(new_config, self.config_attr)[self.name]
 
@@ -259,8 +259,8 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
         if self.configured and config_sibling == self:
             return defer.succeed(None)
         self.configured = True
-        return self.reconfigServiceWithConstructorArgs(*config_sibling._config_args,
-                                                       **config_sibling._config_kwargs)
+        return self.reconfigService(*config_sibling._config_args,
+                                    **config_sibling._config_kwargs)
 
     def setServiceParent(self, parent):
         self.master = parent
@@ -269,5 +269,5 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
     def checkConfig(self, *args, **kwargs):
         return defer.succeed(True)
 
-    def reconfigServiceWithConstructorArgs(self, *args, **kwargs):
+    def reconfigService(self, *args, **kwargs):
         return defer.succeed(None)

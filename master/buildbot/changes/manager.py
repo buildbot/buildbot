@@ -43,8 +43,8 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.master = master
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        timer = metrics.Timer("ChangeManager.reconfigService")
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        timer = metrics.Timer("ChangeManager.reconfigServiceWithBuildbotConfig")
         timer.start()
 
         removed, added = util.diffSets(
@@ -69,7 +69,7 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         metrics.MetricCountEvent.log("num_sources", num_sources, absolute=True)
 
         # reconfig any newly-added change sources, as well as existing
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
         timer.stop()

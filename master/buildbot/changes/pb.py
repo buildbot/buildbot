@@ -133,7 +133,7 @@ class PBChangeSource(service.ReconfigurableServiceMixin, base.ChangeSource):
         return port
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no "
@@ -144,7 +144,7 @@ class PBChangeSource(service.ReconfigurableServiceMixin, base.ChangeSource):
             yield self._unregister()
             self._register(port)
 
-        yield service.ReconfigurableServiceMixin.reconfigService(
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
             self, new_config)
 
     def activate(self):

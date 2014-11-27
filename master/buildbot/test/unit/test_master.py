@@ -223,7 +223,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
     def test_reconfig(self):
         reactor = self.make_reactor()
-        self.master.reconfigService = mock.Mock(
+        self.master.reconfigServiceWithBuildbotConfig = mock.Mock(
             side_effect=lambda n: defer.succeed(None))
 
         d = self.master.startService(_reactor=reactor)
@@ -232,7 +232,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            self.master.reconfigService.assert_called_with(mock.ANY)
+            self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
         return d
 
     @defer.inlineCallbacks
@@ -259,10 +259,10 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def test_reconfigService_db_url_changed(self):
         old = self.master.config = config.MasterConfig()
         old.db['db_url'] = 'aaaa'
-        yield self.master.reconfigService(old)
+        yield self.master.reconfigServiceWithBuildbotConfig(old)
 
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
         self.assertRaises(config.ConfigErrors, lambda:
-                          self.master.reconfigService(new))
+                          self.master.reconfigServiceWithBuildbotConfig(new))

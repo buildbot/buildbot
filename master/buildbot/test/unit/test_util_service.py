@@ -543,7 +543,7 @@ class MyService(service.BuildbotService):
             config.error("a must be specified")
         return defer.succeed(True)
 
-    def reconfigServiceWithConstructorArgs(self, *argv, **kwargs):
+    def reconfigService(self, *argv, **kwargs):
         self.config = argv, kwargs
         return defer.succeed(None)
 
@@ -568,7 +568,7 @@ class BuildbotService(unittest.TestCase):
         self.master.config.services = {"basic": serv}
         yield serv.setServiceParent(self.master)
         yield self.master.startService()
-        yield self.master.reconfigService(self.master.config)
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         defer.returnValue(serv)
 
     @defer.inlineCallbacks
@@ -594,7 +594,7 @@ class BuildbotService(unittest.TestCase):
         self.master.config.services = {"basic": serv2}
 
         # reconfigure the master
-        yield self.master.reconfigService(self.master.config)
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         # the first service is still used
         self.assertIdentical(self.master.namedServices["basic"], serv)
         # the second service is not used
@@ -613,7 +613,7 @@ class BuildbotService(unittest.TestCase):
         self.master.config.services = {"basic": serv2}
 
         # reconfigure the master
-        yield self.master.reconfigService(self.master.config)
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         # the first service is still used
         self.assertIdentical(self.master.namedServices["basic"], serv)
         # the second service is not used

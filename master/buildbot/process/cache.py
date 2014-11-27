@@ -58,14 +58,14 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
             c = self._caches[cache_name] = lru.AsyncLRUCache(miss_fn, max_size)
             return c
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.config = new_config.caches
         for name, cache in self._caches.iteritems():
             cache.set_max_size(new_config.caches.get(name,
                                                      self.DEFAULT_CACHE_SIZE))
 
-        return service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                  new_config)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)
 
     def get_metrics(self):
         return dict([

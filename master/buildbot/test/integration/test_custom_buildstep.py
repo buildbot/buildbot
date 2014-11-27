@@ -169,7 +169,7 @@ class RunSteps(unittest.TestCase):
         new_config.builders.append(
             config.BuilderConfig(name='test', slavename='testsl',
                                  factory=self.factory))
-        yield self.builder.reconfigService(new_config)
+        yield self.builder.reconfigServiceWithBuildbotConfig(new_config)
 
         self.slave = BuildSlave('bsl', 'pass')
         self.slave.sendBuilderList = lambda: defer.succeed(None)

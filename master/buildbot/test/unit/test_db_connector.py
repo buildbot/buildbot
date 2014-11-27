@@ -55,7 +55,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         self.master.config.db['db_url'] = self.db_url
         yield self.db.setup(check_version=check_version)
         self.db.startService()
-        yield self.db.reconfigService(self.master.config)
+        yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)
 
     # tests
     def test_doCleanup_service(self):

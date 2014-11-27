@@ -56,7 +56,7 @@ class TestStatus(unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
-    def test_reconfigService(self):
+    def test_reconfigServiceWithBuildbotConfig(self):
         m = mock.Mock(name='master')
         status = master.Status(m)
         status.startService()
@@ -67,7 +67,7 @@ class TestStatus(unittest.TestCase):
         sr0 = FakeStatusReceiver()
         config.status = [sr0]
 
-        yield status.reconfigService(config)
+        yield status.reconfigServiceWithBuildbotConfig(config)
 
         self.assertTrue(sr0.running)
         self.assertIdentical(sr0.master, m)
@@ -77,7 +77,7 @@ class TestStatus(unittest.TestCase):
         sr2 = FakeStatusReceiver()
         config.status = [sr1, sr2]
 
-        yield status.reconfigService(config)
+        yield status.reconfigServiceWithBuildbotConfig(config)
 
         self.assertFalse(sr0.running)
         self.assertIdentical(sr0.master, None)
@@ -91,11 +91,11 @@ class TestStatus(unittest.TestCase):
         sr2 = FakeStatusReceiver()
         config.status = [sr1, sr2]
 
-        yield status.reconfigService(config)
+        yield status.reconfigServiceWithBuildbotConfig(config)
 
         # and back to nothing
         config.status = []
-        yield status.reconfigService(config)
+        yield status.reconfigServiceWithBuildbotConfig(config)
 
         self.assertIdentical(sr0.master, None)
         self.assertIdentical(sr1.master, None)

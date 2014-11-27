@@ -381,11 +381,11 @@ Reconfigurable Services
 Instances which need to be notified of a change in configuration should be
 implemented as Twisted services, and mix in the
 :py:class:`ReconfigurableServiceMixin` class, overriding the
-:py:meth:`~ReconfigurableServiceMixin.reconfigService` method.
+:py:meth:`~ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig` method.
 
 .. py:class:: ReconfigurableServiceMixin
 
-    .. py:method:: reconfigService(new_config)
+    .. py:method:: reconfigServiceWithBuildbotConfig(new_config)
 
         :param new_config: new master configuration
         :type new_config: :py:class:`MasterConfig`

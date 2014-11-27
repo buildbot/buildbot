@@ -124,12 +124,12 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         return d
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
         assert self.configured_url == new_config.db['db_url']
 
-        return service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                  new_config)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)
 
     def _doCleanup(self):
         """

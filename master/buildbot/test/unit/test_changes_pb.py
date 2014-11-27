@@ -101,13 +101,13 @@ class TestPBChangeSource(
         if exp_ConfigErrors:
             # if it's not registered, it should raise a ConfigError.
             try:
-                yield self.changesource.reconfigService(cfg)
+                yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
             except config.ConfigErrors:
                 pass
             else:
                 self.fail("Expected ConfigErrors")
         else:
-            yield self.changesource.reconfigService(cfg)
+            yield self.changesource.reconfigServiceWithBuildbotConfig(cfg)
 
         if exp_registration:
             self.assertRegistered(*exp_registration)
@@ -153,7 +153,7 @@ class TestPBChangeSource(
         self.attachChangeSource(pb.PBChangeSource(port='9876'))
 
         self.startChangeSource()
-        yield self.changesource.reconfigService(config)
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
@@ -168,13 +168,13 @@ class TestPBChangeSource(
         self.attachChangeSource(pb.PBChangeSource())
 
         self.startChangeSource()
-        yield self.changesource.reconfigService(config)
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertRegistered('9876', 'change', 'changepw')
 
         config.protocols = {'pb': {'port': '1234'}}
 
-        yield self.changesource.reconfigService(config)
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertUnregistered('9876', 'change', 'changepw')
         self.assertRegistered('1234', 'change', 'changepw')
@@ -192,13 +192,13 @@ class TestPBChangeSource(
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
         self.startChangeSource()
-        yield self.changesource.reconfigService(config)
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 
         config.slavePortnum = '1234'
 
-        yield self.changesource.reconfigService(config)
+        yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
         self.assertNotRegistered()
 

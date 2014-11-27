@@ -185,7 +185,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
                                              notify_on_missing=['a@b.com', 13]))
 
     @defer.inlineCallbacks
-    def do_test_reconfigService(self, old, new, existingRegistration=True):
+    def do_test_reconfigServiceWithBuildbotConfig(self, old, new, existingRegistration=True):
         old.master = self.master
         if existingRegistration:
             old.registration = bslavemanager.FakeBuildslaveRegistration(old)
@@ -195,7 +195,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         new_config = mock.Mock()
         new_config.slaves = [new]
 
-        yield old.reconfigService(new_config)
+        yield old.reconfigServiceWithBuildbotConfig(new_config)
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
@@ -212,7 +212,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         old.updateSlave = mock.Mock(side_effect=lambda: defer.succeed(None))
 
-        yield self.do_test_reconfigService(old, new)
+        yield self.do_test_reconfigServiceWithBuildbotConfig(old, new)
 
         self.assertEqual(old.max_builds, 3)
         self.assertEqual(old.notify_on_missing, ['her@me.com'])
@@ -225,14 +225,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_reconfigService_has_properties(self):
         old = self.createBuildslave(name="bot", password="pass")
 
-        yield self.do_test_reconfigService(old, old)
+        yield self.do_test_reconfigServiceWithBuildbotConfig(old, old)
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
         old = self.createBuildslave('bot', 'pass')
-        yield self.do_test_reconfigService(old, old,
-                                           existingRegistration=False)
+        yield self.do_test_reconfigServiceWithBuildbotConfig(old, old,
+                                                             existingRegistration=False)
         self.assertIn('bot', self.master.buildslaves.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
 
@@ -245,7 +245,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         config.protocols = {'pb': {'port': 'tcp:1234'}}
         config.slaves = [slave]
 
-        yield slave.reconfigService(config)
+        yield slave.reconfigServiceWithBuildbotConfig(config)
 
         reg = slave.registration
 

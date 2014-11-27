@@ -260,7 +260,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
             # give all services a chance to load the new configuration, rather
             # than the base configuration
-            yield self.reconfigService(self.config)
+            yield self.reconfigServiceWithBuildbotConfig(self.config)
 
             # mark the master as active now that mq is running
             yield self.data.updates.masterActive(
@@ -356,7 +356,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                 if name not in old_config.services:
                     yield new_config.services[name].setServiceParent(self)
 
-            yield self.reconfigService(new_config)
+            yield self.reconfigServiceWithBuildbotConfig(new_config)
 
         except config.ConfigErrors, e:
             for msg in e.errors:
@@ -376,7 +376,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         else:
             log.msg("configuration update complete")
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         if self.configured_db_url is None:
             self.configured_db_url = new_config.db['db_url']
         elif (self.configured_db_url != new_config.db['db_url']):
@@ -389,8 +389,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                  new_config)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)
 
     # informational methods
     def allSchedulers(self):

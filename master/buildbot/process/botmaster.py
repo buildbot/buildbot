@@ -155,16 +155,16 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        timer = metrics.Timer("BotMaster.reconfigService")
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        timer = metrics.Timer("BotMaster.reconfigServiceWithBuildbotConfig")
         timer.start()
 
         # reconfigure builders
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case

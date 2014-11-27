@@ -81,14 +81,14 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             logfileName='http.log')
         master.www = wwwservice.WWWService(master)
         yield master.www.startService()
-        yield master.www.reconfigService(master.config)
+        yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
         self.url = 'http://127.0.0.1:%d/' % master.www.getPortnum()
         master.config.www['url'] = self.url
-        yield master.www.reconfigService(master.config)
+        yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
         self.master = master
 

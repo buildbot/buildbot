@@ -34,7 +34,7 @@ class FakeBuildSlave(service.ReconfigurableServiceMixin, service.AsyncService):
     def __init__(self, slavename):
         self.slavename = slavename
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.reconfig_count += 1
         return defer.succeed(None)
 
@@ -60,12 +60,12 @@ class TestBuildSlaveManager(unittest.TestCase):
     def tearDown(self):
         return self.buildslaves.stopService()
 
-    def test_reconfigService(self):
+    def test_reconfigServiceWithBuildbotConfig(self):
         self.patch(self.buildslaves, 'reconfigServiceSlaves',
                    mock.Mock(side_effect=lambda c: defer.succeed(None)))
 
         new_config = mock.Mock()
-        d = self.buildslaves.reconfigService(new_config)
+        d = self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):

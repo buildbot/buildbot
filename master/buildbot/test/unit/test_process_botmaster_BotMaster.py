@@ -121,7 +121,7 @@ class TestBotMaster(unittest.TestCase):
     def tearDown(self):
         return self.botmaster.stopService()
 
-    def test_reconfigService(self):
+    def test_reconfigServiceWithBuildbotConfig(self):
         # check that reconfigServiceBuilders is called.
         self.patch(self.botmaster, 'reconfigServiceBuilders',
                    mock.Mock(side_effect=lambda c: defer.succeed(None)))
@@ -129,7 +129,7 @@ class TestBotMaster(unittest.TestCase):
                    mock.Mock())
 
         new_config = mock.Mock()
-        d = self.botmaster.reconfigService(new_config)
+        d = self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):

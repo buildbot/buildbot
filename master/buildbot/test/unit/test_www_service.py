@@ -52,7 +52,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def test_reconfigService_no_port(self):
         new_config = self.makeConfig()
-        d = self.svc.reconfigService(new_config)
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):
@@ -66,16 +66,16 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         NeedsReconfigResource.reconfigs = 0
 
         # first time, reconfigResource gets called along with setupSite
-        yield self.svc.reconfigService(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 1)
 
         # and the next time, setupSite isn't called, but reconfigResource is
-        yield self.svc.reconfigService(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 2)
 
     def test_reconfigService_port(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigService(new_config)
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):
@@ -86,12 +86,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def test_reconfigService_port_changes(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigService(new_config)
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def reconfig(_):
             newer_config = self.makeConfig(port=999)
-            return self.svc.reconfigService(newer_config)
+            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
         @d.addCallback
         def check(_):
@@ -102,12 +102,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def test_reconfigService_port_changes_to_none(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigService(new_config)
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def reconfig(_):
             newer_config = self.makeConfig()
-            return self.svc.reconfigService(newer_config)
+            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
         @d.addCallback
         def check(_):

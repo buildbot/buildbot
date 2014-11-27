@@ -85,13 +85,13 @@ class BuildslaveManager(service.ReconfigurableServiceMixin,
         self.slaves = {}  # maps slavename to BuildSlave
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
 
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfig any newly-added change sources, as well as existing
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                           new_config)
 
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):
@@ -186,8 +186,7 @@ class BuildslaveManager(service.ReconfigurableServiceMixin,
             log.msg("Got slaveinfo from '%s'" % buildslaveName)
         except Exception, e:
             log.msg("Failed to communicate with slave '%s'\n"
-                    "%s" % (buildslaveName, e)
-                    )
+                    "%s" % (buildslaveName, e))
             defer.returnValue(False)
 
         conn.info = info
