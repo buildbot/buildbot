@@ -633,6 +633,29 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(b.getSummaryStatistic('casualties', add), 11)
         self.assertEqual(b.getSummaryStatistic('casualties', add, 10), 21)
 
+    @defer.inlineCallbacks
+    def testflushProperties(self):
+        b = self.build
+
+        class FakeBuildStatus(Mock):
+            implements(interfaces.IProperties)
+        b.build_status = FakeBuildStatus()
+
+        class Properties(Mock):
+
+            def asList(self):
+                return [(u'p', 5, u'fake'),
+                        (u'p2', ['abc', 9], u'mock')]
+        b.master.data.updates.setBuildProperty = Mock()
+        b.build_status.getProperties.return_value = Properties()
+        b.buildid = 42
+        result = 'SUCCESS'
+        res = yield b._flushProperties(result)
+        self.assertEquals(res, result)
+        b.master.data.updates.setBuildProperty.assert_has_calls([
+            call(42, u'p', 5, u'fake'),
+            call(42, u'p2', ['abc', 9], u'mock')])
+
 
 class TestMultipleSourceStamps(unittest.TestCase):
 

@@ -403,8 +403,21 @@ class Build(properties.PropertiesMixin):
         self.executedSteps.append(s)
         self.currentStep = s
         d = defer.maybeDeferred(s.startStep, self.conn)
+        d.addBoth(self._flushProperties)
         d.addCallback(self._stepDone, s)
         d.addErrback(self.buildException)
+
+    @defer.inlineCallbacks
+    def _flushProperties(self, results):
+        # `results` is just passed on to the next callback
+        props = interfaces.IProperties(self)
+
+        properties = props.getProperties().asList()
+        for name, value, source in properties:
+            yield self.master.data.updates.setBuildProperty(
+                self.buildid, name, value, source)
+
+        defer.returnValue(results)
 
     def _stepDone(self, results, step):
         self.currentStep = None
