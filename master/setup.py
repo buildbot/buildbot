@@ -383,12 +383,20 @@ else:
         'sqlalchemy-migrate ==0.7.0, ==0.7.1, ==0.7.2',
         'python-dateutil==1.5',
     ]
-    setup_args['tests_require'] = [
-        'mock',
-    ]
+
+    setup_args['extras_require'] = {
+        'test': [
+            'mock',
+            'pep8',
+            'pylint==1.1.0',
+            'pyflakes',
+        ],
+    }
+
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
         setup_args['tests_require'] = None
+        setup_args['extras_require'] = None
 
 setup(**setup_args)
 
