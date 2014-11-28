@@ -134,6 +134,7 @@ if window.describe?
             expected =
                 files: ['myfiles']
                 category: 'mycategory'
+                parent_changeids: [1]
                 repository: 'myrepository'
                 author: 'myauthor'
                 project: 'myproject'
