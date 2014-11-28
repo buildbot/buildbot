@@ -19,9 +19,10 @@ Unit tests for the plugin framework
 
 import mock
 
+import buildbot.plugins.db
+
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
-import buildbot.plugins.db
 from twisted.trial import unittest
 from zope.interface import implements
 
@@ -32,9 +33,11 @@ db = buildbot.plugins.db
 
 
 class FakeEntry(object):
+
     """
     An entry suitable for unit tests
     """
+
     def __init__(self, name, project_name, version, fail_require, value):
         self._name = name
         self._dist = mock.Mock(spec_set=['project_name', 'version'])
@@ -68,6 +71,7 @@ class FakeEntry(object):
 
 
 class ITestInterface(IPlugin):
+
     """
     test interface
     """
@@ -76,6 +80,7 @@ class ITestInterface(IPlugin):
 
 
 class ClassWithInterface(object):
+
     """
     a class to implement a simple interface
     """
@@ -90,6 +95,7 @@ class ClassWithInterface(object):
 
 
 class ClassWithNoInterface(object):
+
     """
     just a class
     """
@@ -137,6 +143,9 @@ def provide_fake_entries(group):
 
 @mock.patch('buildbot.plugins.db.iter_entry_points', provide_fake_entries)
 class TestBuildbotPlugins(unittest.TestCase):
+
+    def setUp(self):
+        buildbot.plugins.db._DB = buildbot.plugins.db._PluginDB()
 
     def test_check_group_registration(self):
         with mock.patch.object(buildbot.plugins.db, '_DB', db._PluginDB()):

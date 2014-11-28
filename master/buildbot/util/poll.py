@@ -18,6 +18,8 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 
+_poller_instances = None
+
 
 class Poller(object):
 
@@ -97,9 +99,24 @@ class _Descriptor(object):
         except AttributeError:
             poller = Poller(self.fn, instance)
             setattr(instance, self.attrName, poller)
+            # track instances when testing
+            if _poller_instances is not None:
+                _poller_instances.append((instance, self.attrName))
         return poller
 
 
 def method(fn):
     stateName = "__poll_" + fn.__name__ + "__"
     return _Descriptor(fn, stateName)
+
+
+def track_poll_methods():
+    global _poller_instances
+    _poller_instances = []
+
+
+def reset_poll_methods():
+    global _poller_instances
+    for instance, attrname in _poller_instances:
+        delattr(instance, attrname)
+    _poller_instances = None
