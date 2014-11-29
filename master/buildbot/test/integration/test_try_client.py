@@ -102,7 +102,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.slave = None
 
         def spawnProcess(pp, executable, args, environ):
-            assert executable == 'ssh'
+            assert executable.endswith('ssh')
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
             newfile = os.path.join(self.jobdir, 'new', 'testy')
             open(tmpfile, "w").write(pp.job)
