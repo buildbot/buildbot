@@ -621,6 +621,7 @@ class Try(pb.Referenceable):
                                    "it is available in the PATH")
 
             ssh_command = ssh_commands[0]
+            print >>sys.stderr, 'Found "%s"' % ssh_commands
             if tryuser:
                 argv = [ssh_command, "-l", tryuser, tryhost,
                         buildbotbin, "tryserver", "--jobdir", trydir]
