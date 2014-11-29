@@ -240,8 +240,8 @@ class PyLint(ShellCommand):
             if counts[msg]:
                 self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
                 self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))
-            self.setProperty("pylint-%s" % fullmsg, counts[msg])
-        self.setProperty("pylint-total", sum(counts.values()))
+            self.setProperty("pylint-%s" % fullmsg, counts[msg], 'Pylint')
+        self.setProperty("pylint-total", sum(counts.values()), 'Pylint')
 
     def evaluateCommand(self, cmd):
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):

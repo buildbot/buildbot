@@ -17,8 +17,8 @@ import re
 
 from buildbot.process import logobserver
 from buildbot.status.results import FAILURE
-from buildbot.status.results import WARNINGS
 from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
 
@@ -80,12 +80,12 @@ class Cppcheck(ShellCommand):
     def createSummary(self, log):
         self.descriptionDone = self.descriptionDone[:]
         for msg in self.MESSAGES:
-            self.setProperty('cppcheck-%s' % msg, self.counts[msg])
+            self.setProperty('cppcheck-%s' % msg, self.counts[msg], 'Cppcheck')
             if not self.counts[msg]:
                 continue
             self.descriptionDone.append("%s=%d" % (msg, self.counts[msg]))
             self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
-        self.setProperty('cppcheck-total', sum(self.counts.values()))
+        self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
 
     def evaluateCommand(self, cmd):
         """ cppcheck always return 0, unless a special parameter is given """
