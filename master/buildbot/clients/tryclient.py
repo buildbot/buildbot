@@ -19,6 +19,7 @@ from __future__ import with_statement
 import os
 import random
 import re
+import shlex
 import string
 import sys
 import time
@@ -30,6 +31,7 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.internet import utils
 from twisted.python import log
+from twisted.python import runtime
 from twisted.python.procutils import which
 from twisted.spread import pb
 
@@ -636,15 +638,18 @@ class Try(pb.Referenceable):
                 # ssh command too, but preserving whitespace inside quotes to
                 # allow using paths with spaces in them which is common under
                 # Windows. And because Windows uses backslashes in paths, we
-                # can't just use shlex.split here as it would interpret them
+                # can't just use shlex.split there as it would interpret them
                 # specially, so do it by hand.
-                #
-                # Note that regex here matches the arguments, not the
-                # separators, as it's simpler to do it like this. And then we
-                # just need to get all of them together using the slice and
-                # also remove the quotes from those that were quoted.
-                argv = [string.strip(a, '"') for a in
-                        re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+                if runtime.platformType == 'win32':
+                    # Note that regex here matches the arguments, not the
+                    # separators, as it's simpler to do it like this. And then we
+                    # just need to get all of them together using the slice and
+                    # also remove the quotes from those that were quoted.
+                    argv = [string.strip(a, '"') for a in
+                            re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+                else:
+                    # Do use standard tokenization logic under POSIX.
+                    argv = shlex.split(ssh_command)
 
             if tryuser:
                 argv += ["-l", tryuser]
