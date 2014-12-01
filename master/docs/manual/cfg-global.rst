@@ -186,8 +186,7 @@ This URL is often used to provide a link from buildbot HTML pages to your projec
 The :bb:cfg:`buildbotURL` string should point to the location where the buildbot's internal web server is visible.
 This URL must end with a slash (``/``).
 
-When status notices are sent to users (either by email or over IRC), :bb:cfg:`buildbotURL` will be used to create a URL to the specific build or problem that they are being notified about.
-It will also be made available to queriers (over IRC) who want to find out where to get more information about this buildbot.
+When status notices are sent to users (e.g., by email or over IRC), :bb:cfg:`buildbotURL` will be used to create a URL to the specific build or problem that they are being notified about.
 
 .. bb:cfg:: logCompressionLimit
 .. bb:cfg:: logCompressionMethod
