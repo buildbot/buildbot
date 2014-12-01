@@ -184,6 +184,7 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
                                              wantMq=True, wantDb=True, wantData=True)
         self.rtype = logs.Log(self.master)
 
+    @defer.inlineCallbacks
     def do_test_callthrough(self, dbMethodName, method, exp_args=None,
                             exp_kwargs=None, *args, **kwargs):
         rv = (1, 2)
