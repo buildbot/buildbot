@@ -20,7 +20,6 @@ from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
-from buildbot.test.util.flaky import flaky
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -79,11 +78,9 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     # run this test twice, to make sure the first time shut everything down
     # correctly; if this second test fails, but the first succeeds, then
     # something is not cleaning up correctly in stopService.
-    @flaky(bugNumber=3066)
     def test_master1(self):
         return self.do_test_master()
 
-    @flaky(bugNumber=3066)
     def test_master2(self):
         return self.do_test_master()
 
