@@ -859,7 +859,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
         class MyService(service.BuildbotService):
 
-            def reconfigServiceWithConstructorArgs(foo=None):
+            def reconfigService(foo=None):
                 self.foo = foo
         myService = MyService(foo="bar", name="foo")
 
@@ -1297,10 +1297,10 @@ class FakeService(service.ReconfigurableServiceMixin,
     succeed = True
     call_index = 1
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self, new_config)
         if not self.succeed:
             @d.addCallback
             def fail(_):
@@ -1311,9 +1311,9 @@ class FakeService(service.ReconfigurableServiceMixin,
 class FakeMultiService(service.ReconfigurableServiceMixin,
                        service.AsyncMultiService):
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = True
-        d = service.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self, new_config)
         return d
 
 
@@ -1321,7 +1321,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
 
     def test_service(self):
         svc = FakeService()
-        d = svc.reconfigService(mock.Mock())
+        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         @d.addCallback
         def check(_):
@@ -1333,7 +1333,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         svc = FakeService()
         svc.succeed = False
         try:
-            yield svc.reconfigService(mock.Mock())
+            yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
         except ValueError:
             pass
         else:
@@ -1347,7 +1347,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         ch2.setServiceParent(svc)
         ch3 = FakeService()
         ch3.setServiceParent(ch2)
-        d = svc.reconfigService(mock.Mock())
+        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         @d.addCallback
         def check(_):
@@ -1369,7 +1369,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             svc.setServiceParent(parent)
             services.append(svc)
 
-        d = parent.reconfigService(mock.Mock())
+        d = parent.reconfigServiceWithBuildbotConfig(mock.Mock())
 
         @d.addCallback
         def check(_):
@@ -1386,7 +1386,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         ch1.setServiceParent(svc)
         ch1.succeed = False
         try:
-            yield svc.reconfigService(mock.Mock())
+            yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
         except ValueError:
             pass
         else:

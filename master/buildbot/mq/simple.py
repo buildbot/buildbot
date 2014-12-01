@@ -30,10 +30,10 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
         self.persistent_qrefs = {}
         self.debug = False
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.debug = new_config.mq.get('debug', False)
-        return service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                  new_config)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)
 
     def produce(self, routingKey, data):
         if self.debug:

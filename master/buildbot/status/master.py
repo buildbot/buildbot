@@ -72,7 +72,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
             yield defer.maybeDeferred(lambda:
@@ -92,8 +92,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
     def stopService(self):
         if self._buildset_complete_consumer:

@@ -26,7 +26,7 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     new_config = "not_called"
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         self.new_config = new_config
         return defer.succeed(None)
 
@@ -64,13 +64,13 @@ class MQConnector(unittest.TestCase):
         self.assertEqual(self.conn.impl.startConsuming,
                          self.conn.startConsuming)
 
-    def test_reconfigService(self):
+    def test_reconfigServiceWithBuildbotConfig(self):
         self.patchFakeMQ()
         self.mqconfig['type'] = 'fake'
         self.conn.setup()
         new_config = mock.Mock()
         new_config.mq = dict(type='fake')
-        d = self.conn.reconfigService(new_config)
+        d = self.conn.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):
@@ -85,7 +85,7 @@ class MQConnector(unittest.TestCase):
         new_config = mock.Mock()
         new_config.mq = dict(type='other')
         try:
-            yield self.conn.reconfigService(new_config)
+            yield self.conn.reconfigServiceWithBuildbotConfig(new_config)
         except AssertionError:
             pass  # expected
         else:

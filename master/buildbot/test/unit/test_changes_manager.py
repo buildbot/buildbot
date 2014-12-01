@@ -42,7 +42,7 @@ class TestChangeManager(unittest.TestCase):
         src1.setServiceParent(self.cm)
         self.new_config.change_sources = [src1, src2]
 
-        d = self.cm.reconfigService(self.new_config)
+        d = self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         @d.addCallback
         def check(_):
@@ -55,7 +55,7 @@ class TestChangeManager(unittest.TestCase):
         src1.setServiceParent(self.cm)
         self.new_config.change_sources = []
 
-        d = self.cm.reconfigService(self.new_config)
+        d = self.cm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         @d.addCallback
         def check(_):

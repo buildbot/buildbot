@@ -51,7 +51,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.master.config.www['auth']
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         www = new_config.www
 
         need_new_site = False
@@ -104,8 +104,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
                 yield self.port_service.setServiceParent(self)
 
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a

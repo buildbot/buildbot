@@ -30,7 +30,7 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.manhole = None
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         if new_config.manhole != self.manhole:
             if self.manhole:
                 yield self.manhole.disownServiceParent()
@@ -43,8 +43,8 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
                 yield self.manhole.setServiceParent(self)
 
         # chain up
-        yield service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                 new_config)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
 
     @defer.inlineCallbacks
     def stopService(self):

@@ -205,8 +205,8 @@ class TestSlaveComm(unittest.TestCase):
         new_config.builders = [config.BuilderConfig(name='bldr',
                                                     slavename='testslave', factory=factory.BuildFactory())]
 
-        yield self.botmaster.reconfigService(new_config)
-        yield self.buildslaves.reconfigService(new_config)
+        yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)
 
         # as part of the reconfig, the slave registered with the pbmanager, so
         # get the port it was assigned

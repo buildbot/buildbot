@@ -90,7 +90,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.updateStatusService.setServiceParent(self)
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # find this builder in the config
         for builder_config in new_config.builders:
             if builder_config.name == self.name:

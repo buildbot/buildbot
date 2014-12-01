@@ -31,8 +31,8 @@ class SchedulerManager(util_service.ReconfigurableServiceMixin,
         self.master = master
 
     @defer.inlineCallbacks
-    def reconfigService(self, new_config):
-        timer = metrics.Timer("SchedulerManager.reconfigService")
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        timer = metrics.Timer("SchedulerManager.reconfigServiceWithBuildbotConfig")
         timer.start()
 
         old_by_name = dict((sch.name, sch) for sch in self)
@@ -56,7 +56,7 @@ class SchedulerManager(util_service.ReconfigurableServiceMixin,
                 added_names.add(n)
 
             # compare using ComparableMixin if they don't support reconfig
-            elif not hasattr(old, 'reconfigService'):
+            elif not hasattr(old, 'reconfigServiceWithBuildbotConfig'):
                 if old != new:
                     removed_names.add(n)
                     added_names.add(n)
@@ -93,7 +93,7 @@ class SchedulerManager(util_service.ReconfigurableServiceMixin,
                                      absolute=True)
 
         # reconfig any newly-added schedulers, as well as existing
-        yield util_service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                      new_config)
+        yield util_service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                        new_config)
 
         timer.stop()

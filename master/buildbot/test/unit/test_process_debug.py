@@ -39,25 +39,25 @@ class TestDebugServices(unittest.TestCase):
         ds.startService()
 
         # start off with no manhole
-        yield ds.reconfigService(self.config)
+        yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # set a manhole, fire it up
         self.config.manhole = manhole = FakeManhole()
-        yield ds.reconfigService(self.config)
+        yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertTrue(manhole.running)
         self.assertIdentical(manhole.master, master)
 
         # unset it, see it stop
         self.config.manhole = None
-        yield ds.reconfigService(self.config)
+        yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)
 
         # re-start to test stopService
         self.config.manhole = manhole
-        yield ds.reconfigService(self.config)
+        yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
         # stop the service, and see that it unregisters
         yield ds.stopService()

@@ -105,7 +105,7 @@ def masterConfig():
     class MyService(BuildbotService):
         name = "myService"
 
-        def reconfigServiceWithConstructorArgs(self, num_reconfig):
+        def reconfigService(self, num_reconfig):
             self.num_reconfig = num_reconfig
             return defer.succeed(None)
 

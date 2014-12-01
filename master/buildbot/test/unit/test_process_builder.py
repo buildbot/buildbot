@@ -66,7 +66,7 @@ class BuilderMixin(object):
         mastercfg = config.MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
-            defer.returnValue((yield self.bldr.reconfigService(mastercfg)))
+            defer.returnValue((yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)))
 
 
 class TestBuilder(BuilderMixin, unittest.TestCase):
@@ -417,7 +417,7 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
 
         mastercfg = config.MasterConfig()
         mastercfg.builders = [new_builder_config]
-        yield self.bldr.reconfigService(mastercfg)
+        yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
         self.assertEqual(
             dict(description=self.bldr.builder_status.getDescription(),
                  tags=self.bldr.builder_status.getTags()),

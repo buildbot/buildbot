@@ -31,7 +31,7 @@ class TestMetricBase(unittest.TestCase):
         self.master.config.metrics = dict(log_interval=0, periodic_interval=0)
         self.observer._reactor = self.clock
         self.observer.startService()
-        self.observer.reconfigService(self.master.config)
+        self.observer.reconfigServiceWithBuildbotConfig(self.master.config)
 
     def tearDown(self):
         if self.observer.running:
@@ -181,13 +181,13 @@ class TestReconfig(TestMetricBase):
 
         # enable log_interval
         new_config.metrics = dict(log_interval=10, periodic_interval=0)
-        observer.reconfigService(new_config)
+        observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assert_(observer.log_task)
         self.assertEquals(observer.periodic_task, None)
 
         # disable that and enable periodic_interval
         new_config.metrics = dict(periodic_interval=10, log_interval=0)
-        observer.reconfigService(new_config)
+        observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assert_(observer.periodic_task)
         self.assertEquals(observer.log_task, None)
 
@@ -196,20 +196,20 @@ class TestReconfig(TestMetricBase):
 
         # disable the whole listener
         new_config.metrics = None
-        observer.reconfigService(new_config)
+        observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertFalse(observer.enabled)
         self.assertEquals(observer.log_task, None)
         self.assertEquals(observer.periodic_task, None)
 
         # disable both
         new_config.metrics = dict(periodic_interval=0, log_interval=0)
-        observer.reconfigService(new_config)
+        observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEquals(observer.log_task, None)
         self.assertEquals(observer.periodic_task, None)
 
         # enable both
         new_config.metrics = dict(periodic_interval=10, log_interval=10)
-        observer.reconfigService(new_config)
+        observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assert_(observer.log_task)
         self.assert_(observer.periodic_task)
 

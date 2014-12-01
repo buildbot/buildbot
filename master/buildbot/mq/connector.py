@@ -48,18 +48,18 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.impl.setServiceParent(self)
 
         # configure it (early)
-        self.impl.reconfigService(self.master.config)
+        self.impl.reconfigServiceWithBuildbotConfig(self.master.config)
 
         # copy the methods onto this object for ease of access
         self.produce = self.impl.produce
         self.startConsuming = self.impl.startConsuming
 
-    def reconfigService(self, new_config):
+    def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
         assert self.impl_type == new_config.mq['type']
 
-        return service.ReconfigurableServiceMixin.reconfigService(self,
-                                                                  new_config)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)
 
     def produce(self, routing_key, data):
         # will be patched after configuration to point to the running
