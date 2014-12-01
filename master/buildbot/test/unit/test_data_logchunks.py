@@ -13,15 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import textwrap
 
 from buildbot.data import logchunks
 from buildbot.data import resultspec
 from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
-from buildbot.test.util import interfaces
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -198,19 +195,3 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
         self.assertEqual(logchunk,
                          {'filename': expFilename, 'mime-type': u"text/plain", 'raw': expContent})
-
-
-class LogChunk(interfaces.InterfaceTests, unittest.TestCase):
-
-    def setUp(self):
-        self.master = fakemaster.make_master(testcase=self,
-                                             wantMq=True, wantDb=True, wantData=True)
-        self.rtype = logchunks.LogChunk(self.master)
-
-    def do_test_callthrough(self, dbMethodName, method, exp_args=None,
-                            exp_kwargs=None, *args, **kwargs):
-        rv = defer.succeed(None)
-        m = mock.Mock(return_value=rv)
-        setattr(self.master.db.logs, dbMethodName, m)
-        self.assertIdentical(method(*args, **kwargs), rv)
-        m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
