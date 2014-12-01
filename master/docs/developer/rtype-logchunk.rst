@@ -118,14 +118,5 @@ Raw endpoints
 Update Methods
 --------------
 
-All update methods are available as attributes of ``master.data.logchunks``.
+Log chunks are updated via :doc:`rtype-log`.
 
-.. py:class:: buildbot.data.logchunks.LogChunkResourceType
-
-    .. py:method:: appendLog(logid, content):
-
-        :param integer logid: the log to which content should be appended
-        :param unicode content: the content to append
-
-        Append the given content to the given log.
-        The content must end with a newline.

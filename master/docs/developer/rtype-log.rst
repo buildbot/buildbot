@@ -115,7 +115,7 @@ Logs
 Update Methods
 --------------
 
-All update methods are available as attributes of ``master.data.logs``.
+All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.logs.LogResourceType
 
@@ -129,6 +129,14 @@ All update methods are available as attributes of ``master.data.logs``.
         Create a new log and return its ID.
         The name need not be unique.
         This method will generate a unique slug based on the name.
+
+    .. py:method:: appendLog(logid, content):
+
+        :param integer logid: the log to which content should be appended
+        :param unicode content: the content to append
+
+        Append the given content to the given log.
+        The content must end with a newline.
 
     .. py:method:: finishLog(logid)
 
