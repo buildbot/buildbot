@@ -225,6 +225,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "maxdelay parameter needs to be an number",
                                 self.parse, "--maxdelay=X", *self.req_args)
+
     def test_inv_maxcpus(self):
         self.assertRaisesRegexp(usage.UsageError,
                                 "maxcpus parameter needs to be an number",
