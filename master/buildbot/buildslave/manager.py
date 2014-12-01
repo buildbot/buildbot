@@ -18,8 +18,7 @@ from buildbot import util
 from buildbot.buildslave.protocols import pb as bbpb
 from buildbot.process import metrics
 from buildbot.util import misc
-from buildbot.util.service import ReconfigurableServiceMixin
-from twisted.application import service
+from buildbot.util import service
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import reflect
@@ -57,15 +56,15 @@ class BuildslaveRegistration(object):
         return self.pbReg.getPort()
 
 
-class BuildslaveManager(ReconfigurableServiceMixin,
-                        service.MultiService):
+class BuildslaveManager(service.ReconfigurableServiceMixin,
+                        service.AsyncMultiService):
 
     name = "buildslaves"
     PING_TIMEOUT = 10
     reconfig_priority = 127
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.setName('buildslaves')
         self.master = master
 
@@ -91,8 +90,8 @@ class BuildslaveManager(ReconfigurableServiceMixin,
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfig any newly-added change sources, as well as existing
-        yield ReconfigurableServiceMixin.reconfigService(self,
-                                                         new_config)
+        yield service.ReconfigurableServiceMixin.reconfigService(self,
+                                                                 new_config)
 
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):
