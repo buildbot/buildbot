@@ -187,7 +187,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
         opts = self.parse("--force", "--relocatable", "--no-logrotate",
                           "--keepalive=4", "--usepty=0", "--umask=022",
-                          "--maxdelay=3","--maxcpus=4", "--log-size=2", "--log-count=1",
+                          "--maxdelay=3", "--maxcpus=4", "--log-size=2", "--log-count=1",
                           "--allow-shutdown=file", *self.req_args)
         self.assertOptions(opts,
                            {"force": True,

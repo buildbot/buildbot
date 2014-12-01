@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import multiprocessing
 import os.path
 import signal
 import socket
 import sys
-import multiprocessing
 
 from twisted.application import internet
 from twisted.application import service
