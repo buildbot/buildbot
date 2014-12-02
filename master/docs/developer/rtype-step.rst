@@ -16,6 +16,7 @@ Steps
         The first is usually one word or phrase; the remainder are sized for one-line display.
     :attr urls: a list of URLs associated with this step.
     :type urls: list of dictionaries with keys `name` and `url`
+    :attr boolean hidden: true if the step should not be displayed
 
     This resource type describes a step in a build.
     Steps have unique IDs, but are most commonly accessed by name in the context of their containing builds.
@@ -110,9 +111,10 @@ All update methods are available as attributes of ``master.data.updates``.
         Add a new url to a step.
         The new url is added to the list of urls.
 
-    .. py:method:: finishStep(stepid, results)
+    .. py:method:: finishStep(stepid, results, hidden)
 
         :param integer stepid: the step to modify
         :param integer results: the step's results
+        :param boolean hidden: true if the step should not be displayed
 
         Mark the step as finished at the current time, with the given results.

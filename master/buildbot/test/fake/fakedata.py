@@ -321,11 +321,13 @@ class FakeUpdates(object):
         self.stepStateString[stepid] = state_string
         return defer.succeed(None)
 
-    def finishStep(self, stepid, results):
+    def finishStep(self, stepid, results, hidden):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'results', results,
                               validation.IntValidator())
+        validation.verifyType(self.testcase, 'hidden', hidden,
+                              validation.BooleanValidator())
         return defer.succeed(None)
 
     def newLog(self, stepid, name, type):

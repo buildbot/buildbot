@@ -576,6 +576,7 @@ _step = dict(
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),
     urls=ListValidator(StringValidator()),
+    hidden=BooleanValidator(),
 )
 _stepEvents = ['new', 'complete']
 

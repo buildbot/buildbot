@@ -51,7 +51,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                         started_at=TIME2, complete_at=TIME3, results=2,
                         urls_json='[{"name":"url","url":"http://url"}]'),
             fakedb.Step(id=72, number=2, name='three', buildid=30,
-                        started_at=TIME3),
+                        started_at=TIME3, hidden=True),
         ])
 
     def tearDown(self):
@@ -71,7 +71,8 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             'started_at': epoch2datetime(TIME3),
             'state_string': u'',
             'stepid': 72,
-            'urls': []})
+            'urls': [],
+            'hidden': True})
 
     @defer.inlineCallbacks
     def test_get_existing_buildid_name(self):
@@ -184,6 +185,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_string': u'pending',
             'stepid': stepid,
             'urls': [],
+            'hidden': False,
         }
         self.master.mq.assertProductions([
             (('builds', '10', 'steps', str(stepid), 'new'), msgBody),
@@ -235,6 +237,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_string': u'pending',
             'stepid': 100,
             'urls': [],
+            'hidden': False,
         }
         self.master.mq.assertProductions([
             (('builds', '10', 'steps', str(100), 'started'), msgBody),
@@ -278,6 +281,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_string': u'hi',
             'stepid': 100,
             'urls': [],
+            'hidden': False,
         }
         self.master.mq.assertProductions([
             (('builds', '10', 'steps', str(100), 'updated'), msgBody),
@@ -301,7 +305,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.finishStep,  # fake
             self.rtype.finishStep)  # real
-        def finishStep(self, stepid, results):
+        def finishStep(self, stepid, results, hidden):
             pass
 
     @defer.inlineCallbacks
@@ -312,7 +316,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.startStep(stepid=100)
         self.patch(reactor, 'seconds', lambda: TIME2)
         self.master.mq.clearProductions()
-        yield self.rtype.finishStep(stepid=100, results=9)
+        yield self.rtype.finishStep(stepid=100, results=9, hidden=False)
 
         msgBody = {
             'buildid': 10,
@@ -325,6 +329,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_string': u'pending',
             'stepid': 100,
             'urls': [],
+            'hidden': False,
         }
         self.master.mq.assertProductions([
             (('builds', '10', 'steps', str(100), 'finished'), msgBody),
@@ -368,6 +373,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'state_string': u'pending',
             'stepid': 100,
             'urls': [{u'name': u'foo', u'url': u'bar'}],
+            'hidden': False,
         }
         self.master.mq.assertProductions([
             (('builds', '10', 'steps', str(100), 'updated'), msgBody),
