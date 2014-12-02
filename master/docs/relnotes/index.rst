@@ -66,7 +66,7 @@ git log itself:
 
 .. code-block:: bash
 
-   git log v0.8.9..master
+   git log v0.8.9..eight
 
 Older Versions
 --------------
