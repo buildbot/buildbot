@@ -74,6 +74,9 @@ class FakeBuilderStatus(object):
     def setFriendlyName(self, name):
         pass
 
+    def setTags(self, tags):
+        pass
+
 
 class FakeMaster(object):
     """
