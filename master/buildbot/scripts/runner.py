@@ -312,11 +312,14 @@ class TryOptions(base.SubcommandOptions):
     optParameters = [
         ["connect", "c", None,
          "How to reach the buildmaster, either 'ssh' or 'pb'"],
-        # for ssh, use --host, --username, and --jobdir
+        # for ssh, use --host, --username, --jobdir and optionally
+        # --ssh
         ["host", None, None,
          "Hostname (used by ssh) for the buildmaster"],
         ["jobdir", None, None,
          "Directory (on the buildmaster host) where try jobs are deposited"],
+        ["ssh", None, None,
+         "Command to use instead of the default \"ssh\""],
         ["username", "u", None,
          "Username performing the try build"],
         # for PB, use --master, --username, and --passwd
@@ -393,6 +396,7 @@ class TryOptions(base.SubcommandOptions):
         ['try_host', 'host'],
         ['try_username', 'username'],
         ['try_jobdir', 'jobdir'],
+        ['try_ssh', 'ssh'],
         ['try_buildbotbin', 'buildbotbin'],
         ['try_passwd', 'passwd'],
         ['try_master', 'master'],

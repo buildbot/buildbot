@@ -96,6 +96,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
 
+* Add ``try_ssh`` configuration file setting and ``--ssh`` command line option for the try tool to specify the command to use for connecting to the build master.
+
 Fixes
 ~~~~~
 

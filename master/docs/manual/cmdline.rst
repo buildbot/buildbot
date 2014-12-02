@@ -168,6 +168,10 @@ It must also be given :option:`--jobdir`, which points to the inlet directory co
 The jobdir can be relative to the user's home directory, but most of the time you will use an explicit path like :file:`~buildbot/project/trydir`.
 These arguments can be provided in :file:`.buildbot/options` as ``try_host``, ``try_username``, ``try_password``, and ``try_jobdir``.
 
+If you need to use something different from the default ``ssh`` command for
+connecting to the remote system, you can use `--ssh` command line option or
+``try_ssh`` in the configuration file.
+
 The SSH approach also provides a :option:`--buildbotbin` argument to allow specification of the buildbot binary to run on the buildmaster.
 This is useful in the case where buildbot is installed in a :ref:`virtualenv <Installation-in-a-Virtualenv>` on the buildmaster host, or in other circumstances where the buildbot command is not on the path of the user given by :option:`--username`.
 The :option:`--buildbotbin` argument can be provided in :file:`.buildbot/options` as ``try_buildbotbin``

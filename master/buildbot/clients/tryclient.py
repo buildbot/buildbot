@@ -19,6 +19,8 @@ from __future__ import with_statement
 import os
 import random
 import re
+import shlex
+import string
 import sys
 import time
 
@@ -29,6 +31,7 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.internet import utils
 from twisted.python import log
+from twisted.python import runtime
 from twisted.python.procutils import which
 from twisted.spread import pb
 
@@ -355,9 +358,13 @@ class GitExtractor(SourceStampExtractor):
         ref = self.config.get("branch." + self.branch + ".merge")
         if remote and ref:
             remote_branch = ref.split("/", 2)[-1]
-            d = self.dovc(["rev-parse", remote + "/" + remote_branch])
-            d.addCallback(self.override_baserev)
-            return d
+            baserev = remote + "/" + remote_branch
+        else:
+            baserev = "master"
+
+        d = self.dovc(["rev-parse", baserev])
+        d.addCallback(self.override_baserev)
+        return d
 
     def override_baserev(self, res):
         self.baserev = res.strip()
@@ -585,8 +592,11 @@ class Try(pb.Referenceable):
 
     def _createJob_1(self, ss):
         self.sourcestamp = ss
+        patchlevel, diff = ss.patch
+        if diff is None:
+            raise RuntimeError("There is no patch to try, diff is empty.")
+
         if self.connect == "ssh":
-            patchlevel, diff = ss.patch
             revspec = ss.revision
             if revspec is None:
                 revspec = ""
@@ -615,12 +625,36 @@ class Try(pb.Referenceable):
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
-            if tryuser:
-                argv = ["ssh", "-l", tryuser, tryhost,
-                        buildbotbin, "tryserver", "--jobdir", trydir]
+            ssh_command = self.getopt("ssh")
+            if not ssh_command:
+                ssh_commands = which("ssh")
+                if not ssh_commands:
+                    raise RuntimeError("couldn't find ssh executable, make sure "
+                                       "it is available in the PATH")
+
+                argv = [ssh_commands[0]]
             else:
-                argv = ["ssh", tryhost,
-                        buildbotbin, "tryserver", "--jobdir", trydir]
+                # Split the string on whitespace to allow passing options in
+                # ssh command too, but preserving whitespace inside quotes to
+                # allow using paths with spaces in them which is common under
+                # Windows. And because Windows uses backslashes in paths, we
+                # can't just use shlex.split there as it would interpret them
+                # specially, so do it by hand.
+                if runtime.platformType == 'win32':
+                    # Note that regex here matches the arguments, not the
+                    # separators, as it's simpler to do it like this. And then we
+                    # just need to get all of them together using the slice and
+                    # also remove the quotes from those that were quoted.
+                    argv = [string.strip(a, '"') for a in
+                            re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
+                else:
+                    # Do use standard tokenization logic under POSIX.
+                    argv = shlex.split(ssh_command)
+
+            if tryuser:
+                argv += ["-l", tryuser]
+
+            argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)
             reactor.spawnProcess(pp, argv[0], argv, os.environ)
             d = pp.d
