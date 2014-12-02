@@ -7,7 +7,7 @@ Release Notes for Buildbot 0.8.10
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot 0.8.10.
-Buildbot 0.8.10 was released on XXX.
+Buildbot 0.8.10 was released on the 2nd of December, 2014.
 
 Master
 ------
