@@ -151,7 +151,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_addChange_withParent(self):
-        self.insertTestData(self.change14_rows)
+        yield self.insertTestData(self.change14_rows)
 
         clock = task.Clock()
         clock.advance(SOMETIME)
@@ -814,7 +814,7 @@ class RealTests(Tests):
                               'sourcestampid': 235,
                               'when_timestamp': epoch2datetime(SOMETIME + 30)}]
 
-        self.insertTestData(rows)
+        yield self.insertTestData(rows)
 
         # 1st build (Eg: no previous build)
         self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(49))),
