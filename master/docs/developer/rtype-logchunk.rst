@@ -32,9 +32,8 @@ Logchunks
 
     .. note::
 
-        .. bb:event:: *.logchunk.new
-
-            There will be no new chunk event, the log rtype will be updated when new chunk is created, and the ui will call the data api to get actual data. This avoids to flood the mq with logchunk data.
+        There is no event for a new chunk. Instead, the log resource is updated when new chunks are added, with the new number of lines.
+        Consumers can then request those lines, if desired.
 
     .. bb:rpath:: /log/:logid/contents
 
@@ -118,14 +117,5 @@ Raw endpoints
 Update Methods
 --------------
 
-All update methods are available as attributes of ``master.data.logchunks``.
+Log chunks are updated via :doc:`rtype-log`.
 
-.. py:class:: buildbot.data.logchunks.LogChunkResourceType
-
-    .. py:method:: appendLog(logid, content):
-
-        :param integer logid: the log to which content should be appended
-        :param unicode content: the content to append
-
-        Append the given content to the given log.
-        The content must end with a newline.
