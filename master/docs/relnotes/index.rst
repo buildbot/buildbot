@@ -14,36 +14,14 @@ Master
 Features
 ~~~~~~~~
 
-* Both the P4 source step and P4 change source support ticket-based authentication.
-
-* Clickable 'categories' links added in 'Waterfall' page (web UI).
-
 Fixes
 ~~~~~
-
-* Buildbot is now compatible with SQLAlchemy 0.8 and higher, using the newly-released SQLAlchemy-Migrate.
-
-* The :bb:step:`HTTPStep` step's request parameters are now renderable.
-
-* Fixed content spoofing vulnerabilities (:bb:bug:`2589`).
-
-* Fixed cross-site scripting in status_json (:bb:bug:`2943`).
-
-* :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
-
-* Fixed bug which made it impossible to specify the project when using the BitBucket dialect.
-
-* Fixed SVN master-side source step: if a SVN operation fails, the repository end up in a situation when a manual intervention is required.
-  Now if SVN reports such a situation during initial check, the checkout will be clobbered.
-
-* Fixed master-side source steps to respect the specified timeout when removing files.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
-
 
 Slave
 -----
@@ -64,7 +42,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.9..eight
+   git log v0.8.10..eight
 
 Older Versions
 --------------
@@ -75,6 +53,7 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.8.10
     0.8.9
     0.8.8
     0.8.7
