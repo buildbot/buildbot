@@ -25,9 +25,9 @@ Fixes
 
 * The :bb:step:`HTTPStep` step's request parameters are now renderable.
 
-* Fixed content spoofing vulnerabilities (#2589).
+* Fixed content spoofing vulnerabilities (:bb:bug:`2589`).
 
-* Fixed cross-site scripting in status_json (#2943).
+* Fixed cross-site scripting in status_json (:bb:bug:`2943`).
 
 * :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
 
