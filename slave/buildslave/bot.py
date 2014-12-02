@@ -245,6 +245,7 @@ class Bot(pb.Referenceable, service.MultiService):
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
+        self.maxcpus = None
         self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
