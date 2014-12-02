@@ -203,7 +203,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             cb = yield self.getCodebaseDict(codebase)
             ss = {
                 'codebase': codebase,
-                'repository': cb.get('repository', None),
+                'repository': cb.get('repository', ''),
                 'branch': cb.get('branch', None),
                 'revision': cb.get('revision', None),
                 'project': '',
@@ -219,7 +219,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             cb = stampsByCodebase[codebase]
             ss = {
                 'codebase': codebase,
-                'repository': cb.get('repository', None),
+                'repository': cb.get('repository', ''),
                 'branch': cb.get('branch', None),
                 'revision': cb.get('revision', None),
                 'project': '',
