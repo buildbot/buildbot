@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from buildbot.data import steps
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -153,14 +151,6 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantDb=True, wantData=True)
         self.rtype = steps.Step(self.master)
-
-    def do_test_callthrough(self, dbMethodName, method, exp_args=None,
-                            exp_kwargs=None, *args, **kwargs):
-        rv = defer.succeed(None)
-        m = mock.Mock(return_value=rv)
-        setattr(self.master.db.steps, dbMethodName, m)
-        self.assertIdentical(method(*args, **kwargs), rv)
-        m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
     def test_signature_newStep(self):
         @self.assertArgSpecMatches(
