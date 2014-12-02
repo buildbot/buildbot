@@ -119,8 +119,8 @@ class Model(base.DBConnectorComponent):
                       sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
                                 nullable=False),
                       # slave which performed this build
-                      # TODO: ForeignKey to buildslaves table, named buildslaveid
-                      # TODO: keep nullable to support slave-free builds
+                      # TODO: ForeignKey to buildslaves table, named buildslaveid (#3088)
+                      # TODO: keep nullable to support slave-free builds (#3088)
                       sa.Column('buildslaveid', sa.Integer),
                       # master which controlled this build
                       sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
