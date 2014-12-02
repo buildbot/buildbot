@@ -383,7 +383,7 @@ git log itself:
 
 .. code-block:: bash
 
-   git log v0.8.9..master
+   git log v0.8.10..eight
 
 Older Versions
 --------------
@@ -394,6 +394,7 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.8.10
     0.8.9
     0.8.8
     0.8.7
