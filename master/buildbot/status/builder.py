@@ -91,6 +91,7 @@ class BuilderStatus(styles.Versioned):
         self.unavailable_build_numbers = set()
         self.latestBuildCache = {}
         self.pendingBuildsCache = None
+        self.tags = []
 
 
     # persistence
@@ -316,6 +317,9 @@ class BuilderStatus(styles.Versioned):
 
     def setFriendlyName(self, name):
         self.friendly_name = name
+
+    def setTags(self, tags):
+        self.tags = tags
 
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
@@ -703,6 +707,7 @@ class BuilderStatus(styles.Versioned):
         result['friendly_name'] = self.getFriendlyName()
         result['project'] = self.project
         result['slaves'] = self.slavenames
+        result['tags'] = self.tags
 
         # TODO(maruel): Add cache settings? Do we care?
 

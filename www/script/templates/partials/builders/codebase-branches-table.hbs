@@ -1,26 +1,40 @@
-<div class="border-table-holder col-md-10">
-    <div id="overScrollJS" class="inner-table-holder">
+<div class="row">
+    <div class="border-table-holder col-md-10">
+        <div id="overScrollJS" class="inner-table-holder">
 
-        <table class="codebase-branch-table">
-            <tr class="codebase">
-                <th>Codebase</th>
-                {{#each codebases}}
-                    <td>{{codebase}}</td>
-                {{/each}}
-            </tr>
-            <tr class="branch">
-                <th>Branch</th>
-                {{#each codebases}}
-                    <td>{{branch}}</td>
-                {{/each}}
-            </tr>
-        </table>
+            <table class="codebase-branch-table">
+                <tr class="codebase">
+                    <th>Codebase</th>
+                    {{#each codebases}}
+                        <td>{{codebase}}</td>
+                    {{/each}}
+                </tr>
+                <tr class="branch">
+                    <th>Branch</th>
+                    {{#each codebases}}
+                        <td>{{branch}}</td>
+                    {{/each}}
+                </tr>
+            </table>
+        </div>
     </div>
 </div>
-{{#if compareURL}}
-    <form method="POST" action="{{compareURL}}">
-        <div class="col-md-12 col-padding-top">
-            <button id="compareBranchesBtn" class="blue-btn" type="SUBMIT">Compare Branches</button>
+<div class="row">
+    {{#if compareURL}}
+        <form method="POST" action="{{compareURL}}">
+            <div class="col-md-12 col-padding-top">
+                <button id="compareBranchesBtn" class="blue-btn" type="SUBMIT">Compare Branches</button>
+            </div>
+        </form>
+    {{/if}}
+</div>
+{{#if tags}}
+    <div class="row">
+        <div class="col-md-12 col-padding-top tags check-boxes-list">
+            {{#each tags}}
+                <label for="tag-{{ this }}">{{ this }}</label><input type="checkbox" id="tag-{{ this }}" data-tag="{{ this }}"/>
+            {{/each}}
+            <label for="tag-None">No Tag</label><input type="checkbox" id="tag-None" data-tag="None"/>
         </div>
-    </form>
+    </div>
 {{/if}}
