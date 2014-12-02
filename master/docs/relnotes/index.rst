@@ -7,6 +7,7 @@ Release Notes for Buildbot |version|
     changes can be given a subsection of their own.
 
 The following are the release notes for Buildbot |version|.
+This version was released on the 2nd of December, 2014.
 
 Master
 ------
