@@ -162,5 +162,5 @@ class Step(base.ResourceType):
     @defer.inlineCallbacks
     def finishStep(self, stepid, results):
         yield self.master.db.steps.finishStep(
-            stepid=stepid, results=results)
+            stepid=stepid, results=results, hidden=False)
         yield self.generateEvent(stepid, 'finished')

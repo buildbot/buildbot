@@ -153,13 +153,14 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
-    def finishStep(self, stepid, results, _reactor=reactor):
+    def finishStep(self, stepid, results, hidden, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q,
                          complete_at=_reactor.seconds(),
-                         results=results)
+                         results=results,
+                         hidden=1 if hidden else 0)
         return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
@@ -176,4 +177,5 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             complete_at=mkdt(row.complete_at),
             state_string=row.state_string,
             results=row.results,
-            urls=json.loads(row.urls_json))
+            urls=json.loads(row.urls_json),
+            hidden=bool(row.hidden))

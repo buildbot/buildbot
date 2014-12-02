@@ -597,6 +597,7 @@ dbdict['stepdict'] = DictValidator(
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),
     urls=ListValidator(StringValidator()),
+    hidden=BooleanValidator(),
 )
 
 # logs

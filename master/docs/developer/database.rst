@@ -373,6 +373,7 @@ steps
     * ``state_string`` (short string describing the step's state)
     * ``results`` (results of this step; see :ref:`Build-Result-Codes`)
     * ``urls`` (list of URLs produced by this step. Each urls is stored as a dictionary with keys `name` and `url`)
+    * ``hidden`` (true if the step should be hidden in status displays)
 
     .. py:method:: getStep(stepid=None, buildid=None, number=None, name=None)
 
@@ -416,10 +417,11 @@ steps
 
         Update the state string for the given step.
 
-    .. py:method:: finishStep(stepid, results)
+    .. py:method:: finishStep(stepid, results, hidden)
 
         :param integer stepid: step ID
         :param integer results: step result
+        :param bool hidden: true if the step should be hidden
         :returns: Deferred
 
         Mark the given step as finished, with ``complete_at`` set to the current time.

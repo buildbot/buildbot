@@ -200,6 +200,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': None,
             'state_string': u'pending',
             'urls': [],
+            'hidden': False,
         })
 
     @defer.inlineCallbacks
@@ -250,6 +251,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': epoch2datetime(TIME1),
             'state_string': u'pending',
             'urls': [],
+            'hidden': False,
         })
 
     def test_signature_setStepStateString(self):
@@ -292,6 +294,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': None,
             'state_string': u'hi',
             'urls': [],
+            'hidden': False,
         })
 
     def test_signature_finishStep(self):
@@ -338,6 +341,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': epoch2datetime(TIME1),
             'state_string': u'pending',
             'urls': [],
+            'hidden': False,
         })
 
     def test_signature_addStepURL(self):
@@ -380,4 +384,5 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'started_at': None,
             'state_string': u'pending',
             'urls': [{u'name': u'foo', u'url': u'bar'}],
+            'hidden': False,
         })

@@ -54,7 +54,8 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Step(id=71, number=1, name='two', buildid=30,
                     started_at=TIME2, complete_at=TIME3,
                     state_string=u'test', results=2,
-                    urls_json=u'["http://url"]'),
+                    urls_json=u'["http://url"]',
+                    hidden=True),
         fakedb.Step(id=72, number=2, name='three', buildid=30,
                     started_at=TIME3),
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),
@@ -65,19 +66,22 @@ class Tests(interfaces.InterfaceTests):
          'started_at': epoch2datetime(TIME1),
          'complete_at': epoch2datetime(TIME2),
          'state_string': u'test',
-         'urls': []},
+         'urls': [],
+         'hidden': False},
         {'id': 71, 'buildid': 30, 'number': 1, 'name': u'two',
          'results': 2,
          'started_at': epoch2datetime(TIME2),
          'complete_at': epoch2datetime(TIME3),
          'state_string': u'test',
-         'urls': [u'http://url']},
+         'urls': [u'http://url'],
+         'hidden': True},
         {'id': 72, 'buildid': 30, 'number': 2, 'name': u'three',
          'results': None,
          'started_at': epoch2datetime(TIME3),
          'complete_at': None,
          'state_string': u'',
-         'urls': []},
+         'urls': [],
+         'hidden': False},
     ]
 
     # signature tests
@@ -109,7 +113,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_finishStep(self):
         @self.assertArgSpecMatches(self.db.steps.finishStep)
-        def finishStep(self, stepid, results):
+        def finishStep(self, stepid, results, hidden):
             pass
 
     # method tests
@@ -191,7 +195,8 @@ class Tests(interfaces.InterfaceTests):
             'complete_at': None,
             'results': None,
             'state_string': u'new',
-            'urls': []})
+            'urls': [],
+            'hidden': False})
 
     @defer.inlineCallbacks
     def test_addStep_getStep_existing_step(self):
@@ -261,10 +266,19 @@ class Tests(interfaces.InterfaceTests):
         clock = task.Clock()
         clock.advance(TIME2)
         yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
-        yield self.db.steps.finishStep(stepid=72, results=11, _reactor=clock)
+        yield self.db.steps.finishStep(stepid=72, results=11, hidden=False,
+                                       _reactor=clock)
         stepdict = yield self.db.steps.getStep(stepid=72)
         self.assertEqual(stepdict['results'], 11)
         self.assertEqual(stepdict['complete_at'], epoch2datetime(TIME2))
+        self.assertEqual(stepdict['hidden'], False)
+
+    @defer.inlineCallbacks
+    def test_finishStep_hidden(self):
+        yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
+        yield self.db.steps.finishStep(stepid=72, results=11, hidden=True)
+        stepdict = yield self.db.steps.getStep(stepid=72)
+        self.assertEqual(stepdict['hidden'], True)
 
 
 class RealTests(Tests):
