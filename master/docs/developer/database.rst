@@ -317,15 +317,6 @@ builds
 
             This update is done unconditionally, even if the build is already finished.
 
-    .. py:method:: finishBuildsFromMaster(masterid, results)
-
-        :param integer masterid: master id
-        :param integer results: build result
-        :returns: Deferred
-
-        Mark the unfinished builds from a given master as finished, with ``complete_at`` set to the current time.
-        This is part of the housekeeping done when a master is lost.
-
     .. py:method:: getBuildProperties(buildid)
 
         :param buildid: build ID

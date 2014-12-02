@@ -76,6 +76,5 @@ All update methods are available as attributes of ``master.data.updates``.
         :returns: Deferred
 
         Mark this master as inactive.
-        Masters should call this method before completing an expected shutdown.
-        This method will take care of deactivating or removing configuration resources like builders and schedulers as well.
-
+        Masters should call this method before completing an expected shutdown, and on startup.
+        This method will take care of deactivating or removing configuration resources like builders and schedulers as well as marking lost builds and build requests for retry.

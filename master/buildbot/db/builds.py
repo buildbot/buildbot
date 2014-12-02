@@ -15,7 +15,6 @@
 
 import sqlalchemy as sa
 
-from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 from buildbot.util import json
@@ -147,18 +146,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.update(whereclause=(tbl.c.id == buildid))
-            conn.execute(q,
-                         complete_at=_reactor.seconds(),
-                         results=results)
-        return self.db.pool.do(thd)
-
-    def finishBuildsFromMaster(self, masterid, results, _reactor=reactor):
-        def thd(conn):
-            tbl = self.db.model.builds
-            q = tbl.update()
-            q = q.where(tbl.c.masterid == masterid)
-            q = q.where(tbl.c.results == NULL)
-
             conn.execute(q,
                          complete_at=_reactor.seconds(),
                          results=results)
