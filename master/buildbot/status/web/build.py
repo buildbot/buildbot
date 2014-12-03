@@ -166,8 +166,8 @@ class StopBuildChainActionResource(ActionResource):
                     canceledrequests = yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
                     # probably builds are no longer pending, we will retry
                     if canceledrequests < 1:
-                        log.msg("Retry stop build chain: buildername: %s, brid: %d" %
-                            (buildername, brid))
+                        log.msg("Retry stop build chain: buildername: %s, build # %d" %
+                            (buildername, build.build_status.number))
                         yield self.stopEntireBuildChain(master, build, buildername, reason, brid)
                         break
 
