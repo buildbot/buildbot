@@ -14,20 +14,11 @@
 # Copyright Buildbot Team Members
 
 import mock
-import re
 
 from buildbot.status import irc
 from buildbot.status import words
-from buildbot.status.results import SUCCESS
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
-from buildbot.test.util import compat
 from buildbot.test.util import config
-from buildbot.util import datetime2epoch
 from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
 from twisted.trial import unittest
 
 

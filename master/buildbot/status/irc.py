@@ -13,18 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import random
-import re
-import shlex
-
-from string import capitalize
-from string import join
-from string import lower
 
 from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import protocol
-from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.python import usage
@@ -32,17 +22,7 @@ from twisted.words.protocols import irc
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot import util
-from buildbot import version
-from buildbot.data import resultspec
-from buildbot.process.properties import Properties
 from buildbot.status import base
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
 from buildbot.status.words import StatusBot
 from buildbot.status.words import ThrottledClientFactory
 
@@ -88,7 +68,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     """I represent the buildbot to an IRC server.
     """
-    
+
     def __init__(self, nickname, password, channels, pm_to_nicks, *args, **kwargs):
         StatusBot.__init__(self, *args, **kwargs)
         self.nickname = nickname
@@ -176,23 +156,6 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.log("I have been kicked from %s by %s: %s" % (channel,
                                                            kicker,
                                                            message))
-
-
-class ThrottledClientFactory(protocol.ClientFactory):
-    lostDelay = random.randint(1, 5)
-    failedDelay = random.randint(45, 60)
-
-    def __init__(self, lostDelay=None, failedDelay=None):
-        if lostDelay is not None:
-            self.lostDelay = lostDelay
-        if failedDelay is not None:
-            self.failedDelay = failedDelay
-
-    def clientConnectionLost(self, connector, reason):
-        reactor.callLater(self.lostDelay, connector.connect)
-
-    def clientConnectionFailed(self, connector, reason):
-        reactor.callLater(self.failedDelay, connector.connect)
 
 
 class IrcStatusFactory(ThrottledClientFactory):
