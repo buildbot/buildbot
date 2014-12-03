@@ -405,7 +405,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getBuildRequestBuildChain(self, requests):
+    def getBuildRequestBuildChain(self, requests, brid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             builds_tbl = self.db.model.builds
@@ -414,27 +414,23 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if len(requests) > 0:
                 br = requests[0]
 
-                q = sa.select([reqs_tbl]).where(reqs_tbl.c.id == br.id)
+                triggeredbybrid = brid
+
+                if brid is None:
+                    triggeredbybrid = br.id
+
+                q = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.buildername],
+                      from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
+                      whereclause=(reqs_tbl.c.triggeredbybrid == triggeredbybrid)  &
+                                   (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))
+
                 res = conn.execute(q)
-                row = res.fetchone()
-
-                if row:
-                    startbrid = br.id
-                    if row.startbrid:
-                        startbrid = row.startbrid
-
-                    q = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.buildername],
-                          from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
-                          whereclause=(reqs_tbl.c.startbrid == startbrid)  &
-                                       (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))
-
-                    res = conn.execute(q)
-                    rows = res.fetchall()
-                    if rows:
-                        for row in rows:
-                            rv.append(dict(brid=row.id, number=row.number,
-                                       buildername=row.buildername))
-                res.close()
+                rows = res.fetchall()
+                if rows:
+                    for row in rows:
+                        rv.append(dict(brid=row.id, number=row.number,
+                                   buildername=row.buildername))
+            res.close()
 
             return rv
 

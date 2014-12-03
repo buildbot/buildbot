@@ -33,7 +33,7 @@
           <div class="divider"></div>
       {% endif %}
 
-      {% if authz.advertiseAction('stopAllBuilds', request) %}
+      {% if authz.advertiseAction('stopAllBuilds', request) and stop_build_chain %}
         <h2 class="head-2">
           Stop Entire Build Chain
         </h2>

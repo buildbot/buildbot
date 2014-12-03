@@ -366,9 +366,9 @@ class Build(properties.PropertiesMixin):
         self.text = [] # list of text string lists (text2)
 
     @defer.inlineCallbacks
-    def getBuildChain(self):
+    def getBuildChain(self, brid):
         master = self.builder.botmaster.parent
-        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests)
+        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests, brid)
         defer.returnValue(buildchain)
 
     def getNextStep(self):

@@ -128,8 +128,8 @@ class StopBuildChainActionResource(ActionResource):
         self.build_status = build_status
         self.action = "stopAllBuilds"
 
-    def stopCurrentBuild(self, c, buildername, number, reason):
-        builderc = c.getBuilder(buildername)
+    def stopCurrentBuild(self, master, buildername, number, reason):
+        builderc = master.getBuilder(buildername)
         if builderc:
             buildc = builderc.getBuild(number)
             if buildc:
@@ -137,12 +137,29 @@ class StopBuildChainActionResource(ActionResource):
         return buildc
 
     @defer.inlineCallbacks
-    def cancelCurrentBuild(self, c, brids, buildername):
-        builderc = c.getBuilder(buildername)
+    def cancelCurrentBuild(self, master, brids, buildername):
+        builderc = master.getBuilder(buildername)
         brcontrols = yield builderc.getPendingBuildRequestControls(brids=brids)
         for build_req in brcontrols:
             if build_req:
                 build_req.cancel()
+
+    @defer.inlineCallbacks
+    def stopEntireBuildChain(self, master, build, reason, brid=None):
+        if build:
+            buildchain = yield build.getBuildChain(brid)
+
+            if len(buildchain) < 1:
+                return
+
+            for br in buildchain:
+                if br['number']:
+                    build = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
+                    # stop dependencies subtree
+                    yield self.stopEntireBuildChain(master, build, reason, br['brid'])
+                else:
+                    # the build still on the queue, it doesnt have any dependency subtree
+                    yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
 
     @defer.inlineCallbacks
     def performAction(self, req):
@@ -161,19 +178,12 @@ class StopBuildChainActionResource(ActionResource):
         reason = ("The web-page 'Stop Entire Build Chain' button was pressed by '%s'\n"
                   % html.escape(name))
 
-        c = interfaces.IControl(self.getBuildmaster(req))
+        master = interfaces.IControl(self.getBuildmaster(req))
         buildername = self.build_status.getBuilder().getName()
         number = self.build_status.getNumber()
-        buildc = self.stopCurrentBuild(c, buildername, number, reason)
+        build = self.stopCurrentBuild(master, buildername, number, reason)
 
-        if buildc:
-            buildchain = yield buildc.getBuildChain()
-            for br in buildchain:
-                if br['number']:
-                    self.stopCurrentBuild(c, br['buildername'], br['number'], reason)
-                else:
-                    # the build still on the queue
-                    yield self.cancelCurrentBuild(c, [br['brid']], br['buildername'])
+        self.stopEntireBuildChain(master, build, reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
@@ -210,6 +220,7 @@ class StatusResourceBuild(HtmlResource):
         codebases_arg = cxt['codebases_arg'] = getCodebasesArg(request=req)
 
         if not b.isFinished():
+            cxt['stop_build_chain'] = False
             step = b.getCurrentStep()
             if not step:
                 cxt['current_step'] = "[waiting for build slave]"
@@ -302,6 +313,8 @@ class StatusResourceBuild(HtmlResource):
         master = self.getBuildmaster(req)
         for sch in master.allSchedulers():
             if isinstance(sch, ForceScheduler) and scheduler == sch.name:
+                if not b.isFinished():
+                    cxt['stop_build_chain'] = True
                 for p in sch.all_fields:
                     parameters[p.name] = p
 
