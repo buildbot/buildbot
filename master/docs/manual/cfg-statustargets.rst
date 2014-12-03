@@ -1009,12 +1009,4 @@ Note that as before, not using ``change_hook_auth`` can expose you to security r
 
     Web hooks are only available for local Gitorious installations, since this feature is not offered as part of Gitorious.org yet.
 
-.. [#]
-
-   Apparently this is the same way http://buildd.debian.org displays build status
-
-.. [#]
-
-   It may even be possible to provide SSL access by using a specification like ``"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"``, but this is completely untested
-
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
