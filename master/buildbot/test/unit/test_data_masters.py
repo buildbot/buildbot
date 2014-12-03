@@ -293,13 +293,13 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
-            m = mock.Mock(name='{}._masterDeactivated'.format(rtype))
+            m = mock.Mock(name='%s._masterDeactivated' % rtype)
             m.side_effect = lambda masterid: defer.succeed(None)
             getattr(self.master.data.rtypes, rtype)._masterDeactivated = m
 
         # and the update methods..
         for meth in 'finishBuild', 'finishStep', 'finishLog':
-            m = mock.Mock(name='updates.{}'.format(meth))
+            m = mock.Mock(name='updates.' + meth)
             m.side_effect = lambda *args, **kwargs: defer.succeed(None)
             setattr(self.master.data.updates, meth, m)
 
