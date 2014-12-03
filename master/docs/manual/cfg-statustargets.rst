@@ -28,7 +28,7 @@ To add status targets, you just append more objects to this list::
                                             {"channel": "#example2",
                                              "password": "somesecretpassword"}]))
 
-Most status delivery objects take a ``categories=`` argument, which can contain a list of `category` names: in this case, it will only show status for Builders that are in one of the named categories.
+Most status delivery objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
 
 .. note:: Implementation Note
 
@@ -286,13 +286,13 @@ MailNotifier arguments
     (list of strings).
     A list of builder names for which mail should be sent.
     Defaults to ``None`` (send mail for all builds).
-    Use either builders or categories, but not both.
+    Use either builders or tags, but not both.
 
-``categories``
+``tags``
     (list of strings).
-    A list of category names to serve status information for.
-    Defaults to ``None`` (all categories).
-    Use either builders or categories, but not both.
+    A list of tag names to serve status information for.
+    Defaults to ``None`` (all tags).
+    Use either builders or tags, but not both.
 
 ``addLogs``
     (boolean).
@@ -597,7 +597,7 @@ If the ``allowForce=True`` option was used, some additional commands will be ava
     *REASON* will be added to the build status to explain why it was stopped.
     You might use this if you committed a bug, corrected it right away, and don't want to wait for the first build (which is destined to fail) to complete before starting the second (hopefully fixed) build.
 
-If the `categories` is set to a category of builders (see the categories option in :ref:`Builder-Configuration`) changes related to only that category of builders will be sent to the channel.
+If the `tags` is set (see the tags option in :ref:`Builder-Configuration`) changes related to only builders belonging to those tags of builders will be sent to the channel.
 
 If the `useRevisions` option is set to `True`, the IRC bot will send status messages that replace the build number with a list of revisions that are contained in that build.
 So instead of seeing `build #253 of ...`, you would see something like `build containing revisions [a87b2c4]`.
