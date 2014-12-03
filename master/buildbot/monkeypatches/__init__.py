@@ -139,6 +139,12 @@ def patch_decorators():
 
 
 @onlyOnce
+def patch_mock_asserts():
+    from buildbot.monkeypatches import mock_asserts
+    mock_asserts.patch()
+
+
+@onlyOnce
 def patch_LoopingCall_reset():
     if twisted.version.major == 11 and twisted.version.minor == 0:
         from buildbot.monkeypatches import loopingcall_reset
@@ -152,6 +158,7 @@ def patch_all(for_tests=False):
         patch_testcase_synctest()
         patch_testcase_assert_raises_regexp()
         patch_decorators()
+        patch_mock_asserts()
 
     patch_bug4881()
     patch_bug4520()
