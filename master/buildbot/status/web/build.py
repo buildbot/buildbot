@@ -155,6 +155,8 @@ class StopBuildChainActionResource(ActionResource):
             for br in buildchain:
                 if br['number']:
                     build = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
+                    log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
+                            (br['buildername'], br['number'], br['brid']))
                     # stop dependencies subtree
                     yield self.stopEntireBuildChain(master, build, reason, br['brid'])
                 else:
