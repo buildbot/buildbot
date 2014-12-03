@@ -144,8 +144,10 @@ class StopBuildChainActionResource(ActionResource):
             if build_req:
                 build_req.cancel()
 
+        defer.returnValue(len(brcontrols))
+
     @defer.inlineCallbacks
-    def stopEntireBuildChain(self, master, build, reason, brid=None):
+    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None):
         if build:
             buildchain = yield build.getBuildChain(brid)
 
@@ -154,14 +156,23 @@ class StopBuildChainActionResource(ActionResource):
 
             for br in buildchain:
                 if br['number']:
-                    build = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
+                    buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
                     log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
                             (br['buildername'], br['number'], br['brid']))
                     # stop dependencies subtree
-                    yield self.stopEntireBuildChain(master, build, reason, br['brid'])
+                    yield self.stopEntireBuildChain(master, buildc, br['buildername'], reason, br['brid'])
                 else:
-                    # the build still on the queue, it doesnt have any dependency subtree
-                    yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
+                    # the build was still on the queue
+                    canceledrequests = yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
+                    # probably builds are no longer pending, we will retry
+                    if canceledrequests < 1:
+                        log.msg("Retry stop build chain: buildername: %s, build # %d, brid: %d" %
+                            (buildername, build.build_status.number, brid))
+                        yield self.stopEntireBuildChain(master, build, buildername, reason, brid)
+                        break
+
+                    log.msg("Canceling build chain: buildername: %s, brid: %d" %
+                            (br['buildername'], br['brid']))
 
     @defer.inlineCallbacks
     def performAction(self, req):
@@ -185,7 +196,7 @@ class StopBuildChainActionResource(ActionResource):
         number = self.build_status.getNumber()
         build = self.stopCurrentBuild(master, buildername, number, reason)
 
-        self.stopEntireBuildChain(master, build, reason)
+        self.stopEntireBuildChain(master, build, buildername, reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
