@@ -25,26 +25,6 @@ from twisted.internet import task
 class SetProperyFromCommand(RunMasterBase):
 
     @defer.inlineCallbacks
-    def doForceBuild(self):
-
-        # force a build, and wait until it is finished
-        d = defer.Deferred()
-        consumer = yield self.master.mq.startConsuming(
-            lambda e, data: d.callback(data),
-            ('builds', None, 'finished'))
-
-        # use data api to force a build
-        yield self.master.data.control("force", {}, ("forceschedulers", "force"))
-
-        # wait until we receive the build finished event
-        build = yield d
-        consumer.stopConsuming()
-
-        # enrich the build result, with the properties results
-        build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
-        defer.returnValue(build)
-
-    @defer.inlineCallbacks
     def test_setProp(self):
         oldNewLog = self.master.data.updates.newLog
 
@@ -56,7 +36,7 @@ class SetProperyFromCommand(RunMasterBase):
             res = yield oldNewLog(*arg, **kw)
             defer.returnValue(res)
         self.master.data.updates.newLog = newLog
-        build = yield self.doForceBuild()
+        build = yield self.doForceBuild(wantProperties=True)
 
         self.assertEqual(build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
 
