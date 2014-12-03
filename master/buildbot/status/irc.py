@@ -17,7 +17,6 @@
 from twisted.application import internet
 from twisted.internet import task
 from twisted.python import log
-from twisted.python import usage
 from twisted.words.protocols import irc
 
 from buildbot import config
