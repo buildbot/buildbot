@@ -147,11 +147,12 @@ class StopBuildChainActionResource(ActionResource):
         defer.returnValue(len(brcontrols))
 
     @defer.inlineCallbacks
-    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None):
+    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0):
+
         if build:
             buildchain = yield build.getBuildChain(brid)
 
-            if len(buildchain) < 1:
+            if len(buildchain) < 1 or retry > 3:
                 return
 
             for br in buildchain:
@@ -168,11 +169,18 @@ class StopBuildChainActionResource(ActionResource):
                     if canceledrequests < 1:
                         log.msg("Retry stop build chain: buildername: %s, build # %d" %
                             (buildername, build.build_status.number))
-                        yield self.stopEntireBuildChain(master, build, buildername, reason, brid)
+                        retry += 1
+                        yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
                         break
 
                     log.msg("Canceling build chain: buildername: %s, brid: %d" %
                             (br['buildername'], br['brid']))
+
+            # the build chain should be empty by now, will retry any running builds
+            buildchain = yield build.getBuildChain(brid)
+            if len(buildchain) > 0:
+                retry += 1
+                yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
 
     @defer.inlineCallbacks
     def performAction(self, req):
