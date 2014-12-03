@@ -180,6 +180,8 @@ class StopBuildChainActionResource(ActionResource):
             buildchain = yield build.getBuildChain(brid)
             if len(buildchain) > 0:
                 retry += 1
+                log.msg("Retry stop build chain: buildername: %s, build # %d" %
+                            (buildername, build.build_status.number))
                 yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
 
     @defer.inlineCallbacks
