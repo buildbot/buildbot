@@ -116,7 +116,6 @@ class MasterConfig(util.ComparableMixin):
         self.revlink = default_revlink_matcher
         self.www = dict(
             port=None,
-            url='http://localhost:8080/',
             plugins=dict(),
             auth=auth.NoAuth(),
             avatar_methods=avatar.AvatarGravatar(),
@@ -569,7 +568,7 @@ class MasterConfig(util.ComparableMixin):
         if 'www' not in config_dict:
             return
         www_cfg = config_dict['www']
-        allowed = set(['port', 'url', 'debug', 'json_cache_seconds',
+        allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
                        'plugins', 'auth', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles'])
@@ -579,13 +578,6 @@ class MasterConfig(util.ComparableMixin):
                   (', '.join(unknown),))
 
         self.www.update(www_cfg)
-
-        # invent an appropriate URL given the port
-        if 'port' in www_cfg and 'url' not in www_cfg:
-            self.www['url'] = 'http://localhost:%d/' % (www_cfg['port'],)
-
-        if not self.www['url'].endswith('/'):
-            self.www['url'] += '/'
 
     def load_services(self, filename, config_dict):
         if 'services' not in config_dict:

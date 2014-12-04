@@ -43,9 +43,6 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # load the apps early, in case something goes wrong in Python land
         self.apps = get_plugins('www', None, load_now=True)
 
-        if 'base' not in self.apps:
-            raise RuntimeError("could not find buildbot-www; is it installed?")
-
     @property
     def auth(self):
         return self.master.config.www['auth']
@@ -104,6 +101,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
                 yield self.port_service.setServiceParent(self)
 
+        if not self.port_service:
+            log.msg("No web server configured on this master")
+
         yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
                                                                                    new_config)
 
@@ -115,6 +115,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def setupSite(self, new_config):
         self.reconfigurableResources = []
+
+        # we're going to need at least the the base plugin (buildbot-www)
+        if 'base' not in self.apps:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
+
         root = self.apps.get('base').resource
         for key, plugin in new_config.www.get('plugins', {}).items():
             if key not in self.apps:
