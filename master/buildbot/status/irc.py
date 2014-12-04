@@ -159,7 +159,6 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.useColors = useColors
         self.allowShutdown = allowShutdown
 
-
     def __getstate__(self):
         d = self.__dict__.copy()
         del d['p']
