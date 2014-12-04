@@ -13,9 +13,9 @@
         <form method="post" action="{{ shutdownURL}}" class="command">
             <strong>Shutdown:</strong>
             {{#if graceful}}
-                Slave will shut down gracefully when it is idle.
+                Slave will <strong>disconnect</strong> gracefully when it is idle.
             {{else}}
-                Request slave to <input class="link-button" type="submit" value="shutdown"/> gracefully
+                Request slave to <input class="link-button" type="submit" value="disconnect"/> gracefully
             {{/if}}
         </form>
     {{/if}}
