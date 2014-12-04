@@ -64,6 +64,7 @@ class RemoteCommand(pb.Referenceable):
         self.builder_name = None
         self.commandID = None
         self.deferred = None
+        self.loglock = defer.DeferredLock()
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
@@ -211,6 +212,7 @@ class RemoteCommand(pb.Referenceable):
             return log.unwrap()
         return log
 
+    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def addStdout(self, data):
         if self.collectStdout:
@@ -219,6 +221,7 @@ class RemoteCommand(pb.Referenceable):
             log_ = yield self._unwrap(self.logs[self.stdioLogName])
             log_.addStdout(data)
 
+    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def addStderr(self, data):
         if self.collectStderr:
@@ -227,12 +230,14 @@ class RemoteCommand(pb.Referenceable):
             log_ = yield self._unwrap(self.logs[self.stdioLogName])
             log_.addStderr(data)
 
+    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def addHeader(self, data):
         if self.stdioLogName is not None and self.stdioLogName in self.logs:
             log_ = yield self._unwrap(self.logs[self.stdioLogName])
             log_.addHeader(data)
 
+    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def addToLog(self, logname, data):
         # Activate delayed logs on first data.
@@ -283,6 +288,7 @@ class RemoteCommand(pb.Referenceable):
                     self.updates[k] = []
                 self.updates[k].append(update[k])
 
+    @util.deferredLocked('loglock')
     @defer.inlineCallbacks
     def remoteComplete(self, maybeFailure):
         if self._startTime and self._remoteElapsed:

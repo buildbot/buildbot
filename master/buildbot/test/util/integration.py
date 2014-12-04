@@ -85,3 +85,26 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # (trial will verify all reactor-based timers have been cleared, etc.)
         self.tearDownDirs()
+
+    @defer.inlineCallbacks
+    def doForceBuild(self, wantSteps=False, wantProperties=False):
+
+        # force a build, and wait until it is finished
+        d = defer.Deferred()
+        consumer = yield self.master.mq.startConsuming(
+            lambda e, data: d.callback(data),
+            ('builds', None, 'finished'))
+
+        # use data api to force a build
+        yield self.master.data.control("force", {}, ("forceschedulers", "force"))
+
+        # wait until we receive the build finished event
+        build = yield d
+        consumer.stopConsuming()
+
+        # enrich the build result, with the step results
+        if wantSteps:
+            build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
+        if wantProperties:
+            build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
+        defer.returnValue(build)

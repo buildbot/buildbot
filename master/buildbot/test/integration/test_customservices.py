@@ -25,29 +25,9 @@ from twisted.internet import defer
 class CustomServiceMaster(RunMasterBase):
 
     @defer.inlineCallbacks
-    def doForceBuild(self):
-
-        # force a build, and wait until it is finished
-        d = defer.Deferred()
-        consumer = yield self.master.mq.startConsuming(
-            lambda e, data: d.callback(data),
-            ('builds', None, 'finished'))
-
-        # use data api to force a build
-        yield self.master.data.control("force", {}, ("forceschedulers", "force"))
-
-        # wait until we receive the build finished event
-        build = yield d
-        consumer.stopConsuming()
-
-        # enrich the build result, with the step results
-        build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
-        defer.returnValue(build)
-
-    @defer.inlineCallbacks
     def test_customService(self):
 
-        build = yield self.doForceBuild()
+        build = yield self.doForceBuild(wantSteps=True)
 
         self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
 
@@ -59,7 +39,7 @@ class CustomServiceMaster(RunMasterBase):
         # are reconfigured as expected
         yield self.master.reconfig()
 
-        build = yield self.doForceBuild()
+        build = yield self.doForceBuild(wantSteps=True)
 
         self.assertEqual(myService.num_reconfig, 2)
         self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
