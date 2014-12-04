@@ -32,6 +32,7 @@ class Db2DataMixin(object):
             'state_string': dbdict['state_string'],
             'results': dbdict['results'],
             'urls': dbdict['urls'],
+            'hidden': dbdict['hidden'],
         }
         return defer.succeed(data)
 
@@ -123,6 +124,7 @@ class Step(base.ResourceType):
                 name=types.String(),
                 url=types.String()
             ))
+        hidden = types.Boolean()
     entityType = EntityType(name)
 
     @defer.inlineCallbacks
@@ -160,7 +162,7 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def finishStep(self, stepid, results):
+    def finishStep(self, stepid, results, hidden):
         yield self.master.db.steps.finishStep(
-            stepid=stepid, results=results)
+            stepid=stepid, results=results, hidden=hidden)
         yield self.generateEvent(stepid, 'finished')

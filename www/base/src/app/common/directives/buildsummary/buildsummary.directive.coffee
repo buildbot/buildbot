@@ -35,7 +35,7 @@ class _buildsummary extends Controller('common')
 
         $scope.isStepDisplayed = (step) ->
             if details == EVERYTHING
-                return true
+                return !step.hidden
             else if details == ONLY_NOT_SUCCESS
                 return not step.results? or step.results != 0
             else if details == NONE

@@ -144,6 +144,7 @@ class Model(base.DBConnectorComponent):
                      sa.Column('state_string', sa.Text, nullable=False, server_default=''),
                      sa.Column('results', sa.Integer),
                      sa.Column('urls_json', sa.Text, nullable=False),
+                     sa.Column('hidden', sa.SmallInteger, nullable=False, server_default='0'),
                      )
 
     # logs

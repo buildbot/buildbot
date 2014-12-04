@@ -499,8 +499,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.realUpdateSummary()
         yield self.realUpdateSummary.stop()
 
-        yield self.master.data.updates.finishStep(self.stepid, self.results)
-
+        # determine whether we should hide this step
         hidden = self.hideStepIf
         if callable(hidden):
             try:
@@ -511,7 +510,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                 yield self.addLogWithFailure(why)
                 self.results = EXCEPTION
                 hidden = False
-        # TODO: hidden
+
+        yield self.master.data.updates.finishStep(self.stepid, self.results,
+                                                  hidden)
 
         self.releaseLocks()
 

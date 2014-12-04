@@ -488,7 +488,8 @@ class Step(Row):
         complete_at=None,
         state_string='',
         results=None,
-        urls_json='[]')
+        urls_json='[]',
+        hidden=False)
 
     id_column = 'id'
     foreignKeys = ('buildid',)
@@ -1852,7 +1853,8 @@ class FakeStepsComponent(FakeDBComponent):
             complete_at=_mkdt(row['complete_at']),
             state_string=row['state_string'],
             results=row['results'],
-            urls=json.loads(row['urls_json']))
+            urls=json.loads(row['urls_json']),
+            hidden=bool(row['hidden']))
 
     def getStep(self, stepid=None, buildid=None, number=None, name=None):
         if stepid is not None:
@@ -1913,7 +1915,8 @@ class FakeStepsComponent(FakeDBComponent):
             'complete_at': None,
             'results': None,
             'state_string': state_string,
-            'urls_json': '[]'}
+            'urls_json': '[]',
+            'hidden': False}
 
         return defer.succeed((id, number, name))
 
@@ -1945,12 +1948,13 @@ class FakeStepsComponent(FakeDBComponent):
             b['urls_json'] = json.dumps(urls)
         return defer.succeed(None)
 
-    def finishStep(self, stepid, results, _reactor=reactor):
+    def finishStep(self, stepid, results, hidden, _reactor=reactor):
         now = _reactor.seconds()
         b = self.steps.get(stepid)
         if b:
             b['complete_at'] = now
             b['results'] = results
+            b['hidden'] = True if hidden else False
         return defer.succeed(None)
 
 
