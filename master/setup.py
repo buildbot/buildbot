@@ -290,7 +290,7 @@ setup_args = {
         ]),
         ('buildbot.status', [
             ('buildbot.status.mail', ['MailNotifier']),
-            ('buildbot.status.words', ['IRC']),
+            ('buildbot.status.irc', ['IRC']),
             ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
             ('buildbot.status.status_gerrit', ['GerritStatusPush']),
             ('buildbot.status.github', ['GitHubStatus'])
