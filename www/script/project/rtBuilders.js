@@ -39,7 +39,7 @@ define(function (require) {
                     $tbSorter.fnDraw();
                 });
 
-                if (savedTags.length) {
+                if (savedTags !== undefined && savedTags.length) {
                     $.each(savedTags, function (i, tag) {
                         $("#tag-" + tag).prop('checked', true);
                     });
@@ -53,7 +53,9 @@ define(function (require) {
             return true;
         },
         loadState: function loadState(oSettings, oData) {
-            savedTags = oData.tags;
+            if (oData.tags !== undefined) {
+                savedTags = oData.tags;
+            }
             return true;
         },
         findAllTags: function findAllTags(data) {
