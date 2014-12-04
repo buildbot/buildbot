@@ -459,6 +459,13 @@ div#slave-status {
     display: inline;
 }
 
-table#tablesorterRt span.label {
-    white-space: inherit;
+div.label-div {
+    overflow: hidden;
+
+    div {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
