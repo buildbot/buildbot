@@ -177,7 +177,7 @@ class Mercurial(Source):
     def applyPurgePattern(self, command):
         if self.purgeExcludePattern:
             for pattern in self.purgeExcludePattern:
-                command.append('-X {}'.format(pattern))
+                command.extend(['-X', pattern])
  
     def clean(self, _):
         command = ['--config', 'extensions.purge=', 'purge']
