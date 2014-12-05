@@ -147,7 +147,7 @@ class StopBuildChainActionResource(ActionResource):
         defer.returnValue(len(brcontrols) > 0)
 
     @defer.inlineCallbacks
-    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0, retrybrid=0):
+    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0):
 
         if build:
 
@@ -159,6 +159,9 @@ class StopBuildChainActionResource(ActionResource):
             buildchain = yield build.getBuildChain(brid)
             if len(buildchain) < 1:
                 return
+
+            if brid is not None:
+                yield build.setStopBuildChain(brid)
 
             for br in buildchain:
                 if br['number']:
@@ -175,15 +178,6 @@ class StopBuildChainActionResource(ActionResource):
                         # the build was removed from queue, we will need to update the build chain list
                         log.msg("Could not cancel build chain: buildername: %s, brid: %d" %
                             (br['buildername'], br['brid']))
-
-                        log.msg("Retry stop build chain: buildername: %s, build # %d (queue updated)" %
-                            (buildername, build.build_status.number))
-
-                        # make sure we are dont keep retrying the cancel
-                        if retrybrid != br['brid']:
-                            yield self.stopEntireBuildChain(master, build, buildername, reason, brid,
-                                                            retrybrid=br['brid'])
-                        break
 
                     log.msg("Canceling build chain: buildername: %s, brid: %d" %
                             (br['buildername'], br['brid']))
@@ -218,7 +212,10 @@ class StopBuildChainActionResource(ActionResource):
         number = self.build_status.getNumber()
         build = self.stopCurrentBuild(master, buildername, number, reason)
 
-        self.stopEntireBuildChain(master, build, buildername, reason)
+        markedrequests = yield build.setStopBuildChain()
+
+        if markedrequests:
+            yield self.stopEntireBuildChain(master, build, buildername, reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
@@ -348,8 +345,6 @@ class StatusResourceBuild(HtmlResource):
         master = self.getBuildmaster(req)
         for sch in master.allSchedulers():
             if isinstance(sch, ForceScheduler) and scheduler == sch.name:
-                if not b.isFinished():
-                    cxt['stop_build_chain'] = True
                 for p in sch.all_fields:
                     parameters[p.name] = p
 

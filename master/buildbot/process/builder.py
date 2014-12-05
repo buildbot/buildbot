@@ -465,15 +465,6 @@ class Builder(config.ReconfigurableServiceMixin,
         log.msg("new expectations: %s seconds" % \
                 self.expectations.expectedBuildTime())
 
-    @defer.inlineCallbacks
-    def getUnclaimedBuildRequests(self):
-        unclaimed_requests = yield self.master.db.buildrequests.getBuildRequests(
-            buildername=self.name, claimed=False)
-
-        # sort by submitted_at, so the first is the oldest
-        unclaimed_requests.sort(key=lambda brd : brd['submitted_at'])
-        defer.returnValue(unclaimed_requests)
-
     # notify the master that the buildrequests were removed from queue
     def notifyRequestsRemoved(self, buildrequests):
         for br in buildrequests:
@@ -511,7 +502,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self._breakBrdictRefloops(unclaimed_requests)
         unclaimed_requests = \
             yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.name, claimed=False)
+                buildername=self.name, claimed=False, stopchain=0)
         defer.returnValue(unclaimed_requests)
         return
 
@@ -558,7 +549,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # now, get the available build requests
         unclaimed_requests = \
             yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.name, claimed=False)
+                    buildername=self.name, claimed=False, stopchain=0)
 
         if not unclaimed_requests:
             self.updateBigStatus()
