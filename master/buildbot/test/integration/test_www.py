@@ -76,7 +76,6 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             port='tcp:0:interface=127.0.0.1',
             debug=True,
             auth=auth.NoAuth(),
-            url="not yet known",
             avatar_methods=[],
             logfileName='http.log')
         master.www = wwwservice.WWWService(master)
@@ -87,7 +86,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
         self.url = 'http://127.0.0.1:%d/' % master.www.getPortnum()
-        master.config.www['url'] = self.url
+        master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
         self.master = master
