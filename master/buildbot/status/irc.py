@@ -143,9 +143,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
-                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False,
-                 categories=None  # deprecated
-                 ):
+                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
         self.status = None
@@ -153,16 +151,13 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.password = password
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
-        self.tags = tags or categories
+        self.tags = tags
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
         self.allowShutdown = allowShutdown
-
-        if categories:
-            log.msg("WARNING: categories are deprecated and should be replaced with 'tags=[cat]'")
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -223,6 +218,8 @@ class IRC(base.StatusReceiverMultiService):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
+        if categories:
+            log.msg("WARNING: categories are deprecated and should be replaced with 'tags=[cat]'")
 
         # need to stash these so we can detect changes later
         self.host = host
