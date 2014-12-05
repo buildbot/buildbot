@@ -1018,7 +1018,7 @@ class StatusBot(object):
         raise NotImplementedError
 
     def getContact(self, user=None, channel=None):
-        """ get a Concact instance for ``user`` on ``channel`` """
+        """ get a Contact instance for ``user`` on ``channel`` """
         try:
             return self.contacts[(channel, user)]
         except KeyError:
