@@ -177,7 +177,8 @@ class Mercurial(Source):
     def clean(self, _):
         command = ['--config', 'extensions.purge=', 'purge']
         if self.purgeExcludePattern:
-            command.extend(self.purgeExcludePattern)
+            for pattern in self.purgeExcludePattern:
+                command.append('-X {}'.format(pattern))
         d =  self._dovccmd(command)
         d.addCallback(self._pullUpdate)
         return d
@@ -195,7 +196,8 @@ class Mercurial(Source):
     def fresh(self, _):
         command = ['--config', 'extensions.purge=', 'purge', '--all']
         if self.purgeExcludePattern:
-            command.extend(self.purgeExcludePattern)
+            for pattern in self.purgeExcludePattern:
+                command.append('-X {}'.format(pattern))
         d = self._dovccmd(command)
         d.addCallback(self._pullUpdate)
         return d
