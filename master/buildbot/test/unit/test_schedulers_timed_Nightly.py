@@ -119,6 +119,10 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                                    branch=None, change_filter=filter.ChangeFilter(category_re="fo+o"))
         assert sched.change_filter
 
+    def test_constructor_month(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', month='1')
+        self.assertEqual(sched.month, "1")
+
     # end-to-end tests: let's see the scheduler in action
 
     @defer.inlineCallbacks
