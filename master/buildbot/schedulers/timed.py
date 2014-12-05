@@ -320,8 +320,9 @@ class Nightly(NightlyBase):
                  reason="The Nightly scheduler named '%(name)s' triggered this build",
                  **kwargs):
         NightlyBase.__init__(self, name=name, builderNames=builderNames,
-                             minute=minute, hour=hour, dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth,
-                             reason=reason, **kwargs)
+                             minute=minute, hour=hour, dayOfMonth=dayOfMonth,
+                             month=month, dayOfWeek=dayOfWeek, reason=reason,
+                             **kwargs)
 
 
 class NightlyTriggerable(NightlyBase):
@@ -331,8 +332,9 @@ class NightlyTriggerable(NightlyBase):
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  reason="The NightlyTriggerable scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        NightlyBase.__init__(self, name=name, builderNames=builderNames, minute=minute, hour=hour,
-                             dayOfWeek=dayOfWeek, dayOfMonth=dayOfMonth, reason=reason,
+        NightlyBase.__init__(self, name=name, builderNames=builderNames,
+                             minute=minute, hour=hour, dayOfMonth=dayOfMonth,
+                             month=month, dayOfWeek=dayOfWeek, reason=reason,
                              **kwargs)
 
         self._lastTrigger = None

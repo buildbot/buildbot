@@ -70,6 +70,10 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'], reason="hourlytriggerable")
         self.assertEqual(sched.reason, "hourlytriggerable")
 
+    def test_constructor_month(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'], month='1')
+        self.assertEqual(sched.month, "1")
+
     def test_timer_noBuilds(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5])
