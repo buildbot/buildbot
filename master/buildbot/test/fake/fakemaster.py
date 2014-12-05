@@ -174,8 +174,10 @@ class FakeMaster(object):
 
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantMq=False, wantDb=False, wantData=False,
-                testcase=None, **kwargs):
+                testcase=None, url=None, **kwargs):
     master = FakeMaster(**kwargs)
+    if url:
+        master.buildbotURL = url
     if wantData:
         wantMq = wantDb = True
     if wantMq:
