@@ -174,12 +174,15 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def clean(self, _):
-        command = ['--config', 'extensions.purge=', 'purge']
+    def applyPurgePattern(self, command):
         if self.purgeExcludePattern:
             for pattern in self.purgeExcludePattern:
                 command.append('-X {}'.format(pattern))
+ 
+    def clean(self, _):
+        command = ['--config', 'extensions.purge=', 'purge']
         d =  self._dovccmd(command)
+        self.applyPurgePattern(command)
         d.addCallback(self._pullUpdate)
         return d
 
@@ -195,9 +198,7 @@ class Mercurial(Source):
 
     def fresh(self, _):
         command = ['--config', 'extensions.purge=', 'purge', '--all']
-        if self.purgeExcludePattern:
-            for pattern in self.purgeExcludePattern:
-                command.append('-X {}'.format(pattern))
+        self.applyPurgePattern(command)
         d = self._dovccmd(command)
         d.addCallback(self._pullUpdate)
         return d
