@@ -61,9 +61,9 @@ There are several common arguments for schedulers, although not all are availabl
     If a Change is allowed by the change filter, but is deemed unimportant, then it will not cause builds to start, but will be remembered and shown in status displays.
 
 ``codebases``
-    When the scheduler processes data from more than 1 repository at the same time then a corresponding codebase definition should be passed for each repository.
-    A codebase definition is a dictionary with one or more of the following keys: repository, branch, revision.
-    The codebase definitions have also to be passed as dictionary.
+    When the scheduler processes data from more than one repository at the same time, a corresponding codebase definition should be passed for each repository.
+    Each codebase definition is a dictionary with any of the keys: ``repository``, ``branch``, ``revision``.
+    The codebase definitions are combined in a dictionary keyed by the name of the codebase.
 
     .. code-block:: python
 
@@ -74,15 +74,11 @@ There are several common arguments for schedulers, although not all are availabl
 
     .. important::
     
-       ``codebases`` behaves also like a change_filter on codebase.
-       The scheduler will only process changes  when their codebases are found in ``codebases``.
-       By default ``codebases`` is set to ``{'':{}}`` which means that only changes with codebase '' (default value for codebase) will be accepted by the scheduler.
+       The ``codebases`` parameter is only used to fill in missing details about a codebases when scheduling a build.
+       For example, when a change to codebase ``A`` occurs, a scheduler must invent a sourcestamp for codebase ``B``.
+       The parameter does not act as a filter on incoming changes -- use a change filter for that purpose.
 
-    Buildsteps can have a reference to one of the codebases.
-    The step will only get information (revision, branch etc.) that is related to that codebase.
-    When a scheduler is triggered by new changes, these changes (having a codebase) will be incorporated by the new build.
-    The buildsteps referencing to the codebases that have changes get information about those changes.
-    The buildstep that references to a codebase that does not have changes in the build get the information from the codebases definition as configured in the scheduler.
+    Source steps can specify a codebase to which they will apply, and will use the sourcestamp for that codebase.
 
 ``onlyImportant``
     A boolean that, when ``True``, only adds important changes to the buildset as specified in the ``fileIsImportant`` callable.
