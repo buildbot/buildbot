@@ -202,9 +202,6 @@ class Contact(base.StatusReceiver):
             raise UsageError("no such builder '%s'" % which)
         defer.returnValue(bdict)
 
-    def getPreviousBuild(self, build):
-        return self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
-
     def getControl(self, which):
         # TODO in nine: there's going to be a better way to do all this.
         #   For now, this continues to work.
@@ -509,7 +506,7 @@ class Contact(base.StatusReceiver):
             log.msg('Not notifying for a build that does not match any tags')
             return
 
-        if not self.notify_for_finished(build):
+        if not (yield self.notify_for_finished(build)):
             return
 
         if not self.shouldReportBuild(builderName, buildNumber):
@@ -549,14 +546,15 @@ class Contact(base.StatusReceiver):
     def getResultsDescriptionAndColor(self, results):
         return self.results_descriptions.get(results, ("??", 'RED'))
 
+    @defer.inlineCallbacks
     def notify_for_finished(self, build):
         if self.notify_for('finished'):
-            return True
+            defer.returnValue(True)
 
         if self.notify_for(lower(self.results_descriptions.get(build['results'])[0])):
-            return True
+            defer.returnValue(True)
 
-        prevBuild = self.getPreviousBuild(build)
+        prevBuild = yield self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
         if prevBuild:
             prevResult = prevBuild['results']
 
@@ -566,9 +564,9 @@ class Contact(base.StatusReceiver):
                                                         '')
 
             if (self.notify_for(required_notification_control_string)):
-                return True
+                defer.returnValue(True)
 
-        return False
+        defer.returnValue(False)
 
     @defer.inlineCallbacks
     def watchedBuildFinished(self, build):
