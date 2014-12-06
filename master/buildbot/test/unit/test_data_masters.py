@@ -236,7 +236,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         self.rtype._masterDeactivated = mock.Mock()
         yield self.rtype.masterStopped(name=u'aname', masterid=13)
-        self.rtype._masterDeactivated.assert_calls([])
+        self.rtype._masterDeactivated.assert_not_called()
 
     def test_signature_expireMasters(self):
         @self.assertArgSpecMatches(
