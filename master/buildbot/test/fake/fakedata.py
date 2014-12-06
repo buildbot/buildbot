@@ -104,13 +104,13 @@ class FakeUpdates(object):
         self.testcase.assertIsInstance(masterid, int)
         if masterid:
             self.testcase.assertEqual(masterid, 1)
-        self.masterActive = True
+        self.thisMasterActive = True
         return defer.succeed(None)
 
     def masterStopped(self, name, masterid):
         self.testcase.assertIsInstance(name, unicode)
         self.testcase.assertEqual(masterid, 1)
-        self.masterActive = False
+        self.thisMasterActive = False
         return defer.succeed(None)
 
     def expireMasters(self):

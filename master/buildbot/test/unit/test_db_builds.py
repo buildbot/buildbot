@@ -109,11 +109,6 @@ class Tests(interfaces.InterfaceTests):
         def finishBuild(self, buildid, results):
             pass
 
-    def test_signature_finishBuildsFromMaster(self):
-        @self.assertArgSpecMatches(self.db.builds.finishBuildsFromMaster)
-        def finishBuildsFromMaster(self, masterid, results):
-            pass
-
     def test_signature_getBuildProperties(self):
         @self.assertArgSpecMatches(self.db.builds.getBuildProperties)
         def getBuildProperties(self, bid):
@@ -238,30 +233,6 @@ class Tests(interfaces.InterfaceTests):
                                      complete_at=epoch2datetime(TIME4),
                                      state_string=u'test',
                                      results=7))
-
-    @defer.inlineCallbacks
-    def test_finishBuildsFromMaster(self):
-        clock = task.Clock()
-        clock.advance(TIME4)
-        yield self.insertTestData(self.backgroundData + self.threeBuilds + [
-            fakedb.Build(
-                id=54, buildrequestid=40, number=50, masterid=89,
-                builderid=77, buildslaveid=13, state_string="test",
-                started_at=TIME1)
-        ])
-        yield self.db.builds.finishBuildsFromMaster(masterid=88, results=7, _reactor=clock)
-        bdict = yield self.db.builds.getBuild(50)
-        validation.verifyDbDict(self, 'builddict', bdict)
-        self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, buildslaveid=13,
-                                     started_at=epoch2datetime(TIME1),
-                                     complete_at=epoch2datetime(TIME4),
-                                     state_string=u'test',
-                                     results=7))
-        for _id, results in [(50, 7), (51, 7), (52, 5), (54, None)]:
-            bdict = yield self.db.builds.getBuild(_id)
-            validation.verifyDbDict(self, 'builddict', bdict)
-            self.assertEqual(bdict['results'], results)
 
     @defer.inlineCallbacks
     def testgetBuildPropertiesEmpty(self):

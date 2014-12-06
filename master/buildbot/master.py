@@ -49,7 +49,6 @@ from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.status.master import Status
-from buildbot.status.results import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
@@ -250,7 +249,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             self.masterid = yield self.db.masters.findMasterId(
                 name=self.name)
 
-            yield self.doMasterHouseKeeping(self.masterid)
+            # mark this master as stopped, in case it crashed before
+            yield self.data.updates.masterStopped(name=self.name,
+                                                  masterid=self.masterid)
 
             for serviceFactory in self.config.services.values():
                 yield serviceFactory.setServiceParent(self)
@@ -284,19 +285,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         log.msg("BuildMaster is stopped")
         self._master_initialized = False
-
-    @defer.inlineCallbacks
-    def doMasterHouseKeeping(self, masterid):
-        # House keeping method, when a master is stopped, disappear or
-        # starts (if it has crashed before)
-        # unclaim the unfinished buildrequest, and finish the unfinished builds
-        buildrequests = yield self.db.buildrequests.getBuildRequests(
-            complete=False, claimed=masterid)
-
-        yield self.db.buildrequests.unclaimBuildRequests(
-            brids=[br['buildrequestid'] for br in buildrequests])
-
-        yield self.db.builds.finishBuildsFromMaster(masterid, RETRY)
 
     def reconfig(self):
         # this method wraps doConfig, ensuring it is only ever called once at

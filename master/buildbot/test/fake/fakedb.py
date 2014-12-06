@@ -1805,14 +1805,6 @@ class FakeBuildsComponent(FakeDBComponent):
             b['results'] = results
         return defer.succeed(None)
 
-    def finishBuildsFromMaster(self, masterid, results, _reactor=reactor):
-        now = _reactor.seconds()
-        for (id, row) in self.builds.items():
-            if row['masterid'] == masterid and row['results'] == None:
-                row['complete_at'] = now
-                row['results'] = results
-        return defer.succeed(None)
-
     def getBuildProperties(self, bid):
         if bid in self.builds:
             return defer.succeed(self.builds[bid]['properties'])
