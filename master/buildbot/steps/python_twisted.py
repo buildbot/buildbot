@@ -374,6 +374,9 @@ class Trial(ShellCommand):
         self.problems = ""
         self.warnings = {}
 
+        # text used before commandComplete runs
+        self.text = 'running'
+
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
         if self.testpath is not None:
