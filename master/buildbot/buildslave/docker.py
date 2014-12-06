@@ -74,7 +74,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                 volume, bind = volume_string.split(":", 1)
             except ValueError:
                 config.error("Invalid volume definition for docker "
-                             "{0}. Skipping...".format(volume_string))
+                             "%s. Skipping..." % volume_string)
             self.volumes.append(volume)
 
             ro = False

@@ -238,7 +238,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
         if name is not None:
             self.name = name
         if self.name is None:
-            raise ValueError("{0}: must pass a name to constructor".format(type(self)))
+            raise ValueError("%s: must pass a name to constructor" % type(self))
         self.checkConfig(*args, **kwargs)
         self._config_args = args
         self._config_kwargs = kwargs

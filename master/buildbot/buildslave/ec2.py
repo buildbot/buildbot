@@ -150,7 +150,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                        aws_secret_access_key=secret_identifier)
             else:
                 raise ValueError(
-                    'The specified region does not exist: {0}'.format(region))
+                    'The specified region does not exist: ' + region)
 
         else:
             self.conn = boto.connect_ec2(identifier, secret_identifier)
