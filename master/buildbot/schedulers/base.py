@@ -61,18 +61,22 @@ class BaseScheduler(ClusteredService, StateMixin):
         # Set the codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without
         # changes
-        if codebases is not None:
+        known_keys = set(['branch', 'repository', 'revision'])
+        if codebases is None:
+            config.error("Codebases cannot be None")
+        else:
             if not isinstance(codebases, dict):
                 config.error("Codebases must be a dict of dicts")
-            for codebase, codebase_attrs in codebases.iteritems():
-                if not isinstance(codebase_attrs, dict):
-                    config.error("Codebases must be a dict of dicts")
-                if (codebases != BaseScheduler.DEFAULT_CODEBASES and
-                        'repository' not in codebase_attrs):
-                    config.error(
-                        "The key 'repository' is mandatory in codebases")
-        else:
-            config.error("Codebases cannot be None")
+            else:
+                for codebase, attrs in codebases.iteritems():
+                    if not isinstance(attrs, dict):
+                        config.error("Codebases must be a dict of dicts")
+                    else:
+                        unk = set(attrs) - known_keys
+                        if unk:
+                            config.error(
+                                "Unknown codebase keys %s for codebase %s"
+                                % (', '.join(unk), codebase))
 
         self.codebases = codebases
 
@@ -203,7 +207,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             cb = yield self.getCodebaseDict(codebase)
             ss = {
                 'codebase': codebase,
-                'repository': cb.get('repository', None),
+                'repository': cb.get('repository', ''),
                 'branch': cb.get('branch', None),
                 'revision': cb.get('revision', None),
                 'project': '',
@@ -219,7 +223,7 @@ class BaseScheduler(ClusteredService, StateMixin):
             cb = stampsByCodebase[codebase]
             ss = {
                 'codebase': codebase,
-                'repository': cb.get('repository', None),
+                'repository': cb.get('repository', ''),
                 'branch': cb.get('branch', None),
                 'revision': cb.get('revision', None),
                 'project': '',

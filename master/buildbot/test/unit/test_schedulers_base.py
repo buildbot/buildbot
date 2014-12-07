@@ -315,6 +315,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         return self.do_addBuildsetForSourceStampsWithDefaults(
             codebases, sourcestamps, exp_sourcestamps)
 
+    def test_addBuildsetForSourceStampsWithDefaults_no_repository(self):
+        exp_sourcestamps = [
+            {'repository': '', 'branch': None,
+                'revision': None, 'codebase': '', 'project': ''},
+        ]
+        return self.do_addBuildsetForSourceStampsWithDefaults(
+            {'': {}}, [], exp_sourcestamps)
+
     def test_addBuildsetForSourceStamps_unknown_codbases(self):
         codebases = {}
         sourcestamps = [
@@ -323,9 +331,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         ]
         exp_sourcestamps = [
             {'branch': None, 'revision': 'BB', 'codebase': 'cbB',
-             'project': '', 'repository': None},
+             'project': '', 'repository': ''},
             {'branch': 'AA', 'revision': None, 'codebase': 'cbA',
-             'project': '', 'repository': None},
+             'project': '', 'repository': ''},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
             codebases, sourcestamps, exp_sourcestamps)
