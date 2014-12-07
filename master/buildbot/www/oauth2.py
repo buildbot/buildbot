@@ -69,8 +69,8 @@ class OAuth2Auth(auth.AuthBase):
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = join(new_config.www['url'], "auth/login")
-        self.homeUri = new_config.www['url']
+        self.loginUri = join(new_config.buildbotURL, "auth/login")
+        self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
         return dict(name=self.name,

@@ -47,7 +47,7 @@ class AvatarResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         self.avatarMethods = new_config.www.get('avatar_methods', [])
-        self.defaultAvatarFullUrl = urljoin(new_config.www['url'], self.defaultAvatarUrl)
+        self.defaultAvatarFullUrl = urljoin(new_config.buildbotURL, self.defaultAvatarUrl)
         self.cache = {}
         # ensure the avatarMethods is a iterable
         if isinstance(self.avatarMethods, AvatarBase):
