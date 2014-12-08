@@ -175,6 +175,8 @@ Fixes
 
 * The build properties are now stored in the database in the ``build_properties`` table.
 
+* The list of changes in the build page now displays all the changes since the last sucessful build.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
