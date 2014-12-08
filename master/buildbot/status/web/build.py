@@ -190,6 +190,7 @@ class StopBuildChainActionResource(ActionResource):
                             (retry, buildername, build.build_status.number))
                 yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
 
+
     @defer.inlineCallbacks
     def performAction(self, req):
         authz = self.getAuthz(req)
@@ -210,12 +211,18 @@ class StopBuildChainActionResource(ActionResource):
         master = interfaces.IControl(self.getBuildmaster(req))
         buildername = self.build_status.getBuilder().getName()
         number = self.build_status.getNumber()
-        build = self.stopCurrentBuild(master, buildername, number, reason)
 
-        markedrequests = yield build.setStopBuildChain()
+        builderc = master.getBuilder(buildername)
+        if builderc:
+            build = builderc.getBuild(number)
 
-        if markedrequests:
-            yield self.stopEntireBuildChain(master, build, buildername, reason)
+        if build:
+            markedrequests = yield build.setStopBuildChain()
+
+            if markedrequests:
+                yield self.stopEntireBuildChain(master, build, buildername, reason)
+
+            build.stopBuild(reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
