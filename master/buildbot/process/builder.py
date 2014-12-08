@@ -646,8 +646,8 @@ class Builder(config.ReconfigurableServiceMixin,
                 break
 
             try:
+                yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
                 if len (brids) > 1:
-                    yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
                     log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 
             except:
