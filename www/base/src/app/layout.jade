@@ -21,4 +21,4 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
         | angular.module('app').requires.push('{{app}}')
     | {%- endfor -%}
     script
-        | angular.module("app").constant("config", {{configjson}})
+        | angular.module("app").constant("config", {{configjson|safe}})
