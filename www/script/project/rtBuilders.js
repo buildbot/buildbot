@@ -35,7 +35,7 @@ define(function (require) {
 
                 // insert codebase and branch on the builders page
                 rtBuilders.findAllTags(data.builders);
-                helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
+                helpers.tableHeader($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
 
 
                 $tagsSelect = $("#tags-select");

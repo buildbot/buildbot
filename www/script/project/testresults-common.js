@@ -151,7 +151,7 @@ define(['main'], function () {
                 },
                 addCodebasesBar: function () {
                     // insert codebase and branch on the builders page
-                    helpers.codeBaseBranchOverview($('.top'));
+                    helpers.tableHeader($('.top'));
                 }
             },
             publicFunc = {

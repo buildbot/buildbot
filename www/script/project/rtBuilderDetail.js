@@ -44,7 +44,7 @@ define(function (require) {
             popup.initRunBuild($(".custom-build"));
 
             // insert codebase and branch
-            helpers.codeBaseBranchOverview($('#brancOverViewCont'));
+            helpers.tableHeader($('#brancOverViewCont'));
 
             var args = URI.parseQuery(window.location.search);
 

@@ -72,7 +72,7 @@ define(function (require) {
             timeElements.setHeartbeat(1000);
 
             // insert codebase and branch on the builders page
-            helpers.codeBaseBranchOverview($('.top'));
+            helpers.tableHeader($('.top'));
 
             //Allow for popups
             $(".popup-btn-js-2").bind("click.katana", function (e) {

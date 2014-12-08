@@ -295,11 +295,12 @@ define(function (require) {
                 }
             });
         },
-        codeBaseBranchOverview: function (El, compareURL, tags) {
+        tableHeader: function (El, compareURL, tags) {
+            var KT = require('precompiled.handlebars');
+
             if (El !== undefined && location.search.length > 0) {
-                var KT = require('precompiled.handlebars'),
-                    args = queryString.parse(location.search),
-                    branches = {compareURL: compareURL, codebases: [], tags: tags};
+                var args = queryString.parse(location.search),
+                    branches = {compareURL: compareURL, codebases: []};
 
                 // Fix up the data so it can be consumed by handlebars
                 var count = 0;
@@ -314,6 +315,10 @@ define(function (require) {
                 // Create the table and append to the given element
                 var cbTable = $(KT.partials.builders["builders:codebaseBranchesTable"](branches));
                 cbTable.appendTo(El);
+            }
+            if (tags) {
+                var $tagEl = $(KT.partials.builders["builders:tagsSelector"]({tags: tags}));
+                $tagEl.appendTo(El);
             }
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use
