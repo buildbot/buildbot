@@ -4,13 +4,13 @@ define(function (require) {
 
     var $ = require('jquery'),
         realtimePages = require('realtimePages'),
-        dt = require('datatables-extend'),
+        dt = require('project/datatables-extend'),
         rtTable = require('rtGenericTable'),
         popup = require('ui.popup'),
         hb = require('project/handlebars-extend');
 
 
-    require('extend-moment');
+    require('project/moment-extend');
     require('libs/jquery.form');
     require('timeElements');
 

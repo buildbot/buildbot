@@ -10,7 +10,6 @@ require.config({
         "selectors": "project/selectors",
         "select2": "libs/select2",
         "datatables": "libs/jquery-datatables",
-        "datatables-extend": "project/datatables-extend",
         "dotdotdot": "plugins/jquery-dotdotdot",
         "screensize": "project/screen-size",
         "helpers": "project/helpers",
@@ -26,7 +25,6 @@ require.config({
         "jqache": "plugins/jqache-0-1-1-min",
         "overscroll": "plugins/jquery-overscroll",
         "moment": "plugins/moment-with-langs",
-        "extend-moment": "project/extendMoment",
         "livestamp": "plugins/livestamp",
         "timeElements": "project/timeElements",
         "iFrameResize": "libs/iframeResizer",
@@ -66,10 +64,10 @@ define(function (require) {
 
     var $ = require('jquery'),
         helpers = require('helpers'),
-        dataTables = require('datatables-extend'),
+        dataTables = require('project/datatables-extend'),
         popup = require('ui.popup'),
         dropdown = require('ui.dropdown'),
-        extendMoment = require('extend-moment'),
+        extendMoment = require('project/moment-extend'),
         timeElements = require('timeElements'),
         toastr = require('toastr');
 

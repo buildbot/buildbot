@@ -3,9 +3,9 @@ define(function (require) {
     "use strict";
 
     var $ = require('jquery'),
-        dt = require('datatables-extend'),
+        dt = require('project/datatables-extend'),
         timeElements = require('timeElements'),
-        extendMoment = require('extend-moment'),
+        extendMoment = require('project/moment-extend'),
         helpers = require('helpers'),
         moment = require('moment'),
         popup = require('ui.popup'),

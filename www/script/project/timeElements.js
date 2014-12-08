@@ -1,8 +1,11 @@
 /*global define*/
-define(["jquery", "moment", "extend-moment"], function ($, moment, extendMoment) {
+define(function (require) {
     "use strict";
 
-    var HEARTBEAT = 5000,
+    var $ = require('jquery'),
+        moment = require('moment'),
+        extendMoment = require('project/moment-extend'),
+        HEARTBEAT = 5000,
         ANIM_INTERVAL = 80,
         lastAnim = 0,
         lastBeat,

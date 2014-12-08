@@ -5,7 +5,7 @@ define(function (require) {
     var $ = require('jquery'),
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
-        dt = require('datatables-extend'),
+        dt = require('project/datatables-extend'),
         timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
         moment = require('moment'),

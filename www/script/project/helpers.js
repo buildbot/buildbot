@@ -7,7 +7,7 @@ define(function (require) {
         timeElements = require('timeElements'),
         queryString = require("libs/query-string");
 
-    require('extend-moment');
+    require('project/moment-extend');
 
     var helpers,
         css_class_enum = {},

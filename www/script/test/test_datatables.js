@@ -1,5 +1,5 @@
 /*global define, describe, it, expect, beforeEach, afterEach*/
-define(["jquery", "datatables-extend", "helpers"], function ($, dTables, helpers) {
+define(["jquery", "project/datatables-extend", "helpers"], function ($, dTables, helpers) {
     "use strict";
 
     var filter,

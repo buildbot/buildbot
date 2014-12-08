@@ -1,8 +1,14 @@
 /*global define*/
-define(['jquery', 'datatables', 'helpers', 'libs/natural-sort', 'ui.popup'], function ($, dataTable, helpers, naturalSort) {
+define(function (require) {
 
     "use strict";
-    var dataTables;
+    var dataTables,
+        $ = require('jquery'),
+        helpers = require('helpers'),
+        naturalSort = require('libs/natural-sort');
+
+    require('ui.popup');
+    require('datatables');
 
     dataTables = {
         init: function () {

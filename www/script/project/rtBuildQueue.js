@@ -5,7 +5,7 @@ define(function (require) {
     var $ = require('jquery'),
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
-        dt = require('datatables-extend'),
+        dt = require('project/datatables-extend'),
         hb = require('project/handlebars-extend'),
         timeElements = require('timeElements'),
         popup = require('ui.popup'),

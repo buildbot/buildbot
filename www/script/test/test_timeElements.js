@@ -1,10 +1,15 @@
 /*global define, jasmine, describe, it, expect, beforeEach, afterEach*/
-define(["jquery", "timeElements", "extend-moment", "moment", "helpers"], function ($, te, extend_moment, moment) {
+define(function (require) {
     "use strict";
+
+    var $ = require("jquery"),
+        te = require("timeElements"),
+        extend_moment = require("project/moment-extend"),
+        moment = require("moment"),
+        $body = $("body");
 
     // Setup the time elements
     te.init();
-    var $body = $("body");
 
     function testElapsedTime(time, expectedText) {
         var $elem = $("<div/>");
