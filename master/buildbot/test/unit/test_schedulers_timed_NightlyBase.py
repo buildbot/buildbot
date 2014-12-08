@@ -180,6 +180,24 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
                                              ((2011, 1, 4, 19, 19), (2011, 1, 4, 20, 0)),  # still hourly!
                                              )
 
+    def test_getNextBuildTime_dayOfWeek_single_as_string(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   dayOfWeek="1")  # Tuesday (2011-1-1 was a Saturday)
+        return self.do_getNextBuildTime_test(sched,
+                                             ((2011, 1, 3, 22, 19), (2011, 1, 4, 0, 0)),
+                                             ((2011, 1, 4, 19, 19), (2011, 1, 4, 20, 0)),  # still hourly!
+                                             )
+
+    def test_getNextBuildTime_dayOfWeek_multiple_as_string(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   dayOfWeek="tue,3")  # Tuesday, Thursday (2011-1-1 was a Saturday)
+        return self.do_getNextBuildTime_test(sched,
+                                             ((2011, 1, 3, 22, 19), (2011, 1, 4, 0, 0)),
+                                             ((2011, 1, 4, 19, 19), (2011, 1, 4, 20, 0)),  # still hourly!
+                                             ((2011, 1, 5, 22, 19), (2011, 1, 6, 0, 0)),
+                                             ((2011, 1, 6, 19, 19), (2011, 1, 6, 20, 0)),  # still hourly!
+                                             )
+
     def test_getNextBuildTime_dayOfWeek_multiple_hours(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    dayOfWeek=[1, 3], hour=1)  # Tuesday, Thursday (2011-1-1 was a Saturday)
