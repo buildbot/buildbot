@@ -38,16 +38,16 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = '{"url": "h:/a/b/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertIn(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"url": "h:/a/b/", "user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertIn(res, exp)
 
         master = self.make_master(url='h:/a/c/', auth=_auth)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"url": "h:/a/c/", "user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
         self.assertIn(res, exp)

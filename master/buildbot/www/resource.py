@@ -39,7 +39,7 @@ class Resource(resource.Resource):
 
     @property
     def base_url(self):
-        return self.master.config.www['url']
+        return self.master.config.buildbotURL
 
     def __init__(self, master):
         resource.Resource.__init__(self)

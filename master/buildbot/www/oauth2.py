@@ -15,14 +15,14 @@
 
 import requests
 
-from urllib import urlencode
-from urlparse import parse_qs
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import resource
 from posixpath import join
 from twisted.internet import defer
 from twisted.internet import threads
+from urllib import urlencode
+from urlparse import parse_qs
 
 
 class OAuth2LoginResource(auth.LoginResource):
@@ -69,8 +69,8 @@ class OAuth2Auth(auth.AuthBase):
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = join(new_config.www['url'], "auth/login")
-        self.homeUri = new_config.www['url']
+        self.loginUri = join(new_config.buildbotURL, "auth/login")
+        self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
         return dict(name=self.name,
