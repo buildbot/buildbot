@@ -126,7 +126,7 @@ class CreateSlaveOptions(MakerBase):
          "Use --umask=022 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
-        ["maxcpus", None, None,
+        ["maxcpus", None, "None",
          "Maximum number of cpus to use on a build. "],
         ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
@@ -216,7 +216,7 @@ class CreateSlaveOptions(MakerBase):
 
         if not re.match(r'^\d+$', self['maxcpus']) and \
                 self['maxcpus'] != 'None':
-            raise usage.UsageError("maxcpus parameter needs to be a number"
+            raise usage.UsageError("maxcpus parameter needs to be an number"
                                    " or None")
 
         if self['allow-shutdown'] not in [None, 'signal', 'file']:

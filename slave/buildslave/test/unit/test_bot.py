@@ -93,7 +93,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'maxcpus', 'basedir']))
         d.addCallback(check)
         return d
 

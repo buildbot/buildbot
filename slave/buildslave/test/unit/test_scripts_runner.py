@@ -196,7 +196,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                             "usepty": 0,
                             "umask": "022",
                             "maxdelay": 3,
-                            "maxcpus": 4,
+                            "maxcpus":"4",
                             "log-size": 2,
                             "log-count": "1",
                             "allow-shutdown": "file",
