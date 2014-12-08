@@ -31,10 +31,7 @@
 {{#if tags}}
     <div class="row">
         <div class="col-md-12 col-padding-top tags check-boxes-list">
-            {{#each tags}}
-                <label for="tag-{{ this }}">{{ this }}</label><input type="checkbox" id="tag-{{ this }}" data-tag="{{ this }}"/>
-            {{/each}}
-            <label for="tag-None">No Tag</label><input type="checkbox" id="tag-None" data-tag="None"/>
+            <label class="col-padding-top" for="tags-select">Tags:</label><input class="col-md-2" type="hidden" id="tags-select"/>
         </div>
     </div>
 {{/if}}

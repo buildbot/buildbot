@@ -14,7 +14,10 @@ define(function (require) {
         initializedCodebaseOverview = false,
         latestRevDict = {},
         tags = new MiniSet(),
-        savedTags = [];
+        savedTags = [],
+        $tagsSelect,
+        NO_TAG = "No Tag",
+        extra_tags = [NO_TAG];
 
     require('libs/jquery.form');
 
@@ -25,7 +28,6 @@ define(function (require) {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
-
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -35,18 +37,39 @@ define(function (require) {
                 rtBuilders.findAllTags(data.builders);
                 helpers.codeBaseBranchOverview($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
 
-                $(".tags :checkbox").click(function click() {
+
+                $tagsSelect = $("#tags-select");
+
+                $tagsSelect.on("change", function change() {
                     $tbSorter.fnDraw();
                 });
 
                 if (savedTags !== undefined && savedTags.length) {
+                    var str = "";
                     $.each(savedTags, function (i, tag) {
-                        $("#tag-" + tag).prop('checked', true);
+                        str += tag + ",";
                     });
+                    $tagsSelect.val(str);
+                    rtBuilders.setupTagsSelector();
+                } else {
+                    rtBuilders.setupTagsSelector();
                 }
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
+        },
+        setupTagsSelector: function setupTagsSelector() {
+            $tagsSelect.select2({
+                multiple: true,
+                data: rtBuilders.parseTags()
+            });
+        },
+        parseTags: function parseTags() {
+            var results = [];
+            $.each(tags.keys(), function (i, tag) {
+                results.push({id: tag, text: tag})
+            });
+            return {results: results};
         },
         saveState: function saveState(oSettings, oData) {
             oData.tags = rtBuilders.getSelectedTags();
@@ -63,14 +86,18 @@ define(function (require) {
             $.each(data, function eachBuilder(i, builder) {
                 tags = tags.add(builder.tags);
             });
+
+            tags.add(extra_tags)
         },
         getSelectedTags: function getSelectedTags() {
             var selectedTags = [];
-            $.each($(".tags :checkbox"), function (i, input) {
-                if ($(input).is(":checked")) {
-                    selectedTags.push($(input).attr("data-tag"));
-                }
-            });
+            if ($tagsSelect !== undefined) {
+                $.each($tagsSelect.val().split(","), function (i, tag) {
+                    if (tag.length) {
+                        selectedTags.push(tag.trim());
+                    }
+                });
+            }
 
             return selectedTags;
         },
@@ -84,11 +111,7 @@ define(function (require) {
                 }
 
                 if (builderTags.length === 0) {
-                    if ($.inArray("None", selectedTags) > -1) {
-                        return true;
-                    }
-
-                    return false;
+                    return $.inArray("No Tag", selectedTags) > -1;
                 }
 
                 var result = false;
@@ -109,15 +132,15 @@ define(function (require) {
             options.fnStateLoadParams = rtBuilders.loadState;
 
             options.aoColumns = [
-                { "mData": null, "sWidth": "7%", "sType": "string-ignore-empty" },
-                { "mData": null, "sWidth": "13%", "sType": "builder-name" },
-                { "mData": null, "sWidth": "10%" },
-                { "mData": null, "sWidth": "15%", "sType": "number-ignore-zero" },
-                { "mData": null, "sWidth": "15%", "sType": "builder-status" },
-                { "mData": null, "sWidth": "5%", "bSortable": false  },
-                { "mData": null, "sWidth": "15%", "bSortable": false  },
-                { "mData": null, "sWidth": "5%", "sType": "natural" },
-                { "mData": null, "sWidth": "5%", "bSortable": false }
+                {"mData": null, "sWidth": "7%", "sType": "string-ignore-empty"},
+                {"mData": null, "sWidth": "13%", "sType": "builder-name"},
+                {"mData": null, "sWidth": "10%"},
+                {"mData": null, "sWidth": "15%", "sType": "number-ignore-zero"},
+                {"mData": null, "sWidth": "15%", "sType": "builder-status"},
+                {"mData": null, "sWidth": "5%", "bSortable": false},
+                {"mData": null, "sWidth": "15%", "bSortable": false},
+                {"mData": null, "sWidth": "5%", "sType": "natural"},
+                {"mData": null, "sWidth": "5%", "bSortable": false}
             ];
 
             options.aaSorting = [
@@ -160,7 +183,8 @@ define(function (require) {
             ];
 
             return dt.initTable($tableElem, options);
-        }
+        },
+        noTag: NO_TAG
     };
 
     return rtBuilders;

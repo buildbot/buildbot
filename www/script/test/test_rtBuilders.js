@@ -50,7 +50,7 @@ define(["jquery", "rtBuilders"], function ($, rtBuilders) {
 
         it("shows only builders without tags when None is given", function () {
             rtBuilders.getSelectedTags = function () {
-                return ["None"];
+                return [rtBuilders.noTag];
             };
 
             var expectedResult = [
@@ -64,7 +64,7 @@ define(["jquery", "rtBuilders"], function ($, rtBuilders) {
 
         it("filters correctly with None and a filter", function () {
             rtBuilders.getSelectedTags = function () {
-                return ["Nightly", "None"];
+                return ["Nightly", rtBuilders.noTag];
             };
 
             var expectedResult = [
