@@ -226,11 +226,6 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                                 "maxdelay parameter needs to be an number",
                                 self.parse, "--maxdelay=X", *self.req_args)
 
-    def test_inv_maxcpus(self):
-        self.assertRaisesRegexp(usage.UsageError,
-                                "maxcpus parameter needs to be an number",
-                                self.parse, "--maxcpus=X", *self.req_args)
-
     def test_inv_log_size(self):
         self.assertRaisesRegexp(usage.UsageError,
                                 "log-size parameter needs to be an number",
@@ -240,6 +235,11 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "log-count parameter needs to be an number or None",
                                 self.parse, "--log-count=X", *self.req_args)
+
+    def test_inv_maxcpus(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "maxcpus parameter needs to be an number or None",
+                                self.parse, "--maxcpus=X", *self.req_args)
 
     def test_inv_umask(self):
         self.assertRaisesRegexp(usage.UsageError,
