@@ -15,7 +15,7 @@ The content of the messages is sufficient to reconstruct the updated state, allo
 
 This split nature immediately brings to light the problem of synchronizing the two interfaces.
 Queueing systems can introduce queueing delays as messages propagate.
-Likewise, database systems may introduce a delay between committed modifications and the modified data appearing in queries; for example, with MySQL master/slave replication, there can be several seconds' delay in a before a slave is updated.
+Likewise, database systems may introduce a delay between committed modifications and the modified data appearing in queries; for example, with MySQL master/slave replication, there can be several seconds' delay before a slave is updated.
 
 Buildbot's MQ connector simply relays messages, and makes no attempt to coordinate the timing of those messages with the corresponding database updates.
 It is up to higher layers to apply such coordination.
