@@ -646,14 +646,16 @@ class Builder(config.ReconfigurableServiceMixin,
                 break
 
             try:
-                yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
                 if len (brids) > 1:
+                    yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
                     log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 
             except:
                 # one or more of the build requests was already claimed;
                 # re-fetch the now-partially-claimed build requests and keep
                 # trying to match them
+                log.msg("build request already claimed, while merging pending buildrequest %s with %s "
+                        % (brids[0], brids[1:]))
                 unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
                 # go around the loop again
                 continue

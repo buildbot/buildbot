@@ -220,11 +220,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def mergeBuildingRequest(self, requests, brids, number):
+    @with_master_objectid
+    def mergeBuildingRequest(self, requests, brids, number, _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                self.tryClaimBuildRequests(conn, brids)
+                claimed_at = self.getClaimedAtValue(_reactor)
+                self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 self.addBuilds(conn, brids, number)
                 self.executeMergeBuildingRequests(conn, requests)
             except:
@@ -335,11 +337,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                   for br in merged_brids ])
         res.close()
 
-    def mergeFinishedBuildRequest(self, brdict, merged_brids):
+    @with_master_objectid
+    def mergeFinishedBuildRequest(self, brdict, merged_brids,
+                                      _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                self.tryClaimBuildRequests(conn, merged_brids)
+                claimed_at = self.getClaimedAtValue(_reactor)
+                self.insertBuildRequestClaimsTable(conn, _master_objectid, merged_brids, claimed_at)
                 # build request will have same properties so we skip checking it
                 self.executeMergeFinishedBuildRequest(conn, brdict, merged_brids)
                 # insert builds
@@ -351,11 +356,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    def mergePendingBuildRequests(self, brids):
+    @with_master_objectid
+    def mergePendingBuildRequests(self, brids,
+                                      _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                self.tryClaimBuildRequests(conn, brids)
+                claimed_at = self.getClaimedAtValue(_reactor)
+                self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
                 # parameter lists supported by the DBAPI aren't
                 iterator = iter(brids[1:])
@@ -503,7 +511,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                               claimed_at=claimed_at)
                          for id in brids])
 
-    def getClaimedAtValue(self, _reactor, claimed_at):
+    def getClaimedAtValue(self, _reactor, claimed_at=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
@@ -534,13 +542,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
         return self.db.pool.do(thd)
-
-    @with_master_objectid
-    def tryClaimBuildRequests(self, conn, brids, claimed_at=None,
-                                      _reactor=reactor, _master_objectid=None):
-        claimed_at = self.getClaimedAtValue(_reactor, claimed_at)
-
-        self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
 
     def addBuilds(self, conn, brids, number, _reactor=reactor):
         builds_tbl = self.db.model.builds
