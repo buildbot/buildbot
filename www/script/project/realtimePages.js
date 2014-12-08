@@ -12,6 +12,8 @@ define(function (require) {
     require('helpers');
     require('timeElements');
 
+    var rtGlobal = require('rtGlobal');
+
     //Realtime commands
     var KRT_JSON_DATA = "krtJSONData";
     var KRT_URL_DROPPED = "krtURLDropped";
@@ -188,14 +190,9 @@ define(function (require) {
             return undefined;
         },
         defaultRealtimeFunctions: function () {
-            var output = {};
-            require(['rtGlobal'], function (rtGlobal) {
-                output = {
-                    "global": rtGlobal.processGlobalInfo
-                };
-            });
-
-            return output;
+            return {
+                "global": rtGlobal.processGlobalInfo
+            };
         },
         setReloadCooldown: function (miliseconds) {
             KRT_RELOAD_CD = miliseconds;

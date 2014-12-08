@@ -3,7 +3,6 @@ define(function (require) {
     "use strict";
 
     var $ = require('jquery'),
-        realtimePages = require('realtimePages'),
         helpers = require('helpers'),
         dt = require('project/datatables-extend'),
         popup = require('ui.popup'),
