@@ -216,13 +216,13 @@ class StopBuildChainActionResource(ActionResource):
         if builderc:
             build = builderc.getBuild(number)
 
-        if build:
-            markedrequests = yield build.setStopBuildChain()
+            if build:
+                markedrequests = yield build.setStopBuildChain()
 
-            if markedrequests:
-                yield self.stopEntireBuildChain(master, build, buildername, reason)
+                if markedrequests:
+                    yield self.stopEntireBuildChain(master, build, buildername, reason)
 
-            build.stopBuild(reason)
+                build.stopBuild(reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
