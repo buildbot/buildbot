@@ -294,6 +294,18 @@ class NightlyBase(Timed):
             return time
 
         if isinstance(time, basestring):
+            if isDayOfWeek:
+                # time could be a comma separated list of values, e.g. "5,sun"
+                time_array = str(time).split(',')
+                for i, time_val in enumerate(time_array):
+                    try:
+                        # try to convert value in place
+                        time_array[i] = (int(time_val) + 1) % 7  # Conversion for croniter (see above)
+                    except ValueError:
+                        # all non-int values are kept
+                        pass
+                return ','.join([str(s) for s in time_array])  # Convert the list to a string
+
             return time
 
         if isDayOfWeek:
