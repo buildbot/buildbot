@@ -114,13 +114,15 @@ class RequiresWwwMixin(object):
 class WwwTestMixin(RequiresWwwMixin):
     UUID = str(uuid1())
 
-    def make_master(self, **kwargs):
+    def make_master(self, url=None, **kwargs):
         master = fakemaster.make_master(wantData=True, testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
-        cfg = dict(url='//', port=None, auth=auth.NoAuth())
+        cfg = dict(port=None, auth=auth.NoAuth())
         cfg.update(kwargs)
         master.config.www = cfg
+        if url is not None:
+            master.config.buildbotURL = url
         self.master.session = FakeSession()
 
         return master

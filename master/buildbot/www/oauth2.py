@@ -15,14 +15,14 @@
 
 import requests
 
-from urllib import urlencode
-from urlparse import parse_qs
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import resource
 from posixpath import join
 from twisted.internet import defer
 from twisted.internet import threads
+from urllib import urlencode
+from urlparse import parse_qs
 
 
 class OAuth2LoginResource(auth.LoginResource):
