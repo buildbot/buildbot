@@ -502,7 +502,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self._breakBrdictRefloops(unclaimed_requests)
         unclaimed_requests = \
             yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.name, claimed=False, stopchain=0)
+                buildername=self.name, claimed=False)
         defer.returnValue(unclaimed_requests)
         return
 
@@ -549,7 +549,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # now, get the available build requests
         unclaimed_requests = \
             yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.name, claimed=False, stopchain=0)
+                    buildername=self.name, claimed=False)
 
         if not unclaimed_requests:
             self.updateBigStatus()

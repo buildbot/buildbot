@@ -900,7 +900,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return defer.succeed(None)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None, stopchain=None):
+                         bsid=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:

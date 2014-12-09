@@ -75,8 +75,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('artifactbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('mergebrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
-        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
-        sa.Column('stopchain', sa.SmallInteger, server_default=sa.DefaultClause("0"), nullable=False)
+        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
     )
 
     # Each row in this table represents a claimed build request, where the

@@ -68,7 +68,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None, _master_objectid=None, brids=None, stopchain=None):
+            bsid=None, _master_objectid=None, brids=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -96,8 +96,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
             if brids is not None:
                 q = q.where(reqs_tbl.c.id.in_(brids))
-            if stopchain is not None:
-                q = q.where(reqs_tbl.c.stopchain == stopchain)
             res = conn.execute(q)
 
             return [ self._brdictFromRow(row, _master_objectid)
@@ -457,50 +455,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 res.close()
 
             return rv
-
-        return self.db.pool.do(thd)
-
-    def setStopChain(self, requests, brid=None):
-        def thd(conn):
-            reqs_tbl = self.db.model.buildrequests
-            markedrequests = False
-
-            if len(requests) > 0:
-                br = requests[0]
-
-                q = sa.select([reqs_tbl.c.id])\
-                    .where(reqs_tbl.c.stopchain == 0)
-
-                if brid is None:
-                    # calculate startbrid
-                    startbrid = self.getStartbrid(conn, reqs_tbl, br)
-
-                    q = q.where(reqs_tbl.c.startbrid == startbrid)
-                else:
-                    q = q.where(reqs_tbl.c.triggeredbybrid == brid)
-
-
-                res = conn.execute(q)
-                rows = res.fetchall()
-                if rows:
-                    brids = [row.id for row in rows]
-                    if startbrid:
-                        brids += [startbrid]
-                    iterator = iter(brids)
-                    batch = list(itertools.islice(iterator, 100))
-                    while len(batch) > 0:
-                        stmt = reqs_tbl.update()\
-                            .where(reqs_tbl.c.id.in_(brids))\
-                            .values(stopchain=1)
-                        res = conn.execute(stmt)
-
-                        if not markedrequests:
-                            markedrequests = res.rowcount > 0
-                        batch = list(itertools.islice(iterator, 100))
-
-                res.close()
-
-            return markedrequests
 
         return self.db.pool.do(thd)
 

@@ -160,9 +160,6 @@ class StopBuildChainActionResource(ActionResource):
             if len(buildchain) < 1:
                 return
 
-            if brid is not None:
-                yield build.setStopBuildChain(brid)
-
             for br in buildchain:
                 if br['number']:
                     buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
@@ -217,10 +214,7 @@ class StopBuildChainActionResource(ActionResource):
             build = builderc.getBuild(number)
 
             if build:
-                markedrequests = yield build.setStopBuildChain()
-
-                if markedrequests:
-                    yield self.stopEntireBuildChain(master, build, buildername, reason)
+                yield self.stopEntireBuildChain(master, build, buildername, reason)
 
                 build.stopBuild(reason)
 

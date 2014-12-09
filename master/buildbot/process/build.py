@@ -371,12 +371,6 @@ class Build(properties.PropertiesMixin):
         buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests, brid)
         defer.returnValue(buildchain)
 
-    @defer.inlineCallbacks
-    def setStopBuildChain(self, brid=None):
-        master = self.builder.botmaster.parent
-        shouldstop = yield master.db.buildrequests.setStopChain(self.requests, brid)
-        defer.returnValue(shouldstop)
-
     def getNextStep(self):
         """This method is called to obtain the next BuildStep for this build.
         When it returns None (or raises a StopIteration exception), the build
