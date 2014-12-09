@@ -12,37 +12,51 @@
       buildsummary(ng-if="build", buildid="build.buildid")
     .col-sm-7
       tabset
-          tab(heading="properties")
+          tab(heading="Build Properties")
             table.table.table-hover.table-striped.table-condensed
               thead
                 tr
-                  th Name
-                  th Value
-                  th Source
+                  th.text-left Name
+                  th.text-center Value
+                  th.text-right Source
               tbody
                 tr(ng-repeat="(name, value) in properties[0]._raw_data")
-                  td {{ name }}
-                  td {{ value[0] }}
-                  td {{ value[1] }}
+                  td.text-left {{ name }}
+                  td.text-center {{ value[0] }}
+                  td.text-right {{ value[1] }}
           tab(heading="{{buildslave.name}}")
               rawdata(data="buildslave")
-          tab(heading="changes")
-                table.table.table-hover.table-striped.table-condensed.table-bordered
-                  tr
-                    td Author
-                    td Revision
-                    td Comment
-                    td Date
-                    td Files
-                  tr(ng-repeat="change in changes | orderBy:'changeid':true")
-                    td {{ change.author }}
-                    td
-                      ul
-                        li branch: {{ change.branch }}
-                        li repos: {{ change.repository }}
-                        li revision: {{ change.revision }}
-                    td {{ change.comments }}
-                    td {{ change.when_timestamp * 1000 | date:'yyyy-MM-dd HH:mm' }}
-                    td
-                      ul
-                        li(data-ng-repeat='file in change.files') {{file}}
+          tab(heading="Responsible Users")
+            ol
+              li(ng-repeat="change in changes") {{ change.author }}
+  h3 All Changes
+  ol
+    li(ng-repeat="change in changes")
+      h4 Change \#{{ change.id }}
+      table.table.table-striped.table-condensed
+        tr(ng-if="change.category")
+          td Category
+          td {{ change.category }}
+        tr
+          td Author
+          td {{ change.author }}
+        tr
+          td Date
+          td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
+        tr(ng-if="change.codebase")
+          td Codebase
+          td {{ change.codebase }}
+        tr
+          td Repository
+          td {{ change.repository }}
+        tr
+          td Branch
+          td {{ change.branch }}
+        tr
+          td Revision
+          td {{ change.revision }}
+      h4 Comment
+      pre {{ change.comments }}
+      h4 Changed files
+      ul
+        li(ng-repeat='file in change.files') {{file}}
