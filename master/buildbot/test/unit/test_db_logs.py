@@ -57,18 +57,20 @@ class Tests(interfaces.InterfaceTests):
                         content="yet another line"),
     ]
 
+    @defer.inlineCallbacks
     def checkTestLogLines(self):
         expLines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
                     'another line', 'yet another line']
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
-                got_lines = yield self.db.logs.getLogLines(201,
-                                                           first_line, last_line)
-                self.assertEqual(got_lines,
-                                 "\n".join(expLines[first_line:last_line + 1] + "\n"))
+                got_lines = yield self.db.logs.getLogLines(
+                    201, first_line, last_line)
+                self.assertEqual(
+                    got_lines,
+                    "\n".join(expLines[first_line:last_line + 1] + [""]))
         # check overflow
         self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)),
-                         "\n".join(expLines[5:7] + "\n"))
+                         "\n".join(expLines[5:7] + [""]))
 
     # signature tests
 
@@ -176,7 +178,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        self.checkTestLogLines()
+        yield self.checkTestLogLines()
 
         # check line number reversal
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 3)), '')
@@ -241,7 +243,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         yield self.db.logs.compressLog(201)
         # test log lines should still be readable just the same
-        self.checkTestLogLines()
+        yield self.checkTestLogLines()
 
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk(self):
