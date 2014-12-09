@@ -288,18 +288,15 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 raise failures[0]
 
             timestamp, author, files, comments = [r[1] for r in results]
-                
+            preChange = dict(author=author, revision=unicode(rev), files=files,
+                             comments=comments, when_timestamp=timestamp,
+                             branch=ascii2unicode(self._removeHeads(branch)),
+                             project=self.project,
+                             repository=ascii2unicode(self.repourl))
             yield self.master.data.updates.addChange(
-                author=author,
-                revision=unicode(rev),
-                files=files,
-                comments=comments,
-                when_timestamp=timestamp,
-                branch=ascii2unicode(self._removeHeads(branch)),
-                category=self.category(self._removeHeads(branch)),
-                project=self.project,
-                repository=ascii2unicode(self.repourl),
-                src=u'git')
+                category=self.category(preChange),
+                src=u'git',
+                **preChange)
 
     def _dovccmd(self, command, args, path=None):
         def encodeArg(arg):
