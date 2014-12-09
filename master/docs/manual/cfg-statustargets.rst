@@ -85,7 +85,7 @@ This form does not send mail to individual developers (and thus does not need th
                              sendToInterestedUsers=False,
                              extraRecipients=['listaddr@example.org'])
 
-If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smptPassword``::
+If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smtpPassword``::
 
     mn = status.MailNotifier(fromaddr="myuser@example.com",
                              sendToInterestedUsers=False,
