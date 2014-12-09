@@ -465,15 +465,6 @@ class Builder(config.ReconfigurableServiceMixin,
         log.msg("new expectations: %s seconds" % \
                 self.expectations.expectedBuildTime())
 
-    @defer.inlineCallbacks
-    def getUnclaimedBuildRequests(self):
-        unclaimed_requests = yield self.master.db.buildrequests.getBuildRequests(
-            buildername=self.name, claimed=False)
-
-        # sort by submitted_at, so the first is the oldest
-        unclaimed_requests.sort(key=lambda brd : brd['submitted_at'])
-        defer.returnValue(unclaimed_requests)
-
     # notify the master that the buildrequests were removed from queue
     def notifyRequestsRemoved(self, buildrequests):
         for br in buildrequests:
@@ -663,6 +654,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 # one or more of the build requests was already claimed;
                 # re-fetch the now-partially-claimed build requests and keep
                 # trying to match them
+
+                if len (brids) > 1:
+                    log.msg("build request already claimed, while merging pending buildrequest %s with %s "
+                        % (brids[0], brids[1:]))
                 unclaimed_requests = yield self.updateUnclaimedRequest(unclaimed_requests)
                 # go around the loop again
                 continue
@@ -912,11 +907,11 @@ class BuilderControl:
             defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestControls(self):
+    def getPendingBuildRequestControls(self, brids=None):
         master = self.original.master
         brdicts = yield master.db.buildrequests.getBuildRequests(
                 buildername=self.original.name,
-                claimed=False)
+                claimed=False, brids=brids)
 
         # convert those into BuildRequest objects
         buildrequests = [ ]

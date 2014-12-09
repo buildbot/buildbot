@@ -110,7 +110,7 @@ class StopBuildActionResource(ActionResource):
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
-        reason = ("The web-page 'stop build' button was pressed by "
+        reason = ("The web-page 'Stop Build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
 
         c = interfaces.IControl(self.getBuildmaster(req))
@@ -119,6 +119,104 @@ class StopBuildActionResource(ActionResource):
             bldc = bldrc.getBuild(self.build_status.getNumber())
             if bldc:
                 bldc.stopBuild(reason)
+
+        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
+
+class StopBuildChainActionResource(ActionResource):
+
+    def __init__(self, build_status):
+        self.build_status = build_status
+        self.action = "stopAllBuilds"
+
+    def stopCurrentBuild(self, master, buildername, number, reason):
+        builderc = master.getBuilder(buildername)
+        if builderc:
+            buildc = builderc.getBuild(number)
+            if buildc:
+                buildc.stopBuild(reason)
+        return buildc
+
+    @defer.inlineCallbacks
+    def cancelCurrentBuild(self, master, brids, buildername):
+        builderc = master.getBuilder(buildername)
+        brcontrols = yield builderc.getPendingBuildRequestControls(brids=brids)
+        for build_req in brcontrols:
+            if build_req:
+                build_req.cancel()
+
+        defer.returnValue(len(brcontrols) > 0)
+
+    @defer.inlineCallbacks
+    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0):
+
+        if build:
+
+            if retry > 3:
+                log.msg("Giving up after 3 times retry, stop build chain: buildername: %s, build # %d" %
+                            (buildername, build.build_status.number))
+                return
+
+            buildchain = yield build.getBuildChain(brid)
+            if len(buildchain) < 1:
+                return
+
+            for br in buildchain:
+                if br['number']:
+                    buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
+                    log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
+                            (br['buildername'], br['number'], br['brid']))
+                    # stop dependencies subtree
+                    yield self.stopEntireBuildChain(master, buildc, br['buildername'], reason, br['brid'])
+                else:
+                    # the build was still on the queue
+                    canceledrequests = yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
+
+                    if not canceledrequests:
+                        # the build was removed from queue, we will need to update the build chain list
+                        log.msg("Could not cancel build chain: buildername: %s, brid: %d" %
+                            (br['buildername'], br['brid']))
+
+                    log.msg("Canceling build chain: buildername: %s, brid: %d" %
+                            (br['buildername'], br['brid']))
+
+            # the build chain should be empty by now, will retry any builds that changed state
+            buildchain = yield build.getBuildChain(brid)
+            if len(buildchain) > 0:
+                retry += 1
+                log.msg("Retry #%d stop build chain: buildername: %s, build # %d" %
+                            (retry, buildername, build.build_status.number))
+                yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
+
+
+    @defer.inlineCallbacks
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        res = yield authz.actionAllowed(self.action, req, self.build_status)
+
+        if not res:
+            defer.returnValue(path_to_authzfail(req))
+            return
+
+        b = self.build_status
+        log.msg("web stopEntireBuildChain of build %s:%s" % \
+                    (b.getBuilder().getName(), b.getNumber()))
+        name = authz.getUsernameFull(req)
+
+        reason = ("The web-page 'Stop Entire Build Chain' button was pressed by '%s'\n"
+                  % html.escape(name))
+
+        master = interfaces.IControl(self.getBuildmaster(req))
+        buildername = self.build_status.getBuilder().getName()
+        number = self.build_status.getNumber()
+
+        builderc = master.getBuilder(buildername)
+        if builderc:
+            build = builderc.getBuild(number)
+
+            if build:
+                yield self.stopEntireBuildChain(master, build, buildername, reason)
+
+                build.stopBuild(reason)
 
         defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
 
@@ -155,6 +253,7 @@ class StatusResourceBuild(HtmlResource):
         codebases_arg = cxt['codebases_arg'] = getCodebasesArg(request=req)
 
         if not b.isFinished():
+            cxt['stop_build_chain'] = False
             step = b.getCurrentStep()
             if not step:
                 cxt['current_step'] = "[waiting for build slave]"
@@ -337,6 +436,9 @@ class StatusResourceBuild(HtmlResource):
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
 
+    def stopchain(self, req):
+        return StopBuildChainActionResource(self.build_status)
+
     def rebuild(self, req):
         return ForceBuildActionResource(self.build_status,
                                         self.build_status.getBuilder())
@@ -344,6 +446,8 @@ class StatusResourceBuild(HtmlResource):
     def getChild(self, path, req):
         if path == "stop":
             return self.stop(req)
+        if path == "stopchain":
+            return self.stopchain(req)
         if path == "rebuild":
             return self.rebuild(req)
         if path == "steps":
