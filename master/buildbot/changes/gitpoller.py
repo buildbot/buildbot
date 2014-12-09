@@ -71,7 +71,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = ascii2unicode(category)
+        if not callable(category):
+            self.category = lambda _: ascii2unicode(category)
+        else:
+            self.category = category
         self.project = ascii2unicode(project)
         self.changeCount = 0
         self.lastRev = {}
@@ -285,6 +288,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 raise failures[0]
 
             timestamp, author, files, comments = [r[1] for r in results]
+                
             yield self.master.data.updates.addChange(
                 author=author,
                 revision=unicode(rev),
@@ -292,7 +296,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 comments=comments,
                 when_timestamp=timestamp,
                 branch=ascii2unicode(self._removeHeads(branch)),
-                category=self.category,
+                category=self.category(self._removeHeads(branch)),
                 project=self.project,
                 repository=ascii2unicode(self.repourl),
                 src=u'git')
