@@ -532,10 +532,6 @@ The following parameters are accepted by this class:
     A dictionnary of events to be notified on the IRC channels.
     This parameter can be changed during run-time by sending the ``notify`` command to the bot.
 
-``noticeOnChannel``
-    (optional, disabled by default)
-    Whether to respond privately to request from users, or to respond on the channel the request was made.
-
 ``showBlameList``
     (optional, disabled by default)
     Whether or not to display the blamelist for failed builds.

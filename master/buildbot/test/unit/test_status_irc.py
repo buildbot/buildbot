@@ -49,7 +49,7 @@ class TestIrcStatusBot(unittest.TestCase):
         return irc.IrcStatusBot(*args, **kwargs)
 
     def test_groupChat(self):
-        b = self.makeBot(noticeOnChannel=True)
+        b = self.makeBot()
         b.notice = lambda d, m: evts.append(('n', d, m))
 
         evts = []
@@ -57,7 +57,7 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(evts, [('n', '#chan', 'hi')])
 
     def test_chat(self):
-        b = self.makeBot(noticeOnChannel=False)
+        b = self.makeBot()
         b.msg = lambda d, m: evts.append(('m', d, m))
 
         evts = []
@@ -234,7 +234,6 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             tags=['tags'],
             password='pass',
             notify_events={'successToFailure': 1, },
-            noticeOnChannel=True,
             showBlameList=False,
             useRevisions=True,
             useSSL=False,
@@ -254,7 +253,6 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         factory.protocol.assert_called_with(
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'],
             factory.status, ['tags'], {'successToFailure': 1},
-            noticeOnChannel=True,
             useColors=False,
             useRevisions=True,
             showBlameList=False)
