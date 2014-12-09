@@ -34,16 +34,16 @@
     li(ng-repeat="change in changes")
       h4 Change \#{{ change.id }}
       table.table.table-striped.table-condensed
-        tr
-          td Tags
-          td {{ change.tags }}
+        tr(ng-if="change.category")
+          td Category
+          td {{ change.category }}
         tr
           td Author
           td {{ change.author }}
         tr
           td Date
           td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
-        tr
+        tr(ng-if="change.codebase")
           td Codebase
           td {{ change.codebase }}
         tr
