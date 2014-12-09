@@ -57,32 +57,35 @@ def reroute_cache(url):
 
 
 plugins = dict((k, {}) for k in master_service.apps.names if k != "base")
-config = {
-    "avatar_methods": {"name": "gravatar"},
-    "user": {"anonymous": True},
-    "plugins": plugins,
-    "port": 8010,
-    "auth": {"name": "NoAuth"}
-}
+
+
+def config():
+    return {
+        "avatar_methods": {"name": "gravatar"},
+        "user": {"anonymous": True},
+        "plugins": plugins,
+        "port": port,
+        "auth": {"name": "NoAuth"}
+    }
 
 
 @application.route('/')
 def root():
     if local_url not in request.url:
         return redirect(local_url)
-    return render_template('index.html', configjson=json.dumps(config), plugins=plugins)
+    return render_template('index.html', configjson=json.dumps(config()), plugins=plugins)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='api proxy for web ui development.')
     parser.add_argument('--dest_buildbot',
                         dest='dest_buildbot',
                         help='url to the destination buildbot',
-                        default="http://nine.buildbot.buildbot.net")
+                        default="http://nine.buildbot.net")
     parser.add_argument('--bind_port',
                         dest='bind_port',
                         type=int,
-                        help='port to bind locally',
-                        default="http://nine.buildbot.buildbot.net")
+                        default=8010,
+                        help='port to bind locally')
 
     args = parser.parse_args()
     dest_buildbot = args.dest_buildbot
