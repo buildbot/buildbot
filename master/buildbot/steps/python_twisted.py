@@ -371,7 +371,7 @@ class Trial(ShellCommand):
         # handled in TrialTestCaseCounter.
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
-        self.problems = ""
+        self.problems = []
         self.warnings = {}
 
         # text used before commandComplete runs
@@ -534,11 +534,11 @@ class Trial(ShellCommand):
             if line.find("=" * 60) == 0 or line.find("-" * 60) == 0:
                 # read to EOF
                 while True:
-                    self.problems += line + "\n"
+                    self.problems.append(line)
                     stream, line = yield
 
     def createSummary(self, loog):
-        problems = self.problems
+        problems = '\n'.join(self.problems)
         warnings = self.warnings
 
         if problems:
