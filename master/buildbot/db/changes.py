@@ -176,7 +176,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(currentBuild['builderid'],
                                                                            currentBuild['number'],
                                                                            ssBuild)
-
         if previousBuild:
             for ss in (yield gssfb(previousBuild['id'])):
                 toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
@@ -187,9 +186,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # For each codebase, append changes until we match the parent
         for cb, change in fromChanges.iteritems():
-            if change:
+            if change and change['changeid'] != toChanges.get(cb, {}).get('changeid'):
                 changes.append(change)
-                while ((toChanges[cb]['changeid'] not in change['parent_changeids']) and
+                while ((toChanges.get(cb, {}).get('changeid') not in change['parent_changeids']) and
                        change['parent_changeids']):
                     # For the moment, a Change only have 1 parent.
                     change = yield self.master.db.changes.getChange(change['parent_changeids'][0])
