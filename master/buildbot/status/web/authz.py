@@ -106,7 +106,7 @@ class Authz(object):
             return request.getUser()
         s = self.session(request)
         if s:
-            fullname = "%(fullName)s <%(email)s>"%(s.infos)
+            fullname = "%(fullName)s %(email)s"%(s.infos)
             return fullname.decode('utf-8', 'ignore')
         else:
             return request.args.get("username", ["<unknown>"])[0]
