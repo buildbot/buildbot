@@ -45,7 +45,8 @@
 
 {% macro stop_build(stop_url, authz, on_all=False, on_selected=False, builders=[], short=False, label="Build") %}
   {% if not short %}
-    <form id="buildForm" method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
+    <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
+          {% if on_all %} data-stop-chain="stopchain" {% endif %}
                {{ 'style="display:inline"' if short else '' }}>
       {% if not short %}
         {% if on_all %}

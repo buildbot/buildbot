@@ -89,6 +89,15 @@ define(function (require) {
                 $body.append($popup);
             });
 
+            // Setup dialog for stop entire chain
+            $("form[data-stop-chain]").ajaxForm({
+                beforeSubmit: function beforeSubmit() {
+                    return confirm('This will cancel all builds in this chain. \n\nAre you sure ' +
+                    'you want to continue?');
+
+                }
+            });
+
             // Setup build buttons
             popups.initRunBuild($(".custom-build"), $(".instant-build"), true);
         },
