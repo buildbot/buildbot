@@ -147,6 +147,7 @@ class Mercurial(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
+            yield self.cleanWorkdir()
             res = yield self._dovccmd(['clone', '--uncompressed', self.repourl, '.', '--noupdate'])
             yield self._checkBranchChange(res)
 
@@ -186,11 +187,15 @@ class Mercurial(Source):
         d.addCallback(self._pullUpdate)
         return d
 
-    def clobber(self, _):
+    def cleanWorkdir(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron':self.logEnviron})
+                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
+        return d
+
+    def clobber(self, _):
+        d = self.cleanWorkdir()
         d.addCallback(lambda _: self._dovccmd(['clone', '--uncompressed', '--noupdate'
                                                , self.repourl, "."]))
         d.addCallback(self._update)
