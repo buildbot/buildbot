@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import textwrap
 
 from buildbot.db import logs
@@ -49,26 +50,44 @@ class Tests(interfaces.InterfaceTests):
         fakedb.LogChunk(logid=201, first_line=2, last_line=4, compressed=0,
                         content=textwrap.dedent("""\
                     line TWO
-                    line 3
+
                     line 2**2""")),
         fakedb.LogChunk(logid=201, first_line=5, last_line=5, compressed=0,
                         content="another line"),
         fakedb.LogChunk(logid=201, first_line=6, last_line=6, compressed=0,
                         content="yet another line"),
     ]
+    bug3101Content = base64.b64decode("""
+        PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0
+        9PT09PT09PT09PT09PT09PT09PT09PT09PT09PQpbU0tJUFBFRF0Kbm90IGEgd2luMz
+        IgcGxhdGZvcm0KCmJ1aWxkc2xhdmUudGVzdC51bml0LnRlc3RfcnVucHJvY2Vzcy5UZ
+        XN0UnVuUHJvY2Vzcy50ZXN0UGlwZVN0cmluZwotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+        LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0
+        tLS0tLS0tClJhbiAyNjcgdGVzdHMgaW4gNS4zNzhzCgpQQVNTRUQgKHNraXBzPTEsIH
+        N1Y2Nlc3Nlcz0yNjYpCnByb2dyYW0gZmluaXNoZWQgd2l0aCBleGl0IGNvZGUgMAplb
+        GFwc2VkVGltZT04LjI0NTcwMg==""")
 
+    bug3101Rows = [
+        fakedb.Log(id=1470, stepid=101, name=u'problems', slug=u'problems',
+                   complete=1, num_lines=11, type=u't'),
+        fakedb.LogChunk(logid=1470, first_line=0, last_line=10, compressed=0,
+                        content=bug3101Content),
+    ]
+
+    @defer.inlineCallbacks
     def checkTestLogLines(self):
-        expLines = ['line zero', 'line 1', 'line TWO', 'line 3', 'line 2**2',
+        expLines = ['line zero', 'line 1', 'line TWO', '', 'line 2**2',
                     'another line', 'yet another line']
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
-                got_lines = yield self.db.logs.getLogLines(201,
-                                                           first_line, last_line)
-                self.assertEqual(got_lines,
-                                 "\n".join(expLines[first_line:last_line + 1] + "\n"))
+                got_lines = yield self.db.logs.getLogLines(
+                    201, first_line, last_line)
+                self.assertEqual(
+                    got_lines,
+                    "\n".join(expLines[first_line:last_line + 1] + [""]))
         # check overflow
         self.assertEqual((yield self.db.logs.getLogLines(201, 5, 20)),
-                         "\n".join(expLines[5:7] + "\n"))
+                         "\n".join(expLines[5:7] + [""]))
 
     # signature tests
 
@@ -176,7 +195,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getLogLines(self):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
-        self.checkTestLogLines()
+        yield self.checkTestLogLines()
 
         # check line number reversal
         self.assertEqual((yield self.db.logs.getLogLines(201, 6, 3)), '')
@@ -189,6 +208,18 @@ class Tests(interfaces.InterfaceTests):
         ])
         self.assertEqual((yield self.db.logs.getLogLines(201, 9, 99)), '')
         self.assertEqual((yield self.db.logs.getLogLines(999, 9, 99)), '')
+
+    @defer.inlineCallbacks
+    def test_getLogLines_bug3101(self):
+        # regression test for #3101
+        content = self.bug3101Content
+        yield self.insertTestData(self.backgroundData + self.bug3101Rows)
+        # overall content is the same, with '\n' padding at the end
+        self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)),
+                         self.bug3101Content + '\n')
+        # try to fetch just one line
+        self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)),
+                         content.split('\n')[0] + '\n')
 
     @defer.inlineCallbacks
     def test_addLog_getLog(self):
@@ -241,7 +272,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         yield self.db.logs.compressLog(201)
         # test log lines should still be readable just the same
-        self.checkTestLogLines()
+        yield self.checkTestLogLines()
 
     @defer.inlineCallbacks
     def test_addLogLines_big_chunk(self):

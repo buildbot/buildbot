@@ -80,7 +80,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     idx = len(content) + 1
                     count = row.last_line - last_line
                     for _ in xrange(count):
-                        idx = content.rindex('\n', 0, idx - 1)
+                        idx = content.rindex('\n', 0, idx)
                     content = content[:idx]
                 rv.append(content)
             return u'\n'.join(rv) + u'\n' if rv else u''

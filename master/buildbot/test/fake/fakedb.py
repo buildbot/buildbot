@@ -2011,8 +2011,8 @@ class FakeLogsComponent(FakeDBComponent):
         if logid not in self.logs or first_line > last_line:
             return defer.succeed('')
         lines = self.log_lines.get(logid, [])
-        rv = '\n'.join(lines[first_line:last_line + 1])
-        return defer.succeed(rv + u'\n' if rv else u'')
+        rv = lines[first_line:last_line + 1]
+        return defer.succeed(u'\n'.join(rv) + u'\n' if rv else u'')
 
     def addLog(self, stepid, name, slug, type):
         id = self._newId()
