@@ -122,9 +122,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         root = self.apps.get('base').resource
         for key, plugin in new_config.www.get('plugins', {}).items():
+            log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
             root.putChild(key, self.apps.get(key).resource)
+        known_plugins = set(new_config.www.get('plugins')) | set(['base'])
+        for plugin_name in set(self.apps.names) - known_plugins:
+            log.msg("NOTE: www plugin %r is installed but not "
+                    "configured" % (plugin_name,))
 
         # /
         root.putChild('', wwwconfig.IndexResource(self.master, self.apps.get('base').static_dir))
