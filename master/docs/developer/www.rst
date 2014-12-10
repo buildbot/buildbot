@@ -616,9 +616,8 @@ Linking with Buildbot
 
 A running buildmaster needs to be able to find the JavaScript source code it needs to serve the UI.
 This needs to work in a variety of contexts - Python development, JavaScript development, and end-user installations.
-To accomplish this, the grunt build process finishes by bundling all of the static data into a Python distribution tarball, along with a little bit of Python glue.
+To accomplish this, the gulp build process finishes by bundling all of the static data into a Python distribution tarball, along with a little bit of Python glue.
 The Python glue implements the interface described below, with some care taken to handle multiple contexts.
-The :src:`www/grunt.js`, :src:`www/setup.py`, and :src:`www/buildbot_www.py` scripts are carefully coordinated.
 
 Hacking Quick-Start
 -------------------
@@ -699,6 +698,32 @@ When doing web development, you usually run:
     gulp dev
 
 This will compile the base webapp in development mode, and automatically rebuild when files change.
+
+
+Testing with real data
+~~~~~~~~~~~~~~~~~~~~~~
+Front-end only hackers might want to just skip the master and slave setup, and just focus on the UI.
+It can also be very useful to just try the UI with real data from your production.
+For those use-cases, api_proxy.py can be used.
+
+This tools is a small flask app that can proxy the data and sse api from a production server to your development environment.
+Having a proxy is slightly slower, but this can be very useful for testing with real complex data.
+
+You still need to have python virtualenv configured with master package installed, like we described in previous paragraph.
+
+Provided you run it in a buildbot master virtualenv, the following command will start the UI and redirect the api calls to the nine demo server:
+
+.. code-block:: none
+
+    python buildbot/master/contrib/api_proxy.py --dest_buildbot http://nine.buildbot.net
+
+You can then just point your browser to localhost:8010, and you will access nine.buildbot.net, with your own version of the UI.
+
+Please use following command for a list of options:
+
+.. code-block:: none
+
+    python buildbot/master/contrib/api_proxy.py --help
 
 Guanlecoja
 ----------
