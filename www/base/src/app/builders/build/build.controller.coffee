@@ -29,11 +29,14 @@ class Build extends Controller
                     unwatch()
 
             buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
-            buildbotService.one('builds', build.id).all('changes').bind($scope).then (changes) ->
-                responsibles = {}
-                for change in changes
-                    responsibles[change.author] = true
-                $scope.responsible = _.keys(responsibles)
+            buildbotService.one('builds', build.id).all('changes').bind($scope)
+            $scope.$watch "changes", (changes) ->
+                if changes?
+                    responsibles = {}
+                    for change in changes
+                        responsibles[change.author] = change.author_email
+                    $scope.responsibles = responsibles
+            , true
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("builds", build.id).all("properties").bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)

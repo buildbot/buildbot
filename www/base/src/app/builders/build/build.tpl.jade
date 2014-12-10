@@ -27,7 +27,11 @@
           tab(heading="{{buildslave.name}}")
               rawdata(data="buildslave")
           tab(heading="Responsible Users")
-            ol
-              li(ng-repeat="author in responsibles") {{ author }}
+            ul.list-group
+                li.list-group-item(ng-repeat="(author, email) in responsibles")
+                    .change-avatar
+                        img(ng-src="avatar?email={{email}}")
+                    a(ng-href="mailto:{{email}}")
+                        | {{ author }}
           tab(heading="Changes")
               changelist(changes="changes")
