@@ -48,8 +48,7 @@ class Hg(Mercurial):
         else:
             yield self.pullLastRev(lastRev)
 
-            rev= yield self._dovccmd(['log', '-r', lastRev,  r'--template={rev}'], collectStdout=True)
-            revrange =  '%d:%s' % ((int(rev.strip())), currentRev)
+            revrange = '::%s-::%s' % (currentRev, lastRev)
 
         # build from latest will have empty rev
         command = ['log', '-b', self.update_branch, '-r', revrange,  r'--template={rev}:{node}\n'
