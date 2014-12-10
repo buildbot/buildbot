@@ -28,35 +28,6 @@
               rawdata(data="buildslave")
           tab(heading="Responsible Users")
             ol
-              li(ng-repeat="change in changes") {{ change.author }}
-  h3 All Changes
-  ol
-    li(ng-repeat="change in changes")
-      h4 Change \#{{ change.id }}
-      table.table.table-striped.table-condensed
-        tr(ng-if="change.category")
-          td Category
-          td {{ change.category }}
-        tr
-          td Author
-          td {{ change.author }}
-        tr
-          td Date
-          td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
-        tr(ng-if="change.codebase")
-          td Codebase
-          td {{ change.codebase }}
-        tr
-          td Repository
-          td {{ change.repository }}
-        tr
-          td Branch
-          td {{ change.branch }}
-        tr
-          td Revision
-          td {{ change.revision }}
-      h4 Comment
-      pre {{ change.comments }}
-      h4 Changed files
-      ul
-        li(ng-repeat='file in change.files') {{file}}
+              li(ng-repeat="author in responsibles") {{ author }}
+          tab(heading="Changes")
+              changelist(changes="changes")
