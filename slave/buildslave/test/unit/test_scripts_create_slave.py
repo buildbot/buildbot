@@ -488,7 +488,7 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
         "log-count": 8,
         "keepalive": 4,
         "maxdelay": 2,
-        "maxcpus": None,
+        "numcpus": None,
 
         # arguments
         "host": "masterhost",
@@ -617,7 +617,7 @@ class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
             options["keepalive"],
             options["usepty"],
             umask=options["umask"],
-            maxcpus=options["maxcpus"],
+            numcpus=options["numcpus"],
             maxdelay=options["maxdelay"],
             allow_shutdown=options["allow-shutdown"])
 

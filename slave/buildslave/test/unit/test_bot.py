@@ -85,7 +85,7 @@ class TestBot(unittest.TestCase):
             self.assertEqual(info, dict(admin='testy!', foo='bar',
                                         environ=os.environ, system=os.name,
                                         basedir=self.basedir,
-                                        maxcpus=multiprocessing.cpu_count()))
+                                        numcpus=multiprocessing.cpu_count()))
         d.addCallback(check)
         return d
 
@@ -93,7 +93,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'maxcpus', 'basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'numcpus', 'basedir']))
         d.addCallback(check)
         return d
 
