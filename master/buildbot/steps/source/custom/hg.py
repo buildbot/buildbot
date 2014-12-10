@@ -11,6 +11,16 @@ class Hg(Mercurial):
         Mercurial.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
+    def pullLastRev(self, lastRev):
+            command = ['pull' , self.repourl]
+            rev = ['--rev', lastRev]
+            if self.update_branch:
+                rev = ['--rev', self.update_branch]
+
+            command.extend(rev)
+            yield self._dovccmd(command)
+
+    @defer.inlineCallbacks
     def parseChanges(self, _):
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
 
@@ -36,8 +46,10 @@ class Hg(Mercurial):
         if lastRev is None or lastRev == '' or lastRev == currentRev:
             revrange = '%s:%s' % (currentRev, currentRev)
         else:
+            yield self.pullLastRev(lastRev)
+
             rev= yield self._dovccmd(['log', '-r', lastRev,  r'--template={rev}'], collectStdout=True)
-            revrange =  '%d:%s' % ((int(rev.strip())+1), currentRev)
+            revrange =  '%d:%s' % ((int(rev.strip())), currentRev)
 
         # build from latest will have empty rev
         command = ['log', '-b', self.update_branch, '-r', revrange,  r'--template={rev}:{node}\n'
@@ -48,6 +60,8 @@ class Hg(Mercurial):
 
         changelist = []
         for rev, node in reversed(revNodeList):
+            if (node == lastRev) and (lastRev != currentRev):
+                continue
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
