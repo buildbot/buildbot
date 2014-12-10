@@ -134,15 +134,17 @@ define(function (require) {
                 }
             };
         },
-        builderTags: function (index) {
+        builderTags: function (index, filterTagsFunc) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-center",
                 "mRender": function (data, type, full) {
+
                     if (type === "filter") {
                         return full.tags;
                     }
-                    return hb.partials.cells["cells:builderTags"](full);
+                    var tags = filterTagsFunc(full.tags);
+                    return hb.partials.cells["cells:builderTags"]({tags: tags});
                 }
             };
         },

@@ -1,80 +1,181 @@
 /*global define, describe, it, expect, beforeEach, afterEach, spyOn*/
-define(["jquery", "rtBuilders"], function ($, rtBuilders) {
+define(function (require) {
     "use strict";
 
-    var abvTag = [
+    var $ = require("jquery"),
+        rtBuilders = require("rtBuilders"),
+        helpers = require("helpers"),
+        nightlyTag = "Nightly",
+        abvTag = [
             ["ABV"]
         ],
         abvNightlyTag = [
             ["ABV", "Nightly"]
         ],
+        trunk = [
+            ["Trunk"]
+        ],
+        trunkNightly = [
+            ["Trunk-Nightly"]
+        ],
+        unity46 = [
+            ["4.6"]
+        ],
+        unity46Nightly = [
+            ["4.6-Nightly"]
+        ],
         noTags = [
             []
         ],
-        builderInfo = [
+        simpleBuilders = [
             abvTag,
             noTags,
             abvNightlyTag
-        ];
+        ],
+        expandedBuilders = [
+            trunk,
+            trunkNightly,
+            unity46,
+            unity46Nightly,
+            noTags,
+            abvNightlyTag
+        ],
+        allTags = [
+            {tags: abvTag[0]},
+            {tags: trunk[0]},
+            {tags: trunkNightly[0]},
+            {tags: unity46[0]},
+            {tags: unity46Nightly[0]}
+        ],
+        filter = rtBuilders.filterByTags(0);
 
-    describe("Builder tags", function () {
-        var filter = rtBuilders.filterByTags(0);
+    function testTagFilter(tests, builders) {
+        $.each(tests, function eachTest(i, test) {
 
-        it("are filtered", function () {
+            // Replace the selected tags function
             rtBuilders.getSelectedTags = function () {
-                return ["ABV"];
+                return test.tags;
             };
 
-            var expectedResult = [
-                    abvTag, abvNightlyTag
-                ],
-                result = $.grep(builderInfo, function (a, b) {
-                    return filter(b, a);
-                });
-            expect(expectedResult).toEqual(result);
+            // Replace the codebases from url function
+            helpers.codebasesFromURL = function () {
+                if (test.branch !== undefined) {
+                    return {unity: test.branch};
+                }
+
+                return {}
+            };
+
+            var result = $.grep(builders, function (a) {
+                return filter(undefined, a);
+            });
+
+            expect(result).toEqual(test.result);
+        });
+    }
+
+    describe("Builder tags", function () {
+        rtBuilders.findAllTags(allTags);
+
+        it("are filtered", function () {
+            var tests = [
+                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"]},
+                {branch: "", result: [abvNightlyTag], tags: ["Nightly"]},
+                {branch: "", result: [abvNightlyTag], tags: ["ABV", "Nightly"]}
+            ];
+
+            testTagFilter(tests, simpleBuilders);
         });
 
         it("are not filtered when no tags are selected", function () {
-            rtBuilders.getSelectedTags = function () {
-                return [];
-            };
+            var tests = [
+                {branch: "", result: expandedBuilders, tags: []},
+                {branch: "trunk", result: [trunk, trunkNightly, noTags, abvNightlyTag], tags: []},
+                {branch: "release/5.0/test", result: [trunk, trunkNightly, noTags, abvNightlyTag], tags: []},
+                {branch: "release/4.6/test", result: [unity46, unity46Nightly, noTags, abvNightlyTag], tags: []}
+            ];
 
-            var expectedResult = [
-                    abvTag, noTags, abvNightlyTag
-                ],
-                result = $.grep(builderInfo, function (a, b) {
-                    return filter(b, a);
-                });
-            expect(expectedResult).toEqual(result);
+            testTagFilter(tests, expandedBuilders);
         });
 
-        it("shows only builders without tags when None is given", function () {
-            rtBuilders.getSelectedTags = function () {
-                return [rtBuilders.noTag];
-            };
+        it("shows only 'No Tag' builders even if there are multiple tags selected", function () {
+            var tests = [
+                {branch: "trunk", result: [trunk, noTags], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "release/5.0/test", result: [trunk, noTags], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "4.6/release/test", result: [unity46, noTags], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "", result: [noTags], tags: [rtBuilders.noTag, "ABV"]}
+            ];
 
-            var expectedResult = [
-                    noTags
-                ],
-                result = $.grep(builderInfo, function (a, b) {
-                    return filter(b, a);
-                });
-            expect(expectedResult).toEqual(result);
+            testTagFilter(tests, expandedBuilders);
         });
 
-        it("filters correctly with None and a filter", function () {
-            rtBuilders.getSelectedTags = function () {
-                return ["Nightly", rtBuilders.noTag];
-            };
 
-            var expectedResult = [
-                    noTags,
-                    abvNightlyTag
-                ],
-                result = $.grep(builderInfo, function (a, b) {
-                    return filter(b, a);
-                });
-            expect(expectedResult).toEqual(result);
+        it("filters tags based on branch", function () {
+            var noTagsTag = rtBuilders.noTag,
+                tests = [
+                    {branch: "trunk", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
+                    {branch: "release/4.6/test", result: [unity46Nightly, abvNightlyTag], tags: [nightlyTag]},
+                    {branch: "5.0/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
+                    {branch: "5.1/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
+                    {branch: undefined, result: [abvNightlyTag], tags: [nightlyTag]},
+                    {branch: undefined, result: expandedBuilders, tags: []},
+                    {branch: undefined, result: [noTags], tags: [noTagsTag]},
+                    {branch: "trunk", result: [trunk, noTags], tags: [noTagsTag]}
+                ];
+
+            testTagFilter(tests, expandedBuilders);
+
+        });
+
+        it("hides tags not for this branch", function () {
+            var tags = [
+                {tag: "ABV", branch_type: "4.6", result: true},
+                {tag: "4.6-ABV", branch_type: "4.6", result: true},
+                {tag: "Trunk-ABV", branch_type: "4.6", result: false},
+                {tag: "Trunk-ABV", branch_type: "trunk", result: true},
+                {tag: "NoBranch", branch_type: undefined, result: true},
+                {tag: "4.6", branch_type: "4.6", result: false},
+                {tag: "Trunk", branch_type: "Trunk", result: false}
+            ];
+
+            $.each(tags, function (i, dict) {
+                expect(rtBuilders.tagVisibleForBranch(dict.tag, dict.branch_type)).toEqual(dict.result);
+            });
+        });
+
+        it("format correctly", function () {
+            var tags = [
+                {tag: "4.6-ABV", branch_type: "4.6", result: "ABV"},
+                {tag: "Trunk-ABV", branch_type: "trunk", result: "ABV"},
+                {tag: "ABV", branch_type: "trunk", result: "ABV"},
+                {tag: ["Nightly", "4.6-ABV"], branch_type: "4.6", result: ["Nightly", "ABV"]},
+                {tag: "4.6-ABV", branch_type: undefined, result: "4.6-ABV"}
+            ];
+
+            $.each(tags, function (i, dict) {
+                expect(rtBuilders.formatTags(dict.tag, dict.branch_type)).toEqual(dict.result);
+            });
         });
     });
+
+    describe("Builder page", function () {
+        it("produces the right branch type", function () {
+            var branches = [
+                {branch: "trunk", branch_type: "trunk"},
+                {branch: "5.0/release/test", branch_type: "trunk"},
+                {branch: "release/4.6/test", branch_type: "4.6"}
+            ];
+
+
+            $.each(branches, function (i, dict) {
+                helpers.codebasesFromURL = function () {
+                    return {unity: dict.branch};
+                };
+
+                var branch_type = rtBuilders.getBranchType();
+                expect(branch_type).toEqual(dict.branch_type);
+            });
+        })
+
+    })
 });

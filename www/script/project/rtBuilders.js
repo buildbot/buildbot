@@ -14,6 +14,8 @@ define(function (require) {
         initializedCodebaseOverview = false,
         latestRevDict = {},
         tags = new MiniSet(),
+        branch_tags = new MiniSet(),// All of the tags that only contain a branch i.e 4.6, Trunk
+        tagAsBranchRegex = /^([0-9].[0-9]|trunk)$/i, // Regex for finding tags that are named the same as branches
         savedTags = [],
         $tagsSelect,
         NO_TAG = "No Tag",
@@ -82,9 +84,18 @@ define(function (require) {
             return true;
         },
         findAllTags: function findAllTags(data) {
+            var branch_type = rtBuilders.getBranchType();
+
             tags.clear();
             $.each(data, function eachBuilder(i, builder) {
-                tags = tags.add(builder.tags);
+                tags = tags.add(rtBuilders.formatTags(builder.tags, branch_type));
+
+                $.each(builder.tags, function eachBuilderTag(i, tag) {
+                    // If we found a branch tag then add it
+                    if (tagAsBranchRegex.exec(tag)) {
+                        branch_tags.add(tag.toLowerCase());
+                    }
+                });
             });
 
             tags.add(extra_tags)
@@ -104,25 +115,109 @@ define(function (require) {
         filterByTags: function filterByTags(col) {
             return function (settings, data) {
                 var selectedTags = rtBuilders.getSelectedTags(),
-                    builderTags = data[col];
+                    builderTags = data[col],
+                    branch_type = rtBuilders.getBranchType(),
+                    hasBranch = function(b) {
+                      return b.toLowerCase() === branch_type.toLowerCase();
+                    };
+
+                var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
+                if (builderTags.length > 0 && selectedTags.length == 0 && filteredTags.length === 0) {
+                    return builderTags.some(hasBranch);
+                }
 
                 if (selectedTags.length === 0) {
                     return true;
                 }
 
                 if (builderTags.length === 0) {
-                    return $.inArray("No Tag", selectedTags) > -1;
+                    return $.inArray(NO_TAG, selectedTags) > -1;
                 }
 
-                var result = false;
-                $.each(builderTags, function (i, tag) {
-                    if ($.inArray(tag, selectedTags) > -1) {
-                        result = true;
+                var result = true;
+                if ($.inArray(NO_TAG, selectedTags) > -1) {
+                    selectedTags.push(branch_type);
+                }
+                $.each(selectedTags, function eachSelectedTag(i, tag) {
+                    if (tag === NO_TAG) {
+                        if (filteredTags.length == 0 && builderTags.some(hasBranch)) {
+                            // Exit early we have found a builder with the branch as a tag
+                            return false;
+                        }
+                    } else if ($.inArray(tag, filteredTags) === -1) {
+                        result = false;
                         return false;
                     }
                 });
                 return result;
             };
+        },
+        getBranchType: function getBranchType() {
+            var branches = helpers.codebasesFromURL({}),
+                regex = [
+                    /(trunk)/,                  // Trunk
+                    /([0-9].[0-9])\/release/,   // 5.0/release
+                    /release\/([0-9].[0-9])/    // release/4.6
+                ],
+                branch_type = undefined;
+
+            $.each(regex, function eachRegex(i, r) {
+                $.each(branches, function eachBranch(i, b) {
+                    var matches = r.exec(b);
+                    if (matches !== null && matches.length > 0) {
+                        branch_type = matches[1];
+                        return false;
+                    }
+                });
+            });
+
+            if (branch_type !== undefined && $.inArray(branch_type, branch_tags.keys()) === -1) {
+                return "trunk"; // Default to trunk
+            }
+
+            return branch_type;
+        },
+        filterTags: function filterTags(tags) {
+            var branch_type = rtBuilders.getBranchType();
+
+            var filtered_tags = tags.filter(function (tag) {
+                return rtBuilders.tagVisibleForBranch(tag, branch_type)
+            });
+
+            return rtBuilders.formatTags(filtered_tags, branch_type);
+
+        },
+        formatTags: function formatTags(tags, branch_type) {
+            var formatTag = function (tag) {
+                if (tag.indexOf("-") > -1) {
+                    return tag.replace(new RegExp(branch_type + "-", "gi"), "");
+                }
+
+                return tag;
+            };
+
+            if (Array.isArray(tags)) {
+                var output = [];
+                $.each(tags, function eachTag(i, tag) {
+                    var formatted_tag = formatTag(tag);
+                    if (rtBuilders.tagVisibleForBranch(tag, branch_type) &&
+                        $.inArray(formatted_tag, output) === -1) {
+                        output.push(formatTag(tag));
+                    }
+                });
+                return output;
+            }
+
+            return formatTag(tags);
+        },
+        tagVisibleForBranch: function tagVisibleForBranch(tag, branch_type) {
+            if (branch_type === undefined) {
+                return true;
+            }
+            if (tag.indexOf("-") > -1) {
+                return tag.toLowerCase().indexOf(branch_type.toLowerCase()) > -1;
+            }
+            return !tagAsBranchRegex.exec(tag);
         },
         dataTableInit: function ($tableElem) {
             var options = {};
@@ -148,7 +243,7 @@ define(function (require) {
             ];
 
             options.aoColumnDefs = [
-                rtTable.cell.builderTags(0),
+                rtTable.cell.builderTags(0, rtBuilders.filterTags),
                 rtTable.cell.builderName(1, "txt-align-left"),
                 rtTable.cell.buildProgress(2, false),
                 rtTable.cell.buildLastRun(3),
