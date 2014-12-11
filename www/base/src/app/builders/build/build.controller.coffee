@@ -30,12 +30,17 @@ class Build extends Controller
 
             buildbotService.one('builders', builderid).one('builds', buildnumber + 1).bind($scope, dest_key:"nextbuild")
             buildbotService.one('builds', build.id).all('changes').bind($scope)
+            $scope.$watch "changes", (changes) ->
+                if changes?
+                    responsibles = {}
+                    for change in changes
+                        responsibles[change.author] = change.author_email
+                    $scope.responsibles = responsibles
+            , true
             buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
             buildbotService.one("builds", build.id).all("properties").bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->
-                buildset = buildbotService.one("buildsets", buildrequest.buildsetid)
-                buildset.bind($scope)
                 recentStorage.addBuild
                     link: "#/builders/#{$scope.builder.builderid}/build/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"

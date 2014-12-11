@@ -1,0 +1,59 @@
+.container-fluid
+    .row
+        .navbar.navbar-default
+            .container-fluid
+                .navbar-header
+                    .navbar-brand
+                        | {{changes.length}} changes
+                .navbar-form.navbar-right
+                    .form-group
+                        .btn.btn-default(ng-click="collapseDetails()", title="Collapse all")
+                            i.fa.fa-minus
+                        .btn.btn-default(ng-click="expandDetails()", title="Expand all")
+                            i.fa.fa-plus
+                    
+    .row
+        ul.list-group
+            li.list-group-item(ng-repeat="change in changes", 
+                               ng-click="change.show_details=!change.show_details")
+                span.no-select
+                    .change-avatar(ng-if="change.author_email")
+                        a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name }}")
+                            img(ng-src="avatar?email={{change.author_email}}")
+                    | &nbsp;
+                    a(ng-if="change.revlink", ng-src="change.revlink")
+                        | {{ change.comments.split("\n")[0] }}
+                    span(ng-if="!change.revlink")
+                        | {{ change.comments.split("\n")[0] }}
+                    &nbsp;
+                    i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
+                div.anim-changedetails(ng-show="change.show_details")
+                    table.table.table-striped.table-condensed(ng-show="change.show_details")
+                      tr(ng-if="change.categories")
+                        td Categories
+                        td {{ change.categories }}
+                      tr
+                        td Author
+                        td {{ change.author }}
+                      tr
+                        td Date
+                        td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
+                      tr(ng-if="change.codebase")
+                        td Codebase
+                        td {{ change.codebase }}
+                      tr
+                        td Repository
+                        td '{{ change.repository }}'
+                      tr
+                        td Branch
+                        td '{{ change.branch }}'
+                      tr
+                        td Revision
+                        td '{{ change.revision }}'
+
+                    h5 Comment
+                    pre {{ change.comments }}
+                    h5 Changed files
+                    ul
+                      li(ng-repeat='file in change.files') {{file}}
+                    p(ng-hide="change.files.length") No files
