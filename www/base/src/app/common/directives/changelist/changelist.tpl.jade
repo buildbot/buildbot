@@ -20,34 +20,40 @@
                     .change-avatar(ng-if="change.author_email")
                         a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name }}")
                             img(ng-src="avatar?email={{change.author_email}}")
-                    | &nbsp;{{ change.comments.split("\n")[0] }}&nbsp;
+                    | &nbsp;
+                    a(ng-if="change.revlink", ng-src="change.revlink")
+                        | {{ change.comments.split("\n")[0] }}
+                    span(ng-if="!change.revlink")
+                        | {{ change.comments.split("\n")[0] }}
+                    &nbsp;
                     i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
                 div.anim-changedetails(ng-show="change.show_details")
                     table.table.table-striped.table-condensed(ng-show="change.show_details")
-                      tr
-                        td Tags
-                        td {{ change.tags }}
+                      tr(ng-if="change.categories")
+                        td Categories
+                        td {{ change.categories }}
                       tr
                         td Author
                         td {{ change.author }}
                       tr
                         td Date
                         td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
-                      tr
+                      tr(ng-if="change.codebase")
                         td Codebase
                         td {{ change.codebase }}
                       tr
                         td Repository
-                        td {{ change.repository }}
+                        td '{{ change.repository }}'
                       tr
                         td Branch
-                        td {{ change.branch }}
+                        td '{{ change.branch }}'
                       tr
                         td Revision
-                        td {{ change.revision }}  
+                        td '{{ change.revision }}'
 
                     h5 Comment
                     pre {{ change.comments }}
                     h5 Changed files
                     ul
                       li(ng-repeat='file in change.files') {{file}}
+                    p(ng-hide="change.files.length") No files

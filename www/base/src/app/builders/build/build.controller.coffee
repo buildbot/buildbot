@@ -41,8 +41,6 @@ class Build extends Controller
             buildbotService.one("builds", build.id).all("properties").bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->
-                buildset = buildbotService.one("buildsets", buildrequest.buildsetid)
-                buildset.bind($scope)
                 recentStorage.addBuild
                     link: "#/builders/#{$scope.builder.builderid}/build/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
