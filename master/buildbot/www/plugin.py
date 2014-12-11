@@ -19,6 +19,7 @@ from twisted.web import static
 
 
 class Application(object):
+
     def __init__(self, modulename, description):
         self.description = description
         self.version = pkg_resources.resource_string(modulename, "/VERSION").strip()
@@ -26,5 +27,6 @@ class Application(object):
         self.resource = static.File(self.static_dir)
 
     def __repr__(self):
-        return "www.plugin.Application(version={version}, description={description}, static_dir={static_dir})".format(
-            **self.__dict__)
+        return ("www.plugin.Application(version=%(version)s, "
+                "description=%(description)s, "
+                "static_dir=%(static_dir)s)") % self.__dict__

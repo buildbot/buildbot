@@ -51,7 +51,7 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     username = props.get("username", username)
     username = props.get("name", username)
     if "email" in props:
-        username += u" <{email}>".format(**props)
+        username += u" <%(email)s>" % props
     return username
 
 
