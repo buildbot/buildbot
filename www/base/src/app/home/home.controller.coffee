@@ -1,5 +1,5 @@
 class Home extends Controller
-    constructor: ($scope, recentStorage) ->
+    constructor: ($scope, recentStorage, buildbotService) ->
         $scope.recent = {}
         recentStorage.getAll().then (e) ->
             $scope.recent.recent_builders = e.recent_builders
@@ -9,3 +9,6 @@ class Home extends Controller
                 recentStorage.getAll().then (e) ->
                     $scope.recent.recent_builders = e.recent_builders
                     $scope.recent.recent_builds = e.recent_builds
+
+
+        buildbotService.some('builds', order: '-started_at', complete: false).bind($scope, dest_key:'builds_running')
