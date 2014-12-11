@@ -988,7 +988,7 @@ class StatusBot(object):
 
     contactClass = Contact
 
-    def __init__(self, status, tags, notify_events, noticeOnChannel=False,
+    def __init__(self, status, tags, notify_events,
                  useRevisions=False, showBlameList=False, useColors=True,
                  categories=None  # deprecated
                  ):
@@ -997,7 +997,6 @@ class StatusBot(object):
         self.master = status.master
         self.tags = tags or categories
         self.notify_events = notify_events
-        self.noticeOnChannel = noticeOnChannel
         self.useColors = useColors
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList

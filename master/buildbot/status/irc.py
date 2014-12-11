@@ -64,8 +64,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     # The following methods are called when we write something.
     def groupChat(self, channel, message):
-        if self.noticeOnChannel:
-            self.notice(channel, message.encode('utf-8', 'replace'))
+        self.notice(channel, message.encode('utf-8', 'replace'))
 
     def chat(self, user, message):
         self.msg(user, message.encode('utf-8', 'replace'))
@@ -142,7 +141,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     p = None
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
-                 noticeOnChannel=False, useRevisions=False, showBlameList=False,
+                 useRevisions=False, showBlameList=False,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
@@ -153,7 +152,6 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.pm_to_nicks = pm_to_nicks
         self.tags = tags
         self.notify_events = notify_events
-        self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
@@ -173,7 +171,6 @@ class IrcStatusFactory(ThrottledClientFactory):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.pm_to_nicks, self.status,
                           self.tags, self.notify_events,
-                          noticeOnChannel=self.noticeOnChannel,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
                           showBlameList=self.showBlameList)
@@ -208,18 +205,20 @@ class IRC(base.StatusReceiverMultiService):
 
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
                  allowForce=False, tags=None, password=None, notify_events={},
-                 noticeOnChannel=False, showBlameList=True, useRevisions=False,
+                 showBlameList=True, useRevisions=False,
                  useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                 allowShutdown=False, categories=None  # categories is deprecated
+                 allowShutdown=False, **kwargs
                  ):
         base.StatusReceiverMultiService.__init__(self)
+
+        deprecated_params = kwargs.keys()
+        if deprecated_params:
+            config.error("%s are deprecated" % (",".join(deprecated_params)))
 
         if allowForce not in (True, False):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
-        if categories:
-            log.msg("WARNING: categories are deprecated and should be replaced with 'tags=[cat]'")
 
         # need to stash these so we can detect changes later
         self.host = host
@@ -230,14 +229,13 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
-        self.tags = tags or categories
+        self.tags = tags
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.tags, self.notify_events,
-                                  noticeOnChannel=noticeOnChannel,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,

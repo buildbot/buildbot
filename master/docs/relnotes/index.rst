@@ -271,6 +271,11 @@ Changes and Removals
 
 * Property values must be serializable in JSON.
 
+* :bb:status:`IRC` has the following changes:
+
+  - categories parameter is deprecated and removed. It should be replaced with tags=[cat]
+  - noticeOnChannel parameter is deprecated and removed.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
