@@ -12,12 +12,7 @@ class Hg(Mercurial):
 
     @defer.inlineCallbacks
     def pullLastRev(self, lastRev):
-            command = ['pull' , self.repourl]
-            rev = ['--rev', lastRev]
-            if self.update_branch:
-                rev = ['--rev', self.update_branch]
-
-            command.extend(rev)
+            command = ['pull', self.repourl, '--rev', lastRev]
             yield self._dovccmd(command)
 
     @defer.inlineCallbacks
@@ -59,8 +54,6 @@ class Hg(Mercurial):
 
         changelist = []
         for rev, node in reversed(revNodeList):
-            if (node == lastRev) and (lastRev != currentRev):
-                continue
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
