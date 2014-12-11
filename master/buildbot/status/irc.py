@@ -207,16 +207,18 @@ class IRC(base.StatusReceiverMultiService):
                  allowForce=False, tags=None, password=None, notify_events={},
                  showBlameList=True, useRevisions=False,
                  useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                 allowShutdown=False, categories=None  # categories is deprecated
+                 allowShutdown=False, **kwargs
                  ):
         base.StatusReceiverMultiService.__init__(self)
+
+        deprecated_params = kwargs.keys()
+        if deprecated_params:
+            config.error("%s are deprecated" % (",".join(deprecated_params)))
 
         if allowForce not in (True, False):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
-        if categories:
-            log.msg("WARNING: categories are deprecated and should be replaced with 'tags=[cat]'")
 
         # need to stash these so we can detect changes later
         self.host = host
@@ -227,7 +229,7 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
-        self.tags = tags or categories
+        self.tags = tags
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 
