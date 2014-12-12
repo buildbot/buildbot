@@ -136,6 +136,22 @@ class MasterConfig(util.ComparableMixin):
     ])
     compare_attrs = list(_known_config_keys)
 
+    def preChangeGenerator(self, **kwargs):
+        return {
+            'author': kwargs.get('author', None),
+            'files': kwargs.get('files', None),
+            'comments': kwargs.get('comments', None),
+            'revision': kwargs.get('revision', None),
+            'when_timestamp': kwargs.get('when_timestamp', None),
+            'branch': kwargs.get('branch', None),
+            'category': kwargs.get('category', None),
+            'revlink': kwargs.get('revlink', u''),
+            'properties': kwargs.get('properties', {}),
+            'repository': kwargs.get('repository', u''),
+            'project': kwargs.get('project', u''),
+            'codebase': kwargs.get('codebase', None)
+        }
+
     @classmethod
     def loadConfig(cls, basedir, filename):
         if not os.path.isdir(basedir):
