@@ -29,9 +29,9 @@
                     i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
                 div.anim-changedetails(ng-show="change.show_details")
                     table.table.table-striped.table-condensed(ng-show="change.show_details")
-                      tr(ng-if="change.categories")
-                        td Categories
-                        td {{ change.categories }}
+                      tr(ng-if="change.category")
+                        td Category
+                        td {{ change.category }}
                       tr
                         td Author
                         td {{ change.author }}
