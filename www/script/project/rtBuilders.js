@@ -122,7 +122,7 @@ define(function (require) {
                     };
 
                 var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
-                if (builderTags.length > 0 && selectedTags.length == 0 && filteredTags.length === 0) {
+                if (selectedTags.length == 0 && (builderTags.length > 0 && filteredTags.length === 0 || builderTags.length !== filteredTags.length)) {
                     return builderTags.some(hasBranch);
                 }
 

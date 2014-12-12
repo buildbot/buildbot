@@ -1073,7 +1073,7 @@ form.command_forcebuild .force-nested>.label{font-weight:700;display:inline-bloc
 #branchTxt,div.common-branch-select{float:right}
 .help-txt{float:right;color:#787878;display:block;font-weight:400;text-shadow:1px 1px 0 #fff;width:188px;margin:0 17px 10px 0}
 .more-info-box .help-txt{float:none}
-.select2-container{min-width:90px;margin:0;position:relative;display:inline-block;zoom:1;vertical-align:middle;text-align:left}
+.select2-container{min-width:90px;margin:0;position:relative;display:inline-block;zoom:1;vertical-align:middle;text-align:left;padding:0}
 .select2-container-active{-webkit-box-shadow:0 0 0 2px rgba(59,76,95,.74),0 1px 0 rgba(255,255,255,.45) inset,1px 1px 0 #FFF;box-shadow:0 0 0 2px rgba(59,76,95,.74),0 1px 0 rgba(255,255,255,.45) inset,1px 1px 0 #FFF;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px}
 .select2-container-active a.select2-choice{-webkit-box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 0 0 #FFF;box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 0 0 #FFF}
 .more-info-box .select2-container{width:150px}

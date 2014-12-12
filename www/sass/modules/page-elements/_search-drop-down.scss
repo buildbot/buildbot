@@ -62,6 +62,7 @@ div.common-branch-select {
     *display: inline;
     vertical-align: middle;
     text-align: left;
+    padding: 0;
 }
 .select2-container-active {
     @include box-shadow($focusShadow, 0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #FFFFFF);

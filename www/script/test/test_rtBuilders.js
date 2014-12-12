@@ -27,10 +27,14 @@ define(function (require) {
         noTags = [
             []
         ],
+        trunkWIPTags = [
+          ["Trunk", "WIP"]
+        ],
         simpleBuilders = [
             abvTag,
             noTags,
-            abvNightlyTag
+            abvNightlyTag,
+            trunkWIPTags
         ],
         expandedBuilders = [
             trunk,
@@ -38,7 +42,8 @@ define(function (require) {
             unity46,
             unity46Nightly,
             noTags,
-            abvNightlyTag
+            abvNightlyTag,
+            trunkWIPTags
         ],
         allTags = [
             {tags: abvTag[0]},
@@ -90,8 +95,8 @@ define(function (require) {
         it("are not filtered when no tags are selected", function () {
             var tests = [
                 {branch: "", result: expandedBuilders, tags: []},
-                {branch: "trunk", result: [trunk, trunkNightly, noTags, abvNightlyTag], tags: []},
-                {branch: "release/5.0/test", result: [trunk, trunkNightly, noTags, abvNightlyTag], tags: []},
+                {branch: "trunk", result: [trunk, trunkNightly, noTags, abvNightlyTag, trunkWIPTags], tags: []},
+                {branch: "release/5.0/test", result: [trunk, trunkNightly, noTags, abvNightlyTag, trunkWIPTags], tags: []},
                 {branch: "release/4.6/test", result: [unity46, unity46Nightly, noTags, abvNightlyTag], tags: []}
             ];
 
