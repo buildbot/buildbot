@@ -139,7 +139,8 @@ class Row(object):
                     t.assertTrue(val is not None,
                                  "foreign key %s:%r does not exit" % (foreign_key, key))
             else:
-                raise ValueError("warning, unsupported foreign key", foreign_key, self.table)
+                raise ValueError(
+                    "warning, unsupported foreign key", foreign_key, self.table)
 
 
 class BuildRequest(Row):
@@ -489,7 +490,7 @@ class Step(Row):
         state_string='',
         results=None,
         urls_json='[]',
-        hidden=False)
+        hidden=0)
 
     id_column = 'id'
     foreignKeys = ('buildid',)
@@ -854,7 +855,8 @@ class FakeChangesComponent(FakeDBComponent):
             # 1 parent for a change.
             # When we will support multiple parent for change, then we will have a
             # table parent_changes with at least 2 col: "changeid", "parent_changeid"
-            # And the col 'parent_changeids' of the table changes will be dropped
+            # And the col 'parent_changeids' of the table changes will be
+            # dropped
             row_only['parent_changeids'] = None
         self.t.assertEqual(row_only, row.values)
 
@@ -912,7 +914,8 @@ class FakeSchedulersComponent(FakeDBComponent):
     # component methods
 
     def classifyChanges(self, schedulerid, classifications):
-        self.classifications.setdefault(schedulerid, {}).update(classifications)
+        self.classifications.setdefault(
+            schedulerid, {}).update(classifications)
         return defer.succeed(None)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):
@@ -1171,7 +1174,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
         # We've gotten this wrong a couple times.
-        assert isinstance(waited_for, bool), 'waited_for should be boolean: %r' % waited_for
+        assert isinstance(
+            waited_for, bool), 'waited_for should be boolean: %r' % waited_for
 
         # calculate submitted at
         if submitted_at:
@@ -1297,7 +1301,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildsetCompletion(self, bsid, complete):
         """Assert that the completion state of buildset BSID is COMPLETE"""
         actual = self.buildsets[bsid]['complete']
-        self.t.failUnless((actual and complete) or (not actual and not complete))
+        self.t.failUnless(
+            (actual and complete) or (not actual and not complete))
 
     def assertBuildset(self, bsid=None, expected_buildset=None):
         """Assert that the given buildset looks as expected; the ssid parameter
@@ -1727,7 +1732,8 @@ class FakeBuildsComponent(FakeDBComponent):
         for row in rows:
             if isinstance(row, BuildProperty):
                 assert row.buildid in self.builds
-                self.builds[row.buildid]['properties'][row.name] = (row.value, row.source)
+                self.builds[row.buildid]['properties'][
+                    row.name] = (row.value, row.source)
 
     # component methods
 
@@ -1966,7 +1972,8 @@ class FakeLogsComponent(FakeDBComponent):
                 # make sure there are enough slots in the list
                 if len(lines) < row.last_line + 1:
                     lines.append([None] * (row.last_line + 1 - len(lines)))
-                lines[row.first_line:row.last_line + 1] = row.content.split('\n')
+                lines[
+                    row.first_line:row.last_line + 1] = row.content.split('\n')
 
     # component methods
 
@@ -2306,7 +2313,8 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def _row2dict(self, row):
         row = row.copy()
-        row['tags'] = [self.db.tags.tags[tagid]['name'] for tagid in self.builders_tags.get(row['id'], [])]
+        row['tags'] = [self.db.tags.tags[tagid]['name']
+                       for tagid in self.builders_tags.get(row['id'], [])]
         return row
 
 

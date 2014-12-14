@@ -55,7 +55,7 @@ class Tests(interfaces.InterfaceTests):
                     started_at=TIME2, complete_at=TIME3,
                     state_string=u'test', results=2,
                     urls_json=u'["http://url"]',
-                    hidden=True),
+                    hidden=1),
         fakedb.Step(id=72, number=2, name='three', buildid=30,
                     started_at=TIME3),
         fakedb.Step(id=73, number=0, name='wrong-build', buildid=31),
