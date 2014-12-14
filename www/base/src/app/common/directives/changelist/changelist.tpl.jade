@@ -25,7 +25,7 @@
                         | {{ change.comments.split("\n")[0] }}
                     span(ng-if="!change.revlink")
                         | {{ change.comments.split("\n")[0] }}
-                    &nbsp;
+                    | &nbsp;
                     i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
                 div.anim-changedetails(ng-show="change.show_details")
                     table.table.table-striped.table-condensed(ng-show="change.show_details")
@@ -37,7 +37,7 @@
                         td {{ change.author }}
                       tr
                         td Date
-                        td {{ change.when_timestamp * 1000 | date:'EEE dd MMM yyyy HH:mm:ss' }}
+                        td {{ change.when_timestamp | dateformat:'LLL'}} ({{ change.when_timestamp | timeago }})
                       tr(ng-if="change.codebase")
                         td Codebase
                         td {{ change.codebase }}
