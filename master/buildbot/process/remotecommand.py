@@ -64,6 +64,9 @@ class RemoteCommand(pb.Referenceable):
         self.builder_name = None
         self.commandID = None
         self.deferred = None
+        # a lock to make sure that only one log-handling method runs at a time.
+        # This is really only a problem with old-style steps, which do not
+        # wait for the Deferred from one method before invoking the next.
         self.loglock = defer.DeferredLock()
 
     def __repr__(self):
