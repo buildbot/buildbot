@@ -12,18 +12,20 @@ class Durationformat extends Filter('common')
     constructor: (MOMENT) ->
         return (time) ->
             d = MOMENT.duration(time * 1000)
-            mins = d.minutes()
-            if mins < 10
-                mins = '0' + mins
-            secs = d.seconds()
-            if secs < 10
-                secs = '0' + secs
+            d = MOMENT.duration(time * 1000)
+            m = MOMENT.utc(d.asMilliseconds())
+            days = Math.floor(d.asDays())
+            if days
+                plural = ""
+                if days > 1
+                    plural = "s"
+                return "#{days} day#{plural} " + m.format('HH:mm:ss')
             if d.hours()
-                return "#{d.hours()}:#{mins}:#{secs}"
-            else if d.minutes()
-                return "#{d.minutes()}:#{secs}"
+                return m.format('HH:mm:ss')
+            if d.minutes()
+                return m.format('mm:ss')
             else
-                return "#{d.seconds()}s"
+                return m.format('s') + " s"
 
 class Dateformat extends Filter('common')
     constructor: (MOMENT) ->
