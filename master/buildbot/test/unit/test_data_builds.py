@@ -16,6 +16,7 @@
 import mock
 
 from buildbot.data import builds
+from buildbot.data import resultspec
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -96,7 +97,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=4),
             fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=13,
-                         buildrequestid=83, number=5),
+                         buildrequestid=83, number=5, complete_at=1),
         ])
 
     def tearDown(self):
@@ -118,6 +119,22 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
         builds = yield self.callGet(('buildrequests', 82, 'builds'))
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
+    def test_get_complete(self):
+        # override resultSpec implementation to be noop
+        class MyResultSpec(resultspec.ResultSpec):
+
+            def apply(self, data):
+                return data
+
+        resultSpec = MyResultSpec(
+            filters=[resultspec.Filter('complete', 'eq', [False])])
+
+        builds = yield self.callGet(('builds',),
+                                    resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 

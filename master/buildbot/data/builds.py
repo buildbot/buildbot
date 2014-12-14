@@ -80,9 +80,13 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
+        # following returns None if no filter
+        # true or false, if there is a complete filter
+        complete = resultSpec.popBooleanFilter("complete")
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
-            buildrequestid=kwargs.get('buildrequestid'))
+            buildrequestid=kwargs.get('buildrequestid'),
+            complete=complete)
         defer.returnValue(
             [(yield self.db2data(dbdict)) for dbdict in builds])
 

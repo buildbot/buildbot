@@ -69,6 +69,16 @@ Builds
 
         This path selects builds for a given buildrequest.
 
+Optimised Queries
+-----------------
+
+All :ref:`Data_API` filters are not optimized. Most of the queries are implemented at the data api level, and thus manipulate full list from db. Some others are optimised with appropriate sql where statement generation.
+
+Here is the list of queries that are optimized at the db level:
+
+    * Get list of builds based on completion. Use resultspec filter ``complete=true`` or ``complete=false``
+
+
 Update Methods
 --------------
 

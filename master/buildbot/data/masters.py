@@ -142,10 +142,9 @@ class Master(base.ResourceType):
             masterid=masterid)
 
         # for each build running on that instance..
-        # TODO: this query iterates over *all* builds - potentially a huge list!
         builds = yield self.master.data.get(('builds',),
                                             filters=[resultspec.Filter('masterid', 'eq', [masterid]),
-                                                     resultspec.Filter('results', 'eq', [None])])
+                                                     resultspec.Filter('complete', 'eq', [False])])
         for build in builds:
             # stop any running steps..
             steps = yield self.master.data.get(

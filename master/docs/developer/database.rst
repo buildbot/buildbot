@@ -274,12 +274,13 @@ builds
         :param list ssBuild: the list of sourcestamps for the current build number
         :returns: None or a build dictionnary
 
-        Returns the last successful build from the current build number with the same repository/repository/codebase 
+        Returns the last successful build from the current build number with the same repository/repository/codebase
 
-    .. py:method:: getBuilds(builderid=None, buildrequestid=None)
+    .. py:method:: getBuilds(builderid=None, buildrequestid=None, complete=None)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: buildrequest to get builds for
+        :param boolean complete: if not None, filters results based on completeness
         :returns: list of build dictionaries as above, via Deferred
 
         Get a list of builds, in the format described above.
@@ -756,7 +757,7 @@ changes
     has the following keys:
 
     * ``changeid`` (the ID of this change)
-    * ``parent_changeids`` (list of ID; change's parents) 
+    * ``parent_changeids`` (list of ID; change's parents)
     * ``author`` (unicode; the author of the change)
     * ``files`` (list of unicode; source-code filenames changed)
     * ``comments`` (unicode; user comments)
@@ -780,7 +781,7 @@ changes
     .. py:method:: getParentChangeIds(branch, repository, project, codebase)
 
         :param branch: the branch of the change
-        :type branch: unicode string 
+        :type branch: unicode string
         :param repository: the repository in which this change took place
         :type repository: unicode string
         :param project: the project this change is a part of
