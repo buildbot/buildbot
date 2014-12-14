@@ -315,7 +315,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         # see that we finished off that build and its steps and logs
         updates = self.master.data.updates
         updates.finishLog.assert_called_with(logid=2000)
-        updates.finishStep.assert_called_with(stepid=200, results=RETRY)
+        updates.finishStep.assert_called_with(stepid=200, results=RETRY, hidden=False)
         updates.finishBuild.assert_called_with(buildid=13, results=RETRY)
 
         self.assertEqual(self.master.mq.productions, [
