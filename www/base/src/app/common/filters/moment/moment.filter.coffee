@@ -12,7 +12,6 @@ class Durationformat extends Filter('common')
     constructor: (MOMENT) ->
         return (time) ->
             d = MOMENT.duration(time * 1000)
-            d = MOMENT.duration(time * 1000)
             m = MOMENT.utc(d.asMilliseconds())
             days = Math.floor(d.asDays())
             if days
