@@ -18,11 +18,11 @@ class Durationformat extends Filter('common')
                 plural = ""
                 if days > 1
                     plural = "s"
-                return "#{days} day#{plural} " + m.format('HH:mm:ss')
+                return "#{days} day#{plural} " + m.format('H:mm:ss')
             if d.hours()
-                return m.format('HH:mm:ss')
+                return m.format('H:mm:ss')
             if d.minutes()
-                return m.format('mm:ss')
+                return m.format('m:ss')
             else
                 return m.format('s') + " s"
 
