@@ -28,7 +28,6 @@ class _changeList extends Controller('common')
                     formatAuthor(change)
 
         $scope.expandDetails = ->
-            console.log "expand"
             for change in $scope.changes
                 change.show_details = true
 
