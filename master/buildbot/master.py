@@ -177,6 +177,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                                                      masterid=self.masterid)
             yield self.data.updates.expireMasters()
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
+        self.masterHeartbeatService.setServiceParent(self)
 
     # setup and reconfig handling
 

@@ -110,7 +110,7 @@ class Master(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def expireMasters(self, _reactor):
+    def expireMasters(self, _reactor=reactor):
         too_old = epoch2datetime(_reactor.seconds() - 60 * EXPIRE_MINUTES)
         masters = yield self.master.db.masters.getMasters()
         for m in masters:
@@ -160,7 +160,7 @@ class Master(base.ResourceType):
                     yield self.master.data.updates.finishLog(
                         logid=log['logid'])
                 yield self.master.data.updates.finishStep(
-                    stepid=step['stepid'], results=RETRY)
+                    stepid=step['stepid'], results=RETRY, hidden=False)
             # then stop the build itself
             yield self.master.data.updates.finishBuild(
                 buildid=build['buildid'], results=RETRY)

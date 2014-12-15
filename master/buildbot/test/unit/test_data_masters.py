@@ -293,13 +293,15 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         # mock out the _masterDeactivated methods this will call
         for rtype in 'builder', 'scheduler', 'changesource':
-            m = mock.Mock(name='%s._masterDeactivated' % rtype)
+            rtype_obj = getattr(self.master.data.rtypes, rtype)
+            m = mock.Mock(name='%s._masterDeactivated' % rtype,
+                          spec=rtype_obj._masterDeactivated)
             m.side_effect = lambda masterid: defer.succeed(None)
-            getattr(self.master.data.rtypes, rtype)._masterDeactivated = m
+            rtype_obj._masterDeactivated = m
 
         # and the update methods..
         for meth in 'finishBuild', 'finishStep', 'finishLog':
-            m = mock.Mock(name='updates.' + meth)
+            m = mock.create_autospec(getattr(self.master.data.updates, meth))
             m.side_effect = lambda *args, **kwargs: defer.succeed(None)
             setattr(self.master.data.updates, meth, m)
 
@@ -315,7 +317,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         # see that we finished off that build and its steps and logs
         updates = self.master.data.updates
         updates.finishLog.assert_called_with(logid=2000)
-        updates.finishStep.assert_called_with(stepid=200, results=RETRY)
+        updates.finishStep.assert_called_with(stepid=200, results=RETRY, hidden=False)
         updates.finishBuild.assert_called_with(buildid=13, results=RETRY)
 
         self.assertEqual(self.master.mq.productions, [
