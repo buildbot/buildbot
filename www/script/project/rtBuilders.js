@@ -19,7 +19,8 @@ define(function (require) {
         savedTags = [],
         $tagsSelect,
         NO_TAG = "No Tag",
-        extra_tags = [NO_TAG];
+        extra_tags = [NO_TAG],
+        MAIN_REPO = "unity_branch";
 
     require('libs/jquery.form');
 
@@ -117,8 +118,8 @@ define(function (require) {
                 var selectedTags = rtBuilders.getSelectedTags(),
                     builderTags = data[col],
                     branch_type = rtBuilders.getBranchType(),
-                    hasBranch = function(b) {
-                      return b.toLowerCase() === branch_type.toLowerCase();
+                    hasBranch = function (b) {
+                        return b.toLowerCase() === branch_type.toLowerCase();
                     };
 
                 var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
@@ -155,14 +156,15 @@ define(function (require) {
         getBranchType: function getBranchType() {
             var branches = helpers.codebasesFromURL({}),
                 regex = [
-                    /(trunk)/,                  // Trunk
-                    /([0-9].[0-9])\/release/,   // 5.0/release
-                    /release\/([0-9].[0-9])/    // release/4.6
+                    /^(trunk)/,                 // Trunk
+                    /^([0-9].[0-9])\//,         // 5.0/
+                    /^release\/([0-9].[0-9])/   // release/4.6
                 ],
                 branch_type = undefined;
 
             $.each(regex, function eachRegex(i, r) {
-                $.each(branches, function eachBranch(i, b) {
+                $.each(branches, function eachBranch(repo, b) {
+                    b = decodeURIComponent(b);
                     var matches = r.exec(b);
                     if (matches !== null && matches.length > 0) {
                         branch_type = matches[1];
@@ -171,7 +173,11 @@ define(function (require) {
                 });
             });
 
-            if (branch_type !== undefined && $.inArray(branch_type, branch_tags.keys()) === -1) {
+            // If the branch is not found as one of the branch tags i.e 4.5, then default to trunk
+            // or if the main repo is being used on this page then also default to trunk
+            if ((branch_type !== undefined && $.inArray(branch_type, branch_tags.keys()) === -1) ||
+                (branch_type === undefined && $.inArray(MAIN_REPO, Object.keys(branches)) > -1 &&
+                branches[MAIN_REPO] !== undefined && branches[MAIN_REPO].length)) {
                 return "trunk"; // Default to trunk
             }
 

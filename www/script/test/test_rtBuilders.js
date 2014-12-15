@@ -65,7 +65,7 @@ define(function (require) {
             // Replace the codebases from url function
             helpers.codebasesFromURL = function () {
                 if (test.branch !== undefined) {
-                    return {unity: test.branch};
+                    return {unity_branch: test.branch};
                 }
 
                 return {}
@@ -122,6 +122,7 @@ define(function (require) {
                     {branch: "release/4.6/test", result: [unity46Nightly, abvNightlyTag], tags: [nightlyTag]},
                     {branch: "5.0/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
                     {branch: "5.1/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
+                    {branch: "test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag]},
                     {branch: undefined, result: [abvNightlyTag], tags: [nightlyTag]},
                     {branch: undefined, result: expandedBuilders, tags: []},
                     {branch: undefined, result: [noTags], tags: [noTagsTag]},
@@ -168,13 +169,14 @@ define(function (require) {
             var branches = [
                 {branch: "trunk", branch_type: "trunk"},
                 {branch: "5.0/release/test", branch_type: "trunk"},
-                {branch: "release/4.6/test", branch_type: "4.6"}
+                {branch: "release/4.6/test", branch_type: "4.6"},
+                {branch: "5.0/ai/test", branch_type: "trunk"}
             ];
 
 
             $.each(branches, function (i, dict) {
                 helpers.codebasesFromURL = function () {
-                    return {unity: dict.branch};
+                    return {unity_branch: dict.branch};
                 };
 
                 var branch_type = rtBuilders.getBranchType();
