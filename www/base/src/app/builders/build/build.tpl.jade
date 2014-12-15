@@ -4,6 +4,7 @@
       li.previous(ng-class="{'disabled': build.number == 1}")
         a(ng-if="build.number > 1 ", ui-sref="build({build:build.number - 1})") &larr; Previous
         span(ng-if="build.number == 1") &larr; Previous
+      span(ng-if="build.complete" title="{{ build.complete_at | dateformat:'LLL' }}") Finished {{ build.complete_at | timeago }}
       li.next(ng-class="{'disabled': last_build}")
         a(ng-if="!last_build", ui-sref="build({build:build.number + 1})") Next &rarr;
         span(ng-if="last_build") Next &rarr;
