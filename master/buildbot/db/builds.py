@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 from buildbot.util import json
@@ -92,14 +93,19 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         defer.returnValue(rv)
 
-    def getBuilds(self, builderid=None, buildrequestid=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, complete=None):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.select()
-            if builderid:
+            if builderid is not None:
                 q = q.where(tbl.c.builderid == builderid)
-            if buildrequestid:
+            if buildrequestid is not None:
                 q = q.where(tbl.c.buildrequestid == buildrequestid)
+            if complete is not None:
+                if complete:
+                    q = q.where(tbl.c.complete_at != NULL)
+                else:
+                    q = q.where(tbl.c.complete_at == NULL)
             res = conn.execute(q)
             return [self._builddictFromRow(row) for row in res.fetchall()]
         return self.db.pool.do(thd)

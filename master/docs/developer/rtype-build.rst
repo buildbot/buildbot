@@ -44,6 +44,10 @@ Builds
 
         This path lists builds, sorted by ID.
 
+        .. note::
+
+            To get the list of running builds, use the resultspec filter ``complete=false``, which is implemented efficiently.
+
     .. bb:rpath:: /build/:buildid
 
         :pathkey integer buildid: the ID of the build
@@ -68,6 +72,8 @@ Builds
         :pathkey integer buildrequestid: the ID of the build request
 
         This path selects builds for a given buildrequest.
+
+
 
 Update Methods
 --------------
