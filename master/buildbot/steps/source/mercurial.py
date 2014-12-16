@@ -22,7 +22,7 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, RETRY
 
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
@@ -76,6 +76,7 @@ class Mercurial(Source):
         self.method = method
         self.clobberOnBranchChange = clobberOnBranchChange
         self.mode = mode
+        self.ended = False
         Source.__init__(self, **kwargs)
 
         errors = []
@@ -130,6 +131,9 @@ class Mercurial(Source):
         #implement
         return 0
 
+    def shouldReboot(self, rc):
+        return rc is not None and rc != SUCCESS and self._isWindowsSlave()
+
     @defer.inlineCallbacks
     def full(self):
         if self.method == 'clobber':
@@ -147,7 +151,11 @@ class Mercurial(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            yield self.cleanWorkdir()
+            rc = yield self.cleanWorkdir()
+            if self.shouldReboot(rc):
+                yield self._requestReboot()
+                return
+
             res = yield self._dovccmd(['clone', '--uncompressed', self.repourl, '.', '--noupdate'])
             yield self._checkBranchChange(res)
 
@@ -187,18 +195,70 @@ class Mercurial(Source):
         d.addCallback(self._pullUpdate)
         return d
 
+    def checkWindowsSlaveEnvironment(self, key):
+        return key in self.build.slavebuilder.slave.slave_environ.keys() \
+               and self.build.slavebuilder.slave.slave_environ[key] == 'Windows_NT'
+
+    def _isWindowsSlave(self):
+        slave_os = self.build.slavebuilder.slave.os and self.build.slavebuilder.slave.os == 'Windows'
+        slave_env = self.checkWindowsSlaveEnvironment('os') or self.checkWindowsSlaveEnvironment('OS')
+        return slave_os or slave_env
+
+    def _requestReboot(self):
+        if self._isWindowsSlave():
+            log.msg("About to reboot slave: " + self.build.slavebuilder.slave.slavename)
+            # shutdown graceful so it doesnt pickup new jobs while restarting
+            self.build.slavebuilder.slave.slave_status.setGraceful(True)
+            cmd = buildstep.RemoteShellCommand(self.workdir,
+                                           ["shutdown", "/r", "/t", "5", "/c", "Mercurial command: restart requested"],
+                                           logEnviron=self.logEnviron,
+                                           collectStdout=True)
+            cmd.useLog(self.stdio_log, False)
+
+            d = self.runCommand(cmd)
+
+            def evaluateCommand(cmd):
+                if cmd.didFail():
+                    log.msg("Source step failed while cleaning the workdir  %s" % cmd)
+
+                self.finish(RETRY)
+                self.ended = True
+                return cmd.rc
+
+            d.addCallback(lambda _: evaluateCommand(cmd))
+            return d
+
+        return defer.succeed(None)
+
     def cleanWorkdir(self):
         cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron})
+                                                'logEnviron': self.logEnviron}, collectStdout=True)
+        cmd.useLog(self.stdio_log, False)
+        d = self.runCommand(cmd)
+        def evaluateCommand(cmd):
+            if cmd.didFail():
+                log.msg("Source step failed while cleaning the workdir  %s" % cmd)
+            return cmd.rc
+        d.addCallback(lambda _: evaluateCommand(cmd))
+        return d
+
+    def cleanHgDir(self):
+        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir + '/.hg',
+                                                'logEnviron': self.logEnviron}, collectStdout=True)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         return d
 
-    def clobber(self, _):
-        d = self.cleanWorkdir()
-        d.addCallback(lambda _: self._dovccmd(['clone', '--uncompressed', '--noupdate'
-                                               , self.repourl, "."]))
+    def cloneAndUpdate(self):
+        d = self._dovccmd(['clone', '--uncompressed', '--noupdate', self.repourl, "."])
         d.addCallback(self._update)
+        return d
+
+    def clobber(self, _):
+        d = self.cleanHgDir()
+        d.addCallback(lambda _: self.cleanWorkdir())
+        d.addCallback(lambda rc: self._requestReboot() if self.shouldReboot(rc)
+                        else self.cloneAndUpdate())
         return d
 
     def fresh(self, _):
@@ -209,6 +269,8 @@ class Mercurial(Source):
         return d
 
     def finish(self, res):
+        if self.ended:
+            return
         d = defer.succeed(res)
         def _gotResults(results):
             self.setStatus(self.cmd, results)
@@ -218,6 +280,9 @@ class Mercurial(Source):
         return d
 
     def parseGotRevision(self, _):
+        if self.ended:
+            return
+
         d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
         def _setrev(stdout):
             revision = stdout.strip()
@@ -312,7 +377,7 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/hgrc',
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)

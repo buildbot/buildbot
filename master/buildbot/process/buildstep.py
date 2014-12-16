@@ -699,6 +699,7 @@ class BuildStep(object, properties.PropertiesMixin):
             return
 
         log.err(why, "BuildStep.failed; traceback follows")
+        results = EXCEPTION
         try:
             if self.progress:
                 self.progress.finish()
@@ -707,7 +708,9 @@ class BuildStep(object, properties.PropertiesMixin):
             # could use why.getDetailedTraceback() for more information
             self.step_status.setText(["'%s'" % self.name, "exception"])
             self.step_status.setText2(["'%s'" % self.name])
-            self.step_status.stepFinished(EXCEPTION)
+            if isinstance(why, Failure) and (why.type == pb.PBConnectionLost or why.type == error.ConnectionLost):
+                results = RETRY
+            self.step_status.stepFinished(results)
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
             self.step_status.setHidden(hidden)
@@ -724,7 +727,7 @@ class BuildStep(object, properties.PropertiesMixin):
             log.err()
 
         log.msg("BuildStep.failed now firing callback")
-        self.deferred.callback(EXCEPTION)
+        self.deferred.callback(results)
 
     # utility methods that BuildSteps may find useful
 

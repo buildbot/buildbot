@@ -67,6 +67,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
             + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
@@ -107,6 +110,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
@@ -150,6 +156,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
@@ -196,6 +205,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                       logEnviron=True))
             + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
@@ -233,6 +245,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
             + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
@@ -262,6 +277,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
@@ -300,6 +318,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
@@ -340,6 +361,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
             + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
@@ -371,7 +395,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
@@ -406,12 +430,15 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
                                  'http://hg.mozilla.org/stable'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
@@ -443,7 +470,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 1, # does not exist
             ExpectShell(workdir='wkdir',
@@ -480,7 +507,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
@@ -517,7 +544,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
@@ -559,7 +586,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
@@ -606,7 +633,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -645,7 +672,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -655,6 +682,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
             + ExpectShell.log('stdio', stdout='default')
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True))
@@ -689,7 +719,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
             + 0,
-            Expect('stat', dict(file='wkdir/.hg',
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -736,6 +766,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=True))
             + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=True))
             + 0,
@@ -777,6 +810,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('stat', dict(file='wkdir/.hg/wlock',
                                 logEnviron=False))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=False))
             + 0,
             Expect('rmdir', dict(dir='wkdir',
                                       logEnviron=False))

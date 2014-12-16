@@ -17,6 +17,9 @@ class Hg(Mercurial):
 
     @defer.inlineCallbacks
     def parseChanges(self, _):
+        if self.ended:
+            return
+
         sourcestamps_updated = self.build.build_status.getAllGotRevisions()
 
         buildLatestRev = self.build.getProperty("buildLatestRev", False)
