@@ -219,7 +219,7 @@ class Mercurial(Source):
 
             def evaluateCommand(cmd):
                 if cmd.didFail():
-                    log.msg("Source step failed while cleaning the workdir  %s" % cmd)
+                    log.msg("Source step failed while requesting reboot %s" % cmd)
 
                 self.finish(RETRY)
                 self.ended = True
