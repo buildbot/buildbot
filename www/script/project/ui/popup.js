@@ -400,52 +400,52 @@ define(function (require) {
                                 popup.validateForm($elem);
 
                                 //Setup AJAX form and instant builds
-                                var $form = $elem.find('form'),
-                                    formOptions = {
-                                        beforeSerialize: function () {
-                                            // Trim revision fields
-                                            $.each($form.find("[name*=_revision]"), function (i, el) {
-                                                var $el = $(el);
-                                                $el.val($.trim($el.val()));
-                                            });
-                                        },
-                                        beforeSubmit: function () {
-                                            $elem.hidePopup();
-                                            $("#preloader").preloader("hidePreloader");
+                                require(["rtGlobal"], function (rtGlobal) {
+                                    var $form = $elem.find('form'),
+                                        formOptions = {
+                                            beforeSerialize: function () {
+                                                // Trim revision fields
+                                                $.each($form.find("[name*=_revision]"), function (i, el) {
+                                                    var $el = $(el);
+                                                    $el.val($.trim($el.val()));
+                                                });
+                                            },
+                                            beforeSubmit: function () {
+                                                $elem.hidePopup();
+                                                $("#preloader").preloader("hidePreloader");
 
-                                            require(["rtGlobal"], function (rtGlobal) {
                                                 if (rtGlobal.isKatanaLoaded()) {
                                                     return confirm('The build load is currently very high, if possible ' +
                                                     'please wait until the build load goes down. \n\nAre you sure ' +
                                                     'you want to request this build?');
                                                 }
-                                            });
-                                        },
-                                        success: function (data) {
-                                            if (redirectToBuilder) {
-                                                window.location.href = builderURL;
+                                            },
+                                            success: function (data) {
+                                                if (redirectToBuilder) {
+                                                    window.location.href = builderURL;
+                                                }
+                                                requirejs(['realtimePages'], function (realtimePages) {
+                                                    var name = dataReturnPage.replace("_json", "");
+                                                    realtimePages.updateSingleRealTimeData(name, data);
+                                                });
+                                                $("#preloader").preloader("hidePreloader");
+
+                                                toastr.info('Your build will start shortly', 'Info', {
+                                                    iconClass: 'info'
+                                                });
+                                            },
+                                            error: function () {
+                                                $("#preloader").preloader("hidePreloader");
+                                                errorCreatingBuild();
                                             }
-                                            requirejs(['realtimePages'], function (realtimePages) {
-                                                var name = dataReturnPage.replace("_json", "");
-                                                realtimePages.updateSingleRealTimeData(name, data);
-                                            });
-                                            $("#preloader").preloader("hidePreloader");
+                                        };
 
-                                            toastr.info('Your build will start shortly', 'Info', {
-                                                iconClass: 'info'
-                                            });
-                                        },
-                                        error: function () {
-                                            $("#preloader").preloader("hidePreloader");
-                                            errorCreatingBuild();
-                                        }
-                                    };
+                                    $form.ajaxForm(formOptions);
 
-                                $form.ajaxForm(formOptions);
-
-                                if (instantBuild) {
-                                    $form.ajaxSubmit(formOptions);
-                                }
+                                    if (instantBuild) {
+                                        $form.ajaxSubmit(formOptions);
+                                    }
+                                });
                             }
                         });
 
