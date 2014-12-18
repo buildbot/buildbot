@@ -179,7 +179,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             schedulers = {},
             builders = [],
             slaves = [],
-            projects = [],
+            projects = {},
             change_sources = [],
             status = [],
             user_managers = [],

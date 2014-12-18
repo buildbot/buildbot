@@ -167,3 +167,17 @@ class MakeDirectory(buildstep.BuildStep):
             self.finished(FAILURE)
             return
         self.finished(SUCCESS)
+
+
+class RequestGracefulDisconnect(buildstep.LoggingBuildStep):
+    name='Request Graceful Disconnect'
+    description='Requesting the slave to disconnect gracefully'
+    descriptionDone='Slave gracefully disconnected'
+
+    def __init__(self, **kwargs):
+        buildstep.LoggingBuildStep.__init__(self, **kwargs)
+
+    def start(self):
+        self.build.slavebuilder.slave.slave_status.setGraceful(True)
+        self.finished(SUCCESS)
+        return
