@@ -11,7 +11,7 @@
 {% if categories|length > 1 %}
  <p><b>Categories:</b>
  {% for c in categories %}
-  <a href="/waterfall?category={{ c }}">{{ c }}</a> &nbsp;
+  <a href="?category={{ c }}">{{ c }}</a> &nbsp;
  {% endfor -%}
  </p>
 {% endif %}
