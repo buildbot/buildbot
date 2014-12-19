@@ -618,6 +618,8 @@ The parameters are just the basics:
 
 ``properties``
 
+``reason``
+
 ``codebases``
     See :ref:`Configuring-Schedulers`.
 
