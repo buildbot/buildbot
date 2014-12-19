@@ -1,0 +1,4 @@
+div
+    label(ng-repeat="(key,answer) in data.answers")
+        input(type="radio", ng-model="data.value", ng-change="changeSettings(data.name, answer)", ng-value="answer")
+        | {{ key }}
