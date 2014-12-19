@@ -16,6 +16,8 @@ Features
 ~~~~~~~~
 
 
+* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
+
 Fixes
 ~~~~~
 
