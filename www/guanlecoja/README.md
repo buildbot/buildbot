@@ -176,6 +176,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.3.6: Prebuild most of the dependencies. node_modules dir is now  100MB smaller
 * 0.3.5: doc update with yo support
 * 0.3.4: fix error handling due to api change from gulp-if
 * 0.3.2: add help screen
