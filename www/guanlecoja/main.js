@@ -1,68 +1,76 @@
 (function() {
-  var _, annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, lazypipe, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, wrap,
+  var _, annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, lazypipe, less, lr, ngClassify, path, remember, rename, run_sequence, serveStatic, sourcemaps, templateCache, uglify, vendors, wrap,
     indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  run_sequence = require('run-sequence');
+  require("./vendors");
 
-  require("coffee-script/register");
-
-  path = require('path');
-
-  fs = require('fs');
-
-  _ = require('lodash');
-
-  argv = require('minimist')(process.argv.slice(2));
+  vendors = global.vendors;
 
   ngClassify = require('gulp-ng-classify');
 
-  gif = require('gulp-if');
-
-  sourcemaps = require('gulp-sourcemaps');
-
-  coffee = require('gulp-coffee');
-
-  gutil = require('gulp-util');
-
-  annotate = require('gulp-ng-annotate');
-
-  concat = require('gulp-concat');
-
-  cached = require('gulp-cached');
+  path = require('path');
 
   karma = require('gulp-karma');
 
-  remember = require('gulp-remember');
+  path = vendors.path;
 
-  uglify = require('gulp-uglify');
+  fs = vendors.fs;
 
-  jade = require('gulp-jade');
+  _ = vendors._;
 
-  wrap = require('gulp-wrap');
+  argv = vendors.minimist(process.argv.slice(2));
 
-  rename = require('gulp-rename');
+  run_sequence = vendors.run_sequence;
 
-  bower = require('gulp-bower-deps');
+  gif = vendors.gif;
 
-  templateCache = require('gulp-angular-templatecache');
+  sourcemaps = vendors.sourcemaps;
 
-  lr = require('gulp-livereload');
+  coffee = vendors.coffee;
 
-  cssmin = require('gulp-minify-css');
+  gutil = vendors.gutil;
 
-  less = require('gulp-less');
+  annotate = vendors.annotate;
 
-  fixtures2js = require('gulp-fixtures2js');
+  concat = vendors.concat;
 
-  gulp_help = require('gulp-help');
+  cached = vendors.cached;
 
-  lazypipe = require('lazypipe');
+  remember = vendors.remember;
 
-  connect = require('connect');
+  uglify = vendors.uglify;
+
+  jade = vendors.jade;
+
+  wrap = vendors.wrap;
+
+  rename = vendors.rename;
+
+  bower = vendors.bower;
+
+  templateCache = vendors.templateCache;
+
+  lr = vendors.lr;
+
+  cssmin = vendors.cssmin;
+
+  less = vendors.less;
+
+  fixtures2js = vendors.fixtures2js;
+
+  gulp_help = vendors.gulp_help;
+
+  lazypipe = vendors.lazypipe;
+
+  connect = vendors.connect;
+
+  serveStatic = vendors["static"];
+
+  require("coffee-script/register");
 
   module.exports = function(gulp) {
     var buildConfig, catch_errors, coffeeCompile, config, coverage, defaultHelp, dev, devHelp, jadeCompile, notests, prod, ref, script_sources;
-    run_sequence.use(gulp);
+    run_sequence = run_sequence.use(gulp);
     gulp = gulp_help(gulp, {
       afterPrintCallback: function(tasks) {
         console.log(gutil.colors.underline("Options:"));
@@ -86,9 +94,9 @@
     }
     bower = bower(config.bower);
     bower.installtask(gulp);
-    require('rimraf').sync(config.dir.build);
+    vendors.rimraf.sync(config.dir.build);
     if (coverage) {
-      require('rimraf').sync(config.dir.coverage);
+      vendors.rimraf.sync(config.dir.coverage);
     }
     if (notests) {
       config.testtasks = ["notests"];
@@ -207,13 +215,19 @@
       return gulp.src(config.files.index).pipe(catch_errors(jade())).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('server', false, ['index'], function(next) {
+      var app;
       if (config.devserver != null) {
-        return connect().use(connect["static"](config.dir.build)).listen(config.devserver.port, next);
+        app = connect();
+        app.use(serveStatic(config.dir.build));
+        return app.listen(config.devserver.port);
       } else {
         return next();
       }
     });
     gulp.task("watch", false, function() {
+      lr.listen({
+        livereload: path.join(__dirname, "livereload.js")
+      });
       gulp.watch(script_sources, ["scripts"]);
       gulp.watch(config.files.templates, ["templates"]);
       gulp.watch(config.files.tests, ["tests"]);

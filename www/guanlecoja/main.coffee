@@ -1,42 +1,54 @@
-run_sequence = require 'run-sequence'
-require("coffee-script/register")
+require "./vendors"
+vendors = global.vendors
+
+# Stuff that we can't import via browserify
+
+# runsequence needs to be at the same level as gulp
+# ng-classify is in coffee, so it does not work with browserify out of the box
+ngClassify = require 'gulp-ng-classify'
+path = require 'path'
+# karma does not work with browserify
+karma = require 'gulp-karma'
+
 
 # utilities
-path = require('path')
-fs = require('fs')
-_ = require('lodash')
+path = vendors.path
+fs = vendors.fs
+_ = vendors._
 
-argv = require('minimist')(process.argv.slice(2))
+argv = vendors.minimist(process.argv.slice(2))
 
 # gulp plugins
-ngClassify = require 'gulp-ng-classify'
-gif = require 'gulp-if'
-sourcemaps = require 'gulp-sourcemaps'
-coffee = require 'gulp-coffee'
-gutil = require 'gulp-util'
-annotate = require 'gulp-ng-annotate'
-concat = require 'gulp-concat'
-cached = require 'gulp-cached'
-karma = require 'gulp-karma'
-remember = require 'gulp-remember'
-uglify = require 'gulp-uglify'
-jade = require 'gulp-jade'
-wrap = require 'gulp-wrap'
-rename = require 'gulp-rename'
-bower = require 'gulp-bower-deps'
-templateCache = require 'gulp-angular-templatecache'
-lr = require 'gulp-livereload'
-cssmin = require 'gulp-minify-css'
-less = require 'gulp-less'
-fixtures2js = require 'gulp-fixtures2js'
-gulp_help = require 'gulp-help'
-lazypipe = require('lazypipe')
+
+run_sequence = vendors.run_sequence
+gif = vendors.gif
+sourcemaps = vendors.sourcemaps
+coffee = vendors.coffee
+gutil = vendors.gutil
+annotate = vendors.annotate
+concat = vendors.concat
+cached = vendors.cached
+remember = vendors.remember
+uglify = vendors.uglify
+jade = vendors.jade
+wrap = vendors.wrap
+rename = vendors.rename
+bower = vendors.bower
+templateCache = vendors.templateCache
+lr = vendors.lr
+cssmin = vendors.cssmin
+less = vendors.less
+fixtures2js = vendors.fixtures2js
+gulp_help = vendors.gulp_help
+lazypipe = vendors.lazypipe
 
 # dependencies for webserver
-connect = require('connect')
+connect = vendors.connect
+serveStatic = vendors.static
+require "coffee-script/register"
 
 module.exports =  (gulp) ->
-    run_sequence.use(gulp)
+    run_sequence = run_sequence.use(gulp)
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
     gulp = gulp_help gulp, afterPrintCallback: (tasks) ->
         console.log(gutil.colors.underline("Options:"))
@@ -67,10 +79,10 @@ module.exports =  (gulp) ->
 
     # first thing, we remove the build dir
     # we do it synchronously to simplify things
-    require('rimraf').sync(config.dir.build)
+    vendors.rimraf.sync(config.dir.build)
 
     if coverage
-        require('rimraf').sync(config.dir.coverage)
+        vendors.rimraf.sync(config.dir.coverage)
 
     if notests
         config.testtasks = ["notests"]
@@ -244,13 +256,14 @@ module.exports =  (gulp) ->
     # Run server.
     gulp.task 'server', false, ['index'], (next) ->
         if config.devserver?
-            connect()
-            .use(connect.static(config.dir.build))
-            .listen(config.devserver.port, next)
+            app = connect()
+            app.use(serveStatic(config.dir.build))
+            app.listen(config.devserver.port)
         else
             next()
 
     gulp.task "watch", false, ->
+        lr.listen(livereload:path.join(__dirname,"livereload.js"))
         # karma own watch mode is used. no need to restart karma
         gulp.watch(script_sources, ["scripts"])
         gulp.watch(config.files.templates, ["templates"])
