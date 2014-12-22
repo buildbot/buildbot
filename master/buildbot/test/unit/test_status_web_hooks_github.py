@@ -141,6 +141,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
+        self.request.received_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-GitHub-Event': 'push'}
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -199,6 +202,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
+        self.request.received_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-GitHub-Event': 'push'}
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -235,6 +241,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequest()
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
+        self.request.received_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-GitHub-Event': 'push'}
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -252,6 +261,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
+        self.request.received_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-GitHub-Event': 'push'}
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -267,6 +279,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
+        self.request.received_headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-GitHub-Event': 'push'}
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
