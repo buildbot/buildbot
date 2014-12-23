@@ -98,6 +98,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add ``try_ssh`` configuration file setting and ``--ssh`` command line option for the try tool to specify the command to use for connecting to the build master.
 
+* GitHub change hook now supports application/json format.
+
 Fixes
 ~~~~~
 
@@ -176,6 +178,8 @@ Fixes
 * The build properties are now stored in the database in the ``build_properties`` table.
 
 * The list of changes in the build page now displays all the changes since the last sucessful build.
+
+* GitHub change hook now correctly responds to ping events.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
