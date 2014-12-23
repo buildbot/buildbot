@@ -41,6 +41,10 @@ class FakeRequest(Mock):
         self.site = Mock()
         self.site.buildbot_service = Mock()
         master = self.site.buildbot_service.master = Mock()
+        self.uri = '/'
+        self.prepath = []
+        self.method = 'GET'
+        self.received_headers = {}
 
         self.addedChanges = []
 
@@ -50,6 +54,9 @@ class FakeRequest(Mock):
         master.addChange = addChange
 
         self.deferred = defer.Deferred()
+
+    def getHeader(self, key):
+        return self.received_headers.get(key)
 
     def write(self, data):
         self.written = self.written + data

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import re
+import logging
 
 from dateutil.parser import parse as dateparse
 from twisted.python import log
@@ -33,15 +34,40 @@ def getChanges(request, options=None):
         request
             the http request object
     """
-    payload = json.loads(request.args['payload'][0])
-    user = payload['repository']['owner']['name']
+
+    event_type = request.getHeader("X-GitHub-Event")
+    log.msg("X-GitHub-Event: %r" % event_type, logLevel=logging.DEBUG)
+
+    if event_type == "ping":
+        return ([], 'git')
+
+    # Reject non-push, non-ping events
+    if event_type != "push":
+        raise ValueError(
+            "Rejecting request.  Expected a push event but received %r instead." % event_type)
+
+    content_type = request.getHeader("Content-Type")
+
+    if content_type == "application/json":
+        payload = json.loads(request.content.read())
+    elif content_type == "application/x-www-form-urlencoded":
+        payload = json.loads(request.args["payload"][0])
+    else:
+        raise ValueError(
+            "Rejecting request.  Unknown 'Content-Type', received %r" % content_type)
+
+    log.msg("Payload: %r" % payload, logLevel=logging.DEBUG)
+
+    # This field is unused:
+    user = None
+    # user = payload['pusher']['name']
     repo = payload['repository']['name']
     repo_url = payload['repository']['url']
     project = request.args.get('project', [''])[0]
     # This field is unused:
     # private = payload['repository']['private']
     changes = process_change(payload, user, repo, repo_url, project)
-    log.msg("Received %s changes from github" % len(changes))
+    log.msg("Received %d changes from github" % len(changes))
     return (changes, 'git')
 
 
@@ -55,7 +81,6 @@ def process_change(payload, user, repo, repo_url, project, codebase=None):
             Hook.
     """
     changes = []
-    newrev = payload['after']
     refname = payload['ref']
 
     # We only care about regular heads, i.e. branches
@@ -64,7 +89,7 @@ def process_change(payload, user, repo, repo_url, project, codebase=None):
         log.msg("Ignoring refname `%s': Not a branch" % refname)
     else:
         branch = match.group(1)
-        if re.match(r"^0*$", newrev):
+        if payload.get('deleted') is True:
             log.msg("Branch `%s' deleted, ignoring" % branch)
         else:
             for commit in payload['commits']:
