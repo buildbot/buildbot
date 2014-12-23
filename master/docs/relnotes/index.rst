@@ -14,8 +14,12 @@ Master
 Features
 ~~~~~~~~
 
+* GitHub change hook now supports application/json format.
+
 Fixes
 ~~~~~
+
+* GitHub change hook now correctly responds to ping events.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

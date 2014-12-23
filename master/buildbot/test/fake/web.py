@@ -47,6 +47,7 @@ class FakeRequest(Mock):
         self.uri = '/'
         self.prepath = []
         self.method = 'GET'
+        self.received_headers = {}
         master = webstatus.master = fakemaster.make_master()
 
         webstatus.setUpJinja2()
@@ -59,6 +60,9 @@ class FakeRequest(Mock):
         master.addChange = addChange
 
         self.deferred = defer.Deferred()
+
+    def getHeader(self, key):
+        return self.received_headers.get(key)
 
     def write(self, data):
         self.written = self.written + data
