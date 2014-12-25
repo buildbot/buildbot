@@ -63,7 +63,7 @@ class ForceSchedulersEndpoint(base.Endpoint):
         /forceschedulers
         /builders/:builderid/forceschedulers
     """
-    rootLinkName = 'schedulers'
+    rootLinkName = 'forceschedulers'
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

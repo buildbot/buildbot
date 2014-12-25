@@ -64,7 +64,7 @@ class BuildslaveEndpoint(Db2DataMixin, base.Endpoint):
 class BuildslavesEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
-    rootLinkName = 'slaves'
+    rootLinkName = 'buildslaves'
     pathPatterns = """
         /buildslaves
         /masters/n:masterid/buildslaves

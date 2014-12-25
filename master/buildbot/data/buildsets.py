@@ -80,7 +80,7 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     pathPatterns = """
         /buildsets
     """
-    rootLinkName = 'buildset'
+    rootLinkName = 'buildsets'
 
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
