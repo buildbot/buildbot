@@ -82,9 +82,10 @@ BaseScheduler
     The following methods are available for subclasses to queue new builds.
     Each creates a new buildset with a build request for each builder.
 
-    .. py:method:: addBuildsetForSourceStamps(self, sourcestamps=[], reason='', external_idstring=None, properties=None, builderNames=None)
+    .. py:method:: addBuildsetForSourceStamps(self, sourcestamps=[], waited_for=False, reason='', external_idstring=None, properties=None, builderNames=None)
 
         :param list sourcestamps: a list of full sourcestamp dictionaries or sourcestamp IDs
+        :param boolean waited_for: if true, this buildset is being waited for (and thus should continue during a clean shutdown)
         :param string reason: reason for the build set
         :param string external_idstring: external identifier for the buildset
         :param properties: properties - in addition to those in the scheduler configuration - to include in the buildset
@@ -99,10 +100,11 @@ BaseScheduler
         The first tuple element is the ID of the new buildset.
         The second tuple element is a dictionary mapping builder name to buildrequest ID.
 
-    .. py:method:: addBuildsetForSourceStampsWithDefaults(reason, sourcestamps, properties=None, builderNames=None)
+    .. py:method:: addBuildsetForSourceStampsWithDefaults(reason, sourcestamps, waited_for=False, properties=None, builderNames=None)
 
         :param string reason: reason for the build set
         :param list sourcestamps: partial list of source stamps to build
+        :param boolean waited_for: if true, this buildset is being waited for (and thus should continue during a clean shutdown)
         :param dict properties: properties - in addition to those in the scheduler configuration - to include in the buildset
         :type properties: :py:class:`~buildbot.process.properties.Properties` instance
         :param list builderNames: a list of builders for the buildset, or None to use the scheduler's configured ``builderNames``
@@ -115,8 +117,9 @@ BaseScheduler
         If ``sourcestamps`` is None, then only the defaults will be used.
         If ``sourcestamps`` includes sourcestamps for codebases not configured on the scheduler, they will be included anyway, although this is probably a sign of an incorrect configuration.
 
-    .. py:method:: addBuildsetForChanges(reason='', external_idstring=None, changeids=[], builderNames=None, properties=None)
+    .. py:method:: addBuildsetForChanges(waited_for=False, reason='', external_idstring=None, changeids=[], builderNames=None, properties=None)
 
+        :param boolean waited_for: if true, this buildset is being waited for (and thus should continue during a clean shutdown)
         :param string reason: reason for the build set
         :param string external_idstring: external identifier for the buildset
         :param list changeids: changes from which to construct the buildset
