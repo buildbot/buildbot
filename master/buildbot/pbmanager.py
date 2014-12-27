@@ -121,15 +121,22 @@ class Dispatcher(service.AsyncService):
         self.portal.registerChecker(self)
         self.serverFactory = pb.PBServerFactory(self.portal)
         self.serverFactory.unsafeTracebacks = True
-        self.port = strports.listen(portstr, self.serverFactory)
+        self.port = None
 
     def __repr__(self):
         return "<pbmanager.Dispatcher for %s on %s>" % \
             (", ".join(self.users.keys()), self.portstr)
 
+    def startService(self):
+        assert not self.port
+        self.port = strports.listen(self.portstr, self.serverFactory)
+        return service.AsyncService.startService(self)
+
     def stopService(self):
         # stop listening on the port when shut down
-        d = defer.maybeDeferred(self.port.stopListening)
+        assert self.port
+        port, self.port = self.port, None
+        d = defer.maybeDeferred(port.stopListening)
         d.addCallback(lambda _: service.AsyncService.stopService(self))
         return d
 

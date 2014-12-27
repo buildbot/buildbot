@@ -182,12 +182,13 @@ class ClusteredService(service.Service, util.ComparableMixin):
 
 class AsyncService(service.Service):
 
+    @defer.inlineCallbacks
     def setServiceParent(self, parent):
         if self.parent is not None:
-            self.disownServiceParent()
+            yield self.disownServiceParent()
         parent = service.IServiceCollection(parent, parent)
         self.parent = parent
-        return self.parent.addService(self)
+        yield self.parent.addService(self)
 
 
 class AsyncMultiService(AsyncService, service.MultiService):
