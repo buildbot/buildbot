@@ -62,7 +62,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         /changes
         /builds/n:buildid/changes
     """
-    rootLinkName = 'change'
+    rootLinkName = 'changes'
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):

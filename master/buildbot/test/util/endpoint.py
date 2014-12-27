@@ -123,3 +123,12 @@ class EndpointMixin(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.ep.control)
         def control(self, action, args, kwargs):
             pass
+
+    def test_rootLinkName(self):
+        rootLinkName = self.ep.rootLinkName
+        if not rootLinkName:
+            return
+        try:
+            self.assertEqual(self.matcher[(rootLinkName,)][0], self.ep)
+        except KeyError:
+            self.fail('No match for rootlink: ' + rootLinkName)
