@@ -276,6 +276,7 @@ class BuildStep(results.ResultComputingConfigMixin,
              'descriptionDone',
              'descriptionSuffix',
              'logEncoding',
+             'workdir',
              ]
 
     name = "generic"
@@ -292,6 +293,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     logEncoding = None
     cmd = None
     rendered = False  # true if attributes are rendered
+    workdir = None
     _waitingForLocks = False
     _run_finished_hook = lambda self: None  # for tests
 
@@ -331,6 +333,16 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setDefaultWorkdir(self, workdir):
         pass
+
+    def getWorkdir(self):
+        # default the workdir appropriately
+        if self.workdir is not None:
+            return self.workdir
+        else:
+            if callable(self.build.workdir):
+                return self.build.workdir(self.build.sources)
+            else:
+                return self.build.workdir
 
     def addFactoryArguments(self, **kwargs):
         # this is here for backwards compatibility
@@ -1094,12 +1106,8 @@ class ShellMixin(object):
         kwargs['env'] = yield self.build.render(builderEnv)
         kwargs['env'].update(self.env)
         kwargs['stdioLogName'] = stdioLogName
-        # default the workdir appropriately
-        if not self.workdir:
-            if callable(self.build.workdir):
-                kwargs['workdir'] = self.build.workdir(self.build.sources)
-            else:
-                kwargs['workdir'] = self.build.workdir
+
+        kwargs['workdir'] = self.getWorkdir()
 
         # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(**kwargs)
