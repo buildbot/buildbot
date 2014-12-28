@@ -76,6 +76,10 @@ class FakeSourceStamp(object):
     def asDict(self, includePatch=True):
         return self.__dict__.copy()
 
+
+class FakeSchedulerManager(object):
+    pass
+
 # Magic numbers that relate brid to other build settings
 BRID_TO_BSID = lambda brid: brid + 2000
 BRID_TO_BID = lambda brid: brid + 3000
@@ -105,13 +109,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.build.builder.botmaster = m.botmaster
         m.status = master.Status(m)
         m.config.buildbotURL = "baseurl/"
+        m.scheduler_manager = FakeSchedulerManager()
 
         self.scheduler_a = a = FakeTriggerable(name='a')
         self.scheduler_b = b = FakeTriggerable(name='b')
-
-        def allSchedulers():
-            return [a, b]
-        m.allSchedulers = allSchedulers
+        m.scheduler_manager.namedServices = dict(a=a, b=b)
 
         a.brids = {77: 11}
         b.brids = {78: 22}
@@ -275,12 +277,14 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         d.addCallback(flush)
         return d
 
+    @defer.inlineCallbacks
     def test_bogus_scheduler(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'x']))
         # bogus scheduler is an exception, not a failure (dont blame the patch)
         self.expectOutcome(result=EXCEPTION)
         self.expectTriggeredWith(a=None)  # a is not triggered!
-        return self.runStep()
+        yield self.runStep()
+        self.flushLoggedErrors(ValueError)
 
     def test_updateSourceStamp(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],

@@ -84,33 +84,27 @@ class Trigger(BuildStep):
             self.ended = True
 
     # Create the properties that are used for the trigger
-    def createTriggerProperties(self):
+    def createTriggerProperties(self, properties):
         # make a new properties object from a dict rendered by the old
         # properties object
         trigger_properties = Properties()
-        trigger_properties.update(self.set_properties, "Trigger")
+        trigger_properties.update(properties, "Trigger")
         return trigger_properties
 
-    # Get all scheduler instances that were configured
-    # A tuple of (triggerables, invalidnames) is returned
-    def getSchedulers(self):
-        all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
-        all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
-        invalid_schedulers = []
-        triggered_schedulers = []
-        # don't fire any schedulers if we discover an unknown one
-        for scheduler in self.schedulerNames:
-            scheduler = scheduler
-            if scheduler in all_schedulers:
-                sch = all_schedulers[scheduler]
-                if ITriggerableScheduler.providedBy(sch):
-                    triggered_schedulers.append(sch)
-                else:
-                    invalid_schedulers.append(scheduler)
-            else:
-                invalid_schedulers.append(scheduler)
+    def getSchedulerByName(self, name):
+        # we use the fact that scheduler_manager is a multiservice, with schedulers as childs
+        # this allow to quickly find schedulers instance by name
+        schedulers = self.master.scheduler_manager.namedServices
+        if name not in schedulers:
+            raise ValueError("unknown triggered scheduler: %r" % (name,))
+        sch = schedulers[name]
+        if not ITriggerableScheduler.providedBy(sch):
+            raise ValueError("triggered scheduler is not ITriggerableScheduler: %r" % (name,))
+        return sch
 
-        return (triggered_schedulers, invalid_schedulers)
+    # This customization enpoint allows users to dynamically select which scheduler and properties to trigger
+    def getSchedulersAndProperties(self):
+        return [(sched, self.set_properties) for sched in self.schedulerNames]
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -170,22 +164,23 @@ class Trigger(BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        # Get all triggerable schedulers and check if there are invalid schedules
-        (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
-        if invalid_schedulers:
-            log.msg("Invalid triggered schedulers: %r" % (invalid_schedulers,))
-            defer.returnValue(EXCEPTION)
+        schedulers_and_props = yield self.getSchedulersAndProperties()
 
-        self.running = True
-
-        props_to_set = self.createTriggerProperties()
+        # post process the schedulernames, and raw properties
+        # we do this out of the loop, as this can result in errors
+        schedulers_and_props = [(
+            self.getSchedulerByName(sch),
+            self.createTriggerProperties(props_to_set))
+            for sch, props_to_set in schedulers_and_props]
 
         ss_for_trigger = self.prepareSourcestampListForTrigger()
 
         dl = []
         triggeredNames = []
         results = SUCCESS
-        for sch in triggered_schedulers:
+        self.running = True
+
+        for sch, props_to_set in schedulers_and_props:
             idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
                 set_props=props_to_set,
