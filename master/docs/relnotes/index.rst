@@ -280,6 +280,18 @@ Changes and Removals
   - categories parameter is deprecated and removed. It should be replaced with tags=[cat]
   - noticeOnChannel parameter is deprecated and removed.
 
+* workdir behavior has been unified:
+
+  - getWorkdir() is now in :py:class:`~buildbot.process.buildstep.BuildStep`, and choose the workdir given following priority:
+
+        * workdir of the step, if defined
+
+        * workdir of the codebase, if defined
+
+        * workdir of the builder (itself defaults to 'build')
+
+    - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
