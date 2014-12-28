@@ -151,6 +151,7 @@ BuildStep
 
         This method is called at build startup with the default workdir for the build.
         Steps which allow a workdir to be specified, but want to override it with the build's default workdir, can use this method to apply the default.
+
         .. note::
 
            This method is deprecated and should not be used anymore, as workdir is now a buildstep base argument

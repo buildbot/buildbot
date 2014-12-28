@@ -117,6 +117,7 @@ class RpmBuild(ShellCommand):
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
         kwargs['command'] = self.command
+        kwargs['workdir'] = self.getWorkdir()
         cmd = buildstep.RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.startCommand(cmd)

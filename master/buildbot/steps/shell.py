@@ -127,6 +127,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # everything left over goes to the RemoteShellCommand
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
+        self.remote_kwargs['workdir'] = workdir
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)

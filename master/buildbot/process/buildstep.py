@@ -332,7 +332,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.buildslave = buildslave
 
     def setDefaultWorkdir(self, workdir):
-        pass
+        if self.workdir is None:
+            self.workdir = workdir
 
     def getWorkdir(self):
         # default the workdir appropriately
@@ -1012,7 +1013,6 @@ class CommandMixin(object):
 class ShellMixin(object):
 
     command = None
-    workdir = None
     env = {}
     want_stdout = True
     want_stderr = True

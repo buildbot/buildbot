@@ -66,7 +66,7 @@ class BuildStepMixin(object):
     # utilities
 
     def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
-                  buildFiles=[]):
+                  buildFiles=[], wantDefaultWorkdir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
@@ -149,8 +149,8 @@ class BuildStepMixin(object):
             addLogObserver(n, o)
 
         # set defaults
-
-        step.setDefaultWorkdir('wkdir')
+        if wantDefaultWorkdir:
+            step.setDefaultWorkdir('wkdir')
 
         # expectations
 
