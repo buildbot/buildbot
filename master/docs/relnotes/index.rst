@@ -14,6 +14,8 @@ Master
 Features
 ~~~~~~~~
 
+* :bb:step:`Git` supports an "origin" option to give a name to the remote repo.
+
 Fixes
 ~~~~~
 
