@@ -282,7 +282,7 @@ Changes and Removals
 
 * workdir behavior has been unified:
 
-  - getWorkdir() is now in :py:class:`~buildbot.process.buildstep.BuildStep`, and choose the workdir given following priority:
+  - ``workdir`` attribute of steps is now a property in :py:class:`~buildbot.process.buildstep.BuildStep`, and choose the workdir given following priority:
 
         * workdir of the step, if defined
 
