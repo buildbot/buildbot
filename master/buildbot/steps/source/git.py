@@ -570,35 +570,32 @@ class Git(Source):
         d.addCallback(applyAlready)
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         if self.slaveVersionIsOlderThan('listdir', '2.16'):
-            d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+            git_path = self.build.path_module.join(self.workdir, '.git')
+            exists = yield self.pathExists(git_path)
 
-            def checkWithPathExists(exists):
-                if(exists):
-                    return "update"
-                else:
-                    return "clone"
+            if exists:
+                defer.returnValue("update")
 
-            d.addCallback(checkWithPathExists)
-        else:
-            cmd = buildstep.RemoteCommand('listdir',
-                                          {'dir': self.workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
+            defer.returnValue("clone")
 
-            def checkWithListdir(_):
-                if 'files' not in cmd.updates:
-                    # no files - directory doesn't exist
-                    return "clone"
-                files = cmd.updates['files'][0]
-                if '.git' in files:
-                    return "update"
-                elif len(files) > 0:
-                    return "clobber"
-                else:
-                    return "clone"
-            d.addCallback(checkWithListdir)
-        return d
+        cmd = buildstep.RemoteCommand('listdir',
+                                      {'dir': self.workdir,
+                                       'logEnviron': self.logEnviron,
+                                       'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if 'files' not in cmd.updates:
+            # No files - directory doesn't exist.
+            defer.returnValue("clone")
+
+        files = cmd.updates['files'][0]
+        if '.git' in files:
+            defer.returnValue("update")
+        elif len(files) > 0:
+            defer.returnValue("clobber")
+
+        defer.returnValue("clone")
