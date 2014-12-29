@@ -267,7 +267,7 @@ class FileUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        self.checkSlaveVersion("uploadFile")
+        self.checkSlaveHasCommand("uploadFile")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -328,7 +328,7 @@ class DirectoryUpload(_TransferBuildStep):
         self.url = url
 
     def start(self):
-        self.checkSlaveVersion("uploadDirectory")
+        self.checkSlaveHasCommand("uploadDirectory")
 
         source = self.slavesrc
         masterdest = self.masterdest
@@ -454,9 +454,9 @@ class MultipleFileUpload(_TransferBuildStep):
             self.addURL(os.path.basename(masterdest), self.url)
 
     def start(self):
-        self.checkSlaveVersion("uploadDirectory")
-        self.checkSlaveVersion("uploadFile")
-        self.checkSlaveVersion("stat")
+        self.checkSlaveHasCommand("uploadDirectory")
+        self.checkSlaveHasCommand("uploadFile")
+        self.checkSlaveHasCommand("stat")
 
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.slavesrcs
@@ -554,7 +554,7 @@ class FileDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        self.checkSlaveVersion("downloadFile")
+        self.checkSlaveHasCommand("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
@@ -616,7 +616,7 @@ class StringDownload(_TransferBuildStep):
 
     def start(self):
         # we use 'downloadFile' remote command on the slave
-        self.checkSlaveVersion("downloadFile")
+        self.checkSlaveHasCommand("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that

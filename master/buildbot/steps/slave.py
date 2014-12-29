@@ -321,7 +321,7 @@ class CompositeStepMixin():
                                      evaluateCommand=commandComplete)
 
     def getFileContentFromSlave(self, filename, abandonOnFailure=False):
-        self.checkSlaveVersion("uploadFile")
+        self.checkSlaveHasCommand("uploadFile")
         fileWriter = StringFileWriter()
         # default arguments
         args = {

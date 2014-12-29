@@ -652,9 +652,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             return True
         return False
 
-    # Check that buildslave version used have implementation for
-    # a remote command. Raise exception if buildslave is to old.
-    def checkSlaveVersion(self, command):
+    def checkSlaveHasCommand(self, command):
         if not self.slaveVersion(command):
             message = "slave is too old, does not know about %s" % command
             raise BuildSlaveTooOldError(message)

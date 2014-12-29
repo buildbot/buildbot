@@ -342,6 +342,13 @@ BuildStep
 
         This method returns true if ``command`` is not implemented on the slave, or if it is older than ``minversion``.
 
+    .. py:method:: slaveVersionHasCommand(command)
+
+        :param command: command to examine
+        :type command: string
+
+        This method raise BuildSlaveTooOldError if ``command`` is not implemented on the slave
+
     .. py:method:: getSlaveName()
 
         :returns: string

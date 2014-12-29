@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -462,6 +463,33 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.results = FAILURE
         st.description = 'fooing'
         self.checkSummary(st.getResultSummary(), u'fooing (failure)')
+
+    # Test calling checkSlaveHasCommand() when buildslave have support for
+    # requested remote command.
+    def testcheckSlaveHasCommandGood(self):
+        # patch BuildStep.slaveVersion() to return success
+        mockedSlaveVersion = mock.Mock()
+        self.patch(buildstep.BuildStep, "slaveVersion", mockedSlaveVersion)
+
+        # check that no exceptions are raised
+        buildstep.BuildStep().checkSlaveHasCommand("foo")
+
+        # make sure slaveVersion() was called with correct arguments
+        mockedSlaveVersion.assert_called_once_with("foo")
+
+    # Test calling checkSlaveHasCommand() when buildslave is to old to support
+    # requested remote command.
+    def testcheckSlaveHasCommandTooOld(self):
+        # patch BuildStep.slaveVersion() to return error
+        self.patch(buildstep.BuildStep,
+                   "slaveVersion",
+                   mock.Mock(return_value=None))
+
+        # make sure appropriate exception is raised
+        step = buildstep.BuildStep()
+        self.assertRaisesRegexp(BuildSlaveTooOldError,
+                                "slave is too old, does not know about foo",
+                                step.checkSlaveHasCommand, "foo")
 
 
 class TestLoggingBuildStep(unittest.TestCase):
