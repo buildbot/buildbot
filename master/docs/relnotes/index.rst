@@ -105,6 +105,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * :bb:chsrc:`GitPoller` now supports detecting new branches
 
+* :bb:step:`Git` supports an "origin" option to give a name to the remote repo.
+
 Reporters
 ~~~~~~~~~
 
