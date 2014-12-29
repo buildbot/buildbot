@@ -106,7 +106,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
-        kwargs['workdir'] = workdir  # including a copy of 'workdir'
+        # workdir is here first positional argument, but it belongs to BuildStep parent
+        kwargs['workdir'] = workdir
         for k in kwargs.keys()[:]:
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
