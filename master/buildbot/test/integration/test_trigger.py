@@ -25,15 +25,15 @@ from twisted.internet import defer
 expectedOutput = """\
 *** BUILD 1 *** ==> finished (success)
     *** STEP shell *** ==> 'echo hello' (success)
-        log:stdio (45)
+        log:stdio (%(loglines)s)
     *** STEP trigger *** ==> triggered trigsched (success)
        url:trigsched #2 (http://localhost:8080/#buildrequests/2)
        url:success: build #1 (http://localhost:8080/#builders/2/builds/1)
     *** STEP shell_1 *** ==> 'echo world' (success)
-        log:stdio (45)
+        log:stdio (%(loglines)s)
 *** BUILD 2 *** ==> finished (success)
     *** STEP shell *** ==> 'echo ola' (success)
-        log:stdio (45)
+        log:stdio (%(loglines)s)
 """
 
 
@@ -57,7 +57,9 @@ class TriggeringMaster(RunMasterBase):
         self.patch(sys, 'stdout', StringIO.StringIO())
         for b in builds:
             yield self.printBuild(b)
-        self.assertEqual(sys.stdout.getvalue(), expectedOutput)
+        # depending on the environment the number of lines is different between test hosts
+        loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
+        self.assertEqual(sys.stdout.getvalue(), expectedOutput % dict(loglines=loglines))
 
 
 # master configuration
