@@ -68,7 +68,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
     def test_real_cmd(self):
         cmd = [sys.executable, '-c', 'print "hello"']
         self.setupStep(
-            master.MasterShellCommand(command=cmd), wantDefaultWorkdir=False)
+            master.MasterShellCommand(command=cmd))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
         else:
@@ -127,8 +127,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         os.environ['WORLD'] = 'hello'
         self.setupStep(
             master.MasterShellCommand(command=cmd,
-                                      env={'HELLO': '${WORLD}'}),
-            wantDefaultWorkdir=False)
+                                      env={'HELLO': '${WORLD}'}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello\r\n")
         else:
@@ -148,8 +147,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         os.environ['LIST'] = 'world'
         self.setupStep(
             master.MasterShellCommand(command=cmd,
-                                      env={'HELLO': ['${WORLD}', '${LIST}']}),
-            wantDefaultWorkdir=False)
+                                      env={'HELLO': ['${WORLD}', '${LIST}']}))
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "hello;world\r\n")
         else:
@@ -170,8 +168,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             'project')]
         self.setupStep(
             master.MasterShellCommand(command=cmd,
-                                      env={'BUILD': WithProperties('%s', "project")}),
-            wantDefaultWorkdir=False)
+                                      env={'BUILD': WithProperties('%s', "project")}))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
         if runtime.platformType == 'win32':
             self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
