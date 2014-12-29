@@ -587,34 +587,31 @@ class Git(Source):
             return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         if self.slaveVersionIsOlderThan('listdir', '2.16'):
-            d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+            git_path = self.build.path_module.join(self.workdir, '.git')
+            exists = yield self.pathExists(git_path)
 
-            @d.addCallback
-            def checkWithPathExists(exists):
-                if(exists):
-                    return "update"
-                else:
-                    return "clone"
+            if exists:
+                defer.returnValue("update")
+
+            defer.returnValue("clone")
+
+        cmd = buildstep.RemoteCommand('listdir',
+                                      {'dir': self.workdir,
+                                       'logEnviron': self.logEnviron,
+                                       'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if 'files' not in cmd.updates:
+            # no files - directory doesn't exist
+            defer.returnValue("clone")
+        files = cmd.updates['files'][0]
+        if '.git' in files:
+            defer.returnValue("update")
+        elif len(files) > 0:
+            defer.returnValue("clobber")
         else:
-            cmd = buildstep.RemoteCommand('listdir',
-                                          {'dir': self.workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def checkWithListdir(_):
-                if 'files' not in cmd.updates:
-                    # no files - directory doesn't exist
-                    return "clone"
-                files = cmd.updates['files'][0]
-                if '.git' in files:
-                    return "update"
-                elif len(files) > 0:
-                    return "clobber"
-                else:
-                    return "clone"
-        return d
+            defer.returnValue("clone")
