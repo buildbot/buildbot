@@ -456,7 +456,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     # state maintenance (private)
     def getObjectId(self):
         """
-        Return the obejct id for this master, for associating state with the
+        Return the object id for this master, for associating state with the
         master.
 
         @returns: ID, via Deferred
