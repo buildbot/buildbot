@@ -652,6 +652,11 @@ class BuildStep(results.ResultComputingConfigMixin,
             return True
         return False
 
+    def checkSlaveHasCommand(self, command):
+        if not self.slaveVersion(command):
+            message = "slave is too old, does not know about %s" % command
+            raise BuildSlaveTooOldError(message)
+
     def getSlaveName(self):
         return self.build.getSlaveName()
 

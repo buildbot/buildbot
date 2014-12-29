@@ -25,6 +25,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.steps.slave import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
@@ -32,7 +33,6 @@ from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
-from twisted.spread import pb
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -361,26 +361,7 @@ class Configure(ShellCommand):
     command = ["./configure"]
 
 
-class StringFileWriter(pb.Referenceable):
-
-    """
-    FileWriter class that just puts received data into a buffer.
-
-    Used to upload a file from slave for inline processing rather than
-    writing into a file on master.
-    """
-
-    def __init__(self):
-        self.buffer = ""
-
-    def remote_write(self, data):
-        self.buffer += data
-
-    def remote_close(self):
-        pass
-
-
-class WarningCountingShellCommand(ShellCommand):
+class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     renderables = ['suppressionFile']
 
     warnCount = 0
@@ -538,24 +519,12 @@ class WarningCountingShellCommand(ShellCommand):
     def start(self):
         if self.suppressionFile is None:
             return ShellCommand.start(self)
-
-        self.myFileWriter = StringFileWriter()
-
-        args = {
-            'slavesrc': self.suppressionFile,
-            'workdir': self.getWorkdir(),
-            'writer': self.myFileWriter,
-            'maxsize': None,
-            'blocksize': 32 * 1024,
-        }
-        cmd = remotecommand.RemoteCommand('uploadFile', args, ignore_updates=True)
-        d = self.runCommand(cmd)
+        d = self.getFileContentFromSlave(self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
 
-    def uploadDone(self, dummy):
-        lines = self.myFileWriter.buffer.split("\n")
-        del(self.myFileWriter)
+    def uploadDone(self, data):
+        lines = data.split("\n")
 
         list = []
         for line in lines:

@@ -342,6 +342,13 @@ BuildStep
 
         This method returns true if ``command`` is not implemented on the slave, or if it is older than ``minversion``.
 
+    .. py:method:: slaveVersionHasCommand(command)
+
+        :param command: command to examine
+        :type command: string
+
+        This method raise BuildSlaveTooOldError if ``command`` is not implemented on the slave
+
     .. py:method:: getSlaveName()
 
         :returns: string
@@ -564,7 +571,7 @@ This class can only be used in new-style steps.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
-    .. py:method:: glob(path)
+    .. py:method:: runGlob(path)
 
         :param path: path to test
         :returns: list of filenames
@@ -572,6 +579,13 @@ This class can only be used in new-style steps.
         Get the list of files matching the given path pattern on the slave.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
+
+    .. py:method:: getFileContentFromSlave(path, abandonOnFailure=False)
+
+        :param path: path of the file to download from slave
+        :returns: string via deferred (content of the file)
+
+        Get the content of a file on the slave.
 
 
 ShellMixin
