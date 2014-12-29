@@ -340,6 +340,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.workdir is not None:
             return self.workdir
         else:
+            # see :ref:`Factory-Workdir-Functions` for details on how to customize this
             if callable(self.build.workdir):
                 return self.build.workdir(self.build.sources)
             else:

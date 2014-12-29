@@ -286,8 +286,6 @@ Changes and Removals
 
         * workdir of the step, if defined
 
-        * workdir of the codebase, if defined
-
         * workdir of the builder (itself defaults to 'build')
 
     - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set

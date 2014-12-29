@@ -141,9 +141,9 @@ BuildStep
 
         * workdir of the step, if defined
 
-        * workdir of the codebase, if defined
+        * workdir of the BuildFactory (itself defaults to 'build').
 
-        * workdir of the builder (itself defaults to 'build')
+            BuildFactory workdir can be a function of sourcestamp. See :ref:`Factory-Workdir-Functions`
 
     .. py:method:: setDefaultWorkdir(workdir)
 
