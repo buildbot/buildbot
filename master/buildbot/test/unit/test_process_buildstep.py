@@ -557,11 +557,6 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setBuildSlave(self, buildslave):
             pass
 
-    def test_signature_setDefaultWorkdir(self):
-        @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
-        def setDefaultWorkdir(self, workdir):
-            pass
-
     def test_signature_setupProgress(self):
         @self.assertArgSpecMatches(self.step.setupProgress)
         def setupProgress(self):

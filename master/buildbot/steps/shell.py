@@ -216,7 +216,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
-        kwargs['workdir'] = self.getWorkdir()
+        kwargs['workdir'] = self.workdir
 
         kwargs['command'] = flatten(self.command, (list, tuple))
 

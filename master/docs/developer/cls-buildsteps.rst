@@ -133,13 +133,11 @@ BuildStep
 
     .. py:attribute:: workdir
 
-        workdir override for the step.
+        Implemented as a property.
+        Workdir where actions of the step are happening.
+        The workdir is by order of priority
 
-    .. py:method:: getWorkdir()
-
-        This method returns the workdir where actions of the step are happening. The workdir is by order of priority
-
-        * workdir of the step, if defined
+        * workdir of the step, if defined via constructor argument
 
         * workdir of the BuildFactory (itself defaults to 'build').
 
@@ -149,12 +147,9 @@ BuildStep
 
         :param workdir: the default workdir, from the build
 
-        This method is called at build startup with the default workdir for the build.
-        Steps which allow a workdir to be specified, but want to override it with the build's default workdir, can use this method to apply the default.
-
         .. note::
 
-           This method is deprecated and should not be used anymore, as workdir is now a buildstep base argument
+           This method is deprecated and should not be used anymore, as workdir is calculated automatically via a property
 
     .. py:method:: setupProgress()
 

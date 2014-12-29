@@ -326,7 +326,7 @@ class CompositeStepMixin():
         # default arguments
         args = {
             'slavesrc': filename,
-            'workdir': self.getWorkdir(),
+            'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': None,
             'blocksize': 32 * 1024,

@@ -23,6 +23,7 @@ import re
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
+from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
 from twisted.python import util as twutil
@@ -293,7 +294,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     logEncoding = None
     cmd = None
     rendered = False  # true if attributes are rendered
-    workdir = None
+    _workdir = None
     _waitingForLocks = False
     _run_finished_hook = lambda self: None  # for tests
 
@@ -331,20 +332,26 @@ class BuildStep(results.ResultComputingConfigMixin,
     def setBuildSlave(self, buildslave):
         self.buildslave = buildslave
 
+    @deprecate.deprecated
     def setDefaultWorkdir(self, workdir):
-        if self.workdir is None:
+        if self._workdir is None:
             self.workdir = workdir
 
-    def getWorkdir(self):
+    @property
+    def workdir(self):
         # default the workdir appropriately
-        if self.workdir is not None:
-            return self.workdir
+        if self._workdir is not None:
+            return self._workdir
         else:
             # see :ref:`Factory-Workdir-Functions` for details on how to customize this
             if callable(self.build.workdir):
                 return self.build.workdir(self.build.sources)
             else:
                 return self.build.workdir
+
+    @workdir.setter
+    def workdir(self, workdir):
+        self._workdir = workdir
 
     def addFactoryArguments(self, **kwargs):
         # this is here for backwards compatibility
@@ -1108,7 +1115,7 @@ class ShellMixin(object):
         kwargs['env'].update(self.env)
         kwargs['stdioLogName'] = stdioLogName
 
-        kwargs['workdir'] = self.getWorkdir()
+        kwargs['workdir'] = self.workdir
 
         # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(**kwargs)
