@@ -335,7 +335,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @deprecate.deprecated
     def setDefaultWorkdir(self, workdir):
         if self._workdir is None:
-            self.workdir = workdir
+            self._workdir = workdir
 
     @property
     def workdir(self):
