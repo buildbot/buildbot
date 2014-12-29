@@ -564,7 +564,7 @@ This class can only be used in new-style steps.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
-    .. py:method:: glob(path)
+    .. py:method:: runGlob(path)
 
         :param path: path to test
         :returns: list of filenames
@@ -572,6 +572,13 @@ This class can only be used in new-style steps.
         Get the list of files matching the given path pattern on the slave.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
+
+    .. py:method:: getFileContentFromSlave(path, abandonOnFailure=False)
+
+        :param path: path of the file to download from slave
+        :returns: string via deferred (content of the file)
+
+        Get the content of a file on the slave.
 
 
 ShellMixin

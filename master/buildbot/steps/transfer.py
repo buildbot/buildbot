@@ -205,13 +205,6 @@ class _TransferBuildStep(BuildStep):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.workdir = workdir
 
-    # Check that buildslave version used have implementation for
-    # a remote command. Raise exception if buildslave is to old.
-    def checkSlaveVersion(self, command):
-        if not self.slaveVersion(command):
-            message = "slave is too old, does not know about %s" % command
-            raise BuildSlaveTooOldError(message)
-
     def setDefaultWorkdir(self, workdir):
         if self.workdir is None:
             self.workdir = workdir
