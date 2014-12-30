@@ -22,6 +22,7 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
+from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -77,6 +78,11 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
+        if not self._passed:
+            print "FAILED! dumping build db for debug"
+            builds = yield self.master.data.get(("builds",))
+            for build in builds:
+                yield self.printBuild(build)
         m = self.master
         # stop the service
         yield m.stopService()
@@ -153,8 +159,27 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                                                 statusToString(build['results']))
         for step in build['steps']:
             print "    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                                                       statusToString(build['results']))
+                                                       statusToString(step['results']))
             for url in step['urls']:
                 print "       url:%s (%s)" % (url['name'], url['url'])
             for log in step['logs']:
                 print "        log:%s (%d)" % (log['name'], log['num_lines'])
+                if step['results'] != SUCCESS:
+                    self.printLog(log)
+
+    def printLog(self, log):
+        print " " * 8 + "*********** LOG: %s *********" % (log['name'],)
+        if log['type'] == 's':
+            for line in log['contents']['content'].splitlines():
+                linetype = line[0]
+                line = line[1:]
+                if linetype == 'h':
+                    # cyan
+                    line = "\x1b[36m" + line + "\x1b[0m"
+                if linetype == 'e':
+                    # red
+                    line = "\x1b[31m" + line + "\x1b[0m"
+                print " " * 8 + line
+        else:
+            print log['contents']['content']
+        print " " * 8 + "********************************"
