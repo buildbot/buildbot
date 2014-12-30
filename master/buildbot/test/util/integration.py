@@ -98,12 +98,12 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # we wait until the first started build is finished
         self.firstBuildId = None
 
-        def newCallback(e, data):
+        def newCallback(_, data):
             if self.firstBuildId is None:
                 self.firstBuildId = data['buildid']
                 newConsumer.stopConsuming()
 
-        def finishedCallback(e, data):
+        def finishedCallback(_, data):
             if self.firstBuildId == data['buildid']:
                 d.callback(data)
 
