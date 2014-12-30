@@ -49,7 +49,7 @@ class MasterShellCommand(BuildStep):
 
         self.command = command
         self.env = env
-        self.workdir = workdir
+        self.masterWorkdir = workdir
         self.usePTY = usePTY
         self.interruptSignal = interruptSignal
 
@@ -136,7 +136,7 @@ class MasterShellCommand(BuildStep):
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                                            path=self.workdir, usePTY=self.usePTY, env=env)
+                                            path=self.masterWorkdir, usePTY=self.usePTY, env=env)
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):

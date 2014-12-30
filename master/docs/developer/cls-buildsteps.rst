@@ -131,12 +131,25 @@ BuildStep
 
         The build slave that will run this step.
 
+    .. py:attribute:: workdir
+
+        Implemented as a property.
+        Workdir where actions of the step are happening.
+        The workdir is by order of priority
+
+        * workdir of the step, if defined via constructor argument
+
+        * workdir of the BuildFactory (itself defaults to 'build').
+
+            BuildFactory workdir can be a function of sourcestamp. See :ref:`Factory-Workdir-Functions`
+
     .. py:method:: setDefaultWorkdir(workdir)
 
         :param workdir: the default workdir, from the build
 
-        This method is called at build startup with the default workdir for the build.
-        Steps which allow a workdir to be specified, but want to override it with the build's default workdir, can use this method to apply the default.
+        .. note::
+
+           This method is deprecated and should not be used anymore, as workdir is calculated automatically via a property
 
     .. py:method:: setupProgress()
 

@@ -66,7 +66,7 @@ class BuildStepMixin(object):
     # utilities
 
     def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
-                  buildFiles=[]):
+                  buildFiles=[], wantDefaultWorkdir=True):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
@@ -74,8 +74,7 @@ class BuildStepMixin(object):
         environment for the slave to run in, replete with a fake build and a
         fake slave.
 
-        As a convenience, it calls the step's setDefaultWorkdir method with
-        C{'wkdir'}.
+        As a convenience, it can set the step's workdir with C{'wkdir'}.
 
         @param slave_version: slave version to present, as a dictionary mapping
             command name to version.  A command name of '*' will apply for all
@@ -84,8 +83,13 @@ class BuildStepMixin(object):
         @param slave_env: environment from the slave at slave startup
         """
         factory = interfaces.IBuildStepFactory(step)
+
         step = self.step = factory.buildStep()
         self.master = fakemaster.make_master(wantData=True, testcase=self)
+
+        # set defaults
+        if wantDefaultWorkdir:
+            step.workdir = step._workdir or 'wkdir'
 
         # step.build
 
@@ -147,10 +151,6 @@ class BuildStepMixin(object):
         # monkey-patch
         for n, o in step._pendingLogObservers:
             addLogObserver(n, o)
-
-        # set defaults
-
-        step.setDefaultWorkdir('wkdir')
 
         # expectations
 
@@ -226,6 +226,13 @@ class BuildStepMixin(object):
             self.debounceClock.advance(1)
             self.assertEqual(self.expected_remote_commands, [],
                              "assert all expected commands were run")
+
+            # in case of unexpected result, display logs in stdout for debugging failing tests
+            if result != self.exp_result:
+                for loog in self.step.logs.values():
+                    print loog.stdout
+                    print loog.stderr
+
             self.assertEqual(result, self.exp_result, "expected result")
             if self.exp_state_string:
                 stepStateString = self.master.data.updates.stepStateString

@@ -164,9 +164,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
 
-    def setDefaultWorkdir(self, workdir):
-        self.workdir = self.workdir or workdir
-
     def describe(self, done=False):
         desc = self.descriptionDone if done else self.description
         if self.descriptionSuffix:

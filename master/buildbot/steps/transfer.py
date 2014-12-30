@@ -194,7 +194,6 @@ class _TransferBuildStep(BuildStep):
     Base class for FileUpload and FileDownload to factor out common
     functionality.
     """
-    DEFAULT_WORKDIR = "build"           # is this redundant?
 
     renderables = ['workdir']
 
@@ -204,17 +203,6 @@ class _TransferBuildStep(BuildStep):
     def __init__(self, workdir=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.workdir = workdir
-
-    def setDefaultWorkdir(self, workdir):
-        if self.workdir is None:
-            self.workdir = workdir
-
-    def _getWorkdir(self):
-        if self.workdir is None:
-            workdir = self.DEFAULT_WORKDIR
-        else:
-            workdir = self.workdir
-        return workdir
 
     def runTransferCommand(self, cmd, writer=None):
         # Run a transfer step, add a callback to extract the command status,
@@ -294,7 +282,7 @@ class FileUpload(_TransferBuildStep):
         # default arguments
         args = {
             'slavesrc': source,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -350,7 +338,7 @@ class DirectoryUpload(_TransferBuildStep):
         # default arguments
         args = {
             'slavesrc': source,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -393,7 +381,7 @@ class MultipleFileUpload(_TransferBuildStep):
 
         args = {
             'slavesrc': source,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -408,7 +396,7 @@ class MultipleFileUpload(_TransferBuildStep):
 
         args = {
             'slavesrc': source,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -422,7 +410,7 @@ class MultipleFileUpload(_TransferBuildStep):
         masterdest = os.path.join(destdir, os.path.basename(source))
         args = {
             'file': source,
-            'workdir': self._getWorkdir()
+            'workdir': self.workdir
         }
 
         cmd = makeStatusRemoteCommand(self, 'stat', args)
@@ -584,7 +572,7 @@ class FileDownload(_TransferBuildStep):
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'mode': self.mode,
         }
 
@@ -635,7 +623,7 @@ class StringDownload(_TransferBuildStep):
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
-            'workdir': self._getWorkdir(),
+            'workdir': self.workdir,
             'mode': self.mode,
         }
 

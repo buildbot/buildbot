@@ -336,11 +336,6 @@ class Build(properties.PropertiesMixin):
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
-            # TODO: remove once we don't have anything depending on setDefaultWorkdir
-            if callable(self.workdir):
-                step.setDefaultWorkdir(self.workdir(self.sources))
-            else:
-                step.setDefaultWorkdir(self.workdir)
             name = step.name
             if name in stepnames:
                 count = stepnames[name]

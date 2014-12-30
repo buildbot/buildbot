@@ -557,11 +557,6 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setBuildSlave(self, buildslave):
             pass
 
-    def test_signature_setDefaultWorkdir(self):
-        @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
-        def setDefaultWorkdir(self, workdir):
-            pass
-
     def test_signature_setupProgress(self):
         @self.assertArgSpecMatches(self.step.setupProgress)
         def setupProgress(self):
@@ -881,7 +876,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example(self):
-        self.setupStep(ShellMixinExample())
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             + Expect.log('stdio', stderr="didn't go so well\n")
@@ -895,7 +890,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_extra_logfile(self):
-        self.setupStep(ShellMixinExample(logfiles={'cleanup': 'cleanup.log'}))
+        self.setupStep(ShellMixinExample(logfiles={'cleanup': 'cleanup.log'}), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],
                         logfiles={'cleanup': 'cleanup.log'})
@@ -909,7 +904,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_build_workdir(self):
-        self.setupStep(ShellMixinExample())
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
         self.build.workdir = '/alternate'
         self.expectCommands(
             ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
@@ -931,7 +926,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_env(self):
-        self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}))
+        self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
         self.build.builder.config.env = {'FOO': 'FOO'}
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],
@@ -944,7 +939,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def test_example_old_slave(self):
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       slave_version={'*': "1.1"})
+                       slave_version={'*': "1.1"}, wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             # note missing parameters
@@ -959,7 +954,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def test_description(self):
         self.setupStep(SimpleShellCommand(
-            command=['foo', properties.Property('bar', 'BAR')]))
+            command=['foo', properties.Property('bar', 'BAR')]), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['foo', 'BAR'])
             + 0,

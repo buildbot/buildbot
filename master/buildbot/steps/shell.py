@@ -106,6 +106,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
+        # workdir is here first positional argument, but it belongs to BuildStep parent
+        kwargs['workdir'] = workdir
         for k in kwargs.keys()[:]:
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
@@ -124,26 +126,14 @@ class ShellCommand(buildstep.LoggingBuildStep):
                          + ', '.join(invalid_args))
 
         # everything left over goes to the RemoteShellCommand
-        kwargs['workdir'] = workdir  # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
+        self.remote_kwargs['workdir'] = workdir
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
         self.slaveEnvironment = self.build.slaveEnvironment
-
-    def setDefaultWorkdir(self, workdir):
-        rkw = self.remote_kwargs
-        rkw['workdir'] = rkw['workdir'] or workdir
-
-    def getWorkdir(self):
-        """
-        Get the current notion of the workdir.  Note that this may change
-        between instantiation of the step and C{start}, as it is based on the
-        build's default workdir, and may even be C{None} before that point.
-        """
-        return self.remote_kwargs['workdir']
 
     def setCommand(self, command):
         self.command = command
@@ -227,6 +217,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
+        kwargs['workdir'] = self.workdir
 
         kwargs['command'] = flatten(self.command, (list, tuple))
 
