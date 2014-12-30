@@ -112,19 +112,8 @@ def define_plugin_entries(groups):
     return result
 
 
-long_description = """
-The Buildbot is a continuous integration framework that provides means to
-automate the compile/test cycle required by most software projects to validate
-code changes. By automatically rebuilding and testing the tree each time
-something has changed, build problems are pinpointed quickly, before other
-developers are inconvenienced by the failure. The guilty developer can be
-identified and harassed without human intervention. By running the builds on a
-variety of platforms, developers who do not have the facilities to test their
-changes everywhere before checkin will at least know shortly afterwards whether
-they have broken the build or not. Warning counts, lint checks, image size,
-compile time, and other build parameters can be tracked over time, are more
-visible, and are therefore easier to improve.
-"""
+with open('README.rst') as long_d_f:
+    long_description = long_d_f.read()
 
 scripts = ["bin/buildbot"]
 # sdist is usually run on a non-Windows platform, but the buildslave.bat file
