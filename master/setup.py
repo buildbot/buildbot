@@ -112,7 +112,7 @@ def define_plugin_entries(groups):
     return result
 
 
-with open('README.rst') as long_d_f:
+with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
 scripts = ["bin/buildbot"]
