@@ -22,6 +22,7 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
+from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildslave.bot import BuildSlave
@@ -87,24 +88,73 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.tearDownDirs()
 
     @defer.inlineCallbacks
-    def doForceBuild(self, wantSteps=False, wantProperties=False):
+    def doForceBuild(self, wantSteps=False, wantProperties=False,
+                     wantLogs=False, useChange=False):
 
         # force a build, and wait until it is finished
         d = defer.Deferred()
-        consumer = yield self.master.mq.startConsuming(
-            lambda e, data: d.callback(data),
+
+        # in order to allow trigger based integration tests
+        # we wait until the first started build is finished
+        self.firstBuildId = None
+
+        def newCallback(_, data):
+            if self.firstBuildId is None:
+                self.firstBuildId = data['buildid']
+                newConsumer.stopConsuming()
+
+        def finishedCallback(_, data):
+            if self.firstBuildId == data['buildid']:
+                d.callback(data)
+
+        newConsumer = yield self.master.mq.startConsuming(
+            newCallback,
+            ('builds', None, 'new'))
+
+        finishedConsumer = yield self.master.mq.startConsuming(
+            finishedCallback,
             ('builds', None, 'finished'))
 
-        # use data api to force a build
-        yield self.master.data.control("force", {}, ("forceschedulers", "force"))
+        if useChange is False:
+            # use data api to force a build
+            yield self.master.data.control("force", {}, ("forceschedulers", "force"))
+        else:
+            # use data api to force a build, via a new change
+            yield self.master.data.updates.addChange(**useChange)
 
         # wait until we receive the build finished event
         build = yield d
-        consumer.stopConsuming()
+        finishedConsumer.stopConsuming()
+        yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
+        defer.returnValue(build)
 
+    @defer.inlineCallbacks
+    def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
         # enrich the build result, with the step results
         if wantSteps:
             build["steps"] = yield self.master.data.get(("builds", build['buildid'], "steps"))
+            # enrich the step result, with the logs results
+            if wantLogs:
+                build["steps"] = list(build["steps"])
+                for step in build["steps"]:
+                    step['logs'] = yield self.master.data.get(("steps", step['stepid'], "logs"))
+                    step["logs"] = list(step['logs'])
+                    for log in step["logs"]:
+                        log['contents'] = yield self.master.data.get(("logs", log['logid'], "contents"))
+
         if wantProperties:
             build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
-        defer.returnValue(build)
+
+    @defer.inlineCallbacks
+    def printBuild(self, build):
+        # helper for debugging: print a build
+        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        print "*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
+                                                statusToString(build['results']))
+        for step in build['steps']:
+            print "    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
+                                                       statusToString(build['results']))
+            for url in step['urls']:
+                print "       url:%s (%s)" % (url['name'], url['url'])
+            for log in step['logs']:
+                print "        log:%s (%d)" % (log['name'], log['num_lines'])
