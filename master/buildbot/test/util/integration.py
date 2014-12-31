@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import StringIO
 import mock
 import os
+import sys
 import textwrap
 
 from twisted.internet import defer
@@ -22,6 +24,7 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
+from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -77,6 +80,12 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
+        if not self._passed:
+            dump = StringIO.StringIO()
+            print >> dump, "FAILED! dumping build db for debug"
+            builds = yield self.master.data.get(("builds",))
+            for build in builds:
+                yield self.printBuild(build, dump)
         m = self.master
         # stop the service
         yield m.stopService()
@@ -86,6 +95,8 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # (trial will verify all reactor-based timers have been cleared, etc.)
         self.tearDownDirs()
+        if not self._passed:
+            raise self.failureException(dump.getvalue())
 
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,
@@ -146,15 +157,34 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
 
     @defer.inlineCallbacks
-    def printBuild(self, build):
+    def printBuild(self, build, out=sys.stdout):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print "*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
-                                                statusToString(build['results']))
+        print >> out, "*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
+                                                        statusToString(build['results']))
         for step in build['steps']:
-            print "    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                                                       statusToString(build['results']))
+            print >> out, "    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
+                                                               statusToString(step['results']))
             for url in step['urls']:
-                print "       url:%s (%s)" % (url['name'], url['url'])
+                print >> out, "       url:%s (%s)" % (url['name'], url['url'])
             for log in step['logs']:
-                print "        log:%s (%d)" % (log['name'], log['num_lines'])
+                print >> out, "        log:%s (%d)" % (log['name'], log['num_lines'])
+                if step['results'] != SUCCESS:
+                    self.printLog(log, out)
+
+    def printLog(self, log, out):
+        print >> out, " " * 8 + "*********** LOG: %s *********" % (log['name'],)
+        if log['type'] == 's':
+            for line in log['contents']['content'].splitlines():
+                linetype = line[0]
+                line = line[1:]
+                if linetype == 'h':
+                    # cyan
+                    line = "\x1b[36m" + line + "\x1b[0m"
+                if linetype == 'e':
+                    # red
+                    line = "\x1b[31m" + line + "\x1b[0m"
+                print " " * 8 + line
+        else:
+            print >> out, log['contents']['content']
+        print >> out, " " * 8 + "********************************"

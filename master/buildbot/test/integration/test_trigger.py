@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import StringIO
-import sys
 
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
@@ -54,12 +53,12 @@ class TriggeringMaster(RunMasterBase):
         self.assertEqual(build['steps'][1]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
-        self.patch(sys, 'stdout', StringIO.StringIO())
+        dump = StringIO.StringIO()
         for b in builds:
-            yield self.printBuild(b)
+            yield self.printBuild(b, dump)
         # depending on the environment the number of lines is different between test hosts
         loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
-        self.assertEqual(sys.stdout.getvalue(), expectedOutput % dict(loglines=loglines))
+        self.assertEqual(dump.getvalue(), expectedOutput % dict(loglines=loglines))
 
 
 # master configuration
