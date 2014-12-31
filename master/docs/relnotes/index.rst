@@ -290,7 +290,7 @@ Changes and Removals
 
     - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set
 
-* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` overriding entry point, for dynamic triggering.
+* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overriden to support dynamic triggering.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

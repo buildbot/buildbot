@@ -2327,13 +2327,13 @@ Dynamic Trigger
 +++++++++++++++
 
 Sometimes it is desirable to select which scheduler to trigger, and which properties to set dynamically, at the time of the build.
-For this purpose, Trigger step support a method that you can customize in order to override statically defined ``schedulernames``, and ``set_properties``.
+For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, and ``set_properties``.
 
 .. py:method:: getSchedulersAndProperties()
 
     :returns: list of tuples (schedulerName, propertiesDict) optionally via deferred
 
-    This methods returns a list of tuples describing what scheduler to trigger, with which properties.
+    This method returns a list of tuples describing what scheduler to trigger, with which properties.
     With this method, you can trigger several time the same scheduler with different set of properties.
     The sourcestamp configuration is however the same for each triggered build request.
 
