@@ -148,7 +148,7 @@ class DebPbuilder(WarningCountingShellCommand):
             if self.components:
                 command += ['--components', self.components]
 
-            cmd = remotecommand.RemoteShellCommand(self.getWorkdir(), command)
+            cmd = remotecommand.RemoteShellCommand(self.workdir, command)
 
             stdio_log = stdio_log = self.addLog("pbuilder")
             cmd.useLog(stdio_log, True, "stdio")
@@ -167,7 +167,7 @@ class DebPbuilder(WarningCountingShellCommand):
                 command = ['sudo', self.pbuilder, '--update',
                            self.baseOption, self.basetgz]
 
-                cmd = remotecommand.RemoteShellCommand(self.getWorkdir(), command)
+                cmd = remotecommand.RemoteShellCommand(self.workdir, command)
                 stdio_log = stdio_log = self.addLog("pbuilder")
                 cmd.useLog(stdio_log, True, "stdio")
                 d = self.runCommand(cmd)

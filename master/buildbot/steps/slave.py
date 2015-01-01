@@ -15,11 +15,32 @@
 
 import stat
 
+from twisted.spread import pb
+
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
+
+
+class StringFileWriter(pb.Referenceable):
+
+    """
+    FileWriter class that just puts received data into a buffer.
+
+    Used to upload a file from slave for inline processing rather than
+    writing into a file on master.
+    """
+
+    def __init__(self):
+        self.buffer = ""
+
+    def remote_write(self, data):
+        self.buffer += data
+
+    def remote_close(self):
+        pass
 
 
 class SlaveBuildStep(buildstep.BuildStep):
@@ -256,7 +277,8 @@ class CompositeStepMixin():
                          evaluateCommand=lambda cmd: cmd.didFail()):
         """generic RemoteCommand boilerplate"""
         cmd = remotecommand.RemoteCommand(cmd, args)
-        cmd.useLog(self.rc_log, False)
+        if hasattr(self, "rc_log"):
+            cmd.useLog(self.rc_log, False)
         d = self.runCommand(cmd)
 
         def commandComplete(cmd):
@@ -296,4 +318,25 @@ class CompositeStepMixin():
 
         return self.runRemoteCommand('glob', {'glob': glob,
                                               'logEnviron': self.logEnviron, },
+                                     evaluateCommand=commandComplete)
+
+    def getFileContentFromSlave(self, filename, abandonOnFailure=False):
+        self.checkSlaveHasCommand("uploadFile")
+        fileWriter = StringFileWriter()
+        # default arguments
+        args = {
+            'slavesrc': filename,
+            'workdir': self.workdir,
+            'writer': fileWriter,
+            'maxsize': None,
+            'blocksize': 32 * 1024,
+        }
+
+        def commandComplete(cmd):
+            if cmd.didFail():
+                return None
+            return fileWriter.buffer
+
+        return self.runRemoteCommand('uploadFile', args,
+                                     abandonOnFailure=abandonOnFailure,
                                      evaluateCommand=commandComplete)

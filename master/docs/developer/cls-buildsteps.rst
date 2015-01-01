@@ -131,12 +131,25 @@ BuildStep
 
         The build slave that will run this step.
 
+    .. py:attribute:: workdir
+
+        Implemented as a property.
+        Workdir where actions of the step are happening.
+        The workdir is by order of priority
+
+        * workdir of the step, if defined via constructor argument
+
+        * workdir of the BuildFactory (itself defaults to 'build').
+
+            BuildFactory workdir can be a function of sourcestamp. See :ref:`Factory-Workdir-Functions`
+
     .. py:method:: setDefaultWorkdir(workdir)
 
         :param workdir: the default workdir, from the build
 
-        This method is called at build startup with the default workdir for the build.
-        Steps which allow a workdir to be specified, but want to override it with the build's default workdir, can use this method to apply the default.
+        .. note::
+
+           This method is deprecated and should not be used anymore, as workdir is calculated automatically via a property
 
     .. py:method:: setupProgress()
 
@@ -341,6 +354,13 @@ BuildStep
         :returns: boolean
 
         This method returns true if ``command`` is not implemented on the slave, or if it is older than ``minversion``.
+
+    .. py:method:: slaveVersionHasCommand(command)
+
+        :param command: command to examine
+        :type command: string
+
+        This method raise BuildSlaveTooOldError if ``command`` is not implemented on the slave
 
     .. py:method:: getSlaveName()
 
@@ -564,7 +584,7 @@ This class can only be used in new-style steps.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
-    .. py:method:: glob(path)
+    .. py:method:: runGlob(path)
 
         :param path: path to test
         :returns: list of filenames
@@ -572,6 +592,13 @@ This class can only be used in new-style steps.
         Get the list of files matching the given path pattern on the slave.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
+
+    .. py:method:: getFileContentFromSlave(path, abandonOnFailure=False)
+
+        :param path: path of the file to download from slave
+        :returns: string via deferred (content of the file)
+
+        Get the content of a file on the slave.
 
 
 ShellMixin

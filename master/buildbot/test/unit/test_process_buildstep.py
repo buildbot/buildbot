@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -463,6 +464,33 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.description = 'fooing'
         self.checkSummary(st.getResultSummary(), u'fooing (failure)')
 
+    # Test calling checkSlaveHasCommand() when buildslave have support for
+    # requested remote command.
+    def testcheckSlaveHasCommandGood(self):
+        # patch BuildStep.slaveVersion() to return success
+        mockedSlaveVersion = mock.Mock()
+        self.patch(buildstep.BuildStep, "slaveVersion", mockedSlaveVersion)
+
+        # check that no exceptions are raised
+        buildstep.BuildStep().checkSlaveHasCommand("foo")
+
+        # make sure slaveVersion() was called with correct arguments
+        mockedSlaveVersion.assert_called_once_with("foo")
+
+    # Test calling checkSlaveHasCommand() when buildslave is to old to support
+    # requested remote command.
+    def testcheckSlaveHasCommandTooOld(self):
+        # patch BuildStep.slaveVersion() to return error
+        self.patch(buildstep.BuildStep,
+                   "slaveVersion",
+                   mock.Mock(return_value=None))
+
+        # make sure appropriate exception is raised
+        step = buildstep.BuildStep()
+        self.assertRaisesRegexp(BuildSlaveTooOldError,
+                                "slave is too old, does not know about foo",
+                                step.checkSlaveHasCommand, "foo")
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
@@ -527,11 +555,6 @@ class InterfaceTests(interfaces.InterfaceTests):
     def test_signature_setBuildSlave(self):
         @self.assertArgSpecMatches(self.step.setBuildSlave)
         def setBuildSlave(self, buildslave):
-            pass
-
-    def test_signature_setDefaultWorkdir(self):
-        @self.assertArgSpecMatches(self.step.setDefaultWorkdir)
-        def setDefaultWorkdir(self, workdir):
             pass
 
     def test_signature_setupProgress(self):
@@ -853,7 +876,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example(self):
-        self.setupStep(ShellMixinExample())
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             + Expect.log('stdio', stderr="didn't go so well\n")
@@ -867,7 +890,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_extra_logfile(self):
-        self.setupStep(ShellMixinExample(logfiles={'cleanup': 'cleanup.log'}))
+        self.setupStep(ShellMixinExample(logfiles={'cleanup': 'cleanup.log'}), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],
                         logfiles={'cleanup': 'cleanup.log'})
@@ -881,7 +904,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_build_workdir(self):
-        self.setupStep(ShellMixinExample())
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
         self.build.workdir = '/alternate'
         self.expectCommands(
             ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
@@ -903,7 +926,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_env(self):
-        self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}))
+        self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
         self.build.builder.config.env = {'FOO': 'FOO'}
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],
@@ -916,7 +939,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def test_example_old_slave(self):
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       slave_version={'*': "1.1"})
+                       slave_version={'*': "1.1"}, wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             # note missing parameters
@@ -931,7 +954,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def test_description(self):
         self.setupStep(SimpleShellCommand(
-            command=['foo', properties.Property('bar', 'BAR')]))
+            command=['foo', properties.Property('bar', 'BAR')]), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['foo', 'BAR'])
             + 0,

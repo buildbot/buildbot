@@ -25,6 +25,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+from buildbot.steps.slave import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
@@ -32,7 +33,6 @@ from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
-from twisted.spread import pb
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -106,6 +106,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
+        # workdir is here first positional argument, but it belongs to BuildStep parent
+        kwargs['workdir'] = workdir
         for k in kwargs.keys()[:]:
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
@@ -124,26 +126,14 @@ class ShellCommand(buildstep.LoggingBuildStep):
                          + ', '.join(invalid_args))
 
         # everything left over goes to the RemoteShellCommand
-        kwargs['workdir'] = workdir  # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
+        self.remote_kwargs['workdir'] = workdir
 
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
         self.slaveEnvironment = self.build.slaveEnvironment
-
-    def setDefaultWorkdir(self, workdir):
-        rkw = self.remote_kwargs
-        rkw['workdir'] = rkw['workdir'] or workdir
-
-    def getWorkdir(self):
-        """
-        Get the current notion of the workdir.  Note that this may change
-        between instantiation of the step and C{start}, as it is based on the
-        build's default workdir, and may even be C{None} before that point.
-        """
-        return self.remote_kwargs['workdir']
 
     def setCommand(self, command):
         self.command = command
@@ -227,6 +217,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
+        kwargs['workdir'] = self.workdir
 
         kwargs['command'] = flatten(self.command, (list, tuple))
 
@@ -361,26 +352,7 @@ class Configure(ShellCommand):
     command = ["./configure"]
 
 
-class StringFileWriter(pb.Referenceable):
-
-    """
-    FileWriter class that just puts received data into a buffer.
-
-    Used to upload a file from slave for inline processing rather than
-    writing into a file on master.
-    """
-
-    def __init__(self):
-        self.buffer = ""
-
-    def remote_write(self, data):
-        self.buffer += data
-
-    def remote_close(self):
-        pass
-
-
-class WarningCountingShellCommand(ShellCommand):
+class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     renderables = ['suppressionFile']
 
     warnCount = 0
@@ -538,24 +510,12 @@ class WarningCountingShellCommand(ShellCommand):
     def start(self):
         if self.suppressionFile is None:
             return ShellCommand.start(self)
-
-        self.myFileWriter = StringFileWriter()
-
-        args = {
-            'slavesrc': self.suppressionFile,
-            'workdir': self.getWorkdir(),
-            'writer': self.myFileWriter,
-            'maxsize': None,
-            'blocksize': 32 * 1024,
-        }
-        cmd = remotecommand.RemoteCommand('uploadFile', args, ignore_updates=True)
-        d = self.runCommand(cmd)
+        d = self.getFileContentFromSlave(self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
 
-    def uploadDone(self, dummy):
-        lines = self.myFileWriter.buffer.split("\n")
-        del(self.myFileWriter)
+    def uploadDone(self, data):
+        lines = data.split("\n")
 
         list = []
         for line in lines:
