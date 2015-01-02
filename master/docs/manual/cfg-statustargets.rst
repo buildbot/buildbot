@@ -375,7 +375,7 @@ be used to access them.
     .. image:: ../_images/success_normal.png
 
 :samp:`/png?builder=${BUILDERNAME}&revision=$REVHASH&size=large`
-    This generate a large png image reporting the status of the build of the given $REVHASH for the given builder $BUILDERNAME. If both number and revision are specified revision will be ignored. $REVHASH must be the full length hash not the short one.  
+    This generate a large png image reporting the status of the build of the given $REVHASH for the given builder $BUILDERNAME. If both number and revision are specified revision will be ignored. $REVHASH must be the full length hash not the short one.
 
 .. note::
 
@@ -619,6 +619,17 @@ Corresponding Apache configuration.
         RewriteCond %{HTTP_REFERER} ^https?://([^/]+)/(.*)$
         RewriteRule ^.*$ https://%1/%2 [R,L]
     </Location>
+
+LDAP-based authentication
+############################################
+Example:
+.. code-block:: python
+
+    auth=LDAPAuth(server_uri='ldap://YOUR_LDAP_SERVER',
+        basedn='dc=example,dc=com',
+        binddn='DOMAIN\\BIND_USERNAME',#windows AD example
+        passwd='BIND_PASSWORD',
+        search='(sAMAccountName=%s)'),#windows AD example
 
 Logging configuration
 #####################

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-
 import os
 
 from buildbot.status.web.base import ActionResource
@@ -22,8 +21,8 @@ from buildbot.status.web.base import path_to_authfail
 from zope.interface import Attribute
 from zope.interface import Interface
 from zope.interface import implements
-
 from buildbot.process.users import users
+from twisted.python import log
 
 
 class IAuth(Interface):
@@ -58,7 +57,8 @@ class AuthBase:
 
     def getUserInfo(self, user):
         """default dummy impl"""
-        return dict(userName=user, fullName=user, email=user + "@localhost", groups=[user])
+        return dict(userName=user, fullName=user,
+            email=user + "@localhost", groups=[user])
 
 
 class BasicAuth(AuthBase):
@@ -133,7 +133,8 @@ class HTPasswdAuth(AuthBase):
 
 class HTPasswdAprAuth(HTPasswdAuth):
     implements(IAuth)
-    """Implement authentication against an .htpasswd file based on libaprutil"""
+    """Implement authentication against an .htpasswd file based on
+libaprutil"""
 
     file = ""
     """Path to the .htpasswd file to use."""
@@ -189,6 +190,123 @@ class UsersAuth(AuthBase):
             return False
         d.addCallback(check_creds)
         return d
+
+
+class LDAPAuth(AuthBase):
+
+    """Implement a synchronous authentication with an LDAP directory.
+    modify from http://trac.buildbot.net/attachment/ticket/138/0012-Implement-an-LDAP-based-authentication-for-the-WebSt.patch"""
+    implements(IAuth)
+
+    basedn = ""
+    """Base DN (Distinguished Name): the root of the LDAP directory tree
+
+    e.g.: ou=people,dc=subdomain,dc=company,dc=com"""
+
+    binddn = ""
+    """The bind DN is the user on the external LDAP server permitted to
+    search the LDAP directory.  You can leave this empty."""
+
+    passwd = ""
+    """Password required to query the LDAP server.  Leave this empty if
+    you can query the server without password."""
+
+    host = ""
+    """Hostname of the LDAP server"""
+
+    search = ""
+    """Template string to use to search the user trying to login in the
+    LDAP directory"""
+
+    def __init__(self, server_uri, basedn, binddn="", passwd="",
+                 search="(uid=%s)"):
+        """Authenticate users against the LDAP server on C{host}.
+
+        The arguments are documented above."""
+        self.server_uri = server_uri
+        self.basedn = basedn
+        self.binddn = binddn
+        self.passwd = passwd
+        self.search = search
+
+        self.search_conn = None
+        # log.msg("ldap init")
+        self.connect()
+
+    def connect(self):
+        """Setup the connections with the LDAP server."""
+        import ldap
+        # Close existing connections
+        if self.search_conn:
+            self.search_conn.unbind()
+        # ldap v2 is outdated
+        ldap.set_option(ldap.OPT_PROTOCOL_VERSION, ldap.VERSION3)
+        ldap.set_option(ldap.OPT_REFERRALS, 0)
+        ldap.set_option(ldap.OPT_NETWORK_TIMEOUT, 10)
+        # Connection used to locate the users in the LDAP DB.
+        self.search_conn = ldap.initialize(self.server_uri)
+        self.search_conn.bind_s(self.binddn, self.passwd,
+                                ldap.AUTH_SIMPLE)
+
+    def authenticate(self, username, password):
+        """Authenticate the C{username} / C{password} with the LDAP server."""
+        # log.msg("ldap %s %s" % (username,password))
+        import ldap
+        # Python-LDAP raises all sorts of exceptions to express various
+        # failures, let's catch them all here and assume that if
+        # anything goes wrong, the authentication failed.
+        try:
+            res = self._authenticate(username, password)
+            log.msg("ldap res:%s" % (res))
+            if res:
+                self.err = ""
+            return res
+        except ldap.LDAPError, e:
+            self.err = "LDAP error: " + str(e)
+            log.msg(self.err)
+            return False
+        except:
+            self.err = "unkown error: " + str(e)
+            log.msg(self.err)
+            return False
+
+    def _authenticate(self, username, password):
+        import ldap
+        # Search the username in the LDAP DB
+        try:
+            result = self.search_conn.search_s(self.basedn,
+                                               ldap.SCOPE_SUBTREE,
+                                               self.search % username,
+                                               ['objectclass'], 1)
+            log.msg("ldap result:%s,%s" % (result, self.search % username))
+        except ldap.SERVER_DOWN:
+            self.err = "LDAP server seems down"
+            log.msg(self.err)
+            # Try to reconnect...
+            self.connect()
+            # FIXME: Check that this can't lead to an infinite recursion
+            return self.authenticate(username, password)
+
+        # Make sure we found a single user in the LDAP DB
+        if not result or len(result) < 1:
+            self.err = "user not found in the LDAP DB"
+            log.msg(self.err)
+            return False
+
+        # Connection used to authenticate users with the LDAP DB.
+        auth_conn = ldap.initialize(self.server_uri)
+        # DN associated to this user
+        ldap_dn = result[0][0]
+        # log.msg('using ldap_dn = ' + ldap_dn)
+        # Authenticate the user
+        try:
+            auth_conn.bind_s(ldap_dn, password, ldap.AUTH_SIMPLE)
+        except ldap.INVALID_CREDENTIALS:
+            self.err = "invalid credentials"
+            log.msg(self.err)
+            return False
+        auth_conn.unbind()
+        return True
 
 
 class AuthFailResource(HtmlResource):
