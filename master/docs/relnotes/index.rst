@@ -383,7 +383,7 @@ git log itself:
 
 .. code-block:: bash
 
-   git log v0.8.10..eight
+   git log v0.8.10..master
 
 Older Versions
 --------------
