@@ -26,9 +26,9 @@ Fixes
 
 * The :bb:step:`HTTPStep` step's request parameters are now renderable.
 
-* Fixed content spoofing vulnerabilities (:bb:bug:`2589`).
+* Fixed content spoofing vulnerabilities (:bug:`2589`).
 
-* Fixed cross-site scripting in status_json (:bb:bug:`2943`).
+* Fixed cross-site scripting in status_json (:bug:`2943`).
 
 * :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
 
@@ -70,7 +70,7 @@ For a more detailed description of the changes made in this version, see the git
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
 Newer versions are also available here:
 
 .. toctree::
