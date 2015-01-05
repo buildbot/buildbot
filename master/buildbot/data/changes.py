@@ -127,6 +127,19 @@ class Change(base.ResourceType):
         else:
             uid = None
 
+        if callable(category):
+            pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               files=files,
+                                                               comments=comments,
+                                                               revision=revision,
+                                                               when_timestamp=when_timestamp,
+                                                               branch=branch,
+                                                               revlink=revlink,
+                                                               properties=properties,
+                                                               repository=repository,
+                                                               project=project)
+            category = category(pre_change)
+
         # set the codebase, either the default, supplied, or generated
         if codebase is None \
                 and self.master.config.codebaseGenerator is not None:

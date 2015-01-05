@@ -64,7 +64,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.useTimestamps = useTimestamps
-        self.category = category
+        self.category = category if callable(category) else ascii2unicode(category)
         self.project = ascii2unicode(project)
         self.initLock = defer.DeferredLock()
 
