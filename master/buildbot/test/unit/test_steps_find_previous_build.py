@@ -7,6 +7,8 @@ from buildbot.steps import artifact
 from buildbot.test.fake import fakemaster, fakedb
 from buildbot.status.results import SUCCESS, SKIPPED
 
+from buildbot.test.fake.remotecommand import ExpectShell
+
 class FakeSourceStamp(object):
 
     def __init__(self, **kwargs):
@@ -60,6 +62,7 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
 
         self.build.requests = []
         self.build.builder.config.name = "A"
+        self.build.builder.config.builddir = "build"
 
         self.build.builder.builder_status.getFriendlyName = lambda: "A"
 
@@ -81,7 +84,7 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
                                                               branch='master',
                                                               revision=12, sourcestampsetid=1)])
 
-    # tests
+    # tests FindPreviousSuccessfulBuild
 
     def test_previous_build_not_found(self):
         self.setupStep(artifact.FindPreviousSuccessfulBuild())
@@ -112,7 +115,7 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-    def test_force_rebuild(self):
+    def test_force_chain_rebuild(self):
         self.setupStep(artifact.FindPreviousSuccessfulBuild(),
                        sourcestampsInBuild = [FakeSourceStamp(codebase='c',
                                                               repository='https://url/project',
@@ -121,4 +124,112 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
                        force_chain_rebuild=True)
 
         self.expectOutcome(result=SKIPPED, status_text=['Skipping previous build check (forcing a rebuild).'])
+        return self.runStep()
+
+    # tests CheckArtifactExists
+
+    def test_checkartifact_previous_build_not_found(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"))
+        self.expectOutcome(result=SUCCESS, status_text=["Artifact not found."])
+        return self.runStep()
+
+    def test_checkartifact_force_rebuild(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)], force_rebuild=True)
+
+        self.expectOutcome(result=SKIPPED, status_text=['Skipping artifact check (forcing a rebuild).'])
+        return self.runStep()
+
+
+    def test_force_chain_rebuild(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)],
+                       force_chain_rebuild=True)
+
+        self.expectOutcome(result=SKIPPED, status_text=['Skipping artifact check (forcing a rebuild).'])
+        return self.runStep()
+
+    def test_checkartifact_build_found_artifact_not_in_srv(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)])
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command= ['ssh',
+              'usr@srv.com',
+              'cd /home/srv/web/dir;',
+              "if [ -d build_1_01_01_1970_00_00_00_+0000/artifact ]; then echo 'Exists'; else echo 'Not found!!'; fi;",
+              'cd build_1_01_01_1970_00_00_00_+0000/artifact',
+              '; ls myartifact.py',
+              '; ls'])
+            + ExpectShell.log('stdio', stdout='Not found!!')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['Artifact not found on server http://srv.com/dir.'])
+        return self.runStep()
+
+
+    def test_checkartifact_build_found_artifact_not_in_dir(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)])
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command= ['ssh',
+              'usr@srv.com',
+              'cd /home/srv/web/dir;',
+              "if [ -d build_1_01_01_1970_00_00_00_+0000/artifact ]; then echo 'Exists'; else echo 'Not found!!'; fi;",
+              'cd build_1_01_01_1970_00_00_00_+0000/artifact',
+              '; ls myartifact.py',
+              '; ls'])
+            + ExpectShell.log('stdio', stdout='')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['Artifact not found on server http://srv.com/dir.'])
+        return self.runStep()
+
+    def test_checkartifact_build_found_artifact_found(self):
+        self.setupStep(artifact.CheckArtifactExists(artifact="myartifact.py", artifactDirectory="artifact",
+                                        artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                        artifactServerURL="http://srv.com/dir"),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)])
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command= ['ssh',
+              'usr@srv.com',
+              'cd /home/srv/web/dir;',
+              "if [ -d build_1_01_01_1970_00_00_00_+0000/artifact ]; then echo 'Exists'; else echo 'Not found!!'; fi;",
+              'cd build_1_01_01_1970_00_00_00_+0000/artifact',
+              '; ls myartifact.py',
+              '; ls'])
+            + ExpectShell.log('stdio', stdout='myartifact.py')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['Searching complete.'])
         return self.runStep()
