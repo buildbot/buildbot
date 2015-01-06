@@ -328,9 +328,7 @@ class Build(properties.PropertiesMixin):
         # add a count to the loser until it is unique.
         self.steps = []
         self.executedSteps = []
-        self.stepStatuses = {}
         stepnames = {}
-        sps = []
 
         for factory in self.stepFactories:
             step = factory.buildStep()
@@ -347,11 +345,8 @@ class Build(properties.PropertiesMixin):
             step.name = name
             self.steps.append(step)
 
-            sp = None
             if self.useProgress:
-                sp = step.setupProgress()
-            if sp:
-                sps.append(sp)
+                step.setupProgress()
 
         # we are now ready to set up our BuildStatus.
         # pass all sourcestamps to the buildstatus
