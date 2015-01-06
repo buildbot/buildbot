@@ -5,7 +5,7 @@ from buildbot.status import master
 from buildbot.test.util import steps
 from buildbot.steps import artifact
 from buildbot.test.fake import fakemaster, fakedb
-from buildbot.status.results import SUCCESS
+from buildbot.status.results import SUCCESS, SKIPPED
 
 class FakeSourceStamp(object):
 
@@ -23,7 +23,8 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def setupStep(self, step, sourcestampsInBuild=None, *args, **kwargs):
+    def setupStep(self, step, sourcestampsInBuild=None, force_rebuild=False, force_chain_rebuild=False,
+                  *args, **kwargs):
         sourcestamps = sourcestampsInBuild or []
         got_revisions = {}
 
@@ -48,6 +49,10 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
             return sourcestamps
         self.build.getAllSourceStamps = getAllSourceStamps
         self.build.build_status.getSourceStamps = getAllSourceStamps
+        if force_rebuild:
+            self.build.setProperty("force_rebuild", True, "FindPreviousBuildTest")
+        if force_chain_rebuild:
+            self.build.setProperty("force_chain_rebuild", True, "FindPreviousBuildTest")
 
         def getAllGotRevisions():
             return got_revisions
@@ -94,4 +99,26 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(result=SUCCESS, status_text=['Found previous successful build.'])
         self.expectURLS({'A #1': 'baseurl/builders/A/builds/1?c_branch=master'})
+        return self.runStep()
+
+    def test_force_rebuild(self):
+        self.setupStep(artifact.FindPreviousSuccessfulBuild(),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)], force_rebuild=True)
+
+        self.expectOutcome(result=SKIPPED, status_text=['Skipping previous build check (forcing a rebuild).'])
+        return self.runStep()
+
+
+    def test_force_rebuild(self):
+        self.setupStep(artifact.FindPreviousSuccessfulBuild(),
+                       sourcestampsInBuild = [FakeSourceStamp(codebase='c',
+                                                              repository='https://url/project',
+                                                              branch='master',
+                                                              revision=12, sourcestampsetid=2)],
+                       force_chain_rebuild=True)
+
+        self.expectOutcome(result=SKIPPED, status_text=['Skipping previous build check (forcing a rebuild).'])
         return self.runStep()
