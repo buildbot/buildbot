@@ -372,6 +372,19 @@ class Build(properties.PropertiesMixin):
         self.result = SUCCESS  # overall result, may downgrade after each step
         self.text = []  # list of text string lists (text2)
 
+    def _addBuildSteps(self, step_factories):
+        factories = [interfaces.IBuildStepFactory(s) for s in step_factories]
+        return self.setupBuildSteps(factories)
+
+    def addStepsAfterCurrentStep(self, step_factories):
+        # Add the new steps after the step that is running.
+        # The running step has already been popped from self.steps
+        self.steps[0:0] = self._addBuildSteps(step_factories)
+
+    def addStepsAfterLastStep(self, step_factories):
+        # Add the new steps to the end.
+        self.steps.extend(self._addBuildSteps(step_factories))
+
     def getNextStep(self):
         """This method is called to obtain the next BuildStep for this build.
         When it returns None (or raises a StopIteration exception), the build
