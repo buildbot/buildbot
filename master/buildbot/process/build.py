@@ -323,26 +323,30 @@ class Build(properties.PropertiesMixin):
             lock.claim(self, access)
         return defer.succeed(None)
 
+    def setUniqueStepName(self, step):
+        # If there are any name collisions, we add a count to the loser
+        # until it is unique.
+        name = step.name
+        if name in self.stepnames:
+            count = self.stepnames[name]
+            count += 1
+            self.stepnames[name] = count
+            name = step.name + "_%d" % count
+        else:
+            self.stepnames[name] = 0
+        step.name = name
+
     def setupBuild(self, expectations):
-        # create the actual BuildSteps. If there are any name collisions, we
-        # add a count to the loser until it is unique.
+        # create the actual BuildSteps.
         self.steps = []
         self.executedSteps = []
-        stepnames = {}
+        self.stepnames = {}
 
         for factory in self.stepFactories:
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
-            name = step.name
-            if name in stepnames:
-                count = stepnames[name]
-                count += 1
-                stepnames[name] = count
-                name = step.name + "_%d" % count
-            else:
-                stepnames[name] = 0
-            step.name = name
+            self.setUniqueStepName(step)
             self.steps.append(step)
 
             if self.useProgress:
