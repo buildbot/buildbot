@@ -331,7 +331,7 @@ class Build(properties.PropertiesMixin):
             count = self.stepnames[name]
             count += 1
             self.stepnames[name] = count
-            name = step.name + "_%d" % count
+            name = "%s_%d" % (step.name, count)
         else:
             self.stepnames[name] = 0
         step.name = name
