@@ -336,21 +336,25 @@ class Build(properties.PropertiesMixin):
             self.stepnames[name] = 0
         step.name = name
 
-    def setupBuild(self, expectations):
-        # create the actual BuildSteps.
-        self.steps = []
-        self.executedSteps = []
-        self.stepnames = {}
-
-        for factory in self.stepFactories:
+    def setupBuildSteps(self, step_factories):
+        steps = []
+        for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
             self.setUniqueStepName(step)
-            self.steps.append(step)
+            steps.append(step)
 
             if self.useProgress:
                 step.setupProgress()
+        return steps
+
+    def setupBuild(self, expectations):
+        # create the actual BuildSteps.
+        self.executedSteps = []
+        self.stepnames = {}
+
+        self.steps = self.setupBuildSteps(self.stepFactories)
 
         # we are now ready to set up our BuildStatus.
         # pass all sourcestamps to the buildstatus
