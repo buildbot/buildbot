@@ -75,6 +75,75 @@ The following attributes can be set on a build factory after it is created, e.g.
     If this attribute is set to a string, that string will be used for constructing the workdir (buildslave base + builder builddir + workdir).
     The attribute can also be a Python callable, for more complex cases, as described in :ref:`Factory-Workdir-Functions`.
 
+.. _DynamicBuildFactories:
+
+Dynamic Build Factories
+------------------------
+
+In some cases you may not know what commands to run until after you checkout the source tree.
+For those cases you can dynamically add steps during a build from other steps.
+
+The :class:`Build` object provides 2 functions to do this:
+
+``addStepsAfterCurrentStep(self, step_factories)``
+    This adds the steps after the step that is currently executing.
+
+``addStepsAfterLastStep(self, step_factories)``
+    This adds the steps onto the end of the build.
+
+Both functions only accept as an argument a list of steps to add to the build.
+
+For example lets say you have a script checked in into your source tree called build.sh.
+When this script is called with the argument ``--list-stages`` it outputs a newline separated list of stage names.
+This can be used to generate at runtime a step for each stage in the build.
+Each stage is then run in this example using ``./build.sh --run-stage <stage name>``.
+
+::
+
+    from buildbot.plugins import util, steps
+    from buildbot.process import buildstep, logobserver
+    from twisted.internet import defer
+
+    class GenerateStagesCommand(buildstep.ShellMixin, steps.BuildStep):
+
+        def __init__(self, **kwargs):
+            kwargs = self.setupShellMixin(kwargs)
+            steps.BuildStep.__init__(self, **kwargs)
+            self.observer = logobserver.BufferLogObserver()
+            self.addLogObserver('stdio', self.observer)
+
+        def extract_stages(self, stdout):
+            stages = []
+            for line in stdout.split('\n'):
+                stage = str(line.strip())
+                if stage:
+                    stages.append(stage)
+            return stages
+
+        @defer.inlineCallbacks
+        def run(self):
+            # run './build.sh --list-stages' to generate the list of stages
+            cmd = yield self.makeRemoteShellCommand()
+            yield self.runCommand(cmd)
+
+            # if the command passes extract the list of stages
+            result = cmd.results()
+            if result == util.SUCCESS:
+                # create a ShellCommand for each stage and add them to the build
+                self.build.addStepsAfterCurrentStep([
+                    steps.ShellCommand(name=stage, command=["./build.sh", "--run-stage", stage])
+                    for stage in self.extract_stages(self.observer.getStdout())
+                ])
+
+            defer.returnValue(result)
+
+    f = util.BuildFactory()
+    f.addStep(steps.Git(repourl=repourl))
+    f.addStep(GenerateStagesCommand(
+        name="Generate build stages",
+        command=["./build.sh", "--list-stages"],
+        haltOnFailure=True))
+
 Predefined Build Factories
 --------------------------
 

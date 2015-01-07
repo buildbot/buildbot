@@ -323,35 +323,38 @@ class Build(properties.PropertiesMixin):
             lock.claim(self, access)
         return defer.succeed(None)
 
-    def setupBuild(self, expectations):
-        # create the actual BuildSteps. If there are any name collisions, we
-        # add a count to the loser until it is unique.
-        self.steps = []
-        self.executedSteps = []
-        self.stepStatuses = {}
-        stepnames = {}
-        sps = []
+    def setUniqueStepName(self, step):
+        # If there are any name collisions, we add a count to the loser
+        # until it is unique.
+        name = step.name
+        if name in self.stepnames:
+            count = self.stepnames[name]
+            count += 1
+            self.stepnames[name] = count
+            name = "%s_%d" % (step.name, count)
+        else:
+            self.stepnames[name] = 0
+        step.name = name
 
-        for factory in self.stepFactories:
+    def setupBuildSteps(self, step_factories):
+        steps = []
+        for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
-            name = step.name
-            if name in stepnames:
-                count = stepnames[name]
-                count += 1
-                stepnames[name] = count
-                name = step.name + "_%d" % count
-            else:
-                stepnames[name] = 0
-            step.name = name
-            self.steps.append(step)
+            self.setUniqueStepName(step)
+            steps.append(step)
 
-            sp = None
             if self.useProgress:
-                sp = step.setupProgress()
-            if sp:
-                sps.append(sp)
+                step.setupProgress()
+        return steps
+
+    def setupBuild(self, expectations):
+        # create the actual BuildSteps.
+        self.executedSteps = []
+        self.stepnames = {}
+
+        self.steps = self.setupBuildSteps(self.stepFactories)
 
         # we are now ready to set up our BuildStatus.
         # pass all sourcestamps to the buildstatus
@@ -368,6 +371,19 @@ class Build(properties.PropertiesMixin):
         self.results = []  # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
         self.result = SUCCESS  # overall result, may downgrade after each step
         self.text = []  # list of text string lists (text2)
+
+    def _addBuildSteps(self, step_factories):
+        factories = [interfaces.IBuildStepFactory(s) for s in step_factories]
+        return self.setupBuildSteps(factories)
+
+    def addStepsAfterCurrentStep(self, step_factories):
+        # Add the new steps after the step that is running.
+        # The running step has already been popped from self.steps
+        self.steps[0:0] = self._addBuildSteps(step_factories)
+
+    def addStepsAfterLastStep(self, step_factories):
+        # Add the new steps to the end.
+        self.steps.extend(self._addBuildSteps(step_factories))
 
     def getNextStep(self):
         """This method is called to obtain the next BuildStep for this build.

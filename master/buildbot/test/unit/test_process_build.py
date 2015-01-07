@@ -656,6 +656,103 @@ class TestBuild(unittest.TestCase):
             call(42, u'p', 5, u'fake'),
             call(42, u'p2', ['abc', 9], u'mock')])
 
+    def create_mock_steps(self, names):
+        steps = []
+
+        def create_mock_step(name):
+            step = Mock()
+            step.return_value = step
+            step.startStep.return_value = SUCCESS
+            step.name = name
+            return step
+
+        for name in names:
+            step = create_mock_step(name)
+            steps.append(step)
+        return steps
+
+    def testAddStepsAfterCurrentStep(self):
+        b = self.build
+
+        steps = self.create_mock_steps(["a", "b", "c"])
+
+        def startStepB(*args, **kw):
+            new_steps = self.create_mock_steps(["d", "e"])
+            b.addStepsAfterCurrentStep([FakeStepFactory(s) for s in new_steps])
+            return SUCCESS
+
+        steps[1].startStep = startStepB
+        b.setStepFactories([FakeStepFactory(s) for s in steps])
+
+        b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
+        self.assertEqual(b.result, SUCCESS)
+        expected_names = ["a", "b", "d", "e", "c"]
+        executed_names = [s.name for s in b.executedSteps]
+        self.assertEqual(executed_names, expected_names)
+
+    def testAddStepsAfterLastStep(self):
+        b = self.build
+
+        steps = self.create_mock_steps(["a", "b", "c"])
+
+        def startStepB(*args, **kw):
+            new_steps = self.create_mock_steps(["d", "e"])
+            b.addStepsAfterLastStep([FakeStepFactory(s) for s in new_steps])
+            return SUCCESS
+
+        steps[1].startStep = startStepB
+        b.setStepFactories([FakeStepFactory(s) for s in steps])
+
+        b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
+        self.assertEqual(b.result, SUCCESS)
+        expected_names = ["a", "b", "c", "d", "e"]
+        executed_names = [s.name for s in b.executedSteps]
+        self.assertEqual(executed_names, expected_names)
+
+    def testStepNamesUnique(self):
+        # if the step names are unique they should remain unchanged
+        b = self.build
+
+        steps = self.create_mock_steps(["clone", "command", "clean"])
+        b.setStepFactories([FakeStepFactory(s) for s in steps])
+
+        b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
+        self.assertEqual(b.result, SUCCESS)
+        expected_names = ["clone", "command", "clean"]
+        executed_names = [s.name for s in b.executedSteps]
+        self.assertEqual(executed_names, expected_names)
+
+    def testStepNamesDuplicate(self):
+        b = self.build
+
+        steps = self.create_mock_steps(["stage", "stage", "stage"])
+        b.setStepFactories([FakeStepFactory(s) for s in steps])
+
+        b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
+        self.assertEqual(b.result, SUCCESS)
+        expected_names = ["stage", "stage_1", "stage_2"]
+        executed_names = [s.name for s in b.executedSteps]
+        self.assertEqual(executed_names, expected_names)
+
+    def testStepNamesDuplicateAfterAdd(self):
+        b = self.build
+
+        steps = self.create_mock_steps(["a", "b", "c"])
+
+        def startStepB(*args, **kw):
+            new_steps = self.create_mock_steps(["c", "c"])
+            b.addStepsAfterCurrentStep([FakeStepFactory(s) for s in new_steps])
+            return SUCCESS
+
+        steps[1].startStep = startStepB
+        b.setStepFactories([FakeStepFactory(s) for s in steps])
+
+        b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
+        self.assertEqual(b.result, SUCCESS)
+        expected_names = ["a", "b", "c_1", "c_2", "c"]
+        executed_names = [s.name for s in b.executedSteps]
+        self.assertEqual(executed_names, expected_names)
+
 
 class TestMultipleSourceStamps(unittest.TestCase):
 
