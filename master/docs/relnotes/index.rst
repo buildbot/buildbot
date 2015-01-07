@@ -100,6 +100,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * GitHub change hook now supports application/json format.
 
+* Add support for dynamically adding steps during a build. See :ref:`DynamicBuildFactories`.
+
 Fixes
 ~~~~~
 
