@@ -37,3 +37,17 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=['Remote artifact directory created.'])
         return self.runStep()
+
+    def test_upload_artifact(self):
+        self.setupStep(artifact.UploadArtifact(artifact="myartifact.py", artifactDirectory="mydir",
+                                   artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                   artifactServerURL="http://srv.com/dir"))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['rsync', '-var', 'myartifact.py',
+                                 'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py'])
+            + ExpectShell.log('stdio', stdout='')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['Artifact(s) uploaded.'])
+        return self.runStep()
