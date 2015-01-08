@@ -1,0 +1,90 @@
+from buildbot.process.build import Build
+from buildbot.process.properties import Properties
+from mock import Mock
+from buildbot.locks import SlaveLock
+from twisted.trial import unittest
+from buildbot.steps import artifact
+from zope.interface import implements
+from buildbot import interfaces
+
+class FakeRequest:
+    def __init__(self):
+        self.sources = []
+        self.reason = "Because"
+        self.properties = Properties()
+
+    def mergeSourceStampsWith(self, others):
+        return self.sources
+
+    def mergeReasons(self, others):
+        return self.reason
+
+class FakeMaster:
+    def __init__(self):
+        self.locks = {}
+        self.parent = Mock()
+
+    def getLockByID(self, lockid):
+        if not lockid in self.locks:
+            self.locks[lockid] = lockid.lockClass(lockid)
+        return self.locks[lockid]
+
+class FakeStepFactory(object):
+    """Fake step factory that just returns a fixed step object."""
+    implements(interfaces.IBuildStepFactory)
+    def __init__(self, step):
+        self.step = step
+
+    def buildStep(self):
+        return self.step
+
+class FakeBuildStatus(Mock):
+    implements(interfaces.IProperties)
+
+class TestBuild(unittest.TestCase):
+
+    def setUp(self):
+        r = FakeRequest()
+
+        self.request = r
+        self.master = FakeMaster()
+        self.master.maybeStartBuildsForSlave = lambda slave: True
+
+        self.build = Build([r])
+        self.builder = Mock()
+        self.builder.botmaster = self.master
+        self.build.setBuilder(self.builder)
+
+    def test_acquire_build_Lock_step(self):
+        b = self.build
+        slavebuilder = Mock()
+
+        l = SlaveLock("slave_builds",
+                             maxCount=1)
+
+        self.assertEqual(len(b.locks), 0)
+        step = artifact.AcquireBuildLocks(locks=[l.access('exclusive')])
+        b.setStepFactories([FakeStepFactory(step)])
+        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.currentStep.start()
+        self.assertEqual(len(b.locks), 1)
+        self.assertTrue(b.locks[0][0].owners[0][0], step)
+
+    def test_release_build_Lock_step(self):
+        b = self.build
+        slavebuilder = Mock()
+
+        l = SlaveLock("slave_builds",
+                             maxCount=1)
+
+        step = artifact.AcquireBuildLocks(locks=[l.access('exclusive')])
+        step2 = artifact.ReleaseBuildLocks()
+        b.setStepFactories([FakeStepFactory(step), FakeStepFactory(step2)])
+        self.assertEqual(len(b.locks), 0)
+
+        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.currentStep.start()
+        self.assertTrue(b.locks[0][0].owners[0][0], step)
+
+        b.currentStep.start()
+        self.assertEqual(len(b.locks[0][0].owners), 0)
