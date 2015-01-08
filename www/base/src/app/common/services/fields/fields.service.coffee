@@ -2,31 +2,47 @@ class fieldsService extends Factory('common')
   constructor: ->
     return {
 
-      checkbox: (name) ->
-        if localStorage.getItem(name) isnt undefined
-          initial_value = localStorage.getItem(name) is "true"
+        checkbox: (name, model) ->
+            if localStorage.getItem("#{name}")?
+                initial_value = localStorage.getItem("#{name}") is "true"
+            else
+                initial_value = model 
 
-        ret = 
-          type: 'checkbox'
-          name: name
-          value: initial_value
+            field = 
+                type: 'checkbox'
+                name: "#{name}"
+                value: initial_value
+            return field
 
-        return ret
+        radio: (name, model, specific_answers...) ->
+            default_answers = ["yes", "no"]
+            answers = default_answers
+            if specific_answers.length > 0
+                answers = specific_answers
 
-      radio: (name, answers...) ->
-          default_answers = 
-            "yes": "yes"
-            "no" : "no"
+            if localStorage.getItem("#{name}")?
+                initial_value = localStorage.getItem("#{name}")
+            else
+                initial_value = model
 
-          if localStorage.getItem(name) isnt undefined
-            initial_value = localStorage.getItem(name)
+            field = 
+                name: "#{name}"
+                type: 'radio'
+                value: initial_value
+                answers: answers
+            return field
 
-          ret = 
-            name: name
-            type: 'radio'
-            value: initial_value
-            answers: default_answers
+        input: (name, model) ->
+            if localStorage.getItem("#{name}")?
+                initial_value = localStorage.getItem("#{name}")
+            else
+                initial_value = model
 
-          return ret
+            field = 
+                name: "#{name}"
+                type: 'text'
+                value: initial_value
+            return field
+
     }
 

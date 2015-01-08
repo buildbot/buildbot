@@ -1,4 +1,3 @@
-div
-    label
-        input(type="checkbox", ng-model="data.value", ng-change="changeSettings(data.name, data.value)", ng-value="data.value")
-        | {{ data.name }}
+label
+    input(type="checkbox", ng-model="data.value", ng-change="changeSettings(data.name, data.value)", ng-value="data.value" ng-disabled="isDisabled")
+    | {{ data.name }}

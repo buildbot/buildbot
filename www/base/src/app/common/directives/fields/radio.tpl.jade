@@ -1,4 +1,4 @@
-div
-    label(ng-repeat="(key,answer) in data.answers")
-        input(type="radio", ng-model="data.value", ng-change="changeSettings(data.name, answer)", ng-value="answer")
-        | {{ key }}
+div(ng-repeat="(key,answer) in data.answers")
+    label(class="bbradio" class="radio-inline")
+        input(type="radio" name="{{data.name}}" ng-model="data.value" ng-change="changeSettings(data.name, answer)" ng-value="answer" class="bbradio")
+        | {{ answer }}

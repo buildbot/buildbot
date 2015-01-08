@@ -1,9 +1,22 @@
 .container
   .row
     .well
-        h2 About this buildbot
+        h2 Settings
         .row
-          div
-            bbcheckbox(data="settings.settings1")
-            bbcheckbox(data="settings.settings2")
-            bbradio(data="settings.settings3")
+            h3 First Settings
+            form(name="settings1")
+                div(class="checkbox")
+                    bbcheckbox(data="settings.settings1")
+                div(class="checkbox")
+                    bbcheckbox(data="settings.settings2")
+                span(class="help-block" ng-show="settings.settings1.value") Warning : {{ settings.settings1.name }} is checked 
+            h3 Second Settings
+            form
+                div(class="radio")
+                    bbradio(data="settings.settings3")
+                div(class="radio")
+                    bbradio(data="settings.settings4")
+            h3 Third Settings
+            form(class="form-horizontal")
+                div(class="form-group")
+                    bbinput(data="settings.settings5")
