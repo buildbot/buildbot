@@ -89,7 +89,10 @@ class BuildRequest(Row):
         results = -1,
         submitted_at = 0,
         complete_at = 0,
-        artifactbrid = None
+        artifactbrid = None,
+        triggeredbybrid = None,
+        mergebrid = None,
+        startbrid = None
     )
 
     id_column = 'id'

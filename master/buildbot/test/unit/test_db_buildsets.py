@@ -20,6 +20,7 @@ from buildbot.db import buildsets
 from buildbot.util import json, UTC, epoch2datetime
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
+import sqlalchemy as sa
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -82,6 +83,27 @@ class TestBuildsetsConnectorComponent(
                 self.assertEqual(rows,
                     [ ( bsid, brids['bldr'], 'bldr', 0, 0,
                         -1, self.now, None) ])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
+    def test_addBuildset_trigger(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder")]
+        d = self.insertTestData(breqs)
+
+        d.addCallback(lambda _ :
+            self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
+                                properties={}, builderNames=['a'], triggeredbybrid=1))
+
+        def check((bsid, brids)):
+            def thd(conn):
+                reqs_tbl = self.db.model.buildrequests
+                q = sa.select(columns=[reqs_tbl]).where(reqs_tbl.c.id == brids['a'])
+                res = conn.execute(q)
+                row = res.fetchone()
+                res.close()
+                self.assertEqual(row.triggeredbybrid, 1)
+                self.assertEqual(row.startbrid, 1)
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
