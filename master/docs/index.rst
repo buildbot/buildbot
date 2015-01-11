@@ -2,13 +2,10 @@
    BuildBot Documentation - |version|
    ==================================
 
-This is the BuildBot documentation for Buildbot version |version|.
+This is the Buildbot documentation for Buildbot version |version|.
 
-If you are evaluating Buildbot and would like to get started quickly, start
-with the :doc:`Tutorial <tutorial/index>`.  Regular users of Buildbot should
-consult the :doc:`Manual <manual/index>`, and those wishing to modify Buildbot
-directly will want to be familiar with the :doc:`Developer's Documentation
-<developer/index>`.
+If you are evaluating Buildbot and would like to get started quickly, start with the :doc:`Tutorial <tutorial/index>`.
+Regular users of Buildbot should consult the :doc:`Manual <manual/index>`, and those wishing to modify Buildbot directly will want to be familiar with the :doc:`Developer's Documentation <developer/index>`.
 
 Table Of Contents
 -----------------
