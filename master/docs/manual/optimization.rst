@@ -3,14 +3,13 @@
 Optimization
 ============
 
-If you're feeling your Buildbot is running a bit slow, here are some tricks that may help you,
-but use them at your own risk.
+If you're feeling your Buildbot is running a bit slow, here are some tricks that may help you, but use them at your own risk.
 
 Properties load speedup
 -----------------------
 
-For example, if most of your build properties are strings, you can gain an approx. 30% speedup
-if you put this snippet of code inside your master.cfg file::
+For example, if most of your build properties are strings, you can gain an approx.
+30% speedup if you put this snippet of code inside your master.cfg file::
 
     def speedup_json_loads():
         import json, re
@@ -27,6 +26,4 @@ if you put this snippet of code inside your master.cfg file::
 
     speedup_json_loads()
 
-It patches json decoder so that it would first try to extract a value from JSON that is a list
-of two strings (which is the case for a property being a string), and would fallback to general
-JSON decoder on any error
+It patches json decoder so that it would first try to extract a value from JSON that is a list of two strings (which is the case for a property being a string), and would fallback to general JSON decoder on any error.

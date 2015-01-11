@@ -4,8 +4,8 @@ Global Configuration
 The keys in this section affect the operations of the buildmaster globally.
 
 .. contents::
-    :depth: 1
-    :local:
+   :depth: 1
+   :local:
 
 .. bb:cfg:: db
 .. bb:cfg:: db_url
@@ -34,7 +34,8 @@ The format of this parameter is completely documented at http://www.sqlalchemy.o
      "driver://[username:password@]host:port/database[?args]"
 
 The optional ``db_poll_interval`` specifies the interval, in seconds, between checks for pending tasks in the database.
-This parameter is generally only useful in multi-master mode. See :ref:`Multi-master-mode`.
+This parameter is generally only useful in multi-master mode.
+See :ref:`Multi-master-mode`.
 
 These parameters can be specified directly in the configuration dictionary, as ``c['db_url']`` and ``c['db_poll_interval']``, although this method is deprecated.
 
@@ -104,25 +105,25 @@ It is possible to configure buildbot to have multiple master processes that shar
 This has been well tested using a MySQL database.
 There are several benefits of Multi-master mode:
 
-  * You can have large numbers of build slaves handling the same queue of build requests.
-    A single master can only handle so many slaves (the number is based on a number of factors including type of builds, number of builds, and master and slave IO and CPU capacity--there is no fixed formula).
-    By adding another master which shares the queue of build requests, you can attach more slaves to this additional master, and increase your build throughput.
+* You can have large numbers of build slaves handling the same queue of build requests.
+  A single master can only handle so many slaves (the number is based on a number of factors including type of builds, number of builds, and master and slave IO and CPU capacity--there is no fixed formula).
+  By adding another master which shares the queue of build requests, you can attach more slaves to this additional master, and increase your build throughput.
 
-  * You can shut one master down to do maintenance, and other masters will continue to do builds.
+* You can shut one master down to do maintenance, and other masters will continue to do builds.
 
 State that is shared in the database includes:
 
-  * List of changes
-  * Scheduler names and internal state
-  * Build requests, including the builder name
+* List of changes
+* Scheduler names and internal state
+* Build requests, including the builder name
 
 Because of this shared state, you are strongly encouraged to:
 
-  * Ensure that each named scheduler runs on only one master.
-    If the same scheduler runs on multiple masters, it will trigger duplicate builds and may produce other undesirable behaviors.
+* Ensure that each named scheduler runs on only one master.
+  If the same scheduler runs on multiple masters, it will trigger duplicate builds and may produce other undesirable behaviors.
 
-  * Ensure builder names are unique for a given build factory implementation.
-    You can have the same builder name configured on many masters, but if the build factories differ, you will get different results depending on which master claims the build.
+* Ensure builder names are unique for a given build factory implementation.
+  You can have the same builder name configured on many masters, but if the build factories differ, you will get different results depending on which master claims the build.
 
 One suggested configuration is to have one buildbot master configured with just the scheduler and change sources; and then other masters configured with just the builders.
 
@@ -186,7 +187,8 @@ The default value is 4096, which should be a reasonable default on most file sys
 This setting has no impact on status plugins, and merely affects the required disk space on the master for build logs.
 
 The :bb:cfg:`logCompressionMethod` controls what type of compression is used for build logs.
-The default is 'bz2', and the other valid option is 'gz'.  'bz2' offers better compression at the expense of more CPU time.
+The default is 'bz2', and the other valid option is 'gz'.
+'bz2' offers better compression at the expense of more CPU time.
 
 The :bb:cfg:`logMaxSize` parameter sets an upper limit (in bytes) to how large logs from an individual build step can be.
 The default value is None, meaning no upper limit to the log size.
@@ -218,7 +220,8 @@ Horizons
 Buildbot stores historical information on disk in the form of "Pickle" files and compressed logfiles.
 In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
 
-The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of. One place these changes are displayed is on the waterfall page.
+The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
+One place these changes are displayed is on the waterfall page.
 This parameter defaults to 0, which means keep all changes indefinitely.
 
 The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
@@ -262,13 +265,15 @@ The available caches are:
     This should be larger than the number of changes that typically arrive in the span of a few minutes, otherwise your schedulers will be reloading changes from the database every time they run.
     For distributed version control systems, like Git or Hg, several thousand changes may arrive at once, so setting this parameter to something like 10000 isn't unreasonable.
 
-    This parameter is the same as the deprecated global parameter :bb:cfg:`changeCacheSize`.  Its default value is 10.
+    This parameter is the same as the deprecated global parameter :bb:cfg:`changeCacheSize`.
+    Its default value is 10.
 
 ``Builds``
     The :bb:cfg:`buildCacheSize` parameter gives the number of builds for each builder which are cached in memory.
     This number should be larger than the number of builds required for commonly-used status displays (the waterfall or grid views), so that those displays do not miss the cache on a refresh.
 
-    This parameter is the same as the deprecated global parameter :bb:cfg:`buildCacheSize`.  Its default value is 15.
+    This parameter is the same as the deprecated global parameter :bb:cfg:`buildCacheSize`.
+    Its default value is 15.
 
 ``chdicts``
     The number of rows from the ``changes`` table to cache in memory.
@@ -364,7 +369,9 @@ This means that you can have the buildmaster listen on a localhost-only port by 
 
 This might be useful if you only run buildslaves on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
 
-.. note:: In Buildbot versions <=0.8.8 you might see ``slavePortnum`` option.
+.. note::
+
+   In Buildbot versions <=0.8.8 you might see ``slavePortnum`` option.
    This option contains same value as ``c['protocols']['pb']['port']`` but not recomended to use.
 
 .. index:: Properties; global
@@ -412,7 +419,9 @@ There are three separate :class:`Manhole` classes.
 Two of them use SSH, one uses unencrypted telnet.
 Two of them use a username+password combination to grant access, one of them uses an SSH-style :file:`authorized_keys` file which contains a list of ssh public keys.
 
-.. note:: Using any Manhole requires that ``pycrypto`` and ``pyasn1`` be installed.
+.. note::
+
+   Using any Manhole requires that ``pycrypto`` and ``pyasn1`` be installed.
    These are not part of the normal Buildbot dependencies.
 
 `manhole.AuthorizedKeysManhole`
@@ -436,7 +445,9 @@ Two of them use a username+password combination to grant access, one of them use
     c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
 
 The :class:`Manhole` instance can be configured to listen on a specific port.
-You may wish to have this listening port bind to the loopback interface (sometimes known as `lo0`, `localhost`, or 127.0.0.1) to restrict access to clients which are running on the same host. ::
+You may wish to have this listening port bind to the loopback interface (sometimes known as `lo0`, `localhost`, or 127.0.0.1) to restrict access to clients which are running on the same host.
+
+::
 
     from buildbot.manhole import PasswordManhole
     c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
