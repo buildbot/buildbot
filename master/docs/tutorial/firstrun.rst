@@ -7,23 +7,17 @@ First Run
 Goal
 ----
 
-This tutorial will take you from zero to running your first buildbot master
-and slave as quickly as possible, without changing the default configuration.
+This tutorial will take you from zero to running your first buildbot master and slave as quickly as possible, without changing the default configuration.
 
-This tutorial is all about instant gratification and the five minute
-experience: in five minutes we want to convince you that this project Works,
-and that you should seriously consider spending some more time learning
-the system.  In this tutorial no configuration or code changes are done.
+This tutorial is all about instant gratification and the five minute experience: in five minutes we want to convince you that this project Works, and that you should seriously consider spending some more time learning the system.
+In this tutorial no configuration or code changes are done.
 
-This tutorial assumes that you are running on Unix, but might be adaptable
-easily to Windows.
+This tutorial assumes that you are running on Unix, but might be adaptable easily to Windows.
 
-For the :ref:`fastest way through in Linux <first-run-docker-label>`, you
-can use Docker, the linux container engine. Docker automates all the
-deployment steps for you.
+For the :ref:`fastest way through in Linux <first-run-docker-label>`, you can use Docker, the linux container engine.
+Docker automates all the deployment steps for you.
 
-For a more manual approach, you should be able to cut and paste each shell
-block from this tutorial directly into a terminal.
+For a more manual approach, you should be able to cut and paste each shell block from this tutorial directly into a terminal.
 
 .. _getting-code-label:
 
@@ -32,14 +26,13 @@ Getting the code
 
 There are many ways to get the code on your machine.
 For this tutorial, we will use easy_install to install and run buildbot.
-While this isn't the preferred method to install buildbot, it is the simplest
-one to use for the purposes of this tutorial because it should work on all
-systems.  (The preferred method would be to install buildbot via ``pip``.)
+While this isn't the preferred method to install buildbot, it is the simplest one to use for the purposes of this tutorial because it should work on all systems.
+(The preferred method would be to install buildbot via ``pip``.)
 
 To make this work, you will need the following installed:
- * Python_ and the development packages for it
- * virtualenv_
- * Git_
+* Python_ and the development packages for it
+* virtualenv_
+* Git_
 
 .. _Python: http://www.python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv/
@@ -47,13 +40,12 @@ To make this work, you will need the following installed:
 
 Preferably, use your package installer to install these.
 
-You will also need a working Internet connection, as virtualenv and
-easy_install will need to download other projects from the Internet.
+You will also need a working Internet connection, as virtualenv and easy_install will need to download other projects from the Internet.
 
 .. note::
 
-    Buildbot does not require root access.  Run the commands in this tutorial
-    as a normal, unprivileged user.
+    Buildbot does not require root access.
+    Run the commands in this tutorial as a normal, unprivileged user.
 
 Let's dive in by typing at the terminal:
 
@@ -127,9 +119,7 @@ Now, create the slave:
 
   buildslave create-slave slave localhost:9989 example-slave pass
 
-The user:host pair, username, and password should be the same as the ones in
-master.cfg; verify this is the case by looking at the section for ``c['slaves']``
-and ``c['slavePortnum']``:
+The user:host pair, username, and password should be the same as the ones in master.cfg; verify this is the case by looking at the section for ``c['slaves']`` and ``c['slavePortnum']``:
 
 .. code-block:: bash
 
@@ -164,24 +154,22 @@ Meanwhile, in the other terminal, in the master log, if you tail the log you sho
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] bot attached
   2011-03-13 18:46:58-0700 [Broker,1,127.0.0.1] Buildslave example-slave attached to runtests
 
-You should now be able to go to http://localhost:8010, where you will see
-a web page similar to:
+You should now be able to go to http://localhost:8010, where you will see a web page similar to:
 
 .. image:: _images/index.png
    :alt: index page
 
-Click on the
-`Waterfall Display link <http://localhost:8010/waterfall>`_
-and you get this:
+Click on the `Waterfall Display link <http://localhost:8010/waterfall>`_ and you get this:
 
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
 
-That's the end of the first tutorial.  A bit underwhelming, you say? Well, that
-was the point! We just wanted to get you to dip your toes in the water.  It's
-easy to take your first steps, but this is about as far as we can go without
-touching the configuration.
+That's the end of the first tutorial.
+A bit underwhelming, you say?
+Well, that was the point!
+We just wanted to get you to dip your toes in the water.
+It's easy to take your first steps, but this is about as far as we can go without touching the configuration.
 
-You've got a taste now, but you're probably curious for more.  Let's step it
-up a little in the second tutorial by changing the configuration and doing
-an actual build. Continue on to :ref:`quick-tour-label`.
+You've got a taste now, but you're probably curious for more.
+Let's step it up a little in the second tutorial by changing the configuration and doing an actual build.
+Continue on to :ref:`quick-tour-label`.
