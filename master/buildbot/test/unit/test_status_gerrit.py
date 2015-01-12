@@ -177,6 +177,7 @@ class TestGerritStatusPush(unittest.TestCase):
 
         d = self.run_fake_summary_build(gsp, buildResults, finalResult,
                                         resultText)
+
         @d.addCallback
         def check(msg):
             result = makeReviewResult(msg,
@@ -192,6 +193,7 @@ class TestGerritStatusPush(unittest.TestCase):
 
         d = self.run_fake_summary_build(gsp, buildResults, finalResult,
                                         resultText)
+
         @d.addCallback
         def check(msg):
             result = makeReviewResult(msg,
