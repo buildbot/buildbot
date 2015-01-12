@@ -1446,6 +1446,16 @@ GerritStatusPush
 
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
+By default, a single summary review is sent; that is, a default summaryCB is provided, but no reviewCB or startCB.
+
+``reviewCB``, if specified, determines the message and score to give when sending a review for each separate build.
+It should return a tuple of (message, verified, reviewed).
+
+If ``startCB`` is specified, it should return a message.
+This message will be sent to the Gerrit server when each build is started.
+
+``summaryCB``, if specified, determines the message and score to give when sending a single review summarizing all of the builds.
+It should return a tuple of (message, verified, reviewed).
 
 An example usage::
 
@@ -1537,10 +1547,6 @@ Parameters:
 ``summaryCB``
     If specified, determines the message and score to give when sending a single review summarizing all of the builds.
     It should return a tuple of :samp:`({message}, {verified}, {reviewed})`.
-
-.. note::
-
-   By default, a single summary review is sent; that is, a default :py:func:`summaryCB` is provided, but no :py:func:`reviewCB` or :py:func:`startCB`.
 
 .. seealso::
 
