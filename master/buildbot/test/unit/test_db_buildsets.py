@@ -87,6 +87,21 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(check)
         return d
 
+    def checkBuildRequest(self, triggeredbybrid=None, startbrid=None, priority=0):
+        def check((bsid, brids)):
+            def thd(conn):
+                reqs_tbl = self.db.model.buildrequests
+                q = sa.select(columns=[reqs_tbl]).where(reqs_tbl.c.id == brids['a'])
+                res = conn.execute(q)
+                row = res.fetchone()
+                res.close()
+                self.assertEqual(row.triggeredbybrid, triggeredbybrid)
+                self.assertEqual(row.startbrid, startbrid)
+                self.assertEqual(row.priority, priority)
+            return self.db.pool.do(thd)
+
+        return check
+
     def test_addBuildset_trigger(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder")]
         d = self.insertTestData(breqs)
@@ -95,17 +110,28 @@ class TestBuildsetsConnectorComponent(
             self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
                                 properties={}, builderNames=['a'], triggeredbybrid=1))
 
-        def check((bsid, brids)):
-            def thd(conn):
-                reqs_tbl = self.db.model.buildrequests
-                q = sa.select(columns=[reqs_tbl]).where(reqs_tbl.c.id == brids['a'])
-                res = conn.execute(q)
-                row = res.fetchone()
-                res.close()
-                self.assertEqual(row.triggeredbybrid, 1)
-                self.assertEqual(row.startbrid, 1)
-            return self.db.pool.do(thd)
-        d.addCallback(check)
+        d.addCallback(self.checkBuildRequest(triggeredbybrid=1, startbrid=1))
+        return d
+
+    def test_addBuildset_trigger_subchain(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder2",
+                                     triggeredbybrid=1, startbrid=1)]
+        d = self.insertTestData(breqs)
+
+        d.addCallback(lambda _ :
+            self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
+                                properties={}, builderNames=['a'], triggeredbybrid=2))
+
+        d.addCallback(self.checkBuildRequest(triggeredbybrid=2, startbrid=1))
+        return d
+
+    def test_addBuildset_priority(self):
+        d = self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
+                                properties={'priority': ('50', 'Force Build Form')},
+                                builderNames=['a'])
+
+        d.addCallback(self.checkBuildRequest(priority=50))
         return d
 
     def test_addBuildset_bigger(self):
