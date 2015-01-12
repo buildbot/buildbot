@@ -135,20 +135,6 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                  startCB=None, port=29418, reviewArg=None,
                  startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
                  identity_file=None, **kwargs):
-        """
-        @param server:    Gerrit SSH server's address to use for push event notifications.
-        @param username:  Gerrit SSH server's username.
-        @param reviewCB:  Callback that is called each time a build is finished, and that is used
-                          to define the message and review approvals depending on the build result.
-        @param startCB:   Callback that is called each time a build is started.
-                          Used to define the message sent to Gerrit.
-        @param port:      Gerrit SSH server's port.
-        @param reviewArg: Optional argument passed to the review callback.
-        @param startArg:  Optional argument passed to the start callback.
-        @param summaryCB:  Callback that is called each time a buildset finishes, and that is used
-                           to define a message and review approvals depending on the build result.
-        @param summaryArg: Optional argument passed to the summary callback.
-        """
         StatusReceiverMultiService.__init__(self)
 
         # If neither reviewCB nor summaryCB were specified, default to sending
