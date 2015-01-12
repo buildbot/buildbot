@@ -16,6 +16,9 @@
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.status_gerrit import GerritStatusPush
+from buildbot.status.status_gerrit import makeReviewResult
+from buildbot.status.status_gerrit import GERRIT_LABEL_VERIFIED
+from buildbot.status.status_gerrit import GERRIT_LABEL_REVIEWED
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
@@ -23,12 +26,12 @@ from mock import Mock
 from twisted.trial import unittest
 
 
-def testReviewCB(builderName, build, result, status, arg):
+def legacyTestReviewCB(builderName, build, result, status, arg):
     msg = str({'name': builderName, 'result': result})
     return (msg, 1 if result == SUCCESS else -1, 0)
 
 
-def testSummaryCB(buildInfoList, results, status, arg):
+def legacyTestSummaryCB(buildInfoList, results, status, arg):
     success = False
     failure = False
 
@@ -63,8 +66,8 @@ class TestGerritStatusPush(unittest.TestCase):
         gsp.master = fakemaster.make_master()
         gsp.master_status = gsp.master.status
 
-    def run_fake_summary_build(self, buildResults, finalResult, resultText, verifiedScore):
-        gsp = GerritStatusPush('host.example.com', 'username', summaryCB=testSummaryCB)
+    def run_fake_summary_build_legacy(self, buildResults, finalResult, resultText, verifiedScore):
+        gsp = GerritStatusPush('host.example.com', 'username', summaryCB=legacyTestSummaryCB)
 
         buildpairs = []
         i = 0
@@ -122,7 +125,10 @@ class TestGerritStatusPush(unittest.TestCase):
                 info.append({'name': "Builder-%d" % i, 'result': buildResults[i],
                              'resultText': resultText[i], 'text': 'buildText',
                              'url': self.THING_URL})
-            fakeSCR.assert_called_once_with(self.TEST_PROJECT, self.TEST_REVISION, str(info), verifiedScore, 0)
+            fakeSCR.assert_called_once_with(self.TEST_PROJECT, self.TEST_REVISION,
+                                            makeReviewResult(str(info),
+                                                             (GERRIT_LABEL_VERIFIED, verifiedScore),
+                                                             (GERRIT_LABEL_REVIEWED, 0)))
 
         return d
 
@@ -144,23 +150,25 @@ class TestGerritStatusPush(unittest.TestCase):
         ]
         self.assertEqual(expected2, with_identity._gerritCmd('foo'))
 
-    def test_buildsetComplete_success_sends_summary_review(self):
-        d = self.run_fake_summary_build(buildResults=[SUCCESS, SUCCESS], finalResult=SUCCESS,
+    def test_buildsetComplete_success_sends_summary_review_legacy(self):
+        d = self.run_fake_summary_build_legacy(buildResults=[SUCCESS, SUCCESS], finalResult=SUCCESS,
                                         resultText=["succeeded", "succeeded"], verifiedScore=1)
         return d
 
-    def test_buildsetComplete_failure_sends_summary_review(self):
-        d = self.run_fake_summary_build(buildResults=[FAILURE, FAILURE], finalResult=FAILURE,
+    def test_buildsetComplete_failure_sends_summary_review_legacy(self):
+        d = self.run_fake_summary_build_legacy(buildResults=[FAILURE, FAILURE], finalResult=FAILURE,
                                         resultText=["failed", "failed"], verifiedScore=-1)
         return d
 
-    def test_buildsetComplete_mixed_sends_summary_review(self):
-        d = self.run_fake_summary_build(buildResults=[SUCCESS, FAILURE], finalResult=FAILURE,
-                                        resultText=["succeeded", "failed"], verifiedScore=-1)
+    def test_buildsetComplete_mixed_sends_summary_review_legacy(self):
+        d = self.run_fake_summary_build_legacy(buildResults=[SUCCESS, FAILURE],
+                                               finalResult=FAILURE,
+                                               resultText=["succeeded", "failed"],
+                                               verifiedScore=-1)
         return d
 
-    def run_fake_single_build(self, buildResult, verifiedScore):
-        gsp = GerritStatusPush('host.example.com', 'username', reviewCB=testReviewCB)
+    def run_fake_single_build_legacy(self, buildResult, verifiedScore):
+        gsp = GerritStatusPush('host.example.com', 'username', reviewCB=legacyTestReviewCB)
         self.run_prepare_gsp(gsp)
 
         fakeSCR = Mock()
@@ -172,11 +180,12 @@ class TestGerritStatusPush(unittest.TestCase):
         gsp.buildFinished('dummyBuilder', build, buildResult)
 
         fakeSCR.assert_called_once_with(self.TEST_PROJECT, self.TEST_REVISION,
-                                        str({'name': 'dummyBuilder', 'result': buildResult}),
-                                        verifiedScore, 0)
+                                        makeReviewResult(str({'name': 'dummyBuilder', 'result': buildResult}),
+                                                         (GERRIT_LABEL_VERIFIED, verifiedScore),
+                                                         (GERRIT_LABEL_REVIEWED, 0)))
 
-    def test_buildsetComplete_success_sends_review(self):
-        self.run_fake_single_build(SUCCESS, 1)
+    def test_buildsetComplete_success_sends_review_legacy(self):
+        self.run_fake_single_build_legacy(SUCCESS, 1)
 
-    def test_buildsetComplete_failure_sends_review(self):
-        self.run_fake_single_build(FAILURE, -1)
+    def test_buildsetComplete_failure_sends_review_legacy(self):
+        self.run_fake_single_build_legacy(FAILURE, -1)
