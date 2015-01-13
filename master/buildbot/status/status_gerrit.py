@@ -19,6 +19,7 @@
 ."""
 
 import time
+import warnings
 
 from buildbot.status import buildset
 from buildbot.status.base import StatusReceiverMultiService
@@ -35,17 +36,57 @@ from twisted.internet.protocol import ProcessProtocol
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
 
+GERRIT_LABEL_VERIFIED = 'Verified'
+GERRIT_LABEL_REVIEWED = 'Code-Review'
+
+
+def makeReviewResult(message, *labels):
+    """
+    helper to produce a review result
+    """
+    return dict(message=message, labels=dict(labels))
+
+
+def _handleLegacyResult(result):
+    """
+    make sure the result is backward compatible
+    """
+    if not isinstance(result, dict):
+        warnings.warn('The Gerrit status callback uses the old way to '
+                      'communicate results.  The outcome might be not what is '
+                      'expected.')
+        message, verified, reviewed = result
+        result = makeReviewResult(message,
+                                  (GERRIT_LABEL_VERIFIED, verified),
+                                  (GERRIT_LABEL_REVIEWED, reviewed))
+    return result
+
+
+def _old_add_label(label, value):
+    if label == GERRIT_LABEL_VERIFIED:
+        return ["--verified %d" % int(value)]
+    elif label == GERRIT_LABEL_REVIEWED:
+        return ["--code-review %d" % int(value)]
+    else:
+        warnings.warn('Gerrit older than 2.6 does not support custom labels. '
+                      'Setting %s is ignored.' % label)
+        return []
+
+
+def _new_add_label(label, value):
+    return ["--label %s=%d" % (label, int(value))]
+
 
 def defaultReviewCB(builderName, build, result, status, arg):
     if result == RETRY:
-        return None, 0, 0
+        return makeReviewResult(None)
 
     message = "Buildbot finished compiling your patchset\n"
     message += "on configuration: %s\n" % builderName
     message += "The result is: %s\n" % Results[result].upper()
 
-    # message, verified, reviewed
-    return message, (result == SUCCESS or -1), 0
+    return makeReviewResult(message,
+                            (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
 
 
 def defaultSummaryCB(buildInfoList, results, status, arg):
@@ -68,15 +109,13 @@ def defaultSummaryCB(buildInfoList, results, status, arg):
         else:
             failure = True
 
-    msg = '\n\n'.join(msgs)
-
     if success and not failure:
         verified = 1
     else:
         verified = -1
 
-    reviewed = 0
-    return (msg, verified, reviewed)
+    return makeReviewResult('\n\n'.join(msgs),
+                            (GERRIT_LABEL_VERIFIED, verified))
 
 
 # These are just sentinel values for GerritStatusPush.__init__ args
@@ -96,20 +135,6 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                  startCB=None, port=29418, reviewArg=None,
                  startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
                  identity_file=None, **kwargs):
-        """
-        @param server:    Gerrit SSH server's address to use for push event notifications.
-        @param username:  Gerrit SSH server's username.
-        @param reviewCB:  Callback that is called each time a build is finished, and that is used
-                          to define the message and review approvals depending on the build result.
-        @param startCB:   Callback that is called each time a build is started.
-                          Used to define the message sent to Gerrit.
-        @param port:      Gerrit SSH server's port.
-        @param reviewArg: Optional argument passed to the review callback.
-        @param startArg:  Optional argument passed to the start callback.
-        @param summaryCB:  Callback that is called each time a buildset finishes, and that is used
-                           to define a message and review approvals depending on the build result.
-        @param summaryArg: Optional argument passed to the summary callback.
-        """
         StatusReceiverMultiService.__init__(self)
 
         # If neither reviewCB nor summaryCB were specified, default to sending
@@ -245,8 +270,11 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
         if self.reviewCB:
-            message, verified, reviewed = self.reviewCB(builderName, build, result, self.master_status, self.reviewArg)
-            self.sendCodeReviews(build, message, verified, reviewed)
+            result = _handleLegacyResult(self.reviewCB(builderName, build,
+                                                       result,
+                                                       self.master_status,
+                                                       self.reviewArg))
+            self.sendCodeReviews(build, result)
 
     def sendBuildSetSummary(self, buildset, builds):
         if self.summaryCB:
@@ -267,10 +295,11 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
-            message, verified, reviewed = self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg)
-            self.sendCodeReviews(builds[0], message, verified, reviewed)
+            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg))
+            self.sendCodeReviews(builds[0], result)
 
-    def sendCodeReviews(self, build, message, verified=0, reviewed=0):
+    def sendCodeReviews(self, build, result):
+        message = result.get('message', None)
         if message is None:
             return
 
@@ -288,7 +317,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                     change2 = downloaded[2 * i]
                     revision = downloaded[2 * i + 1]
                     if change1 == change2:
-                        self.sendCodeReview(project, revision, message, verified, reviewed)
+                        self.sendCodeReview(project, revision, result)
                     else:
                         return  # something is wrong, abort
             return
@@ -304,32 +333,31 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                 revision = None
 
             if project is not None and revision is not None:
-                self.sendCodeReview(project, revision, message, verified, reviewed)
+                self.sendCodeReview(project, revision, result)
                 return
 
-    def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
+    def sendCodeReview(self, project, revision, result):
         gerrit_version = self.getCachedVersion()
-        if (verified or reviewed) and gerrit_version is None:
-            self.callWithVersion(lambda: self.sendCodeReview(project, revision, message, verified, reviewed))
+        if gerrit_version is None:
+            self.callWithVersion(lambda: self.sendCodeReview(project, revision,
+                                                             result))
             return
 
         command = self._gerritCmd("review", "--project %s" % str(project))
+        message = result.get('message', None)
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
 
-        if verified:
-            assert(gerrit_version)
+        labels = result.get('labels', None)
+        if labels:
+            assert gerrit_version
             if gerrit_version < LooseVersion("2.6"):
-                command.extend(["--verified %d" % int(verified)])
+                add_label = _old_add_label
             else:
-                command.extend(["--label Verified=%d" % int(verified)])
+                add_label = _new_add_label
 
-        if reviewed:
-            assert(gerrit_version)
-            if gerrit_version < LooseVersion("2.6"):
-                command.extend(["--code-review %d" % int(reviewed)])
-            else:
-                command.extend(["--label Code-Review=%d" % int(reviewed)])
+            for label, value in labels.items():
+                command.extend(add_label(label, value))
 
         command.append(str(revision))
         print command

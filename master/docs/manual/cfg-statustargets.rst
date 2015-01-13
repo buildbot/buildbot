@@ -1447,100 +1447,71 @@ GerritStatusPush
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
 
-An example usage::
+.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, ...)
 
-    from buildbot.status.status_gerrit import GerritStatusPush
-    from buildbot.status.builder import Results, SUCCESS, RETRY
+   :param string server: Gerrit SSH server's address to use for push event notifications.
+   :param string username: Gerrit SSH server's username.
+   :param int port: (optional) Gerrit SSH server's port (default: 29418)
+   :param reviewCB: (optional) callback that is called each time a build is finished, and that is used to define the message and review approvals depending on the build result.
+   :param reviewArg: (optional) argument passed to the review callback.
 
-    def gerritReviewCB(builderName, build, result, status, arg):
-        if result == RETRY:
-            return None, 0, 0
+                    If :py:func:`reviewCB` callback is specified, it determines the message and score to give when sending a review for each separate build.
+                    It should return a dictionary:
 
-        message =  "Buildbot finished compiling your patchset\n"
-        message += "on configuration: %s\n" % builderName
-        message += "The result is: %s\n" % Results[result].upper()
+                    .. code-block:: python
 
-        if arg:
-            message += "\nFor more details visit:\n"
-            message += status.getURLForThing(build) + "\n"
+                        {'message': message,
+                         'labels': {label-name: label-score,
+                                    ...}
+                        }
 
-        # message, verified, reviewed
-        return message, (result == SUCCESS or -1), 0
+                    For example:
 
-    def gerritStartCB(builderName, build, arg):
-        message = "Buildbot started compiling your patchset\n"
-        message += "on configuration: %s\n" % builderName
+                    .. literalinclude:: /examples/git_gerrit.cfg
+                       :pyobject: gerritReviewCB
+                       :language: python
 
-        return message
+                    Where ``Results``, ``RETRY`` and ``SUCCESS`` are imported like
 
-    def gerritSummaryCB(buildInfoList, results, status, arg):
-        success = False
-        failure = False
+                    .. code-block:: python
 
-        msgs = []
+                       from buildbot.status.builder import Results, SUCCESS, RETRY
 
-        for buildInfo in buildInfoList:
-            msg = "Builder %(name)s %(resultText)s (%(text)s)" % buildInfo
-            link = buildInfo.get('url', None)
-            if link:
-                msg += " - " + link
-            else:
-                msg += "."
-            msgs.append(msg)
+   :param startCB: (optional) callback that is called each time a build is started.
+                   Used to define the message sent to Gerrit.
+   :param startArg: (optional) argument passed to the start callback.
 
-            if buildInfo['result'] == SUCCESS:
-                success = True
-            else:
-                failure = True
+                    If :py:func:`startCB` is specified, it should return a message.
+                    This message will be sent to the Gerrit server when each build is started, for example:
 
-        msg = '\n\n'.join(msgs)
+                    .. literalinclude:: /examples/git_gerrit.cfg
+                       :pyobject: gerritStartCB
 
-        if success and not failure:
-            verified = 1
-        else:
-            verified = -1
+   :param summaryCB: (optional) callback that is called each time a buildset finishes, and that is used to define a message and review approvals depending on the build result.
+   :param summaryArg: (optional) argument passed to the summary callback.
+ 
+                      If :py:func:`summaryCB` callback is specified, determines the message and score to give when sending a single review summarizing all of the builds.
+                      It should return a dictionary:
 
-        reviewed = 0
-        return (msg, verified, reviewed)
+                      .. code-block:: python
 
-    c['buildbotURL'] = 'http://buildbot.example.com/'
-    c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
-                                        reviewCB=gerritReviewCB,
-                                        reviewArg=c['buildbotURL'],
-                                        startCB=gerritStartCB,
-                                        startArg=c['buildbotURL'],
-                                        summaryCB=gerritSummaryCB,
-                                        summaryArg=c['buildbotURL']))
+                          {'message': message,
+                           'labels': {label-name: label-score,
+                                      ...}
+                          }
 
-Parameters:
+                      .. literalinclude:: /examples/git_gerrit.cfg
+                         :pyobject: gerritSummaryCB
 
-``server`` (string)
-    Gerrit SSH server's address to use for push event notifications.
-
-``username`` (string)
-    Gerrit SSH server's username.
-
-``identity_file`` (string, optional)
-    Gerrit SSH identity file.
-
-``port`` (int, optional)
-    Gerrit SSH server's port (default: 29418)
-
-``reviewCB``
-    If specified, determines the message and score to give when sending a review for each separate build.
-    It should return a tuple of :samp:`({message}, {verified}, {reviewed})`.
-
-``startCB``
-    If specified, it should return a message.
-    This message will be sent to the Gerrit server when each build is started.
-
-``summaryCB``
-    If specified, determines the message and score to give when sending a single review summarizing all of the builds.
-    It should return a tuple of :samp:`({message}, {verified}, {reviewed})`.
+   :param string identity_file: (optional) Gerrit SSH identity file.
 
 .. note::
 
-   By default, a single summary review is sent; that is, a default :py:func:`summaryCB` is provided, but no :py:func:`reviewCB` or :py:func:`startCB`.
+   By default, a single summary review is sent; that is, a default summaryCB is provided, but no reviewCB or startCB.
+
+.. note::
+
+   If :py:func:`reviewCB` or :py:func:`summaryCB` do not return any labels, only a message will be pushed to the Gerrit server.
 
 .. seealso::
 
