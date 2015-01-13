@@ -92,13 +92,15 @@ The :bb:cfg:`change_source` configuration key holds all active change sources fo
 
 Most configurations have a single :class:`ChangeSource`, watching only a single tree, e.g.::
 
-    c['change_source'] = PBChangeSource()
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.PBChangeSource()
 
 For more advanced configurations, the parameter can be a list of change sources::
 
     source1 = ...
     source2 = ...
-    c['change_source'] = [ source1, source1 ]
+    c['change_source'] = [source1, source1]
 
 Repository and Project
 ++++++++++++++++++++++
