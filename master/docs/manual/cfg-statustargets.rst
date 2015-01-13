@@ -13,22 +13,21 @@ The Buildmaster has a variety of ways to present build status to various users.
 Each such delivery method is a `Status Target` object in the configuration's :bb:cfg:`status` list.
 To add status targets, you just append more objects to this list::
 
+    from buildbot.plugins import status
+
     c['status'] = []
 
-    from buildbot.status import html
-    c['status'].append(html.Waterfall(http_port=8010))
+    c['status'].append(status.WebStatus(http_port=8010))
 
-    from buildbot.status import mail
-    m = mail.MailNotifier(fromaddr="buildbot@localhost",
-                          extraRecipients=["builds@lists.example.com"],
-                          sendToInterestedUsers=False)
+    m = status.MailNotifier(fromaddr="buildbot@localhost",
+                            extraRecipients=["builds@lists.example.com"],
+                            sendToInterestedUsers=False)
     c['status'].append(m)
 
-    from buildbot.status import words
-    c['status'].append(words.IRC(host="irc.example.com", nick="bb",
-                                 channels=[{"channel": "#example1"},
-                                           {"channel": "#example2",
-                                            "password": "somesecretpassword"}]))
+    c['status'].append(status.IRC(host="irc.example.com", nick="bb",
+                                  channels=[{"channel": "#example1"},
+                                            {"channel": "#example2",
+                                             "password": "somesecretpassword"}]))
 
 Most status delivery objects take a ``categories=`` argument, which can contain a list of `category` names: in this case, it will only show status for Builders that are in one of the named categories.
 
@@ -72,8 +71,9 @@ Configuration
 
 The simplest possible configuration for WebStatus is::
 
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(8080))
+    from buildbot.plugins import status
+
+    c['status'].append(status.WebStatus(8080))
 
 Buildbot uses a templating system for the web interface.
 The source of these templates can be found in the :file:`status/web/templates/` directory in buildbot's library area.
@@ -84,11 +84,11 @@ If that isn't enough you can also provide additional Jinja2 template loaders::
     import jinja2
     myloaders = [
         jinja2.FileSystemLoader("/tmp/mypath"),
-        ]
+    ]
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
-        jinja_loaders = myloaders,
+        jinja_loaders = myloaders
     ))
 
 The first time a buildmaster is created, the :file:`public_html/` directory is populated with some sample files, which you will probably want to customize for your own project.
@@ -315,8 +315,9 @@ HTTP Connection
 The most common way to run a :class:`WebStatus` is on a regular TCP port.
 To do this, just pass in the TCP port number when you create the :class:`WebStatus` instance; this is called the ``http_port`` argument::
 
-    from buildbot.status.html import WebStatus
-    c['status'].append(WebStatus(http_port=8080))
+    from buildbot.plugins import status
+
+    c['status'].append(status.WebStatus(http_port=8080))
 
 The ``http_port`` argument is actually a `strports specification` for the port that the web server should listen on.
 This can be a simple port number, or a string like ``http_port="tcp:8080:interface=127.0.0.1"`` (to limit connections to the loopback interface, and therefore to clients running on the same host) [#]_.
@@ -379,12 +380,10 @@ For each of these actions, you can configure buildbot to never allow the action,
 
 This is all configured with the :class:`Authz` class::
 
-    from buildbot.status.html import WebStatus
-    from buildbot.status.web.authz import Authz
-    authz = Authz(
-        forceBuild=True,
-        stopBuild=True)
-    c['status'].append(WebStatus(http_port=8080, authz=authz))
+    from buildbot.plugins import status, util
+
+    authz = util.Authz(forceBuild=True, stopBuild=True)
+    c['status'].append(status.WebStatus(http_port=8080, authz=authz))
 
 Each of the actions listed above is an option to :class:`Authz`.
 You can specify ``False`` (the default) to prohibit that action or ``True`` to enable it.
@@ -401,21 +400,21 @@ Pass an instance of :class:`status.web.auth.IAuth` as a ``auth`` keyword argumen
 
 ::
 
-    from buildbot.status.html import WebStatus
-    from buildbot.status.web.authz import Authz
-    from buildbot.status.web.auth import BasicAuth
-    users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
-    authz = Authz(auth=BasicAuth(users),
+    from buildbot.plugins import status, util
+
+    users = [
+        ('bob', 'secret-pass'),
+        ('jill', 'super-pass')
+    ]
+    authz = util.Authz(auth=util.BasicAuth(users),
         forceBuild='auth', # only authenticated users
         pingBuilder=True, # but anyone can do this
     )
-    c['status'].append(WebStatus(http_port=8080, authz=authz))
+    c['status'].append(status.WebStatus(http_port=8080, authz=authz))
     # or
-    from buildbot.status.web.auth import HTPasswdAuth
-    auth = (HTPasswdAuth('/path/to/htpasswd'))
+    auth = util.HTPasswdAuth('/path/to/htpasswd')
     # or
-    from buildbot.status.web.auth import UsersAuth
-    auth = UsersAuth()
+    auth = util.UsersAuth()
 
 The class :class:`BasicAuth` implements a basic authentication mechanism using a list of user/password tuples provided from the configuration file.
 The class `HTPasswdAuth` implements an authentication against an :file:`.htpasswd` file.
@@ -436,8 +435,8 @@ That function will be called with an authenticated username and some action-spec
         else:
             return False # otherwise, no way.
 
-    authz = Authz(auth=BasicAuth(users),
-                  forceBuild=canForceBuild)
+    authz = util.Authz(auth=util.BasicAuth(users),
+                       forceBuild=canForceBuild)
 
 The ``forceBuild`` and ``pingBuilder`` actions both supply a :class:`BuilderStatus` object.
 The ``stopBuild`` action supplies a :class:`BuildStatus` object.
@@ -454,7 +453,7 @@ Just set ``useHttpHeader`` to ``True`` in :class:`Authz` constructor.
 
 ::
 
-    authz = Authz(useHttpHeader=True) # WebStatus secured by web frontend with HTTP auth
+    authz = util.Authz(useHttpHeader=True)  # WebStatus secured by web frontend with HTTP auth
 
 Please note that WebStatus can decode password for HTTP Basic requests only (for Digest authentication it's just impossible).
 Custom :class:`status.web.auth.IAuth` subclasses may just ignore password at all since it's already validated by web server.
@@ -467,16 +466,17 @@ If you allow unauthenticated access through frontend as well, it's possible to s
 
 ::
 
-    authz = Authz(useHttpHeader=True, httpLoginUrl='https://buildbot/login')
+    authz = util.Authz(useHttpHeader=True,
+                       httpLoginUrl='https://buildbot.example.org/login')
 
 A configuration example with Apache HTTPD as reverse proxy could look like the following.
 
 ::
 
-    authz = Authz(useHttpHeader=True,
-                  httpLoginUrl='https://buildbot/login',
-                  auth=HTPasswdAprAuth('/var/www/htpasswd'),
-                  forceBuild='auth')
+    authz = util.Authz(useHttpHeader=True,
+                       httpLoginUrl='https://buildbot.example.org/login',
+                       auth=util.HTPasswdAprAuth('/var/www/htpasswd'),
+                       forceBuild='auth')
 
 Corresponding Apache configuration.
 
@@ -841,32 +841,33 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
 
 ::
 
-    from buildbot.status.mail import MailNotifier
-    mn = MailNotifier(fromaddr="buildbot@example.org", lookup="example.org")
+    from buildbot.plugins import status
+
+    mn = status.MailNotifier(fromaddr="buildbot@example.org", lookup="example.org")
     c['status'].append(mn)
 
 To get a simple one-message-per-build (say, for a mailing list), use the following form instead.
 This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below), instead it only ever sends mail to the `extra recipients` named in the arguments::
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      extraRecipients=['listaddr@example.org'])
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             extraRecipients=['listaddr@example.org'])
 
 If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smtpPassword``::
 
-    mn = MailNotifier(fromaddr="myuser@gmail.com",
-                      sendToInterestedUsers=False,
-                      extraRecipients=["listaddr@example.org"],
-                      relayhost="smtp.gmail.com", smtpPort=587,
-                      smtpUser="myuser@gmail.com", smtpPassword="mypassword")
+    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+                             sendToInterestedUsers=False,
+                             extraRecipients=["listaddr@example.org"],
+                             relayhost="smtp.gmail.com", smtpPort=587,
+                             smtpUser="myuser@gmail.com", smtpPassword="mypassword")
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
-    mn = MailNotifier(fromaddr="myuser@gmail.com",
-                      sendToInterestedUsers=False,
-                      extraRecipients=["listaddr@example.org"],
-                      useTls=True, relayhost="smtp.gmail.com", smtpPort=587,
-                      smtpUser="myuser@gmail.com", smtpPassword="mypassword")
+    mn = status.MailNotifier(fromaddr="myuser@gmail.com",
+                             sendToInterestedUsers=False,
+                             extraRecipients=["listaddr@example.org"],
+                             useTls=True, relayhost="smtp.gmail.com", smtpPort=587,
+                             smtpUser="myuser@gmail.com", smtpPassword="mypassword")
 
 .. note::
 
@@ -877,9 +878,10 @@ For this purpose MailNotifier provides the argument ``messageFormatter`` (a func
 
 For example, if only short emails are desired (e.g., for delivery to phones)::
 
-    from buildbot.status.builder import Results
+    from buildbot.plugins import util, status
+
     def messageFormatter(mode, name, build, results, master_status):
-        result = Results[results]
+        result = util.Results[results]
 
         text = list()
         text.append("STATUS: %s" % result.title())
@@ -888,17 +890,17 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
             'type' : 'plain'
         }
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      mode=('problem',),
-                      extraRecipients=['listaddr@example.org'],
-                      messageFormatter=messageFormatter)
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             mode=('problem',),
+                             extraRecipients=['listaddr@example.org'],
+                             messageFormatter=messageFormatter)
 
 Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step that finished is given below::
 
-    from buildbot.status.builder import Results
-
-    import cgi, datetime
+    from buildbot.plugins import util, status
+    import cgi
+    import datetime
 
     def html_message_formatter(mode, name, build, results, master_status):
         """Provide a customized message to Buildbot's MailNotifier.
@@ -906,7 +908,7 @@ Another example of a function delivering a customized html email containing the 
         The last 80 lines of the log are provided as well as the changes
         relevant to the build.  Message content is formatted as html.
         """
-        result = Results[results]
+        result = util.Results[results]
 
         limit_lines = 80
         text = list()
@@ -972,7 +974,7 @@ Another example of a function delivering a customized html email containing the 
                 if log.getName() == 'stdio':
                     break
             name = "%s.%s" % (log.getStep().getName(), log.getName())
-            status, dummy = log.getStep().getResults()
+            status, _ = log.getStep().getResults()
             content = log.getText().splitlines() # Note: can be VERY LARGE
             url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
@@ -993,13 +995,13 @@ Another example of a function delivering a customized html email containing the 
             return {
                 'body': u"\n".join(text),
                 'type': 'html'
-                }
+            }
 
-    mn = MailNotifier(fromaddr="buildbot@example.org",
-                      sendToInterestedUsers=False,
-                      mode=('failing',),
-                      extraRecipients=['listaddr@example.org'],
-                      messageFormatter=html_message_formatter)
+    mn = status.MailNotifier(fromaddr="buildbot@example.org",
+                             sendToInterestedUsers=False,
+                             mode=('failing',),
+                             extraRecipients=['listaddr@example.org'],
+                             messageFormatter=html_message_formatter)
 
 MailNotifier arguments
 ++++++++++++++++++++++
@@ -1007,18 +1009,15 @@ MailNotifier arguments
 ``fromaddr``
     The email address to be used in the 'From' header.
 
-``sendToInterestedUsers``
-    (boolean).
+``sendToInterestedUsers`` (boolean)
     If ``True`` (the default), send mail to all of the Interested Users.
     If ``False``, only send mail to the ``extraRecipients`` list.
 
-``extraRecipients``
-    (list of strings).
+``extraRecipients`` (list of strings)
     A list of email addresses to which messages should be sent (in addition to the InterestedUsers list, which includes any developers who made :class:`Change`\s that went into this build).
     It is a good idea to create a small mailing list and deliver to that, then let subscribers come and go as they please.
 
-``subject``
-    (string).
+``subject`` (string)
     A string to be used as the subject line of the message.
     ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
 
@@ -1056,61 +1055,50 @@ MailNotifier arguments
 
     Defaults to (``failing``, ``passing``, ``warnings``).
 
-``builders``
-    (list of strings).
+``builders`` (list of strings)
     A list of builder names for which mail should be sent.
     Defaults to ``None`` (send mail for all builds).
     Use either builders or categories, but not both.
 
-``categories``
-    (list of strings).
+``categories`` (list of strings)
     A list of category names to serve status information for.
     Defaults to ``None`` (all categories).
     Use either builders or categories, but not both.
 
-``addLogs``
-    (boolean).
+``addLogs`` (boolean)
     If ``True``, include all build logs as attachments to the messages.
     These can be quite large.
     This can also be set to a list of log names, to send a subset of the logs.
     Defaults to ``False``.
 
-``addPatch``
-    (boolean).
+``addPatch`` (boolean)
     If ``True``, include the patch content if a patch was present.
     Patches are usually used on a :class:`Try` server.
     Defaults to ``True``.
 
-``buildSetSummary``
-    (boolean).
+``buildSetSummary`` (boolean)
     If ``True``, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.
     Defaults to ``False``.
 
-``relayhost``
-    (string).
+``relayhost`` (string)
     The host to which the outbound SMTP connection should be made.
     Defaults to 'localhost'
 
-``smtpPort``
-    (int).
+``smtpPort`` (int)
     The port that will be used on outbound SMTP connections.
     Defaults to 25.
 
-``useTls``
-    (boolean).
+``useTls`` (boolean)
     When this argument is ``True`` (default is ``False``) ``MailNotifier`` sends emails using TLS and authenticates with the ``relayhost``.
     When using TLS the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
 
-``smtpUser``
-    (string).
+``smtpUser`` (string)
     The user name to use when authenticating with the ``relayhost``.
 
-``smtpPassword``
-    (string).
+``smtpPassword`` (string)
     The password that will be used when authenticating with the ``relayhost``.
 
-``lookup``
-    (implementor of :class:`IEmailLookup`).
+``lookup`` (implementor of :class:`IEmailLookup`)
     Object which provides :class:`IEmailLookup`, which is responsible for mapping User names (which come from the VC system) into valid email addresses.
 
     If the argument is not provided, the ``MailNotifier`` will attempt to build the ``sendToInterestedUsers`` from the authors of the Changes that led to the Build via :ref:`User-Objects`.
@@ -1134,8 +1122,8 @@ MailNotifier arguments
     The 'html' type should be used when generating an HTML message.
     The ``subject`` key is optional, but gives the subject for the email.
 
-``extraHeaders``
-    (dictionary) A dictionary containing key/value pairs of extra headers to add to sent e-mails.
+``extraHeaders`` (dictionary)
+    A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
 ``previousBuildGetter``
@@ -1222,7 +1210,7 @@ Log information::
     logs = list()
     for log in build.getLogs():
         log_name = "%s.%s" % (log.getStep().getName(), log.getName())
-        log_status, dummy = log.getStep().getResults()
+        log_status, _ = log.getStep().getResults()
         log_body = log.getText().splitlines() # Note: can be VERY LARGE
         log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
                                            log.getStep().getName(),
@@ -1243,18 +1231,20 @@ It can also be asked to announce builds as they occur, or be told to shut up.
 
 ::
 
-    from buildbot.status import words
-    irc = words.IRC("irc.example.org", "botnickname",
-                    useColors=False,
-                    channels=[{"channel": "#example1"},
-                              {"channel": "#example2",
-                               "password": "somesecretpassword"}],
-                    password="mysecretnickservpassword",
-                    notify_events={
-                      'exception': 1,
-                      'successToFailure': 1,
-                      'failureToSuccess': 1,
-                    })
+    from buildbot.plugins import status
+
+    irc = status.IRC("irc.example.org", "botnickname",
+                     useColors=False,
+                     channels=[{"channel": "#example1"},
+                               {"channel": "#example2",
+                                "password": "somesecretpassword"}],
+                     password="mysecretnickservpassword",
+                     notify_events={
+                       'exception': 1,
+                       'successToFailure': 1,
+                       'failureToSuccess': 1
+                     })
+
     c['status'].append(irc)
 
 Take a look at the docstring for :class:`words.IRC` for more details on configuring this service.
@@ -1405,14 +1395,15 @@ StatusPush
 
 ::
 
-    def Process(self):
-      print str(self.queue.popChunk())
-      self.queueNextServerPush()
+    from buildbot.plugins import status
 
-    import buildbot.status.status_push
-    sp = buildbot.status.status_push.StatusPush(serverPushCb=Process,
-                                                bufferDelay=0.5,
-                                                retryDelay=5)
+    def Process(self):
+        print str(self.queue.popChunk())
+        self.queueNextServerPush()
+
+    sp = status.StatusPush(serverPushCb=Process,
+                           bufferDelay=0.5,
+                           retryDelay=5)
     c['status'].append(sp)
 
 :class:`StatusPush` batches events normally processed and sends it to the :func:`serverPushCb` callback every ``bufferDelay`` seconds.
@@ -1429,9 +1420,10 @@ HttpStatusPush
 
 ::
 
-    import buildbot.status.status_push
-    sp = buildbot.status.status_push.HttpStatusPush(
-            serverUrl="http://example.com/submit")
+    from buildbot.plugins import status
+
+    sp = status.HttpStatusPush(serverUrl="http://example.com/submit")
+
     c['status'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
@@ -1527,27 +1519,26 @@ GitHubStatus
 
 ::
 
-    from buildbot.status.github import GitHubStatus
+    from buildbot.plugins import status, util
 
-    repoOwner = Interpolate("%(prop:github_repo_owner)s")
-    repoName = Interpolate("%(prop:github_repo_name)s")
-    sha = Interpolate("%(src::revision)s")
-    gs = GitHubStatus(token='githubAPIToken',
-                      repoOwner=repoOwner,
-                      repoName=repoName,
-                      sha=sha,
-                      startDescription='Build started.',
-                      endDescription='Build done.',
-                      )
-    buildbot_bbtools = BuilderConfig(
+    repoOwner = util.Interpolate("%(prop:github_repo_owner)s")
+    repoName = util.Interpolate("%(prop:github_repo_name)s")
+    sha = util.Interpolate("%(src::revision)s")
+    gs = status.GitHubStatus(token='githubAPIToken',
+                             repoOwner=repoOwner,
+                             repoName=repoName,
+                             sha=sha,
+                             startDescription='Build started.',
+                             endDescription='Build done.')
+    buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
         slavenames=['slave1'],
-        factory=BuilderFactory(),
+        factory=util.BuilderFactory(),
         properties={
             "github_repo_owner": "buildbot",
             "github_repo_name": "bbtools",
-            },
-        )
+        })
+
     c['builders'].append(buildbot_bbtools)
     c['status'].append(gs)
 
@@ -1577,4 +1568,3 @@ You can define custom start and end build messages using the `startDescription` 
     but this is completely untested
 
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
-

@@ -293,6 +293,7 @@ setup_args = {
             ('buildbot.status.mail', ['MailNotifier']),
             ('buildbot.status.status_gerrit', ['GerritStatusPush']),
             ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
+            ('buildbot.status.web.baseweb', ['WebStatus']),
             ('buildbot.status.words', ['IRC'])
         ]),
         ('buildbot.util', [
@@ -329,6 +330,9 @@ setup_args = {
             ('buildbot.status.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
+            ('buildbot.status.web.auth', [
+                'BasicAuth', 'HTPasswdAprAuth', 'HTPasswdAuth', 'UsersAuth']),
+            ('buildbot.status.web.authz', ['Authz']),
             ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
             ('buildbot.steps.source.repo', [
                 ('repo.DownloadsFromChangeSource',
