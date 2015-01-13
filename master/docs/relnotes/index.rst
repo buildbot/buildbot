@@ -45,6 +45,27 @@ Features
 
   More detailed information is available in :bb:status:`GerritStatusPush` section.
 
+* Buildbot now supports plugins.
+  They allow Buildbot to be extended by using components distributed independently from the main code.
+  They also provide for a unified way to access all components.
+  When previously the following construction was used::
+
+      from buildbot.kind.other.bits import ComponentClass
+
+      ... ComponentClass ...
+
+  the following construction achieves the same result::
+
+      from buildbot.plugins import kind
+
+      ... kind.ComponentClass ...
+
+  Kinds of components that are available this way are described in :doc:`../manual/plugins`.
+
+  .. note::
+
+     While the components can be still directly imported as ``buildbot.kind.other.bits``, this might not be the case after Buildbot v1.0 is released.
+
 Fixes
 ~~~~~
 
