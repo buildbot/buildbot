@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider, glMenuServiceProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'home'
@@ -10,6 +10,26 @@ class State extends Config
             caption: 'Home'
             icon: 'home'
             order: 1
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:name
+            caption: 'Home related settings'
+            items:[
+                {
+                    type:'bool'
+                    name:'checkbox1'
+                    default_value: false
+                }
+                {
+                    type:'choices'
+                    name:'radio'
+                    default_value: 'radio1'
+                    answers: [
+                        { name: 'radio1' }
+                        { name: 'radio2' }
+                    ]
+                }
+            ]
 
         cfg =
             group: name

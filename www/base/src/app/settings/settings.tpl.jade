@@ -2,21 +2,17 @@
   .row
     .well
         h2 Settings
-        .row
-            h3 First Settings
-            form(name="settings1")
-                div(class="checkbox")
-                    bbcheckbox(data="settings.settings1")
-                div(class="checkbox")
-                    bbcheckbox(data="settings.settings2")
-                span(class="help-block" ng-show="settings.settings1.value") Warning : {{ settings.settings1.name }} is checked 
-            h3 Second Settings
-            form
-                div(class="radio")
-                    bbradio(data="settings.settings3")
-                div(class="radio")
-                    bbradio(data="settings.settings4")
-            h3 Third Settings
-            form(class="form-horizontal")
-                div(class="form-group")
-                    bbinput(data="settings.settings5")
+        .row(ng-repeat="group in ::settingsGroups")
+            h3 {{group.caption}}
+            form(name="{{ group.name }}")
+            div(ng-repeat="item in group.items")
+                div(ng-switch="", on="item.type")
+                    div(ng-switch-when="bool")
+                        label(class="checkbox-inline")
+                            input(type="checkbox" name="{{item.name}}" ng-model="item.value" ng-value="item.value")
+                            | {{ item.name }}
+                    div(ng-switch-when="choices")
+                        div(ng-repeat="answer in item.answers")
+                            label(class="radio-inline")
+                                input(type="radio" name="{{group.name + '_' + answer.name}}" ng-model="item.value" ng-value="answer.name")
+                                | {{ answer.name }}
