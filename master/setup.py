@@ -289,11 +289,11 @@ setup_args = {
                 'MsBuild4', 'MsBuild', 'MsBuild12'])
         ]),
         ('buildbot.status', [
+            ('buildbot.status.github', ['GitHubStatus']),
             ('buildbot.status.mail', ['MailNotifier']),
-            ('buildbot.status.words', ['IRC']),
-            ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
             ('buildbot.status.status_gerrit', ['GerritStatusPush']),
-            ('buildbot.status.github', ['GitHubStatus'])
+            ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
+            ('buildbot.status.words', ['IRC'])
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
