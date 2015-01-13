@@ -1,5 +1,3 @@
-.. _Customization:
-
 Customization
 =============
 
@@ -16,14 +14,18 @@ Programmatic Configuration Generation
 Bearing in mind that ``master.cfg`` is a Python file, large configurations can be shortened considerably by judicious use of Python loops.
 For example, the following will generate a builder for each of a range of supported versions of Python::
 
+    from buildbot.plugins import util, steps
+
     pythons = ['python2.4', 'python2.5', 'python2.6', 'python2.7',
                'python3.2', 'python3.3']
-    pytest_slaves = [ "slave%s" % n for n in range(10) ]
+
+    pytest_slaves = ["slave%s" % n for n in range(10)]
+
     for python in pythons:
-        f = BuildFactory()
-        f.addStep(SVN(...))
-        f.addStep(ShellCommand(command=[ python, 'test.py' ]))
-        c['builders'].append(BuilderConfig(
+        f = util.BuildFactory()
+        f.addStep(steps.SVN(...))
+        f.addStep(steps.ShellCommand(command=[python, 'test.py']))
+        c['builders'].append(util.BuilderConfig(
                 name="test-%s" % python,
                 factory=f,
                 slavenames=pytest_slaves))
@@ -44,6 +46,7 @@ For example::
     def mergeRequests(builder, req1, req2):
         "any requests with the same branch can be merged"
         return req1.source.branch == req2.source.branch
+
     c['mergeRequests'] = mergeRequests
 
 In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
@@ -53,9 +56,10 @@ Note the use of the :func:`canBeMergedWith` method to access the source stamp co
 ::
 
     def mergeRequests(builder, req1, req2):
-        if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+        if req1.source.canBeMergedWith(req2.source) and req1.reason == req2.reason:
            return True
         return False
+
     c['mergeRequests'] = mergeRequests
 
 If it's necessary to perform some extended operation to determine whether two requests can be merged, then the ``mergeRequests`` callable may return its result via Deferred.
@@ -67,10 +71,13 @@ For example::
             getMergeInfo(req1.source.revision),
             getMergeInfo(req2.source.revision),
         ])
+
+        @d.addCallback
         def process(info1, info2):
             return info1 == info2
-        d.addCallback(process)
+
         return d
+
     c['mergeRequests'] = mergeRequests
 
 .. _Builder-Priority-Functions:
@@ -123,26 +130,30 @@ If some non-immediate result must be calculated, the ``nextBuild`` function can 
 
     def nextBuild(bldr, requests):
         d = get_request_priorities(requests)
+
+        @d.addCallback
         def pick(priorities):
             if requests:
                 return sorted(zip(priorities, requests))[0][1]
-        d.addCallback(pick)
+
         return d
 
-The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`.
+The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
+
+    ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
 .. _Customizing-SVNPoller:
 
 Customizing SVNPoller
 ---------------------
 
-Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: ``({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})``.
-When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the ``{REPOURL}`` and possibly some portion of the ``{PROJECT-plus-BRANCH}`` string.
-The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a ``{FILEPATH}`` (which is relative to the top of a checked-out tree).
+Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: :samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`.
+When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}` string.
+The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of a checked-out tree).
 The details of how these strings are split up depend upon how your repository names its branches.
 
-PROJECT/BRANCHNAME/FILEPATH repositories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:samp:`{PROJECT}/{BRANCHNAME}/{FILEPATH}` repositories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One common layout is to have all the various projects that share a repository get a single top-level directory each, with ``branches``, ``tags``, and ``trunk`` subdirectories:
 
@@ -157,8 +168,9 @@ One common layout is to have all the various projects that share a repository ge
 
 To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.SVNPoller(
        svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/amanda/trunk")
 
 In this case, every Change that our :bb:chsrc:`SVNPoller` produces will have its branch attribute set to ``None``, to indicate that the Change is on the trunk.
@@ -197,21 +209,23 @@ If your repository uses this same ``{PROJECT}/{BRANCH}/{FILEPATH}`` naming schem
 In fact, this is the definition of the provided ``split_file_branches`` function.
 So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this::
 
-    from buildbot.changes.svnpoller import SVNPoller, split_file_branches
-    c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
-                                   split_file=split_file_branches)
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
+                                           split_file=util.svn.split_file_branches)
 
 Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and ``None`` to indicate the trunk) will be delivered to the Schedulers.
 Each Scheduler is then free to use or ignore each branch as it sees fit.
 
 If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes::
 
-    from buildbot.changes.svnpoller import split_file_branches
+    from buildbot.plugins import util
+
     def split_file_projects_branches(path):
         if not "/" in path:
             return None
         project, path = path.split("/", 1)
-        f = split_file_branches(path)
+        f = util.svn.split_file_branches(path)
         if f:
             info = dict(project=project, path=f[1])
             if f[0]:
@@ -221,16 +235,17 @@ If you have multiple projects in the same repository your split function can att
 
 Again, this is provided by default. To use it you would do this::
 
-    from buildbot.changes.svnpoller import SVNPoller, split_file_projects_branches
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller(
        svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
-       split_file=split_file_projects_branches)
+       split_file=util.svn.split_file_projects_branches)
 
 Note here that we are monitoring at the root of the repository, and that within that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and ``branches``.
 It is that ``amanda`` subdirectory whose name becomes the ``project`` field of the Change.
 
-BRANCHNAME/PROJECT/FILEPATH repositories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:samp:`{BRANCHNAME}/{PROJECT}/{FILEPATH}` repositories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another common way to organize a Subversion repository is to put the branch name at the top, and the projects underneath.
 This is especially frequent when there are a number of related sub-projects that all get released in a group.
@@ -247,8 +262,9 @@ The whole Nevow trunk would be checked out with ``http://divmod.org/svn/Divmod/t
 Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about the Nevow trunk.
 This case looks just like the ``{PROJECT}/{BRANCH}`` layout described earlier::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
 
 But what happens when we want to track multiple Nevow branches?
 We have to point our ``svnurl=`` high enough to see all those branches, but we also don't want to include Quotient changes (since we're only building Nevow).
@@ -256,9 +272,10 @@ To accomplish this, we must rely upon the ``split_file`` function to help us tel
 
 ::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod",
-                                   split_file=my_file_splitter)
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod",
+                                           split_file=my_file_splitter)
 
 The ``my_file_splitter`` function will be called with repository-relative pathnames like:
 
@@ -282,16 +299,16 @@ The following definition for :meth:`my_file_splitter` will do the job::
         pieces = path.split('/')
         if pieces[0] == 'trunk':
             branch = None
-            pieces.pop(0) # remove 'trunk'
+            pieces.pop(0)   # remove 'trunk'
         elif pieces[0] == 'branches':
-            pieces.pop(0) # remove 'branches'
+            pieces.pop(0)   # remove 'branches'
             # grab branch name
             branch = 'branches/' + pieces.pop(0)
         else:
-            return None # something weird
+            return None     # something weird
         projectname = pieces.pop(0)
         if projectname != 'Nevow':
-            return None # wrong project
+            return None     # wrong project
         return dict(branch=branch, path='/'.join(pieces))
 
 If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply::
@@ -382,7 +399,7 @@ The skeleton of such a project would look like::
         # override some methods
         ...
 
-    f = factory.BuildFactory()
+    f = util.BuildFactory()
     f.buildClass = DynamicBuild
     f.addStep(...)
 
@@ -403,10 +420,10 @@ Here is an example how you can achieve workdir-per-repo::
         def workdir(source_stamp):
             return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
 
-        build_factory = factory.BuildFactory()
+        build_factory = util.BuildFactory()
         build_factory.workdir = workdir
 
-        build_factory.addStep(Git(mode="update"))
+        build_factory.addStep(steps.Git(mode="update"))
         # ...
         builders.append ({'name': 'mybuilder',
                           'slavename': 'myslave',
@@ -470,11 +487,10 @@ The whole thing looks like this::
 
     class Frobnify(LoggingBuildStep):
         def __init__(self,
-                frob_what="frobee",
-                frob_how_many=None,
-                frob_how=None,
-                **kwargs):
-
+                     frob_what="frobee",
+                     frob_how_many=None,
+                     frob_how=None,
+                     **kwargs):
             # check
             if frob_how_many is None:
                 raise TypeError("Frobnify argument how_many is required")
@@ -491,9 +507,7 @@ The whole thing looks like this::
             self.frob_how = frob_how
 
     class FastFrobnify(Frobnify):
-        def __init__(self,
-                speed=5,
-                **kwargs):
+        def __init__(self, speed=5, **kwargs):
             Frobnify.__init__(self, **kwargs)
             self.speed = speed
 
@@ -532,13 +546,11 @@ A simple example of a step using the shell mixin is::
 
         @defer.inlineCallbacks
         def run(self):
-            cmd = yield self.makeRemoteShellCommand(
-                    command=[self.cleanupScript])
+            cmd = yield self.makeRemoteShellCommand(command=[self.cleanupScript])
             yield self.runCommand(cmd)
             if cmd.didFail():
-                cmd = yield self.makeRemoteShellCommand(
-                        command=[self.cleanupScript, '--force'],
-                        logEnviron=False)
+                cmd = yield self.makeRemoteShellCommand(command=[self.cleanupScript, '--force'],
+                                                        logEnviron=False)
                 yield self.runCommand(cmd)
             defer.returnValue(cmd.results())
 
@@ -682,9 +694,9 @@ The full version is in :bb:src:`master/buildbot/steps/python_twisted.py`.
 
 .. code-block:: python
 
-    from buildbot.process.logobserver import LogLineObserver
+    from buildbot.plugins import util
 
-    class TrialTestCaseCounter(LogLineObserver):
+    class TrialTestCaseCounter(util.LogLineObserver):
         _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
         numTests = 0
         finished = False
@@ -789,15 +801,14 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
 .. code-block:: python
 
-    from buildbot.process import buildstep
+    from buildbot.plugins import steps, util
     from buildbot.interfaces import BuildSlaveToOldError
-    from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
     import stat
 
-    class MyBuildStep(buildstep.BuildStep):
+    class MyBuildStep(steps.BuildStep):
 
         def __init__(self, dirname, **kwargs):
-            buildstep.BuildStep.__init__(self, **kwargs)
+            steps.BuildStep.__init__(self, **kwargs)
             self.dirname = dirname
 
         def start(self):
@@ -807,7 +818,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             if not all(slavever):
                 raise BuildSlaveToOldError('need stat and glob')
 
-            cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
+            cmd = util.RemoteCommand('stat', {'file': self.dirname})
 
             d = self.runCommand(cmd)
             d.addCallback(lambda res: self.evaluateStat(cmd))
@@ -817,15 +828,15 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
         def evaluateStat(self, cmd):
             if cmd.didFail():
                 self.step_status.setText(["File not found."])
-                self.finished(FAILURE)
+                self.finished(util.FAILURE)
                 return
             s = cmd.updates["stat"][-1]
             if not stat.S_ISDIR(s[stat.ST_MODE]):
                 self.step_status.setText(["'tis not a directory"])
-                self.finished(WARNINGS)
+                self.finished(util.WARNINGS)
                 return
 
-            cmd = buildstep.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'})
+            cmd = util.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'})
 
             d = self.runCommand(cmd)
             d.addCallback(lambda res: self.evaluateGlob(cmd))
@@ -835,14 +846,14 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
         def evaluateGlob(self, cmd):
             if cmd.didFail():
                 self.step_status.setText(["Glob failed."])
-                self.finished(FAILURE)
+                self.finished(util.FAILURE)
                 return
             files = cmd.updates["files"][-1]
             if len(files):
                 self.step_status.setText(["Found pycs"]+files)
             else:
                 self.step_status.setText(["No pycs found"])
-            self.finished(SUCCESS)
+            self.finished(util.SUCCESS)
 
 For more information on the available commands, see :doc:`../developer/master-slave`.
 
@@ -851,13 +862,27 @@ For more information on the available commands, see :doc:`../developer/master-sl
     Step Progress
     BuildStepFailed
 
-A Somewhat Whimsical Example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Writing New Status Plugins
+--------------------------
+
+Each status plugin is an object which provides the :class:`twisted.application.service.IService` interface, which creates a tree of Services with the buildmaster at the top [not strictly true].
+The status plugins are all children of an object which implements :class:`buildbot.interfaces.IStatus`, the main status object.
+From this object, the plugin can retrieve anything it wants about current and past builds.
+It can also subscribe to hear about new and upcoming builds.
+
+Status plugins which only react to human queries (like the Waterfall display) never need to subscribe to anything: they are idle until someone asks a question, then wake up and extract the information they need to answer it, then they go back to sleep.
+Plugins which need to act spontaneously when builds complete (like the :class:`MailNotifier` plugin) need to subscribe to hear about new builds.
+
+If the status plugin needs to run network services (like the HTTP server used by the Waterfall plugin), they can be attached as Service children of the plugin itself, using the :class:`IServiceCollection` interface.
+
+A Somewhat Whimsical Example (or "It's now customized, how do I deploy it?")
+----------------------------------------------------------------------------
 
 Let's say that we've got some snazzy new unit-test framework called Framboozle.
 It's the hottest thing since sliced bread.
 It slices, it dices, it runs unit tests like there's no tomorrow.
-Plus if your unit tests fail, you can use its name for a Web 2.1 startup company, make millions of dollars, and hire engineers to fix the bugs for you, while you spend your afternoons lazily hang-gliding along a scenic pacific beach, blissfully unconcerned about the state of your tests.[#framboozle_reg]_
+Plus if your unit tests fail, you can use its name for a Web 2.1 startup company, make millions of dollars, and hire engineers to fix the bugs for you, while you spend your afternoons lazily hang-gliding along a scenic pacific beach, blissfully unconcerned about the state of your tests.
+[#framboozle_reg]_
 
 To run a Framboozle-enabled test suite, you just run the 'framboozler' command from the top of your source code tree.
 The 'framboozler' command emits a bunch of stuff to stdout, but the most interesting bit is that it emits the line "FNURRRGH!" every time it finishes running a test case You'd like to have a test-case counting LogObserver that watches for these lines and counts them, because counting them will help the buildbot more accurately calculate how long the build will take, and this will let you know exactly how long you can sneak out of the office for your hang-gliding lessons without anyone noticing that you're gone.
@@ -865,21 +890,20 @@ The 'framboozler' command emits a bunch of stuff to stdout, but the most interes
 This will involve writing a new :class:`BuildStep` (probably named "Framboozle") which inherits from :bb:step:`ShellCommand`.
 The :class:`BuildStep` class definition itself will look something like this::
 
-    from buildbot.steps.shell import ShellCommand
-    from buildbot.process.logobserver import LogLineObserver
+    from buildbot.plugins import steps, util
 
-    class FNURRRGHCounter(LogLineObserver):
+    class FNURRRGHCounter(util.LogLineObserver):
         numTests = 0
         def outLineReceived(self, line):
             if "FNURRRGH!" in line:
                 self.numTests += 1
                 self.step.setProgress('tests', self.numTests)
 
-    class Framboozle(ShellCommand):
+    class Framboozle(steps.ShellCommand):
         command = ["framboozler"]
 
         def __init__(self, **kwargs):
-            ShellCommand.__init__(self, **kwargs)   # always upcall!
+            steps.ShellCommand.__init__(self, **kwargs)     # always upcall!
             counter = FNURRRGHCounter()
             self.addLogObserver('stdio', counter)
             self.progressMetrics += ('tests',)
@@ -887,18 +911,23 @@ The :class:`BuildStep` class definition itself will look something like this::
 So that's the code that we want to wind up using.
 How do we actually deploy it?
 
-You have a couple of different options.
+You have a number of different options:
+
+.. contents::
+   :local:
 
 Inclusion in the :file:`master.cfg` file
-########################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like::
 
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+    from buildbot.plugins import steps, util
+
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="stuff"))
     f.addStep(Framboozle())
 
-Remember that :file:`master.cfg` is secretly just a Python program with one job: populating the :file:`BuildmasterConfig` dictionary.
+Remember that :file:`master.cfg` is just a Python program with one job: populating the :file:`BuildmasterConfig` dictionary.
 And Python programs are allowed to define as many classes as they like.
 So you can define classes and use them in the same file, just as long as the class is defined before some other code tries to use it.
 
@@ -906,8 +935,8 @@ This is easy, and it keeps the point of definition very close to the point of us
 The downside is that every time you reload the config file, the Framboozle class will get redefined, which means that the buildmaster will think that you've reconfigured all the Builders that use it, even though nothing changed.
 Bleh.
 
-python file somewhere on the system
-###################################
+Python file somewhere on the system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Instead, we can put this code in a separate file, and import it into the master.cfg file just like we would the normal buildsteps like :bb:step:`ShellCommand` and :bb:step:`SVN`.
 
@@ -926,16 +955,20 @@ Or add something like this to something like your :file:`~/.bashrc` or :file:`~/
 
 Once we've done this, our :file:`master.cfg` can look like::
 
+    from buildbot.plugins import steps, util
     from framboozle import Framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="stuff"))
     f.addStep(Framboozle())
 
 or::
 
+    from buildbot.plugins import steps, util
     import framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="stuff"))
     f.addStep(framboozle.Framboozle())
 
 (check out the Python docs for details about how ``import`` and ``from A import B`` work).
@@ -949,7 +982,7 @@ This means that reconfiguring the buildmaster (with ``buildbot reconfig``, for e
 On the other hand, you either have to start your buildmaster in a slightly weird way, or you have to modify your environment to set the :envvar:`PYTHONPATH` variable.
 
 Install this code into a standard Python library directory
-##########################################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Find out what your Python's standard include path is by asking it:
 
@@ -979,41 +1012,70 @@ We can use the same :file:`master.cfg` ``import framboozle`` statement as in Opt
 By putting it in a standard include directory (instead of the decidedly non-standard :file:`~/lib/python`), we don't even have to set :envvar:`PYTHONPATH` to anything special.
 The downside is that you probably have to be root to write to one of those standard include directories.
 
-Submit the code for inclusion in the Buildbot distribution
-##########################################################
+.. _Plugin-Module:
 
-Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch in a bug at http://buildbot.net.
+Distribute a Buildbot Plug-In
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First of all, you must prepare a Python package (if you do not know what that is, please check :doc:`../developer/plugins-publish`, where you can find a couple of pointers to tutorials).
+
+When you have a package, you will have a special file called :file:`setup.py`.
+This file needs to be updated to include a pointer to your new step::
+
+    setup(
+        ...
+        entry_points = {
+            ...,
+            'buildbot.steps': [
+                'Framboozle = framboozle:Framboozle'
+            ]
+        },
+        ...
+    )
+
+Where:
+
+* ``buildbot.steps`` is the kind of plugin you offer (more information about possible kinds you can find in :doc:`../developer/plugins-publish`)
+* ``framboozle:Framboozle`` consists of two parts: ``framboozle`` is the name of the python module where to look for ``Framboozle`` class, which implements the plugin
+* ``Framboozle`` is the name of the plugin.
+
+  This will allow users of your plugin to use it just like any other Buildbot plugins::
+
+    from buildbot.plugins import steps
+
+    ... steps.Framboozle ...
+
+Now you can upload it to PyPI_ where other people can download it from and use in their build systems.
+Once again, the information about how to prepare and upload a package to PyPI_ can be found in tutorials listed in :doc:`../developer/plugins-publish`.
+
+.. _PyPI: http://pypi.python.org/
+
+Submit the code for inclusion in the Buildbot distribution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Make a fork of buildbot on http://github.com/buildbot/buildbot or post a patch in a bug at http://trac.buildbot.net.
 In either case, post a note about your patch to the mailing list, so others can provide feedback and, eventually, commit it.
 
 ::
 
-    from buildbot.steps import framboozle
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(framboozle.Framboozle())
+    from buildbot.plugins import steps, util
+
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="stuff"))
+    f.addStep(steps.Framboozle())
 
 And then you don't even have to install framboozle.py anywhere on your system, since it will ship with Buildbot.
 You don't have to be root, you don't have to set :envvar:`PYTHONPATH`.
 But you do have to make a good case for Framboozle being worth going into the main distribution, you'll probably have to provide docs and some unit test cases, you'll need to figure out what kind of beer the author likes (IPA's and Stouts for Dustin), and then you'll have to wait until the next release.
 But in some environments, all this is easier than getting root on your buildmaster box, so the tradeoffs may actually be worth it.
 
+Summary
+~~~~~~~
+
 Putting the code in master.cfg (1) makes it available to that buildmaster instance.
 Putting it in a file in a personal library directory (2) makes it available for any buildmasters you might be running.
 Putting it in a file in a system-wide shared library directory (3) makes it available for any buildmasters that anyone on that system might be running.
 Getting it into the buildbot's upstream repository (4) makes it available for any buildmasters that anyone in the world might be running.
 It's all a matter of how widely you want to deploy that new class.
-
-Writing New Status Plugins
---------------------------
-
-Each status plugin is an object which provides the :class:`twisted.application.service.IService` interface, which creates a tree of Services with the buildmaster at the top [not strictly true].
-The status plugins are all children of an object which implements :class:`buildbot.interfaces.IStatus`, the main status object.
-From this object, the plugin can retrieve anything it wants about current and past builds.
-It can also subscribe to hear about new and upcoming builds.
-
-Status plugins which only react to human queries (like the Waterfall display) never need to subscribe to anything: they are idle until someone asks a question, then wake up and extract the information they need to answer it, then they go back to sleep.
-Plugins which need to act spontaneously when builds complete (like the :class:`MailNotifier` plugin) need to subscribe to hear about new builds.
-
-If the status plugin needs to run network services (like the HTTP server used by the Waterfall plugin), they can be attached as Service children of the plugin itself, using the :class:`IServiceCollection` interface.
 
 .. [#framboozle_reg] framboozle.com is still available. Remember, I get 10% :).

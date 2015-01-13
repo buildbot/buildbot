@@ -25,7 +25,9 @@ The two basic Scheduler classes you are likely to start with are :class:`SingleB
 
 Scheduler arguments should always be specified by name (as keyword arguments), to allow for future expansion::
 
-    sched = SingleBranchScheduler(name="quick", builderNames=['lin', 'win'])
+    from buildbot.plugins import schedulers
+
+    sched = schedulers.SingleBranchScheduler(name="quick", builderNames=['lin', 'win'])
 
 There are several common arguments for schedulers, although not all are available with all schedulers.
 
@@ -46,7 +48,7 @@ There are several common arguments for schedulers, although not all are availabl
     .. code-block:: python
 
         sched = Scheduler(...,
-            properties = { 'owner' : [ 'zorro@company.com', 'silver@company.com' ] })
+            properties = {'owner': ['zorro@company.com', 'silver@company.com']})
 
 ``fileIsImportant``
     A callable which takes one argument, a Change instance, and returns ``True`` if the change is worth building, and ``False`` if it is not.
@@ -107,8 +109,9 @@ Several schedulers perform filtering on an incoming set of changes.
 The filter can most generically be specified as a :class:`ChangeFilter`.
 Set up a :class:`ChangeFilter` like this::
 
-    from buildbot.changes.filter import ChangeFilter
-    my_filter = ChangeFilter(
+    from buildbot.plugins import util
+
+    my_filter = util.ChangeFilter(
         project_re="^baseproduct/.*",
         branch="devel")
 
@@ -137,24 +140,24 @@ There are five attributes of changes on which you can filter:
 
 For each attribute, the filter can look for a single, specific value::
 
-    my_filter = ChangeFilter(project = 'myproject')
+    my_filter = ChangeFilter(project='myproject')
 
 or accept any of a set of values::
 
-    my_filter = ChangeFilter(project = ['myproject', 'jimsproject'])
+    my_filter = ChangeFilter(project=['myproject', 'jimsproject'])
 
 or apply a regular expression, using the attribute name with a "``_re``" suffix::
 
-    my_filter = ChangeFilter(category_re = '.*deve.*')
+    my_filter = ChangeFilter(category_re='.*deve.*')
     # or, to use regular expression flags:
     import re
-    my_filter = ChangeFilter(category_re = re.compile('.*deve.*', re.I))
+    my_filter = ChangeFilter(category_re=re.compile('.*deve.*', re.I))
 
 For anything more complicated, define a Python function to recognize the strings you want::
 
     def my_branch_fn(branch):
         return branch in branches_to_build and branch not in branches_to_ignore
-    my_filter = ChangeFilter(branch_fn = my_branch_fn)
+    my_filter = ChangeFilter(branch_fn=my_branch_fn)
 
 The special argument ``filter_fn`` can be used to specify a function that is given the entire Change object, and returns a boolean.
 
@@ -245,14 +248,14 @@ The arguments to this scheduler are:
 
 Example::
 
-    from buildbot.schedulers.basic  import SingleBranchScheduler
-    from buildbot.changes import filter
-    quick = SingleBranchScheduler(name="quick",
-                        change_filter=filter.ChangeFilter(branch='master'),
+    from buildbot.plugins import schedulers, util
+
+    quick = schedulers.SingleBranchScheduler(name="quick",
+                        change_filter=util.ChangeFilter(branch='master'),
                         treeStableTimer=60,
                         builderNames=["quick-linux", "quick-netbsd"])
-    full = SingleBranchScheduler(name="full",
-                        change_filter=filter.ChangeFilter(branch='master'),
+    full = schedulers.SingleBranchScheduler(name="full",
+                        change_filter=util.ChangeFilter(branch='master'),
                         treeStableTimer=5*60,
                         builderNames=["full-linux", "full-netbsd", "full-OSX"])
     c['schedulers'] = [quick, full]
@@ -343,11 +346,12 @@ The keyword arguments to this scheduler are:
 
 Example::
 
-    from buildbot.schedulers import basic
-    tests = basic.SingleBranchScheduler(name="just-tests",
+    from buildbot.plugins import schedulers
+
+    tests = schedulers.SingleBranchScheduler(name="just-tests",
                             treeStableTimer=5*60,
                             builderNames=["full-linux", "full-netbsd", "full-OSX"])
-    package = basic.Dependent(name="build-package",
+    package = schedulers.Dependent(name="build-package",
                             upstream=tests, # <- no quotes!
                             builderNames=["make-tarball", "make-deb", "make-rpm"])
     c['schedulers'] = [tests, package]
@@ -379,8 +383,9 @@ The arguments to this scheduler are:
 
 Example::
 
-    from buildbot.schedulers import timed
-    nightly = timed.Periodic(name="daily",
+    from buildbot.plugins import schedulers
+
+    nightly = schedulers.Periodic(name="daily",
                     builderNames=["full-solaris"],
                     periodicBuildTimer=24*60*60)
     c['schedulers'] = [nightly]
@@ -454,43 +459,44 @@ The full list of parameters is:
 
 For example, the following master.cfg clause will cause a build to be started every night at 3:00am::
 
-    from buildbot.schedulers import timed
+    from buildbot.plugins import schedulers
+
     c['schedulers'].append(
-        timed.Nightly(name='nightly',
-            branch='master',
-            builderNames=['builder1', 'builder2'],
-            hour=3,
-            minute=0))
+        schedulers.Nightly(name='nightly',
+                           branch='master',
+                           builderNames=['builder1', 'builder2'],
+                           hour=3,
+                           minute=0))
 
 This scheduler will perform a build each Monday morning at 6:23am and again at 8:23am, but only if someone has committed code in the interim::
 
     c['schedulers'].append(
-        timed.Nightly(name='BeforeWork',
-             branch=`default`,
-             builderNames=['builder1'],
-             dayOfWeek=0,
-             hour=[6,8],
-             minute=23,
-             onlyIfChanged=True))
+        schedulers.Nightly(name='BeforeWork',
+                           branch=`default`,
+                           builderNames=['builder1'],
+                           dayOfWeek=0,
+                           hour=[6,8],
+                           minute=23,
+                           onlyIfChanged=True))
 
 The following runs a build every two hours, using Python's :func:`range` function::
 
-    c.schedulers.append(
-        timed.Nightly(name='every2hours',
-            branch=None, # default branch
-            builderNames=['builder1'],
-            hour=range(0, 24, 2)))
+    c['schedulers'].append(
+        schedulers.Nightly(name='every2hours',
+                           branch=None,     # default branch
+                           builderNames=['builder1'],
+                           hour=range(0, 24, 2)))
 
 Finally, this example will run only on December 24th::
 
     c['schedulers'].append(
-        timed.Nightly(name='SleighPreflightCheck',
-            branch=None, # default branch
-            builderNames=['flying_circuits', 'radar'],
-            month=12,
-            dayOfMonth=24,
-            hour=12,
-            minute=0))
+        schedulers.Nightly(name='SleighPreflightCheck',
+                           branch=None,     # default branch
+                           builderNames=['flying_circuits', 'radar'],
+                           month=12,
+                           dayOfMonth=24,
+                           hour=12,
+                           minute=0))
 
 .. bb:sched:: Try_Jobdir
 .. bb:sched:: Try_Userpass
@@ -553,10 +559,11 @@ For example, to set up the `jobdir` style of trial build, using a command queue 
 
 and then use the following scheduler in the buildmaster's config file::
 
-    from buildbot.schedulers.trysched import Try_Jobdir
-    s = Try_Jobdir(name="try1",
-                   builderNames=["full-linux", "full-netbsd", "full-OSX"],
-                   jobdir="jobdir")
+    from buildbot.plugins import schedulers
+
+    s = schedulers.Try_Jobdir(name="try1",
+                              builderNames=["full-linux", "full-netbsd", "full-OSX"],
+                              jobdir="jobdir")
     c['schedulers'] = [s]
 
 Note that you must create the jobdir before telling the buildmaster to use this configuration, otherwise you will get an error.
@@ -575,11 +582,12 @@ To use the username/password form of authentication, create a :class:`Try_Userpa
 It takes the same ``builderNames`` argument as the :class:`Try_Jobdir` form, but accepts an additional ``port`` argument (to specify the TCP port to listen on) and a ``userpass`` list of username/password pairs to accept.
 Remember to use good passwords for this: the security of the buildslave accounts depends upon it::
 
-    from buildbot.schedulers.trysched import Try_Userpass
-    s = Try_Userpass(name="try2",
-                     builderNames=["full-linux", "full-netbsd", "full-OSX"],
-                     port=8031,
-                     userpass=[("alice","pw1"), ("bob", "pw2")] )
+    from buildbot.plugins import schedulers
+
+    s = schedulers.Try_Userpass(name="try2",
+                                builderNames=["full-linux", "full-netbsd", "full-OSX"],
+                                port=8031,
+                                userpass=[("alice","pw1"), ("bob", "pw2")])
     c['schedulers'] = [s]
 
 Like most places in the buildbot, the ``port`` argument takes a `strports` specification.
@@ -617,48 +625,46 @@ The parameters are just the basics:
 This class is only useful in conjunction with the :class:`Trigger` step.
 Here is a fully-worked example::
 
-    from buildbot.schedulers import basic, timed, triggerable
-    from buildbot.process import factory
-    from buildbot.steps import trigger
+    from buildbot.plugins import steps, schedulers, util
 
-    checkin = basic.SingleBranchScheduler(name="checkin",
+    checkin = schedulers.SingleBranchScheduler(name="checkin",
                 branch=None,
                 treeStableTimer=5*60,
                 builderNames=["checkin"])
-    nightly = timed.Nightly(name='nightly',
+    nightly = schedulers.Nightly(name='nightly',
                 branch=None,
                 builderNames=['nightly'],
                 hour=3,
                 minute=0)
 
-    mktarball = triggerable.Triggerable(name="mktarball",
+    mktarball = schedulers.Triggerable(name="mktarball",
                     builderNames=["mktarball"])
-    build = triggerable.Triggerable(name="build-all-platforms",
+    build = schedulers.Triggerable(name="build-all-platforms",
                     builderNames=["build-all-platforms"])
-    test = triggerable.Triggerable(name="distributed-test",
+    test = schedulers.Triggerable(name="distributed-test",
                     builderNames=["distributed-test"])
-    package = triggerable.Triggerable(name="package-all-platforms",
+    package = schedulers.Triggerable(name="package-all-platforms",
                     builderNames=["package-all-platforms"])
 
     c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
 
     # on checkin, make a tarball, build it, and test it
-    checkin_factory = factory.BuildFactory()
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
-                                           waitForFinish=True))
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
-                                       waitForFinish=True))
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['distributed-test'],
-                                      waitForFinish=True))
+    checkin_factory = util.BuildFactory()
+    checkin_factory.addStep(steps.Trigger(schedulerNames=['mktarball'],
+                                          waitForFinish=True))
+    checkin_factory.addStep(steps.Trigger(schedulerNames=['build-all-platforms'],
+                                          waitForFinish=True))
+    checkin_factory.addStep(steps.Trigger(schedulerNames=['distributed-test'],
+                                          waitForFinish=True))
 
     # and every night, make a tarball, build it, and package it
-    nightly_factory = factory.BuildFactory()
-    nightly_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
-                                           waitForFinish=True))
-    nightly_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
-                                       waitForFinish=True))
-    nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
-                                         waitForFinish=True))
+    nightly_factory = util.BuildFactory()
+    nightly_factory.addStep(steps.Trigger(schedulerNames=['mktarball'],
+                                          waitForFinish=True))
+    nightly_factory.addStep(steps.Trigger(schedulerNames=['build-all-platforms'],
+                                          waitForFinish=True))
+    nightly_factory.addStep(steps.Trigger(schedulerNames=['package-all-platforms'],
+                                          waitForFinish=True))
 
 .. bb:sched:: NightlyTriggerable
 
@@ -698,15 +704,13 @@ Note that ``waitForFinish`` is ignored by :class:`Trigger` steps targeting this 
 
 Here is a fully-worked example::
 
-    from buildbot.schedulers import basic, timed
-    from buildbot.process import factory
-    from buildbot.steps import shell, trigger
+    from buildbot.plugins import schedulers, util, steps
 
-    checkin = basic.SingleBranchScheduler(name="checkin",
+    checkin = schedulers.SingleBranchScheduler(name="checkin",
                 branch=None,
                 treeStableTimer=5*60,
                 builderNames=["checkin"])
-    nightly = timed.NightlyTriggerable(name='nightly',
+    nightly = schedulers.NightlyTriggerable(name='nightly',
                 builderNames=['nightly'],
                 hour=3,
                 minute=0)
@@ -714,13 +718,13 @@ Here is a fully-worked example::
     c['schedulers'] = [checkin, nightly]
 
     # on checkin, run tests
-    checkin_factory = factory.BuildFactory()
-    checkin_factory.addStep(shell.Test())
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly']))
+    checkin_factory = util.BuildFactory()
+    checkin_factory.addStep(steps.Test())
+    checkin_factory.addStep(steps.Trigger(schedulerNames=['nightly']))
 
     # and every night, package the latest successful build
-    nightly_factory = factory.BuildFactory()
-    nightly_factory.addStep(shell.ShellCommand(command=['make', 'package']))
+    nightly_factory = util.BuildFactory()
+    nightly_factory.addStep(steps.ShellCommand(command=['make', 'package']))
 
 .. bb:sched:: ForceScheduler
 
@@ -776,42 +780,40 @@ The scheduler takes the following parameters:
 An example may be better than long explanation.
 What you need in your config file is something like::
 
-    from buildbot.schedulers.forcesched import *
+    from buildbot.plugins import schedulers, util
 
-    sch = ForceScheduler(name="force",
-                 builderNames=["my-builder"],
+    sch = schedulers.ForceScheduler(name="force",
+                                    builderNames=["my-builder"],
 
-                 # will generate a combo box
-                 branch=ChoiceStringParameter(name="branch",
-                                        choices=["main","devel"], default="main"),
+                                    # will generate a combo box
+                                    branch=util.ChoiceStringParameter(name="branch",
+                                                                     choices=["main","devel"], default="main"),
 
-                 # will generate a text input
-                 reason=StringParameter(name="reason",label="reason:<br>",
-                                        required=True, size=80),
+                                    # will generate a text input
+                                    reason=util.StringParameter(name="reason",label="reason:<br>",
+                                                                required=True, size=80),
 
-                 # will generate nothing in the form, but revision, repository,
-                 # and project are needed by buildbot scheduling system so we
-                 # need to pass a value ("")
-                 revision=FixedParameter(name="revision", default=""),
-                 repository=FixedParameter(name="repository", default=""),
-                 project=FixedParameter(name="project", default=""),
+                                    # will generate nothing in the form, but revision, repository,
+                                    # and project are needed by buildbot scheduling system so we
+                                    # need to pass a value ("")
+                                    revision=util.FixedParameter(name="revision", default=""),
+                                    repository=util.FixedParameter(name="repository", default=""),
+                                    project=util.FixedParameter(name="project", default=""),
 
-                 # in case you dont require authentication this will display
-                 # input for user to type his name
-                 username=UserNameParameter(label="your name:<br>", size=80),
+                                    # in case you dont require authentication this will display
+                                    # input for user to type his name
+                                    username=util.UserNameParameter(label="your name:<br>", size=80),
 
-                 # A completely customized property list.  The name of the
-                 # property is the name of the parameter
-                 properties=[
+                                    # A completely customized property list.  The name of the
+                                    # property is the name of the parameter
+                                    properties=[
+                                        util.BooleanParameter(name="force_build_clean",
+                                                              label="force a make clean", default=False),
+                                        util.StringParameter(name="pull_url",
+                                                             label="optionally give a public Git pull url:<br>",
+                                                             default="", size=80)
+                                    ])
 
-                    BooleanParameter(name="force_build_clean",
-                                label="force a make clean", default=False),
-
-                    StringParameter(name="pull_url",
-                        label="optionally give a public Git pull url:<br>",
-                        default="", size=80)
-                 ]
-                 )
     c['schedulers'].append(sch)
 
 Authorization
@@ -821,22 +823,23 @@ The force scheduler uses the web status's :ref:`authorization <Authorization>` f
 Here is an example of code on how you can define which user has which right::
 
     user_mapping = {
-        re.compile("project1-builder"): ["project1-maintainer", "john"] ,
+        re.compile("project1-builder"): ["project1-maintainer", "john"],
         re.compile("project2-builder"): ["project2-maintainer", "jack"],
         re.compile(".*"): ["root"]
     }
-    def force_auth(user,  status):
+
+    def force_auth(user, status):
         global user_mapping
-        for r,users in user_mapping.items():
+        for r, users in user_mapping.items():
             if r.match(status.name):
                 if user in users:
-                        return True
+                    return True
         return False
 
     # use authz_cfg in your WebStatus setup
     authz_cfg=authz.Authz(
         auth=my_auth,
-        forceBuild = force_auth,
+        forceBuild=force_auth
     )
 
 .. _ForceScheduler-Parameters:
@@ -875,7 +878,9 @@ FixedParameter
 
 ::
 
-    FixedParameter(name="branch", default="trunk"),
+    from buildbot.plugins import util
+
+    util.FixedParameter(name="branch", default="trunk"),
 
 This parameter type will not be shown on the web form, and always generate a property with its default value.
 
@@ -884,7 +889,9 @@ StringParameter
 
 ::
 
-    StringParameter(name="pull_url",
+    from buildbot.plugins import util
+
+    util.StringParameter(name="pull_url",
         label="optionally give a public Git pull url:<br>",
         default="", size=80)
 
@@ -904,9 +911,12 @@ TextParameter
 
 ::
 
-    StringParameter(name="comments",
-                    label="comments to be displayed to the user of the built binary",
-                    default="This is a development build", cols=60, rows=5)
+    from buildbot.plugins import util
+
+    util.StringParameter(name="comments",
+                         label="comments to be displayed to the user of the built binary",
+                         default="This is a development build",
+                         cols=60, rows=5)
 
 This parameter type is similar to StringParameter, except that it is represented in the HTML form as a textarea, allowing multi-line input.
 It adds the StringParameter arguments, this type allows:
@@ -932,8 +942,11 @@ IntParameter
 
 ::
 
-    IntParameter(name="debug_level",
-        label="debug level (1-10)", default=2)
+    from buildbot.plugins import util
+
+    util.IntParameter(name="debug_level",
+                      label="debug level (1-10)",
+                      default=2)
 
 This parameter type accepts an integer value using a text-entry box.
 
@@ -942,8 +955,11 @@ BooleanParameter
 
 ::
 
-    BooleanParameter(name="force_build_clean",
-        label="force a make clean", default=False)
+    from buildbot.plugins import util
+
+    util.BooleanParameter(name="force_build_clean",
+                          label="force a make clean",
+                          default=False)
 
 This type represents a boolean value.
 It will be presented as a checkbox.
@@ -953,7 +969,9 @@ UserNameParameter
 
 ::
 
-    UserNameParameter(label="your name:<br>", size=80)
+    from buildbot.plugins import util
+
+    util.UserNameParameter(label="your name:<br>", size=80)
 
 This parameter type accepts a username.
 If authentication is active, it will use the authenticated user instead of displaying a text-entry box.
@@ -971,8 +989,11 @@ ChoiceStringParameter
 
 ::
 
-    ChoiceStringParameter(name="branch",
-        choices=["main","devel"], default="main")
+    from buildbot.plugins import util
+
+    util.ChoiceStringParameter(name="branch",
+                               choices=["main", "devel"],
+                               default="main")
 
 This parameter type lets the user choose between several choices (e.g the list of branches you are supporting, or the test campaign to run).
 If ``multiple`` is false, then its result is a string - one of the choices.
@@ -999,27 +1020,31 @@ Its arguments, in addition to the common options, are:
 
 Example::
 
-    ChoiceStringParameter(name="forced_tests",
-                          label = "smoke test campaign to run",
-                          default = default_tests,
-                          multiple = True,
-                          strict = True,
-                          choices = [ "test_builder1",
-                                      "test_builder2",
-                                      "test_builder3" ])
+    from buildbot.plugins import util, steps
+
+    util.ChoiceStringParameter(name="forced_tests",
+                               label="smoke test campaign to run",
+                               default=default_tests,
+                               multiple=True,
+                               strict=True,
+                               choices=["test_builder1",
+                                        "test_builder2",
+                                        "test_builder3"])
 
     # .. and later base the schedulers to trigger off this property:
 
     # triggers the tests depending on the property forced_test
-    builder1.factory.addStep(Trigger(name="Trigger tests",
-                                     schedulerNames=Property("forced_tests")))
+    builder1.factory.addStep(steps.Trigger(name="Trigger tests",
+                                     schedulerNames=util.Property("forced_tests")))
 
 CodebaseParameter
 #################
 
 ::
 
-    CodebaseParameter(codebase="myrepo")
+    from buildbot.plugins import util
+
+    util.CodebaseParameter(codebase="myrepo")
 
 This is a parameter group to specify a sourcestamp for a given codebase.
 
@@ -1063,18 +1088,20 @@ The new parameter is:
 
 Example::
 
+    from buildbot.plugins import util
+
     def get_compatible_builds(status, builder):
-        if builder == None: # this is the case for force_build_all
+        if builder is None:     # this is the case for force_build_all
             return ["cannot generate build list here"]
         # find all successful builds in builder1 and builder2
         builds = []
-        for builder in ["builder1","builder2"]:
+        for builder in ["builder1", "builder2"]:
             builder_status = status.getBuilder(builder)
-            for num in xrange(1,40): # 40 last builds
+            for num in xrange(1, 40):   # 40 last builds
                 b = builder_status.getBuild(-num)
                 if not b:
                     continue
-                if b.getResults() == FAILURE:
+                if b.getResults() == util.FAILURE:
                     continue
                 builds.append(builder+"/"+str(b.getNumber()))
         return builds
@@ -1083,11 +1110,11 @@ Example::
 
     sched = Scheduler(...,
         properties=[
-            InheritBuildParameter(
-                name="inherit",
-                label="promote a build for merge",
-                compatible_builds=get_compatible_builds,
-                required = True),
+            util.InheritBuildParameter(
+                    name="inherit",
+                    label="promote a build for merge",
+                    compatible_builds=get_compatible_builds,
+                    required = True),
                 ])
 
 .. bb:sched:: BuildslaveChoiceParameter
@@ -1101,7 +1128,7 @@ The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to
 
 Example::
 
-    from buildbot.process.builder import enforceChosenSlave
+    from buildbot.plugins import util
 
     # schedulers:
     ForceScheduler(
@@ -1114,7 +1141,7 @@ Example::
     # builders:
     BuilderConfig(
         # ...
-        canStartBuild=enforceChosenSlave,
+        canStartBuild=util.enforceChosenSlave,
     )
 
 AnyPropertyParameter

@@ -22,4 +22,5 @@ It is intended both for developers writing patches that will be included in Buil
     master-slave
     encodings
     metrics
+    plugins-publish
     classes
