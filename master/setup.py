@@ -327,6 +327,7 @@ setup_args = {
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter']),
+            ('buildbot.status.client', ['PBListener']),
             ('buildbot.status.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),

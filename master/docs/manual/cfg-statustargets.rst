@@ -1376,9 +1376,9 @@ PBListener
 
 ::
 
-    import buildbot.status.client
-    pbl = buildbot.status.client.PBListener(port=int, user=str,
-                                            passwd=str)
+    from buildbot.plugins import status
+
+    pbl = status.PBListener(port=int, user=str, passwd=str)
     c['status'].append(pbl)
 
 This sets up a PB listener on the given TCP port, to which a PB-based status client can connect and retrieve status information.
