@@ -30,9 +30,9 @@ __all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'status', 'util']
 
 # Names here match the names of the corresponding Buildbot module, hence
 # 'changes', 'schedulers', but 'buildslave'
-changes = get_plugins('change_source', IChangeSource)
-schedulers = get_plugins('scheduler', IScheduler)
-buildslave = get_plugins('build_slave', IBuildSlave)
-steps = get_plugins('step', IBuildStep)
+changes = get_plugins('changes', IChangeSource)
+schedulers = get_plugins('schedulers', IScheduler)
+buildslave = get_plugins('buildslave', IBuildSlave)
+steps = get_plugins('steps', IBuildStep)
 status = get_plugins('status', IStatusReceiver)
 util = get_plugins('util', None)

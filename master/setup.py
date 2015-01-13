@@ -207,7 +207,7 @@ setup_args = {
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
     'entry_points': define_plugin_entries([
-        ('buildbot.change_source', [
+        ('buildbot.changes', [
             ('buildbot.changes.mail', [
                 'MaildirSource', 'CVSMaildirSource',
                 'SVNCommitEmailMaildirSource',
@@ -221,7 +221,7 @@ setup_args = {
             ('buildbot.changes.pb', ['PBChangeSource']),
             ('buildbot.changes.svnpoller', ['SVNPoller'])
         ]),
-        ('buildbot.scheduler', [
+        ('buildbot.schedulers', [
             ('buildbot.schedulers.basic', [
                 'SingleBranchScheduler', 'AnyBranchScheduler']),
             ('buildbot.schedulers.dependent', ['Dependent']),
@@ -232,13 +232,13 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.build_slave', [
+        ('buildbot.buildslave', [
             ('buildbot.buildslave.base', ['BuildSlave']),
             ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
             ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
             ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave'])
         ]),
-        ('buildbot.step', [
+        ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
