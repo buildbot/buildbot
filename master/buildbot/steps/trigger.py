@@ -38,7 +38,7 @@ class Trigger(BuildStep):
     def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={},
-                 copy_properties=[], parent_relationship="triggered from", **kwargs):
+                 copy_properties=[], parent_relationship="Triggered from", **kwargs):
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
