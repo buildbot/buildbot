@@ -1038,9 +1038,9 @@ Where:
 
   This will allow users of your plugin to use it just like any other Buildbot plugins::
 
-    from buildbot.plugins.steps import *
+    from buildbot.plugins import steps
 
-    ... Framboozle ...
+    ... steps.Framboozle ...
 
 Now you can upload it to PyPI_ where other people can download it from and use in their build systems.
 Once again, the information about how to prepare and upload a package to PyPI_ can be found in tutorials listed in :doc:`../developer/plugins-publish`.
@@ -1055,12 +1055,12 @@ In either case, post a note about your patch to the mailing list, so others can 
 
 When it's committed to the master, the usage is the same as in the previous approach::
 
-    from buildbot.steps import Framboozle
+    from buildbot.plugins import steps, util
 
     ...
-    f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
-    f.addStep(Framboozle())
+    f = util.BuildFactory()
+    f.addStep(steps.SVN(svnurl="stuff"))
+    f.addStep(steps.Framboozle())
     ...
 
 And then you don't even have to install :file:`framboozle.py` anywhere on your system, since it will ship with Buildbot.
