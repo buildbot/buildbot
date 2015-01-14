@@ -98,7 +98,7 @@ Open up the config again and introduce a syntax error by removing the first sing
   c[title'] = "Pyflakes"
   c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
-This creates a Python SyntaxError.
+This creates a Python ``SyntaxError``.
 Now go ahead and reconfig the buildmaster:
 
 .. code-block:: bash
@@ -167,7 +167,7 @@ In this example we will use #buildbot-test, so go join that channel.
 (*Note: please do not join the main buildbot channel!*)
 
 Edit the config and look for the *STATUS TARGETS* section.
-Enter these lines below the WebStatus line in master.cfg::
+Enter these lines below the WebStatus line in :file:`master.cfg`::
 
   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
 
