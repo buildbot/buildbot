@@ -10,12 +10,12 @@ class Buildsummary extends Directive('common')
         }
 
 class _buildsummary extends Controller('common')
-    constructor: ($scope, buildbotService, config, resultsService, $urlMatcherFactory) ->
-
+    constructor: ($scope, buildbotService, resultsService, $urlMatcherFactory, $location) ->
+        baseurl = $location.absUrl().split("#")[0]
         buildrequestURLMatcher = $urlMatcherFactory.compile(
-            "#{config.url}#buildrequests/{buildrequestid:[0-9]+}")
+            "#{baseurl}#buildrequests/{buildrequestid:[0-9]+}")
         buildURLMatcher = $urlMatcherFactory.compile(
-            "#{config.url}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
+            "#{baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
 
         NONE = 0
         ONLY_NOT_SUCCESS = 1
