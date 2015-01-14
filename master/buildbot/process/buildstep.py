@@ -248,11 +248,11 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     renderables = results.ResultComputingConfigMixin.resultConfig + [
         'alwaysRun',
-        'doStepIf',
-        'hideStepIf',
         'description',
         'descriptionDone',
         'descriptionSuffix',
+        'doStepIf',
+        'hideStepIf',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
@@ -262,23 +262,25 @@ class BuildStep(results.ResultComputingConfigMixin,
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    parms = ['name', 'locks',
-             'haltOnFailure',
-             'flunkOnWarnings',
-             'flunkOnFailure',
-             'warnOnWarnings',
-             'warnOnFailure',
-             'alwaysRun',
-             'progressMetrics',
-             'useProgress',
-             'doStepIf',
-             'hideStepIf',
-             'description',
-             'descriptionDone',
-             'descriptionSuffix',
-             'logEncoding',
-             'workdir',
-             ]
+    parms = [
+        'alwaysRun',
+        'description',
+        'descriptionDone',
+        'descriptionSuffix',
+        'doStepIf',
+        'flunkOnFailure',
+        'flunkOnWarnings',
+        'haltOnFailure',
+        'hideStepIf',
+        'locks',
+        'logEncoding',
+        'name',
+        'progressMetrics',
+        'useProgress',
+        'warnOnFailure',
+        'warnOnWarnings',
+        'workdir',
+    ]
 
     name = "generic"
     description = None  # set this to a list of short strings to override
