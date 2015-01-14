@@ -41,10 +41,7 @@ class Cppcheck(ShellCommand):
                               ('enable', []),
                               ('inconclusive', False),
                               ('extra_args', [])]:
-            setattr(self, name, default)
-            if name in kwargs:
-                setattr(self, name, kwargs[name])
-                del kwargs[name]
+            setattr(self, name, kwargs.pop(name, default))
 
         ShellCommand.__init__(self, *args, **kwargs)
         self.addLogObserver(
