@@ -688,6 +688,46 @@ class TestBuildsetsConnectorComponent(
             fakedb.SourceStamp(id=2, revision='b', codebase='2', sourcestampsetid=1,
                                branch='staging', repository='w')])
 
+    def test_downloadArtifact(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", complete=1, results=0),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="B", complete=1, results=0,
+                                     submitted_at=self.SUBMITTED_AT_EPOCH, complete_at=self.COMPLETE_AT_EPOCH,
+                                     triggeredbybrid=1, startbrid=1)
+                 ]
+        d = self.insertTestData(breqs)
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequestTriggered(triggeredbybrid=1, buildername='B'))
+
+        def check(brdict):
+            self.assertEqual(brdict,
+                    dict(artifactbrid=None, brid=2, buildername="B", buildsetid=2,
+                        complete=True, complete_at=self.COMPLETE_AT, priority=0,
+                        results=0, submitted_at=self.SUBMITTED_AT
+                        ))
+        d.addCallback(check)
+        return d
+
+    def test_downloadArtifactReusingBuild(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", complete=1, results=0),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="B", complete=1, results=0,
+                                     submitted_at=1418823086, complete_at=1418823086),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="B", complete=1, results=0,
+                                     submitted_at=self.SUBMITTED_AT_EPOCH, complete_at=self.COMPLETE_AT_EPOCH,
+                                     triggeredbybrid=1, startbrid=1, artifactbrid=2)
+                 ]
+        d = self.insertTestData(breqs)
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequestTriggered(triggeredbybrid=1, buildername='B'))
+
+        def check(brdict):
+            self.assertEqual(brdict,
+                    dict(artifactbrid=None, brid=2, buildername="B", buildsetid=2,
+                        complete=True, complete_at=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC), priority=0,
+                        results=0, submitted_at=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC)
+                        ))
+        d.addCallback(check)
+        return d
+
     def test_previousSuccessFullBuildRequestFound(self):
         # add build request
         d = self.buildRequestWithSources()
