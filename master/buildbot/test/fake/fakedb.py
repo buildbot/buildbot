@@ -980,6 +980,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
         return defer.succeed(rv)
 
+    def getBuildRequestTriggered(self, triggeredbybrid, buildername):
+        rv = None
+        for id, br in self.reqs.iteritems():
+            if br.triggeredbybrid == triggeredbybrid and br.buildername == buildername:
+                if br.artifactbrid:
+                    return self._brdictFromRow(self.reqs[br.artifactbrid])
+                return self._brdictFromRow(br)
+        return rv
+
     def reusePreviousBuild(self, requests, artifactbrid):
         return defer.succeed(None)
 
