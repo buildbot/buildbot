@@ -8,7 +8,7 @@ class Settings extends Config
         glMenuServiceProvider.addGroup
             name: name
             caption: 'Settings'
-            icon: 'user'
+            icon: 'sliders'
             order: 99
 
         # Configuration

@@ -15,12 +15,10 @@ class State extends Config
             name:name
             caption: 'Home related settings'
             items:[
-                {
                     type:'bool'
                     name:'checkbox1'
                     default_value: false
-                }
-                {
+                ,
                     type:'choices'
                     name:'radio'
                     default_value: 'radio1'
@@ -28,7 +26,6 @@ class State extends Config
                         { name: 'radio1' }
                         { name: 'radio2' }
                     ]
-                }
             ]
 
         cfg =
