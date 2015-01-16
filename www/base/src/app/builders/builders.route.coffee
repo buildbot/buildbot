@@ -11,27 +11,6 @@ class State extends Config
             icon: 'cogs'
             order: 10
 
-        bbSettingsServiceProvider.addSettingsGroup
-            name:'Builders'
-            caption: 'Builders related settings'
-            items:[
-                    type:'bool'
-                    name:'checkbox1'
-                    default_value: true
-                ,
-                    type:'choices'
-                    name:'radio'
-                    default_value: 'radio1'
-                    answers: [
-                        { name: 'radio1' }
-                        { name: 'radio2' }
-                    ]
-                ,
-                    type:'integer'
-                    name: 'Number of builders displayed'
-                    default_value: 10
-            ]
-
         # Configuration
         cfg =
             group: "builds"
