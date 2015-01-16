@@ -26,6 +26,10 @@ class State extends Config
                         { name: 'radio1' }
                         { name: 'radio2' }
                     ]
+                ,
+                    type:'integer'
+                    name: 'Number of builders displayed'
+                    default_value: 10
             ]
 
         # Configuration

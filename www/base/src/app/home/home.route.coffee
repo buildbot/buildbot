@@ -26,6 +26,10 @@ class State extends Config
                         { name: 'radio1' }
                         { name: 'radio2' }
                     ]
+                ,
+                    type:'text'
+                    name:'Default welcome message'
+                    default_value: 'Hello!'
             ]
 
         cfg =
