@@ -179,6 +179,10 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
     This should be a ``docker.tls.TLSConfig`` object.
     See `docker-py's own documentation <http://docker-py.readthedocs.org/en/latest/tls/>`_ for more details on how to initialise this object.
 
+``followStartupLogs``
+    (optional, defaults to false)
+    This transfers docker container's log inside master logs during slave startup (before connection). This can be useful to debug slave startup. e.g network issues, etc.
+
 Setting up Volumes
 ..................
 

@@ -57,7 +57,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
     instance = None
 
     def __init__(self, name, password, docker_host, image=None, command=None,
-                 volumes=None, dockerfile=None, version=None, tls=None,
+                 volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
                  **kwargs):
 
         if not client:
@@ -69,6 +69,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         self.volumes = []
         self.binds = {}
+        self.followStartupLogs = followStartupLogs
         for volume_string in (volumes or []):
             try:
                 volume, bind = volume_string.split(":", 1)
@@ -152,12 +153,19 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                 'Failed to start container'
             )
-
-        log.msg('Container created, Id: %s...' % instance['Id'][:6])
+        shortid = instance['Id'][:6]
+        log.msg('Container created, Id: %s...' % (shortid,))
         instance['image'] = image
         self.instance = instance
-        docker_client.start(instance['Id'], binds=self.binds)
+        docker_client.start(instance, binds=self.binds)
         log.msg('Container started')
+        if self.followStartupLogs:
+            logs = docker_client.attach(container=instance, stdout=True, stderr=True, stream=True)
+            for line in logs:
+                log.msg("docker VM %s: %s" % (shortid, line.strip()))
+                if self.conn:
+                    break
+            del logs
         return [instance['Id'], self.image]
 
     def stop_instance(self, fast=False):

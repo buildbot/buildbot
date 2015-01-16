@@ -785,6 +785,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building.clear()  # just to be sure
         yield d
         self.insubstantiating = False
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
