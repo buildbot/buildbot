@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider) ->
 
         # Name of the state
         name = 'home'
