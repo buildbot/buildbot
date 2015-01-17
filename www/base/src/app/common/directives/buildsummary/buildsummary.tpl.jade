@@ -1,5 +1,6 @@
 .panel.panel-default(ng-class="results2class(build)")
   .panel-heading.no-select(ng-click="toggleDetails()")
+    span(ng-if="prefix") {{prefix}}&nbsp;
     a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
       | {{builder.name}}/{{build.number}}
     .pull-right

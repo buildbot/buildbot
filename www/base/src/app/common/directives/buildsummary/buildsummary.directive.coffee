@@ -3,7 +3,7 @@ class Buildsummary extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {buildid: '=', condensed: '='}
+            scope: {buildid: '=', condensed: '=', prefix: "@"}
             templateUrl: 'views/buildsummary.html'
             compile: RecursionHelper.compile
             controller: '_buildsummaryController'
