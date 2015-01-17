@@ -38,7 +38,8 @@ class GitHubStatus(StatusReceiverMultiService):
     """
 
     def __init__(self, token, repoOwner, repoName, sha=None,
-                 startDescription=None, endDescription=None):
+                 startDescription=None, endDescription=None,
+                 baseURL=None):
         """
         Token for GitHub API.
         """
@@ -59,7 +60,7 @@ class GitHubStatus(StatusReceiverMultiService):
         self._sha = sha
         self._repoOwner = repoOwner
         self._repoName = repoName
-        self._github = GitHubAPI(oauth2_token=self._token)
+        self._github = GitHubAPI(oauth2_token=self._token, baseURL=baseURL)
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
