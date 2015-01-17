@@ -44,7 +44,13 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
 
-class IChangeSource(Interface):
+class IPlugin(Interface):
+    """
+    Base interface for all Buildbot plugins
+    """
+
+
+class IChangeSource(IPlugin):
 
     """
     Service which feeds Change objects to the changemaster. When files or
@@ -883,7 +889,7 @@ class IStatusLogConsumer(Interface):
         """The log has finished sending chunks to the consumer."""
 
 
-class IStatusReceiver(Interface):
+class IStatusReceiver(IPlugin):
 
     """I am an object which can receive build status updates. I may be
     subscribed to an IStatus, an IBuilderStatus, or an IBuildStatus."""
@@ -1141,7 +1147,7 @@ class ILogObserver(Interface):
         pass
 
 
-class IBuildSlave(Interface):
+class IBuildSlave(IPlugin):
     # this is a marker interface for the BuildSlave class
     pass
 
@@ -1266,7 +1272,7 @@ class IProperties(Interface):
         """
 
 
-class IScheduler(Interface):
+class IScheduler(IPlugin):
     pass
 
 
@@ -1285,3 +1291,10 @@ class IBuildStepFactory(Interface):
 
     def buildStep():
         pass
+
+
+class IBuildStep(IPlugin):
+    """
+    A build step
+    """
+    # Currently has nothing

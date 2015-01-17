@@ -28,10 +28,11 @@ Buildslaves with an unrecognized slavename or a non-matching password will be re
 
 A configuration for two slaves would look like::
 
-    from buildbot.buildslave import BuildSlave
+    from buildbot.plugins import buildslave
+
     c['slaves'] = [
-        BuildSlave('bot-solaris', 'solarispasswd'),
-        BuildSlave('bot-bsd', 'bsdpasswd'),
+        buildslave.BuildSlave('bot-solaris', 'solarispasswd'),
+        buildslave.BuildSlave('bot-bsd', 'bsdpasswd'),
     ]
 
 BuildSlave Options
@@ -43,8 +44,10 @@ BuildSlave Options
 For example::
 
     c['slaves'] = [
-        BuildSlave('bot-solaris', 'solarispasswd',
-                    properties={ 'os':'solaris' }),
+        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
+                              properties={
+                                'os': 'solaris'
+                              }),
     ]
 
 .. index:: Build Slaves; limiting concurrency
@@ -52,7 +55,7 @@ For example::
 The :class:`BuildSlave` constructor can also take an optional ``max_builds`` parameter to limit the number of builds that it will execute simultaneously::
 
     c['slaves'] = [
-        BuildSlave("bot-linux", "linuxpassword", max_builds=2)
+        buildslave.BuildSlave("bot-linux", "linuxpassword", max_builds=2)
     ]
 
 Master-Slave TCP Keepalive
@@ -64,8 +67,8 @@ These keepalives ensure that traffic is flowing over the underlying TCP connecti
 The interval can be modified by specifying the interval in seconds using the ``keepalive_interval`` parameter of BuildSlave::
 
     c['slaves'] = [
-        BuildSlave('bot-linux', 'linuxpasswd',
-                    keepalive_interval=3600),
+        buildslave.BuildSlave('bot-linux', 'linuxpasswd',
+                              keepalive_interval=3600),
     ]
 
 The interval can be set to ``None`` to disable this functionality altogether.
@@ -82,8 +85,8 @@ If you'd like to have the administrator of the buildslave (or other people) be n
 This value can be a single email address, or a list of addresses::
 
     c['slaves'] = [
-        BuildSlave('bot-solaris', 'solarispasswd',
-                    notify_on_missing="bob@example.com"),
+        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
+                              notify_on_missing="bob@example.com"),
     ]
 
 By default, this will send email when the buildslave has been disconnected for more than one hour.
@@ -93,10 +96,10 @@ To change the timeout, use ``missing_timeout=`` and give it a number of seconds 
 You can have the buildmaster send email to multiple recipients: just provide a list of addresses instead of a single one::
 
     c['slaves'] = [
-        BuildSlave('bot-solaris', 'solarispasswd',
-                    notify_on_missing=["bob@example.com",
-                                        "alice@example.org"],
-                    missing_timeout=300, # notify after 5 minutes
+        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
+                              notify_on_missing=["bob@example.com",
+                                                 "alice@example.org"],
+                              missing_timeout=300   # notify after 5 minutes
         ),
     ]
 
@@ -106,15 +109,15 @@ If no :class:`MailNotifier` is configured on this buildmaster, the buildslave-mi
 
 Note that if you want to have a :class:`MailNotifier` for buildslave-missing emails but not for regular build emails, just create one with ``builders=[]``, as follows::
 
-    from buildbot.status import mail
-    m = mail.MailNotifier(fromaddr="buildbot@localhost", builders=[],
-                          relayhost="smtp.example.org")
+    from buildbot.plugins import status, buildslave
+
+    m = status.MailNotifier(fromaddr="buildbot@localhost", builders=[],
+                            relayhost="smtp.example.org")
     c['status'].append(m)
 
-    from buildbot.buildslave import BuildSlave
     c['slaves'] = [
-            BuildSlave('bot-solaris', 'solarispasswd',
-                        notify_on_missing="bob@example.com"),
+            buildslave.BuildSlave('bot-solaris', 'solarispasswd',
+                                  notify_on_missing="bob@example.com"),
     ]
 
 .. index:: BuildSlaves; latent
@@ -210,12 +213,14 @@ It specifies all necessary remaining values explicitly in the instantiation.
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        ami='ami-12345',
                                        identifier='publickey',
-                                       secret_identifier='privatekey'
-                                       )]
+                                       secret_identifier='privatekey')
+    ]
 
 The ``ami`` argument specifies the AMI that the master should start.
 The ``identifier`` argument specifies the AWS `Access Key Id`, and the ``secret_identifier`` specifies the AWS `Secret Access Key.` Both the AMI and the account information can be specified in alternate ways.
@@ -233,9 +238,12 @@ Then you can instantiate the build slave as follows.
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                       ami='ami-12345')]
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+       buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                      ami='ami-12345')
+    ]
 
 If you want to put the key information in another file, use the ``aws_id_file_path`` initialization argument.
 
@@ -249,20 +257,21 @@ One available filter is to specify the acceptable AMI owners, by AWS account num
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                               valid_ami_owners=[11111111111,
-                                                 22222222222],
-                               identifier='publickey',
-                               secret_identifier='privatekey'
-                               )
+    from buildbot.plugins import buildslave
+
+    bot1 = buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                          valid_ami_owners=[11111111111,
+                                                            22222222222],
+                                          identifier='publickey',
+                                          secret_identifier='privatekey')
 
 The other available filter is to provide a regular expression string that will be matched against each AMI's location (the S3 bucket and manifest name).
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    bot1 = EC2LatentBuildSlave(
+    from buildbot.plugins import buildslave
+
+    bot1 = buildslave.EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
@@ -272,8 +281,9 @@ Only the first group is used; subsequent groups are ignored.
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    bot1 = EC2LatentBuildSlave(
+    from buildbot.plugins import buildslave
+
+    bot1 = buildslave.EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
@@ -283,8 +293,9 @@ This allows 10 to sort after 1, for instance.
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    bot1 = EC2LatentBuildSlave(
+    from buildbot.plugins import buildslave
+
+    bot1 = buildslave.EC2LatentBuildSlave(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
@@ -295,13 +306,15 @@ To configure, generate a Elastic IP in AWS, and then specify it in your configur
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        'ami-12345',
                                        identifier='publickey',
                                        secret_identifier='privatekey',
-                                       elastic_ip='208.77.188.166'
-                                       )]
+                                       elastic_ip='208.77.188.166')
+    ]
 
 One other way to configure a slave is by settings AWS tags.
 They can for example be used to have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy.
@@ -309,13 +322,15 @@ To get Buildbot to tag the latent slave specify the tag keys and values in your 
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        'ami-12345',
                                        identifier='publickey',
                                        secret_identifier='privatekey',
-                                       tags={'SomeTag': 'foo'}
-                                       )]
+                                       tags={'SomeTag': 'foo'})
+    ]
 
 The :class:`EC2LatentBuildSlave` supports all other configuration from the standard :class:`BuildSlave`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an EC2 instance to attach before considering the attempt to have failed, and email addresses to alert, respectively.  ``missing_timeout`` defaults to 20 minutes.
@@ -333,16 +348,18 @@ Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`
 
 ::
 
-    from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-    c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                        'ami-12345', region='us-west-2',
                                        identifier='publickey',
                                        secret_identifier='privatekey',
                                        elastic_ip='208.77.188.166',
                                        placement='b', spot_instance=True,
                                        max_spot_price=0.09,
-                                       price_multiplier=1.15
-                                       )]
+                                       price_multiplier=1.15)
+    ]
 
 This example would attempt to create a m1.large spot instance in the us-west-2b region costing no more than $0.09/hour.
 The spot prices for that region in the last 24 hours will be averaged and multiplied by the ``price_multiplier`` parameter, then a spot request will be sent to Amazon with the above details.
@@ -414,9 +431,14 @@ That copy will be thrown away every time a build is complete.
 
 ::
 
-    from buildbot.buildslave.libvirt import LibVirtSlave, Connection
-    c['slaves'] = [LibVirtSlave('minion1', 'sekrit', Connection("qemu:///session"),
-                                '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
+    from buildbot.plugins import buildslave, util
+
+    c['slaves'] = [
+        buildslave.LibVirtSlave('minion1', 'sekrit',
+                                util.Connection("qemu:///session"),
+                                '/home/buildbot/images/minion1',
+                                '/home/buildbot/images/base_image')
+    ]
 
 You can use virt-manager to define ``minion1`` with the correct hardware.
 If you don't, buildbot won't be able to find a VM to start.
@@ -503,12 +525,15 @@ Here is the simplest example of configuring an OpenStack latent buildslave.
 
 ::
 
-    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+    from buildbot.plugins import buildslave
+
+    c['slaves'] = [
+        buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
                     flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
-                    os_auth_url='http://127.0.0.1:35357/v2.0')]
+                    os_auth_url='http://127.0.0.1:35357/v2.0')
+    ]
 
 The ``image`` argument also supports being given a callable.
 The callable will be passed the list of available images and must return the image to use.
@@ -516,7 +541,7 @@ The invocation happens in a separate thread to prevent blocking the build master
 
 ::
 
-    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+    from buildbot.plugins import buildslave
 
     def find_image(images):
         # Sort oldest to newest.
@@ -525,11 +550,13 @@ The invocation happens in a separate thread to prevent blocking the build master
         # Return the oldest candiate image.
         return candidate_images[0]
 
-    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+    c['slaves'] = [
+        buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
                     flavor=1, image=find_image,
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
-                    os_auth_url='http://127.0.0.1:35357/v2.0')]
+                    os_auth_url='http://127.0.0.1:35357/v2.0')
+    ]
 
 
 :class:`OpenStackLatentBuildSlave` supports all other configuration from the standard :class:`BuildSlave`.

@@ -92,13 +92,15 @@ The :bb:cfg:`change_source` configuration key holds all active change sources fo
 
 Most configurations have a single :class:`ChangeSource`, watching only a single tree, e.g.::
 
-    c['change_source'] = PBChangeSource()
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.PBChangeSource()
 
 For more advanced configurations, the parameter can be a list of change sources::
 
     source1 = ...
     source2 = ...
-    c['change_source'] = [ source1, source1 ]
+    c['change_source'] = [source1, source1]
 
 Repository and Project
 ++++++++++++++++++++++
@@ -132,9 +134,10 @@ There is a separate ChangeSource variant for each parsing function.
 
 Once you've chosen a maildir location and a parsing function, create the change source and put it in ``change_source``::
 
-    from buildbot.changes.mail import CVSMaildirSource
-    c['change_source'] = CVSMaildirSource("~/maildir-buildbot",
-                                            prefix="/trunk/")
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.CVSMaildirSource("~/maildir-buildbot",
+                                                  prefix="/trunk/")
 
 .. _Subscribing-the-Buildmaster:
 
@@ -256,8 +259,9 @@ The Buildbot's :bb:chsrc:`CVSMaildirSource` knows how to parse these messages an
 It takes the directory name of the maildir root.
 For example::
 
-    from buildbot.changes.mail import CVSMaildirSource
-    c['change_source'] = CVSMaildirSource("/home/buildbot/Mail")
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
 Configuration of CVS and buildbot_cvs_mail.py
 #############################################
@@ -307,8 +311,9 @@ It does not currently handle branches: all of the Change objects that it creates
 
 ::
 
-    from buildbot.changes.mail import SVNCommitEmailMaildirSource
-    c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.SVNCommitEmailMaildirSource("~/maildir-buildbot")
 
 .. bb:chsrc:: BzrLaunchpadEmailMaildirSource
 
@@ -338,9 +343,14 @@ However, it is possible to set the bzr `append_revisions_only` option for public
 
 ::
 
-    from buildbot.changes.mail import BzrLaunchpadEmailMaildirSource
-    bm = { 'lp:~maria-captains/maria/5.1' : '5.1', 'lp:~maria-captains/maria/6.0' : '6.0' }
-    c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branchMap = bm)
+    from buildbot.plugins import changes
+
+    bm = {
+        'lp:~maria-captains/maria/5.1': '5.1',
+        'lp:~maria-captains/maria/6.0': '6.0'
+    }
+    c['change_source'] = changes.BzrLaunchpadEmailMaildirSource("~/maildir-buildbot",
+                                                                branchMap=bm)
 
 .. bb:chsrc:: PBChangeSource
 
@@ -387,8 +397,9 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 For example::
 
-    from buildbot.changes import pb
-    c['change_source'] = pb.PBChangeSource(port=9999, user='laura', passwd='fpga')
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.PBChangeSource(port=9999, user='laura', passwd='fpga')
 
 The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSource`\:
 
@@ -512,10 +523,10 @@ It watches a project in which the branch name is simply the next path component,
 
 ::
 
-    from buildbot.changes import p4poller
-    s = p4poller.P4Source(p4base='//depot/project/',
-                          split_file=lambda branchfile: branchfile.split('/',1),
-                         )
+    from buildbot.plugins import changes
+
+    s = changes.P4Source(p4base='//depot/project/',
+                         split_file=lambda branchfile: branchfile.split('/',1))
     c['change_source'] = s
 
 .. bb:chsrc:: BonsaiPoller
@@ -644,30 +655,30 @@ It can watch a single branch or multiple branches.
 Several split file functions are available for common SVN repository layouts.
 For a poller that is only monitoring trunk, the default split file function is available explicitly as ``split_file_alwaystrunk``::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_alwaystrunk
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller(
         svnurl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
-        split_file=split_file_alwaystrunk)
+        split_file=util.svn.split_file_alwaystrunk)
 
 
 For repositories with the ``/trunk`` and ``/branches/{BRANCH}`` layout, ``split_file_branches`` will do the job::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_branches
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
-        split_file=split_file_branches)
+        split_file=util.svn.split_file_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any changes to the ``project`` attribute of the poller.
 
 For repositories with the ``{PROJECT}/trunk`` and ``{PROJECT}/branches/{BRANCH}`` layout, ``split_file_projects_branches`` will do the job::
 
-    from buildbot.changes.svnpoller import SVNPoller
-    from buildbot.changes.svnpoller import split_file_projects_branches
-    c['change_source'] = SVNPoller(
+    from buildbot.plugins import changes, util
+
+    c['change_source'] = changes.SVNPoller(
         svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
-        split_file=split_file_projects_branches)
+        split_file=util.svn.split_file_projects_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any changes to the project determined by the splitter.
 
@@ -691,9 +702,9 @@ Minimally, provide a URL that you want to poll (``bzr://``, ``bzr+ssh://``, or `
 
     # bzr_buildbot.py in the same directory as master.cfg
     from bzr_buildbot import BzrPoller
-    c['change_source'] = BzrPoller(
-        url='bzr://hostname/my_project',
-        poll_interval=300)
+
+    c['change_source'] = BzrPoller(url='bzr://hostname/my_project',
+                                   poll_interval=300)
 
 The ``BzrPoller`` parameters are:
 
@@ -782,9 +793,10 @@ It accepts the following arguments:
 
 A configuration for the Git poller might look like this::
 
-    from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
-                                   branches=['master', 'great_new_feature'])
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.GitPoller(repourl='git@example.com:foobaz/myrepo.git',
+                                           branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
 
@@ -851,10 +863,11 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
 A configuration for the Mercurial poller might look like this::
 
-    from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
-                                  branch='great_new_feature',
-                                  workdir='hg-myrepo')
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.HgPoller(repourl='http://hg.example.org/projects/myrepo',
+                                          branch='great_new_feature',
+                                          workdir='hg-myrepo')
 
 .. bb:chsrc:: BitbucketPullrequestPoller
 
@@ -912,14 +925,17 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 
 A minimal configuration for the Bitbucket pull request poller might look like this::
 
-    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
-    c['change_source'] = BitbucketPullrequestPoller(
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.BitbucketPullrequestPoller(
         owner='myname',
         slug='myrepo',
       )
 
 Here is a more complex configuration using a ``pullrequest_filter``.
 The pull request is only processed if at least 3 people have already approved it::
+
+    from buildbot.plugins import changes
 
     def approve_filter(pr, threshold):
         approves = 0
@@ -931,15 +947,13 @@ The pull request is only processed if at least 3 people have already approved it
             return False
         return True
 
-    from buildbot.changes.bitbucket import BitbucketPullrequestPoller
-    c['change_source'] = BitbucketPullrequestPoller(
+    c['change_source'] = changes.BitbucketPullrequestPoller(
         owner='myname',
         slug='myrepo',
         branch='mybranch',
         project='myproject',
-        pullrequest_filter=lambda pr : approve_filter(pr,3),
-        pollInterval=600,
-      )
+        pullrequest_filter=lambda pr: approve_filter(pr,3),
+        pollInterval=600)
 
 .. warning::
 
@@ -996,8 +1010,9 @@ But you can specify how to handle Events:
 
 An example::
 
-    from buildbot.changes.gerritchangesource import GerritChangeSource
-    class MyGerritChangeSource(GerritChangeSource):
+    from buildbot.plugins import changes
+
+    class MyGerritChangeSource(changes.GerritChangeSource):
         """Custom GerritChangeSource
         """
         def eventReceived_patchset_created(self, properties, event):
@@ -1068,8 +1083,9 @@ In case of ``ref-updated`` event, these properties will be:
 
 A configuration for this source might look like::
 
-    from buildbot.changes.gerritchangesource import GerritChangeSource
-    c['change_source'] = GerritChangeSource(
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.GerritChangeSource(
         "gerrit.example.com",
         "gerrit_user",
         handled_events=["patchset-created", "change-merged"])
@@ -1133,8 +1149,9 @@ It accepts the following arguments:
 
 As an example, to poll the Ostinato project's commit feed every 3 hours, the configuration would look like this::
 
-    from googlecode_atom import GoogleCodeAtomPoller
-    c['change_source'] = GoogleCodeAtomPoller(
+    from buildbot.plugins import changes
+
+    c['change_source'] = changes.GoogleCodeAtomPoller(
         feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
         pollinterval=10800)
 

@@ -261,7 +261,7 @@ The split_file_branches function, which comes with buildbot, is designed for exa
 And of course this is all SVN-specific, but there are pollers for all the popular VCSs.
 
 But note: if you have many projects, branches, and builders it probably pays to not hardcode all the schedulers and builders in the configuration, but generate them dynamically starting from list of all projects, branches, targets etc.
-and using loops to generate all possible combinations (or only the needed ones, depending on the specific setup), as explained in the documentation chapter about :ref:`Customization`.
+And using loops to generate all possible combinations (or only the needed ones, depending on the specific setup), as explained in the documentation chapter about :doc:`../manual/customization`.
 
 Status targets
 --------------

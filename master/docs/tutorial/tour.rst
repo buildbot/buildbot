@@ -164,11 +164,11 @@ In this example we will use #buildbot-test, so go join that channel.
 Edit the config and look for the *STATUS TARGETS* section.
 Enter these lines below the WebStatus line in master.cfg::
 
-  c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
+    from buildbot.plugins import status
 
-  from buildbot.status import words
-  c['status'].append(words.IRC(host="irc.freenode.org", nick="bbtest",
-                               channels=["#buildbot-test"]))
+    c['status'].append(status.WebStatus(http_port=8010, authz=authz_cfg))
+    c['status'].append(status.IRC(host="irc.freenode.org", nick="bbtest",
+                                  channels=["#buildbot-test"]))
 
 Reconfigure the build master then do:
 
@@ -257,26 +257,25 @@ Setting Authorized Web Users
 
 Further down, look for the WebStatus configuration::
 
-   c['status'] = []
+    from buildbot.plugins import status, util
 
-   from buildbot.status import html
-   from buildbot.status.web import authz, auth
+    c['status'] = []
 
-   authz_cfg=authz.Authz(
-       # change any of these to True to enable; see the manual for more
-       # options
-       auth=auth.BasicAuth([("pyflakes","pyflakes")]),
-       gracefulShutdown = False,
-       forceBuild = 'auth', # use this to test your slave once it is set up
-       forceAllBuilds = False,
-       pingBuilder = False,
-       stopBuild = False,
-       stopAllBuilds = False,
-       cancelPendingBuild = False,
-   )
-   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
+    authz_cfg=util.Authz(
+        # change any of these to True to enable; see the manual for more
+        # options
+        auth=util.BasicAuth([("pyflakes","pyflakes")]),
+        gracefulShutdown=False,
+        forceBuild='auth', # use this to test your slave once it is set up
+        forceAllBuilds=False,
+        pingBuilder=False,
+        stopBuild=False,
+        stopAllBuilds=False,
+        cancelPendingBuild=False,
+    )
+    c['status'].append(status.WebStatus(http_port=8010, authz=authz_cfg))
 
-The ``auth.BasicAuth()`` define authorized users and their passwords.
+The ``util.BasicAuth()`` define authorized users and their passwords.
 You can change these or add new ones.
 See :bb:status:`WebStatus` for more about the WebStatus configuration.
 
@@ -290,21 +289,22 @@ To use this you will need to install an additional package or two to your virtua
 
 .. code-block:: bash
 
-  cd
-  cd tmp/buildbot
-  source sandbox/bin/activate
-  easy_install pycrypto
-  easy_install pyasn1
+    cd
+    cd tmp/buildbot
+    source sandbox/bin/activate
+    easy_install pycrypto
+    easy_install pyasn1
 
 In your master.cfg find::
 
-  c = BuildmasterConfig = {}
+    c = BuildmasterConfig = {}
 
 Insert the following to enable debugging mode with manhole::
 
-  ####### DEBUGGING
-  from buildbot import manhole
-  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
+    ####### DEBUGGING
+    from buildbot.plugins import util
+
+    c['manhole'] = util.PasswordManhole("tcp:1234:interface=127.0.0.1", "admin", "passwd")
 
 After restarting the master, you can ssh into the master and get an interactive Python shell:
 
@@ -342,12 +342,12 @@ Buildbot includes a way for developers to submit patches for testing without com
 
 To set this up, add the following lines to master.cfg::
 
-  from buildbot.scheduler import Try_Userpass
-  c['schedulers'].append(Try_Userpass(
-                                      name='try',
-                                      builderNames=['runtests'],
-                                      port=5555,
-                                      userpass=[('sampleuser','samplepass')]))
+    from buildbot.plugins import schedulers
+
+    c['schedulers'].append(schedulers.Try_Userpass(name='try',
+                                                   builderNames=['runtests'],
+                                                   port=5555,
+                                                   userpass=[('sampleuser','samplepass')]))
 
 Then you can submit changes using the :bb:cmdline:`try` command.
 
@@ -355,17 +355,17 @@ Let's try this out by making a one-line change to pyflakes, say, to make it trac
 
 .. code-block:: bash
 
-  git clone git://github.com/buildbot/pyflakes.git pyflakes-git
-  cd pyflakes-git/pyflakes
-  $EDITOR checker.py
-  # change "traceTree = False" on line 185 to "traceTree = True"
+    git clone git://github.com/buildbot/pyflakes.git pyflakes-git
+    cd pyflakes-git/pyflakes
+    $EDITOR checker.py
+    # change "traceTree = False" on line 185 to "traceTree = True"
 
 Then run buildbot's ``try`` command as follows:
 
 .. code-block:: bash
 
-  source ~/tmp/buildbot/sandbox/bin/activate
-  buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
+    source ~/tmp/buildbot/sandbox/bin/activate
+    buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
 This will do ``git diff`` for you and send the resulting patch to the server for build and test against the latest sources from Git.
 
