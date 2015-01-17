@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import re
+from hashlib import sha1
+import hmac
 import logging
+import re
 
 from dateutil.parser import parse as dateparse
 from twisted.python import log
@@ -25,52 +27,12 @@ try:
 except ImportError:
     import simplejson as json
 
-
-def getChanges(request, options=None):
-    """
-    Responds only to POST events and starts the build process
-
-    :arguments:
-        request
-            the http request object
-    """
-
-    event_type = request.getHeader("X-GitHub-Event")
-    log.msg("X-GitHub-Event: %r" % event_type, logLevel=logging.DEBUG)
-
-    if event_type == "ping":
-        return ([], 'git')
-
-    # Reject non-push, non-ping events
-    if event_type != "push":
-        raise ValueError(
-            "Rejecting request.  Expected a push event but received %r instead." % event_type)
-
-    content_type = request.getHeader("Content-Type")
-
-    if content_type == "application/json":
-        payload = json.loads(request.content.read())
-    elif content_type == "application/x-www-form-urlencoded":
-        payload = json.loads(request.args["payload"][0])
-    else:
-        raise ValueError(
-            "Rejecting request.  Unknown 'Content-Type', received %r" % content_type)
-
-    log.msg("Payload: %r" % payload, logLevel=logging.DEBUG)
-
-    # This field is unused:
-    user = None
-    # user = payload['pusher']['name']
-    repo = payload['repository']['name']
-    repo_url = payload['repository']['url']
-    project = request.args.get('project', [''])[0]
-    # This field is unused:
-    # private = payload['repository']['private']
-    changes = process_change(payload, user, repo, repo_url, project)
-    log.msg("Received %d changes from github" % len(changes))
-    return (changes, 'git')
+_HEADER_CT = 'Content-Type'
+_HEADER_EVENT = 'X-GitHub-Event'
+_HEADER_SIGNATURE = 'X-Hub-Signature'
 
 
+# NOTE: for some reason this function is also used in gitlab hook
 def process_change(payload, user, repo, repo_url, project, codebase=None):
     """
     Consumes the JSON as a python object and actually starts the build.
@@ -87,47 +49,141 @@ def process_change(payload, user, repo, repo_url, project, codebase=None):
     match = re.match(r"^refs\/heads\/(.+)$", refname)
     if not match:
         log.msg("Ignoring refname `%s': Not a branch" % refname)
-    else:
-        branch = match.group(1)
-        if payload.get('deleted') is True:
-            log.msg("Branch `%s' deleted, ignoring" % branch)
-        else:
-            for commit in payload['commits']:
-                if 'distinct' in commit and not commit['distinct']:
-                    log.msg(
-                        'Commit `%s` is a non-distinct commit, ignoring...' % (
-                            commit['id'])
-                    )
-                    continue
+        return changes
 
-                files = []
-                if 'added' in commit:
-                    files.extend(commit['added'])
-                if 'modified' in commit:
-                    files.extend(commit['modified'])
-                if 'removed' in commit:
-                    files.extend(commit['removed'])
-                when_timestamp = dateparse(commit['timestamp'])
+    branch = match.group(1)
+    if payload.get('deleted'):
+        log.msg("Branch `%s' deleted, ignoring" % branch)
+        return changes
 
-                log.msg("New revision: %s" % commit['id'][:8])
+    for commit in payload['commits']:
+        if not commit.get('distinct', True):
+            log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
+                    (commit['id'],))
+            continue
 
-                change = {
-                    'author': '%s <%s>' % (
-                        commit['author']['name'], commit['author']['email']
-                    ),
-                    'files': files,
-                    'comments': commit['message'],
-                    'revision': commit['id'],
-                    'when_timestamp': when_timestamp,
-                    'branch': branch,
-                    'revlink': commit['url'],
-                    'repository': repo_url,
-                    'project': project
-                }
+        files = []
+        for kind in ('added', 'modified', 'removed'):
+            files.extend(commit.get(kind, []))
 
-                if codebase is not None:
-                    change['codebase'] = codebase
+        when_timestamp = dateparse(commit['timestamp'])
 
-                changes.append(change)
+        log.msg("New revision: %s" % commit['id'][:8])
+
+        change = {
+            'author': '%s <%s>' % (commit['author']['name'],
+                                   commit['author']['email']),
+            'files': files,
+            'comments': commit['message'],
+            'revision': commit['id'],
+            'when_timestamp': when_timestamp,
+            'branch': branch,
+            'revlink': commit['url'],
+            'repository': repo_url,
+            'project': project
+        }
+
+        if codebase is not None:
+            change['codebase'] = codebase
+
+        changes.append(change)
 
     return changes
+
+
+class GitHubEventHandler(object):
+    def __init__(self, secret, strict, codebase=None):
+        self._secret = secret
+        self._strict = strict
+        self._codebase = codebase
+
+        if self._strict and not self._secret:
+            raise ValueError('Strict mode is requested '
+                             'while no secret is provided')
+
+    def process(self, request):
+        payload = self._get_payload(request)
+
+        event_type = request.getHeader(_HEADER_EVENT)
+        log.msg("X-GitHub-Event: %r" % (event_type,), logLevel=logging.DEBUG)
+
+        handler = getattr(self, 'handle_%s' % event_type, None)
+
+        if handler is None:
+            raise ValueError('Unknown event: %r' % (event_type,))
+
+        return handler(payload)
+
+    def _get_payload(self, request):
+        content = request.content.read()
+
+        signature = request.getHeader(_HEADER_SIGNATURE)
+
+        if not signature and self._strict:
+            raise ValueError('Request has no required signature')
+
+        if self._secret and signature:
+            try:
+                hash_type, hexdigest = signature.split('=')
+            except ValueError:
+                raise ValueError('Wrong signature format: %r' % (signature,))
+
+            if hash_type != 'sha1':
+                raise ValueError('Unknown hash type: %s' % (hash_type,))
+
+            mac = hmac.new(self._secret, msg=content, digestmod=sha1)
+            # NOTE: hmac.compare_digest should be used, but it's only available
+            # starting Python 2.7.7
+            if mac.hexdigest() != hexdigest:
+                raise ValueError('Hash mismatch')
+
+        content_type = request.getHeader(_HEADER_CT)
+
+        if content_type == 'application/json':
+            payload = json.loads(content)
+        elif content_type == 'application/x-www-form-urlencoded':
+            payload = json.loads(request.args['payload'][0])
+        else:
+            raise ValueError('Unknown content type: %r' % (content_type,))
+
+        log.msg("Payload: %r" % payload, logLevel=logging.DEBUG)
+
+        return payload
+
+    def handle_ping(self, _):
+        return [], 'git'
+
+    def handle_push(self, payload):
+        # This field is unused:
+        user = None
+        # user = payload['pusher']['name']
+        repo = payload['repository']['name']
+        repo_url = payload['repository']['url']
+        # NOTE: what would be a reasonable value for project?
+        # project = request.args.get('project', [''])[0]
+        project = payload['repository']['full_name']
+
+        changes = process_change(payload, user, repo, repo_url, project,
+                                 self._codebase)
+        log.msg("Received %d changes from github" % len(changes))
+
+        return changes, 'git'
+
+
+def getChanges(request, options=None):
+    """
+    Responds only to POST events and starts the build process
+
+    :arguments:
+        request
+            the http request object
+    """
+    if options is None:
+        options = {}
+
+    klass = options.get('class', GitHubEventHandler)
+
+    handler = klass(options.get('secret', None),
+                    options.get('strict', False),
+                    options.get('codebase', None))
+    return handler.process(request)
