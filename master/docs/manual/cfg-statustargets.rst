@@ -591,12 +591,37 @@ GitHub hook
    There is a standalone HTTP server available for receiving GitHub notifications as well: :file:`contrib/github_buildbot.py`.
    This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
-The GitHub hook is simple and takes no options:
+The GitHub hook has the following parameters:
+
+``secret`` (default `None`)
+    Secret token to use to validate payloads
+``strict`` (default `False`)
+    If the hook must be strict regarding valid payloads.
+    If the value is `False` (default), the signature will only be checked if a secret is specified and a signature was supplied with the payload.
+    If the value is `True`, a secret must be provided, and payloads without signature will be ignored.
+``codebase`` (default `None`)
+    The codebase value to include with created changes.
+``class`` (default `None`)
+    A class to be used for processing incoming payloads.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
+    The default class handles `ping` and `push` events only.
+    If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass `GitHubEventHandler` and add handler methods for the corresponding events.
+    For example, if you'd like to handle `blah` events, your code should look something like this::
+
+        from buildbot.status.web.hooks.github import GitHubEventHandler
+
+        class MyBlahHandler(GitHubEventHandler):
+
+            def handle_blah(self, payload):
+                # Do some magic here
+                return [], 'git'
+
+The simples way to use GitHub hook is as follows:
 
 .. code-block:: python
 
     c['status'].append(status.WebStatus(...,
-                                        change_hook_dialects={'github': True},
+                                        change_hook_dialects={'github': {}},
                                         ...))
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
@@ -613,7 +638,16 @@ The parameters are:
 
 :guilabel:`Secret`
     Any value.
-    Currently this parameter is not supported.
+    If you provide a non-empty value (recommended), make sure that your hook is configured to use it::
+
+        c['status'].append(status.WebStatus(...,
+                                            change_hook_dialects={
+                                                'github': {
+                                                    'secret': 'MY-SECRET',
+                                                    'strict': True
+                                                }
+                                            },
+                                            ...))
 
 :guilabel:`Which events would you like to trigger this webhook?`
     Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
@@ -623,22 +657,22 @@ And then press the ``Add Webhook`` button.
 .. warning::
 
    The incoming HTTP requests for this hook are not authenticated by default.
-   Anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
+   If you do not specify a secret, anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option::
+To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option::
 
     c['status'].append(status.WebStatus(...,
                                       change_hook_auth=["file:changehook.passwd"],
                                       ...
                                      ))
 
-And create a file ``changehook.passwd``
+create a file ``changehook.passwd``:
 
 .. code-block:: none
 
     user:password
 
-Then change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
+and change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
 
 See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
 

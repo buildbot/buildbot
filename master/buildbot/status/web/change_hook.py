@@ -91,7 +91,9 @@ class ChangeHookResource(resource.Resource):
             log.err(why, "adding changes from web hook")
             request.setResponseCode(500)
             request.finish()
+
         d.addCallbacks(ok, err)
+
         return server.NOT_DONE_YET
 
     def getChanges(self, request):
