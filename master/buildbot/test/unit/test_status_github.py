@@ -40,7 +40,6 @@ else:
     buildbot.status.github
 
     from buildbot.status.github import GitHubStatus
-    from buildbot.status.github import _timeDeltaToHumanReadable
     from buildbot.status.github import _getGitHubState
 
 from buildbot.test.fake.fakebuild import FakeBuild
@@ -355,37 +354,6 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'endDateTime': endDateTime,
             'duration': '2 seconds',
         })
-
-    def test_timeDeltaToHumanReadable(self):
-        """
-        It will return a human readable time difference.
-        """
-        result = _timeDeltaToHumanReadable(1, 1)
-        self.assertEqual('super fast', result)
-
-        result = _timeDeltaToHumanReadable(1, 2)
-        self.assertEqual('1 seconds', result)
-
-        result = _timeDeltaToHumanReadable(1, 61)
-        self.assertEqual('1 minutes', result)
-
-        result = _timeDeltaToHumanReadable(1, 62)
-        self.assertEqual('1 minutes, 1 seconds', result)
-
-        result = _timeDeltaToHumanReadable(1, 60 * 60 + 1)
-        self.assertEqual('1 hours', result)
-
-        result = _timeDeltaToHumanReadable(1, 60 * 60 + 61)
-        self.assertEqual('1 hours, 1 minutes', result)
-
-        result = _timeDeltaToHumanReadable(1, 60 * 60 + 62)
-        self.assertEqual('1 hours, 1 minutes, 1 seconds', result)
-
-        result = _timeDeltaToHumanReadable(1, 24 * 60 * 60 + 1)
-        self.assertEqual('1 days', result)
-
-        result = _timeDeltaToHumanReadable(1, 24 * 60 * 60 + 2)
-        self.assertEqual('1 days, 1 seconds', result)
 
     def test_getGitHubRepoProperties_skip_no_sha(self):
         """
