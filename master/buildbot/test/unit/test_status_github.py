@@ -21,6 +21,7 @@ import datetime
 
 
 from mock import Mock
+from mock import patch
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -34,6 +35,10 @@ try:
 except ImportError:
     txgithub = None
 else:
+    # Import fully qualified module for patching.
+    import buildbot.status.github
+    buildbot.status.github
+
     from buildbot.status.github import GitHubStatus
     from buildbot.status.github import _timeDeltaToHumanReadable
     from buildbot.status.github import _getGitHubState
@@ -128,6 +133,29 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(status._sha, Interpolate("%(src::revision)s"))
         self.assertEqual(status._startDescription, "Build started.")
         self.assertEqual(status._endDescription, "Build done.")
+
+    def test_custom_github_url(self):
+        """
+        Check that the custom URL is passed as it should be
+        """
+        with patch('buildbot.status.github.GitHubAPI') as mock:
+            token = 'GitHub-API-Token'
+            owner = Interpolate('owner')
+            name = Interpolate('name')
+
+            GitHubStatus(token, owner, name)
+
+            mock.assert_called_once_with(oauth2_token=token, baseURL=None)
+
+        with patch('buildbot.status.github.GitHubAPI') as mock:
+            token = 'GitHub-API-Token'
+            owner = Interpolate('owner')
+            name = Interpolate('name')
+            url = 'https://my.example.com/api'
+
+            GitHubStatus(token, owner, name, baseURL=url)
+
+            mock.assert_called_once_with(oauth2_token=token, baseURL=url)
 
     def test_startService(self):
         """
