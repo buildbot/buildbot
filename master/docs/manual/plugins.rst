@@ -2,7 +2,7 @@
 Plugin Infrastructure in Buildbot
 =================================
 
-.. versionadded:: 0.9.0
+.. versionadded:: 0.8.11
 
 Plugin infrastructure in Buildbot allows easy use of components that are not part of the core.
 It also allows unified access to components that are included in the core.
