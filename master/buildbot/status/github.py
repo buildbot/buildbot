@@ -111,7 +111,7 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status:
             defer.returnValue(None)
 
-        (startTime, _) = build.getTimes()
+        startTime, _ = build.getTimes()
 
         description = yield build.render(self._startDescription)
 
@@ -145,7 +145,7 @@ class GitHubStatus(StatusReceiverMultiService):
             defer.returnValue(None)
 
         state = _getGitHubState(results)
-        (startTime, endTime) = build.getTimes()
+        startTime, endTime = build.getTimes()
         duration = human_readable_delta(startTime, endTime)
         description = yield build.render(self._endDescription)
 
