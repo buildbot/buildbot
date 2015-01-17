@@ -299,7 +299,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     This page gives a brief summary of the Buildbot itself: software version, versions of some libraries that the Buildbot depends upon, etc.
     It also contains a link to the buildbot.net home page.
 
-There are also a set of web-status resources that are intended for use by other programs, rather than humans.
+There is also a set of web-status resources that are intended for use by other programs, rather than humans.
 
 ``/change_hook``
     This provides an endpoint for web-based source change notification.
@@ -571,11 +571,11 @@ Change_hook is disabled by default and each DIALECT has to be enabled separately
 
 An example WebStatus configuration line which enables change_hook and two DIALECTS::
 
-    c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
+    c['status'].append(html.WebStatus(http_port=8010, allowForce=True,
         change_hook_dialects={
             'base': True,
-            'somehook': {'option1':True,
-                         'option2':False}}))
+            'somehook': {'option1': True,
+                         'option2': False}}))
 
 Within the WebStatus arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
