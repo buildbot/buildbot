@@ -822,6 +822,8 @@ buildbot.util.lineboundaries
 
     This class accepts a sequence of arbitrary strings and invokes a callback only with complete (newline-terminated) substrings.
     It buffers any partial lines until a subsequent newline is seen.
+    It considers any of ``\r``, ``\n``, and ``\r\n`` to be newlines.
+    Because of the ambiguity of an append operation ending in the character ``\r`` (it may be a bare ``\r`` or half of ``\r\n``), the last line of such an append operation will be buffered until the next append or flush.
 
     :param callback: asynchronous function to call with newline-terminated strings
 
