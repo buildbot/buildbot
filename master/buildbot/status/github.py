@@ -33,13 +33,13 @@ from buildbot.status.builder import SUCCESS
 
 
 class GitHubStatus(StatusReceiverMultiService):
-    implements(IStatusReceiver)
-
     """
     Send build status to GitHub.
 
     For more details see Buildbot's user manual.
     """
+
+    implements(IStatusReceiver)
 
     def __init__(self, token, repoOwner, repoName, sha=None,
                  startDescription=None, endDescription=None,
@@ -60,6 +60,8 @@ class GitHubStatus(StatusReceiverMultiService):
 
         self._github = GitHubAPI(oauth2_token=token, baseURL=baseURL)
 
+        self._status = None
+
     def startService(self):
         StatusReceiverMultiService.startService(self)
         self._status = self.parent.getStatus()
@@ -69,7 +71,7 @@ class GitHubStatus(StatusReceiverMultiService):
         StatusReceiverMultiService.stopService(self)
         self._status.unsubscribe(self)
 
-    def builderAdded(self, name, builder):
+    def builderAdded(self, name_, builder_):
         """
         Subscribe to all builders.
         """
@@ -93,7 +95,7 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status:
             defer.returnValue(None)
 
-        (startTime, endTime) = build.getTimes()
+        (startTime, _) = build.getTimes()
 
         description = yield build.render(self._startDescription)
 
