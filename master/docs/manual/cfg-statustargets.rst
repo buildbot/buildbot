@@ -101,7 +101,7 @@ If you are running the buildbot behind a reverse proxy, you'll probably need to 
 
 If you would like to use an alternative root directory, add the ``public_html=`` option to the :class:`WebStatus` creation::
 
-    c['status'].append(WebStatus(8080, public_html="/var/www/buildbot"))
+    c['status'].append(status.WebStatus(8080, public_html="/var/www/buildbot"))
 
 In addition, if you are familiar with twisted.web *Resource Trees*, you can write code to add additional pages at places inside this web space.
 Just use :meth:`webstatus.putChild` to place these resources.
@@ -198,7 +198,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     If you do have multiple branches, you should use the ``branch=`` query argument.
     The ``order_console_by_time`` option may help sorting revisions, although it depends on the date being set correctly in each commit::
 
-        w = html.WebStatus(http_port=8080, order_console_by_time=True)
+        w = status.WebStatus(http_port=8080, order_console_by_time=True)
 
 ``/rss``
     This provides a rss feed summarizing all failed builds.
@@ -571,7 +571,7 @@ Change_hook is disabled by default and each DIALECT has to be enabled separately
 
 An example WebStatus configuration line which enables change_hook and two DIALECTS::
 
-    c['status'].append(html.WebStatus(http_port=8010, allowForce=True,
+    c['status'].append(status.WebStatus(http_port=8010, allowForce=True,
         change_hook_dialects={
             'base': True,
             'somehook': {'option1': True,
@@ -595,9 +595,9 @@ The GitHub hook is simple and takes no options:
 
 .. code-block:: python
 
-    c['status'].append(html.WebStatus(...,
-                                      change_hook_dialects={'github': True},
-                                      ...))
+    c['status'].append(status.WebStatus(...,
+                                        change_hook_dialects={'github': True},
+                                        ...))
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
 The parameters are:
@@ -627,7 +627,7 @@ And then press the ``Add Webhook`` button.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option::
 
-    c['status'].append(html.WebStatus(...,
+    c['status'].append(status.WebStatus(...,
                                       change_hook_auth=["file:changehook.passwd"],
                                       ...
                                      ))
@@ -651,8 +651,8 @@ The BitBucket hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(...,
-                       change_hook_dialects={ 'bitbucket' : True }))
+    c['status'].append(status.WebStatus(...,
+                            change_hook_dialects={'bitbucket': True}))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
 For example, it the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point BitBucket to ``http://builds.mycompany.com/change_hook/bitbucket``.
@@ -670,7 +670,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-  c['status'].append(html.WebStatus(...,
+  c['status'].append(status.WebStatus(...,
                                     change_hook_auth=["file:changehook.passwd"]))
 
 Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
@@ -683,7 +683,7 @@ Google Code hook
 The Google Code hook is quite similar to the GitHub Hook.
 It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
     ))
@@ -715,7 +715,7 @@ Suppose you have a poller configured like this::
 
 And you configure your WebStatus to enable this hook::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'poller': True}
     ))
@@ -731,7 +731,7 @@ If no ``poller`` argument is provided then the hook will trigger polling of all 
 
 You can restrict which pollers the webhook has access to using the ``allowed`` option::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
@@ -743,7 +743,7 @@ The GitLab hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={ 'gitlab' : True }
     ))
@@ -762,7 +762,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_auth=["file:changehook.passwd"]
     ))
@@ -778,7 +778,7 @@ The Gitorious hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'gitorious': True}
     ))
@@ -795,7 +795,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_auth=["file:changehook.passwd"]
     ))
