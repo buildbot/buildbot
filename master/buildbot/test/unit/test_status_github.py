@@ -242,7 +242,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -257,7 +257,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'pending',
@@ -301,7 +301,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -317,7 +317,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'success',
@@ -403,7 +403,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._repoName = Interpolate('name')
         self.status._sha = Interpolate('sha')
         self.status._status = Mock()
-        self.status._status.getURLForThing = lambda build: 'http://thing'
+        self.status._status.getURLForThing = lambda build: 'http://example.org'
         self.build.getNumber = lambda: 1
 
         d = self.status._getGitHubRepoProperties(self.build)
@@ -414,7 +414,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoName': 'name',
             'repoOwner': 'owner',
             'sha': 'sha',
-            'targetURL': 'http://thing',
+            'targetURL': 'http://example.org',
         },
             result)
 
