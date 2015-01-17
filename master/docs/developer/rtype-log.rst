@@ -137,6 +137,7 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Append the given content to the given log.
         The content must end with a newline.
+        All newlines in the content should be UNIX-style (``\n``).
 
     .. py:method:: finishLog(logid)
 

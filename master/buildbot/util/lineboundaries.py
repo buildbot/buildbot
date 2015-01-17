@@ -13,12 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+
 from twisted.internet import defer
 
 
 class LineBoundaryFinder(object):
 
     __slots__ = ['partialLine', 'callback']
+
+    # the lookahead here (`(?=.)`) ensures that `\r` doesn't match at the end
+    # of the buffer
+    newline_re = re.compile(r'(\r\n|\r(?=.)|\n)')
 
     def __init__(self, callback):
         self.partialLine = None
@@ -28,6 +34,7 @@ class LineBoundaryFinder(object):
         if self.partialLine:
             text = self.partialLine + text
             self.partialLine = None
+        text = self.newline_re.sub('\n', text)
         if text:
             if text[-1] != '\n':
                 i = text.rfind('\n')

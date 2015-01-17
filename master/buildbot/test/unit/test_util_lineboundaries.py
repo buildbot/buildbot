@@ -16,6 +16,7 @@
 from buildbot.util import lineboundaries
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import log
 from twisted.trial import unittest
 
 
@@ -71,6 +72,45 @@ class LBF(unittest.TestCase):
         self.assertCallbacks(['hello, cruel\n'])
         yield self.lbf.flush()
         self.assertCallbacks(['world\n'])
+
+    @defer.inlineCallbacks
+    def test_windows_newlines_folded(self):
+        r"Windows' \r\n is treated as and converted to a newline"
+        yield self.lbf.append('hello, ')
+        self.assertCallbacks([])
+        yield self.lbf.append('cruel\r\n\r\nworld')
+        self.assertCallbacks(['hello, cruel\n\n'])
+        yield self.lbf.flush()
+        self.assertCallbacks(['world\n'])
+
+    @defer.inlineCallbacks
+    def test_bare_cr_folded(self):
+        r"a bare \r is treated as and converted to a newline"
+        yield self.lbf.append('1%\r5%\r15%\r100%\nfinished')
+        yield self.lbf.flush()
+        self.assertCallbacks(['1%\n5%\n15%\n100%\n', 'finished\n'])
+
+    @defer.inlineCallbacks
+    def test_mixed_consecutive_newlines(self):
+        r"mixing newline styles back-to-back doesn't collapse them"
+        yield self.lbf.append('1\r\n\n\r')
+        self.assertCallbacks(['1\n\n'])  # last \r is delayed until flush
+        yield self.lbf.append('2\n\r\n')
+        self.assertCallbacks(['\n2\n\n'])
+
+    @defer.inlineCallbacks
+    def test_split_newlines(self):
+        r"multi-character newlines, split across chunks, are converted"
+        input = 'a\nb\r\nc\rd\n\re'
+        for splitpoint in range(1, len(input) - 1):
+            a, b = input[:splitpoint], input[splitpoint:]
+            yield self.lbf.append(a)
+            yield self.lbf.append(b)
+            yield self.lbf.flush()
+            res = ''.join(self.callbacks)
+            log.msg('feeding %r, %r gives %r' % (a, b, res))
+            self.assertEqual(res, 'a\nb\nc\nd\n\ne\n')
+            self.callbacks = []
 
     def test_empty_flush(self):
         d = self.lbf.flush()
