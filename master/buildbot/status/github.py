@@ -31,6 +31,49 @@ from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SUCCESS
 
+_STATE_MAP = {
+    SUCCESS: 'success',
+    FAILURE: 'failure',
+}
+
+
+def _getGitHubState(results):
+    """
+    Convert Buildbot states into GitHub states.
+    """
+    # GitHub defines `success`, `failure` and `error` states.
+    # We explicitly map success and failure. Any other BuildBot status
+    # is converted to `error`.
+    return _STATE_MAP.get(results, 'error')
+
+
+def _timeDeltaToHumanReadable(start, end):
+    """
+    Return a string of human readable time delta.
+    """
+    start_date = datetime.fromtimestamp(start)
+    end_date = datetime.fromtimestamp(end)
+    delta = end_date - start_date
+
+    result = []
+    if delta.days > 0:
+        result.append('%d days' % (delta.days,))
+    if delta.seconds > 0:
+        hours = delta.seconds / 3600
+        if hours > 0:
+            result.append('%d hours' % (hours,))
+        minutes = (delta.seconds - hours * 3600) / 60
+        if minutes:
+            result.append('%d minutes' % (minutes,))
+        seconds = delta.seconds % 60
+        if seconds > 0:
+            result.append('%d seconds' % (seconds,))
+
+    if result:
+        return ', '.join(result)
+    else:
+        return 'super fast'
+
 
 class GitHubStatus(StatusReceiverMultiService):
     """
@@ -128,9 +171,9 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status:
             defer.returnValue(None)
 
-        state = self._getGitHubState(results)
+        state = _getGitHubState(results)
         (startTime, endTime) = build.getTimes()
-        duration = self._timeDeltaToHumanReadable(startTime, endTime)
+        duration = _timeDeltaToHumanReadable(startTime, endTime)
         description = yield build.render(self._endDescription)
 
         status.update({
@@ -144,33 +187,6 @@ class GitHubStatus(StatusReceiverMultiService):
 
         result = yield self._sendGitHubStatus(status)
         defer.returnValue(result)
-
-    def _timeDeltaToHumanReadable(self, start, end):
-        """
-        Return a string of human readable time delta.
-        """
-        start_date = datetime.fromtimestamp(start)
-        end_date = datetime.fromtimestamp(end)
-        delta = end_date - start_date
-
-        result = []
-        if delta.days > 0:
-            result.append('%d days' % (delta.days,))
-        if delta.seconds > 0:
-            hours = delta.seconds / 3600
-            if hours > 0:
-                result.append('%d hours' % (hours,))
-            minutes = (delta.seconds - hours * 3600) / 60
-            if minutes:
-                result.append('%d minutes' % (minutes,))
-            seconds = delta.seconds % 60
-            if seconds > 0:
-                result.append('%d seconds' % (seconds,))
-        result = ', '.join(result)
-        if not result:
-            return 'super fast'
-        else:
-            return result
 
     @defer.inlineCallbacks
     def _getGitHubRepoProperties(self, build):
@@ -198,23 +214,6 @@ class GitHubStatus(StatusReceiverMultiService):
             'buildNumber': str(build.getNumber()),
         }
         defer.returnValue(result)
-
-    def _getGitHubState(self, results):
-        """
-        Convert Buildbot states into GitHub states.
-        """
-        # GitHub defines `success`, `failure` and `error` states.
-        # We explicitly map success and failure. Any other BuildBot status
-        # is converted to `error`.
-        state_map = {
-            SUCCESS: 'success',
-            FAILURE: 'failure',
-        }
-
-        try:
-            return state_map[results]
-        except KeyError:
-            return 'error'
 
     def _sendGitHubStatus(self, status):
         """

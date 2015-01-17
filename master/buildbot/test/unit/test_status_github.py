@@ -35,6 +35,8 @@ except ImportError:
     txgithub = None
 else:
     from buildbot.status.github import GitHubStatus
+    from buildbot.status.github import _timeDeltaToHumanReadable
+    from buildbot.status.github import _getGitHubState
 
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging
@@ -330,31 +332,31 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         """
         It will return a human readable time difference.
         """
-        result = self.status._timeDeltaToHumanReadable(1, 1)
+        result = _timeDeltaToHumanReadable(1, 1)
         self.assertEqual('super fast', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 2)
+        result = _timeDeltaToHumanReadable(1, 2)
         self.assertEqual('1 seconds', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 61)
+        result = _timeDeltaToHumanReadable(1, 61)
         self.assertEqual('1 minutes', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 62)
+        result = _timeDeltaToHumanReadable(1, 62)
         self.assertEqual('1 minutes, 1 seconds', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 1)
+        result = _timeDeltaToHumanReadable(1, 60 * 60 + 1)
         self.assertEqual('1 hours', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 61)
+        result = _timeDeltaToHumanReadable(1, 60 * 60 + 61)
         self.assertEqual('1 hours, 1 minutes', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 62)
+        result = _timeDeltaToHumanReadable(1, 60 * 60 + 62)
         self.assertEqual('1 hours, 1 minutes, 1 seconds', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 1)
+        result = _timeDeltaToHumanReadable(1, 24 * 60 * 60 + 1)
         self.assertEqual('1 days', result)
 
-        result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 2)
+        result = _timeDeltaToHumanReadable(1, 24 * 60 * 60 + 2)
         self.assertEqual('1 days, 1 seconds', result)
 
     def test_getGitHubRepoProperties_skip_no_sha(self):
@@ -421,14 +423,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         _getGitHubState will try to translate BuildBot status into GitHub
         status. For unknown values will fallback to 'error'.
         """
-        self.assertEqual(
-            'success', self.status._getGitHubState(SUCCESS))
-
-        self.assertEqual(
-            'failure', self.status._getGitHubState(FAILURE))
-
-        self.assertEqual(
-            'error', self.status._getGitHubState('anything-else'))
+        self.assertEqual('success', _getGitHubState(SUCCESS))
+        self.assertEqual('failure', _getGitHubState(FAILURE))
+        self.assertEqual('error', _getGitHubState('anything-else'))
 
     def test_sendGitHubStatus_success(self):
         """
