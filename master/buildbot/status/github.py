@@ -30,6 +30,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SUCCESS
+from buildbot.util import human_readable_delta
 
 _STATE_MAP = {
     SUCCESS: 'success',
@@ -45,34 +46,6 @@ def _getGitHubState(results):
     # We explicitly map success and failure. Any other BuildBot status
     # is converted to `error`.
     return _STATE_MAP.get(results, 'error')
-
-
-def _timeDeltaToHumanReadable(start, end):
-    """
-    Return a string of human readable time delta.
-    """
-    start_date = datetime.fromtimestamp(start)
-    end_date = datetime.fromtimestamp(end)
-    delta = end_date - start_date
-
-    result = []
-    if delta.days > 0:
-        result.append('%d days' % (delta.days,))
-    if delta.seconds > 0:
-        hours = delta.seconds / 3600
-        if hours > 0:
-            result.append('%d hours' % (hours,))
-        minutes = (delta.seconds - hours * 3600) / 60
-        if minutes:
-            result.append('%d minutes' % (minutes,))
-        seconds = delta.seconds % 60
-        if seconds > 0:
-            result.append('%d seconds' % (seconds,))
-
-    if result:
-        return ', '.join(result)
-    else:
-        return 'super fast'
 
 
 class GitHubStatus(StatusReceiverMultiService):
@@ -173,7 +146,7 @@ class GitHubStatus(StatusReceiverMultiService):
 
         state = _getGitHubState(results)
         (startTime, endTime) = build.getTimes()
-        duration = _timeDeltaToHumanReadable(startTime, endTime)
+        duration = human_readable_delta(startTime, endTime)
         description = yield build.render(self._endDescription)
 
         status.update({

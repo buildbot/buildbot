@@ -60,6 +60,40 @@ class formatInterval(unittest.TestCase):
         self.assertEqual(util.formatInterval(7392), "2 hrs, 3 mins, 12 secs")
 
 
+class TestHumanReadableDelta(unittest.TestCase):
+
+    def test_timeDeltaToHumanReadable(self):
+        """
+        It will return a human readable time difference.
+        """
+        result = util.human_readable_delta(1, 1)
+        self.assertEqual('super fast', result)
+
+        result = util.human_readable_delta(1, 2)
+        self.assertEqual('1 seconds', result)
+
+        result = util.human_readable_delta(1, 61)
+        self.assertEqual('1 minutes', result)
+
+        result = util.human_readable_delta(1, 62)
+        self.assertEqual('1 minutes, 1 seconds', result)
+
+        result = util.human_readable_delta(1, 60 * 60 + 1)
+        self.assertEqual('1 hours', result)
+
+        result = util.human_readable_delta(1, 60 * 60 + 61)
+        self.assertEqual('1 hours, 1 minutes', result)
+
+        result = util.human_readable_delta(1, 60 * 60 + 62)
+        self.assertEqual('1 hours, 1 minutes, 1 seconds', result)
+
+        result = util.human_readable_delta(1, 24 * 60 * 60 + 1)
+        self.assertEqual('1 days', result)
+
+        result = util.human_readable_delta(1, 24 * 60 * 60 + 2)
+        self.assertEqual('1 days, 1 seconds', result)
+
+
 class safeTranslate(unittest.TestCase):
 
     def test_str_good(self):

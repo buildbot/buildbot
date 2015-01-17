@@ -202,6 +202,35 @@ def datetime2epoch(dt):
         return calendar.timegm(dt.utctimetuple())
 
 
+# TODO: maybe "merge" with formatInterval?
+def human_readable_delta(start, end):
+    """
+    Return a string of human readable time delta.
+    """
+    start_date = datetime.datetime.fromtimestamp(start)
+    end_date = datetime.datetime.fromtimestamp(end)
+    delta = end_date - start_date
+
+    result = []
+    if delta.days > 0:
+        result.append('%d days' % (delta.days,))
+    if delta.seconds > 0:
+        hours = delta.seconds / 3600
+        if hours > 0:
+            result.append('%d hours' % (hours,))
+        minutes = (delta.seconds - hours * 3600) / 60
+        if minutes:
+            result.append('%d minutes' % (minutes,))
+        seconds = delta.seconds % 60
+        if seconds > 0:
+            result.append('%d seconds' % (seconds,))
+
+    if result:
+        return ', '.join(result)
+    else:
+        return 'super fast'
+
+
 def makeList(input):
     if isinstance(input, basestring):
         return [input]
@@ -258,4 +287,5 @@ __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'SerializedInvocation', 'UTC',
-    'diffSets', 'makeList', 'in_reactor', 'check_functional_environment']
+    'diffSets', 'makeList', 'in_reactor', 'check_functional_environment',
+    'human_readable_delta']
