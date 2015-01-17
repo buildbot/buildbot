@@ -28,7 +28,8 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        version = open(fn).read().strip()
+        with open(fn) as vfile:
+            version = vfile.read().strip()
         return version
     except IOError:
         pass
@@ -40,6 +41,8 @@ def getVersion(init_file):
     # no matter the number of digits for X, Y and Z
     VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
 
+    version = 'latest'
+
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
@@ -48,9 +51,9 @@ def getVersion(init_file):
             v = VERSION_MATCH.search(out)
             if v:
                 version = v.group(1)
-        return version
     except OSError:
         pass
-    return "latest"
+
+    return version
 
 version = getVersion(__file__)
