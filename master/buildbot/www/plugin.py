@@ -26,6 +26,9 @@ class Application(object):
         self.static_dir = pkg_resources.resource_filename(modulename, "/static")
         self.resource = static.File(self.static_dir)
 
+    def setMaster(self, master):
+        self.master = master
+
     def __repr__(self):
         return ("www.plugin.Application(version=%(version)s, "
                 "description=%(description)s, "
