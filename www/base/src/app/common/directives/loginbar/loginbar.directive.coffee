@@ -9,7 +9,8 @@ class Loginbar extends Directive('common')
         }
 
 class _loginbar extends Controller('common')
-    constructor: ($scope, config, $http) ->
+    constructor: ($scope, config, $http, $location) ->
+        baseurl = $location.absUrl().split("#")[0]
         $scope.username = ""
         $scope.password = ""
         $scope.loginCollapsed = 1
@@ -22,7 +23,7 @@ class _loginbar extends Controller('common')
             $http.defaults.headers.common['Authorization'] = auth
             $http
                 method: "GET"
-                url: "#{config.url}auth/login"
+                url: "#{baseurl}auth/login"
             .success (data, status) ->
                 window.location.reload()
 
@@ -30,13 +31,13 @@ class _loginbar extends Controller('common')
             $http.defaults.headers.common = {}
             $http
                 method: "GET"
-                url: "#{config.url}auth/logout"
+                url: "#{baseurl}auth/logout"
             .success (data, status) ->
                 window.location.reload()
         $scope.loginoauth2 = ->
             $http
                 method: "GET"
-                url: "#{config.url}auth/login"
+                url: "#{baseurl}auth/login"
             .success (data, status) ->
                 document.location = data
         if config.auth.autologin and config.user.anonymous and config.auth.oauth2

@@ -31,14 +31,15 @@ describe 'buildrequest controller', ->
         createController = ->
             return $controller 'buildrequestController',
                 $scope: $scope
+        $httpBackend.expectDataGET('buildrequests/1')
+        $httpBackend.expectDataGET('builders/1')
+        $httpBackend.expectDataGET('buildsets/1')
     beforeEach(inject(injected))
 
     afterEach ->
         $httpBackend.verifyNoOutstandingExpectation()
         $httpBackend.verifyNoOutstandingRequest()
     it 'should query for buildrequest', ->
-        $httpBackend.expectDataGET('buildrequests/1')
-        $httpBackend.expectDataGET('buildsets/1')
         controller = createController()
         $httpBackend.flush()
         $scope.buildrequest.claimed = true
@@ -49,8 +50,6 @@ describe 'buildrequest controller', ->
         $httpBackend.verifyNoOutstandingRequest()
 
     it 'should query for builds again if first query returns 0', ->
-        $httpBackend.expectDataGET('buildrequests/1')
-        $httpBackend.expectDataGET('buildsets/1')
         controller = createController()
         $httpBackend.flush()
         $scope.buildrequest.claimed = true
@@ -73,8 +72,6 @@ describe 'buildrequest controller', ->
 
     it 'should go to build page if build started', ->
         $stateParams.redirect_to_build = 1
-        $httpBackend.expectDataGET('buildrequests/1')
-        $httpBackend.expectDataGET('buildsets/1')
         controller = createController()
         $httpBackend.flush()
         $scope.buildrequest.claimed = true
@@ -89,4 +86,4 @@ describe 'buildrequest controller', ->
         expect($scope.builds[0].buildid).toBeDefined()
         $timeout.flush()
         $httpBackend.verifyNoOutstandingRequest()
-        expect(goneto).toEqual([ 'build', { builder : 2, build : 1 } ])
+        expect(goneto).toEqual([ 'build', { builder : 3, build : 1 } ])
