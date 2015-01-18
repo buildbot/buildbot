@@ -428,7 +428,8 @@ The entrypoint must contain a twisted.web Resource, that is populated in the web
 The front-end part of the plugin system automatically loads `/<pluginname>/scripts.js` and `/<pluginname>/styles.css` into the angular.js application.
 The scripts.js files can register itself as a dependency to the main "app" module, register some new states to $stateProvider, or new menu items via glMenuProvider.
 
-The entrypoint being a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`.
+The entrypoint containing a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`.
+For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint. 
 You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
 
 .. _Routing:
