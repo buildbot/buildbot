@@ -92,7 +92,7 @@ describe 'buildsummary controller', ->
         .toBe(true)
         expect($scope.isBuildRequestURL("http://otherdomain:5000/#buildrequests/123"))
         .toBe(false)
-        expect($scope.isBuildRequestURL("#{baseurl}#build/123"))
+        expect($scope.isBuildRequestURL("#{baseurl}#builds/123"))
         .toBe(false)
         expect($scope.isBuildRequestURL("#{baseurl}#buildrequests/bla"))
         .toBe(false)

@@ -144,7 +144,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getURLForBuild(self, builderid, build_number):
         prefix = self.getBuildbotURL()
-        return prefix + "#builders/%d/build/%d" % (
+        return prefix + "#builders/%d/builds/%d" % (
             builderid,
             build_number)
 
@@ -152,7 +152,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # dont use this API. this URL is not supported
         # its here waiting for getURLForThing removal or switch to deferred
         prefix = self.getBuildbotURL()
-        return prefix + "#builders/%s/build/%d" % (
+        return prefix + "#builders/%s/builds/%d" % (
             urllib.quote(builder_name, safe=''),
             build_number)
 
