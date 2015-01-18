@@ -301,8 +301,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
             if p in kwargs:
-                setattr(self, p, kwargs[p])
-                del kwargs[p]
+                setattr(self, p, kwargs.pop(p))
+
         if kwargs:
             config.error("%s.__init__ got unexpected keyword argument(s) %s"
                          % (self.__class__, kwargs.keys()))
