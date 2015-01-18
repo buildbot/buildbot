@@ -340,7 +340,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @property
     def workdir(self):
         # default the workdir appropriately
-        if self._workdir is not None:
+        if self._workdir is not None or self.build is None:
             return self._workdir
         else:
             # see :ref:`Factory-Workdir-Functions` for details on how to customize this
