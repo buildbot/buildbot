@@ -17,7 +17,7 @@ import datetime
 import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import task, defer
-from buildbot.db import buildrequests
+from buildbot.db import buildrequests, builds
 from buildbot.test.util import connector_component, db
 from buildbot.test.fake import fakedb
 from buildbot.util import UTC, epoch2datetime
@@ -49,11 +49,12 @@ class TestBuildsetsConnectorComponent(
         d = self.setUpConnectorComponent(
             table_names=[ 'patches', 'changes', 'sourcestamp_changes',
                 'buildsets', 'buildset_properties', 'buildrequests',
-                'objects', 'buildrequest_claims', 'sourcestamps', 'sourcestampsets' ])
+                'objects', 'buildrequest_claims', 'sourcestamps', 'sourcestampsets', 'builds' ])
 
         def finish_setup(_):
             self.db.buildrequests = \
                     buildrequests.BuildRequestsConnectorComponent(self.db)
+            self.db.builds = builds.BuildsConnectorComponent(self.db)
             self.db.master.getObjectId = lambda : defer.succeed(self.MASTER_ID)
         d.addCallback(finish_setup)
 
@@ -863,4 +864,126 @@ class TestBuildsetsConnectorComponent(
                       self.db.buildrequests.getBuildRequests(brids=[1, 2, 3, 4]))
 
         d.addCallback(checkBuildRequests, 1)
+        return d
+
+    def test_findCompatibleFinishedBuildRequest(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="B", complete=1, results=0,
+                                     submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder", complete=1, results=0,
+                                     submitted_at=1418823086, complete_at=1418823086, startbrid=1),
+                fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder", complete=1, results=0,
+                                     submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=5, buildsetid=5, buildername="builder", startbrid=1)]
+
+        d = self.insertTestData(breqs)
+
+        def checkBuildRequest(brdict):
+            self.assertEqual(brdict['brid'], 2)
+
+        d.addCallback(lambda _:
+                      self.db.buildrequests.findCompatibleFinishedBuildRequest(buildername="builder", startbrid=1))
+
+        d.addCallback(checkBuildRequest)
+        return d
+
+    def mergeBuildRequestFinishedBuild(self):
+        return [fakedb.BuildRequest(id=1, buildsetid=1, buildername="B", complete=1, results=0,
+                                    submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder", startbrid=1),
+                fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder", startbrid=1,
+                                    complete=1, results=0,
+                                    submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder"),
+                fakedb.BuildRequest(id=5, buildsetid=5, buildername="builder"),
+                fakedb.BuildRequest(id=6, buildsetid=6, buildername="builder", startbrid=1),
+                fakedb.BuildRequest(id=7, buildsetid=7, buildername="builder", startbrid=1)]
+
+    def test_getRequestsCompatibleToMerge(self):
+        breqs = self.mergeBuildRequestFinishedBuild()
+
+        d = self.insertTestData(breqs)
+
+        def checkBuildRequests(brids):
+            self.assertEqual(brids, [2, 6, 7])
+
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getRequestsCompatibleToMerge(buildername='builder', startbrid=1,
+                                                                         compatible_brids=[2, 4, 5, 6, 7]))
+
+        d.addCallback(checkBuildRequests)
+        return d
+
+    def test_mergeFinishedBuildRequest(self):
+        breqs = self.mergeBuildRequestFinishedBuild()
+
+        build = [fakedb.Build(id=1, number=1, brid=3, start_time=1418823086, finish_time=1418823086)]
+
+        d = self.insertTestData(breqs + build)
+
+        def checkBuildRequests(brlist, finished_brid):
+            self.assertTrue(all([br['mergebrid'] == finished_brid and br['artifactbrid'] == finished_brid
+                                 for br in brlist]))
+
+        def checkBuild(bdict):
+            self.assertEqual(bdict, [dict(bid=2,
+                                         brid=2,
+                                         finish_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC),
+                                         number=1,
+                                         start_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC))])
+            self.assertTrue(True)
+
+        d.addCallback(lambda _: self.db.buildrequests.findCompatibleFinishedBuildRequest(buildername="builder",
+                                                                                         startbrid=1))
+
+        d.addCallback(lambda brdict:
+                      self.db.buildrequests.mergeFinishedBuildRequest(brdict, merged_brids=[2, 6, 7]))
+
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='builder', brids=[2, 6, 7]))
+
+        d.addCallback(checkBuildRequests, finished_brid=3)
+        d.addCallback(lambda  _: self.db.builds.getBuildsForRequest(brid=2))
+        d.addCallback(checkBuild)
+        return d
+
+    def test_mergeFinishedBuildRequestReuseArtifact(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="B", complete=1, results=0,
+                                    submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder",
+                                    complete=1, results=0,
+                                    submitted_at=1418823086, complete_at=1418823086),
+                fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder", startbrid=1,
+                                    complete=1, results=0,
+                                    submitted_at=1418823086, complete_at=1418823086, mergebrid=2, artifactbrid=2),
+                fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder"),
+                fakedb.BuildRequest(id=5, buildsetid=5, buildername="builder"),
+                fakedb.BuildRequest(id=6, buildsetid=6, buildername="builder", startbrid=1),
+                fakedb.BuildRequest(id=7, buildsetid=7, buildername="builder", startbrid=1)]
+
+        build = [fakedb.Build(id=1, number=1, brid=3, start_time=1418823086, finish_time=1418823086)]
+
+        d = self.insertTestData(breqs + build)
+
+        def checkBuildRequests(brlist, finished_brid, artifactbrid):
+            self.assertTrue(all([br['mergebrid'] == finished_brid and br['artifactbrid'] == artifactbrid
+                                 for br in brlist]))
+
+        def checkBuild(bdict):
+            self.assertEqual(bdict, [dict(bid=3,
+                                         brid=7,
+                                         finish_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC),
+                                         number=1,
+                                         start_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC))])
+            self.assertTrue(True)
+
+        d.addCallback(lambda _: self.db.buildrequests.findCompatibleFinishedBuildRequest(buildername="builder",
+                                                                                         startbrid=1))
+
+        d.addCallback(lambda brdict:
+                      self.db.buildrequests.mergeFinishedBuildRequest(brdict, merged_brids=[6, 7]))
+
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='builder', brids=[6, 7]))
+
+        d.addCallback(checkBuildRequests, finished_brid=3, artifactbrid=2)
+        d.addCallback(lambda  _: self.db.builds.getBuildsForRequest(brid=7))
+        d.addCallback(checkBuild)
         return d
