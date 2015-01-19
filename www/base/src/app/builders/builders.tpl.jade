@@ -10,6 +10,6 @@
               | {{ builder.name }}
           td
             span(data-ng-repeat="build in builder.builds")
-                a(data-ng-href="#/builders/{{ builder.id }}/build/{{build.number}}")
+                a(data-ng-href="#/builders/{{ builder.id }}/builds/{{build.number}}")
                     span.badge-status(ng-class="results2class(build, 'pulse')")
                       | {{ build.number }}
