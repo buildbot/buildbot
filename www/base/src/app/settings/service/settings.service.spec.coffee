@@ -188,7 +188,7 @@ describe 'settingsService', ->
                 default_value: false
             ]
 
-    it 'should merge groups when new group has no name', inject (bbSettingsService) ->
+    it 'should not add a group without name', inject (bbSettingsService) ->
         localStorage.clear()
         group =
             caption: 'Auth related settings'

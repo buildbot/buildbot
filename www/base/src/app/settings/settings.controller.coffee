@@ -1,5 +1,5 @@
 class Settings extends Controller
-    constructor: ($scope, config, bbSettingsService) ->
+    constructor: ($scope, bbSettingsService) ->
         # All settings definition
         # 
 
