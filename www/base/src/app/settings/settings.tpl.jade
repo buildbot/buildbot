@@ -6,7 +6,7 @@
             h3 {{group.caption}}
             form(name="{{ group.name }}")
             div(ng-repeat="item in group.items")
-                div(ng-switch="", on="item.type" class="col-md-12")
+                div.col-md-12(ng-switch="", on="item.type")
                     div(ng-switch-when="bool"  class="form-group")
                         label(class="checkbox-inline")
                             input(type="checkbox" name="{{item.name}}" ng-model="item.value" ng-value="item.value")
