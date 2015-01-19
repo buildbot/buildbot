@@ -32,7 +32,7 @@
         td Status
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
           td(width='20px')
-            a(href='#/builders/{{ builder.id }}/build/{{build.number}}',title='{{build}}')
+            a(ui-sref="build({builder:builder.builderid, build:build.number})")
               span.badge-status(ng-class="results2class(build, 'pulse')")
                 | {{ build.number }}
           td(width='150px')

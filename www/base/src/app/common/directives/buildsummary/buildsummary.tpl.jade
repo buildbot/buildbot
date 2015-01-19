@@ -1,7 +1,7 @@
 .panel.panel-default(ng-class="results2class(build)")
   .panel-heading.no-select(ng-click="toggleDetails()")
     span(ng-if="prefix") {{prefix}}&nbsp;
-    a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
+    a(ui-sref="build({builder:builder.builderid, build:build.number})")
       | {{builder.name}}/{{build.number}}
     .pull-right
       span(ng-show="build.complete")
@@ -26,14 +26,15 @@
       div.anim-stepdetails(ng-show="step.fulldisplay")
         ul
           li(ng-repeat="log in step.logs")
-            a(href="api/v2/logs/{{log.id}}/raw")
+            a(ng-href="api/v2/logs/{{log.id}}/raw")
                 i.fa.fa-download
             | &nbsp;
-            a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
+            a(ui-sref="log({builder:builder.builderid, build:build.number, step: step.number, log:log.slug})")
+                | {{log.name}}
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
       ul
         li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
-          a(href="{{url.url}}") {{url.name}}
+          a(ng-href="{{url.url}}") {{url.name}}
       ul.list-unstyled
         li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
           buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')
