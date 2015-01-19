@@ -602,10 +602,13 @@ class BuildersResource(HtmlResource):
         status = self.getStatus(req)
         encoding = getRequestCharset(req)
 
-        showCategories = req.args.get("category", [])
-        if showCategories == []:
-            showCategories = None
-        builders = req.args.get("builder", status.getBuilderNames(categories=showCategories))
+        showTags = req.args.get("tag", [])
+        if not showTags:
+            showTags = req.args.get("category", [])
+            if not showTags:
+                showTags = None
+
+        builders = req.args.get("builder", status.getBuilderNames(tags=showTags))
         branches = [b.decode(encoding)
                     for b in req.args.get("branch", [])
                     if b]

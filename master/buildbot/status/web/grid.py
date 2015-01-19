@@ -147,7 +147,7 @@ class GridStatusMixin(object):
             build = build.getPreviousBuild()
         return
 
-    def getRecentSourcestamps(self, status, numBuilds, categories, branch):
+    def getRecentSourcestamps(self, status, numBuilds, tags, branch):
         """
         get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
         by the earliest start we've seen for them
@@ -156,7 +156,7 @@ class GridStatusMixin(object):
         sourcestamps = {}  # { ss-tuple : earliest time }
         for bn in status.getBuilderNames():
             builder = status.getBuilder(bn)
-            if categories and builder.category not in categories:
+            if tags and not builder.matchesAnyTag(tags):
                 continue
             for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamps(absolute=True)
@@ -185,18 +185,20 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
         # get url parameters
         numBuilds = int(request.args.get("width", [5])[0])
-        categories = request.args.get("category", [])
+        tags = request.args.get("tag", [])
+        if not tags:
+            tags = request.args.get("category", [])
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk':
             branch = None
 
         # and the data we want to render
         status = self.getStatus(request)
-        stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
+        stamps = self.getRecentSourcestamps(status, numBuilds, tags, branch)
 
         cxt['refresh'] = self.get_reload_time(request)
 
-        cxt.update({'categories': categories,
+        cxt.update({'tags': tags,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
@@ -210,7 +212,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             builds = [None] * len(stamps)
 
             builder = status.getBuilder(bn)
-            if categories and builder.category not in categories:
+            if tags and not builder.matchesAnyTag(tags):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):
@@ -248,7 +250,9 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
         # get url parameters
         numBuilds = int(request.args.get("length", [5])[0])
-        categories = request.args.get("category", [])
+        tags = request.args.get("tag", [])
+        if not tags:
+            tags = request.args.get("category", [])
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk':
             branch = None
@@ -261,9 +265,9 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
         # and the data we want to render
         status = self.getStatus(request)
-        stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
+        stamps = self.getRecentSourcestamps(status, numBuilds, tags, branch)
 
-        cxt.update({'categories': categories,
+        cxt.update({'tags': tags,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
@@ -282,7 +286,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             builds = [None] * len(stamps)
 
             builder = status.getBuilder(bn)
-            if categories and builder.category not in categories:
+            if tags and not builder.matchesAnyTag(tags):
                 continue
 
             for build in self.getRecentBuilds(builder, numBuilds, branch):

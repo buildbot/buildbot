@@ -1,12 +1,12 @@
-{% macro category_title() -%}
- {% if categories %}
+{% macro tag_title() -%}
+ {% if tags %}
   <br>
-  {% trans categories=categories %}
-   <b>Category:</b></br>
-  {% pluralize categories %}
-   <b>Categories:</b><br/>
+  {% trans tags=tags %}
+   <b>Tag:</b></br>
+  {% pluralize tags %}
+   <b>Tags:</b><br/>
   {% endtrans %}
-  {% for c in categories %}
+  {% for c in tags %}
     {{ c|e }}<br/>
   {% endfor %}
  {% endif %}

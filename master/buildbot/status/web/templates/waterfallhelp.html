@@ -83,21 +83,21 @@ the Builders you are interested in here.</p>
 {% endfor %}
 </table>
 
-<h2>Limiting the Categories that are displayed</h2>
+<h2>Limiting the Tags that are displayed</h2>
 
-<p>By adding one or more <tt>category=</tt> arguments, the display will be
-limited to showing builds that ran on the builders with those categories. 
+<p>By adding one or more <tt>tag=</tt> arguments, the display will be
+limited to showing builds that ran on the builders with those tags. 
 This serves to limit the display to the specific named columns. 
-If no <tt>category=</tt> arguments are provided, all Categories will be displayed.</p>
+If no <tt>tag=</tt> arguments are provided, all tags will be displayed.</p>
 
-<p>To view a Waterfall page with only a subset of Categories displayed, select
-the Categories you are interested in here.</p>
+<p>To view a Waterfall page with only a subset of tags displayed, select
+the tags you are interested in here.</p>
        
 <table>
-{% for cat in all_categories %}
- <tr><td><input type="checkbox" name="category" value="{{ cat }}"
-  {% if cat in show_categories %}checked="checked"{% endif %} />
- </td><td>{{cat}}</td></tr>
+{% for tag in all_tags %}
+ <tr><td><input type="checkbox" name="tag" value="{{ tag }}"
+  {% if tag in show_tags %}checked="checked"{% endif %} />
+ </td><td>{{tag}}</td></tr>
 {% endfor %}
 </table>
 

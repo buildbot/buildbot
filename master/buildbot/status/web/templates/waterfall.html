@@ -8,10 +8,10 @@
   <a style="float: right;" href="{{ help_url }}">waterfall help</a>
 </div>
 
-{% if categories|length > 1 %}
- <p><b>Categories:</b>
- {% for c in categories %}
-  <a href="?category={{ c }}">{{ c }}</a> &nbsp;
+{% if tags|length > 1 %}
+ <p><b>Tags:</b>
+ {% for t in tags %}
+  <a href="?tag={{ t }}">{{ t }}</a> &nbsp;
  {% endfor -%}
  </p>
 {% endif %}

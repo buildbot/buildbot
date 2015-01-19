@@ -19,7 +19,7 @@ from buildbot.status.web.base import IBox
 
 class BuildStatusStatusResource(HtmlResource):
 
-    def __init__(self, categories=None):
+    def __init__(self, tags=None):
         HtmlResource.__init__(self)
 
     def content(self, request, ctx):

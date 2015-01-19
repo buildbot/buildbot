@@ -31,7 +31,7 @@
 #    with code from http://feedvalidator.org
 # 3) nicer xml output
 # 4) feeds can be filtered as per the /waterfall display with the
-#    builder and category filters
+#    builder and tag filters
 # 5) cleaned up white space and imports
 #
 # Finally, the code was directly integrated into these two files,
@@ -80,9 +80,9 @@ class FeedResource(XmlResource):
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories=None, pageTitle=None):
+    def __init__(self, status, tags=None, pageTitle=None, categories=None):
         self.status = status
-        self.categories = categories
+        self.tags = tags or categories
         self.pageTitle = pageTitle
         self.title = self.status.getTitle()
         self.link = self.status.getBuildbotURL()
@@ -105,26 +105,28 @@ class FeedResource(XmlResource):
         # status/web/waterfall.py
         #
         # we start with all Builders available to this Waterfall: this is
-        # limited by the config-file -time categories= argument, and defaults
+        # limited by the config-file -time tags= argument, and defaults
         # to all defined Builders.
-        allBuilderNames = self.status.getBuilderNames(categories=self.categories)
+        allBuilderNames = self.status.getBuilderNames(tags=self.tags)
         builders = [self.status.getBuilder(name) for name in allBuilderNames]
 
         # but if the URL has one or more builder= arguments (or the old show=
         # argument, which is still accepted for backwards compatibility), we
         # use that set of builders instead. We still don't show anything
-        # outside the config-file time set limited by categories=.
+        # outside the config-file time set limited by tags=.
         showBuilders = request.args.get("show", [])
         showBuilders.extend(request.args.get("builder", []))
         if showBuilders:
             builders = [b for b in builders if b.name in showBuilders]
 
-        # now, if the URL has one or category= arguments, use them as a
+        # now, if the URL has one or tag= arguments, use them as a
         # filter: only show those builders which belong to one of the given
-        # categories.
-        showCategories = request.args.get("category", [])
-        if showCategories:
-            builders = [b for b in builders if b.category in showCategories]
+        # tags.
+        showTags = request.args.get("tag", [])
+        if not showTags:
+            showTags = request.args.get("category", [])
+        if showTags:
+            builders = [b for b in builders if b.matchesAnyTag(tags=showTags)]
 
         failures_only = request.args.get("failures_only", ["false"])
         failures_only = failures_only[0] not in ('false', '0', 'no', 'off')
@@ -277,13 +279,13 @@ class Rss20StatusResource(FeedResource):
     # contentType = 'application/rss+xml' (browser dependent)
     template_file = 'feed_rss20.xml'
 
-    def __init__(self, status, categories=None, pageTitle=None):
-        FeedResource.__init__(self, status, categories, pageTitle)
+    def __init__(self, status, tags=None, pageTitle=None):
+        FeedResource.__init__(self, status, tags, pageTitle)
 
 
 class Atom10StatusResource(FeedResource):
     # contentType = 'application/atom+xml' (browser dependent)
     template_file = 'feed_atom10.xml'
 
-    def __init__(self, status, categories=None, pageTitle=None):
-        FeedResource.__init__(self, status, categories, pageTitle)
+    def __init__(self, status, tags=None, pageTitle=None):
+        FeedResource.__init__(self, status, tags, pageTitle)

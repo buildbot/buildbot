@@ -62,7 +62,7 @@ class FakeStatus(object):
         self.master = master
         self.lastBuilderStatus = None
 
-    def builderAdded(self, name, basedir, category=None, description=None):
+    def builderAdded(self, name, basedir, tags=None, description=None):
         bs = FakeBuilderStatus(self.master)
         self.lastBuilderStatus = bs
         return bs
@@ -78,10 +78,13 @@ class FakeBuilderStatus(object):
 
     implements(interfaces.IBuilderStatus)
 
-    def __init__(self, master):
-        self.master = master
-        self.basedir = os.path.join(master.basedir, 'bldr')
+    def __init__(self, master=None, buildername="Builder"):
+        if master:
+            self.master = master
+            self.basedir = os.path.join(master.basedir, 'bldr')
         self.lastBuildStatus = None
+        self._tags = None
+        self.name = buildername
 
     def setDescription(self, description):
         self._description = description
@@ -89,11 +92,14 @@ class FakeBuilderStatus(object):
     def getDescription(self):
         return self._description
 
-    def setCategory(self, category):
-        self._category = category
+    def setTags(self, tags):
+        self._tags = tags
 
-    def getCategory(self):
-        return self._category
+    def getTags(self):
+        return self._tags
+
+    def matchesAnyTag(self, tags):
+        return set(self._tags) & set(tags)
 
     def setSlavenames(self, names):
         pass

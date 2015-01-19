@@ -26,11 +26,11 @@ class TestBuildStepStatus(unittest.TestCase):
     # that buildstep.BuildStepStatus is never instantiated here should tell you
     # that these classes are not well isolated!
 
-    def setupBuilder(self, buildername, category=None, description=None):
+    def setupBuilder(self, buildername, tags=None, description=None):
         self.master = fakemaster.make_master()
         self.master.basedir = '/basedir'
 
-        b = builder.BuilderStatus(buildername, self.master, category, description)
+        b = builder.BuilderStatus(buildername, tags, self.master, description)
         b.master = self.master
         # Ackwardly, Status sets this member variable.
         b.basedir = os.path.abspath(self.mktemp())

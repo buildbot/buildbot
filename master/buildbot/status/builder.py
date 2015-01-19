@@ -62,23 +62,23 @@ class BuilderStatus(styles.Versioned):
     I live in the buildbot.process.build.Builder object, in the
     .builder_status attribute.
 
-    @type  category: string
-    @ivar  category: user-defined category this builder belongs to; can be
+    @type  tags: None or list of strings
+    @ivar  tags: user-defined "tag" this builder has; can be
                      used to filter on in status clients
     """
 
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
-    persistenceVersion = 1
+    persistenceVersion = 2
     persistenceForgets = ('wasUpgraded', )
 
-    category = None
+    tags = None
     currentBigState = "offline"  # or idle/waiting/interlocked/building
     basedir = None  # filled in by our parent
 
-    def __init__(self, buildername, category, master, description):
+    def __init__(self, buildername, tags, master, description):
         self.name = buildername
-        self.category = category
+        self.tags = tags
         self.description = description
         self.master = master
 
@@ -134,6 +134,12 @@ class BuilderStatus(styles.Versioned):
             del self.slavename
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber  # determineNextBuildNumber chooses this
+        self.wasUpgraded = True
+
+    def upgradeToVersion2(self):
+        if hasattr(self, 'category'):
+            self.tags = self.category and [self.category] or None
+            del self.category
         self.wasUpgraded = True
 
     def determineNextBuildNumber(self):
@@ -322,12 +328,27 @@ class BuilderStatus(styles.Versioned):
             b = self.getBuild(-2)
         return b
 
-    def setCategory(self, category):
+    def getTags(self):
+        return self.tags
+
+    def setTags(self, tags):
         # used during reconfig
-        self.category = category
+        self.tags = tags
+
+    def matchesAnyTag(self, tags):
+        return self.tags and any((tag in self.tags) for tag in tags)
+
+    def matchesAllTags(self, tags):
+        return self.tags and all((tag in self.tags) for tag in tags)
+
+    def setCategory(self, category):
+        return self.setTags([category])
 
     def getCategory(self):
-        return self.category
+        tags = self.getTags()
+        if tags:
+            return tags[0]
+        return None
 
     def getBuildByRevision(self, rev):
         number = self.nextBuildNumber - 1
@@ -438,7 +459,7 @@ class BuilderStatus(styles.Versioned):
             # sourcestamps match, skip this build
             if branches and not branches & self._getBuildBranches(b):
                 continue
-            if categories and not b.getBuilder().getCategory() in categories:
+            if categories and not b.getBuilder().matchesAnyTag(tags=categories):
                 continue
             if committers and not [True for c in b.getChanges() if c.who in committers]:
                 continue
@@ -583,7 +604,7 @@ class BuilderStatus(styles.Versioned):
         # Constant
         # TODO(maruel): Fix me. We don't want to leak the full path.
         result['basedir'] = os.path.basename(self.basedir)
-        result['category'] = self.category
+        result['tags'] = self.tags
         result['slaves'] = self.slavenames
         result['schedulers'] = [s.name
                                 for s in self.status.master.allSchedulers()

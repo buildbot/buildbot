@@ -94,7 +94,7 @@ class BuildStepMixin(object):
 
         # step.build
 
-        b = self.build = fakebuild.FakeBuild()
+        b = self.build = fakebuild.FakeBuild(master=self.master)
         b.master = self.master
 
         def getSlaveVersion(cmd, oldversion):

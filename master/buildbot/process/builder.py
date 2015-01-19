@@ -97,15 +97,15 @@ class Builder(config.ReconfigurableServiceMixin,
         # set up a builder status object on the first reconfig
         if not self.builder_status:
             self.builder_status = self.master.status.builderAdded(
-                builder_config.name,
-                builder_config.builddir,
-                builder_config.category,
-                builder_config.description)
+                name=builder_config.name,
+                basedir=builder_config.builddir,
+                tags=builder_config.tags,
+                description=builder_config.description)
 
         self.config = builder_config
 
         self.builder_status.setDescription(builder_config.description)
-        self.builder_status.setCategory(builder_config.category)
+        self.builder_status.setTags(builder_config.tags)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 

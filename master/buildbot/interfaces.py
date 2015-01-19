@@ -157,7 +157,7 @@ class IStatus(Interface):
         """Return a list of ISchedulerStatus objects for all
         currently-registered Schedulers."""
 
-    def getBuilderNames(categories=None):
+    def getBuilderNames(categories=None, tags=None):
         """Return a list of the names of all current Builders."""
     def getBuilder(name):
         """Return the IBuilderStatus object for a given named Builder. Raises
@@ -333,6 +333,9 @@ class IBuilderStatus(Interface):
 
     def getName():
         """Return the name of this Builder (a string)."""
+
+    def getTags():
+        """Return the tags of this builder (a list of strings)"""
 
     def getCategory():
         """Return the category of this builder (a string)."""
