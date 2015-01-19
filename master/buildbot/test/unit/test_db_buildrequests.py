@@ -843,3 +843,24 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(checkBuildRequests, 1)
 
         return d
+
+    def test_mergePendingBuildRequests(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder"),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder")]
+
+        d = self.insertTestData(breqs)
+
+        def checkBuildRequests(brlist, mergebrid):
+            self.assertEqual(brlist[0]['mergebrid'], None)
+            self.assertTrue(all([br['mergebrid'] == mergebrid for br in brlist[1:]]))
+
+        d.addCallback(lambda _:
+                      self.db.buildrequests.mergePendingBuildRequests([1,2,3,4]))
+
+        d.addCallback(lambda _:
+                      self.db.buildrequests.getBuildRequests(brids=[1, 2, 3, 4]))
+
+        d.addCallback(checkBuildRequests, 1)
+        return d
