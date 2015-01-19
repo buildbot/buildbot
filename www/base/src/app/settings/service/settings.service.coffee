@@ -3,7 +3,7 @@ class bbSettings extends Provider
         @groups = {}
 
 
-    mergeNewGroup: (oldGroup, newGroup) ->
+    _mergeNewGroup: (oldGroup, newGroup) ->
         if not newGroup?
             return undefined
         if not oldGroup?
@@ -17,11 +17,11 @@ class bbSettings extends Provider
                         newItem.value = oldItem.value
             return newGroup
 
-    addSettingsGroup: (group) ->
+    _addSettingsGroup: (group) ->
         storageGroups = angular.fromJson(localStorage.getItem('settings')) || {}
         unless group.name?
             throw Error("Group (with caption : #{group.caption}) must have a correct name property.")
-        newGroup = @mergeNewGroup(storageGroups[group.name], group)
+        newGroup = @_mergeNewGroup(storageGroups[group.name], group)
         @groups[newGroup.name] = newGroup
         return @groups
 
@@ -34,8 +34,9 @@ class bbSettings extends Provider
                 localStorage.setItem('settings', angular.toJson(self.groups))
                 null
             getSetting: (settingSelector) ->
-                groupName = settingSelector.split('.')[0]
-                settingName = settingSelector.split('.')[1]
+                groupAndSettingName = settingSelector.split('.')
+                groupName = groupAndSettingName[0]
+                settingName = groupAndSettingName[1]
                 if self.groups[groupName]?
                     return setting for setting in self.groups[groupName].items when setting.name is settingName
                 else

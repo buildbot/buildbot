@@ -1,10 +1,10 @@
 describe 'settingsService', ->
     bbSettingsServiceProviderRef = ""
-    beforeEach module "guanlecoja.ui", (bbSettingsServiceProvider) ->
+    beforeEach module "app", (bbSettingsServiceProvider) ->
         bbSettingsServiceProviderRef = bbSettingsServiceProvider
 
         localStorage.clear()
-        bbSettingsServiceProvider.addSettingsGroup
+        bbSettingsServiceProvider._addSettingsGroup
             name:'User'
             caption: 'User related settings'
             items:[
@@ -21,7 +21,7 @@ describe 'settingsService', ->
                 ]
             ]
 
-        bbSettingsServiceProvider.addSettingsGroup
+        bbSettingsServiceProvider._addSettingsGroup
             name:'Release'
             caption: 'Release related settings'
             items:[
@@ -70,7 +70,7 @@ describe 'settingsService', ->
                 name:'radio2'
                 default_value: false
             ]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(old_group, new_group)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group)
         expect(group_result).toEqual
             name:'Auth'
             caption: 'Auth related settings'
@@ -101,7 +101,7 @@ describe 'settingsService', ->
             name:'Auth'
             caption: 'Auth related settings'
             items:[]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(old_group, new_group)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group)
         expect(group_result).toEqual
             name:'Auth'
             caption: 'Auth related settings'
@@ -125,7 +125,7 @@ describe 'settingsService', ->
                 name:'checkbox_system2'
                 default_value: false
             ]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(old_group, new_group)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group)
         expect(group_result).toEqual
             name:'System'
             caption: 'System related settings'
@@ -155,7 +155,7 @@ describe 'settingsService', ->
                 name:'checkbox_system2'
                 default_value: false
             ]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(old_group, undefined)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, undefined)
         expect(group_result).toBeUndefined()
 
     it 'should merge groups when old group is undefined', inject (bbSettingsService) ->
@@ -172,7 +172,7 @@ describe 'settingsService', ->
                 name:'radio2'
                 default_value: false
             ]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(undefined, new_group)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(undefined, new_group)
         expect(group_result).toEqual
             name:'Auth'
             caption: 'Auth related settings'
@@ -202,7 +202,7 @@ describe 'settingsService', ->
                 default_value: false
             ]
         exceptionRun = ->
-            group_result = bbSettingsServiceProviderRef.addSettingsGroup(group)
+            group_result = bbSettingsServiceProviderRef._addSettingsGroup(group)
         expect(exceptionRun).toThrow()
 
 
@@ -223,7 +223,7 @@ describe 'settingsService', ->
                 type:'bool'
                 name:'checkbox_system2'
             ]
-        group_result = bbSettingsServiceProviderRef.mergeNewGroup(old_group, new_group)
+        group_result = bbSettingsServiceProviderRef._mergeNewGroup(old_group, new_group)
         expect(group_result).toEqual
             name:'System'
             caption: 'System related settings'
