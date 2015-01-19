@@ -1,7 +1,7 @@
 .panel.panel-default(ng-class="results2class(build)")
   .panel-heading.no-select(ng-click="toggleDetails()")
     span(ng-if="prefix") {{prefix}}&nbsp;
-    a(href="#/builders/{{builder.builderid}}/build/{{build.number}}")
+    a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}")
       | {{builder.name}}/{{build.number}}
     .pull-right
       span(ng-show="build.complete")
@@ -29,7 +29,7 @@
             a(href="api/v2/logs/{{log.id}}/raw")
                 i.fa.fa-download
             | &nbsp;
-            a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
+            a(href="#/builders/{{builder.builderid}}/builds/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
       ul
         li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
