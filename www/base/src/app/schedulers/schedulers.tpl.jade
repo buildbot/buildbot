@@ -6,8 +6,8 @@
           td Master
         tr(ng-repeat='scheduler in schedulers')
           td
-            a(href='#/schedulers/{{ scheduler.schedulerid }}')
+            a(ui-sref='scheduler({scheduler: scheduler.schedulerid})')
               | {{ scheduler.name }}
           td
-            a(href="#/masters/{{scheduler.master.masterid}}")
+            a(ui-sref='master({master: scheduler.master.masterid})')
               | {{ scheduler.master.name }}

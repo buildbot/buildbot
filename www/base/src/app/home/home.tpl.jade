@@ -9,12 +9,12 @@
           li
             small Most recently browsed builds
           li(ng-repeat='b in recent.recent_builds')
-             a(href='{{b.link}}') {{b.caption}}
+             a(ng-href='{{b.link}}') {{b.caption}}
           li.divider
           li
             small Most recently browsed builders
           li(ng-repeat='b in recent.recent_builders')
-             a(href='{{b.link}}') {{b.caption}}
+             a(ng-href='{{b.link}}') {{b.caption}}
     .col-sm-8
       .well
         h2 Welcome to buildbot

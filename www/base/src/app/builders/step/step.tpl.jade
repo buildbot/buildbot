@@ -4,9 +4,9 @@
       | status: {{step.state_string}}
       ul.unstyled
         li(ng-repeat="log in step.logs")
-          a(href="#/builders/{{builder.builderid}}/build/{{build.number}}/step/{{step.number}}/log/{{log.slug}}") {{log.name}}
+          a(ui-sref="log({builder:builder.builderid, build:build.number, step: step.number, log:log.slug})")
       ul.unstyled
         li(ng-repeat="url in step.urls")
-          a(href="{{url.url}}") {{url.name}}
+          a(ng-href="{{url.url}}") {{url.name}}
     .col-sm-6
       rawdata(data="step")
