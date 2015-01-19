@@ -280,7 +280,7 @@ describe 'settingsService', ->
 
     it 'should save correct settings', inject (bbSettingsService) ->
         checkbox = bbSettingsService.getSetting('User.checkbox1')
-        expect(checkbox.value).toBeFalsy()
+        expect(checkbox.value).toBe(false)
         checkbox.value = true
         bbSettingsService.save()
         storageGroups = angular.fromJson(localStorage.getItem('settings'))
