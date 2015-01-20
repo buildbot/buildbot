@@ -16,8 +16,10 @@
 import weakref
 from twisted.internet import defer
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakebuild
 from buildbot.test.fake import pbmanager
 from buildbot import config
+from buildbot.process import properties
 import mock
 
 class FakeCache(object):
@@ -50,11 +52,19 @@ class FakeBotMaster(object):
 
 class FakeStatus(object):
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None):
-        return FakeBuilderStatus()
+    def __init__(self):
+        self.master = None
 
+    def builderAdded(self, name, basedir, category=None, friendly_name=None):
+        return FakeBuilderStatus(self.master)
+
+    def build_started(self, brid, buildername, build_status):
+        pass
 
 class FakeBuilderStatus(object):
+
+    def __init__(self, master=None):
+        self.master = master
 
     def setCategory(self, category):
         pass
@@ -76,6 +86,12 @@ class FakeBuilderStatus(object):
 
     def setTags(self, tags):
         pass
+
+    def newBuild(self):
+        bs = fakebuild.FakeBuildStatus(self, self.master, 1)
+        bs.number = 1
+        bs.properties = properties.Properties()
+        return bs
 
 
 class FakeMaster(object):

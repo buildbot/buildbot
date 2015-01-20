@@ -21,6 +21,7 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.status import master
 from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakebuild
 from buildbot.process import builder, factory
 from buildbot.db import buildrequests
 from buildbot.util import epoch2datetime
@@ -35,7 +36,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
         ]
 
-    def makeBuilder(self, patch_random=False, **config_kwargs):
+    def makeBuilder(self, patch_random=False, patch_startbuildfor=True, **config_kwargs):
         """Set up C{self.bldr}"""
         self.bstatus = mock.Mock()
         self.factory = factory.BuildFactory()
@@ -51,11 +52,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr.botmaster = self.master.botmaster
 
         # patch into the _startBuildsFor method
-        self.builds_started = []
-        def _startBuildFor(slavebuilder, buildrequests):
-            self.builds_started.append((slavebuilder, buildrequests))
-            return defer.succeed(True)
-        self.bldr._startBuildFor = _startBuildFor
+        if patch_startbuildfor:
+            self.builds_started = []
+            def _startBuildFor(slavebuilder, buildrequests):
+                self.builds_started.append((slavebuilder, buildrequests))
+                return defer.succeed(True)
+            self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
             # patch 'random.choice' to always take the slave that sorts
@@ -83,6 +85,12 @@ class TestBuilderBuildCreation(unittest.TestCase):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
+            sb.slave = mock.Mock()
+            sb.prepare = lambda x, y: True
+            sb.ping = lambda: True
+            sb.buildStarted = lambda: True
+            sb.buildFinished = lambda: False
+            sb.remote = mock.Mock()
             self.bldr.slaves.append(sb)
 
     # services
@@ -115,7 +123,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
     # maybeStartBuild
 
-    def do_test_maybeStartBuild(self, rows=[], exp_claims=[], exp_builds=[],
+    def assertBuildingRequets(self, exp):
+        builds_started = [br.id for br in self.bldr.building[0].requests]
+        self.assertEqual(sorted(builds_started), sorted(exp))
+
+    def do_test_maybeStartBuild(self, rows=[], exp_claims=[], exp_builds=None, exp_brids=None,
                 exp_fail=None):
         d = self.db.insertTestData(rows)
         d.addCallback(lambda _ :
@@ -123,12 +135,44 @@ class TestBuilderBuildCreation(unittest.TestCase):
         def check(_):
             self.failIf(exp_fail)
             self.db.buildrequests.assertMyClaims(exp_claims)
-            self.assertBuildsStarted(exp_builds)
+            if exp_builds:
+                self.assertBuildsStarted(exp_builds)
+            if exp_brids:
+                self.assertBuildingRequets(exp_brids)
         d.addCallback(check)
         def eb(f):
             f.trap(exp_fail)
         d.addErrback(eb)
         return d
+
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_mergeBuilding(self):
+        yield self.makeBuilder(patch_startbuildfor=False)
+        def newBuild(buildrequests):
+            return fakebuild.FakeBuild(buildrequests)
+
+        self.bldr.config.factory.newBuild = newBuild
+
+        self.bldr.notifyRequestsRemoved = lambda x: True
+
+        self.setSlaveBuilders({'test-slave11':1})
+        rows = [fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, branch="az", repository="xz", revision="ww"),
+                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr", submitted_at=130000)]
+
+        yield self.db.insertTestData(rows)
+        yield self.do_test_maybeStartBuild(exp_claims=[1], exp_brids=[1])
+
+        self.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
+        self.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, branch="az",
+                                                                repository="xz", revision="ww")])
+        self.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=1)])
+        self.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr",
+                                                                  submitted_at=130000)])
+
+        yield self.do_test_maybeStartBuild(exp_claims=[1, 2], exp_brids=[1, 2])
+
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_no_buildreqests(self):

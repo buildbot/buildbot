@@ -1008,6 +1008,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                                                   objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
+
+    def mergeBuildingRequest(self, requests, brids, number):
+        return self.claimBuildRequests(brids)
+
     def reclaimBuildRequests(self, brids):
         for brid in brids:
             if brid not in self.claims:
