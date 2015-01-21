@@ -973,7 +973,6 @@ class TestBuildsetsConnectorComponent(
                                          finish_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC),
                                          number=1,
                                          start_time=datetime.datetime(2014, 12, 17, 13, 31, 26, tzinfo=UTC))])
-            self.assertTrue(True)
 
         d.addCallback(lambda _: self.db.buildrequests.findCompatibleFinishedBuildRequest(buildername="builder",
                                                                                          startbrid=1))
@@ -986,4 +985,39 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(checkBuildRequests, finished_brid=3, artifactbrid=2)
         d.addCallback(lambda  _: self.db.builds.getBuildsForRequest(brid=7))
         d.addCallback(checkBuild)
+        return d
+
+    def test_mergeBuildingRequest(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder"),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder")]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID,
+                    claimed_at=1300103810)]
+
+        build = [fakedb.Build(id=1, number=1, brid=1, start_time=1418823086)]
+
+        brids =  [2, 3, 4]
+
+        def checkBuild(bdict):
+            self.assertEqual(bdict[0]['bid'], 4)
+            self.assertEqual(bdict[0]['brid'], 4)
+            self.assertEqual(bdict[0]['number'], 1)
+
+        def check(_, brids):
+            def thd(conn):
+                claims_tbl = self.db.model.buildrequest_claims
+                q = sa.select([claims_tbl.c.brid])\
+                    .where(
+                        (claims_tbl.c.brid.in_(brids)))
+                results = conn.execute(q).fetchall()
+                self.assertEqual(sorted([row.brid for row in results]), sorted(brids))
+            return self.db.pool.do(thd)
+
+        d = self.insertTestData(breqs + breqsclaims + build)
+        d.addCallback(lambda _: self.db.buildrequests.mergeBuildingRequest(breqs, brids, 1))
+        d.addCallback(lambda _: self.db.builds.getBuildsForRequest(brid=4))
+        d.addCallback(checkBuild)
+        d.addCallback(check, brids=brids)
         return d
