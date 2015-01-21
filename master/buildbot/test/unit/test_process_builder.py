@@ -127,9 +127,11 @@ class TestBuilderBuildCreation(unittest.TestCase):
         builds_started = [br.id for br in self.bldr.building[0].requests]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def do_test_maybeStartBuild(self, rows=[], exp_claims=[], exp_builds=None, exp_brids=None,
+    def do_test_maybeStartBuild(self, rows=None, exp_claims=[], exp_builds=None, exp_brids=None,
                 exp_fail=None):
-        d = self.db.insertTestData(rows)
+        d = defer.succeed(True)
+        if rows:
+            d = self.db.insertTestData(rows)
         d.addCallback(lambda _ :
                 self.bldr.maybeStartBuild())
         def check(_):
@@ -157,7 +159,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
 
         self.setSlaveBuilders({'test-slave11':1})
         rows = [fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, sourcestampsetid=1, branch="az", repository="xz", revision="ww"),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz", revision="ww"),
                 fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
                 fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr", submitted_at=130000)]
 
@@ -165,14 +167,42 @@ class TestBuilderBuildCreation(unittest.TestCase):
         yield self.do_test_maybeStartBuild(exp_claims=[1], exp_brids=[1])
 
         self.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
-        self.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, branch="az",
+        self.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c', branch="az",
                                                                 repository="xz", revision="ww")])
-        self.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=1)])
+        self.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
         self.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr",
                                                                   submitted_at=130000)])
 
         yield self.do_test_maybeStartBuild(exp_claims=[1, 2], exp_brids=[1, 2])
 
+
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_mergeBuildingCouldNotMerge(self):
+        yield self.makeBuilder(patch_startbuildfor=False)
+        def newBuild(buildrequests):
+            return fakebuild.FakeBuild(buildrequests)
+
+        self.bldr.config.factory.newBuild = newBuild
+
+        self.bldr.notifyRequestsRemoved = lambda x: True
+
+        self.setSlaveBuilders({'test-slave11':1})
+        rows = [fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz", revision="ww"),
+                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr", submitted_at=130000)]
+
+        yield self.db.insertTestData(rows)
+        yield self.do_test_maybeStartBuild(exp_claims=[1], exp_brids=[1])
+
+        self.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
+        self.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c', branch="az",
+                                                                repository="xz", revision="bb")])
+        self.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
+        self.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr",
+                                                                  submitted_at=130000)])
+
+        yield self.do_test_maybeStartBuild(exp_claims=[1, 2], exp_brids=[1])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_no_buildreqests(self):
