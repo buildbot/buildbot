@@ -79,9 +79,8 @@ class HTTPStep(BuildStep):
         self.method = method
         self.url = url
 
-        for p in HTTPStep.requestsParams:
-            v = kwargs.pop(p, None)
-            self.__dict__[p] = v
+        for param in HTTPStep.requestsParams:
+            setattr(self, param, kwargs.pop(param, None))
 
         BuildStep.__init__(self, **kwargs)
 
@@ -98,10 +97,10 @@ class HTTPStep(BuildStep):
             'url': self.url
         }
 
-        for p in self.__dict__ and self.requestsParams:
-            v = self.__dict__[p]
-            if v is not None:
-                requestkwargs[p] = v
+        for param in self.requestsParams:
+            value = getattr(self, param, None)
+            if value is not None:
+                requestkwargs[param] = value
 
         log = self.addLog('log')
 
