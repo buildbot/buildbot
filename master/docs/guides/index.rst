@@ -8,3 +8,5 @@ The level of these guides is a bit higher than the one of :doc:`tutorials <../tu
 
 .. toctree::
    :maxdepth: 1
+
+   svn
