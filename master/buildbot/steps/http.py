@@ -62,11 +62,11 @@ class HTTPStep(BuildStep):
     name = 'HTTPStep'
     description = 'Requesting'
     descriptionDone = 'Requested'
-    requestsParams = ["method", "url", "params", "data", "headers",
+    requestsParams = ["params", "data", "headers",
                       "cookies", "files", "auth",
                       "timeout", "allow_redirects", "proxies",
                       "hooks", "stream", "verify", "cert"]
-    renderables = requestsParams
+    renderables = requestsParams + ["method", "url"]
     session = None
 
     def __init__(self, url, method, **kwargs):
