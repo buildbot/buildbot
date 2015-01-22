@@ -105,6 +105,7 @@ Arguments common to all :class:`BuildStep` subclasses:
     Consequently, you could add a :py:class:`ShellCommand` step like so::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(command=["make", "test"],
                                      description="testing",
                                      descriptionDone="tests"))
@@ -124,7 +125,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 ``doStepIf``
     A step can be configured to only run under certain conditions.
     To do this, set the step's ``doStepIf`` to a boolean value, or to a function that returns a boolean value or Deferred.
-    If the value or function result is false, then the step will return ``SKIPPED`` without doing anything.
+    If the value or function result is ``False``, then the step will return ``SKIPPED`` without doing anything.
     Otherwise, the step will be executed normally.
     If you set ``doStepIf`` to a function, that function should accept one parameter, which will be the :class:`Step` object itself.
 
@@ -133,7 +134,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 ``hideStepIf``
     A step can be optionally hidden from the waterfall and build details web pages.
     To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value.
-    Steps are always shown while they execute, however after the step as finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
+    Steps are always shown while they execute, however after the step as finished, this parameter is evaluated (if a function) and if the value is ``True``, the step is hidden.
     For example, in order to hide the step if the step has been skipped::
 
         factory.addStep(Foo(..., hideStepIf=lambda results, s: results==SKIPPED))
@@ -194,6 +195,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
     ::
 
         from buildbot.plugins import steps
+
         factory = BuildFactory()
         factory.addStep(steps.Mercurial(repourl='path/to/repo', mode='full',
                                         method='fresh'))
@@ -217,7 +219,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
     Source Steps are special in that they perform some operations outside of the workdir (like creating the workdir itself).
 
 ``alwaysUseLatest``
-    if True, bypass the usual behavior of checking out the revision in the source stamp, and always update to the latest revision in the repository instead.
+    if ``True``, bypass the usual behavior of checking out the revision in the source stamp, and always update to the latest revision in the repository instead.
 
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means that when a full VC checkout fails, it should be retried up to ``repeats`` times, waiting ``delay`` seconds between attempts.
@@ -234,7 +236,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 
 ``codebase``
     This specifies which codebase the source step should use to select the right source stamp.
-    The default codebase value is ``''``.
+    The default codebase value is ``''`` (empty string).
     The codebase must correspond to a codebase assigned by the :bb:cfg:`codebaseGenerator`.
     If there is no codebaseGenerator defined in the master then codebase doesn't need to be set, the default value will then match all changes.
 
@@ -243,7 +245,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
     If your repositories are particularly large, then you may need to increase this  value from its default of 1200 (20 minutes).
 
 ``logEnviron``
-    If this option is true (the default), then the step's logfile will describe the environment variables on the slave.
+    If this option is ``True`` (the default), then the step's logfile will describe the environment variables on the slave.
     In situations where the environment is not relevant and is long, it may be easier to set ``logEnviron=False``.
 
 ``env``
@@ -261,12 +263,13 @@ Mercurial
 
 The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/mercurial>`_ (aka ``hg``) checkout or update.
 
-Branches are available in two modes: ``dirname``, where the name of the branch is a suffix of the name of the repository, or ``inrepo``, which uses Hg's named-branches support.
+Branches are available in two modes: ``dirname``, where the name of the branch is a suffix of the name of the repository, or ``inrepo``, which uses Mercurial's named-branches support.
 Make sure this setting matches your changehook, if you have that installed.
 
 ::
 
     from buildbot.plugins import steps
+
     factory.addStep(steps.Mercurial(repourl='path/to/repo', mode='full',
                                     method='fresh', branchType='inrepo'))
 
@@ -280,7 +283,7 @@ The Mercurial step takes the following arguments:
    This will be appended to ``repourl`` to create the string that will be passed to the ``hg clone`` command.
 
 ``branchType``
-   either 'dirname' (default) or 'inrepo' depending on whether the branch name should be appended to the ``repourl`` or the branch is a Mercurial named branch and can be found within the ``repourl``.
+   either ``'dirname'`` (default) or ``'inrepo'`` depending on whether the branch name should be appended to the ``repourl`` or the branch is a Mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
    boolean, defaults to ``True``.
@@ -322,6 +325,7 @@ Note that the buildbot supports Git version 1.2.0 and later: earlier versions (s
 ::
 
     from buildbot.plugins import steps
+
     factory.addStep(steps.Git(repourl='git://path/to/repo', mode='full',
                               method='clobber', submodules=True))
 
@@ -460,14 +464,18 @@ The :bb:step:`SVN` step should be created with the ``repourl`` argument:
 If you are building from multiple branches, then you should create the :bb:step:`SVN` step with the ``repourl`` and provide branch information with ``Interpolate``::
 
     from buildbot.plugins import steps, util
-    factory.addStep(steps.SVN(mode='incremental',
-                    repourl=util.Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
+
+    factory.addStep(steps.SVN(
+                        mode='incremental',
+                        repourl=util.Interpolate('svn://svn.example.org/svn/%(src::branch)s/myproject')))
 
 Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN` step without ``Interpolate``::
 
     from buildbot.plugins import steps
-    factory.addStep(steps.SVN(mode='full',
-                    repourl='svn://svn.example.org/svn/myproject/trunk'))
+
+    factory.addStep(steps.SVN(
+                        mode='full',
+                        repourl='svn://svn.example.org/svn/myproject/trunk'))
 
 ``username``
    (optional): if specified, this will be passed to the ``svn`` binary with a ``--username`` option.
@@ -537,9 +545,11 @@ The :bb:step:`CVS` build step performs a `CVS <http://www.nongnu.org/cvs/>`_ che
 ::
 
     from buildbot.plugins import steps
-    factory.addStep(steps.CVS(mode='incremental',
-                    cvsroot=':pserver:me@cvs.example.net:/cvsroot/myproj',
-                    cvsmodule='buildbot'))
+
+    factory.addStep(steps.CVS(
+                        mode='incremental',
+                        cvsroot=':pserver:me@cvs.example.net:/cvsroot/myproj',
+                        cvsmodule='buildbot'))
 
 This step takes the following arguments:
 
@@ -550,6 +560,10 @@ This step takes the following arguments:
 ``cvsmodule``
     (required): specify the cvs ``module``, which is generally a subdirectory of the :file:`CVSROOT`.
     The cvsmodule for the Buildbot source code is ``buildbot``.
+
+    .. todo::
+
+       This is not relevant any more since Buildbot moved to git for quite some time.
 
 ``branch``
     a string which will be used in a ``-r`` argument.
@@ -600,8 +614,10 @@ This makes it look very much like Mercurial.
 ::
 
     from buildbot.plugins import steps
-    factory.addStep(steps.Bzr(mode='incremental',
-                              repourl='lp:~knielsen/maria/tmp-buildbot-test'))
+
+    factory.addStep(steps.Bzr(
+                        mode='incremental',
+                        repourl='lp:~knielsen/maria/tmp-buildbot-test'))
 
 The step takes the following arguments:
 
@@ -610,7 +626,7 @@ The step takes the following arguments:
 
 ``baseURL``
     (required unless ``repourl`` is provided): the base repository URL, to which a branch name will be appended.
-    It should probably end in a slash.
+    It should probably end with a slash.
 
 ``defaultBranch``
     (allowed if and only if ``baseURL`` is provided): this specifies the name of the branch to use when a Build does not provide one of its own.
@@ -650,6 +666,7 @@ The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ cl
 ::
 
     from buildbot.plugins import steps, util
+
     factory.addStep(steps.P4(p4port=p4port,
                              p4client=util.WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
                              p4user=p4user,
@@ -683,7 +700,7 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
     The client name and source directory will be prepended to the client path.
 
 ``p4viewspec``
-    This will override any p4branch, p4base, and/or p4extra_views specified.
+    This will override any ``p4branch``, ``p4base``, and/or ``p4extra_views`` specified.
     The viewspec will be an array of tuples as follows::
 
         [('//depot/main/','')]
@@ -806,11 +823,9 @@ The Repo step takes the following arguments:
 
 ``util.repo.DownloadsFromProperties`` can be used as a renderable of the ``repoDownload`` parameter it will look in passed properties for string with following possible format:
 
-      -  ``repo download project change_number/patchset_number``.
-
-      -  ``project change_number/patchset_number``.
-
-      -  ``project/change_number/patchset_number``.
+* ``repo download project change_number/patchset_number``
+* ``project change_number/patchset_number``
+* ``project/change_number/patchset_number``
 
 All of these properties will be translated into a :command:`repo download`.
 This feature allows integrators to build with several pending interdependent changes, which at the moment cannot be described properly in Gerrit, and can only be described by humans.
@@ -844,7 +859,7 @@ Gerrit
 
 .. py:class:: buildbot.steps.source.gerrit.Gerrit
 
-This Source step is exactly like the :bb:step:`Git` checkout step , except that it integrates with :bb:chsrc:`GerritChangeSource`, and will automatically checkout the additional changes.
+This Source step is exactly like the :bb:step:`Git` checkout step, except that it integrates with :bb:chsrc:`GerritChangeSource`, and will automatically checkout the additional changes.
 
 Gerrit integration can be also triggered using forced build with property named ``gerrit_change`` with values in format ``change_number/patchset_number``.
 This property will be translated into a branch name.
@@ -864,6 +879,7 @@ The :bb:step:`Darcs` build step performs a `Darcs <http://darcs.net/>`_ checkout
 ::
 
     from buildbot.plugins import steps
+
     factory.addStep(steps.Darcs(repourl='http://path/to/repo',
                                 mode='full', method='clobber', retry=(10, 1)))
 
@@ -912,6 +928,7 @@ The :bb:step:`Monotone <Monotone>` build step performs a `Monotone <http://www.m
 ::
 
     from buildbot.plugins import steps
+
     factory.addStep(steps.Monotone(repourl='http://path/to/repo',
                                    mode='full', method='clobber',
                                    branch='some.branch.name', retry=(10, 1)))
@@ -1008,6 +1025,7 @@ The :bb:step:`ShellCommand` arguments are:
     For example::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(command=["make", "test"],
                                      workdir="build/tests"))
 
@@ -1016,6 +1034,7 @@ The :bb:step:`ShellCommand` arguments are:
     For example, to run tests with a different i18n language setting, you might use::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(command=["make", "test"],
                                      env={'LANG': 'fr_FR'}))
 
@@ -1024,6 +1043,7 @@ The :bb:step:`ShellCommand` arguments are:
     The following example will prepend :file:`/home/buildbot/lib/python` to any existing :envvar:`PYTHONPATH`::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
@@ -1036,10 +1056,13 @@ The :bb:step:`ShellCommand` arguments are:
     ::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(
                       command=["make", "test"],
-                      env={'PATH': ["/home/buildbot/bin",
-                                    "${PATH}"]}))
+                      env={'PATH': [
+                            "/home/buildbot/bin",
+                            "${PATH}"
+                      ]}))
 
     Note that environment values must be strings (or lists that are turned into strings).
     In particular, numeric properties such as ``buildnumber`` must be substituted using :ref:`Interpolate`.
@@ -1082,6 +1105,7 @@ The :bb:step:`ShellCommand` arguments are:
     ::
 
         from buildbot.plugins import steps
+
         f.addStep(steps.ShellCommand(
                            command=["make", "test"],
                            logfiles={"triallog": "_trial_temp/test.log"}))
@@ -1122,9 +1146,8 @@ The :bb:step:`ShellCommand` arguments are:
     This functionality requires a 0.8.6 slave or newer.
 
 ``sigtermTime``
-
     If set, when interrupting, try to kill the command with SIGTERM and wait for sigtermTime seconds before firing ``interuptSignal``.
-    If None, ``interruptSignal`` will be fired immediately on interrupt.
+    If ``None``, ``interruptSignal`` will be fired immediately on interrupt.
 
 ``initialStdin``
     If the command expects input on stdin, that can be supplied a a string with this parameter.
@@ -1132,9 +1155,8 @@ The :bb:step:`ShellCommand` arguments are:
 
 ``decodeRC``
     This is a dictionary that decodes exit codes into results value.
-    For example, ``{0:SUCCESS,1:FAILURE,2:WARNINGS}``, will treat the exit code ``2`` as WARNINGS.
-    The default is to treat just 0 as successful.
-    (``{0:SUCCESS}``) any exit code not present in the dictionary will be treated as ``FAILURE``
+    For example, ``{0: SUCCESS, 1: FAILURE, 2: WARNINGS}``, will treat the exit code ``2`` as ``WARNINGS``.
+    The default is to only treat 0 as successful (``{0: SUCCESS}``), any exit code not present in the dictionary will be treated as ``FAILURE``.
 
 .. bb:step:: ShellSequence
 
@@ -1148,7 +1170,6 @@ We have two ways to handle that:
 * Create one shell command with all these.
   To put the logs of each commands in separate logfiles, we need to re-write the script as ``configure 1> configure_log; ...`` and to add these ``configure_log`` files as ``logfiles`` argument of the buildstep.
   This has the drawback of complicating the shell script, and making it harder to maintain as the logfile name is put in different places.
-
 * Create three :bb:step:`ShellCommand` instances, but this loads the build UI unnecessarily.
 
 :bb:step:`ShellSequence` is a class to execute not one but a sequence of shell commands during a build.
@@ -1164,6 +1185,7 @@ A list of :class:`~buildbot.steps.shellsequence.ShellArg` objects or a renderabl
 ::
 
     from buildbot.plugins import steps, util
+
     f.addStep(steps.ShellSequence(commands=[
                                     util.ShellArg(command=['configure']),
                                     util.ShellArg(command=['make'], logfile='make'),
@@ -1184,7 +1206,6 @@ All these commands share the same configuration of ``environment``, ``workdir`` 
     Any of the arguments to this class can be renderable.
 
     Note that if ``logfile`` name does not start with the prefix ``stdio``, that prefix will be set like ``stdio <logfile>``.
-
 
 The two :bb:step:`ShellSequence` methods below tune the behavior of how the list of shell commands are executed, and can be overridden in subclasses.
 
@@ -2601,10 +2622,10 @@ The parameters are the following:
 
     .. note::
 
-        The entire Buildbot master process shares a single Requests ``Session`` object.
-        This has the advantage of supporting connection re-use and other HTTP/1.1 features.
-        However, it also means that any cookies or other state changed by one step will be visible to other steps, causing unexpected results.
-        This behavior may change in future versions.
+       The entire Buildbot master process shares a single Requests ``Session`` object.
+       This has the advantage of supporting connection re-use and other HTTP/1.1 features.
+       However, it also means that any cookies or other state changed by one step will be visible to other steps, causing unexpected results.
+       This behavior may change in future versions.
 
 When the method is known in advance, class with the name of the method can also be used.
 In this case, it is not necessary to specify the method.
@@ -2612,6 +2633,7 @@ In this case, it is not necessary to specify the method.
 Example::
 
     from buildbot.plugins import steps, util
+
     f.addStep(steps.POST('http://myRESTService.example.com/builds',
                          data = {
                             'builder': util.Property('buildername'),
