@@ -78,7 +78,7 @@ class HTTPStep(BuildStep):
 
         self.method = method
         self.url = url
-        self.requestkwargs = {'method': method, 'url': url}
+
         for p in HTTPStep.requestsParams:
             v = kwargs.pop(p, None)
             self.__dict__[p] = v
@@ -94,10 +94,15 @@ class HTTPStep(BuildStep):
         # create a new session if it doesn't exist
         self.session = getSession()
 
+        requestkwargs = {
+            'method': self.method,
+            'url': self.url
+        }
+
         for p in self.__dict__ and self.requestsParams:
             v = self.__dict__[p]
             if v is not None:
-                self.requestkwargs[p] = v
+                requestkwargs[p] = v
 
         log = self.addLog('log')
 
@@ -106,9 +111,9 @@ class HTTPStep(BuildStep):
         log.addHeader('Performing %s request to %s\n' % (self.method, self.url))
         if self.params:
             log.addHeader('Parameters:\n')
-            for k, v in self.requestkwargs.get("params", {}).iteritems():
+            for k, v in requestkwargs.get("params", {}).iteritems():
                 log.addHeader('\t%s: %s\n' % (k, v))
-        data = self.requestkwargs.get("data", None)
+        data = requestkwargs.get("data", None)
         if data:
             log.addHeader('Data:\n')
             if isinstance(data, dict):
@@ -118,7 +123,7 @@ class HTTPStep(BuildStep):
                 log.addHeader('\t%s\n' % data)
 
         try:
-            r = yield self.session.request(**self.requestkwargs)
+            r = yield self.session.request(**requestkwargs)
         except requests.exceptions.ConnectionError, e:
             log.addStderr('An exception occured while performing the request: %s' % e)
             self.finished(FAILURE)
