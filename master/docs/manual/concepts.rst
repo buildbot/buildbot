@@ -106,7 +106,7 @@ Instead of a revision number, each build can have a ``context``, which is a stri
 The ``repourl``, ``baseURL``, and ``defaultBranch`` arguments are all handled the same way as with Darcs.
 The *revision*, however, is the hash identifier returned by ``hg identify``.
 
-`Git <http://git.or.cz/>`_ also follows a decentralized model, and each repository can have several branches and tags.
+`Git <http://git-scm.com/>`_ also follows a decentralized model, and each repository can have several branches and tags.
 The source Step is configured with a static ``repourl`` which specifies the location of the repository.
 In addition, an optional ``branch`` parameter can be specified to check out code from a specific branch instead of the default *master* branch.
 The *revision* is specified as a SHA1 hash as returned by e.g. ``git rev-parse``.

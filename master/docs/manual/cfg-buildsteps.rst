@@ -316,7 +316,7 @@ Git
 
 .. py:class:: buildbot.steps.source.git.Git
 
-The ``Git`` build step clones or updates a `Git <http://git.or.cz/>`_ repository and checks out the specified branch or revision.
+The ``Git`` build step clones or updates a `Git <http://git-scm.com/>`_ repository and checks out the specified branch or revision.
 Note that the buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the buildbot uses.
 
 ::
