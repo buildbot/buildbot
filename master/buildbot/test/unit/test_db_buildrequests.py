@@ -1021,3 +1021,47 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(checkBuild)
         d.addCallback(check, brids=brids)
         return d
+
+    def test_getBuildRequestCalculateBuildChain(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder-02", triggeredbybrid=1, startbrid=1),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder-03", triggeredbybrid=1, startbrid=1),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="builder-02",
+                                     triggeredbybrid=3, startbrid=1, mergebrid=2),
+                 fakedb.BuildRequest(id=5, buildsetid=5, buildername="builder-04", triggeredbybrid=2, startbrid=1),
+                 fakedb.BuildRequest(id=6, buildsetid=6, buildername="builder-05", triggeredbybrid=3, startbrid=1),
+                 fakedb.BuildRequest(id=7, buildsetid=7, buildername="builder-06", triggeredbybrid=3, startbrid=1),
+                 fakedb.BuildRequest(id=8, buildsetid=8, buildername="builder-07", triggeredbybrid=3, startbrid=1,
+                                     complete=1),
+                 fakedb.BuildRequest(id=9, buildsetid=9, buildername="builder-08", triggeredbybrid=7, startbrid=1),
+                 fakedb.BuildRequest(id=10, buildsetid=10, buildername="builder-09", triggeredbybrid=1, startbrid=1),
+                 fakedb.BuildRequest(id=11, buildsetid=11, buildername="builder-10", triggeredbybrid=10, startbrid=1),
+                 fakedb.BuildRequest(id=12, buildsetid=12, buildername="builder-03",
+                                     triggeredbybrid=1, startbrid=1,  mergebrid=3)]
+
+        builds = [fakedb.Build(id=1, number=1, brid=1, start_time=1418823086),
+                  fakedb.Build(id=2, number=2, brid=3, start_time=1418823086),
+                  fakedb.Build(id=3, number=3, brid=6, start_time=1418823086),
+                  fakedb.Build(id=5, number=5, brid=9, start_time=1418823086),
+                  fakedb.Build(id=4, number=4, brid=8, start_time=1418823086)]
+
+        d = self.insertTestData(breqs + builds)
+
+        def checkBuildChain(buildChain, exp_chain=[]):
+            self.assertEqual(buildChain, exp_chain)
+
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]]))
+        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-02', 'number': None, 'brid': 2},
+                                                    {'buildername': u'builder-03', 'number': 2, 'brid': 3},
+                                                    {'buildername': u'builder-09', 'number': None, 'brid': 10}])
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[2]], brid=3))
+        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-05', 'number': 3, 'brid': 6},
+                                                  {'buildername': u'builder-06', 'number': None, 'brid': 7}])
+
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[6]], brid=7))
+        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-08', 'number': 5, 'brid': 9}])
+
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]], brid=9))
+        d.addCallback(checkBuildChain)
+
+        return d
