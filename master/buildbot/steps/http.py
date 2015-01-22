@@ -72,14 +72,16 @@ class HTTPStep(BuildStep):
     def __init__(self, url, method, **kwargs):
         if txrequests is None or requests is None:
             config.error("Need to install txrequest to use this step:\n\n pip install txrequests")
+
+        if method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
+            config.error("Wrong method given: '%s' is not known" % method)
+
         self.method = method
         self.url = url
         self.requestkwargs = {'method': method, 'url': url}
         for p in HTTPStep.requestsParams:
             v = kwargs.pop(p, None)
             self.__dict__[p] = v
-        if method not in ('POST', 'GET', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'):
-            config.error("Wrong method given: '%s' is not known" % method)
 
         BuildStep.__init__(self, **kwargs)
 
