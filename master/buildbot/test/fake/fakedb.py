@@ -946,6 +946,14 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
+    def completeBuildRequests(self, brids, results):
+        for brid in brids:
+            if brid in self.reqs:
+                self.reqs[brid].complete = 1
+                self.reqs[brid].results = results
+
+        return defer.succeed(None)
+
     def compare(self, list1, list2):
 
         if len(list1) != len(list2):

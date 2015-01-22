@@ -126,6 +126,12 @@ class FakeMaster(object):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+    def maybeBuildsetComplete(self, bsid):
+        pass
+
+    def buildRequestRemoved(self, bsid, brid, buildername):
+        pass
+
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantDb=False, testcase=None, **kwargs):
     master = FakeMaster(**kwargs)
