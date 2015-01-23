@@ -119,7 +119,7 @@ class TempSourceStamp(object):
 
 
 class TempChange(object):
-    # temporary fake change; attributes are added below
+    # temporary fake change
 
     def __init__(self, d):
         for k, v in d.items():
@@ -229,11 +229,8 @@ class BuildRequest(object):
             else:
                 ss.patch = None
                 ss.patch_info = (None, None)
-            ss.changes = []
-            change = yield master.db.changes.getChangeFromSSid(ss.ssid)
-            if change:
-                ss.changes.append(TempChange(change))
-            # XXX: sourcestamps don't have changes anymore; this affects merging!!
+            changes = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
+            ss.changes = [TempChange(change) for change in changes]
 
         defer.returnValue(buildrequest)
 

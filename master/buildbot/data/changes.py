@@ -61,16 +61,24 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
     pathPatterns = """
         /changes
         /builds/n:buildid/changes
+        /sourcestamps/n:ssid/changes
     """
     rootLinkName = 'changes'
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         buildid = kwargs.get('buildid')
-        if buildid is None:
-            changes = yield self.master.db.changes.getChanges()
-        else:
+        ssid = kwargs.get('ssid')
+        if buildid is not None:
             changes = yield self.master.db.changes.getChangesForBuild(buildid)
+        elif ssid is not None:
+            change = yield self.master.db.changes.getChangeFromSSid(ssid)
+            if change is not None:
+                changes = [change]
+            else:
+                changes = []
+        else:
+            changes = yield self.master.db.changes.getChanges()
 
         changes = [(yield self._fixChange(ch)) for ch in changes]
         defer.returnValue(changes)
