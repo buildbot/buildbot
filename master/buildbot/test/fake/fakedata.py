@@ -85,6 +85,20 @@ class FakeUpdates(object):
         self.testcase.assertIsInstance(revision, (types.NoneType, unicode))
         self.testcase.assertIsInstance(when_timestamp, (types.NoneType, int))
         self.testcase.assertIsInstance(branch, (types.NoneType, unicode))
+
+        if callable(category):
+            pre_change = self.master.config.preChangeGenerator(author=author,
+                                                               files=files,
+                                                               comments=comments,
+                                                               revision=revision,
+                                                               when_timestamp=when_timestamp,
+                                                               branch=branch,
+                                                               revlink=revlink,
+                                                               properties=properties,
+                                                               repository=repository,
+                                                               project=project)
+            category = category(pre_change)
+
         self.testcase.assertIsInstance(category, (types.NoneType, unicode))
         self.testcase.assertIsInstance(revlink, (types.NoneType, unicode))
         self.assertProperties(sourced=False, properties=properties)

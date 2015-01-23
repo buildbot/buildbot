@@ -255,7 +255,10 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         return d
 
     def test_addChange_src_codebaseGenerator(self):
+        def preChangeGenerator(**kwargs):
+            return kwargs
         self.master.config = mock.Mock(name='master.config')
+        self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = \
             lambda change: 'cb-%s' % change['category']
         kwargs = dict(author=u'warner', branch=u'warnerdb',

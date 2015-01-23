@@ -71,7 +71,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = ascii2unicode(category)
+        self.category = category if callable(category) else ascii2unicode(category)
         self.project = ascii2unicode(project)
         self.changeCount = 0
         self.lastRev = {}
@@ -285,17 +285,13 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 raise failures[0]
 
             timestamp, author, files, comments = [r[1] for r in results]
+
             yield self.master.data.updates.addChange(
-                author=author,
-                revision=unicode(rev),
-                files=files,
-                comments=comments,
-                when_timestamp=timestamp,
+                author=author, revision=ascii2unicode(rev), files=files,
+                comments=comments, when_timestamp=timestamp,
                 branch=ascii2unicode(self._removeHeads(branch)),
-                category=self.category,
-                project=self.project,
-                repository=ascii2unicode(self.repourl),
-                src=u'git')
+                project=self.project, repository=ascii2unicode(self.repourl),
+                category=self.category, src=u'git')
 
     def _dovccmd(self, command, args, path=None):
         def encodeArg(arg):

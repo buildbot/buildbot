@@ -335,6 +335,23 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             self.basedir, self.filename)
         self.assertIsInstance(rv, config.MasterConfig)
 
+    def test_preChangeGenerator(self):
+        cfg = config.MasterConfig()
+        self.assertEqual({
+            'author': None,
+            'files': None,
+            'comments': None,
+            'revision': None,
+            'when_timestamp': None,
+            'branch': None,
+            'category': None,
+            'revlink': u'',
+            'properties': {},
+            'repository': u'',
+            'project': u'',
+            'codebase': None},
+            cfg.preChangeGenerator())
+
 
 class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 

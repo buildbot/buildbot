@@ -60,7 +60,7 @@ class HgPoller(base.PollingChangeSource):
         self.hgbin = hgbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category
+        self.category = category if callable(category) else ascii2unicode(category)
         self.project = project
         self.commitInfo = {}
         self.initLock = defer.DeferredLock()

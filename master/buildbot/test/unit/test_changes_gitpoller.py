@@ -964,6 +964,88 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         return d
 
+    def test_poll_callableCategory(self):
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', self.REPOURL)
+            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    'refs/heads/master\n'),
+            gpo.Expect('git', 'fetch', self.REPOURL,
+                       '+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+            .path('gitpoller-work'),
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+            .path('gitpoller-work')
+            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            gpo.Expect(
+                'git', 'log', '--format=%H',
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                '^fa3ae8ed68e664d4db24798611b352e3c6509930',
+                '--')
+            .path('gitpoller-work')
+            .stdout('\n'.join([
+                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+        )
+
+        # and patch out the _get_commit_foo methods which were already tested
+        # above
+        def timestamp(rev):
+            return defer.succeed(1273258009)
+        self.patch(self.poller, '_get_commit_timestamp', timestamp)
+
+        def author(rev):
+            return defer.succeed(u'by:' + rev[:8])
+        self.patch(self.poller, '_get_commit_author', author)
+
+        def files(rev):
+            return defer.succeed([u'/etc/' + rev[:3]])
+        self.patch(self.poller, '_get_commit_files', files)
+
+        def comments(rev):
+            return defer.succeed(u'hello!')
+        self.patch(self.poller, '_get_commit_comments', comments)
+
+        # do the poll
+        self.poller.branches = True
+
+        def callableCategory(chdict):
+            return chdict['revision'][:6]
+
+        self.poller.category = callableCategory
+
+        self.poller.lastRev = {
+            'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+        }
+        d = self.poller.poll()
+
+        @d.addCallback
+        def cb(_):
+            self.assertAllCommandsRan()
+            self.assertEqual(self.poller.lastRev, {
+                'refs/heads/master':
+                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            })
+
+            added = self.master.data.updates.changesAdded
+            self.assertEqual(len(added), 2)
+
+            self.assertEqual(added[0]['author'], 'by:4423cdbc')
+            self.assertEqual(added[0]['when_timestamp'], 1273258009)
+            self.assertEqual(added[0]['comments'], 'hello!')
+            self.assertEqual(added[0]['branch'], 'master')
+            self.assertEqual(added[0]['files'], [u'/etc/442'])
+            self.assertEqual(added[0]['src'], 'git')
+            self.assertEqual(added[0]['category'], u'4423cd')
+
+            self.assertEqual(added[1]['author'], 'by:64a5dc2a')
+            self.assertEqual(added[1]['when_timestamp'], 1273258009)
+            self.assertEqual(added[1]['comments'], 'hello!')
+            self.assertEqual(added[1]['files'], [u'/etc/64a'])
+            self.assertEqual(added[1]['src'], 'git')
+            self.assertEqual(added[1]['category'], u'64a5dc')
+        return d
+
     # We mock out base.PollingChangeSource.startService, since it calls
     # reactor.callWhenRunning, which leaves a dirty reactor if a synchronous
     # deferred is returned from a test method.

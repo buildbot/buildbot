@@ -120,7 +120,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.svnbin = svnbin
         self.histmax = histmax
         self._prefix = None
-        self.category = util.ascii2unicode(category)
+        self.category = category if callable(category) else util.ascii2unicode(category)
         self.project = util.ascii2unicode(project)
 
         self.cachepath = cachepath
