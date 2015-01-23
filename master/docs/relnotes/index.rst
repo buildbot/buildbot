@@ -102,6 +102,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add support for dynamically adding steps during a build. See :ref:`DynamicBuildFactories`.
 
+* :bb:chsrc:`GitPoller` now supports detecting new branches
+
 Fixes
 ~~~~~
 
