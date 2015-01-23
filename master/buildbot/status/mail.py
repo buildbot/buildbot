@@ -483,7 +483,8 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         return base.StatusReceiverMultiService.stopService(self)
 
     def disownServiceParent(self):
-        self.master_status.unsubscribe(self)
+        if self.master_status is not None:
+            self.master_status.unsubscribe(self)
         self.master_status = None
         for w in self.watched:
             w.unsubscribe(self)

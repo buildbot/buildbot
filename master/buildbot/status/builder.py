@@ -480,7 +480,11 @@ class BuilderStatus(styles.Versioned):
         self.status._builder_subscribe(self.name, receiver)
 
     def unsubscribe(self, receiver):
-        self.watchers.remove(receiver)
+        try:
+            self.watchers.remove(receiver)
+        except ValueError:
+            # Receiver may not be in the list if modules are unloaded on reconfig
+            pass
         self.status._builder_unsubscribe(self.name, receiver)
 
     # Builder interface (methods called by the Builder which feeds us)
