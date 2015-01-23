@@ -118,6 +118,18 @@ class TempSourceStamp(object):
         return result
 
 
+class TempChange(object):
+    # temporary fake change; attributes are added below
+
+    def __init__(self, d):
+        for k, v in d.items():
+            setattr(self, k, v)
+        self.properties = properties.Properties()
+        for k, v in d['properties'].items():
+            self.properties.setProperty(k, v[0], v[1])
+        self.who = d['author']
+
+
 class BuildRequest(object):
 
     """
@@ -218,6 +230,9 @@ class BuildRequest(object):
                 ss.patch = None
                 ss.patch_info = (None, None)
             ss.changes = []
+            change = yield master.db.changes.getChangeFromSSid(ss.ssid)
+            if change:
+                ss.changes.append(TempChange(change))
             # XXX: sourcestamps don't have changes anymore; this affects merging!!
 
         defer.returnValue(buildrequest)
