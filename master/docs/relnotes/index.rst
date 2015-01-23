@@ -182,6 +182,7 @@ Fixes
 * The list of changes in the build page now displays all the changes since the last sucessful build.
 
 * GitHub change hook now correctly responds to ping events.
+* ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
