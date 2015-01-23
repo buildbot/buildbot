@@ -56,6 +56,8 @@ Minor Python Packages
 
 * Buildbot requires at least Twisted-11.0.0.
 
+* Buildbot works python-dateutil >= 1.5
+
 Features
 ~~~~~~~~
 
