@@ -1413,6 +1413,12 @@ masters
         Get a list of the masters, represented as dictionaries; masters are sorted
         and paged using generic data query options
 
+    .. py:method:: setAllMastersActiveLongTimeAgo()
+
+        :returns: None via Deferred
+
+        This method is intended to be call by upgrade-master, and will effectively force housekeeping on all masters at next startup.
+        This method is not intended to be called outside of housekeeping scripts.
 
 builders
 ~~~~~~~~
