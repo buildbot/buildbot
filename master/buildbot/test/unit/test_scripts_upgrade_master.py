@@ -20,6 +20,7 @@ import os
 
 from buildbot import config as config_module
 from buildbot.db import connector
+from buildbot.db import masters
 from buildbot.db import model
 from buildbot.scripts import upgrade_master
 from buildbot.test.util import compat
@@ -274,6 +275,9 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector.DBConnector, 'setup', setup)
         upgrade = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(model.Model, 'upgrade', upgrade)
+        setAllMastersActiveLongTimeAgo = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
+        self.patch(masters.MastersConnectorComponent,
+                   'setAllMastersActiveLongTimeAgo', setAllMastersActiveLongTimeAgo)
         yield upgrade_master.upgradeDatabase(
             mkconfig(basedir='test', quiet=True),
             config_module.MasterConfig())

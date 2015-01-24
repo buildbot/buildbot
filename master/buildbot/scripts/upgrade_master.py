@@ -157,6 +157,7 @@ def upgradeDatabase(config, master_cfg):
 
     yield db.setup(check_version=False, verbose=not config['quiet'])
     yield db.model.upgrade()
+    yield db.masters.setAllMastersActiveLongTimeAgo()
 
 
 @in_reactor

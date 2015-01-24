@@ -91,6 +91,13 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 for row in conn.execute(tbl.select()).fetchall()]
         return self.db.pool.do(thd)
 
+    def setAllMastersActiveLongTimeAgo(self, _reactor=reactor):
+        def thd(conn):
+            tbl = self.db.model.masters
+            q = tbl.update().values(active=1, last_active=0)
+            conn.execute(q)
+        return self.db.pool.do(thd)
+
     def _masterdictFromRow(self, row):
         return MasterDict(id=row.id, name=row.name,
                           active=bool(row.active),
