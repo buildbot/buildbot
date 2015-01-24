@@ -122,7 +122,6 @@ class Git(Source):
         self.retryFetch = retryFetch
         self.submodules = submodules
         self.shallow = shallow
-        self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.getDescription = getDescription
