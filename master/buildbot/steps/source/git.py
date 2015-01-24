@@ -416,6 +416,7 @@ class Git(Source):
         else:
             raise buildstep.BuildStepFailed()
 
+    @defer.inlineCallbacks
     def _clone(self, shallowClone):
         """Retry if clone failed"""
 
@@ -442,29 +443,26 @@ class Git(Source):
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step
-        d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
         if switchToBranch:
-            d.addCallback(lambda _: self._fetch(None))
+            res = yield self._fetch(None)
 
-        def _retry(res):
-            if self.stopped or res == RC_SUCCESS:  # or shallow clone??
-                return res
+        done = self.stopped or res == RC_SUCCESS  # or shallow clone??
+        if self.retry and not done:
             delay, repeats = self.retry
             if repeats > 0:
                 log.msg("Checkout failed, trying %d more times after %d seconds"
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
+
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._doClobber())
                 df.addCallback(lambda _: self._clone(shallowClone))
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+                res = yield df
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
