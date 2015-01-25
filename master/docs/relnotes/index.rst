@@ -11,6 +11,10 @@ The following are the release notes for Buildbot |version|.
 Master
 ------
 
+Requirements:
+
+* Buildbot works python-dateutil >= 1.5
+
 Features
 ~~~~~~~~
 
