@@ -38,8 +38,14 @@ Changes
     .. bb:rpath:: /builds/:buildid/changes
 
         :pathkey integer buildid: the ID of the build
-        
+
         This path lists all changes related to a build
+
+    .. bb:rpath:: /sourcestamps/:ssid/changes
+
+        :pathkey integer ssid: the ID of the sourcestamp
+
+        This path lists all changes related to a sourcestamp
 
 
     .. bb:rpath:: /changes/:changeid
@@ -81,4 +87,3 @@ All update methods are available as attributes of ``master.data.updates``.
         All parameters labeled 'unicode' must be unicode strings and not bytestrings.
         Filenames in ``files``, and property names, must also be unicode strings.
         This is tested by the fake implementation.
-

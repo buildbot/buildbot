@@ -832,6 +832,9 @@ class FakeChangesComponent(FakeDBComponent):
     def getChangesForBuild(self, buildid):
         pass
 
+    def getChangeFromSSid(self, ssid):
+        pass
+
     def _chdict(self, row):
         chdict = row.copy()
         del chdict['uids']
