@@ -32,65 +32,6 @@ _HEADER_EVENT = 'X-GitHub-Event'
 _HEADER_SIGNATURE = 'X-Hub-Signature'
 
 
-# NOTE: for some reason this function is also used in gitlab hook
-def process_change(payload, user, repo, repo_url, project, codebase=None):
-    """
-    Consumes the JSON as a python object and actually starts the build.
-
-    :arguments:
-        payload
-            Python Object that represents the JSON sent by GitHub Service
-            Hook.
-    """
-    changes = []
-    refname = payload['ref']
-
-    # We only care about regular heads, i.e. branches
-    match = re.match(r"^refs\/heads\/(.+)$", refname)
-    if not match:
-        log.msg("Ignoring refname `%s': Not a branch" % refname)
-        return changes
-
-    branch = match.group(1)
-    if payload.get('deleted'):
-        log.msg("Branch `%s' deleted, ignoring" % branch)
-        return changes
-
-    for commit in payload['commits']:
-        if not commit.get('distinct', True):
-            log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
-                    (commit['id'],))
-            continue
-
-        files = []
-        for kind in ('added', 'modified', 'removed'):
-            files.extend(commit.get(kind, []))
-
-        when_timestamp = dateparse(commit['timestamp'])
-
-        log.msg("New revision: %s" % commit['id'][:8])
-
-        change = {
-            'author': '%s <%s>' % (commit['author']['name'],
-                                   commit['author']['email']),
-            'files': files,
-            'comments': commit['message'],
-            'revision': commit['id'],
-            'when_timestamp': when_timestamp,
-            'branch': branch,
-            'revlink': commit['url'],
-            'repository': repo_url,
-            'project': project
-        }
-
-        if codebase is not None:
-            change['codebase'] = codebase
-
-        changes.append(change)
-
-    return changes
-
-
 class GitHubEventHandler(object):
     def __init__(self, secret, strict, codebase=None):
         self._secret = secret
@@ -163,11 +104,68 @@ class GitHubEventHandler(object):
         # project = request.args.get('project', [''])[0]
         project = payload['repository']['full_name']
 
-        changes = process_change(payload, user, repo, repo_url, project,
-                                 self._codebase)
+        changes = self._process_change(payload, user, repo, repo_url, project)
+
         log.msg("Received %d changes from github" % len(changes))
 
         return changes, 'git'
+
+    def _process_change(self, payload, user, repo, repo_url, project):
+        """
+        Consumes the JSON as a python object and actually starts the build.
+
+        :arguments:
+            payload
+                Python Object that represents the JSON sent by GitHub Service
+                Hook.
+        """
+        changes = []
+        refname = payload['ref']
+
+        # We only care about regular heads, i.e. branches
+        match = re.match(r"^refs\/heads\/(.+)$", refname)
+        if not match:
+            log.msg("Ignoring refname `%s': Not a branch" % refname)
+            return changes
+
+        branch = match.group(1)
+        if payload.get('deleted'):
+            log.msg("Branch `%s' deleted, ignoring" % branch)
+            return changes
+
+        for commit in payload['commits']:
+            if not commit.get('distinct', True):
+                log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
+                        (commit['id'],))
+                continue
+
+            files = []
+            for kind in ('added', 'modified', 'removed'):
+                files.extend(commit.get(kind, []))
+
+            when_timestamp = dateparse(commit['timestamp'])
+
+            log.msg("New revision: %s" % commit['id'][:8])
+
+            change = {
+                'author': '%s <%s>' % (commit['author']['name'],
+                                    commit['author']['email']),
+                'files': files,
+                'comments': commit['message'],
+                'revision': commit['id'],
+                'when_timestamp': when_timestamp,
+                'branch': branch,
+                'revlink': commit['url'],
+                'repository': repo_url,
+                'project': project
+            }
+
+            if self._codebase is not None:
+                change['codebase'] = self._codebase
+
+            changes.append(change)
+
+        return changes
 
 
 def getChanges(request, options=None):
