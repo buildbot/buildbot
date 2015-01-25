@@ -188,6 +188,8 @@ Fixes
 * GitHub change hook now correctly responds to ping events.
 * ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
 
+* When no arguments are used ``buildbot checkconfig`` now uses :file:`buildbot.tac` to locate the master config file.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
