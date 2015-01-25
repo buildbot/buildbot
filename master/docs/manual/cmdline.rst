@@ -129,6 +129,19 @@ sighup
 
 This sends a SIGHUP to the buildmaster running in the given directory, which causes it to re-read its :file:`master.cfg` file.
 
+.. bb:cmdline:: checkconfig
+
+checkconfig
++++++++++++
+
+.. code-block:: none
+
+    buildbot checkconfig {BASEDIR|CONFIG_FILE}
+
+This checks if the buildmaster configuration is well-formed and contains no deprecated or invalid elements.
+If no arguments are used or the base directory is passed as the argument the config file specified in :file:`buildbot.tac` is checked.
+If the argument is the path to a config file then it will be checked without using the :file:`buildbot.tac` file.
+
 Developer Tools
 ~~~~~~~~~~~~~~~
 
