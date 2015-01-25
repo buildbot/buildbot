@@ -147,19 +147,27 @@ class TestCheckconfig(unittest.TestCase):
         self.loadConfig = mock.Mock(spec=checkconfig._loadConfig, return_value=3)
         self.patch(checkconfig, '_loadConfig', self.loadConfig)
 
+    def test_checkconfig_default(self):
+        self.assertEqual(checkconfig.checkconfig(dict()), 3)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(),
+                                           configFile='master.cfg', quiet=None)
+
     def test_checkconfig_given_dir(self):
         self.assertEqual(checkconfig.checkconfig(dict(configFile='.')), 3)
-        self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg', quiet=None)
+        self.loadConfig.assert_called_with(basedir='.', configFile='master.cfg',
+                                           quiet=None)
 
     def test_checkconfig_given_file(self):
         config = dict(configFile='master.cfg')
         self.assertEqual(checkconfig.checkconfig(config), 3)
-        self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=None)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(),
+                                           configFile='master.cfg', quiet=None)
 
     def test_checkconfig_quiet(self):
         config = dict(configFile='master.cfg', quiet=True)
         self.assertEqual(checkconfig.checkconfig(config), 3)
-        self.loadConfig.assert_called_with(basedir=os.getcwd(), configFile='master.cfg', quiet=True)
+        self.loadConfig.assert_called_with(basedir=os.getcwd(),
+                                           configFile='master.cfg', quiet=True)
 
     def test_checkconfig_syntaxError_quiet(self):
         """

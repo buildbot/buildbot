@@ -487,13 +487,12 @@ class CheckConfigOptions(base.SubcommandOptions):
 
     def getSynopsis(self):
         return "Usage:\t\tbuildbot checkconfig [configFile]\n" + \
-            "\t\tIf not specified, 'master.cfg' will be used as 'configFile'"
+            "\t\tIf not specified, the config file specified in " + \
+            "'buildbot.tac' from the current directory will be used"
 
     def parseArgs(self, *args):
         if len(args) >= 1:
             self['configFile'] = args[0]
-        else:
-            self['configFile'] = 'master.cfg'
 
 
 class UserOptions(base.SubcommandOptions):

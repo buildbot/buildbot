@@ -38,7 +38,7 @@ def _loadConfig(basedir, configFile, quiet):
 
 def checkconfig(config):
     quiet = config.get('quiet')
-    configFile = config.get('configFile')
+    configFile = config.get('configFile', os.getcwd())
 
     if os.path.isdir(configFile):
         basedir = configFile

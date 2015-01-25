@@ -595,7 +595,7 @@ class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         opts = self.parse()
-        exp = dict(quiet=False, configFile='master.cfg')
+        exp = dict(quiet=False)
         self.assertOptions(opts, exp)
 
     def test_configfile(self):
@@ -605,7 +605,7 @@ class TestCheckConfigOptions(OptionsMixin, unittest.TestCase):
 
     def test_quiet(self):
         opts = self.parse('-q')
-        exp = dict(quiet=True, configFile='master.cfg')
+        exp = dict(quiet=True)
         self.assertOptions(opts, exp)
 
 
