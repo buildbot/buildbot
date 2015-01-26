@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+
 from buildbot.util import json
 from dateutil.parser import parse as dateparse
 from twisted.python import log
-import re
 
 
 def _process_change(payload, user, repo, repo_url, project, codebase=None):

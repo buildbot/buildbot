@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from hashlib import sha1
 import hmac
 import logging
 import re
+
+from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 from twisted.python import log
@@ -149,7 +150,7 @@ class GitHubEventHandler(object):
 
             change = {
                 'author': '%s <%s>' % (commit['author']['name'],
-                                    commit['author']['email']),
+                                       commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],

@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+import hmac
+
 from calendar import timegm
 from hashlib import sha1
-import hmac
 
 from buildbot.status.web.change_hook import ChangeHookResource
 from buildbot.status.web.hooks.github import _HEADER_CT
