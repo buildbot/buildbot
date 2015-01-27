@@ -1595,6 +1595,10 @@ In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty
 
 You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
 
+Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional parameter -- ``baseURL`` -- that allows to specify a different API base endpoint.
+This is required if you work with GitHub Enterprise installation.
+This feature requires ``txgithub`` of version 0.2.0 or better.
+
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
 .. [#] It may even be possible to provide SSL access by using a
