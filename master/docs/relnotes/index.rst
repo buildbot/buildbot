@@ -74,6 +74,11 @@ Features
 
 * :bb:step:`MasterShellCommand` now renders the ``path`` argument.
 
+* GitHub status target now allows to specify a different base URL for the API (usefule for GitHub enterprise installations).
+  This feature requires `txgithub` of version 0.2.0 or better.
+
+* GitHub change hook now supports payload validation using shared secret, see :ref:`GitHub-hook` for details.
+
 Fixes
 ~~~~~
 

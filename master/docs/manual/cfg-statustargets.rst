@@ -583,6 +583,8 @@ The :file:`post_build_request.py` script in :file:`master/contrib` allows for th
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
 
+.. _GitHub-hook:
+
 GitHub hook
 ###########
 
