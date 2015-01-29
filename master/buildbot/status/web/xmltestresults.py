@@ -18,8 +18,8 @@ from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_buil
 
 NUNIT, NOSE, JUNIT = range(3)
 
-class XMLTestResource(HtmlResource):
 
+class XMLTestResource(HtmlResource):
     def __init__(self, log, step_status):
         HtmlResource.__init__(self)
         self.log = log
@@ -37,7 +37,8 @@ class XMLTestResource(HtmlResource):
                 return ("passed", "Pass")
             if test['executed'].lower() == "true" and ('result' in test and test['result'].lower() == "inconclusive"):
                 return "inconclusive", "Inconclusive"
-            elif 'ignored' in test and test['ignored'].lower() == "true":
+            elif ('ignored' in test and test['ignored'].lower() == "true") \
+                    or ('result' in test and test['result'].lower() == "ignored"):
                 return "ignored", "Ignored"
             elif test['executed'].lower() == "false":
                 return "skipped", "Skipped"
@@ -126,7 +127,7 @@ class XMLTestResource(HtmlResource):
 
             root = ElementTree.fromstring(html)
             root_dict = self.etree_to_dict(root)
-            xpath =".//test-suite/results/test-case/../.."
+            xpath = ".//test-suite/results/test-case/../.."
             if xml_type is NOSE or xml_type is JUNIT:
                 xpath = ".//testcase"
             test_suites_dict = [self.etree_to_dict(r) for r in root.findall(xpath)]
@@ -230,10 +231,15 @@ class XMLTestResource(HtmlResource):
 
             cxt['test_suites'] = output_tests
 
-            failed = int(root_dict['failures'])
-            ignored = int(0 if ('not_run' not in root_dict) else root_dict['not-run'])
+            failed = int(0 if ('failures' not in root_dict) else root_dict['failures']) + \
+                     int(0 if ('errors' not in root_dict) else root_dict['errors'])
+            ignored = int(0 if ('ignored' not in root_dict) else root_dict['ignored'])
             skipped = int(0 if ('skipped' not in root_dict) else root_dict['skipped'])
             inconclusive = int(0 if ('inconclusive' not in root_dict) else root_dict['inconclusive'])
+
+            if skipped == 0 and 'skipped' not in root_dict:
+                skipped = int(0 if ('not-run' not in root_dict) else root_dict['not-run'])
+
             success = (total - failed - inconclusive - skipped - ignored)
 
             success_per = 0
