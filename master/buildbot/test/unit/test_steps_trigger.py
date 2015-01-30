@@ -582,5 +582,60 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.build.build_status.saveYourself = lambda: True
         self.build.currentStep.start()
         self.build.lostRemote()
-
         self.assertEqual(self.master.db.buildrequests.claims, {})
+
+    @defer.inlineCallbacks
+    def test_TriggerStepMultiMasterMode(self):
+        m = fakemaster.FakeMaster()
+        m.maybeStartBuildsForSlave = lambda slave: True
+        m.status = master.Status(m)
+        m.config.buildbotURL = "baseurl/"
+        m.config.multiMaster = True
+        m.db = fakedb.FakeDBConnector(self)
+
+        scheduler_a = FakeTriggerable(name='a')
+
+        m.allSchedulers = lambda: [scheduler_a]
+
+        def trigger_sch(sourcestamps = None, set_props=None, triggeredbybrid=None, reason=None):
+            rows = [ fakedb.MasterConfig(id=1,  buildbotURL="build-master-01/", objectid=1),
+                     fakedb.MasterConfig(id=2, buildbotURL="build-master-02/", objectid=2),
+                     fakedb.SourceStampSet(id=1),
+                     fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c',
+                                        branch="az", repository="xz", revision="ww"),
+                     fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
+                     fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder1", submitted_at=130000),
+                     fakedb.BuildRequest(id=2, buildsetid=1, buildername="builder2", submitted_at=130000),
+                     fakedb.BuildRequestClaim(brid=1, objectid=2, claimed_at=130000),
+                     fakedb.BuildRequestClaim(brid=2, objectid=1, claimed_at=130000),
+                     fakedb.Build(id=1, number=1, brid=1),
+                     fakedb.Build(id=2, number=1, brid=2)]
+
+            d = m.db.insertTestData(rows)
+            d.addCallback(lambda _: (SUCCESS,  {'builder1': 1L, 'builder2': 2L}))
+            return d
+
+        scheduler_a.trigger = trigger_sch
+        self.step = trigger.Trigger(schedulerNames=['a'], waitForFinish=True)
+        self.step.addCompleteLog = lambda x,y: True
+        self.step.step_status = Mock()
+        self.step.step_status.getLogs = lambda: []
+        self.expected_urls = []
+        self.step.step_status.addURL = lambda text, path, results=None: \
+            self.expected_urls.append({'text': text, 'path': path})
+        self.step.build = fakebuild.FakeBuild()
+        self.step.build.builder.botmaster = m.botmaster
+
+        self.step.build.getAllSourceStamps = lambda: []
+        self.step.build.build_status.getAllGotRevisions = lambda: {}
+        request = Mock()
+        request.id = 1
+        self.step.build.requests = [request]
+
+        self.remote = Mock(name="SlaveBuilder(remote)")
+        yield self.step.startStep(self.remote)
+
+        self.assertEqual(self.expected_urls[0]['text'], 'builder2 #1')
+        self.assertEqual(self.expected_urls[0]['path'], 'build-master-01/builders/builder2/builds/1')
+        self.assertEqual(self.expected_urls[1]['text'], 'builder1 #1')
+        self.assertEqual(self.expected_urls[1]['path'], 'build-master-02/builders/builder1/builds/1')
