@@ -24,8 +24,11 @@ from buildbot.status import master
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION, DEPENDENCY_FAILURE
 from buildbot.steps import trigger
 from buildbot.test.util import steps, compat
-from buildbot.test.fake import fakemaster, fakedb
+from buildbot.test.fake import fakemaster, fakedb, fakebuild
 from mock import Mock
+from buildbot.process import factory
+from buildbot.process.build import Build
+from buildbot.process.builder import Builder
 
 class FakeTriggerable(object):
     implements(interfaces.ITriggerableScheduler)
@@ -506,3 +509,78 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
 
         return d
+
+    @defer.inlineCallbacks
+    def test_interruptConnectionLostShouldRetry(self):
+        self.master = fakemaster.FakeMaster()
+        self.master.maybeStartBuildsForSlave = lambda slave: True
+
+        self.master.db = fakedb.FakeDBConnector(self)
+
+        rows = [fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz", revision="ww"),
+                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr", submitted_at=130000)]
+
+        yield self.master.db.insertTestData(rows)
+
+        self.master.status = master.Status(self.master)
+        self.master.config.buildbotURL = "baseurl/"
+
+        self.scheduler_a = a = FakeTriggerable(name='a')
+        self.scheduler_b = b = FakeTriggerable(name='b')
+        def allSchedulers():
+            return [a, b]
+        self.master.allSchedulers = allSchedulers
+
+        self.factory = factory.BuildFactory()
+        self.step = trigger.Trigger(schedulerNames=['a'], waitForFinish=True)
+        self.step.addCompleteLog = lambda x,y: True
+
+
+        self.factory.addStep(self.step)
+        config_args = dict(name="bldr", slavename="slv", builddir="bdir",
+                     slavebuilddir="sbdir", project='default', factory=self.factory)
+        builder_config = config.BuilderConfig(**config_args)
+
+        self.bldr = Builder(builder_config.name, _addServices=False)
+        self.bldr.master = self.master
+        self.bldr.botmaster = self.master.botmaster
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [ builder_config ]
+
+        self.bldr.startService()
+        yield self.bldr.reconfigService(mastercfg)
+
+        def newBuild(buildrequests):
+            self.build = Build(buildrequests)
+            self.build.setStepFactories([fakebuild.FakeStepFactory(self.step)])
+            return self.build
+
+        self.bldr.config.factory.newBuild = newBuild
+
+        self.bldr.notifyRequestsRemoved = lambda x: True
+
+        sb = Mock(spec=['isAvailable'], name='test-slave-1')
+        sb.name = 'test-slave-1'
+        sb.isAvailable.return_value = 1
+        sb.slave = Mock()
+        sb.slave.properties = properties.Properties()
+        sb.prepare = lambda x, y: True
+        sb.ping = lambda: True
+        sb.buildStarted = lambda: True
+        sb.buildFinished = lambda: False
+        sb.remote = Mock()
+        self.bldr.slaves.append(sb)
+
+        self.assertEqual(self.master.db.buildrequests.claims, {})
+
+        yield self.bldr.maybeStartBuild()
+
+        self.assertEqual(self.master.db.buildrequests.claims[1].brid, 1)
+        self.build.build_status.saveYourself = lambda: True
+        self.build.currentStep.start()
+        self.build.lostRemote()
+
+        self.assertEqual(self.master.db.buildrequests.claims, {})

@@ -18,6 +18,7 @@ import posixpath
 from twisted.python import components
 from buildbot.process import properties
 from buildbot import interfaces
+from zope.interface import implements
 
 class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
 
@@ -47,3 +48,12 @@ class FakeBuild(mock.Mock, properties.PropertiesMixin):
 components.registerAdapter(
         lambda build : build.build_status.properties,
         FakeBuild, interfaces.IProperties)
+
+class FakeStepFactory(object):
+    """Fake step factory that just returns a fixed step object."""
+    implements(interfaces.IBuildStepFactory)
+    def __init__(self, step):
+        self.step = step
+
+    def buildStep(self):
+        return self.step
