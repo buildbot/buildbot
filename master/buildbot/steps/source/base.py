@@ -166,8 +166,8 @@ class Source(LoggingBuildStep):
                 ss.revision = sourcestamps_updated[self.codebase]
                 break
 
-        # update buildrequest revision
-        if len(self.build.requests) > 0:
+        # update buildrequest revision, only if the revision is empty
+        if len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision:
             if self.codebase in self.build.requests[0].sources:
                 self.build.requests[0].sources[self.codebase].revision = sourcestamps_updated[self.codebase]
 
