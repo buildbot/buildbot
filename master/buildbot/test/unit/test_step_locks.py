@@ -6,6 +6,7 @@ from twisted.trial import unittest
 from buildbot.steps import artifact
 from zope.interface import implements
 from buildbot import interfaces
+from buildbot.test.fake.fakebuild import  FakeStepFactory, FakeBuildStatus
 
 class FakeRequest:
     def __init__(self):
@@ -28,18 +29,6 @@ class FakeMaster:
         if not lockid in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         return self.locks[lockid]
-
-class FakeStepFactory(object):
-    """Fake step factory that just returns a fixed step object."""
-    implements(interfaces.IBuildStepFactory)
-    def __init__(self, step):
-        self.step = step
-
-    def buildStep(self):
-        return self.step
-
-class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)
 
 class TestBuild(unittest.TestCase):
 

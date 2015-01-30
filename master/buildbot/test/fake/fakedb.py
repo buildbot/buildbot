@@ -946,6 +946,12 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
+    def unclaimBuildRequests(self, brids, _master_objectid=None):
+        for brid in brids:
+            if brid in self.claims:
+                del self.claims[brid]
+        return defer.succeed(None)
+
     def completeBuildRequests(self, brids, results):
         for brid in brids:
             if brid in self.reqs:
@@ -1147,6 +1153,10 @@ class FakeBuildsComponent(FakeDBComponent):
             b = self.builds.get(bid)
             if b:
                 b.finish_time = now
+        return defer.succeed(None)
+
+    def finishedMergedBuilds(self, brids, number):
+        return defer.succeed(None)
 
 class FakeMastersConfigComponent(FakeDBComponent):
 
