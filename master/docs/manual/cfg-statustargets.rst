@@ -101,7 +101,7 @@ If you are running the buildbot behind a reverse proxy, you'll probably need to 
 
 If you would like to use an alternative root directory, add the ``public_html=`` option to the :class:`WebStatus` creation::
 
-    c['status'].append(WebStatus(8080, public_html="/var/www/buildbot"))
+    c['status'].append(status.WebStatus(8080, public_html="/var/www/buildbot"))
 
 In addition, if you are familiar with twisted.web *Resource Trees*, you can write code to add additional pages at places inside this web space.
 Just use :meth:`webstatus.putChild` to place these resources.
@@ -198,7 +198,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     If you do have multiple branches, you should use the ``branch=`` query argument.
     The ``order_console_by_time`` option may help sorting revisions, although it depends on the date being set correctly in each commit::
 
-        w = html.WebStatus(http_port=8080, order_console_by_time=True)
+        w = status.WebStatus(http_port=8080, order_console_by_time=True)
 
 ``/rss``
     This provides a rss feed summarizing all failed builds.
@@ -299,7 +299,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     This page gives a brief summary of the Buildbot itself: software version, versions of some libraries that the Buildbot depends upon, etc.
     It also contains a link to the buildbot.net home page.
 
-There are also a set of web-status resources that are intended for use by other programs, rather than humans.
+There is also a set of web-status resources that are intended for use by other programs, rather than humans.
 
 ``/change_hook``
     This provides an endpoint for web-based source change notification.
@@ -571,17 +571,19 @@ Change_hook is disabled by default and each DIALECT has to be enabled separately
 
 An example WebStatus configuration line which enables change_hook and two DIALECTS::
 
-    c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
+    c['status'].append(status.WebStatus(http_port=8010, allowForce=True,
         change_hook_dialects={
             'base': True,
-            'somehook': {'option1':True,
-                         'option2':False}}))
+            'somehook': {'option1': True,
+                         'option2': False}}))
 
 Within the WebStatus arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
 The :file:`post_build_request.py` script in :file:`master/contrib` allows for the submission of an arbitrary change request.
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
+
+.. _GitHub-hook:
 
 GitHub hook
 ###########
@@ -591,13 +593,38 @@ GitHub hook
    There is a standalone HTTP server available for receiving GitHub notifications as well: :file:`contrib/github_buildbot.py`.
    This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
-The GitHub hook is simple and takes no options:
+The GitHub hook has the following parameters:
+
+``secret`` (default `None`)
+    Secret token to use to validate payloads
+``strict`` (default `False`)
+    If the hook must be strict regarding valid payloads.
+    If the value is `False` (default), the signature will only be checked if a secret is specified and a signature was supplied with the payload.
+    If the value is `True`, a secret must be provided, and payloads without signature will be ignored.
+``codebase`` (default `None`)
+    The codebase value to include with created changes.
+``class`` (default `None`)
+    A class to be used for processing incoming payloads.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
+    The default class handles `ping` and `push` events only.
+    If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass `GitHubEventHandler` and add handler methods for the corresponding events.
+    For example, if you'd like to handle `blah` events, your code should look something like this::
+
+        from buildbot.status.web.hooks.github import GitHubEventHandler
+
+        class MyBlahHandler(GitHubEventHandler):
+
+            def handle_blah(self, payload):
+                # Do some magic here
+                return [], 'git'
+
+The simples way to use GitHub hook is as follows:
 
 .. code-block:: python
 
-    c['status'].append(html.WebStatus(...,
-                                      change_hook_dialects={'github': True},
-                                      ...))
+    c['status'].append(status.WebStatus(...,
+                                        change_hook_dialects={'github': {}},
+                                        ...))
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
 The parameters are:
@@ -613,7 +640,16 @@ The parameters are:
 
 :guilabel:`Secret`
     Any value.
-    Currently this parameter is not supported.
+    If you provide a non-empty value (recommended), make sure that your hook is configured to use it::
+
+        c['status'].append(status.WebStatus(...,
+                                            change_hook_dialects={
+                                                'github': {
+                                                    'secret': 'MY-SECRET',
+                                                    'strict': True
+                                                }
+                                            },
+                                            ...))
 
 :guilabel:`Which events would you like to trigger this webhook?`
     Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
@@ -623,22 +659,22 @@ And then press the ``Add Webhook`` button.
 .. warning::
 
    The incoming HTTP requests for this hook are not authenticated by default.
-   Anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
+   If you do not specify a secret, anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option::
+To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option::
 
-    c['status'].append(html.WebStatus(...,
+    c['status'].append(status.WebStatus(...,
                                       change_hook_auth=["file:changehook.passwd"],
                                       ...
                                      ))
 
-And create a file ``changehook.passwd``
+create a file ``changehook.passwd``:
 
 .. code-block:: none
 
     user:password
 
-Then change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
+and change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
 
 See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
 
@@ -651,8 +687,8 @@ The BitBucket hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(...,
-                       change_hook_dialects={ 'bitbucket' : True }))
+    c['status'].append(status.WebStatus(...,
+                            change_hook_dialects={'bitbucket': True}))
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
 For example, it the grid URL is ``http://builds.mycompany.com/bbot/grid``, then point BitBucket to ``http://builds.mycompany.com/change_hook/bitbucket``.
@@ -670,7 +706,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-  c['status'].append(html.WebStatus(...,
+  c['status'].append(status.WebStatus(...,
                                     change_hook_auth=["file:changehook.passwd"]))
 
 Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
@@ -683,7 +719,7 @@ Google Code hook
 The Google Code hook is quite similar to the GitHub Hook.
 It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
     ))
@@ -715,7 +751,7 @@ Suppose you have a poller configured like this::
 
 And you configure your WebStatus to enable this hook::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'poller': True}
     ))
@@ -731,7 +767,7 @@ If no ``poller`` argument is provided then the hook will trigger polling of all 
 
 You can restrict which pollers the webhook has access to using the ``allowed`` option::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     ))
@@ -743,7 +779,7 @@ The GitLab hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={ 'gitlab' : True }
     ))
@@ -762,7 +798,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_auth=["file:changehook.passwd"]
     ))
@@ -778,7 +814,7 @@ The Gitorious hook is as simple as GitHub one and it also takes no options.
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_dialects={'gitorious': True}
     ))
@@ -795,7 +831,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
 ::
 
-    c['status'].append(html.WebStatus(
+    c['status'].append(status.WebStatus(
         # ...
         change_hook_auth=["file:changehook.passwd"]
     ))
@@ -1560,6 +1596,10 @@ By default `sha` is defined as: `%(src::revision)s`.
 In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty string, the plugin will skip sending the status.
 
 You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
+
+Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional parameter -- ``baseURL`` -- that allows to specify a different API base endpoint.
+This is required if you work with GitHub Enterprise installation.
+This feature requires ``txgithub`` of version 0.2.0 or better.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

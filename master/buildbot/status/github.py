@@ -14,52 +14,69 @@
 # Copyright Buildbot Team Members
 from __future__ import absolute_import
 
-import datetime
+from datetime import datetime
 
 from twisted.internet import defer
 from twisted.python import log
-from txgithub.api import GithubApi as GitHubAPI
+try:
+    from txgithub.api import GithubApi as GitHubAPI
+except ImportError:
+    GitHubAPI = None
 from zope.interface import implements
 
+from buildbot import config
 from buildbot.interfaces import IStatusReceiver
 from buildbot.process.properties import Interpolate
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SUCCESS
+from buildbot.util import human_readable_delta
+
+_STATE_MAP = {
+    SUCCESS: 'success',
+    FAILURE: 'failure',
+}
+
+
+def _getGitHubState(results):
+    """
+    Convert Buildbot states into GitHub states.
+    """
+    # GitHub defines `success`, `failure` and `error` states.
+    # We explicitly map success and failure. Any other BuildBot status
+    # is converted to `error`.
+    return _STATE_MAP.get(results, 'error')
 
 
 class GitHubStatus(StatusReceiverMultiService):
-    implements(IStatusReceiver)
-
     """
     Send build status to GitHub.
 
     For more details see Buildbot's user manual.
     """
 
+    implements(IStatusReceiver)
+
     def __init__(self, token, repoOwner, repoName, sha=None,
-                 startDescription=None, endDescription=None):
+                 startDescription=None, endDescription=None,
+                 baseURL=None):
         """
         Token for GitHub API.
         """
+        if not GitHubAPI:
+            config.error('GitHubStatus requires txgithub package installed')
+
         StatusReceiverMultiService.__init__(self)
 
-        if not sha:
-            sha = Interpolate("%(src::revision)s")
-
-        if not startDescription:
-            startDescription = "Build started."
-        self._startDescription = startDescription
-
-        if not endDescription:
-            endDescription = "Build done."
-        self._endDescription = endDescription
-
-        self._token = token
-        self._sha = sha
+        self._sha = sha or Interpolate("%(src::revision)s")
         self._repoOwner = repoOwner
         self._repoName = repoName
-        self._github = GitHubAPI(oauth2_token=self._token)
+        self._startDescription = startDescription or "Build started."
+        self._endDescription = endDescription or "Build done."
+
+        self._github = GitHubAPI(oauth2_token=token, baseURL=baseURL)
+
+        self._status = None
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
@@ -70,7 +87,7 @@ class GitHubStatus(StatusReceiverMultiService):
         StatusReceiverMultiService.stopService(self)
         self._status.unsubscribe(self)
 
-    def builderAdded(self, name, builder):
+    def builderAdded(self, name_, builder_):
         """
         Subscribe to all builders.
         """
@@ -81,10 +98,9 @@ class GitHubStatus(StatusReceiverMultiService):
         See: C{IStatusReceiver}.
         """
         d = self._sendStartStatus(builderName, build)
-        d.addErrback(
-            log.err,
-            'While sending start status to GitHub for %s.' % (
-                builderName))
+        d.addErrback(log.err,
+                     'While sending start status to GitHub for %s.' %
+                     (builderName,))
 
     @defer.inlineCallbacks
     def _sendStartStatus(self, builderName, build):
@@ -95,7 +111,7 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status:
             defer.returnValue(None)
 
-        (startTime, endTime) = build.getTimes()
+        startTime, _ = build.getTimes()
 
         description = yield build.render(self._startDescription)
 
@@ -103,8 +119,7 @@ class GitHubStatus(StatusReceiverMultiService):
             'state': 'pending',
             'description': description,
             'builderName': builderName,
-            'startDateTime': datetime.datetime.fromtimestamp(
-                startTime).isoformat(' '),
+            'startDateTime': datetime.fromtimestamp(startTime).isoformat(' '),
             'endDateTime': 'In progress',
             'duration': 'In progress',
         })
@@ -116,10 +131,9 @@ class GitHubStatus(StatusReceiverMultiService):
         See: C{IStatusReceiver}.
         """
         d = self._sendFinishStatus(builderName, build, results)
-        d.addErrback(
-            log.err,
-            'While sending finish status to GitHub for %s.' % (
-                builderName))
+        d.addErrback(log.err,
+                     'While sending finish status to GitHub for %s.' %
+                     (builderName,))
 
     @defer.inlineCallbacks
     def _sendFinishStatus(self, builderName, build, results):
@@ -130,51 +144,22 @@ class GitHubStatus(StatusReceiverMultiService):
         if not status:
             defer.returnValue(None)
 
-        state = self._getGitHubState(results)
-        (startTime, endTime) = build.getTimes()
-        duration = self._timeDeltaToHumanReadable(startTime, endTime)
+        state = _getGitHubState(results)
+        startTime, endTime = build.getTimes()
+        duration = human_readable_delta(startTime, endTime)
         description = yield build.render(self._endDescription)
 
         status.update({
             'state': state,
             'description': description,
             'builderName': builderName,
-            'startDateTime': datetime.datetime.fromtimestamp(
-                startTime).isoformat(' '),
-            'endDateTime': datetime.datetime.fromtimestamp(
-                endTime).isoformat(' '),
+            'startDateTime': datetime.fromtimestamp(startTime).isoformat(' '),
+            'endDateTime': datetime.fromtimestamp(endTime).isoformat(' '),
             'duration': duration,
         })
 
         result = yield self._sendGitHubStatus(status)
         defer.returnValue(result)
-
-    def _timeDeltaToHumanReadable(self, start, end):
-        """
-        Return a string of human readable time delta.
-        """
-        start_date = datetime.datetime.fromtimestamp(start)
-        end_date = datetime.datetime.fromtimestamp(end)
-        delta = end_date - start_date
-
-        result = []
-        if delta.days > 0:
-            result.append('%d days' % (delta.days,))
-        if delta.seconds > 0:
-            hours = delta.seconds / 3600
-            if hours > 0:
-                result.append('%d hours' % (hours,))
-            minutes = (delta.seconds - hours * 3600) / 60
-            if minutes:
-                result.append('%d minutes' % (minutes,))
-            seconds = delta.seconds % 60
-            if seconds > 0:
-                result.append('%d seconds' % (seconds,))
-        result = ', '.join(result)
-        if not result:
-            return 'super fast'
-        else:
-            return result
 
     @defer.inlineCallbacks
     def _getGitHubRepoProperties(self, build):
@@ -202,23 +187,6 @@ class GitHubStatus(StatusReceiverMultiService):
             'buildNumber': str(build.getNumber()),
         }
         defer.returnValue(result)
-
-    def _getGitHubState(self, results):
-        """
-        Convert Buildbot states into GitHub states.
-        """
-        # GitHub defines `success`, `failure` and `error` states.
-        # We explicitly map success and failure. Any other BuildBot status
-        # is converted to `error`.
-        state_map = {
-            SUCCESS: 'success',
-            FAILURE: 'failure',
-        }
-
-        try:
-            return state_map[results]
-        except KeyError:
-            return 'error'
 
     def _sendGitHubStatus(self, status):
         """
