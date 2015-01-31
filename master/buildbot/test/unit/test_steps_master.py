@@ -205,6 +205,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectLogfile('stdio', path.path)
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         d = self.runStep()
+
         def check(_):
             headers = self.step_status.logs['stdio'].headers.splitlines()
             self.assertIn(" in dir %s" % (path.path,), headers)
@@ -231,6 +232,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectLogfile('stdio', child_path.path)
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         d = self.runStep()
+
         def check(_):
             headers = self.step_status.logs['stdio'].headers.splitlines()
             self.assertIn(" in dir %s" % (child_path.path,), headers)
