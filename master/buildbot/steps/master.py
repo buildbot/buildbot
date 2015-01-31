@@ -38,7 +38,10 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env', 'description', 'descriptionDone', 'descriptionSuffix']
+    renderables = [
+        'command', 'env', 'path',
+        'description', 'descriptionDone', 'descriptionSuffix',
+    ]
     haltOnFailure = True
     flunkOnFailure = True
 
@@ -107,6 +110,11 @@ class MasterShellCommand(BuildStep):
             else:
                 argv = command
 
+        if self.path is not None:
+            path = os.path.join(os.getcwd(), self.path)
+        else:
+            path = os.getcwd()
+
         self.stdio_log = stdio_log = self.addLog("stdio")
 
         if type(command) in types.StringTypes:
@@ -114,7 +122,7 @@ class MasterShellCommand(BuildStep):
         else:
             stdio_log.addHeader(" ".join(command) + "\n\n")
         stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
-        stdio_log.addHeader(" in dir %s\n" % os.getcwd())
+        stdio_log.addHeader(" in dir %s\n" % (path,))
         stdio_log.addHeader(" argv: %s\n" % (argv,))
         self.step_status.setText(self.describe())
 
@@ -149,7 +157,7 @@ class MasterShellCommand(BuildStep):
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
-                                            path=self.path, usePTY=self.usePTY, env=env)
+                                            path=path, usePTY=self.usePTY, env=env)
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):
