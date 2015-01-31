@@ -70,6 +70,8 @@ class AbstractSlaveBuilder(object):
 
     def buildStarted(self):
         self.state = BUILDING
+        # AbstractBuildSlave doesn't always have a buildStarted method
+        # so only call it if it is available.
         try:
             slave_buildStarted = self.slave.buildStarted
         except AttributeError:
