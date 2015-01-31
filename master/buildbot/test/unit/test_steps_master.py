@@ -104,7 +104,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
     def test_constr_args(self):
         self.setupStep(
             master.MasterShellCommand(description='x', descriptionDone='y',
-                                      env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
+                                      env={'a': 'b'}, path='/path/to/working/directory', usePTY=True,
                                       command='true'))
 
         self.assertEqual(self.step.describe(), ['x'])
@@ -115,7 +115,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             exp_argv = ['/bin/sh', '-c', 'true']
         self.patchSpawnProcess(
             exp_cmd=exp_argv[0], exp_argv=exp_argv,
-            exp_path=['/usr/bin'], exp_usePTY=True, exp_env={'a': 'b'},
+            exp_path='/path/to/working/directory', exp_usePTY=True, exp_env={'a': 'b'},
             outputs=[
                 ('out', 'hello!\n'),
                 ('err', 'world\n'),
@@ -196,7 +196,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             master.MasterShellCommand(description='x', descriptionDone='y',
                                       descriptionSuffix='z',
-                                      env={'a': 'b'}, path=['/usr/bin'], usePTY=True,
+                                      env={'a': 'b'}, path='/path/to/working/directory', usePTY=True,
                                       command='true'))
 
         # call twice to make sure the suffix doesn't get double added
@@ -209,7 +209,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             exp_argv = ['/bin/sh', '-c', 'true']
         self.patchSpawnProcess(
             exp_cmd=exp_argv[0], exp_argv=exp_argv,
-            exp_path=['/usr/bin'], exp_usePTY=True, exp_env={'a': 'b'},
+            exp_path='/path/to/working/directory', exp_usePTY=True, exp_env={'a': 'b'},
             outputs=[
                 ('out', 'hello!\n'),
                 ('err', 'world\n'),
