@@ -30,8 +30,14 @@ from twisted.python import log
 class Trigger(BuildStep):
     name = "trigger"
 
-    renderables = ['set_properties', 'schedulerNames', 'sourceStamps',
-                   'updateSourceStamp', 'alwaysUseLatest', 'parent_relationship']
+    renderables = [
+        'alwaysUseLatest',
+        'parent_relationship',
+        'schedulerNames',
+        'set_properties',
+        'sourceStamps',
+        'updateSourceStamp'
+    ]
 
     flunkOnFailure = True
 
