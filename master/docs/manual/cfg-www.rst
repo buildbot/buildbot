@@ -28,11 +28,11 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 
 ``plugins``
     This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
-    These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-www-waterfall``.
+    These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-waterfall-view``.
     For example::
 
         c['www'] = {
-            'plugins': {'waterfall': {'num_builds': 50}}
+            'plugins': {'waterfall_view': {'num_builds': 50}}
         }
 
 ``debug``
