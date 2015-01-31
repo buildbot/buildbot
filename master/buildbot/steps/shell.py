@@ -80,8 +80,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     name = "shell"
     renderables = [
-        'slaveEnvironment', 'remote_kwargs', 'command',
-        'haltOnFailure', 'flunkOnFailure']
+        'command',
+        'flunkOnFailure',
+        'haltOnFailure',
+        'remote_kwargs',
+        'slaveEnvironment'
+    ]
 
     command = None  # set this to a command, or set in kwargs
     # logfiles={} # you can also set 'logfiles' to a dictionary, and it
