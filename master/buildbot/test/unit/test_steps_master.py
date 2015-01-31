@@ -192,6 +192,50 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
+    def test_path_absolute(self):
+        """
+        If the ``path`` argument is absolute, the command is executed in that directory,
+        and that directory is logged.
+        """
+        path = FilePath(self.mktemp())
+        path.createDirectory()
+        cmd = [sys.executable, '-c', 'import os, sys; sys.stdout.write(os.getcwd())']
+        self.setupStep(
+            master.MasterShellCommand(command=cmd, path=path.path))
+        self.expectLogfile('stdio', path.path)
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        d = self.runStep()
+        def check(_):
+            headers = self.step_status.logs['stdio'].headers.splitlines()
+            self.assertIn(" in dir %s" % (path.path,), headers)
+        return d
+
+    def test_path_relative(self):
+        """
+        If the ``path`` argument is relative, the path is combined with the
+        current working directory. The command is executed in that directory,
+        and that directory is logged.
+        """
+        base_path = FilePath(self.mktemp())
+        base_path.createDirectory()
+        child_path = base_path.child('child')
+        child_path.createDirectory()
+        cmd = [sys.executable, '-c', 'import os, sys; sys.stdout.write(os.getcwd())']
+
+        old_cwd = os.getcwd()
+        os.chdir(base_path.path)
+        self.addCleanup(os.chdir, old_cwd)
+
+        self.setupStep(
+            master.MasterShellCommand(command=cmd, path="child"))
+        self.expectLogfile('stdio', child_path.path)
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        d = self.runStep()
+        def check(_):
+            headers = self.step_status.logs['stdio'].headers.splitlines()
+            self.assertIn(" in dir %s" % (child_path.path,), headers)
+        return d
+
     def test_constr_args_descriptionSuffix(self):
         self.setupStep(
             master.MasterShellCommand(description='x', descriptionDone='y',
