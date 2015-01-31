@@ -72,11 +72,14 @@ Features
 
 * :bb:chsrc:`GitPoller` now supports detecting new branches
 
+* :bb:step:`MasterShellCommand` now renders the ``path`` argument.
+
 Fixes
 ~~~~~
 
 * GitHub change hook now correctly responds to ping events.
 * ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
+* :bb:step:`MasterShellCommand` now correctly logs the working directory where it was run.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
