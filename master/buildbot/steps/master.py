@@ -38,7 +38,10 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env', 'description', 'descriptionDone', 'descriptionSuffix']
+    renderables = [
+        'command', 'env', 'path',
+        'description', 'descriptionDone', 'descriptionSuffix',
+    ]
     haltOnFailure = True
     flunkOnFailure = True
 

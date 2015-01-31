@@ -29,6 +29,7 @@ from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import runtime
 from twisted.trial import unittest
+from twisted.python.filepath import FilePath
 
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
@@ -175,6 +176,19 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "BUILDBOT-TEST\r\nBUILDBOT-TEST\r\n")
         else:
             self.expectLogfile('stdio', "BUILDBOT-TEST\nBUILDBOT-TEST\n")
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        return self.runStep()
+
+    def test_path_is_renderable(self):
+        """
+        The ``path`` argument of ``MasterShellCommand`` is renderable.`
+        """
+        path = FilePath(self.mktemp())
+        path.createDirectory()
+        cmd = [sys.executable, '-c', 'import os, sys; sys.stdout.write(os.getcwd())']
+        self.setupStep(
+            master.MasterShellCommand(command=cmd, path=Interpolate(path.path)))
+        self.expectLogfile('stdio', path.path)
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
