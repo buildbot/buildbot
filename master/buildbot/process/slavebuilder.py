@@ -77,6 +77,14 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
     def buildStarted(self):
         self.state = BUILDING
+        # AbstractBuildSlave doesn't always have a buildStarted method
+        # so only call it if it is available.
+        try:
+            slave_buildStarted = self.slave.buildStarted
+        except AttributeError:
+            pass
+        else:
+            slave_buildStarted(self)
 
     def buildFinished(self):
         self.state = IDLE
@@ -285,10 +293,6 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
     def detached(self):
         AbstractSlaveBuilder.detached(self)
         self.state = LATENT
-
-    def buildStarted(self):
-        AbstractSlaveBuilder.buildStarted(self)
-        self.slave.buildStarted(self)
 
     def _attachFailure(self, why, where):
         self.state = LATENT
