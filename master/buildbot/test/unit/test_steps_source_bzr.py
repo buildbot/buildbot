@@ -15,11 +15,11 @@
 
 import os.path
 
+from buildbot.process import remotetransfer
 from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source import bzr
-from buildbot.steps.transfer import _FileReader
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -248,12 +248,12 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['bzr', 'update'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(_FileReader),
+                                        reader=ExpectRemoteRef(remotetransfer.FileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(_FileReader),
+                                        reader=ExpectRemoteRef(remotetransfer.FileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,

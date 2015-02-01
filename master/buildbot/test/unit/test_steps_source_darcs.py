@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot.process import remotetransfer
 from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source import darcs
-from buildbot.steps.transfer import _FileReader
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -234,12 +234,12 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['darcs', 'pull', '--all', '--verbose'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(_FileReader),
+                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(_FileReader),
+                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
@@ -318,7 +318,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(_FileReader),
+                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
                                         slavedest='.darcs-context', workdir='wkdir',
                                         mode=None))
             + 0,

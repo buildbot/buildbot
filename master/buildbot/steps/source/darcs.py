@@ -15,8 +15,6 @@
 
 # Source step code for darcs
 
-import StringIO
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -25,9 +23,9 @@ from buildbot.config import ConfigErrors
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process import remotetransfer
 from buildbot.status.results import SUCCESS
 from buildbot.steps.source.base import Source
-from buildbot.steps.transfer import _FileReader
 
 
 class Darcs(Source):
@@ -255,7 +253,7 @@ class Darcs(Source):
         return self.pathExists(self.build.path_module.join(self.workdir, '_darcs'))
 
     def _downloadFile(self, buf, filename):
-        filereader = _FileReader(StringIO.StringIO(buf))
+        filereader = remotetransfer.StringFileReader(buf)
         args = {
             'slavedest': filename,
             'maxsize': None,

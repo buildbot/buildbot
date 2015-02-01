@@ -25,7 +25,7 @@ from twisted.python import log
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
-from buildbot.steps.slave import StringFileWriter
+from buildbot.process.remotetransfer import StringFileWriter
 from buildbot.steps.source.base import Source
 
 
