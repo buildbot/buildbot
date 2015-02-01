@@ -81,8 +81,16 @@ class RemoteCommand(base.RemoteCommandProxy, pb.Referenceable):
     pass
 
 
-class Connection(base.Connection, pb.Avatar):
+class FileReaderProxy(base.FileReaderProxy, pb.Referenceable):
+    pass
 
+
+class FileWriterProxy(base.FileWriterProxy, pb.Referenceable):
+    pass
+
+
+class Connection(base.Connection, pb.Avatar):
+    proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
     # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
     keepalive_timer = None
     keepalive_interval = 3600
@@ -181,6 +189,7 @@ class Connection(base.Connection, pb.Avatar):
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
         remoteCommand = RemoteCommand(remoteCommand)
+        args = self.createArgsProxies(args)
         return slavebuilder.callRemote('startCommand',
                                        remoteCommand, commandId, commandName, args
                                        )

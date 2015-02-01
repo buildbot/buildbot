@@ -25,6 +25,7 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
 
 class Connection(object):
+    proxies = {}
 
     def __init__(self, master, buildslave):
         self.master = master
@@ -33,6 +34,15 @@ class Connection(object):
         self._disconnectSubs = subscription.SubscriptionPoint(
             "disconnections from %s" % name)
 
+    # This method replace all Impl args by their Proxy protocol implementation
+    def createArgsProxies(self, args):
+        newargs = {}
+        for k, v in args.iteritems():
+            for implclass, proxyclass in self.proxies.items():
+                if isinstance(v, implclass):
+                    v = proxyclass(v)
+            newargs[k] = v
+        return newargs
     # disconnection handling
 
     def notifyOnDisconnect(self, cb):
