@@ -54,12 +54,12 @@ Other optional keys may be set on each ``BuilderConfig``:
     If not set, defaults to ``builddir``.
     If a slave is connected to multiple builders that share the same ``slavebuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
 
-``category``
-    If provided, this is a string that identifies a category for the builder to be a part of.
-    Status clients can limit themselves to a subset of the available categories.
+``tags``
+    If provided, this is a list of strings that identifies tags for the builder.
+    Status clients can limit themselves to a subset of the available tags.
     A common use for this is to add new builders to your setup (for a new module, or for a new buildslave) that do not work correctly yet and allow you to integrate them with the active builders.
-    You can put these new builders in a test category, make your main status clients ignore them, and have only private status clients pick them up.
-    As soon as they work, you can move them over to the active category.
+    You can tag these new builders with a ``test`` tag, make your main status clients ignore them, and have only private status clients pick them up.
+    As soon as they work, you can move them over to the active tag.
 
 ``nextSlave``
     If provided, this is a function that controls which slave will be assigned future jobs.
