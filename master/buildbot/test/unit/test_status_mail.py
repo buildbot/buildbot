@@ -185,7 +185,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
                           MailNotifier, 'from@example.org',
                           tags=['fast', 'slow'], builders=['a', 'b'])
 
-
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
         # categories are deprecated, but allow them until they're removed.
         self.assertRaises(config.ConfigErrors,

@@ -66,7 +66,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
                  subject="buildbot %(result)s in %(builder)s", binaryURL="",
                  logCompression="", errorparser="unix", columnName=None,
                  useChangeTime=False,
-                 categories=None # deprecated, use tags instead
+                 categories=None  # deprecated, use tags instead
                  ):
         """
         @type  fromaddr: string
