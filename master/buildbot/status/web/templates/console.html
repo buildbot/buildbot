@@ -83,8 +83,8 @@ function checkMouseLeave(element, event) {
   <table width="95%" class="Grid" border="0" cellspacing="0">
     <tr>
       <td width="33%" align="left" class="left_align">
-{% if categories|length > 1 %}
-        <br/><b>Categories:</b> {% for c in categories %}{{ c.name|e }} {% endfor %}
+{% if tags|length > 1 %}
+        <br/><b>Tags:</b> {% for t in tags %}{{ t.name|e }} {% endfor %}
 {% endif %}
 {% if codebase %}
         <br/><b>Codebase:</b> {{ codebase|e }}
@@ -147,15 +147,15 @@ function checkMouseLeave(element, event) {
 <div align="center">
 <table width="96%">
   
-{% if categories|length > 1 %}
+{% if tags|length > 1 %}
   <tr>
     <td width="1%">
     </td>
     <td width="1%">
     </td>
-  {% for c in categories %}
-      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
-        {{ c.name|e }}
+  {% for t in tags %}
+      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ t.size }}%'>
+        {{ t.name|e }}
       </td>
   {% endfor %}
   </tr>
@@ -171,11 +171,11 @@ function checkMouseLeave(element, event) {
     </td>
     <td width="1%">
     </td>
-  {% for c in categories %}
+  {% for t in tags %}
     <td class='DevSlave {{ alt_class.next() }}'>
       <table width="100%">
         <tr>          
-    {% for s in slaves[c.name] %}          
+    {% for s in slaves[t.name] %}
           <td class='DevSlaveBox'>
             <a href='{{ s.url }}' title='{{ s.pageTitle }}' class='DevSlaveBox {{ s.color }}' target="_blank">
             </a>
@@ -200,12 +200,12 @@ function checkMouseLeave(element, event) {
       {{ r.who|user }}
     </td>
 
-  {% for c in categories %}
+  {% for t in tags %}
     {% set last = "last" if loop.last else "" %}
     <td class='DevStatus {{ alt }} {{ last if not firstrev else '' }}'>
       <table width="100%">
         <tr>    
-    {% for b in r.builds[c.name] %}
+    {% for b in r.builds[t.name] %}
           <td class='DevStatusBox'>
             <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;'
                title='{{ b.pageTitle|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
