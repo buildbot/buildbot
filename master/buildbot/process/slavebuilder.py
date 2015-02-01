@@ -15,7 +15,6 @@
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.spread import pb
 
 (ATTACHING,  # slave attached, still checking hostinfo/etc
  IDLE,  # idle, available for use
@@ -26,7 +25,7 @@ from twisted.spread import pb
  ) = range(6)
 
 
-class AbstractSlaveBuilder(pb.Referenceable):
+class AbstractSlaveBuilder(object):
 
     def __init__(self):
         self.ping_watchers = []
