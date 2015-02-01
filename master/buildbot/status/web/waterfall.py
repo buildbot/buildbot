@@ -322,8 +322,8 @@ class WaterfallHelp(HtmlResource):
         allBuilderNames = status.getBuilderNames()
         builders = [status.getBuilder(name) for name in allBuilderNames]
         allTags = set()
-        for builder in builders:
-            tags = builder.getTags()
+        for bldr in builders:
+            tags = bldr.getTags()
             allTags.update(tags or [])
         cxt['show_tags'] = show_tags
         cxt['all_tags'] = allTags

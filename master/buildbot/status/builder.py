@@ -336,10 +336,12 @@ class BuilderStatus(styles.Versioned):
         self.tags = tags
 
     def matchesAnyTag(self, tags):
-        return self.tags and any((tag in self.tags) for tag in tags)
+        # Need to guard against None with the "or []".
+        return set(self.tags or []).isdisjoint(tags)
 
     def matchesAllTags(self, tags):
-        return self.tags and all((tag in self.tags) for tag in tags)
+        # Need to guard against None with the "or []".
+        return set(self.tags or []).issuperset(tags)
 
     def setCategory(self, category):
         return self.setTags([category])
