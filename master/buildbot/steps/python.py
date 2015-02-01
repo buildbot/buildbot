@@ -72,12 +72,11 @@ class PyFlakes(ShellCommand):
     description = ["running", "pyflakes"]
     descriptionDone = ["pyflakes"]
     flunkOnFailure = False
-    # any pyflakes lines like this cause FAILURE
-    flunkingIssues = ["undefined"]
-    # we need a separate variable for syntax errors
-    hasSyntaxError = False
 
-    MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
+    # any pyflakes lines like this cause FAILURE
+    _flunkingIssues = ("undefined",)
+
+    _MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
 
     def __init__(self, *args, **kwargs):
         # PyFlakes return 1 for both warnings and errors. We
@@ -90,9 +89,12 @@ class PyFlakes(ShellCommand):
 
         counts = self.counts = {}
         summaries = self.summaries = {}
-        for m in self.MESSAGES:
+        for m in self._MESSAGES:
             counts[m] = 0
             summaries[m] = []
+
+        # we need a separate variable for syntax errors
+        self._hasSyntaxError = False
 
     def logConsumer(self):
         counts = self.counts
@@ -104,13 +106,14 @@ class PyFlakes(ShellCommand):
             # pyflakes' step, so don't count these as warnings. Stop ignoring
             # the initial lines as soon as we see one with a colon.
             if first:
-                if line.find(":") != -1:
+                if ':' in line:
                     # there's the colon, this is the first real line
                     first = False
                     # fall through and parse the line
                 else:
                     # skip this line, keep skipping non-colon lines
                     continue
+
             if line.find("imported but unused") != -1:
                 m = "unused"
             elif line.find("*' used; unable to detect undefined names") != -1:
@@ -120,12 +123,13 @@ class PyFlakes(ShellCommand):
             elif line.find("redefinition of unused") != -1:
                 m = "redefs"
             elif line.find("invalid syntax") != -1:
-                self.hasSyntaxError = True
+                self._hasSyntaxError = True
                 # we can do this, because if a syntax error occurs
                 # the output will only contain the info about it, nothing else
                 m = "misc"
             else:
                 m = "misc"
+
             summaries[m].append(line)
             counts[m] += 1
 
@@ -134,10 +138,10 @@ class PyFlakes(ShellCommand):
         self.descriptionDone = self.descriptionDone[:]
 
         # we log 'misc' as syntax-error
-        if self.hasSyntaxError:
+        if self._hasSyntaxError:
             self.addCompleteLog("syntax-error", "\n".join(summaries['misc']))
         else:
-            for m in self.MESSAGES:
+            for m in self._MESSAGES:
                 if counts[m]:
                     self.descriptionDone.append("%s=%d" % (m, counts[m]))
                     self.addCompleteLog(m, "\n".join(summaries[m]))
@@ -146,9 +150,9 @@ class PyFlakes(ShellCommand):
                              "pyflakes")
 
     def evaluateCommand(self, cmd):
-        if cmd.didFail() or self.hasSyntaxError:
+        if cmd.didFail() or self._hasSyntaxError:
             return FAILURE
-        for m in self.flunkingIssues:
+        for m in self._flunkingIssues:
             if self.getProperty("pyflakes-%s" % m):
                 return FAILURE
         if self.getProperty("pyflakes-total"):
@@ -184,7 +188,7 @@ class PyLint(ShellCommand):
     # message type consists of the type char and 4 digits
     # The message types:
 
-    MESSAGES = {
+    _MESSAGES = {
         'C': "convention",  # for programming standard violation
         'R': "refactor",  # for bad code smell
         'W': "warning",  # for python specific problems
@@ -193,11 +197,11 @@ class PyLint(ShellCommand):
         'I': "info",
     }
 
-    flunkingIssues = ["F", "E"]  # msg categories that cause FAILURE
+    _flunkingIssues = ("F", "E")  # msg categories that cause FAILURE
 
     _re_groupname = 'errtype'
     _msgtypes_re_str = '(?P<%s>[%s])' % (
-        _re_groupname, ''.join(MESSAGES.keys()))
+        _re_groupname, ''.join(_MESSAGES.keys()))
     _default_line_re = re.compile(
         r'^%s(\d{4})?: *\d+(, *\d+)?:.+' % _msgtypes_re_str)
     _parseable_line_re = re.compile(
@@ -211,7 +215,7 @@ class PyLint(ShellCommand):
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def logConsumer(self):
-        for m in self.MESSAGES:
+        for m in self._MESSAGES:
             self.counts[m] = 0
             self.summaries[m] = []
 
@@ -229,14 +233,14 @@ class PyLint(ShellCommand):
             mo = line_re.match(line)
             if mo:
                 msgtype = mo.group(self._re_groupname)
-                assert msgtype in self.MESSAGES
+                assert msgtype in self._MESSAGES
                 self.summaries[msgtype].append(line)
                 self.counts[msgtype] += 1
 
     def createSummary(self, log):
         counts, summaries = self.counts, self.summaries
         self.descriptionDone = self.descriptionDone[:]
-        for msg, fullmsg in self.MESSAGES.items():
+        for msg, fullmsg in self._MESSAGES.items():
             if counts[msg]:
                 self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
                 self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))
@@ -246,8 +250,8 @@ class PyLint(ShellCommand):
     def evaluateCommand(self, cmd):
         if cmd.rc & (self.RC_FATAL | self.RC_ERROR | self.RC_USAGE):
             return FAILURE
-        for msg in self.flunkingIssues:
-            if self.getProperty("pylint-%s" % self.MESSAGES[msg]):
+        for msg in self._flunkingIssues:
+            if self.getProperty("pylint-%s" % self._MESSAGES[msg]):
                 return FAILURE
         if self.getProperty("pylint-total"):
             return WARNINGS
@@ -265,8 +269,14 @@ class Sphinx(ShellCommand):
     haltOnFailure = True
 
     def __init__(self, sphinx_sourcedir='.', sphinx_builddir=None,
-                 sphinx_builder=None, sphinx='sphinx-build', tags=[],
-                 defines={}, mode='incremental', **kwargs):
+                 sphinx_builder=None, sphinx='sphinx-build', tags=None,
+                 defines=None, mode='incremental', **kwargs):
+
+        if tags is None:
+            tags = []
+
+        if defines is None:
+            defines = {}
 
         if sphinx_builddir is None:
             # Who the heck is not interested in the built doc ?
@@ -305,22 +315,22 @@ class Sphinx(ShellCommand):
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
-    msgs = ['WARNING', 'ERROR', 'SEVERE']
+    _msgs = ('WARNING', 'ERROR', 'SEVERE')
 
     def logConsumer(self):
         self.warnings = []
         while True:
             stream, line = yield
-            if (line.startswith('build succeeded')
-                    or line.startswith('no targets are out of date.')):
+            if line.startswith('build succeeded') or \
+               line.startswith('no targets are out of date.'):
                 self.success = True
             else:
-                for msg in self.msgs:
+                for msg in self._msgs:
                     if msg in line:
                         self.warnings.append(line)
 
     def createSummary(self, log):
-        if len(self.warnings) > 0:
+        if self.warnings:
             self.addCompleteLog('warnings', "\n".join(self.warnings))
 
         self.step_status.setStatistic('warnings', len(self.warnings))
