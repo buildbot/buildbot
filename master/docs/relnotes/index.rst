@@ -79,6 +79,8 @@ Features
 
 * GitHub change hook now supports payload validation using shared secret, see :ref:`GitHub-hook` for details.
 
+* Builders can now have multiple "tags" associated with them. Tags can be used in various status classes as filters (eg, on the waterfall page).
+
 Fixes
 ~~~~~
 
@@ -88,6 +90,8 @@ Fixes
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The builder parameter "category" is deprecated and is replaced by a parameter called "tags".
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

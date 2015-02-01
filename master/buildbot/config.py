@@ -636,7 +636,8 @@ class MasterConfig(object):
 class BuilderConfig:
 
     def __init__(self, name=None, slavename=None, slavenames=None,
-                 builddir=None, slavebuilddir=None, factory=None, category=None,
+                 builddir=None, slavebuilddir=None, factory=None,
+                 category=None, tags=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, mergeRequests=None, description=None,
                  canStartBuild=None):
@@ -688,10 +689,25 @@ class BuilderConfig:
         self.slavebuilddir = slavebuilddir
 
         # remainder are optional
-        if category is not None and not isinstance(category, str):
-            error("builder '%s': category must be a string" % (name,))
+        if category and tags:
+            error("builder '%s': category is being replaced by tags; you should only specify tags" % (name,))
 
-        self.category = category or ''
+        if category:
+            if not isinstance(category, str):
+                error("builder '%s': category must be a string" % (name,))
+            tags = [category]
+
+            self.category = category  # Set this for legacy reasons
+
+        if tags:
+            if not isinstance(tags, list):
+                error("builder '%s': tags must be a list" % (name,))
+            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
+            if bad_tags:
+                error("builder '%s': tags list contains something that is not a string" % (name,))
+
+        self.tags = tags
+
         self.nextSlave = nextSlave
         if nextSlave and not callable(nextSlave):
             error('nextSlave must be a callable')
@@ -721,8 +737,8 @@ class BuilderConfig:
             'builddir': self.builddir,
             'slavebuilddir': self.slavebuilddir,
         }
-        if self.category:
-            rv['category'] = self.category
+        if self.tags:
+            rv['tags'] = self.tags
         if self.nextSlave:
             rv['nextSlave'] = self.nextSlave
         if self.nextBuild:

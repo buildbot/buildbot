@@ -207,7 +207,7 @@ class IRCContact(base.StatusReceiver):
         """
         @rtype: list of L{buildbot.process.builder.Builder}
         """
-        names = sorted(self.bot.status.getBuilderNames(categories=self.bot.categories))
+        names = sorted(self.bot.status.getBuilderNames(tags=self.bot.tags))
         builders = [self.bot.status.getBuilder(n) for n in names]
         return builders
 
@@ -389,8 +389,8 @@ class IRCContact(base.StatusReceiver):
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
     def builderAdded(self, builderName, builder):
-        if (self.bot.categories is not None and
-                builder.category not in self.bot.categories):
+        if (self.bot.tags is not None and
+                not builder.matchesAnyTag(self.bot.tags)):
             return
 
         log.msg('[Contact] Builder %s added' % (builderName))
@@ -401,13 +401,13 @@ class IRCContact(base.StatusReceiver):
 
     def buildStarted(self, builderName, build):
         builder = build.getBuilder()
-        log.msg('[Contact] Builder %r in category %s started' % (builder, builder.category))
+        log.msg('[Contact] Builder %r with tags %r started' % (builder, builder.getTags()))
 
         # only notify about builders we are interested in
 
-        if (self.bot.categories is not None and
-           builder.category not in self.bot.categories):
-            log.msg('Not notifying for a build in the wrong category')
+        if (self.bot.tags is not None and
+           not builder.matchesAnyTag(self.bot.tags)):
+            log.msg('Not notifying for a build with no matching tag')
             return
 
         if not self.notify_for('started'):
@@ -452,8 +452,8 @@ class IRCContact(base.StatusReceiver):
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
 
-        if (self.bot.categories is not None and
-                builder.category not in self.bot.categories):
+        if (self.bot.tags is not None and
+                not builder.matchesAnyTag(self.bot.tags)):
             return
 
         if not self.notify_for_finished(build):
@@ -509,8 +509,8 @@ class IRCContact(base.StatusReceiver):
 
         # only notify about builders we are interested in
         builder = b.getBuilder()
-        if (self.bot.categories is not None and
-                builder.category not in self.bot.categories):
+        if (self.bot.tags is not None and
+                not builder.matchesAnyTag(self.bot.tags)):
             return
 
         builder_name = builder.getName()
@@ -882,7 +882,7 @@ class IrcStatusBot(irc.IRCClient):
     contactClass = IRCContact
 
     def __init__(self, nickname, password, channels, pm_to_nicks, status,
-                 categories, notify_events, noticeOnChannel=False,
+                 tags, notify_events, noticeOnChannel=False,
                  useRevisions=False, showBlameList=False, useColors=True):
         self.nickname = nickname
         self.channels = channels
@@ -890,7 +890,7 @@ class IrcStatusBot(irc.IRCClient):
         self.password = password
         self.status = status
         self.master = status.master
-        self.categories = categories
+        self.tags = tags
         self.notify_events = notify_events
         self.hasQuit = 0
         self.contacts = {}
@@ -1002,9 +1002,11 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, pm_to_nicks, categories, notify_events,
+    def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
                  noticeOnChannel=False, useRevisions=False, showBlameList=False,
-                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
+                 lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False,
+                 categories=None  # deprecated, use tags instead
+                 ):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
         self.status = None
@@ -1012,7 +1014,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.password = password
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
-        self.categories = categories
+        self.tags = tags or categories
         self.notify_events = notify_events
         self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
@@ -1033,7 +1035,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.pm_to_nicks, self.status,
-                          self.categories, self.notify_events,
+                          self.tags, self.notify_events,
                           noticeOnChannel=self.noticeOnChannel,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
@@ -1067,14 +1069,16 @@ class IRC(base.StatusReceiverMultiService):
 
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
-                     "useRevisions", "categories", "useColors",
+                     "useRevisions", "tags", "useColors",
                      "lostDelay", "failedDelay", "allowShutdown"]
 
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
-                 allowForce=False, categories=None, password=None, notify_events={},
+                 allowForce=False, tags=None, password=None, notify_events={},
                  noticeOnChannel=False, showBlameList=True, useRevisions=False,
                  useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                 allowShutdown=False):
+                 allowShutdown=False,
+                 categories=None  # deprecated
+                 ):
         base.StatusReceiverMultiService.__init__(self)
 
         if allowForce not in (True, False):
@@ -1091,13 +1095,13 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
-        self.categories = categories
+        self.tags = tags or categories
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
-                                  self.categories, self.notify_events,
+                                  self.tags, self.notify_events,
                                   noticeOnChannel=noticeOnChannel,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,

@@ -29,7 +29,7 @@ To add status targets, you just append more objects to this list::
                                             {"channel": "#example2",
                                              "password": "somesecretpassword"}]))
 
-Most status delivery objects take a ``categories=`` argument, which can contain a list of `category` names: in this case, it will only show status for Builders that are in one of the named categories.
+Most status delivery objects take a ``tags=`` argument, which can contain a list of `tag` names: in this case, it will only show status for Builders that have one of the named tags.
 
 .. note:: Implementation Note
 
@@ -138,7 +138,7 @@ The table below lists all of the internal pages and the URLs that can be used to
 
     By adding one or more ``builder=`` query arguments, the Waterfall is restricted to only showing information about the given Builders.
     By adding one or more ``branch=`` query arguments, the display is restricted to showing information about the given branches.
-    In addition, adding one or more ``category=`` query arguments to the URL will limit the display to Builders that were defined with one of the given categories.
+    In addition, adding one or more ``tag=`` query arguments to the URL will limit the display to Builders that were defined with one of the given tags.
 
     A ``show_events=true`` query argument causes the display to include non-:class:`Build` events, like slaves attaching and detaching, as well as reconfiguration events.
     ``show_events=false`` hides these events.
@@ -157,7 +157,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     This provides a chronologically oriented display of builders, by revision.
     The builders are listed down the left side of the page, and the revisions are listed across the top.
 
-    By adding one or more ``category=`` arguments the grid will be restricted to revisions in those categories.
+    By adding one or more ``tag=`` arguments the grid will be restricted to builders with those tags.
 
     A :samp:`width={N}` argument will limit the number of revisions shown to *N*, defaulting to 5.
 
@@ -183,7 +183,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     By adding one or more ``builder=`` query arguments, the Console view is restricted to only showing information about the given Builders.
     Adding a ``repository=`` argument will limit display to a given repository.
     By adding one or more ``branch=`` query arguments, the display is restricted to showing information about the given branches.
-    In addition, adding one or more ``category=`` query arguments to the URL will limit the display to Builders that were defined with one of the given categories.
+    In addition, adding one or more ``tag=`` query arguments to the URL will limit the display to Builders that were defined with one of the given tags.
     With the ``project=`` query argument, it's possible to restrict the view to changes from the given project.
     With the ``codebase=`` query argument, it's possible to restrict the view to changes for the given codebase.
 
@@ -1094,12 +1094,12 @@ MailNotifier arguments
 ``builders`` (list of strings)
     A list of builder names for which mail should be sent.
     Defaults to ``None`` (send mail for all builds).
-    Use either builders or categories, but not both.
+    Use either builders or tags, but not both.
 
-``categories`` (list of strings)
-    A list of category names to serve status information for.
-    Defaults to ``None`` (all categories).
-    Use either builders or categories, but not both.
+``tags`` (list of strings)
+    A list of tag names to serve status information for.
+    Defaults to ``None`` (all tags).
+    Use either builders or tags, but not both.
 
 ``addLogs`` (boolean)
     If ``True``, include all build logs as attachments to the messages.
@@ -1391,7 +1391,7 @@ If the ``allowForce=True`` option was used, some additional commands will be ava
     *REASON* will be added to the build status to explain why it was stopped.
     You might use this if you committed a bug, corrected it right away, and don't want to wait for the first build (which is destined to fail) to complete before starting the second (hopefully fixed) build.
 
-If the `categories` is set to a category of builders (see the categories option in :ref:`Builder-Configuration`) changes related to only that category of builders will be sent to the channel.
+If the `tags` is set (see the tags option in :ref:`Builder-Configuration`) changes related to only builders belonging to those tags of builders will be sent to the channel.
 
 If the `useRevisions` option is set to `True`, the IRC bot will send status messages that replace the build number with a list of revisions that are contained in that build.
 So instead of seeing `build #253 of ...`, you would see something like `build containing revisions [a87b2c4]`.

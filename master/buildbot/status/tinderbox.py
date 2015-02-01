@@ -56,16 +56,18 @@ class TinderboxMailNotifier(mail.MailNotifier):
     """
     implements(interfaces.IEmailSender)
 
-    compare_attrs = ["extraRecipients", "fromaddr", "categories", "builders",
+    compare_attrs = ["extraRecipients", "fromaddr", "tags", "builders",
                      "addLogs", "relayhost", "subject", "binaryURL", "tree",
                      "logCompression", "errorparser", "columnName",
                      "useChangeTime"]
 
     def __init__(self, fromaddr, tree, extraRecipients,
-                 categories=None, builders=None, relayhost="localhost",
+                 tags=None, builders=None, relayhost="localhost",
                  subject="buildbot %(result)s in %(builder)s", binaryURL="",
                  logCompression="", errorparser="unix", columnName=None,
-                 useChangeTime=False):
+                 useChangeTime=False,
+                 categories=None  # deprecated, use tags instead
+                 ):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -79,16 +81,18 @@ class TinderboxMailNotifier(mail.MailNotifier):
         @param extraRecipients: E-mail addresses of recipients. This should at
                                 least include the tinderbox daemon.
 
-        @type  categories: list of strings
-        @param categories: a list of category names to serve status
+        @type  tags: list of strings
+        @param tags: a list of tag names to serve status
                            information for. Defaults to None (all
-                           categories). Use either builders or categories,
+                           tags). Use either builders or tags,
                            but not both.
+
+        @type  categories: list of strings; DEPRECATED: use tags instead.
 
         @type  builders: list of strings
         @param builders: a list of builder names for which mail should be
                          sent. Defaults to None (send mail for all builds).
-                         Use either builders or categories, but not both.
+                         Use either builders or tags, but not both.
 
         @type  relayhost: string
         @param relayhost: the host to which the outbound SMTP connection
@@ -131,7 +135,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
                               the current time is used as the builddate.
         """
 
-        mail.MailNotifier.__init__(self, fromaddr, categories=categories,
+        mail.MailNotifier.__init__(self, fromaddr, tags=tags,
                                    builders=builders, relayhost=relayhost,
                                    subject=subject,
                                    extraRecipients=extraRecipients,
@@ -153,8 +157,8 @@ class TinderboxMailNotifier(mail.MailNotifier):
         builder = build.getBuilder()
         if self.builders is not None and name not in self.builders:
             return  # ignore this Build
-        if self.categories is not None and \
-                builder.category not in self.categories:
+        if self.tags is not None and \
+                not builder.matchesAnyTag(self.tags):
             return  # ignore this build
         self.buildMessage(name, build, "building")
 

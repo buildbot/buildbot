@@ -26,6 +26,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util.config import ConfigErrorsMixin
 from mock import Mock
@@ -70,6 +71,9 @@ class FakeSource:
 
 
 class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(testcase=self)
 
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         builds = [FakeBuildStatus(name='build')]
@@ -176,7 +180,13 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             self.assertIn('application/octet-stream', txt)
         return d
 
+    def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
+        self.assertRaises(config.ConfigErrors,
+                          MailNotifier, 'from@example.org',
+                          tags=['fast', 'slow'], builders=['a', 'b'])
+
     def test_init_enforces_categories_and_builders_are_mutually_exclusive(self):
+        # categories are deprecated, but allow them until they're removed.
         self.assertRaises(config.ConfigErrors,
                           MailNotifier, 'from@example.org',
                           categories=['fast', 'slow'], builders=['a', 'b'])
@@ -185,11 +195,21 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.assertRaisesConfigError("mode 'all' is not valid in an iterator and must be passed in as a separate string",
                                      lambda: MailNotifier('from@example.org', mode=['all']))
 
+    def test_builderAdded_ignores_unspecified_tags(self):
+        mn = MailNotifier('from@example.org', tags=['fast'])
+
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
+
+        self.assertEqual(None, mn.builderAdded('dummyBuilder', builder))
+        self.assert_(builder not in mn.watched)
+
     def test_builderAdded_ignores_unspecified_categories(self):
+        # categories are deprecated, but leave a test for it until we remove it
         mn = MailNotifier('from@example.org', categories=['fast'])
 
-        builder = Mock()
-        builder.category = 'slow'
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
 
         self.assertEqual(None, mn.builderAdded('dummyBuilder', builder))
         self.assert_(builder not in mn.watched)
@@ -197,10 +217,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
     def test_builderAdded_subscribes_to_all_builders_by_default(self):
         mn = MailNotifier('from@example.org')
 
-        builder = Mock()
-        builder.category = 'slow'
-        builder2 = Mock()
-        builder2.category = None
+        builder = fakemaster.FakeBuilderStatus(self.master)
+        builder.setTags(['slow'])
+
+        builder2 = fakemaster.FakeBuilderStatus(self.master)
+        # No tags set.
 
         self.assertEqual(mn, mn.builderAdded('dummyBuilder', builder))
         self.assertEqual(mn, mn.builderAdded('dummyBuilder2', builder2))
@@ -463,12 +484,24 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.assertTrue(isinstance(self.passedAttrs['revision'], str))
         self.assertEqual(self.passedAttrs['revision'], '111222')
 
+    def test_buildFinished_ignores_unspecified_tags(self):
+        mn = MailNotifier('from@example.org', tags=['fast'])
+
+        build = FakeBuildStatus(name="build")
+        build.builder = fakemaster.FakeBuilderStatus(self.master)
+        build.builder.setTags(['slow'])
+        build.getBuilder = lambda: build.builder
+
+        self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
+
     def test_buildFinished_ignores_unspecified_categories(self):
+        # categories are deprecated, but test them until they're removed
         mn = MailNotifier('from@example.org', categories=['fast'])
 
         build = FakeBuildStatus(name="build")
-        build.builder = Mock()
-        build.builder.category = 'slow'
+        build.builder = fakemaster.FakeBuilderStatus(self.master)
+        build.builder.setTags(['slow'])
+        build.getBuilder = lambda: build.builder
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 

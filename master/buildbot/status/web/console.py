@@ -258,7 +258,7 @@ class ConsoleStatusResource(HtmlResource):
         return builds
 
     def getAllBuildsForRevision(self, status, request, codebase, lastRevision,
-                                numBuilds, categories, builders, debugInfo):
+                                numBuilds, tags, builders, debugInfo):
         """Returns a dictionary of builds we need to inspect to be able to
         display the console page. The key is the builder name, and the value is
         an array of build we care about. We also returns a dictionary of
@@ -266,7 +266,7 @@ class ConsoleStatusResource(HtmlResource):
 
         codebase is the codebase to get revisions from
         lastRevision is the last revision we want to display in the page.
-        categories is a list of categories to display. It is coming from the
+        tags is a list of tags to display. It is coming from the
             HTTP GET parameters.
         builders is a list of builders to display. It is coming from the HTTP
             GET parameters.
@@ -284,24 +284,17 @@ class ConsoleStatusResource(HtmlResource):
             builder = status.getBuilder(builderName)
 
             # Make sure we are interested in this builder.
-            if categories and builder.category not in categories:
+            if tags and not builder.matchesAnyTag(tags):
                 continue
             if builders and builderName not in builders:
                 continue
 
             # We want to display this builder.
-            category = builder.category or "default"
-            # Strip the category to keep only the text before the first |.
-            # This is a hack to support the chromium usecase where they have
-            # multiple categories for each slave. We use only the first one.
-            # TODO(nsylvain): Create another way to specify "display category"
-            #     in master.cfg.
-            category = category.split('|')[0]
-            if not builderList.get(category):
-                builderList[category] = []
+            tags = builder.getTags() or ["default"]
+            for tag in tags:
+                # Append this builder to the dictionary of builders.
+                builderList.setdefault(tag, []).append(builderName)
 
-            # Append this builder to the dictionary of builders.
-            builderList[category].append(builderName)
             # Set the list of builds for this builder.
             allBuilds[builderName] = self.getBuildsForRevision(request,
                                                                builder,
@@ -316,26 +309,26 @@ class ConsoleStatusResource(HtmlResource):
     #
     # Display functions
     #
-    def displayCategories(self, builderList, debugInfo):
-        """Display the top category line."""
+    def displayTags(self, builderList, debugInfo):
+        """Display the top tags line."""
 
         count = 0
-        for category in builderList:
-            count += len(builderList[category])
+        for tag in builderList:
+            count += len(builderList[tag])
 
-        categories = sorted(builderList.keys())
+        tags = sorted(builderList.keys())
 
         cs = []
 
-        for category in categories:
+        for tag in tags:
             c = {}
 
-            c["name"] = category
+            c["name"] = tag
 
             # To be able to align the table correctly, we need to know
-            # what percentage of space this category will be taking. This is
-            # (#Builders in Category) / (#Builders Total) * 100.
-            c["size"] = (len(builderList[category]) * 100) / count
+            # what percentage of space this tag will be taking. This is
+            # (#Builders in tag) / (#Builders Total) * 100.
+            c["size"] = (len(builderList[tag]) * 100) / count
             cs.append(c)
 
         return cs
@@ -347,20 +340,20 @@ class ConsoleStatusResource(HtmlResource):
         nbSlaves = 0
 
         # Get the number of builders.
-        for category in builderList:
-            nbSlaves += len(builderList[category])
+        for tag in builderList:
+            nbSlaves += len(builderList[tag])
 
-        # Get the categories, and order them alphabetically.
-        categories = sorted(builderList.keys())
+        # Get the tags, and order them alphabetically.
+        tags = sorted(builderList.keys())
 
         slaves = {}
 
-        # For each category, we display each builder.
-        for category in categories:
-            slaves[category] = []
-            # For each builder in this category, we set the build info and we
+        # For each tag, we display each builder.
+        for tag in tags:
+            slaves[tag] = []
+            # For each builder in this tag, we set the build info and we
             # display the box.
-            for bldr in builderList[category]:
+            for bldr in builderList[tag]:
                 s = {}
                 s["color"] = "notstarted"
                 s["pageTitle"] = bldr
@@ -380,7 +373,7 @@ class ConsoleStatusResource(HtmlResource):
                         s["color"] = getResultsClass(build.getResults(), None,
                                                      False, True)
 
-                slaves[category].append(s)
+                slaves[tag].append(s)
 
         return slaves
 
@@ -404,21 +397,21 @@ class ConsoleStatusResource(HtmlResource):
 
         details = []
         nbSlaves = 0
-        for category in builderList:
-            nbSlaves += len(builderList[category])
+        for tag in builderList:
+            nbSlaves += len(builderList[tag])
 
-        # Sort the categories.
-        categories = sorted(builderList.keys())
+        # Sort the tags.
+        tags = sorted(builderList.keys())
 
         builds = {}
 
-        # Display the boxes by category group.
-        for category in categories:
+        # Display the boxes by tag group.
+        for tag in tags:
 
-            builds[category] = []
+            builds[tag] = []
 
-            # Display the boxes for each builder in this category.
-            for bldr in builderList[category]:
+            # Display the boxes for each builder in this tag.
+            for bldr in builderList[tag]:
                 introducedIn = None
                 firstNotIn = None
                 # If there is no builds default to True
@@ -475,7 +468,7 @@ class ConsoleStatusResource(HtmlResource):
                 b["color"] = resultsClass
                 b["tag"] = tag
 
-                builds[category].append(b)
+                builds[tag].append(b)
 
                 # If the box is red, we add the explaination in the details
                 # section.
@@ -516,7 +509,7 @@ class ConsoleStatusResource(HtmlResource):
                     pass
 
     def displayPage(self, request, status, builderList, allBuilds, codebase,
-                    revisions, categories, repository, project, branch,
+                    revisions, tags, repository, project, branch,
                     debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
@@ -525,18 +518,18 @@ class ConsoleStatusResource(HtmlResource):
         subs["repository"] = repository
         subs["project"] = project
         subs["codebase"] = codebase
-        if categories:
-            subs["categories"] = ' '.join(categories)
+        if tags:
+            subs["tags"] = ' '.join(tags)
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
                                      time.localtime(util.now()))
         subs["debugInfo"] = debugInfo
         subs["ANYBRANCH"] = ANYBRANCH
 
         if builderList:
-            subs["categories"] = self.displayCategories(builderList, debugInfo)
+            subs["tags"] = self.displayTags(builderList, debugInfo)
             subs['slaves'] = self.displaySlaveLine(status, builderList, debugInfo)
         else:
-            subs["categories"] = []
+            subs["tags"] = []
 
         subs['revisions'] = []
 
@@ -601,8 +594,10 @@ class ConsoleStatusResource(HtmlResource):
         debugInfo["load_time"] = time.time()
 
         # get url parameters
-        # Categories to show information for.
-        categories = request.args.get("category", [])
+        # tags to show information for.
+        tags = request.args.get("tag", [])
+        if not tags:
+            tags = request.args.get("category", [])
         # List of all builders to show on the page.
         builders = request.args.get("builder", [])
         # Repo used to filter the changes shown.
@@ -658,7 +653,7 @@ class ConsoleStatusResource(HtmlResource):
                                                                         codebase,
                                                                         lastRevision,
                                                                         numRevs,
-                                                                        categories,
+                                                                        tags,
                                                                         builders,
                                                                         debugInfo)
 
@@ -666,7 +661,7 @@ class ConsoleStatusResource(HtmlResource):
 
             cxt.update(self.displayPage(request, status, builderList,
                                         allBuilds, codebase, revisions,
-                                        categories, repository, project,
+                                        tags, repository, project,
                                         branch, debugInfo))
 
             templates = request.site.buildbot_service.templates

@@ -294,9 +294,9 @@ def insertGaps(g, showEvents, lastEventTime, idleGap=2):
 class WaterfallHelp(HtmlResource):
     pageTitle = "Waterfall Help"
 
-    def __init__(self, categories=None):
+    def __init__(self, tags=None):
         HtmlResource.__init__(self)
-        self.categories = categories
+        self.tags = tags
 
     def content(self, request, cxt):
         status = self.getStatus(request)
@@ -312,16 +312,21 @@ class WaterfallHelp(HtmlResource):
         show_builders = request.args.get("show", [])
         show_builders.extend(request.args.get("builder", []))
         cxt['show_builders'] = show_builders
-        cxt['all_builders'] = status.getBuilderNames(categories=self.categories)
+        cxt['all_builders'] = status.getBuilderNames(tags=self.tags)
 
         # this has a set of toggle-buttons to let the user choose the
-        # categories
-        show_categories = request.args.get("category", [])
+        # tags
+        show_tags = request.args.get("tag", [])
+        if not show_tags:
+            show_tags = request.args.get("category", [])
         allBuilderNames = status.getBuilderNames()
         builders = [status.getBuilder(name) for name in allBuilderNames]
-        allCategories = [builder.getCategory() for builder in builders]
-        cxt['show_categories'] = show_categories
-        cxt['all_categories'] = allCategories
+        allTags = set()
+        for bldr in builders:
+            tags = bldr.getTags()
+            allTags.update(tags or [])
+        cxt['show_tags'] = show_tags
+        cxt['all_tags'] = allTags
 
         # a couple of radio-button selectors for refresh time will appear
         # just after that text
@@ -372,12 +377,12 @@ class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
-    def __init__(self, categories=None, num_events=200, num_events_max=None):
+    def __init__(self, tags=None, num_events=200, num_events_max=None):
         HtmlResource.__init__(self)
-        self.categories = categories
+        self.tags = tags
         self.num_events = num_events
         self.num_events_max = num_events_max
-        self.putChild("help", WaterfallHelp(categories))
+        self.putChild("help", WaterfallHelp(tags))
 
     def getPageTitle(self, request):
         status = self.getStatus(request)
@@ -452,7 +457,7 @@ class WaterfallStatusResource(HtmlResource):
         changes_d.addCallback(keep_changes)
 
         # build request counts for each builder
-        allBuilderNames = status.getBuilderNames(categories=self.categories)
+        allBuilderNames = status.getBuilderNames(tags=self.tags)
         brstatus_ds = []
         brcounts = {}
 
@@ -478,15 +483,15 @@ class WaterfallStatusResource(HtmlResource):
         ctx['refresh'] = self.get_reload_time(request)
 
         # we start with all Builders available to this Waterfall: this is
-        # limited by the config-file -time categories= argument, and defaults
+        # limited by the config-file -time tags= argument, and defaults
         # to all defined Builders.
-        allBuilderNames = status.getBuilderNames(categories=self.categories)
+        allBuilderNames = status.getBuilderNames(tags=self.tags)
         builders = [status.getBuilder(name) for name in allBuilderNames]
 
         # but if the URL has one or more builder= arguments (or the old show=
         # argument, which is still accepted for backwards compatibility), we
         # use that set of builders instead. We still don't show anything
-        # outside the config-file time set limited by categories=.
+        # outside the config-file time set limited by tags=.
         showBuilders = request.args.get("show", [])
         showBuilders.extend(request.args.get("builder", []))
         if showBuilders:
@@ -494,10 +499,12 @@ class WaterfallStatusResource(HtmlResource):
 
         # now, if the URL has one or category= arguments, use them as a
         # filter: only show those builders which belong to one of the given
-        # categories.
-        showCategories = request.args.get("category", [])
-        if showCategories:
-            builders = [b for b in builders if b.category in showCategories]
+        # tags.
+        showTags = request.args.get("tag", [])
+        if not showTags:
+            showTags = request.args.get("category", [])
+        if showTags:
+            builders = [b for b in builders if b.matchesAnyTag(showTags)]
 
         # If the URL has the failures_only=true argument, we remove all the
         # builders that are not currently red or won't be turning red at the end
@@ -572,15 +579,14 @@ class WaterfallStatusResource(HtmlResource):
         if self.get_reload_time(request) is not None:
             ctx['no_reload_page'] = with_args(request, remove_args=["reload"])
 
-        # get alphabetically sorted list of all categories
-        categories = set()
+        # get alphabetically sorted list of all tags
+        tags = set()
         builderNames = status.getBuilderNames()
         for builderName in builderNames:
             builder = status.getBuilder(builderName)
-            categories.add(builder.category)
-        categories = list(categories)
-        categories.sort()
-        ctx['categories'] = categories
+            tags.update(builder.getTags() or [])
+        tags = sorted(tags)
+        ctx['tags'] = tags
 
         template = request.site.buildbot_service.templates.get_template("waterfall.html")
         data = template.render(**ctx)
