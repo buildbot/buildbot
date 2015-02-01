@@ -442,7 +442,7 @@ class ConsoleStatusResource(HtmlResource):
 
                 url = "./waterfall"
                 pageTitle = bldr
-                tag = ""
+                nice_tag = ""
                 current_details = {}
                 if introducedIn:
                     current_details = introducedIn.details or ""
@@ -455,7 +455,7 @@ class ConsoleStatusResource(HtmlResource):
                     builderStrip = builderStrip.replace('(', '')
                     builderStrip = builderStrip.replace(')', '')
                     builderStrip = builderStrip.replace('.', '')
-                    tag = "Tag%s%s" % (builderStrip, introducedIn.number)
+                    nice_tag = "Tag%s%s" % (builderStrip, introducedIn.number)
 
                 if isRunning:
                     pageTitle += ' ETA: %ds' % (introducedIn.eta or 0)
@@ -466,7 +466,7 @@ class ConsoleStatusResource(HtmlResource):
                 b["url"] = url
                 b["pageTitle"] = pageTitle
                 b["color"] = resultsClass
-                b["tag"] = tag
+                b["tag"] = nice_tag
 
                 builds[tag].append(b)
 
