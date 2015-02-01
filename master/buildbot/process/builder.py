@@ -32,7 +32,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import log
-from twisted.spread import pb
 from zope.interface import implements
 
 
@@ -46,7 +45,6 @@ def enforceChosenSlave(bldr, slavebuilder, breq):
 
 
 class Builder(util_service.ReconfigurableServiceMixin,
-              pb.Referenceable,
               service.MultiService):
 
     # reconfigure builders before slaves
@@ -205,8 +203,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         @type  slave: L{buildbot.buildslave.BuildSlave}
         @param slave: the BuildSlave that represents the buildslave as a whole
-        @type  remote: L{twisted.spread.pb.RemoteReference}
-        @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}
         @type  commands: dict: string -> string, or None
         @param commands: provides the slave's version of each RemoteCommand
 
