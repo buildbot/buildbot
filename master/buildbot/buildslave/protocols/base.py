@@ -66,3 +66,25 @@ class Connection(object):
 
     def remoteInterruptCommand(self, commandId, why):
         raise NotImplementedError
+
+
+class RemoteCommandImpl(object):
+
+    def remote_update(self, updates):
+        raise NotImplementedError
+
+    def remote_complete(self, failure=None):
+        raise NotImplementedError
+
+
+class RemoteCommandProxy(object):
+
+    def __init__(self, impl):
+        assert isinstance(impl, RemoteCommandImpl)
+        self.impl = impl
+
+    def remote_update(self, updates):
+        return self.impl.remote_update(updates)
+
+    def remote_complete(self, failure=None):
+        return self.impl.remote_complete(failure)

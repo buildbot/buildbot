@@ -76,6 +76,11 @@ class Listener(base.Listener):
             raise RuntimeError("rejecting duplicate slave")
 
 
+# just add pb.Referenceable capability to the RemoteCommandProxy
+class RemoteCommand(base.RemoteCommandProxy, pb.Referenceable):
+    pass
+
+
 class Connection(base.Connection, pb.Avatar):
 
     # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
@@ -175,6 +180,7 @@ class Connection(base.Connection, pb.Avatar):
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
+        remoteCommand = RemoteCommand(remoteCommand)
         return slavebuilder.callRemote('startCommand',
                                        remoteCommand, commandId, commandName, args
                                        )

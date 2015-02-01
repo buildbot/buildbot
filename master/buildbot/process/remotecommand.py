@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot import util
+from buildbot.buildslave.protocols import base
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -29,7 +30,7 @@ class RemoteException(Exception):
     pass
 
 
-class RemoteCommand(pb.Referenceable):
+class RemoteCommand(base.RemoteCommandImpl):
 
     # class-level unique identifier generator for command ids
     _commandCounter = 0
