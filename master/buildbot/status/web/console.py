@@ -291,15 +291,6 @@ class ConsoleStatusResource(HtmlResource):
 
             # We want to display this builder.
             tags = builder.getTags() or ["default"]
-            
-            # Strip the category to keep only the text before the first |.
-            # This is a hack to support the chromium usecase where they have
-            # multiple tags for each slave. We use only the first one.
-            # TODO(nsylvain): Create another way to specify "display category"
-            #     in master.cfg.
-            if len(tags)==1:
-                tags = tags[0].split('|')
-
             for tag in tags:
                 # Append this builder to the dictionary of builders.
                 builderList.setdefault(tag, []).append(builderName)
