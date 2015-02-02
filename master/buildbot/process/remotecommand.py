@@ -117,7 +117,6 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def _start(self):
         self._startTime = util.now()
-
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.

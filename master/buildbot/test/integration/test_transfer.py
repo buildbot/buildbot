@@ -27,7 +27,7 @@ from twisted.internet import defer
 
 
 class TransferStepsMasterPb(RunMasterBase):
-    slaveproto = "pb"
+    proto = "pb"
 
     def readMasterDirContents(self, top):
         contents = {}
@@ -53,6 +53,10 @@ class TransferStepsMasterPb(RunMasterBase):
         # cleanup our mess (slave is cleaned up by parent class)
         shutil.rmtree("dir")
         os.unlink("master.txt")
+
+
+class TransferStepsMasterNull(TransferStepsMasterPb):
+    proto = "null"
 
 
 # master configuration

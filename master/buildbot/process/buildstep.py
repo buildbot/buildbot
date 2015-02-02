@@ -496,9 +496,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         except BuildStepFailed:
             self.results = FAILURE
 
-        except BuildSlaveTooOldError:
-            self.results = EXCEPTION
-
         except error.ConnectionLost:
             self.results = RETRY
 
