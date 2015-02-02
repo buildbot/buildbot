@@ -290,8 +290,8 @@ class ConsoleStatusResource(HtmlResource):
                 continue
 
             # We want to display this builder.
-            tags = builder.getTags() or ["default"]
-            for tag in tags:
+            builder_tags = builder.getTags() or ["default"]
+            for tag in builder_tags:
                 # Append this builder to the dictionary of builders.
                 builderList.setdefault(tag, []).append(builderName)
 
