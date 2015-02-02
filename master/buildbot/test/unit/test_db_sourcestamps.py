@@ -25,7 +25,8 @@ class TestSourceStampsConnectorComponent(
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['changes', 'change_files', 'patches',
-                'sourcestamp_changes', 'sourcestamps', 'sourcestampsets' ])
+                'sourcestamp_changes', 'sourcestamps', 'sourcestampsets',
+                'buildrequests', 'buildsets', 'buildset_properties'])
 
         def finish_setup(_):
             self.db.sourcestamps = \
@@ -244,4 +245,39 @@ class TestSourceStampsConnectorComponent(
         d.addCallback(lambda _: self.db.sourcestamps.getSourceStamp(2))
         d.addCallback(checkRevision, codebase='c2', revision='r2')
 
+        return d
+
+    def test_findLastBuildRev(self):
+        d = self.insertTestData([fakedb.SourceStampSet(id=1),
+                                fakedb.SourceStampSet(id=2),
+                                fakedb.SourceStampSet(id=3),
+                                fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='b1', revision='az',
+                repository='repo', codebase='c1'),
+                                fakedb.SourceStamp(id=2, sourcestampsetid=2, branch='b1', revision='bw',
+                repository='repo', codebase='c1'),
+                                fakedb.SourceStamp(id=3, sourcestampsetid=3, branch='b1', revision=None,
+                repository='repo', codebase='c1'),
+                                fakedb.Buildset(id=1, sourcestampsetid=1),
+                                fakedb.BuildsetProperty(buildsetid=1,
+                                                        property_name="buildLatestRev",
+                                                        property_value='[true, "Force Build Form"]'),
+                                fakedb.Buildset(id=2, sourcestampsetid=2),
+                                fakedb.BuildsetProperty(buildsetid=2,
+                                                        property_name="buildLatestRev",
+                                                        property_value='["True", "Trigger"]'),
+                                fakedb.Buildset(id=3, sourcestampsetid=3),
+                                fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder1", complete=1, results=4),
+                                fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder1", complete=1, results=2),
+                                fakedb.BuildRequest(id=3, buildsetid=3, buildername="builder1"),
+                                ])
+        def check(lastrev, expectedrev):
+            self.assertEqual(lastrev, expectedrev)
+
+        d.addCallback(lambda _:
+                self.db.sourcestamps.findLastBuildRev(buildername="builder1",
+                                                      brid=3, codebase="c1",
+                                                      repository="repo",
+                                                      branch="b1"))
+
+        d.addCallback(check, "az")
         return d
