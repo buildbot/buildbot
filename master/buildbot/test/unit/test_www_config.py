@@ -38,16 +38,16 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = '{"user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         self.assertIn(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"user": {"email": "me@me.org", "name": "me"}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         self.assertIn(res, exp)
 
         master = self.make_master(url='h:/a/c/', auth=_auth)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"user": {"anonymous": true}, "auth": {"name": "NoAuth"}, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         self.assertIn(res, exp)
