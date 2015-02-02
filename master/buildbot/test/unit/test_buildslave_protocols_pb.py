@@ -183,7 +183,7 @@ class TestConnection(unittest.TestCase):
         conn.remoteSetBuilderList(builders)
 
         RCInstance, builder_name, commandID = base.RemoteCommandImpl(), "builder", None
-        remote_command, args = "command", "args"
+        remote_command, args = "command", {"args": 'args'}
 
         conn.remoteStartCommand(RCInstance, builder_name, commandID, remote_command, args)
 

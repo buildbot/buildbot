@@ -32,7 +32,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
         :returns: shallow copy of args dictionary with proxies instead of impls
 
-        Helper methods that will use :attr:`proxies`, and replace ``Impl`` objects by specific ``Proxy`` counterpart.
+        Helper method that will use :attr:`proxies`, and replace ``Impl`` objects by specific ``Proxy`` counterpart.
 
     .. py:method:: notifyOnDisconnect(cb)
 
@@ -173,7 +173,7 @@ All the objects that are referenced from the slaves for remote calls have an ``I
     Class used to implement data transfer between slave and master
 
     .. :py:method:: remote_write(data)
-    
+
         :param data: data to write
 
         data needs to be written on master side

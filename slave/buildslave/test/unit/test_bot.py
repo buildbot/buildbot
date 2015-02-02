@@ -82,7 +82,11 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ, system=os.name, basedir=self.basedir))
+            self.assertEqual(info, dict(
+                admin='testy!', foo='bar',
+                environ=os.environ, system=os.name, basedir=self.basedir,
+                slave_commands=self.real_bot.remote_getCommands(),
+                version=self.real_bot.remote_getVersion()))
         d.addCallback(check)
         return d
 
@@ -90,7 +94,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir', 'slave_commands', 'version']))
         d.addCallback(check)
         return d
 
