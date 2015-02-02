@@ -1176,6 +1176,9 @@ class FakeMastersConfigComponent(FakeDBComponent):
 
     def getMasterURL(self, brid, id=1):
         row = self.mastersconfig[id]
+        for br, c in self.db.buildrequests.claims.iteritems():
+            if br == brid:
+                row = self.mastersconfig[c.objectid]
 
         return defer.succeed(dict(id=row.id, buildbotURL=row.buildbotURL, objectid=row.objectid))
 
