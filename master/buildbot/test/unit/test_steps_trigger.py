@@ -635,7 +635,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.remote = Mock(name="SlaveBuilder(remote)")
         yield self.step.startStep(self.remote)
 
-        self.assertEqual(self.expected_urls[0]['text'], 'builder2 #1')
-        self.assertEqual(self.expected_urls[0]['path'], 'build-master-01/builders/builder2/builds/1')
-        self.assertEqual(self.expected_urls[1]['text'], 'builder1 #1')
-        self.assertEqual(self.expected_urls[1]['path'], 'build-master-02/builders/builder1/builds/1')
+        self.assertEqual(self.expected_urls[0],
+                        {'text': 'builder2 #1', 'path': 'build-master-01/builders/builder2/builds/1'})
+        self.assertEqual(self.expected_urls[1],
+                        {'text': 'builder1 #1', 'path': 'build-master-02/builders/builder1/builds/1'})
