@@ -1,7 +1,7 @@
 <div class="label-div">
     {{#each tags}}
         <div>
-            <span class="label label-info" title="{{ this }}">{{ this }}</span>
+            <span class="label {{this.class}}" title="{{ this.tag }}">{{ this.tag }}</span>
         </div>
     {{/each}}
 </div>
