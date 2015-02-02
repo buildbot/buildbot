@@ -766,7 +766,7 @@ class PendingBuildsCache():
     """
     def __init__(self, builder):
         self.builder = builder
-        self.cache = None
+        self.cache = []
         self.cache_now()
         self.builder.subscribe(self)
 
