@@ -19,8 +19,10 @@ define(function (require) {
         savedTags = [],
         $tagsSelect,
         NO_TAG = "No Tag",
+        UNSTABLE_TAG = "Unstable",
         extra_tags = [NO_TAG],
-        MAIN_REPO = "unity_branch";
+        MAIN_REPO = "unity_branch",
+        hideUnstable = false;
 
     require('libs/jquery.form');
 
@@ -40,9 +42,15 @@ define(function (require) {
                 rtBuilders.findAllTags(data.builders);
                 helpers.tableHeader($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
 
+                var $unstableButton = $("#btn-unstable");
+                $unstableButton.click(function() {
+                    hideUnstable = !hideUnstable;
+                    rtBuilders.updateUnstableButton();
+                    $tbSorter.fnDraw();
+                });
+                rtBuilders.updateUnstableButton();
 
                 $tagsSelect = $("#tags-select");
-
                 $tagsSelect.on("change", function change() {
                     $tbSorter.fnDraw();
                 });
@@ -60,6 +68,9 @@ define(function (require) {
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
+
+            //Setup tooltips
+            helpers.tooltip($("[data-title]"));
         },
         setupTagsSelector: function setupTagsSelector() {
             $tagsSelect.select2({
@@ -76,11 +87,14 @@ define(function (require) {
         },
         saveState: function saveState(oSettings, oData) {
             oData.tags = rtBuilders.getSelectedTags();
+            oData.hide_unstable = hideUnstable;
             return true;
         },
         loadState: function loadState(oSettings, oData) {
             if (oData.tags !== undefined) {
                 savedTags = oData.tags;
+                hideUnstable = oData.hide_unstable;
+                rtBuilders.updateUnstableButton();
             }
             return true;
         },
@@ -121,6 +135,10 @@ define(function (require) {
                     hasBranch = function (b) {
                         return b.toLowerCase() === branch_type.toLowerCase();
                     };
+
+                if (hideUnstable === true && $.inArray(UNSTABLE_TAG, builderTags) > -1) {
+                    return false;
+                }
 
                 var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
                 if (selectedTags.length == 0 && (builderTags.length > 0 && filteredTags.length === 0 || builderTags.length !== filteredTags.length)) {
@@ -224,6 +242,21 @@ define(function (require) {
                 return tag.toLowerCase().indexOf(branch_type.toLowerCase()) > -1;
             }
             return !tagAsBranchRegex.exec(tag);
+        },
+        setHideUnstable: function setHideUnstable(hidden) {
+          hideUnstable = hidden;
+        },
+        isUnstableHidden: function isUnstableHidden() {
+            return hideUnstable;
+        },
+        updateUnstableButton: function() {
+            var $unstableButton = $("#btn-unstable");
+            $unstableButton.removeClass("btn-danger btn-success");
+            if (hideUnstable) {
+                $unstableButton.addClass("btn-success").text("");
+            } else {
+                $unstableButton.addClass("btn-danger").text("");
+            }
         },
         dataTableInit: function ($tableElem) {
             var options = {};

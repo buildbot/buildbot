@@ -499,6 +499,11 @@ select[multiple].input-lg,textarea.input-lg{height:auto}
 .btn-danger.active,.btn-danger:active,.open .btn-danger.dropdown-toggle{background-image:none}
 .btn-danger.disabled,.btn-danger.disabled.active,.btn-danger.disabled:active,.btn-danger.disabled:focus,.btn-danger.disabled:hover,.btn-danger[disabled],.btn-danger[disabled].active,.btn-danger[disabled]:active,.btn-danger[disabled]:focus,.btn-danger[disabled]:hover,fieldset[disabled] .btn-danger,fieldset[disabled] .btn-danger.active,fieldset[disabled] .btn-danger:active,fieldset[disabled] .btn-danger:focus,fieldset[disabled] .btn-danger:hover{background-color:#d9534f;border-color:#d43f3a}
 .btn-danger .badge{color:#d9534f;background-color:#fff}
+.btn-katana{color:#fff;background-color:#2e6592;border-color:#28587f}
+.btn-katana.active,.btn-katana:active,.btn-katana:focus,.btn-katana:hover,.open .btn-katana.dropdown-toggle{color:#fff;background-color:#245073;border-color:#193750}
+.btn-katana.active,.btn-katana:active,.open .btn-katana.dropdown-toggle{background-image:none}
+.btn-katana.disabled,.btn-katana.disabled.active,.btn-katana.disabled:active,.btn-katana.disabled:focus,.btn-katana.disabled:hover,.btn-katana[disabled],.btn-katana[disabled].active,.btn-katana[disabled]:active,.btn-katana[disabled]:focus,.btn-katana[disabled]:hover,fieldset[disabled] .btn-katana,fieldset[disabled] .btn-katana.active,fieldset[disabled] .btn-katana:active,fieldset[disabled] .btn-katana:focus,fieldset[disabled] .btn-katana:hover{background-color:#2e6592;border-color:#28587f}
+.btn-katana .badge{color:#2e6592;background-color:#fff}
 .btn-link{color:#2e6592;font-weight:400;cursor:pointer;border-radius:0}
 .btn-link,.btn-link:active,.btn-link[disabled],fieldset[disabled] .btn-link{background-color:transparent;-webkit-box-shadow:none;box-shadow:none}
 .btn-link,.btn-link:active,.btn-link:focus,.btn-link:hover{border-color:transparent}
@@ -778,9 +783,9 @@ div.last{margin-right:0}
 @keyframes shake{0%,100%{transform:translateX(0)}
 10%,30%,50%,70%,90%{transform:translateX(-10px)}
 20%,40%,60%,80%{transform:translateX(10px)}}
-@font-face{font-family:katana_icons;src:url(/fonts/katana_icons/katana_icons.eot?cachebusting=6&1413275644) format('embedded-opentype'),url(/fonts/katana_icons/katana_icons.ttf?cachebusting=6&1413275644) format('truetype')}
-@font-face{font-family:pacifico;src:url(/fonts/pacifico/pacifico-webfont.eot?cachebusting=2&1413275644) format('embedded-opentype'),url(/fonts/pacifico/pacifico-webfont.ttf?cachebusting=2&1413275644) format('truetype')}
-@font-face{font-family:leckerlione;src:url(/fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6&1413275644) format('embedded-opentype'),url(/fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6&1413275644) format('truetype')}
+@font-face{font-family:katana_icons;src:url(/fonts/katana_icons/katana_icons.eot?cachebusting=6&1422866590) format('embedded-opentype'),url(/fonts/katana_icons/katana_icons.ttf?cachebusting=6&1422866590) format('truetype')}
+@font-face{font-family:pacifico;src:url(/fonts/pacifico/pacifico-webfont.eot?cachebusting=2&1417772545) format('embedded-opentype'),url(/fonts/pacifico/pacifico-webfont.ttf?cachebusting=2&1417772545) format('truetype')}
+@font-face{font-family:leckerlione;src:url(/fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6&1417772545) format('embedded-opentype'),url(/fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6&1417772545) format('truetype')}
 .user-settings{display:none}
 @media (min-width:1200px){.user-settings{display:inline}}
 .user-settings input[type=checkbox]{float:left;display:block}
@@ -812,7 +817,7 @@ div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
 .small-txt{color:#838383}
 .pr-small-head{margin:0 0 2px}
 .spin-cont{display:block;margin-top:0}
-.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1413275644);background-position:0 0;height:13px;width:13px;display:inline-block}
+.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1417772545);background-position:0 0;height:13px;width:13px;display:inline-block}
 .spin-icon.pull-bottom{margin-bottom:-2px}
 .building .spin-icon{margin-left:5px}
 .bubble{background-color:#80000D;-moz-border-radius:9px;-webkit-border-radius:9px;border-radius:9px;-webkit-box-shadow:1px 1px 1px #FFF;box-shadow:1px 1px 1px #FFF;color:#FFF;padding:2px 6px;margin-left:5px;font-size:11px}
@@ -931,7 +936,7 @@ ul.building li:last-child .percent-outer{margin-bottom:0}
 .percent-inner{background-color:#39719F;-webkit-box-shadow:1px 0 4px rgba(0,0,0,.6) inset;box-shadow:1px 0 4px rgba(0,0,0,.6) inset;float:left;height:100%;line-height:20px;text-align:center;transition:width .6s ease 0s;width:0}
 .firefox .percent-inner{transition:none}
 .overtime .percent-inner{background-color:#857373}
-.progressbar-overlay{background:url(/images/animated-overlay.gif?1413275644);height:100%;opacity:.11}
+.progressbar-overlay{background:url(/images/animated-overlay.gif?1417772545);height:100%;opacity:.11}
 .time-txt{text-shadow:0 -1px 0 rgba(68,68,68,.78);position:absolute;padding:2px 0 0 5px;color:#fff;display:block;font-size:11px;z-index:1}
 .table-wrapper{clear:both;overflow-y:auto;-webkit-overflow-scrolling:touch}
 @media (min-width:992px){.table-wrapper{overflow:visible}}
@@ -1285,6 +1290,15 @@ pre.code{padding-left:15px;white-space:pre-line;text-shadow:0 1px 0 #fff}
 .codebases-list,.reset{margin:0!important;padding:0!important}
 #slaveInfo{padding-bottom:15px}
 .col-padding-top{padding-top:10px}
+.col-padding-top input[type=checkbox]{margin-top:9px}
+#tags-content{width:400px;margin-right:20px;margin-bottom:5px}
+#tags-content .select2-container{width:270px}
+#tags-content>label{top:7px;position:relative;font-weight:700;text-shadow:0 1px 0 #fff}
+#tags-content>label .select2-choices{-webkit-box-shadow:1px 1px 0 white,2px 2px 4px #DEDEDE inset,0 0 4px #f5f5f5 inset;box-shadow:1px 1px 0 white,2px 2px 4px #DEDEDE inset,0 0 4px #f5f5f5 inset;color:#666;font-size:12px;line-height:13px;padding:9px 11px 2px 30px;text-shadow:0 1px 0 #fff;width:100%}
+#tags-content>label:after{color:#ADADAD;font-family:katana_icons;content:"";left:12px;position:absolute;top:14px;line-height:12px}
+#tags-content button{vertical-align:top;margin-top:12px;font-family:katana_icons}
+.more-info-box #tags-content{height:32px}
+#tags-content>form{display:inline}
 .builder-filters{margin-bottom:10px}
 div#slave-status{display:inline}
 div.label-div{overflow:hidden}

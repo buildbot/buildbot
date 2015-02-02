@@ -1,7 +1,13 @@
 {{#if tags}}
     <div class="row">
-        <div class="col-md-12 col-padding-top tags check-boxes-list">
-            <label class="col-padding-top" for="tags-select">Tags:</label><input class="col-md-2" type="hidden" id="tags-select"/>
+        <div class="col-md-12" id="tags-content">
+            <label><input class="col-md-2" type="hidden" id="tags-select" placeholder="Filter tags"/></label>
+            <button id="btn-unstable" class="tooltip btn btn-danger" type="SUBMIT" data-title="Toggle visibility of Unstable tags, while the button is red you will see Unstable builds."></button>
+            {{#if ../compareURL}}
+                <form method="POST" action="{{../compareURL}}">
+                    <button id="compareBranchesBtn" class="btn btn-katana" data-title="Compare builder results across branches" type="SUBMIT"></button>
+                </form>
+            {{/if}}
         </div>
     </div>
 {{/if}}
