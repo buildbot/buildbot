@@ -52,7 +52,9 @@ define(function (require) {
             abvTag,
             noTags,
             abvNightlyTag,
-            unstableNightly
+            unstableNightly,
+            trunkWIPTags,
+            trunk
         ],
         allTags = [
             {tags: abvTag[0]},
@@ -181,9 +183,11 @@ define(function (require) {
 
         it("are filtered and hide unstable", function () {
             var tests = [
+                {branch: "", result: [trunk], tags: ["Trunk"], hide_unstable: true},
+                {branch: "", result: [trunkWIPTags, trunk], tags: ["Trunk"], hide_unstable: false},
                 {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"], hide_unstable: true},
                 {branch: "", result: [abvNightlyTag, unstableNightly], tags: ["Nightly"], hide_unstable: false},
-                {branch: "", result: [abvNightlyTag], tags: ["ABV", "Nightly"], hide_unstable: true}
+                {branch: "", result: [abvNightlyTag], tags: ["ABV", "Nightly"], hide_unstable: true},
             ];
 
             testTagFilter(tests, unstableBuilders);

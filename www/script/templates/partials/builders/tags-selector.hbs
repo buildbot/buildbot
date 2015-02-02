@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col-md-12" id="tags-content">
             <label><input class="col-md-2" type="hidden" id="tags-select" placeholder="Filter tags"/></label>
-            <button id="btn-unstable" class="tooltip btn btn-danger" type="SUBMIT" data-title="Toggle visibility of Unstable tags, while the button is red you will see Unstable builds."></button>
+            <button id="btn-unstable" class="tooltip btn btn-danger" type="SUBMIT" data-title="Toggle visibility of Unstable/WIP builds, while the button is red you will see Unstable/WIP builds."></button>
             {{#if ../compareURL}}
                 <form method="POST" action="{{../compareURL}}">
                     <button id="compareBranchesBtn" class="btn btn-katana" data-title="Compare builder results across branches" type="SUBMIT"></button>
