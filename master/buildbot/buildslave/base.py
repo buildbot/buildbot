@@ -243,7 +243,7 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
         self.updateLocks()
 
         bids = [b._builderid for b in self.botmaster.getBuildersForSlave(self.slavename)]
-        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, bids)
+        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, bids)
 
         # update the attached slave's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
