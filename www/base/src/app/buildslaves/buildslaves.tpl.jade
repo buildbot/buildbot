@@ -8,7 +8,7 @@
                 th Infos
             tr(ng-repeat='buildslave in buildslaves')
                 td {{buildslave.name}}
-                td {{isConnected(buildslave)}}
+                td {{buildslave.connected_to.length}} connection
                 td 
                     span(ng-repeat="builder in buildslave.builders")
                         a(ui-sref="builder({builder: builder.builderid})")

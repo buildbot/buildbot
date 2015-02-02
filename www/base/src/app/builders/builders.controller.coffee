@@ -3,7 +3,7 @@ class Builders extends Controller
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         $scope.connected2class = (slave) ->
-            if slave.active
+            if slave.connected_to.length > 0
                 return "slave_CONNECTED"
             else
                 return "slave_DISCONNECTED"
