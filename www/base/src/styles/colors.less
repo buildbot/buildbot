@@ -14,7 +14,7 @@
     color: blue;
 }
 .label,.badge-status {
-&.results_SUCCESS {
+&.results_SUCCESS, &.slave_CONNECTED {
     color: #000;
     background-color: #8d4;
     border-color: #4F8530;
@@ -26,7 +26,7 @@
     border-color: #C29D46;
 }
 
-&.results_FAILURE {
+&.results_FAILURE, &.slave_DISCONNECTED {
     color: #000;
     background-color: #e88;
     border-color: #A77272;

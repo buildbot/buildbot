@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider, glMenuServiceProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'home'
@@ -22,3 +22,18 @@ class State extends Config
             name: name
             url: '/'
             data: cfg
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:'Home'
+            caption: 'Home page related settings'
+            items:[
+                type:'integer'
+                name:'max_recent_builds'
+                caption:'Max recent builds'
+                default_value: 10
+            ,
+                type:'integer'
+                name:'max_recent_builders'
+                caption:'Max recent builders'
+                default_value: 10
+            ]

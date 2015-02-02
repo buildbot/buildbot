@@ -54,6 +54,10 @@ class IndexResource(resource.Resource):
         else:
             config.update({"user": {"anonymous": True}})
         config.update(self.config)
+        config['buildbotURL'] = self.master.config.buildbotURL
+        config['title'] = self.master.config.title
+        config['titleURL'] = self.master.config.titleURL
+        config['multiMaster'] = self.master.config.multiMaster
 
         def toJson(obj):
             obj = IConfigured(obj).getConfigDict()

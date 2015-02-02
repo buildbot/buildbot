@@ -1,7 +1,7 @@
 dl.dl-horizontal
     div(ng-if="v !== undefined", ng-repeat="(k,v) in data._raw_data ? data._raw_data : data")
         dt {{k}}
-        dd(ng-if="!isObject(v) && !isArrayOfObjects(v)") {{v}}
+        dd(ng-if="!isObject(v) && !isArrayOfObjects(v)") {{v}}&nbsp;
         dd(ng-if="isArrayOfObjects(v)")
             i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':expanded}", ng-click="expanded = !expanded")
             ul(ng-if="expanded")

@@ -9,7 +9,7 @@ class bbSettings extends Provider
         if not oldGroup?
             item.value = item.default_value for item in newGroup.items
             return newGroup
-        else 
+        else
             for newItem in newGroup.items
                 newItem.value = newItem.default_value
                 for oldItem in oldGroup.items
@@ -17,7 +17,7 @@ class bbSettings extends Provider
                         newItem.value = oldItem.value
             return newGroup
 
-    _addSettingsGroup: (group) ->
+    addSettingsGroup: (group) ->
         storageGroups = angular.fromJson(localStorage.getItem('settings')) || {}
         unless group.name?
             throw Error("Group (with caption : #{group.caption}) must have a correct name property.")
@@ -28,8 +28,13 @@ class bbSettings extends Provider
     $get: [ ->
         self = @
         return {
-            getSettingsGroups: -> 
+            getSettingsGroups: ->
                 self.groups
+            getSettingsGroup: (group)->
+                ret = {}
+                for item in self.groups[group].items
+                    ret[item.name] = item
+                return ret
             save: ->
                 localStorage.setItem('settings', angular.toJson(self.groups))
                 null

@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider, glMenuServiceProvider) ->
+    constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'builders'
@@ -25,3 +25,13 @@ class State extends Config
             data: cfg
 
         $stateProvider.state(state)
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:'Builders'
+            caption: 'Builders page related settings'
+            items:[
+                type:'bool'
+                name:'show_old_builders'
+                caption:'Show old builders'
+                default_value: false
+            ]
