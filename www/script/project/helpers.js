@@ -317,8 +317,8 @@ define(function (require) {
                 cbTable.appendTo(El);
             }
             if (tags) {
-                var $tagEl = $(KT.partials.builders["builders:tagsSelector"]({tags: tags}));
-                $tagEl.appendTo(El);
+                var $tagEl = $(KT.partials.builders["builders:tagsSelector"]({tags: tags, compareURL: compareURL}));
+                $tagEl.prependTo(El);
             }
         },
         menuItemWidth: function (isMediumScreen) { // set the width on the breadcrumbnavigation. For responsive use

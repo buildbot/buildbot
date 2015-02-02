@@ -30,6 +30,9 @@ define(function (require) {
         trunkWIPTags = [
           ["Trunk", "WIP"]
         ],
+        unstableNightly = [
+            ["Nightly", "Unstable"]
+        ],
         simpleBuilders = [
             abvTag,
             noTags,
@@ -44,6 +47,12 @@ define(function (require) {
             noTags,
             abvNightlyTag,
             trunkWIPTags
+        ],
+        unstableBuilders = [
+            abvTag,
+            noTags,
+            abvNightlyTag,
+            unstableNightly
         ],
         allTags = [
             {tags: abvTag[0]},
@@ -70,6 +79,13 @@ define(function (require) {
 
                 return {}
             };
+
+            // Set if hiding unstable
+            if (test.hide_unstable === true) {
+                rtBuilders.setHideUnstable(true);
+            } else {
+                rtBuilders.setHideUnstable(false);
+            }
 
             var result = $.grep(builders, function (a) {
                 return filter(undefined, a);
@@ -162,6 +178,16 @@ define(function (require) {
                 expect(rtBuilders.formatTags(dict.tag, dict.branch_type)).toEqual(dict.result);
             });
         });
+
+        it("are filtered and hide unstable", function () {
+            var tests = [
+                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"], hide_unstable: true},
+                {branch: "", result: [abvNightlyTag, unstableNightly], tags: ["Nightly"], hide_unstable: false},
+                {branch: "", result: [abvNightlyTag], tags: ["ABV", "Nightly"], hide_unstable: true}
+            ];
+
+            testTagFilter(tests, unstableBuilders);
+        });
     });
 
     describe("Builder page", function () {
@@ -184,5 +210,5 @@ define(function (require) {
             });
         })
 
-    })
+    });
 });

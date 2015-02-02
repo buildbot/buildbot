@@ -77,6 +77,11 @@
   @include button-variant($btn-danger-color, $btn-danger-bg, $btn-danger-border);
 }
 
+// Katana buttons
+.btn-katana {
+  @include button-variant($btn-katana-color, $btn-katana-bg, $btn-katana-border);
+}
+
 
 // Link buttons
 // -------------------------

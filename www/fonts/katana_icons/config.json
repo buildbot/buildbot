@@ -19,6 +19,12 @@
       "src": "fontawesome"
     },
     {
+      "uid": "3db5347bd219f3bce6025780f5d9ef45",
+      "css": "tag",
+      "code": 59413,
+      "src": "fontawesome"
+    },
+    {
       "uid": "ca90da02d2c6a3183f2458e4dc416285",
       "css": "ajust",
       "code": 59403,
@@ -124,6 +130,12 @@
       "uid": "2105aa6ffb4434ebf82a20d97ac1ed25",
       "css": "help-circled-3",
       "code": 59396,
+      "src": "elusive"
+    },
+    {
+      "uid": "dc73bee1d58539abe8c96b958bf4c931",
+      "css": "fire",
+      "code": 59411,
       "src": "elusive"
     },
     {

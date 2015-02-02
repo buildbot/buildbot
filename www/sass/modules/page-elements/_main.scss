@@ -5,10 +5,10 @@
 * @section page-elements
 * @author Simon Holm
 */
-    
+
 .tooltip-cont {
 	position:absolute;
-	display:block;	
+	display:block;
 	display:none;
 	max-width:350px;
 	@include bgimage(linear-gradient(top, rgba(255, 255, 255, 0.93) 0%, #F8F8F9 100%));
@@ -17,9 +17,9 @@
 	@include box-shadow(1px 1px 9px rgba(0, 0, 0, 0.37));
 	padding:8px 8px 8px 8px;
 	z-index:1000;
-	
+
 }
-  
+
 div.force-text .label.question-icon {
 	margin-top: 9px;
 }
@@ -39,10 +39,10 @@ div.force-text .label.question-icon {
 }
 
 // used for hidden html in the forcebuild dialogue. See forms.html
- 
- 
+
+
 .content-blocks {
-	margin-bottom:15px;	
+	margin-bottom:15px;
 }
 
 .dependencies {
@@ -51,7 +51,7 @@ div.force-text .label.question-icon {
 		width: 100%;
 	}
 }
- 
+
 
 .slaves-block {
 	display:none;
@@ -67,7 +67,7 @@ div.force-text .label.question-icon {
 
 // On 'cancel builds' dialogue
 .txt-cont {
-	padding-right:10px;	
+	padding-right:10px;
 	display:table-cell;
 	margin-bottom:0;
 	vertical-align: middle;
@@ -92,11 +92,11 @@ width: 100%;
 		position: absolute;
 		margin-top: -10px;
 	}
-	
+
 }
 
 #bowl_ringG{
-@include box-sizing(content-box);	
+@include box-sizing(content-box);
 left:50%;
 top:50%;
 position:absolute;
@@ -105,11 +105,11 @@ height:30px;
 border:3px solid #BBBBBB;
 @include border-radius(30px);
 @include box-shadow(1px 1px 1px #fff);
- 
+
 }
 
 // rotate ring with ball effect
-.ball_holderG{	
+.ball_holderG{
 position:absolute;
 width:8px;
 height:30px;
@@ -143,7 +143,7 @@ animation-timing-function:linear;
 
 }
 
-.ballG{	
+.ballG{
 position:absolute;
 left:0px;
 top:-7px;
@@ -168,14 +168,14 @@ background: #BBBBBB;
 
 // login box
 .login-box {
-	  
+
 	&.more-info-box {
 		display: block;
 	    float: none;
 	    padding: 44px 33px 23px;
 	    width: 303px;
 		h3 {
-			display: block;	
+			display: block;
 		}
 		.login-welcome-txt {
 			@include text-shadow(0 1px 0 #FFFFFF);
@@ -184,7 +184,7 @@ background: #BBBBBB;
 		    margin-bottom: 15px;
 		    clear: both;
 		}
-	} 
+	}
 	h1.logo a {
 			opacity: 1;
 		   	color: #445873;
@@ -225,7 +225,7 @@ body.log.interface {
 	background: #FFFFFF;
 	padding:20px;
 }
- 
+
 
 // Ellipsis and tooltip start
 
@@ -242,7 +242,7 @@ body.log.interface {
 	display:block;
 	overflow:hidden;
 }
- 
+
 .full {display:none;}
 
 .tool-tip {
@@ -258,7 +258,7 @@ body.log.interface {
 	z-index: 1;
 	white-space: normal;
 	word-wrap: break-word;
-	max-width: 175px;	
+	max-width: 175px;
 	@include box-shadow(2px 2px 4px rgba(0, 0, 0, 0.12));
 }
 
@@ -280,13 +280,13 @@ body.log.interface {
 	li {
 		margin:0 0 15px 0 ;
 		list-style: none;
-		
+
 		span {
 			font-weight:bold;
 		}
 	}
 }
- 
+
 .summary-circles span {
 	background-color: #EEF0F5;
 	//@include bgimage (linear-gradient(top, #3A669A 0%, #6AA1CD 100%));
@@ -314,7 +314,7 @@ body.log.interface {
   border-color: #c30000;
   font-size: 20px;
 }
- 
+
 .footer {
 	background: none repeat scroll 0 0 #FFFFFF;
     border-top: 2px solid #E3E3E3;
@@ -333,13 +333,13 @@ body.log.interface {
 	display:none;
 	@media (min-width: 1200px) {
 		display:block;
-	}	
+	}
    color: rgba(244, 249, 255, 0.84);
     float: right;
-    font-size: 10px;    
+    font-size: 10px;
     span,
     a {
-    	font-weight: bold;    	
+    	font-weight: bold;
 	}
 	a {
 		color: #3f81b5;
@@ -362,18 +362,18 @@ body.log.interface {
 				width: auto;
 			}
 		}
-		
+
 	}
 
 
 @media (min-width: $screen-md-min) {
-	.ellipsis {	
+	.ellipsis {
 		max-width:300px;
 	}
 	.dataTables_wrapper {
 		overflow: visible;
 	}
-	
+
 	.tool-tip {
 		max-width: 325px;
 	}
@@ -388,19 +388,19 @@ body.log.interface {
     display: -moz-inline-stack;
     display: inline-block;
 }
- 
+
 .sticky-bar {
   @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
   position: fixed;
   width: 100%;
-  padding: 10px 0 ;  
+  padding: 10px 0 ;
   overflow:hidden;
   z-index: 1000;
   a,label {
 	color: #fff;
   	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.44);
   }
-  a:hover {  	
+  a:hover {
   	color: rgba(255,255,255,0.75)
   }
   ul li {
@@ -417,9 +417,9 @@ body.log.interface {
 .sticky-bar-bottom {
   left: 0;
   bottom: 0;
-  text-align: right;  
+  text-align: right;
 }
- 
+
 #log_page .footer {
 	padding-bottom:52px;
 }
@@ -431,10 +431,10 @@ pre.code {
 }
 
 .log-iframe {
-	background-color: transparent; 
-	border: none ; 
-	padding: 0; 
-	overflow: hidden;	
+	background-color: transparent;
+	border: none ;
+	padding: 0;
+	overflow: hidden;
 	width:100%;
 }
 
@@ -449,6 +449,54 @@ pre.code {
 
 .col-padding-top {
  padding-top: 10px;
+  input[type=checkbox]{
+    margin-top: 9px;
+  }
+}
+
+#tags-content {
+    width: 400px;
+    margin-right: 20px;
+    margin-bottom: 5px;
+    .select2-container {
+      width: 270px;
+    }
+    > label {
+        top: 7px;
+        position: relative;
+        font-weight: bold;
+        @include text-shadow(0 1px 0 white);
+        .select2-choices {
+            @include box-shadow(1px 1px 0 white, 2px 2px 4px #DEDEDE inset, 0 0 4px whitesmoke inset);
+            color: #666666;
+            font-size: 12px;
+            line-height: 13px;
+            padding: 9px 11px 2px 30px;
+            @include text-shadow(0 1px 0 white);
+            width: 100%;
+        }
+        &:after {
+            color: #ADADAD;
+            font-family: katana_icons;
+            content: "";
+            left: 12px;
+            position: absolute;
+            top: 14px;
+            line-height: 12px;
+        }
+    }
+    button {
+      vertical-align: top;
+      margin-top: 12px;
+      font-family: katana_icons;
+    }
+    .more-info-box & {
+        height: 32px;
+    }
+    > form {
+      display: inline;
+
+    }
 }
 
 .builder-filters {
