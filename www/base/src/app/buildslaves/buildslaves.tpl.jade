@@ -1,5 +1,18 @@
 .container
-  .row
-    ul
-      lu(ng-repeat='buildslave in buildslaves')
-        rawdata(data='buildslave')
+    .row
+        table.table.table-hover.table-striped.table-condensed
+            tr
+                th SlaveName
+                th Status
+                th Builders
+                th Infos
+            tr(ng-repeat='buildslave in buildslaves')
+                td {{buildslave.name}}
+                td {{buildslave.connected_to.length}} connection
+                td 
+                    span(ng-repeat="builder in buildslave.builders")
+                        a(ui-sref="builder({builder: builder.builderid})")
+                            | {{ builder.name }}
+                        | &nbsp;
+                td 
+                    rawdata(data='buildslave.slaveinfo')

@@ -1,5 +1,7 @@
 class Home extends Controller
-    constructor: ($scope, recentStorage, buildbotService) ->
+    constructor: ($scope, recentStorage, buildbotService, config, $location) ->
+        $scope.baseurl = $location.absUrl().split("#")[0]
+        $scope.config = config
         $scope.recent = {}
         recentStorage.getAll().then (e) ->
             $scope.recent.recent_builders = e.recent_builders

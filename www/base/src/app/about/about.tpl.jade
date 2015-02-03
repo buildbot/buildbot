@@ -7,11 +7,8 @@
             ul
               li Buildbot version: {{config.bbversion}}
               li Twisted version: {{config.txversion}}
-          .col-sm-4
-            ul
-              li Project Name: {{config.projectname}}
-              li Project Version: {{config.projectversion}}
-              li Project Url: {{config.projecturl}}
+              li Project Infos:
+                a(ng-href="{{config.projecturl}}") {{config.projectname}}
         .row
           small
 

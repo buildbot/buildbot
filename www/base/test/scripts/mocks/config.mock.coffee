@@ -1,1 +1,1 @@
-angular.module("app").constant("config", {})
+angular.module("app").constant("config", {title:"foo"})

@@ -4,7 +4,7 @@ describe 'settingsService', ->
         bbSettingsServiceProviderRef = bbSettingsServiceProvider
 
         localStorage.clear()
-        bbSettingsServiceProvider._addSettingsGroup
+        bbSettingsServiceProvider.addSettingsGroup
             name:'User'
             caption: 'User related settings'
             items:[
@@ -21,7 +21,7 @@ describe 'settingsService', ->
                 ]
             ]
 
-        bbSettingsServiceProvider._addSettingsGroup
+        bbSettingsServiceProvider.addSettingsGroup
             name:'Release'
             caption: 'Release related settings'
             items:[
@@ -106,7 +106,7 @@ describe 'settingsService', ->
             name:'Auth'
             caption: 'Auth related settings'
             items:[]
-        
+
     it 'should merge groups when old group is defined with no items', inject (bbSettingsService) ->
         localStorage.clear()
         old_group =
@@ -202,7 +202,7 @@ describe 'settingsService', ->
                 default_value: false
             ]
         exceptionRun = ->
-            group_result = bbSettingsServiceProviderRef._addSettingsGroup(group)
+            group_result = bbSettingsServiceProviderRef.addSettingsGroup(group)
         expect(exceptionRun).toThrow()
 
 
@@ -238,7 +238,7 @@ describe 'settingsService', ->
                 value: undefined
             ]
 
-        
+
     it 'should generate correct settings', inject (bbSettingsService) ->
         groups = bbSettingsService.getSettingsGroups()
         expect(groups['Release']).toEqual
@@ -284,5 +284,5 @@ describe 'settingsService', ->
         checkbox.value = true
         bbSettingsService.save()
         storageGroups = angular.fromJson(localStorage.getItem('settings'))
-        storageCheckbox = storageGroups['User'].items[0].value 
+        storageCheckbox = storageGroups['User'].items[0].value
         expect(storageCheckbox).toBeTruthy()
