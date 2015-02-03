@@ -41,6 +41,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                                  important=imp_int)
                 except (sqlalchemy.exc.ProgrammingError,
                         sqlalchemy.exc.IntegrityError):
+                    transaction.rollback()
+                    transaction = conn.begin()
                     # insert failed, so try an update
                     conn.execute(upd_q,
                                  wc_changeid=changeid,
