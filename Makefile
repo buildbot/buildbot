@@ -38,6 +38,12 @@ frontend_install_tests:
 	$(PIP) install mock wheel
 	trial pkg/test_buildbot_pkg.py
 
+prebuilt_frontend:
+	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_www-1latest-py2-none-any.whl
+	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_codeparameter-1latest-py2-none-any.whl
+	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_console_view-1latest-py2-none-any.whl
+	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_waterfall_view-1latest-py2-none-any.whl
+
 # install git hooks for validating patches at commit time
 hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
