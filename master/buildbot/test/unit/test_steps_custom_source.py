@@ -47,8 +47,8 @@ class TestCustomSource(unittest.TestCase):
                 return cmd['stdout']
         return ''
 
-    def checkChanges(self, ss, changes):
-        self.assertEqual(ss.revision, 'abzw')
+    def checkChanges(self, ss, changes, revision):
+        self.assertEqual(ss.revision, revision)
         self.assertEqual(ss.changes, changes)
 
     @defer.inlineCallbacks
@@ -79,8 +79,8 @@ class TestCustomSource(unittest.TestCase):
 
         yield self.step.parseChanges(None)
 
-        self.checkChanges(request.sources['c'], ())
-        self.checkChanges(build_ss[0], self.expect_changes)
+        self.checkChanges(request.sources['c'], (), 'abzw')
+        self.checkChanges(build_ss[0], self.expect_changes, 'abzw')
 
     @defer.inlineCallbacks
     def test_GitIncomingChanges(self):
@@ -115,5 +115,56 @@ class TestCustomSource(unittest.TestCase):
 
         yield self.step.parseChanges(None)
 
-        self.checkChanges(request.sources['c'], ())
-        self.checkChanges(build_ss[0], self.expect_changes)
+        self.checkChanges(request.sources['c'], (), 'abzw')
+        self.checkChanges(build_ss[0], self.expect_changes, 'abzw')
+
+    @defer.inlineCallbacks
+    def test_GitNoIncomingChanges(self):
+        self.step = git.GitCommand(repourl="git-repo", codebase="c",
+                               submodules=True, mode='full', method='fresh')
+
+        self.step.buildslave = Mock()
+
+        build_ss, request = self.setupStep()
+        self.step.build.getProperty = lambda x, y: False
+        yield self.step.parseChanges(None)
+        self.checkChanges(request.sources['c'], (), 'abzw')
+        self.checkChanges(build_ss[0], [], 'abzw')
+
+    @defer.inlineCallbacks
+    def test_HgNoIncomingChanges(self):
+        self.step = hg.Hg(repourl="repo", codebase='c', mode='full', method='fresh', branchType='inrepo',
+                          clobberOnBranchChange=False)
+
+        build_ss, request = self.setupStep()
+        self.step.build.getProperty = lambda x, y: False
+        yield self.step.parseChanges(None)
+        self.checkChanges(request.sources['c'], (), 'abzw')
+        self.checkChanges(build_ss[0], [], 'abzw')
+
+    @defer.inlineCallbacks
+    def test_GitRevisionUnchanged(self):
+        self.step = git.GitCommand(repourl="git-repo", codebase="c",
+                               submodules=True, mode='full', method='fresh')
+
+        self.step.buildslave = Mock()
+
+        build_ss, request = self.setupStep()
+        request.sources['c'].revision = "rrrzzz"
+        self.step.build.getProperty = lambda x, y: False
+        yield self.step.parseChanges(None)
+        self.checkChanges(request.sources['c'], (), 'rrrzzz')
+        self.checkChanges(build_ss[0], [], 'abzw')
+
+
+    @defer.inlineCallbacks
+    def test_HgRevisionUnchanged(self):
+        self.step = hg.Hg(repourl="repo", codebase='c', mode='full', method='fresh', branchType='inrepo',
+                          clobberOnBranchChange=False)
+
+        build_ss, request = self.setupStep()
+        request.sources['c'].revision = "rrrzzz"
+        self.step.build.getProperty = lambda x, y: False
+        yield self.step.parseChanges(None)
+        self.checkChanges(request.sources['c'], (), 'rrrzzz')
+        self.checkChanges(build_ss[0], [], 'abzw')
