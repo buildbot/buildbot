@@ -144,6 +144,14 @@ define(function (require) {
                         return full.tags;
                     }
                     var tags = filterTagsFunc(full.tags);
+                    tags = $.map(tags, function(tag) {
+                        var css_class = "label-info";
+                        if (tag.toLowerCase() === "unstable" || tag.toLowerCase() == "WIP") {
+                            css_class = "label-warning";
+                        }
+
+                        return {tag: tag, class: css_class}
+                    });
                     return hb.partials.cells["cells:builderTags"]({tags: tags});
                 }
             };
