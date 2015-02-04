@@ -20,7 +20,7 @@ class TestCustomSource(unittest.TestCase):
         self.step.build.build_status.getAllGotRevisions = lambda: {'c': 'abzw'}
         build_ss = [SourceStamp(branch='b1', codebase='c', repository='repo')]
         self.step.build.build_status.getSourceStamps = lambda: build_ss
-        self.step.update_branch = 'b1'
+        self.step.branch = self.step.update_branch = 'b1'
         self.step.build.getProperty = lambda x, y: True
         request = Mock()
         request.id = 3
@@ -28,7 +28,7 @@ class TestCustomSource(unittest.TestCase):
         self.step.build.requests = [request]
         self.step.build.builder.botmaster = m.botmaster
         self.expected_commands = []
-        self.expect_changes = [Change(revision=u'117b9a27b5bf65d7e7b5edb48f7fd59dc4170486', files=None,
+        self.expected_changes = [Change(revision=u'117b9a27b5bf65d7e7b5edb48f7fd59dc4170486', files=None,
                                  who=u'dev1 <dev1@mail.com>', branch=u'b1', comments=u'list of changes1',
                                  when=1421667230.0, repository='repo', codebase='c'),
                           Change(revision=u'b2e48cbab3f0753f99db833acff6ca18096854bd', files=None,
@@ -47,9 +47,14 @@ class TestCustomSource(unittest.TestCase):
                 return cmd['stdout']
         return ''
 
-    def checkChanges(self, ss, changes, revision):
+    def checkChangesList(self, changes_added, expected_changes):
+        self.assertEqual(len(changes_added), len(expected_changes))
+        for i in range(len(changes_added)):
+            self.assertEqual(changes_added[i].asDict(), expected_changes[i].asDict())
+
+    def checkChanges(self, ss, expected_changes, revision):
         self.assertEqual(ss.revision, revision)
-        self.assertEqual(ss.changes, changes)
+        self.checkChangesList(ss.changes, expected_changes)
 
     @defer.inlineCallbacks
     def test_MercuriaIncomingChanges(self):
@@ -80,11 +85,11 @@ class TestCustomSource(unittest.TestCase):
         yield self.step.parseChanges(None)
 
         self.checkChanges(request.sources['c'], (), 'abzw')
-        self.checkChanges(build_ss[0], self.expect_changes, 'abzw')
+        self.checkChanges(build_ss[0], self.expected_changes, 'abzw')
 
     @defer.inlineCallbacks
     def test_GitIncomingChanges(self):
-        self.step = git.GitCommand(repourl="git-repo", codebase="c",
+        self.step = git.GitCommand(repourl="repo", codebase="c",
                                submodules=True, mode='full', method='fresh')
 
         self.step.buildslave = Mock()
@@ -107,7 +112,7 @@ class TestCustomSource(unittest.TestCase):
                                             when='1421667112', developer='dev2 <dev2@mail.com>',
                                             comments='list of changes2') +\
                                  getExpectedCmd(revision='5553a6194a6393dfbec82f96654d52a76ddf844d',
-                                            when='1421583649', developer='dev3 <dev2@mail.com>',
+                                            when='1421583649', developer='dev3 <dev3@mail.com>',
                                             comments='list of changes3')
 
 
@@ -116,7 +121,7 @@ class TestCustomSource(unittest.TestCase):
         yield self.step.parseChanges(None)
 
         self.checkChanges(request.sources['c'], (), 'abzw')
-        self.checkChanges(build_ss[0], self.expect_changes, 'abzw')
+        self.checkChanges(build_ss[0], self.expected_changes, 'abzw')
 
     @defer.inlineCallbacks
     def test_GitNoIncomingChanges(self):
