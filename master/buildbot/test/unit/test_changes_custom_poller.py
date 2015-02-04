@@ -14,6 +14,11 @@ class TestCustomSource(unittest.TestCase):
                 return cmd['stdout']
         return ''
 
+    def checkChangesList(self, changes_added, expected_changes):
+        self.assertEqual(len(changes_added), len(expected_changes))
+        for i in range(len(changes_added)):
+            self.assertEqual(changes_added[i].asDict(), expected_changes[i].asDict())
+
     @defer.inlineCallbacks
     def test_mercurialPollsAnyBranch(self):
         poller = HgPoller(repourl='http://hg.repo.org/src',
@@ -90,4 +95,24 @@ class TestCustomSource(unittest.TestCase):
                                            defer.succeed('1421667230 -3600\ndev1 <dev1@mail.com>\nlist of changes1')})
 
         yield poller._processChangesAllBranches(None)
+
         self.assertEqual(poller.lastRev, {'1.0/dev': '194362:960963s2fda7', 'trunkbookmark': '194362:70fc4de2ff38'})
+
+        expected_changes = [Change(revision=u'5553a6194a6393dfbec82f96654d52a76ddf844d', files=None,
+                                 who=u'dev3 <dev3@mail.com>', branch=u'1.0/dev', comments=u'list of changes3',
+                                 when=1421583649, category=None, project='',
+                                 repository='http://hg.repo.org/src', codebase=None),
+                            Change(revision=u'b2e48cbab3f0753f99db833acff6ca18096854bd', files=None,
+                                 who=u'dev2 <dev2@mail.com>', branch=u'1.0/dev', comments=u'list of changes2',
+                                 when=1421667112, category=None, project='',
+                                 repository='http://hg.repo.org/src', codebase=None),
+                            Change(revision=u'117b9a27b5bf65d7e7b5edb48f7fd59dc4170486', files=None,
+                                 who=u'dev1 <dev1@mail.com>', branch=u'1.0/dev', comments=u'list of changes1',
+                                 when=1421667230, repository='http://hg.repo.org/src', codebase=None),
+                            Change(revision=u'70fc4de2ff3828a587d80f7528c1b5314c51550e7', files=None,
+                                 who=u'dev4 <dev4@mail.com>', branch=u'trunkbookmark',
+                                 comments=u'list of changes4', when=1422983233,
+                                 category=None, project='', repository='http://hg.repo.org/src',
+                                 codebase=None)]
+
+        self.checkChangesList(changes_added, expected_changes)
