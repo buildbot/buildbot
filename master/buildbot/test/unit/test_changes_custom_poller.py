@@ -5,7 +5,7 @@ from mock import Mock
 from buildbot.util import datetime2epoch
 from buildbot.changes.changes import Change
 
-class TestCustomSource(unittest.TestCase):
+class TestCustomPoller(unittest.TestCase):
 
     def getProcessOutput(self, executable, args=(), env={}, path=None, reactor=None,
                  errortoo=0):
