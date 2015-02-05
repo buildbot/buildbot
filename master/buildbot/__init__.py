@@ -17,6 +17,7 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
+from __future__ import with_statement
 from subprocess import Popen, PIPE, STDOUT
 import os
 import re
@@ -36,7 +37,8 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        return open(fn).read().strip()
+        with open(fn) as f:
+            return f.read().strip()
     except IOError:
         pass
 
