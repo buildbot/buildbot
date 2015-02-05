@@ -17,7 +17,7 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
-from __future__ import with_statement
+from subprocess import Popen, PIPE, STDOUT
 import os
 import re
 
@@ -38,9 +38,6 @@ def getVersion(init_file):
         return open(fn).read().strip()
     except IOError:
         pass
-
-    from subprocess import Popen, PIPE, STDOUT
-    import re
 
     # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
     # no matter the number of digits for X, Y and Z
