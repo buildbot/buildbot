@@ -465,7 +465,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                 "customMesg is deprecated; use messageFormatter instead")
 
     def setServiceParent(self, parent):
-        self.master_status = self.parent
+        self.master_status = parent
         self.master_status.subscribe(self)
         self.master = self.master_status.master
         return base.StatusReceiverMultiService.setServiceParent(self, parent)
