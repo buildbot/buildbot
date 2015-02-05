@@ -186,7 +186,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             yield self.setState('lastRev', self.lastRev)
 
     @defer.inlineCallbacks
-    def _processChangesByBranch(self,branchname, branch, lastRev):
+    def _processChangesByBranch(self, branchname, branch, lastRev):
 
         args = ['rev-parse', branch]
         rev = (yield utils.getProcessOutput(self.gitbin, args,
