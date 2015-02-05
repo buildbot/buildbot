@@ -170,8 +170,8 @@ setup_args = {
         "buildbot.steps.package.deb",
         "buildbot.steps.package.rpm",
         "buildbot.steps.source",
-        "buildbot.test.util",
-        "buildbot.test.fake",
+        "buildbot.test.util",  # test.util and test.fake are part of the framework, and can (must!) be used
+        "buildbot.test.fake",  # to write unit tests for custom steps
         "buildbot.util",
         "buildbot.www",
     ] + (NOT_WHEEL and [  # skip tests for wheels (save 50% of the archive)
