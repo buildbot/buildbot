@@ -21,6 +21,7 @@ from subprocess import Popen, PIPE, STDOUT
 import os
 import re
 
+
 def getVersion(init_file):
     """
     Return BUILDBOT_VERSION environment variable, content of VERSION file, git
@@ -55,5 +56,6 @@ def getVersion(init_file):
         pass
 
     return "latest"
+
 
 version = getVersion(__file__)
