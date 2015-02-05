@@ -342,6 +342,8 @@ class MasterConfig(util.ComparableMixin):
                     error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
                           " defined, recommended to remove slavePortnum and leave"
                           " only c['protocols']['pb']['port']")
+                if proto == "wamp":
+                    self.check_wamp_proto(options)
         else:
             error("c['protocols'] must be dict")
             return
@@ -629,6 +631,17 @@ class MasterConfig(util.ComparableMixin):
         if unscheduled_buildernames:
             error("builder(s) %s have no schedulers to drive them"
                   % (', '.join(unscheduled_buildernames),))
+
+    def check_wamp_proto(self, config):
+        if "router_url" not in config:
+            error("please provide a router url for using wamp protocol")
+            return
+        url = config['router_url']
+        if not url.startswith("ws://") or url.startswith("wss://"):
+            error("only websocket urls are supported for wamp protocol: " + url)
+            return
+        if "realm" not in config:
+            config['realm'] = 'buildbot'
 
     def check_schedulers(self):
         # don't perform this check in multiMaster mode

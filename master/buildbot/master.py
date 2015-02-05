@@ -54,6 +54,7 @@ from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
+from buildbot.wamp import connector as wampconnector
 from buildbot.www import service as wwwservice
 
 #
@@ -163,6 +164,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         self.www = wwwservice.WWWService(self)
         self.www.setServiceParent(self)
+
+        if "wamp" in self.config.protocols:
+            self.wamp = wampconnector.WampConnector(self)
+            self.wamp.setServiceParent(self)
 
         self.debug = debug.DebugServices(self)
         self.debug.setServiceParent(self)

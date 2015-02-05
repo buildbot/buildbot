@@ -38,6 +38,12 @@ config =
             restangular:
                 version: "~1.4.0"
                 files: 'dist/restangular.js'
+            "angular-wamp":
+                version: "~0.1.2"
+                files: 'release/angular-wamp.js'
+            autobahn:
+                version: "~0.9.5"
+                files: 'autobahn.js'
             d3:  # d3 is loaded on demand via d3Service
                 version: "~3.4.11"
                 files: []

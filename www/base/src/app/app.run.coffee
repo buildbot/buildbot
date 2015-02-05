@@ -1,5 +1,5 @@
 class RouteChangeListener extends Run
-    constructor: ($rootScope, $log, config, glNotificationService) ->
+    constructor: ($rootScope, $log, config, glNotificationService, $wamp) ->
         # fire an event related to the current route
         $rootScope.$on '$routeChangeSuccess', (event, currentRoute, priorRoute) ->
             $rootScope.$broadcast "#{currentRoute.controller}$routeChangeSuccess",
@@ -8,3 +8,5 @@ class RouteChangeListener extends Run
             setTimeout ->
                 glNotificationService.notify(msg:config.on_load_warning)
             , 500
+        if not window.__karma__?
+            $wamp.open()

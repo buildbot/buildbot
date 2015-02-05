@@ -1,5 +1,5 @@
 class Route extends Config
-    constructor: ($urlRouterProvider, glMenuServiceProvider, config) ->
+    constructor: ($urlRouterProvider, glMenuServiceProvider, $wampProvider, config) ->
         $urlRouterProvider.otherwise('/')
         # the app title needs to be < 18 chars else the UI looks bad
         # we try to find best option
@@ -13,3 +13,9 @@ class Route extends Config
             apptitle = "Buildbot"
         glMenuServiceProvider.setAppTitle(apptitle)
         # all states config are in the modules
+        url = config.buildbotURL
+        if url?
+            url = url.replace("http://", "ws://").replace("https://", "wss://") + "ws"
+            $wampProvider.init
+                url: url,
+                realm: 'buildbot'
