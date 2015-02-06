@@ -19,6 +19,9 @@ from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot import config
+from twisted.internet import defer
+from mock import Mock
+from buildbot.process import buildstep
 
 class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -850,3 +853,45 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
+
+    def runCommand(self, c):
+        for cmd in self.expected_commands:
+            if cmd['command'] == [c.remote_command, c.args]:
+                self.currentCommandRC = cmd['rc']
+                return defer.succeed(cmd['rc'])
+
+        return -1
+
+    def checkDidFail(self):
+        return self.currentCommandRC != 0
+
+    def clobber(self, _):
+        self.clobberRepository = True
+        defer.succeed(None)
+
+    def mockStatCommand(self, file, rc):
+        return {'command': ['stat', {'logEnviron': True, 'file': file}],
+                 'rc': rc}
+
+    @defer.inlineCallbacks
+    def test_mercurial_clobberIfContainsJournal(self):
+        step = mercurial.Mercurial(repourl='http://hg.mozilla.org', mode='full', method='fresh', branchType='inrepo',
+                          clobberOnBranchChange=False)
+
+        step.workdir = "build"
+        step.stdio_log = Mock()
+        step.runCommand = self.runCommand
+        self.currentCommandRC = -1
+        self.clobberRepository = False
+
+        self.patch(buildstep.RemoteCommand, "didFail", self.checkDidFail)
+
+        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 0)]
+        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
+
+        step.clobber = self.clobber
+
+        yield step.full()
+
+        self.assertTrue(self.clobberRepository)
