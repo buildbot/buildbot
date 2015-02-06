@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 from buildbot.steps.source import mercurial
-from buildbot.status.results import SUCCESS, FAILURE
+from buildbot.status.results import SUCCESS, FAILURE, RETRY
 from buildbot.test.util import sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot import config
@@ -859,6 +859,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             if cmd['command'] == [c.remote_command, c.args]:
                 self.currentCommandRC = cmd['rc']
                 return defer.succeed(cmd['rc'])
+            if c.remote_command == 'shell' and 'command' in c.args and cmd['command'] == c.args['command']:
+                self.currentCommandRC = cmd['rc']
+                return defer.succeed(cmd['rc'])
 
         return -1
 
@@ -873,18 +876,41 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         return {'command': ['stat', {'logEnviron': True, 'file': file}],
                  'rc': rc}
 
-    @defer.inlineCallbacks
-    def test_mercurial_clobberIfContainsJournal(self):
+    def mockRmdirCommand(self, dir, rc):
+        return {'command': ['rmdir', {'logEnviron': True, 'dir': dir}],
+                'rc': rc}
+
+    def setGraceful(self, val):
+        self.disconnectGraceful = val
+
+    def finish(self, result):
+        self.result = result
+
+    def setupStepRecoveryTests(self):
         step = mercurial.Mercurial(repourl='http://hg.mozilla.org', mode='full', method='fresh', branchType='inrepo',
                           clobberOnBranchChange=False)
-
         step.workdir = "build"
         step.stdio_log = Mock()
         step.runCommand = self.runCommand
         self.currentCommandRC = -1
         self.clobberRepository = False
-
         self.patch(buildstep.RemoteCommand, "didFail", self.checkDidFail)
+        step._isWindowsSlave = lambda: True
+
+        step.build = Mock()
+        step.build.slavebuilder.slave = Mock()
+        step.build.slavebuilder.slave.slavename = "test-slave"
+
+        step.build.slavebuilder.slave.slave_status = Mock()
+        step.disconnectGraceful = False
+        step.build.slavebuilder.slave.slave_status.setGraceful = self.setGraceful
+        self.result = SUCCESS
+        step.finish = self.finish
+        return step
+
+    @defer.inlineCallbacks
+    def test_mercurial_clobberIfContainsJournal(self):
+        step = self.setupStepRecoveryTests()
 
         self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 0)]
         self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
@@ -895,3 +921,64 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         yield step.full()
 
         self.assertTrue(self.clobberRepository)
+
+    @defer.inlineCallbacks
+    def test_mercurial_clobberIfContainsLock(self):
+        step = self.setupStepRecoveryTests()
+
+        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 0))
+        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
+
+        step.clobber = self.clobber
+
+        yield step.full()
+
+        self.assertTrue(self.clobberRepository)
+
+    @defer.inlineCallbacks
+    def test_mercurial_clobberIfContainsWorkdirLock(self):
+        step = self.setupStepRecoveryTests()
+
+        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 0))
+
+        step.clobber = self.clobber
+
+        yield step.full()
+
+        self.assertTrue(self.clobberRepository)
+
+    @defer.inlineCallbacks
+    def test_mercurial_clobberShouldRestartIfCleanFails(self):
+        step = self.setupStepRecoveryTests()
+
+        self.expected_commands = [self.mockRmdirCommand('build/.hg', 1)]
+        self.expected_commands.append(self.mockRmdirCommand('build', 1))
+        self.expected_commands.append({'command': ['shutdown', '/r', '/t', '5', '/c',
+                                                   'Mercurial command: restart requested'],
+                                       'rc': 1})
+
+        yield step.clobber(None)
+
+        self.assertTrue(self.disconnectGraceful)
+        self.assertEqual(self.result, RETRY)
+
+    @defer.inlineCallbacks
+    def test_mercurialDirNotUpdatableShouldRestartIfCleanFails(self):
+        step = self.setupStepRecoveryTests()
+
+        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
+        self.expected_commands.append(self.mockStatCommand('build/.hg/hgrc', 1))
+        self.expected_commands.append(self.mockRmdirCommand('build', 1))
+        self.expected_commands.append({'command': ['shutdown', '/r', '/t', '5', '/c',
+                                                   'Mercurial command: restart requested'],
+                                       'rc': 1})
+
+        yield step.full()
+
+        self.assertTrue(self.disconnectGraceful)
+        self.assertEqual(self.result, RETRY)
