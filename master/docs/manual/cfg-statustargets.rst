@@ -1517,7 +1517,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
    :param summaryCB: (optional) callback that is called each time a buildset finishes, and that is used to define a message and review approvals depending on the build result.
    :param summaryArg: (optional) argument passed to the summary callback.
- 
+
                       If :py:func:`summaryCB` callback is specified, determines the message and score to give when sending a single review summarizing all of the builds.
                       It should return a dictionary:
 
@@ -1600,6 +1600,39 @@ You can define custom start and end build messages using the `startDescription` 
 Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional parameter -- ``baseURL`` -- that allows to specify a different API base endpoint.
 This is required if you work with GitHub Enterprise installation.
 This feature requires ``txgithub`` of version 0.2.0 or better.
+
+StashStatusPush
+~~~~~~~~~~~~~~~
+
+.. @cindex StashStatusPush
+.. py:class:: buildbot.status.status_stash.StashStatusPush
+
+::
+
+    from buildbot.status.status_stash import StashStatusPush
+
+    ss = StashStatusPush('https://stash.example.com:8080/',
+                         'stash_username',
+                         'secret_password')
+
+    c['status'].append(ss)
+
+
+:class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
+The build status is published to a specific commit SHA in Stash.
+It tracks the last build for each builderName for each commit built.
+
+Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
+
+It uses the standard Python Twisted Agent to make REST requests to the stash server.
+It uses HTTP Basic AUTH.
+As a result, we recommend you use https in your base_url rather than http.
+If you use https, it requires `pyOpenSSL`.
+
+Configuration requires exactly 3 parameters:
+`base_url` is the base url of the stash host, up to and optionally including the first / of the path.
+`user` is the stash user to post as
+`password` is the stash user's password
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
