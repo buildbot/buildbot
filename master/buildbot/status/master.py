@@ -426,7 +426,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 break
         if buildername in self._builder_observers:
             brs = buildrequest.BuildRequestStatus(buildername,
-                                                  msg['brid'], self)
+                                                  msg['buildrequestid'], self)
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestSubmitted'):
                     eventually(observer.requestSubmitted, brs)
