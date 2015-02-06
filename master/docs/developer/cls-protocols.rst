@@ -115,7 +115,15 @@ This is why we implement a ``Impl vs Proxy`` methods.
 All the objects that are referenced from the slaves for remote calls have an ``Impl`` and a ``Proxy`` base classes in this module.
 
 ``Impl`` classes are subclassed by buildbot master, and implement the actual logic for the protocol api.
-``Proxy`` classes are subclassed by the slave/master protocols, and implements the demux and de-serialization of protocol calls.
+``Proxy`` classes are implemented by the slave/master protocols, and implements the demux and de-serialization of protocol calls.
+
+On slave sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
+
+.. py:class:: SlaveProxyObject()
+
+    .. py:method:: callRemote(message, *args, **kw)
+
+        calls the method ``"remote_" + message`` on master side
 
 .. py:class:: RemoteCommandImpl()
 
@@ -157,17 +165,6 @@ All the objects that are referenced from the slaves for remote calls have an ``I
             Called by the slave when the command is complete.
 
 
-.. py:class:: RemoteCommandProxy(impl):
-
-    .. :py:method:: remote_update(updates):
-
-        proxy ``update`` method to the impl
-
-    .. :py:method:: remote_complete(failure=None):
-
-        proxy ``complete`` method to the impl
-
-
 .. py:class:: FileWriterImpl()
 
     Class used to implement data transfer between slave and master
@@ -193,25 +190,6 @@ All the objects that are referenced from the slaves for remote calls have an ``I
         Called when master should close the file
 
 
-.. py:class:: FileWriterProxy(object)
-
-    .. py:method:: remote_write(data)
-
-        proxy ``write`` method to the impl
-
-    .. py:method:: remote_utime(accessed_modified)
-
-        proxy ``utime`` method to the impl
-
-    .. py:method:: remote_unpack()
-
-        proxy ``unpack`` method to the impl
-
-    .. py:method:: remote_close()
-
-        proxy ``close`` method to the impl
-
-
 .. py:class:: FileReaderImpl(object)
 
     .. py:method:: remote_read(maxLength)
@@ -224,14 +202,3 @@ All the objects that are referenced from the slaves for remote calls have an ``I
     .. py:method:: remote_close()
 
         Called when master should close the file
-
-
-.. py:class:: FileReaderProxy(object)
-
-    .. py:method:: remote_read(maxLength)
-
-        proxy ``read`` method to the impl
-
-    .. py:method:: remote_close()
-
-        proxy ``close`` method to the impl

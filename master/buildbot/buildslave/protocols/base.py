@@ -79,8 +79,6 @@ class Connection(object):
 
 
 # RemoteCommand base implementation and base proxy
-
-
 class RemoteCommandImpl(object):
 
     def remote_update(self, updates):
@@ -90,21 +88,7 @@ class RemoteCommandImpl(object):
         raise NotImplementedError
 
 
-class RemoteCommandProxy(object):
-
-    def __init__(self, impl):
-        assert isinstance(impl, RemoteCommandImpl)
-        self.impl = impl
-
-    def remote_update(self, updates):
-        return self.impl.remote_update(updates)
-
-    def remote_complete(self, failure=None):
-        return self.impl.remote_complete(failure)
-
-
-# FileWriter base implementation and base proxy
-
+# FileWriter base implementation
 class FileWriterImpl(object):
 
     def remote_write(self, data):
@@ -120,27 +104,7 @@ class FileWriterImpl(object):
         raise NotImplementedError
 
 
-class FileWriterProxy(object):
-
-    def __init__(self, impl):
-        assert isinstance(impl, FileWriterImpl)
-        self.impl = impl
-
-    def remote_write(self, data):
-        return self.impl.remote_write(data)
-
-    def remote_utime(self, accessed_modified):
-        return self.impl.remote_utime(accessed_modified)
-
-    def remote_unpack(self):
-        return self.impl.remote_unpack()
-
-    def remote_close(self):
-        return self.impl.remote_close()
-
-# FileReader base implementation and base proxy
-
-
+# FileReader base implementation
 class FileReaderImpl(object):
 
     def remote_read(self, maxLength):
@@ -148,16 +112,3 @@ class FileReaderImpl(object):
 
     def remote_close(self):
         raise NotImplementedError
-
-
-class FileReaderProxy(object):
-
-    def __init__(self, impl):
-        assert isinstance(impl, FileReaderImpl)
-        self.impl = impl
-
-    def remote_read(self, maxLength):
-        return self.impl.remote_read(maxLength)
-
-    def remote_close(self):
-        return self.impl.remote_close()

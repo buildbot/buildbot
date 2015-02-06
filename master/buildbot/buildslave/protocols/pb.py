@@ -76,17 +76,27 @@ class Listener(base.Listener):
             raise RuntimeError("rejecting duplicate slave")
 
 
-# just add pb.Referenceable capability to the RemoteCommandProxy
-class RemoteCommand(base.RemoteCommandProxy, pb.Referenceable):
-    pass
+class ReferenceableProxy(pb.Referenceable):
+
+    def __init__(self, impl):
+        assert isinstance(impl, self.ImplClass)
+        self.impl = impl
+
+    def __getattr__(self, default=None):
+        return getattr(self.impl, default)
 
 
-class FileReaderProxy(base.FileReaderProxy, pb.Referenceable):
-    pass
+# Proxy are just ReferenceableProxy to the Impl classes
+class RemoteCommand(ReferenceableProxy):
+    ImplClass = base.RemoteCommandImpl
 
 
-class FileWriterProxy(base.FileWriterProxy, pb.Referenceable):
-    pass
+class FileReaderProxy(ReferenceableProxy):
+    ImplClass = base.FileReaderImpl
+
+
+class FileWriterProxy(ReferenceableProxy):
+    ImplClass = base.FileWriterImpl
 
 
 class Connection(base.Connection, pb.Avatar):

@@ -26,6 +26,10 @@ class Listener(base.Listener):
 
 class ProxyMixin():
 
+    def __init__(self, impl):
+        assert isinstance(impl, self.ImplClass)
+        self.impl = impl
+
     def callRemote(self, message, *args, **kw):
         method = getattr(self.impl, "remote_%s" % message, None)
         if method is None:
@@ -43,20 +47,19 @@ class ProxyMixin():
     def dontNotifyOnDisconnect(self, cb):
         pass
 
+
 # just add ProxyMixin capability to the RemoteCommandProxy
 # so that callers of callRemote actually directly call the proper method
+class RemoteCommandProxy(ProxyMixin):
+    ImplClass = base.RemoteCommandImpl
 
 
-class RemoteCommandProxy(base.RemoteCommandProxy, ProxyMixin):
-    pass
+class FileReaderProxy(ProxyMixin):
+    ImplClass = base.FileReaderImpl
 
 
-class FileReaderProxy(base.FileReaderProxy, ProxyMixin):
-    pass
-
-
-class FileWriterProxy(base.FileWriterProxy, ProxyMixin):
-    pass
+class FileWriterProxy(ProxyMixin):
+    ImplClass = base.FileWriterImpl
 
 
 class Connection(base.Connection):
