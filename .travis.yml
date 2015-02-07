@@ -49,7 +49,7 @@ install:
   - (cd slave;  python setup.py develop)
   # mock is preinstalled on Travis
   # txgithub requires Twisted >= 12.3.0
-  - pip install txgithub
+  #- pip install txgithub
   # txrequests support only Python 2.6 and 2.7.
   - pip install txrequests
 
@@ -79,6 +79,7 @@ script:
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
+  - pip list
 
 notifications:
   email: false
