@@ -142,7 +142,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.stopTimers()
 
 
-class BuildSlave(BuildSlaveBase, service.MultiService):
+class BuildSlave(BuildSlaveBase):
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
@@ -152,7 +152,6 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
 
-        service.MultiService.__init__(self)
         BuildSlaveBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None

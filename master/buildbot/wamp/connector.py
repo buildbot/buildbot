@@ -21,7 +21,7 @@ from buildbot.util import service
 from buildbot.wamp import protocol
 
 
-class MasterService(ApplicationSession):
+class MasterService(ApplicationSession, service.AsyncMultiService):
 
     """
     concatenation of all the wamp services of buildbot
@@ -29,13 +29,18 @@ class MasterService(ApplicationSession):
 
     def __init__(self, config):
         ApplicationSession.__init__(self)
+        service.AsyncMultiService.__init__(self)
         self.config = config
         self.master = config.extra['master']
-        self.slave_protocol = protocol.SlaveProtoWampHandler(self.master)
+        self.setServiceParent(config.extra['parent'])
+        config.extra['parent'].service = self
+        # init and register child handlers
+        p = protocol.SlaveProtoWampHandler(self.master)
+        p.setServiceParent(self)
 
     @defer.inlineCallbacks
     def onJoin(self, details):
-        for handler in (self, self.slave_protocol):
+        for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
 
@@ -58,7 +63,9 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.master = master
         self.app = self.router_url = None
 
-    @defer.inlineCallbacks
+    def call(self, *args, **kw):
+        return self.service.call(*args, **kw)
+
     def reconfigServiceWithBuildbotConfig(self, new_config):
         wamp = new_config.protocols.get('wamp', {})
         router_url = wamp.get('router_url', None)
@@ -68,16 +75,18 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         # how would we tell the slaves to switch router ?
         if self.app is not None and self.router_url != router_url:
             raise ValueError("Cannot use different wamp router url when reconfiguring")
+        if router_url is None:
+            return
         self.router_url = router_url
         self.app = ApplicationRunner(
             url=self.router_url,
-            extra=dict(master=self.master),
+            extra=dict(master=self.master, parent=self),
             realm=wamp.get('realm'),
             debug=wamp.get('debug_websockets', False),
             debug_wamp=wamp.get('debug_lowlevel', False),
             debug_app=wamp.get('debug', False)
         )
 
-        self.app.run(start_reactor=False)
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        self.app.run(make, start_reactor=False)
+        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                    new_config)

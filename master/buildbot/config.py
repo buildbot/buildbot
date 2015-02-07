@@ -32,6 +32,11 @@ from buildbot.www import avatar
 from twisted.python import failure
 from twisted.python import log
 
+try:
+    import autobahn
+except ImportError:
+    autobahn = None
+
 
 class ConfigErrors(Exception):
 
@@ -633,6 +638,8 @@ class MasterConfig(util.ComparableMixin):
                   % (', '.join(unscheduled_buildernames),))
 
     def check_wamp_proto(self, config):
+        if autobahn is None:
+            error("please 'pip install autobahn' for using wamp protocol")
         if "router_url" not in config:
             error("please provide a router url for using wamp protocol")
             return
@@ -711,10 +718,7 @@ class MasterConfig(util.ComparableMixin):
         ports = set()
         if self.protocols:
             for proto, options in self.protocols.iteritems():
-                if proto == 'null':
-                    port = -1
-                else:
-                    port = options.get("port")
+                port = options.get("port")
                 if not port:
                     continue
                 if isinstance(port, int):
@@ -724,7 +728,6 @@ class MasterConfig(util.ComparableMixin):
                     error("Some of ports in c['protocols'] duplicated")
                 ports.add(port)
 
-        if ports:
             return
         if self.slaves:
             error("slaves are configured, but c['protocols'] not")

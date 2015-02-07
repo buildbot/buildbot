@@ -30,6 +30,10 @@ from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildslave.bot import BuildSlave
 from buildslave.bot import LocalBuildSlave
+try:
+    from buildslave.wamp import WampBuildSlave
+except ImportError:
+    WampBuildSlave = None
 
 
 class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
@@ -44,6 +48,16 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
         elif self.proto == 'null':
             proto = '{"null": {}}'
+        elif self.proto == 'wamp':
+            # Unfortunatly, there is no way to build local router for tests
+            # need to rely on an external router
+            if "WAMP_ROUTER_URL" not in os.environ:
+                raise unittest.SkipTest("Please provide WAMP_ROUTER_URL environment with url to wamp router to run wamp tests")
+            if WampBuildSlave is None:
+                raise unittest.SkipTest("Please install autobahn to run wamp tests")
+            proto = '{"wamp": {"router_url": "%s"}}' % (os.environ['WAMP_ROUTER_URL'],)
+        else:
+            raise Exception("unsupported proto: " + self.proto)
         # We create a master.cfg, which loads the configuration from the
         # test module. Only the slave config is kept there, as it should not
         # be changed
@@ -84,6 +98,10 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':
             s = LocalBuildSlave("local1", self.basedir, False)
+        elif self.proto == 'wamp':
+            s = WampBuildSlave(os.environ["WAMP_ROUTER_URL"], "buildbot", "local1", "localpw",
+                               self.basedir, False)
+
         s.setServiceParent(m)
 
     @defer.inlineCallbacks
