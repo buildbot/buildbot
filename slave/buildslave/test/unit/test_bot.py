@@ -16,6 +16,7 @@
 import mock
 import os
 import shutil
+import multiprocessing
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -81,7 +82,10 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ, system=os.name, basedir=self.basedir))
+            self.assertEqual(info, dict(admin='testy!', foo='bar',
+                                        environ=os.environ, system=os.name,
+                                        basedir=self.basedir,
+                                        numcpus=multiprocessing.cpu_count()))
         d.addCallback(check)
         return d
 
@@ -89,7 +93,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'numcpus', 'basedir']))
         d.addCallback(check)
         return d
 

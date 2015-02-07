@@ -187,7 +187,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
         opts = self.parse("--force", "--relocatable", "--no-logrotate",
                           "--keepalive=4", "--usepty=0", "--umask=022",
-                          "--maxdelay=3", "--log-size=2", "--log-count=1",
+                          "--maxdelay=3", "--numcpus=4", "--log-size=2", "--log-count=1",
                           "--allow-shutdown=file", *self.req_args)
         self.assertOptions(opts,
                            {"force": True,
@@ -196,6 +196,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                             "usepty": 0,
                             "umask": "022",
                             "maxdelay": 3,
+                            "numcpus": "4",
                             "log-size": 2,
                             "log-count": "1",
                             "allow-shutdown": "file",
@@ -234,6 +235,11 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "log-count parameter needs to be an number or None",
                                 self.parse, "--log-count=X", *self.req_args)
+
+    def test_inv_numcpus(self):
+        self.assertRaisesRegexp(usage.UsageError,
+                                "numcpus parameter needs to be an number or None",
+                                self.parse, "--numcpus=X", *self.req_args)
 
     def test_inv_umask(self):
         self.assertRaisesRegexp(usage.UsageError,

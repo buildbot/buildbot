@@ -55,11 +55,12 @@ keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
+numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               allow_shutdown=allow_shutdown)
+               numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)
 
 """]

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import multiprocessing
 import os.path
 import signal
 import socket
@@ -244,6 +245,7 @@ class Bot(pb.Referenceable, service.MultiService):
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
+        self.numcpus = None
         self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
@@ -322,9 +324,12 @@ class Bot(pb.Referenceable, service.MultiService):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
                     files[f] = open(filename, "r").read()
+        if not self.numcpus:
+            self.numcpus = multiprocessing.cpu_count()
         files['environ'] = os.environ.copy()
         files['system'] = os.name
         files['basedir'] = self.basedir
+        files['numcpus'] = self.numcpus
         return files
 
     def remote_getVersion(self):
@@ -443,7 +448,8 @@ class BuildSlave(service.MultiService):
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=None, umask=None,
-                 maxdelay=300, unicode_encoding=None, allow_shutdown=None):
+                 maxdelay=300, numcpus=None, unicode_encoding=None,
+                 allow_shutdown=None):
 
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
@@ -456,7 +462,7 @@ class BuildSlave(service.MultiService):
             keepalive = None
         self.umask = umask
         self.basedir = basedir
-
+        self.numcpus = numcpus
         self.shutdown_loop = None
 
         if allow_shutdown == 'signal':
