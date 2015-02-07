@@ -79,6 +79,7 @@ script:
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
+  - pip list
 
 notifications:
   email: false
