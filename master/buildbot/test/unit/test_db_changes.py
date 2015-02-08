@@ -719,16 +719,15 @@ class RealTests(Tests):
                   "buildsetSourceStampid": 0,
                   "buildrequestid": 0,
                   "buildid": 0}
-        codebase_ss = {}
+
+        codebase_ss = {}  # shared state between addChange and addBuild
 
         def addChange(codebase, revision, author, comments, branch='master', category='cat', project='proj', repository='repo'):
             lastID["sourcestampid"] += 1
             lastID["changeid"] += 1
-            parent_changeids = codebase_ss.get(codebase, [None])[-1]
+            parent_changeids = codebase_ss.get(codebase, None)
 
-            if codebase not in codebase_ss:
-                codebase_ss[codebase] = list()
-            codebase_ss[codebase].append(lastID["sourcestampid"])
+            codebase_ss[codebase] = lastID["sourcestampid"]
 
             changeRows = [fakedb.SourceStamp(id=lastID["sourcestampid"],
                                              codebase=codebase,
@@ -755,14 +754,13 @@ class RealTests(Tests):
             buildRows = [fakedb.Buildset(id=lastID["buildsetid"],
                                          reason='foo',
                                          submitted_at=1300305012, results=-1)]
-            for cb, ss_list in codebase_ss.iteritems():
-                for ss in ss_list:
-                    lastID["buildsetSourceStampid"] += 1
-                    buildRows.append(
-                        fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],
-                                                   sourcestampid=ss,
-                                                   buildsetid=lastID["buildsetid"]))
-            codebase_ss = {}
+            for cb, ss in codebase_ss.iteritems():
+                lastID["buildsetSourceStampid"] += 1
+                buildRows.append(
+                    fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],
+                                               sourcestampid=ss,
+                                               buildsetid=lastID["buildsetid"]))
+            codebase_ss.clear()
             buildRows.extend([
                 fakedb.BuildRequest(id=lastID["buildrequestid"],
                                     buildsetid=lastID["buildsetid"],
