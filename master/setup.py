@@ -30,9 +30,9 @@ from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 
 if "bdist_wheel" in sys.argv:
-    NOT_WHEEL = False
+    BUILDING_WHEEL = True
 else:
-    NOT_WHEEL = True
+    BUILDING_WHEEL = False
 
 def include(d, e):
     """Generate a pair of (directory, file-list) for installation.
@@ -170,17 +170,17 @@ setup_args = {
         "buildbot.steps.package.deb",
         "buildbot.steps.package.rpm",
         "buildbot.steps.source",
-        "buildbot.test.util",  # test.util and test.fake are part of the framework, and can (must!) be used
-        "buildbot.test.fake",  # to write unit tests for custom steps
         "buildbot.util",
         "buildbot.www",
-    ] + (NOT_WHEEL and [  # skip tests for wheels (save 50% of the archive)
+    ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
+        "buildbot.test.util",
+        "buildbot.test.fake",
         "buildbot.test.fuzz",
         "buildbot.test.integration",
         "buildbot.test.regressions",
         "buildbot.test.unit",
-    ] or []),
+    ]),
     'data_files': [
         ("buildbot", [
             "buildbot/buildbot.png",
