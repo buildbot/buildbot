@@ -109,6 +109,7 @@ script:
   - "[ $IS_LATEST = false ] || make pyflakes"
   - "[ $IS_LATEST = false ] || make docs"
   - "[ $IS_LATEST = false ] || make pep8"
+  - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
   email: false
