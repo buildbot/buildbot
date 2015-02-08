@@ -75,6 +75,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builders.updateBuilderInfo(8, u'a string which describe the builder', [])
         builderdict7 = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict7)
+        builderdict7['tags'].sort()  # order is unspecified
         self.assertEqual(builderdict7,
                          dict(id=7, name='some:builder7', tags=['cat1', 'cat2'],
                               masterids=[], description='a string which describe the builder'))
