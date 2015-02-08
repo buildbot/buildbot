@@ -100,10 +100,11 @@ class Buildslave(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveConfigured(self, buildslaveid, buildermasterids):
+    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
         yield self.master.db.buildslaves.buildslaveConfigured(
             buildslaveid=buildslaveid,
-            buildermasterids=buildermasterids)
+            masterid=masterid,
+            builderids=builderids)
 
     @base.updateMethod
     def findBuildslaveId(self, name):

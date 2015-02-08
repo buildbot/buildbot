@@ -237,6 +237,13 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
         def findBuildslaveId(self, name):
             pass
 
+    def test_signature_buildslaveConfigured(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.buildslaveConfigured,  # fake
+            self.rtype.buildslaveConfigured)  # real
+        def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+            pass
+
     def test_findBuildslaveId(self):
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)

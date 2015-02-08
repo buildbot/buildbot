@@ -388,10 +388,11 @@ class FakeUpdates(object):
             masterid=masterid,
             slaveinfo=slaveinfo)
 
-    def buildslaveConfigured(self, buildslaveid, buildermasterids):
+    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
         return self.master.db.buildslaves.buildslaveConfigured(
             buildslaveid=buildslaveid,
-            buildermasterids=buildermasterids)
+            masterid=masterid,
+            builderids=builderids)
 
     def buildslaveDisconnected(self, buildslaveid, masterid):
         return self.master.db.buildslaves.buildslaveDisconnected(
