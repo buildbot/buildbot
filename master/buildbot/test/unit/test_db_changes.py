@@ -778,220 +778,45 @@ class RealTests(Tests):
                              results=results)])
             return buildRows
 
-        # Build1 has 1 change per code base. build result = success
+        # Build1 has 1 change per code base
         rows.extend(addChange('A', 1, 'franck', '1st commit'))
         rows.extend(addChange('B', 1, 'alice', '2nd commit'))
         rows.extend(addChange('C', 1, 'bob', '3rd commit'))
         rows.extend(addBuild(codebase_ss))
-        # Build 2 has only one change for codebase A. build result = success
+        # Build 2 has only one change for codebase A
         rows.extend(addChange('A', 2, 'delanne', '4th commit'))
         rows.extend(addBuild(codebase_ss))
-        # Build 3 has only one change for codebase B. build result = success
+        # Build 3 has only one change for codebase B
         rows.extend(addChange('B', 2, 'bob', '6th commit'))
         rows.extend(addBuild(codebase_ss))
-        # Build 4 has no change. build result = success
+        # Build 4 has no change
         rows.extend(addBuild(codebase_ss))
-        # Build 5 has 2 changes for codebase A and 1 change for codebase C. build result = success
+        # Build 5 has 2 changes for codebase A and 1 change for codebase C
         rows.extend(addChange('A', 3, 'franck', '7th commit'))
         rows.extend(addChange('A', 4, 'alice', '8th commit'))
         rows.extend(addChange('B', 3, 'bob', '9th commit'))
         rows.extend(addBuild(codebase_ss))
-        # Build 6 has only one change for codebase C. build result = failure
+        # Build 6 has only one change for codebase C
         rows.extend(addChange('C', 2, 'bob', '10th commit'))
         rows.extend(addBuild(codebase_ss, 2))
-        # Build 7 has only one change for codebase C. build result = success
+        # Build 7 has only one change for codebase C
         rows.extend(addChange('C', 3, 'bob', '11th commit'))
         rows.extend(addBuild(codebase_ss, 2))
         yield self.insertTestData(rows)
 
-        expected_1stBuild = [{'author': u'alice',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 2,
-                              'codebase': u'',
-                              'comments': u'2nd commit',
-                              'files': [],
-                              'parent_changeids': [],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'1',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 2,
-                              'when_timestamp': epoch2datetime(SOMETIME + 2)},
-                             {'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 3,
-                              'codebase': u'',
-                              'comments': u'3rd commit',
-                              'files': [],
-                              'parent_changeids': [],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'1',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 3,
-                              'when_timestamp': epoch2datetime(SOMETIME + 3)},
-                             {'author': u'franck',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 1,
-                              'codebase': u'',
-                              'comments': u'1st commit',
-                              'files': [],
-                              'parent_changeids': [],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'1',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 1,
-                              'when_timestamp': epoch2datetime(SOMETIME + 1)}]
-        expected_2ndBuild = [{'author': u'delanne',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 4,
-                              'codebase': u'',
-                              'comments': u'4th commit',
-                              'files': [],
-                              'parent_changeids': [1],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'2',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 4,
-                              'when_timestamp': epoch2datetime(SOMETIME + 4)}]
-        expected_3rdBuild = [{'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 5,
-                              'codebase': u'',
-                              'comments': u'6th commit',
-                              'files': [],
-                              'parent_changeids': [2],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'2',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 5,
-                              'when_timestamp': epoch2datetime(SOMETIME + 5)}]
-        expected_4thBuild = []
-        expected_5thBuild = [{'author': u'alice',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 7,
-                              'codebase': u'',
-                              'comments': u'8th commit',
-                              'files': [],
-                              'parent_changeids': [6],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'4',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 7,
-                              'when_timestamp': epoch2datetime(SOMETIME + 7)},
-                             {'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 8,
-                              'codebase': u'',
-                              'comments': u'9th commit',
-                              'files': [],
-                              'parent_changeids': [5],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'3',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 8,
-                              'when_timestamp': epoch2datetime(SOMETIME + 8)},
-                             {'author': u'franck',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 6,
-                              'codebase': u'',
-                              'comments': u'7th commit',
-                              'files': [],
-                              'parent_changeids': [4],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'3',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 6,
-                              'when_timestamp': epoch2datetime(SOMETIME + 6)}]
-        expected_6thBuild = [{'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 9,
-                              'codebase': u'',
-                              'comments': u'10th commit',
-                              'files': [],
-                              'parent_changeids': [3],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'2',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 9,
-                              'when_timestamp': epoch2datetime(SOMETIME + 9)}]
-        expected_7thBuild = [{'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 9,
-                              'codebase': u'',
-                              'comments': u'10th commit',
-                              'files': [],
-                              'parent_changeids': [3],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'2',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 9,
-                              'when_timestamp': epoch2datetime(SOMETIME + 9)},
-                             {'author': u'bob',
-                              'branch': u'master',
-                              'category': u'cat',
-                              'changeid': 10,
-                              'codebase': u'',
-                              'comments': u'11th commit',
-                              'files': [],
-                              'parent_changeids': [9],
-                              'project': u'proj',
-                              'properties': {},
-                              'repository': u'repo',
-                              'revision': u'3',
-                              'revlink': u'http://vc/abcd',
-                              'sourcestampid': 10,
-                              'when_timestamp': epoch2datetime(SOMETIME + 10)}]
+        @defer.inlineCallbacks
+        def expect(buildid, commits):
+            got = yield self.db.changes.getChangesForBuild(buildid)
+            got_commits = [c['comments'] for c in got]
+            self.assertEqual(sorted(got_commits), sorted(commits))
 
-        # 1st build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(1))),
-                         sorted(expected_1stBuild))
-        # 2nd build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(2))),
-                         sorted(expected_2ndBuild))
-        # 3rd build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(3))),
-                         sorted(expected_3rdBuild))
-        # 4th build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(4))),
-                         sorted(expected_4thBuild))
-        # 5th build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(5))),
-                         sorted(expected_5thBuild))
-        # 6th build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(6))),
-                         sorted(expected_6thBuild))
-        # 7th build
-        self.assertEqual(sorted((yield self.db.changes.getChangesForBuild(7))),
-                         sorted(expected_7thBuild))
+        yield expect(1, [u'2nd commit', u'3rd commit', u'1st commit'])
+        yield expect(2, [u'4th commit'])
+        yield expect(3, [u'6th commit'])
+        yield expect(4, [])
+        yield expect(5, [u'8th commit', u'9th commit', u'7th commit'])
+        yield expect(6, [u'10th commit'])
+        yield expect(7, [u'11th commit'])
 
 
 class TestFakeDB(unittest.TestCase, Tests):
