@@ -737,6 +737,15 @@ buildslaves
 
         Record the given buildslave as no longer attached to the given master.
 
+    .. py:method:: buildslaveConfigured(buildslaveid, masterid, builderids)
+
+        :param integer buildslaveid: the ID of the buildslave
+        :param integer masterid: the ID of the master to which it configured
+        :param list of integer builderids: the ID of the builders to which it is configured
+        :returns: Deferred
+
+        Record the given buildslave as being configured on the given master and for given builders.
+
 changes
 ~~~~~~~
 

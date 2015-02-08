@@ -36,7 +36,6 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             ))
 
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-        print "buildslaveConfigured", buildslaveid, masterid, builderids
 
         def thd(conn):
             # first remove the old configured buildermasterids for this master and slave

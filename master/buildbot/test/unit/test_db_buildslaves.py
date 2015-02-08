@@ -99,6 +99,11 @@ class Tests(interfaces.InterfaceTests):
         def buildslaveDisconnected(self, buildslaveid, masterid):
             pass
 
+    def test_signature_buildslaveConfigured(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.buildslaveConfigured)
+        def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+            pass
+
     @defer.inlineCallbacks
     def test_findBuildslaveId_insert(self):
         id = yield self.db.buildslaves.findBuildslaveId(name=u"xyz")
