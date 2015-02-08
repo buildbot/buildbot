@@ -57,6 +57,7 @@ def reroute_cache(url):
 
 
 plugins = dict((k, {}) for k in master_service.apps.names if k != "base")
+print "found plugins:", plugins
 
 
 def config():
@@ -65,7 +66,12 @@ def config():
         "user": {"anonymous": True},
         "plugins": plugins,
         "port": port,
-        "auth": {"name": "NoAuth"}
+        "auth": {"name": "NoAuth"},
+        "buildbotURL": local_url + "/",
+        "title": "proxied buildbot",
+        "titleURL": local_url,
+        "multiMaster": False
+
     }
 
 
@@ -73,7 +79,7 @@ def config():
 def root():
     if local_url not in request.url:
         return redirect(local_url)
-    return render_template('index.html', configjson=json.dumps(config()), plugins=plugins)
+    return render_template('index.html', configjson=json.dumps(config()), config=config())
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='api proxy for web ui development.')
