@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 from autobahn.twisted.util import sleep
-from autobahn.twisted.wamp import ApplicationRunner
 from autobahn.twisted.wamp import ApplicationSession
+from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import ApplicationError
 from buildslave import base
 from twisted.application import service
@@ -135,15 +135,13 @@ class WampBuildSlave(base.BuildSlaveBase):
         base.BuildSlaveBase.__init__(self, name, basedir, usePTY, umask=umask,
                                      unicode_encoding=unicode_encoding)
         self.passwd = passwd
-        self.app = ApplicationRunner(
+        self.app = Service(
             url=router_url,
             realm=realm,
+            make=make,
             extra=dict(parent=self),
             debug=kw.get('debug_websockets', False),
             debug_wamp=kw.get('debug_lowlevel', False),
             debug_app=kw.get('debug', False)
         )
-
-    def startService(self):
-        self.app.run(make, start_reactor=False)
-        base.BuildSlaveBase.startService(self)
+        self.app.setServiceParent(self)
