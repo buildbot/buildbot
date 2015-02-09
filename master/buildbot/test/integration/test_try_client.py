@@ -23,7 +23,7 @@ from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import www
-from buildbot.test.util.flaky import flaky
+from buildbot.test.util.decorators import flaky
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor

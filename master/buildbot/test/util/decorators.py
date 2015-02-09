@@ -16,6 +16,11 @@
 Various decorators for test cases
 """
 
+import os
+
+
+_FLAKY_ENV_VAR = 'RUN_FLAKY_TESTS'
+
 
 def todo(message):
     """
@@ -27,4 +32,13 @@ def todo(message):
         """
         func.todo = message
         return func
+    return wrap
+
+
+def flaky(bugNumber):
+    def wrap(fn):
+        if not os.environ.get(_FLAKY_ENV_VAR):
+            fn.skip = ("Flaky test (http://trac.buildbot.net/ticket/%d) "
+                       "- set $%s to run anyway" % (bugNumber, _FLAKY_ENV_VAR))
+        return fn
     return wrap

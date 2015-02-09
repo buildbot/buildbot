@@ -24,7 +24,7 @@ from buildbot.scripts import start
 from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-from buildbot.test.util.flaky import flaky
+from buildbot.test.util.decorators import flaky
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
 from twisted.trial import unittest
