@@ -12,14 +12,23 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+#
+# Keep in sync with slave/buildslave/__init__.py
+#
+# We can't put this method in utility modules, because they import dependancy packages
+#
 from __future__ import with_statement
-
+from subprocess import Popen, PIPE, STDOUT
 import os
+import re
 
 
-# we can't put this method in utility modules, because they import dependancy packages.
 def getVersion(init_file):
+    """
+    Return BUILDBOT_VERSION environment variable, content of VERSION file, git
+    tag or 'latest'
+    """
+
     try:
         return os.environ['BUILDBOT_VERSION']
     except KeyError:
@@ -28,20 +37,14 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        with open(fn) as vfile:
-            version = vfile.read().strip()
-        return version
+        with open(fn) as f:
+            return f.read().strip()
     except IOError:
         pass
-
-    from subprocess import Popen, PIPE, STDOUT
-    import re
 
     # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
     # no matter the number of digits for X, Y and Z
     VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
-
-    version = 'latest'
 
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
@@ -50,10 +53,11 @@ def getVersion(init_file):
         if (not p.returncode) and out:
             v = VERSION_MATCH.search(out)
             if v:
-                version = v.group(1)
+                return v.group(1)
     except OSError:
         pass
 
-    return version
+    return "latest"
+
 
 version = getVersion(__file__)
