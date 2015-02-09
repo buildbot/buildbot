@@ -22,7 +22,7 @@ from twisted.trial import unittest
 import buildbot.status.web.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
-from buildbot.test.util import compat
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 
 
 gitJsonPayload = """{
@@ -238,7 +238,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         self.assertEqual(request.written, 'no changes found')
 
     @inlineCallbacks
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def testWithNoJson(self):
         request = FakeRequest()
         request.uri = '/change_hook/bitbucket'

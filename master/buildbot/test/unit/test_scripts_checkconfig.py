@@ -24,8 +24,8 @@ import textwrap
 
 from buildbot.scripts import base
 from buildbot.scripts import checkconfig
-from buildbot.test.util import compat
 from buildbot.test.util import dirs
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.trial import unittest
 
 
@@ -94,7 +94,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         # (regression) check that sys.path hasn't changed
         self.assertEqual(len(sys.path), len_sys_path)
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_failure_ImportError(self):
         config = textwrap.dedent("""\
                 import test_scripts_checkconfig_does_not_exist
@@ -104,7 +104,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                               'No module named test_scripts_checkconfig_does_not_exist'))
         self.flushLoggedErrors()
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_failure_no_slaves(self):
         config = textwrap.dedent("""\
                 BuildmasterConfig={}

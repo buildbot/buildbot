@@ -17,7 +17,7 @@ import mock
 
 from buildbot.changes import base
 from buildbot.test.util import changesource
-from buildbot.test.util import compat
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -114,7 +114,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         reactor.callWhenRunning(d.callback, None)
         return d
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_loop_exception(self):
         # track when poll() gets called
         loops = []

@@ -16,7 +16,7 @@
 import mock
 
 from buildbot import config
-from buildbot.test.util import compat
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from buildbot.util import service
 from twisted.internet import defer
 from twisted.internet import task
@@ -493,7 +493,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, self.svc._unclaimService.call_count)
         self.assertEqual(False, self.svc.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_claim_raises(self):
         self.setServiceClaimable(self.svc, RuntimeError())
 
@@ -502,7 +502,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_activate_raises(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
         self.setActivateToReturn(self.svc, RuntimeError())
@@ -513,7 +513,7 @@ class ClusteredService(unittest.TestCase):
         # half-active: we actually return True in this case:
         self.assertEqual(True, self.svc.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_deactivate_raises(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
         self.setDeactivateToReturn(self.svc, RuntimeError())
@@ -524,7 +524,7 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_unclaim_raises(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
         self.setUnclaimToReturn(self.svc, RuntimeError())

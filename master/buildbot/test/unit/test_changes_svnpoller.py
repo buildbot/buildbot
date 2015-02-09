@@ -20,8 +20,8 @@ import xml.dom.minidom
 
 from buildbot.changes import svnpoller
 from buildbot.test.util import changesource
-from buildbot.test.util import compat
 from buildbot.test.util import gpo
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -569,7 +569,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         )
         s.poll()
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_poll_get_prefix_exception(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
@@ -585,7 +585,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
         return d
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_poll_get_logs_exception(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
                                  svnuser='dustin', svnpasswd='bbrocks')
@@ -621,7 +621,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         with open(cachepath) as f:
             self.assertEqual(f.read().strip(), '44')
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_cachepath_bogus(self):
         cachepath = os.path.abspath('revcache')
         with open(cachepath, "w") as f:

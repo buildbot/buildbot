@@ -18,7 +18,7 @@ import mock
 from buildbot import config
 from buildbot.buildslave import libvirt as libvirtbuildslave
 from buildbot.test.fake import libvirt
-from buildbot.test.util import compat
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import utils
@@ -113,7 +113,7 @@ class TestLibVirtSlave(unittest.TestCase):
 
         self.assertEqual(started, True)
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_start_instance_create_fails(self):
         bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',

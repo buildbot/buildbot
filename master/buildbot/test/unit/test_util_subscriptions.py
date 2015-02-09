@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 
-from buildbot.test.util import compat
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from buildbot.util import subscription
 
 
@@ -50,7 +50,7 @@ class subscriptions(unittest.TestCase):
         self.subpt.deliver(3, 4)
         self.assertEqual(state, [])
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_exception(self):
         def cb(*args, **kwargs):
             raise RuntimeError('mah bucket!')

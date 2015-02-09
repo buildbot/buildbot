@@ -20,8 +20,8 @@ from buildbot.changes import changes
 from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
-from buildbot.test.util import compat
 from buildbot.test.util import scheduler
+from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -172,7 +172,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             dict(fileIsImportant=lambda c: False),
             False)
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_change_consumption_fileIsImportant_exception(self):
         d = self.do_test_change_consumption(
             dict(fileIsImportant=lambda c: 1 / 0),
@@ -239,7 +239,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertTrue(sched.deactivate.called)
         self.assertFalse(sched.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_activation_claim_raises(self):
         sched = self.makeScheduler(name='n', builderNames=['a'])
         sched.clock = task.Clock()
@@ -251,7 +251,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertFalse(sched.isActive())
 
-    @compat.usesFlushLoggedErrors
+    @usesFlushLoggedErrors
     def test_activation_activate_fails(self):
         sched = self.makeScheduler(name='n', builderNames=['a'])
         sched.clock = task.Clock()
