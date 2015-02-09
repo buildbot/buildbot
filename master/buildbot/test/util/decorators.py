@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 """
-Mark a test as a todo one
+Various decorators for test cases
 """
 
 
