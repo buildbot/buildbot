@@ -23,10 +23,10 @@ from buildbot.db import connector
 from buildbot.db import masters
 from buildbot.db import model
 from buildbot.scripts import upgrade_master
-from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -155,7 +155,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertFalse(rv)
         self.assertInStdout('invalid buildmaster directory')
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_checkBasedir_active_pidfile(self):
         self.activeBasedir()
         open(os.path.join('test', 'twistd.pid'), 'w').close()
