@@ -168,7 +168,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         changes = list()
         currentBuild = yield self.master.db.builds.getBuild(buildid)
         fromChanges, toChanges = dict(), dict()
-        ssBuild = [ss for ss in (yield gssfb(buildid))]
+        ssBuild = yield gssfb(buildid)
         for ss in ssBuild:
             fromChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
 
