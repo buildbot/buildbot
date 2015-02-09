@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from autobahn.twisted.util import sleep
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
-from autobahn.wamp.exception import ApplicationError
 from buildslave import base
 from twisted.application import service
+from twisted.application.internet import TimerService
 
 from twisted.internet import defer
 
@@ -36,12 +35,22 @@ class ProxyBase(object):
         self.slavename = slavename
         self.commandId = commandId
 
-    @defer.inlineCallbacks
     def callRemote(self, command, *args, **kw):
-        ret = yield self.session.call("org.buildbot." + self.name + "." + command,
-                                      self.slavename, self.commandId,
-                                      *args, **kw)
-        defer.returnValue(ret)
+        meth = getattr(self, command, None)
+        if meth is None:
+            return self.session.call("org.buildbot." + self.slavename + "." + self.name + "." + command,
+                                     self.commandId,
+                                     *args, **kw)
+        else:
+            return meth(command, *args, **kw)
+
+    # Publications are for calls that dont need a response
+    # Publication avoids a return message
+    # This works as pub sub in wamp is ordered
+    # https://github.com/tavendo/WAMP/blob/master/spec/basic.md#publish--subscribe-ordering
+    def publishRemote(self, command, *args, **kw):
+        return self.session.publish("org.buildslave.%s.%s.%s" % (self.slavename, self.commandId, self.name),
+                                    *args, **kw)
 
     def notifyOnDisconnect(self, cb):
         pass
@@ -55,6 +64,10 @@ class ProxyBase(object):
 
 class RemoteCommandProxy(ProxyBase):
     name = "remotecommand"
+    # RemoteCommand update semantics is actually pub/sub, and not RPC
+    # unfortunately, crossbar does not implement pattern subscribe yet, so that is not useful
+    # update = ProxyBase.publishRemote
+    # close = ProxyBase.publishRemote
 
 
 class FileWriterProxy(ProxyBase):
@@ -93,26 +106,52 @@ class BotApplicationSession(ApplicationSession, service.MultiService):
         service.MultiService.__init__(self)
         self.config = config
         self.setServiceParent(config.extra['parent'])
+        self.slavename = self.parent.name
         config.extra['parent'].session = self
+        self.masterid = None
+
+    def advertiseMe(self):
+        return self.publish("org.buildslave.joined", self.parent.name)
+
+    def registerGenericCommands(self):
+        endpoint = "org.buildslave.%s.%s"
+        dl = []
+        for methodname in ('getCommands', 'setBuilderList', 'print', 'getSlaveInfo',
+                           'getVersion', 'shutdown', 'startCommand'):
+            method = getattr(self.parent.bot, "remote_" + methodname)
+            dl.append(self.register(method, endpoint % (self.slavename, methodname)))
+        return defer.gatherResults(dl)
+
+    def connectedToMaster(self, masterid):
+        self.masterid = masterid
+
+    def maybeDisconnectedFromMaster(self, masterid):
+        # in order to avoid race condition, we listen to all master disconnection events
+        if self.masterid == masterid:
+            self.masterid = None
+            # maybe another master wants me...
+            self.advertiseMe()
+
+    def masterConnected(self, masterid):
+        self.advertiseMe()
+
+    def onLeave(self, details):
+        self.masterid = None
 
     @defer.inlineCallbacks
     def onJoin(self, details):
-        b = "org.buildslave." + self.parent.name + "."
+        yield self.registerGenericCommands()
         dl = []
-        for name in ('getCommands', 'setBuilderList', 'print', 'getSlaveInfo', 'getVersion', 'shutdown', 'startCommand'):
-            method = getattr(self.parent.bot, "remote_" + name)
-            dl.append(self.register(method, b + name))
-        while True:
-            yield defer.gatherResults(dl)
-            try:
-                yield self.call("org.buildbot.connect_slave", self.parent.name)
-            except ApplicationError as e:
-                if e.error == ApplicationError.NO_SUCH_PROCEDURE:
-                    yield sleep(.1)
-                    continue
-                else:
-                    raise
-            break
+        dl.append(self.subscribe(self.connectedToMaster,
+                                 "org.buildbot.<masterid>.%s.attached" % (self.slavename)))
+        dl.append(self.subscribe(self.maybeDisconnectedFromMaster,
+                                 "org.buildbot.<masterid>.disconnected"))
+        dl.append(self.subscribe(self.masterConnected,
+                                 "org.buildbot.<masterid>.connected"))
+        yield defer.gatherResults(dl)
+
+        # if we missed a disconnected message, we still advertise ourselve every 10min
+        TimerService(10 * 60, self.advertiseMe).setServiceParent(self)
 
 
 def make(config):

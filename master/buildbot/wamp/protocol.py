@@ -25,62 +25,13 @@ class SlaveProtoWampHandler(service.AsyncMultiService):
         service.AsyncMultiService.__init__(self)
         self.master = master
 
-    @wamp.register(u"org.buildbot.connect_slave")
+    @wamp.subscribe(u"org.buildslave.joined")
     @defer.inlineCallbacks
-    def connect_slave(self, name):
-        slave = self.master.buildslaves.slaves[name]
+    def connect_slave(self, slavename):
+        slave = self.master.buildslaves.slaves[slavename]
         conn = Connection(self.master, slave)
-        res = yield self.master.buildslaves.newConnection(conn, name)
+        res = yield self.master.buildslaves.newConnection(conn, slavename)
+        # several masters can fight for this slave. We only attach if we won
         if res:
+            yield conn.attached()
             yield slave.attached(conn)
-
-    def getRemoteCommand(self, slavename, commandid):
-        # TODO: sanity checks
-        conn = self.master.buildslaves.slaves[slavename].conn
-        rc = conn.curCommands[commandid]
-        return rc
-    # RemoteCommand base implementation
-
-    @wamp.register(u"org.buildbot.remotecommand.update")
-    def rc_update(self, slavename, commandid, updates):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.remoteCommand.remote_update(updates)
-
-    @wamp.register(u"org.buildbot.remotecommand.complete")
-    def rc_complete(self, slavename, commandid, failure=None):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.remoteCommand.remote_complete(failure)
-
-    # FileWriter base implementation
-
-    @wamp.register(u"org.buildbot.filewriter.write")
-    def fw_write(self, slavename, commandid, data):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filewriter.remote_write(data)
-
-    @wamp.register(u"org.buildbot.filewriter.utime")
-    def fw_utime(self, slavename, commandid, accessed_modified):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filewriter.remote_utime(accessed_modified)
-
-    @wamp.register(u"org.buildbot.filewriter.unpack")
-    def fw_unpack(self, slavename, commandid):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filewriter.remote_unpack()
-
-    @wamp.register(u"org.buildbot.filewriter.close")
-    def fw_close(self, slavename, commandid):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filewriter.remote_close()
-
-    # FileReader base implementation
-
-    @wamp.register(u"org.buildbot.filereader.read")
-    def fr_read(self, slavename, commandid, maxLength):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filereader.remote_read(maxLength)
-
-    @wamp.register(u"org.buildbot.filereader.close")
-    def fr_close(self, slavename, commandid):
-        rc = self.getRemoteCommand(slavename, commandid)
-        return rc.filereader.remote_close()

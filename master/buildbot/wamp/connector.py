@@ -43,6 +43,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
+        yield self.publish("org.buildbot.%s.connected" % (self.master.masterid))
 
 
 def make(config):
@@ -63,9 +64,6 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.master = master
         self.app = self.router_url = None
 
-    def call(self, *args, **kw):
-        return self.service.call(*args, **kw)
-
     def reconfigServiceWithBuildbotConfig(self, new_config):
         wamp = new_config.protocols.get('wamp', {})
         router_url = wamp.get('router_url', None)
@@ -83,7 +81,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             extra=dict(master=self.master, parent=self),
             realm=wamp.get('realm'),
             make=make,
-            debug=wamp.get('debug_websockets', True),
+            debug=wamp.get('debug_websockets', False),
             debug_wamp=wamp.get('debug_lowlevel', False),
             debug_app=wamp.get('debug', False)
         )
