@@ -65,6 +65,15 @@ install:
       git fetch origin --depth=$DEPTH --quiet;
     done
 
+  # Determine if current configuration is latest
+  - |
+    if [[ $TWISTED == latest && \
+          $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
+      export IS_LATEST=true
+    else
+      export IS_LATEST=false
+    fi;
+
   # coveralls is the interface to coveralls.io; see after_success
   - "echo 'travis_fold:start:coveralls'; pip install coveralls; echo 'travis_fold:end:coveralls'"
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
@@ -74,19 +83,11 @@ install:
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
   # mock is preinstalled on Travis
-  # txgithub requires Twisted >= 12.3.0
-  - pip install txgithub
+  # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
+  # latest Twisted to avoid unintended upgrades.
+  - "[ $IS_LATEST = false ] || pip install txgithub"
   # txrequests support only Python 2.6 and 2.7.
   - pip install txrequests
-
-  # Determine if current configuration is latest
-  - |
-    if [[ $TWISTED == latest && \
-          $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
-      export IS_LATEST=true
-    else
-      export IS_LATEST=false
-    fi;
 
   # Run additional tests only in latest configuration
   # Astroid 1.3.0 dropped Python-2.6 spuport
