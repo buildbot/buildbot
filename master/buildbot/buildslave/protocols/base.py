@@ -25,6 +25,7 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
 
 class Connection(object):
+    proxies = {}
 
     def __init__(self, master, buildslave):
         self.master = master
@@ -33,6 +34,15 @@ class Connection(object):
         self._disconnectSubs = subscription.SubscriptionPoint(
             "disconnections from %s" % name)
 
+    # This method replace all Impl args by their Proxy protocol implementation
+    def createArgsProxies(self, args):
+        newargs = {}
+        for k, v in args.iteritems():
+            for implclass, proxyclass in self.proxies.items():
+                if isinstance(v, implclass):
+                    v = proxyclass(v)
+            newargs[k] = v
+        return newargs
     # disconnection handling
 
     def notifyOnDisconnect(self, cb):
@@ -65,4 +75,40 @@ class Connection(object):
         raise NotImplementedError
 
     def remoteInterruptCommand(self, commandId, why):
+        raise NotImplementedError
+
+
+# RemoteCommand base implementation and base proxy
+class RemoteCommandImpl(object):
+
+    def remote_update(self, updates):
+        raise NotImplementedError
+
+    def remote_complete(self, failure=None):
+        raise NotImplementedError
+
+
+# FileWriter base implementation
+class FileWriterImpl(object):
+
+    def remote_write(self, data):
+        raise NotImplementedError
+
+    def remote_utime(self, accessed_modified):
+        raise NotImplementedError
+
+    def remote_unpack(self):
+        raise NotImplementedError
+
+    def remote_close(self):
+        raise NotImplementedError
+
+
+# FileReader base implementation
+class FileReaderImpl(object):
+
+    def remote_read(self, maxLength):
+        raise NotImplementedError
+
+    def remote_close(self):
         raise NotImplementedError

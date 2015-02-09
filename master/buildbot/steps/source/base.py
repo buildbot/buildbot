@@ -14,15 +14,13 @@
 # Copyright Buildbot Team Members
 
 
-import StringIO
-
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
 from buildbot.steps.slave import CompositeStepMixin
-from buildbot.steps.transfer import _FileReader
 from twisted.python import log
 
 
@@ -212,7 +210,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             self.workdir = self.build.path_module.join(self.workdir, root)
 
         def _downloadFile(buf, filename):
-            filereader = _FileReader(StringIO.StringIO(buf))
+            filereader = remotetransfer.StringFileReader(buf)
             args = {
                 'slavedest': filename,
                 'maxsize': None,

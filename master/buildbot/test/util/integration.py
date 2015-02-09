@@ -29,16 +29,21 @@ from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildslave.bot import BuildSlave
+from buildslave.bot import LocalBuildSlave
 
 
 class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
+    proto = "null"
 
     @defer.inlineCallbacks
     def setUp(self):
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
-
+        if self.proto == 'pb':
+            proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
+        elif self.proto == 'null':
+            proto = '{"null": {}}'
         # We create a master.cfg, which loads the configuration from the
         # test module. Only the slave config is kept there, as it should not
         # be changed
@@ -47,8 +52,8 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             from %s import masterConfig
             c = BuildmasterConfig = masterConfig()
             c['slaves'] = [BuildSlave("local1", "localpw")]
-            c['protocols'] = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-            """ % self.__class__.__module__))
+            c['protocols'] = %s
+            """ % (self.__class__.__module__, proto)))
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m
@@ -70,12 +75,15 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 
-        # We find out the slave port automatically
-        slavePort = m.pbmanager.dispatchers.values()[0].port.getHost().port
+        if self.proto == 'pb':
+            # We find out the slave port automatically
+            slavePort = m.pbmanager.dispatchers.values()[0].port.getHost().port
 
-        # create a slave, and attach it to the master, it will be started, and stopped
-        # along with the master
-        s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
+            # create a slave, and attach it to the master, it will be started, and stopped
+            # along with the master
+            s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
+        elif self.proto == 'null':
+            s = LocalBuildSlave("local1", self.basedir, False)
         s.setServiceParent(m)
 
     @defer.inlineCallbacks

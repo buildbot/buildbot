@@ -76,8 +76,31 @@ class Listener(base.Listener):
             raise RuntimeError("rejecting duplicate slave")
 
 
-class Connection(base.Connection, pb.Avatar):
+class ReferenceableProxy(pb.Referenceable):
 
+    def __init__(self, impl):
+        assert isinstance(impl, self.ImplClass)
+        self.impl = impl
+
+    def __getattr__(self, default=None):
+        return getattr(self.impl, default)
+
+
+# Proxy are just ReferenceableProxy to the Impl classes
+class RemoteCommand(ReferenceableProxy):
+    ImplClass = base.RemoteCommandImpl
+
+
+class FileReaderProxy(ReferenceableProxy):
+    ImplClass = base.FileReaderImpl
+
+
+class FileWriterProxy(ReferenceableProxy):
+    ImplClass = base.FileWriterImpl
+
+
+class Connection(base.Connection, pb.Avatar):
+    proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
     # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
     keepalive_timer = None
     keepalive_interval = 3600
@@ -153,6 +176,9 @@ class Connection(base.Connection, pb.Avatar):
         except pb.NoSuchMethod:
             log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
 
+        # newer slaves send all info in one command
+        if "slave_commands" in info:
+            defer.returnValue(info)
         try:
             info["slave_commands"] = yield self.mind.callRemote('getCommands')
         except pb.NoSuchMethod:
@@ -175,6 +201,8 @@ class Connection(base.Connection, pb.Avatar):
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         slavebuilder = self.builders.get(builderName)
+        remoteCommand = RemoteCommand(remoteCommand)
+        args = self.createArgsProxies(args)
         return slavebuilder.callRemote('startCommand',
                                        remoteCommand, commandId, commandName, args
                                        )

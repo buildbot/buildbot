@@ -13,7 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from buildslave.null import LocalBuildSlave
-from buildslave.pb import BuildSlave
+from buildslave.base import BuildSlaveBase
+from twisted.internet import defer
 
-__all__ = ['BuildSlave', 'LocalBuildSlave']
+
+class LocalBuildSlave(BuildSlaveBase):
+
+    @defer.inlineCallbacks
+    def startService(self):
+        # importing here to avoid dependency on buildbot master package
+        from buildbot.buildslave.protocols.null import Connection
+
+        yield BuildSlaveBase.startService(self)
+        self.slavename = self.name
+        conn = Connection(self.parent, self)
+        res = yield self.parent.buildslaves.newConnection(conn, self.name)
+        if res:
+            yield self.parent.buildslaves.slaves[self.name].attached(conn)

@@ -4,11 +4,14 @@ Protocols
 To exchange information over the network between master and slave we need to use
 protocol.
 
-:class:`Listener` and :class:`Connection` provide interfaces to implement
-wrappers around protocol specific calls, so other classes which use them no need
+:mod:`buildbot.buildslave.protocols.base` provide interfaces to implement
+wrappers around protocol specific calls, so other classes which use them do not need
 to know about protocol calls or handle protocol specific exceptions.
 
-.. py:class Listener(master)
+.. py:module:: buildbot.buildslave.protocols.base
+
+
+.. py:class:: Listener(master)
 
     :param master: :py:class:`buildbot.master.BuildMaster` instance
 
@@ -16,9 +19,20 @@ to know about protocol calls or handle protocol specific exceptions.
     Protocol-specific subclasses are instantiated with protocol-specific
     parameters by the buildmaster during startup.
 
-.. py:class Connection(master, buildslave, mind)
+.. py:class:: Connection(master, buildslave, mind)
 
     Represents connection to single slave
+
+    .. py:attribute:: proxies
+
+        Dictionary containing mapping between ``Impl`` classes and ``Proxy`` class for this protocol
+        This may be overridden by subclass to declare its proxy implementations
+
+    .. py:method:: createArgsProxies(args)
+
+        :returns: shallow copy of args dictionary with proxies instead of impls
+
+        Helper method that will use :attr:`proxies`, and replace ``Impl`` objects by specific ``Proxy`` counterpart.
 
     .. py:method:: notifyOnDisconnect(cb)
 
@@ -57,7 +71,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
     .. py:method:: remoteStartCommand(remoteCommand, builderName, commandId, commandName, args)
 
-        :param remoteCommand: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
+        :param remoteCommand: :py:class:`~buildbot.buildslave.protocols.base.RemoteCommandImpl` instance
         :param builderName: self explanatory
         :type builderName: string
         :param commandId: command number
@@ -93,3 +107,98 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Interrupt command with given CommandID on slave, print reason "why" to
         slave logs
+
+Following classes are describing the slave -> master part of the protocol.
+
+In order to support old slaves, we must make sure we do not change the current pb protocol.
+This is why we implement a ``Impl vs Proxy`` methods.
+All the objects that are referenced from the slaves for remote calls have an ``Impl`` and a ``Proxy`` base classes in this module.
+
+``Impl`` classes are subclassed by buildbot master, and implement the actual logic for the protocol api.
+``Proxy`` classes are implemented by the slave/master protocols, and implements the demux and de-serialization of protocol calls.
+
+On slave sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
+
+.. py:class:: SlaveProxyObject()
+
+    .. py:method:: callRemote(message, *args, **kw)
+
+        calls the method ``"remote_" + message`` on master side
+
+.. py:class:: RemoteCommandImpl()
+
+    Represents a RemoteCommand status controller
+
+    .. py:method:: remote_update(updates)
+
+        :param updates: dictionary of updates
+
+        Called when the slaves has updates to the current remote command
+
+        possible keys for updates are:
+
+        * ``stdout``: Some logs where captured in remote command's stdout. value: ``<data> as string``
+
+        * ``stderr``: Some logs where captured in remote command's stderr. value: ``<data> as string``
+
+        * ``header``: remote command's header text. value: ``<data> as  string``
+
+        * ``log``: one of the watched logs has received some text. value: ``(<logname> as string, <data> as string)``
+
+        * ``rc``: Remote command exited with a return code. value: ``<rc> as integer``
+
+        * ``elapsed``: Remote command has taken <elapsed> time. value: ``<elapsed seconds> as float``
+
+        * ``stat``: sent by the ``stat`` command with the result of the os.stat, converted to a tuple. value: ``<stat> as tuple``
+
+        * ``files``: sent by the ``glob`` command with the result of the glob.glob. value: ``<files> as list of string``
+
+        * ``got_revision``: sent by the source commands with the revision checked out. value: ``<revision> as string``
+
+        * ``repo_downloaded``: sent by the ``repo`` command with the list of patches downloaded by repo. value: ``<downloads> as list of string``
+
+
+    .. :py:method:: remote_complete(failure=None)
+
+        :param failure: copy of the failure if any
+
+            Called by the slave when the command is complete.
+
+
+.. py:class:: FileWriterImpl()
+
+    Class used to implement data transfer between slave and master
+
+    .. :py:method:: remote_write(data)
+
+        :param data: data to write
+
+        data needs to be written on master side
+
+    .. :py:method:: remote_utime(accessed_modified)
+
+        :param accessed_modified: modification times
+
+        called with value of the modification time to update on master side
+
+    .. :py:method:: remote_unpack()
+
+        Called when master should start to unpack the tarball sent via command ``uploadDirectory``
+
+    .. :py:method:: remote_close()
+
+        Called when master should close the file
+
+
+.. py:class:: FileReaderImpl(object)
+
+    .. py:method:: remote_read(maxLength)
+
+        :param maxLength: maximum length of the data to send
+        :returns: data read
+
+        called when slave needs more data
+
+    .. py:method:: remote_close()
+
+        Called when master should close the file

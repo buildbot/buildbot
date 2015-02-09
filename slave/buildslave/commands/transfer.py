@@ -56,7 +56,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         - ['workdir']:   base directory to use
         - ['slavesrc']:  name of the slave-side file to read from
-        - ['writer']:    RemoteReference to a transfer._FileWriter object
+        - ['writer']:    RemoteReference to a buildslave.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
@@ -253,7 +253,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
         - ['workdir']:   base directory to use
         - ['slavedest']: name of the slave-side file to be created
-        - ['reader']:    RemoteReference to a transfer._FileReader object
+        - ['reader']:    RemoteReference to a buildslave.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file

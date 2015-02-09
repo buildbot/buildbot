@@ -26,7 +26,8 @@ from twisted.trial import unittest
 
 import buildslave
 
-from buildslave import bot
+from buildslave import base
+from buildslave import pb
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util import command
@@ -41,7 +42,7 @@ class TestBot(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.real_bot = bot.Bot(self.basedir, False)
+        self.real_bot = base.BotBase(self.basedir, False)
         self.real_bot.startService()
 
         self.bot = FakeRemote(self.real_bot)
@@ -81,7 +82,11 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ, system=os.name, basedir=self.basedir))
+            self.assertEqual(info, dict(
+                admin='testy!', foo='bar',
+                environ=os.environ, system=os.name, basedir=self.basedir,
+                slave_commands=self.real_bot.remote_getCommands(),
+                version=self.real_bot.remote_getVersion()))
         d.addCallback(check)
         return d
 
@@ -89,7 +94,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir', 'slave_commands', 'version']))
         d.addCallback(check)
         return d
 
@@ -214,7 +219,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.bot = bot.Bot(self.basedir, False)
+        self.bot = base.BotBase(self.basedir, False)
         self.bot.startService()
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
@@ -384,7 +389,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 class TestBotFactory(unittest.TestCase):
 
     def setUp(self):
-        self.bf = bot.BotFactory('mstr', 9010, 35, 200)
+        self.bf = pb.BotFactory('mstr', 9010, 35, 200)
 
     # tests
 

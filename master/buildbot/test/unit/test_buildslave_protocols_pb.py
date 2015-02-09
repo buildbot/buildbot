@@ -15,6 +15,7 @@
 
 import mock
 
+from buildbot.buildslave.protocols import base
 from buildbot.buildslave.protocols import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
@@ -181,13 +182,17 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         conn.remoteSetBuilderList(builders)
 
-        RCInstance, builder_name, commandID = None, "builder", None
-        remote_command, args = "command", "args"
+        RCInstance, builder_name, commandID = base.RemoteCommandImpl(), "builder", None
+        remote_command, args = "command", {"args": 'args'}
 
         conn.remoteStartCommand(RCInstance, builder_name, commandID, remote_command, args)
 
-        ret_val['builder'].callRemote.assert_called_with('startCommand',
-                                                         RCInstance, commandID, remote_command, args)
+        callargs = ret_val['builder'].callRemote.call_args_list[0][0]
+        callargs_without_rc = (callargs[0], callargs[2], callargs[3], callargs[4])
+        self.assertEqual(callargs_without_rc, ('startCommand',
+                                               commandID, remote_command, args))
+        self.assertIsInstance(callargs[1], pb.RemoteCommand)
+        self.assertEqual(callargs[1].impl, RCInstance)
 
     def test_doKeepalive(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)

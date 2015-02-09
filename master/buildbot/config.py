@@ -698,13 +698,16 @@ class MasterConfig(util.ComparableMixin):
         ports = set()
         if self.protocols:
             for proto, options in self.protocols.iteritems():
-                port = options.get("port")
+                if proto == 'null':
+                    port = -1
+                else:
+                    port = options.get("port")
                 if not port:
                     continue
                 if isinstance(port, int):
                     # Conversion needed to compare listenTCP and strports ports
                     port = "tcp:%d" % port
-                if port in ports:
+                if port != -1 and port in ports:
                     error("Some of ports in c['protocols'] duplicated")
                 ports.add(port)
 

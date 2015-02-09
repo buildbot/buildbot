@@ -13,21 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import with_statement
-
-
 import os.path
 import stat
-import tarfile
-import tempfile
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
+
 from buildbot import config
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import remotecommand
+from buildbot.process import remotetransfer
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SKIPPED
@@ -36,149 +28,6 @@ from buildbot.util import json
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.python import log
-from twisted.spread import pb
-
-
-class _FileWriter(pb.Referenceable):
-
-    """
-    Helper class that acts as a file-object with write access
-    """
-
-    def __init__(self, destfile, maxsize, mode):
-        # Create missing directories.
-        destfile = os.path.abspath(destfile)
-        dirname = os.path.dirname(destfile)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
-        self.destfile = destfile
-        self.mode = mode
-        fd, self.tmpname = tempfile.mkstemp(dir=dirname)
-        self.fp = os.fdopen(fd, 'wb')
-        self.remaining = maxsize
-
-    def remote_write(self, data):
-        """
-        Called from remote slave to write L{data} to L{fp} within boundaries
-        of L{maxsize}
-
-        @type  data: C{string}
-        @param data: String of data to write
-        """
-        if self.remaining is not None:
-            if len(data) > self.remaining:
-                data = data[:self.remaining]
-            self.fp.write(data)
-            self.remaining = self.remaining - len(data)
-        else:
-            self.fp.write(data)
-
-    def remote_utime(self, accessed_modified):
-        os.utime(self.destfile, accessed_modified)
-
-    def remote_close(self):
-        """
-        Called by remote slave to state that no more data will be transfered
-        """
-        self.fp.close()
-        self.fp = None
-        # on windows, os.rename does not automatically unlink, so do it manually
-        if os.path.exists(self.destfile):
-            os.unlink(self.destfile)
-        os.rename(self.tmpname, self.destfile)
-        self.tmpname = None
-        if self.mode is not None:
-            os.chmod(self.destfile, self.mode)
-
-    def cancel(self):
-        # unclean shutdown, the file is probably truncated, so delete it
-        # altogether rather than deliver a corrupted file
-        fp = getattr(self, "fp", None)
-        if fp:
-            fp.close()
-            if self.destfile and os.path.exists(self.destfile):
-                os.unlink(self.destfile)
-            if self.tmpname and os.path.exists(self.tmpname):
-                os.unlink(self.tmpname)
-
-
-def _extractall(self, path=".", members=None):
-    """Fallback extractall method for TarFile, in case it doesn't have its own."""
-
-    import copy
-
-    directories = []
-
-    if members is None:
-        members = self
-
-    for tarinfo in members:
-        if tarinfo.isdir():
-            # Extract directories with a safe mode.
-            directories.append(tarinfo)
-            tarinfo = copy.copy(tarinfo)
-            tarinfo.mode = 0700
-        self.extract(tarinfo, path)
-
-    # Reverse sort directories.
-    directories.sort(lambda a, b: cmp(a.name, b.name))
-    directories.reverse()
-
-    # Set correct owner, mtime and filemode on directories.
-    for tarinfo in directories:
-        dirpath = os.path.join(path, tarinfo.name)
-        try:
-            self.chown(tarinfo, dirpath)
-            self.utime(tarinfo, dirpath)
-            self.chmod(tarinfo, dirpath)
-        except tarfile.ExtractError, e:
-            if self.errorlevel > 1:
-                raise
-            else:
-                self._dbg(1, "tarfile: %s" % e)
-
-
-class _DirectoryWriter(_FileWriter):
-
-    """
-    A DirectoryWriter is implemented as a FileWriter, with an added post-processing
-    step to unpack the archive, once the transfer has completed.
-    """
-
-    def __init__(self, destroot, maxsize, compress, mode):
-        self.destroot = destroot
-        self.compress = compress
-
-        self.fd, self.tarname = tempfile.mkstemp()
-        os.close(self.fd)
-
-        _FileWriter.__init__(self, self.tarname, maxsize, mode)
-
-    def remote_unpack(self):
-        """
-        Called by remote slave to state that no more data will be transfered
-        """
-        # Make sure remote_close is called, otherwise atomic rename wont happen
-        self.remote_close()
-
-        # Map configured compression to a TarFile setting
-        if self.compress == 'bz2':
-            mode = 'r|bz2'
-        elif self.compress == 'gz':
-            mode = 'r|gz'
-        else:
-            mode = 'r'
-
-        # Support old python
-        if not hasattr(tarfile.TarFile, 'extractall'):
-            tarfile.TarFile.extractall = _extractall
-
-        # Unpack archive and clean up after self
-        archive = tarfile.open(name=self.tarname, mode=mode)
-        archive.extractall(path=self.destroot)
-        archive.close()
-        os.remove(self.tarname)
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
@@ -272,7 +121,7 @@ class FileUpload(_TransferBuildStep):
             self.addURL(os.path.basename(masterdest), self.url)
 
         # we use maxsize to limit the amount of data on both sides
-        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+        fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
 
         if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
@@ -333,7 +182,7 @@ class DirectoryUpload(_TransferBuildStep):
             self.addURL(os.path.basename(masterdest), self.url)
 
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
 
         # default arguments
         args = {
@@ -377,7 +226,7 @@ class MultipleFileUpload(_TransferBuildStep):
         self.url = url
 
     def uploadFile(self, source, masterdest):
-        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
+        fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
 
         args = {
             'slavesrc': source,
@@ -392,7 +241,7 @@ class MultipleFileUpload(_TransferBuildStep):
         return self.runTransferCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
 
         args = {
             'slavesrc': source,
@@ -487,40 +336,6 @@ class MultipleFileUpload(_TransferBuildStep):
         return BuildStep.finished(self, result)
 
 
-class _FileReader(pb.Referenceable):
-
-    """
-    Helper class that acts as a file-object with read access
-    """
-
-    def __init__(self, fp):
-        self.fp = fp
-
-    def remote_read(self, maxlength):
-        """
-        Called from remote slave to read at most L{maxlength} bytes of data
-
-        @type  maxlength: C{integer}
-        @param maxlength: Maximum number of data bytes that can be returned
-
-        @return: Data read from L{fp}
-        @rtype: C{string} of bytes read from file
-        """
-        if self.fp is None:
-            return ''
-
-        data = self.fp.read(maxlength)
-        return data
-
-    def remote_close(self):
-        """
-        Called by remote slave to state that no more data will be transfered
-        """
-        if self.fp is not None:
-            self.fp.close()
-            self.fp = None
-
-
 class FileDownload(_TransferBuildStep):
 
     name = 'download'
@@ -564,7 +379,7 @@ class FileDownload(_TransferBuildStep):
             # maybeDeferred, just re-raise the exception here.
             eventually(BuildStep.finished, self, FAILURE)
             return
-        fileReader = _FileReader(fp)
+        fileReader = remotetransfer.FileReader(fp)
 
         # default arguments
         args = {
@@ -614,8 +429,7 @@ class StringDownload(_TransferBuildStep):
         self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
 
         # setup structures for reading the file
-        fp = StringIO(self.s)
-        fileReader = _FileReader(fp)
+        fileReader = remotetransfer.StringFileReader(self.s)
 
         # default arguments
         args = {

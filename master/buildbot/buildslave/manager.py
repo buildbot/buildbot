@@ -48,9 +48,10 @@ class BuildslaveRegistration(object):
     def update(self, slave_config, global_config):
         # For most protocols, there's nothing to do, but for PB we must
         # update the registration in case the port or password has changed.
-        self.pbReg = yield self.master.buildslaves.pb.updateRegistration(
-            slave_config.slavename, slave_config.password,
-            global_config.protocols['pb']['port'])
+        if 'pb' in global_config.protocols:
+            self.pbReg = yield self.master.buildslaves.pb.updateRegistration(
+                slave_config.slavename, slave_config.password,
+                global_config.protocols['pb']['port'])
 
     def getPBPort(self):
         return self.pbReg.getPort()
@@ -91,7 +92,7 @@ class BuildslaveManager(service.ReconfigurableServiceMixin,
 
         # reconfig any newly-added change sources, as well as existing
         yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                           new_config)
+                                                                                   new_config)
 
     @defer.inlineCallbacks
     def reconfigServiceSlaves(self, new_config):

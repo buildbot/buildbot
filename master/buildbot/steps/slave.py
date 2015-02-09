@@ -15,32 +15,12 @@
 
 import stat
 
-from twisted.spread import pb
-
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process import remotetransfer
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
-
-
-class StringFileWriter(pb.Referenceable):
-
-    """
-    FileWriter class that just puts received data into a buffer.
-
-    Used to upload a file from slave for inline processing rather than
-    writing into a file on master.
-    """
-
-    def __init__(self):
-        self.buffer = ""
-
-    def remote_write(self, data):
-        self.buffer += data
-
-    def remote_close(self):
-        pass
 
 
 class SlaveBuildStep(buildstep.BuildStep):
@@ -322,7 +302,7 @@ class CompositeStepMixin():
 
     def getFileContentFromSlave(self, filename, abandonOnFailure=False):
         self.checkSlaveHasCommand("uploadFile")
-        fileWriter = StringFileWriter()
+        fileWriter = remotetransfer.StringFileWriter()
         # default arguments
         args = {
             'slavesrc': filename,
