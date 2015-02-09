@@ -67,7 +67,7 @@ install:
   - "[ $IS_LATEST = false ] || pip install pylint==1.1.0"
   - "[ $IS_LATEST = false ] || pip install pyflakes"
   - "[ $IS_LATEST = false ] || pip install sphinx"
-  - "[ $IS_LATEST = false ] || pip install pep8"
+  - "[ $IS_LATEST = false ] || pip install pep8==1.5.7"
 
 # Tests running commands
 script:
