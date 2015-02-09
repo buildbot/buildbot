@@ -33,7 +33,6 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         self.config = config
         self.master = config.extra['master']
         self.setServiceParent(config.extra['parent'])
-        config.extra['parent'].service = self
         # init and register child handlers
         p = protocol.SlaveProtoWampHandler(self.master)
         p.setServiceParent(self)
@@ -44,6 +43,8 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
             yield self.register(handler)
             yield self.subscribe(handler)
         yield self.publish("org.buildbot.%s.connected" % (self.master.masterid))
+        self.parent.service = self
+        self.parent.serviceDeferred.callback(self)
 
 
 def make(config):
@@ -63,6 +64,19 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.setName('wamp')
         self.master = master
         self.app = self.router_url = None
+        self.serviceDeferred = defer.Deferred()
+        self.service = None
+
+    def getService(self):
+        if self.service is not None:
+            return defer.succeed(self.service)
+        d = defer.Deferred()
+
+        @self.serviceDeferred.addCallback
+        def gotService(service):
+            d.callback(service)
+            return service
+        return d
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         wamp = new_config.protocols.get('wamp', {})

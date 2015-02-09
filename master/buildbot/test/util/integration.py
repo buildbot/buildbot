@@ -46,8 +46,10 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self.configfile = os.path.join(self.basedir, 'master.cfg')
         if self.proto == 'pb':
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
+            mq = '{"type": "simple"}'
         elif self.proto == 'null':
             proto = '{"null": {}}'
+            mq = '{"type": "simple"}'
         elif self.proto == 'wamp':
             # Unfortunatly, there is no way to build local router for tests
             # need to rely on an external router
@@ -56,6 +58,7 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             if WampBuildSlave is None:
                 raise unittest.SkipTest("Please install autobahn to run wamp tests")
             proto = '{"wamp": {"router_url": "%s"}}' % (os.environ['WAMP_ROUTER_URL'],)
+            mq = '{"type": "wamp"}'
         else:
             raise Exception("unsupported proto: " + self.proto)
         # We create a master.cfg, which loads the configuration from the
@@ -66,8 +69,9 @@ class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             from %s import masterConfig
             c = BuildmasterConfig = masterConfig()
             c['slaves'] = [BuildSlave("local1", "localpw")]
+            c['mq'] = %s
             c['protocols'] = %s
-            """ % (self.__class__.__module__, proto)))
+            """ % (self.__class__.__module__, mq, proto)))
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m

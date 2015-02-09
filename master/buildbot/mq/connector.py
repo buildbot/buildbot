@@ -24,6 +24,10 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             'class': "buildbot.mq.simple.SimpleMQ",
             'keys': set(['debug']),
         },
+        'wamp': {
+            'class': "buildbot.mq.wamp.WampMQ",
+            'keys': set([]),
+        },
     }
 
     def __init__(self, master):
