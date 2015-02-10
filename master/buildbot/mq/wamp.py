@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from autobahn.wamp.types import PublishOptions
 from autobahn.wamp import exception
+from autobahn.wamp.types import PublishOptions
+from twisted.internet import defer
 
 from buildbot.mq import base
 from buildbot.util import service
@@ -51,7 +51,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     def _produce(self, routingKey, data):
         service = yield self.master.wamp.getService()
         _data = json.loads(json.dumps(data, default=toJson))
-        options = PublishOptions(excludeMe = False)
+        options = PublishOptions(excludeMe=False)
         try:
             service.publish(self.messageTopic(routingKey), _data, options=options)
             for k, v in self.EMULATED_WILDCARDS.items():
@@ -76,7 +76,11 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 class QueueRef(base.QueueRef):
 
-    __slots__ = ['unreg', 'filter', 'emulated']
+    __slots__ = ['unreg', 'filter', 'emulated', 'unreg']
+
+    def __init__(self, callback):
+        base.QueueRef.__init__(self, callback)
+        self.unreg = None
 
     @defer.inlineCallbacks
     def subscribe(self, service, _filter):
@@ -92,6 +96,8 @@ class QueueRef(base.QueueRef):
             return
         _filter = WampMQ.messageTopic(_filter)
         self.unreg = yield service.subscribe(self.invoke, _filter)
+        if self.callback is None:
+            yield self.stopConsuming()
 
     def invoke(self, msg):
         if self.emulated:
@@ -100,4 +106,7 @@ class QueueRef(base.QueueRef):
 
     def stopConsuming(self):
         self.callback = None
-        return self.unreg.unsubscribe()
+        if self.unreg is not None:
+            unreg = self.unreg
+            self.unreg = None
+            return unreg.unsubscribe()

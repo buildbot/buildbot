@@ -156,6 +156,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
 
+        if wampconnector is not None:
+            self.wamp = wampconnector.WampConnector(self)
+            self.wamp.setServiceParent(self)
+
         self.db = dbconnector.DBConnector(self, self.basedir)
         self.db.setServiceParent(self)
 
@@ -167,10 +171,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         self.www = wwwservice.WWWService(self)
         self.www.setServiceParent(self)
-
-        if wampconnector is not None:
-            self.wamp = wampconnector.WampConnector(self)
-            self.wamp.setServiceParent(self)
 
         self.debug = debug.DebugServices(self)
         self.debug.setServiceParent(self)

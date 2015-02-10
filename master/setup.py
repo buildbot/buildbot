@@ -376,9 +376,6 @@ else:
         'sqlalchemy-migrate==0.7.2',
         'python-dateutil>=1.5',
 
-        # crossbar + autobahn for wamp and websockets
-        'autobahn>=0.9.5',
-        'crossbar>=0.10.1'
     ]
 
     setup_args['extras_require'] = {
@@ -387,6 +384,10 @@ else:
             'pep8',
             'pylint==1.1.0',
             'pyflakes',
+        ],
+        'wamp': [
+            # autobahn for wamp and websockets
+            'autobahn>=0.9.5',
         ],
     }
 
