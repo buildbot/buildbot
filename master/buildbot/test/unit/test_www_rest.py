@@ -17,7 +17,6 @@ import mock
 import re
 
 from buildbot.test.fake import endpoint
-from buildbot.test.util import compat
 from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import rest
@@ -69,7 +68,6 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         self.assertRequest(content=json.dumps({'error': message}),
                            responseCode=responseCode)
 
-    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_failure(self):
         self.rsrc.renderRest = mock.Mock(return_value=defer.fail(RuntimeError('oh noes')))
@@ -464,7 +462,6 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
                                item=endpoint.testData[13],
                                contentType='application/json; charset=utf-8')
 
-    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_api_fails(self):
         yield self.render_resource(self.rsrc, '/test/fail')
@@ -633,7 +630,6 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
             contentType='application/json',
             responseCode=200)
 
-    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_valid_fails(self):
         yield self.render_control_resource(self.rsrc, '/test/13',

@@ -21,10 +21,10 @@ import time
 import twisted
 
 from buildbot.scripts import start
-from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-from buildbot.test.util.flaky import flaky
+from buildbot.test.util.decorators import flaky
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
 from twisted.trial import unittest
@@ -100,7 +100,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         return d
 
     @flaky(bugNumber=2760)
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_start(self):
         d = self.runStart()
 

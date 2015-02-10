@@ -25,7 +25,6 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
-from buildbot.test.util import compat
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
 from mock import Mock
@@ -264,7 +263,6 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
-    @compat.usesFlushLoggedErrors
     def test_simple_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
