@@ -24,7 +24,6 @@ from buildbot.status.results import SUCCESS
 from buildbot.steps import slave
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps
-from buildbot.test.util.decorators import usesFlushLoggedErrors
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -121,7 +120,6 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
                            state_string="File not found. (failure)")
         return self.runStep()
 
-    @usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_old_version(self):
         self.setupStep(slave.FileExists(file="x"),

@@ -32,7 +32,6 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
-from buildbot.test.util.decorators import usesFlushLoggedErrors
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.internet import task
@@ -217,7 +216,6 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
-    @usesFlushLoggedErrors
     def test_hideStepIf_Callable_Exception(self):
         called = [False]
 

@@ -33,8 +33,6 @@ from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.decorators import usesFlushLoggedErrors
-from buildbot.test.util.decorators import usesFlushWarnings
 from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -237,7 +235,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             lambda: config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
 
-    @usesFlushLoggedErrors
     def test_loadConfig_parse_error(self):
         self.install_config_file('def x:\nbar')
         self.assertRaisesConfigError(
@@ -735,7 +732,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
-    @usesFlushWarnings
     def test_load_builders_abs_builddir(self):
         bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
                     builddir=os.path.abspath('.'))
@@ -1386,7 +1382,6 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             self.assertEqual(prio_order, called_order)
         return d
 
-    @usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):
         svc = FakeMultiService()

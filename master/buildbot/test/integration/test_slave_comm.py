@@ -26,7 +26,6 @@ from buildbot.process import factory
 from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.decorators import flaky
-from buildbot.test.util.decorators import usesFlushLoggedErrors
 from buildbot.util.eventual import eventually
 from twisted.cred import credentials
 from twisted.internet import defer
@@ -271,7 +270,6 @@ class TestSlaveComm(unittest.TestCase):
 
     @flaky(bugNumber=2761)
     @defer.inlineCallbacks
-    @usesFlushLoggedErrors
     def test_duplicate_slave(self):
         yield self.addSlave()
 
@@ -295,7 +293,6 @@ class TestSlaveComm(unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    @usesFlushLoggedErrors
     def test_duplicate_slave_old_dead(self):
         yield self.addSlave()
 

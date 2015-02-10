@@ -17,11 +17,8 @@ Various decorators for test cases
 """
 
 import os
-import sys
-import twisted
 
 from twisted.python import runtime
-from twisted.python import versions
 
 
 _FLAKY_ENV_VAR = 'RUN_FLAKY_TESTS'
@@ -47,24 +44,6 @@ def flaky(bugNumber):
                        "- set $%s to run anyway" % (bugNumber, _FLAKY_ENV_VAR))
         return fn
     return wrap
-
-
-def usesFlushLoggedErrors(test):
-    "Decorate a test method that uses flushLoggedErrors with this decorator"
-    if (sys.version_info[:2] == (2, 7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
-
-
-def usesFlushWarnings(test):
-    "Decorate a test method that uses flushWarnings with this decorator"
-    if (sys.version_info[:2] == (2, 7)
-            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
-        test.skip = \
-            "flushWarnings is broken on Python==2.7 and Twisted<=9.0.0"
-    return test
 
 
 def skipUnlessPlatformIs(platform):

@@ -36,7 +36,6 @@ from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.util.decorators import usesFlushLoggedErrors
 from buildbot.util import json
 
 from cStringIO import StringIO
@@ -187,7 +186,6 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
-    @usesFlushLoggedErrors
     def testException(self):
         self.setupStep(
             transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
@@ -262,7 +260,6 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
-    @usesFlushLoggedErrors
     def testException(self):
         self.setupStep(
             transfer.DirectoryUpload(slavesrc='srcdir', masterdest=self.destdir))
@@ -406,7 +403,6 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
-    @usesFlushLoggedErrors
     def testException(self):
         self.setupStep(
             transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
