@@ -24,6 +24,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.util import steps
+from buildbot.test.util.decorators import skip_if_no_python
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
@@ -66,6 +67,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                     pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
+    @skip_if_no_python
     def test_real_cmd(self):
         cmd = [sys.executable, '-c', 'print "hello"']
         self.setupStep(
@@ -77,6 +79,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
+    @skip_if_no_python
     def test_real_cmd_interrupted(self):
         cmd = [sys.executable, '-c', 'while True: pass']
         self.setupStep(
@@ -93,6 +96,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.step.interrupt("KILL")
         return d
 
+    @skip_if_no_python
     def test_real_cmd_fails(self):
         cmd = [sys.executable, '-c', 'import sys; sys.exit(1)']
         self.setupStep(
@@ -124,6 +128,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=['y'])
         return self.runStep()
 
+    @skip_if_no_python
     def test_env_subst(self):
         cmd = [sys.executable, '-c', 'import os; print os.environ["HELLO"]']
         os.environ['WORLD'] = 'hello'
@@ -143,6 +148,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         d.addBoth(_restore_env)
         return d
 
+    @skip_if_no_python
     def test_env_list_subst(self):
         cmd = [sys.executable, '-c', 'import os; print os.environ["HELLO"]']
         os.environ['WORLD'] = 'hello'
@@ -164,6 +170,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         d.addBoth(_restore_env)
         return d
 
+    @skip_if_no_python
     def test_prop_rendering(self):
         cmd = [sys.executable, '-c', WithProperties(
             'import os; print "%s"; print os.environ[\"BUILD\"]',
@@ -179,6 +186,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
+    @skip_if_no_python
     def test_path_is_renderable(self):
         """
         The ``path`` argument of ``MasterShellCommand`` is renderable.`
@@ -192,6 +200,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["Ran"])
         return self.runStep()
 
+    @skip_if_no_python
     def test_path_absolute(self):
         """
         If the ``path`` argument is absolute, the command is executed in that directory,
@@ -211,6 +220,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.assertIn(" in dir %s" % (path.path,), headers)
         return d
 
+    @skip_if_no_python
     def test_path_relative(self):
         """
         If the ``path`` argument is relative, the path is combined with the

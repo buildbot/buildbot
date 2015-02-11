@@ -24,6 +24,7 @@ from buildbot.scripts import start
 from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util.decorators import skip_if_no_python
 from buildbot.test.util.flaky import flaky
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
@@ -72,6 +73,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
         self.assertInStdout('invalid buildmaster directory')
 
+    @skip_if_no_python
     def runStart(self, **config):
         args = [
             '-c',
