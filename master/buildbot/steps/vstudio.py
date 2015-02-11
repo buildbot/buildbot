@@ -430,6 +430,13 @@ class MsBuild4(VisualStudio):
             command.append("/t:%s" % (self.project))
 
         self.setCommand(command)
+        
+        if self.mode == "build":
+            command.append("/t:Build")
+        elif self.mode == "clean":
+            command.append("/t:Clean")
+        elif self.mode == "rebuild":
+            command.append("/t:Rebuild")
 
         return VisualStudio.start(self)
 
