@@ -434,7 +434,7 @@ class MsBuild4(VisualStudio):
             command.append("/t:Clean")
         elif self.mode == "rebuild":
             command.append("/t:Rebuild")
-            
+
         self.setCommand(command)
 
         return VisualStudio.start(self)
