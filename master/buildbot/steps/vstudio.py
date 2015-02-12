@@ -428,15 +428,14 @@ class MsBuild4(VisualStudio):
                    "/p:Platform=%s" % (self.platform)]
         if self.project is not None:
             command.append("/t:%s" % (self.project))
-
-        self.setCommand(command)
-        
-        if self.mode == "build":
+        elif self.mode == "build":
             command.append("/t:Build")
         elif self.mode == "clean":
             command.append("/t:Clean")
         elif self.mode == "rebuild":
             command.append("/t:Rebuild")
+            
+        self.setCommand(command)
 
         return VisualStudio.start(self)
 
