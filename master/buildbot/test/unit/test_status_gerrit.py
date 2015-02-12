@@ -22,7 +22,7 @@ from buildbot.status.status_gerrit import makeReviewResult
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from mock import Mock
+from mock import call, Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -31,6 +31,11 @@ def testReviewCB(builderName, build, result, status, arg):
     verified = 1 if result == SUCCESS else -1
     return makeReviewResult(str({'name': builderName, 'result': result}),
                             (GERRIT_LABEL_VERIFIED, verified))
+
+
+def testStartCB(builderName, build, arg):
+    return makeReviewResult(str({'name': builderName}),
+                            (GERRIT_LABEL_REVIEWED, 0))
 
 
 def testSummaryCB(buildInfoList, results, status, arg):
@@ -100,10 +105,14 @@ class TestGerritStatusPush(unittest.TestCase):
 
     TEST_PROJECT = 'testProject'
     TEST_REVISION = 'd34db33fd43db33f'
+    TEST_CHANGE_ID = 'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
+    TEST_BUILDER_NAME = 'dummyBuilder'
     TEST_PROPS = {
         'gerrit_branch': 'refs/changes/34/1234/1',
         'project': TEST_PROJECT,
         'got_revision': TEST_REVISION,
+        'revision': TEST_REVISION,
+        'event.change.id': TEST_CHANGE_ID
     }
     THING_URL = 'http://thing.example.com'
 
@@ -268,39 +277,48 @@ class TestGerritStatusPush(unittest.TestCase):
         build = FakeBuildStatus(name="build")
         build.getProperty = self.TEST_PROPS.get
 
-        gsp.buildFinished('dummyBuilder', build, buildResult)
+        gsp.buildStarted(self.TEST_BUILDER_NAME, build)
+        gsp.buildFinished(self.TEST_BUILDER_NAME, build, buildResult)
 
-        return defer.succeed(str({'name': 'dummyBuilder', 'result': buildResult}))
+        return defer.succeed(str({'name': self.TEST_BUILDER_NAME,
+                                  'result': buildResult}))
 
     # same goes for check_single_build and check_single_build_legacy
 
     def check_single_build(self, buildResult, verifiedScore):
-        gsp = _get_prepared_gsp(reviewCB=testReviewCB)
+        gsp = _get_prepared_gsp(reviewCB=testReviewCB, startCB=testStartCB)
 
         d = self.run_fake_single_build(gsp, buildResult)
 
         @d.addCallback
         def check(msg):
+            start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+                                     (GERRIT_LABEL_REVIEWED, 0))
             result = makeReviewResult(msg,
                                       (GERRIT_LABEL_VERIFIED, verifiedScore))
-            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                       self.TEST_REVISION,
-                                                       result)
+            calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
+                     call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+            gsp.sendCodeReview.assert_has_calls(calls)
+
         return d
 
     def check_single_build_legacy(self, buildResult, verifiedScore):
-        gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB)
+        gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB,
+                                startCB=testStartCB)
 
         d = self.run_fake_single_build(gsp, buildResult)
 
         @d.addCallback
         def check(msg):
+            start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+                                     (GERRIT_LABEL_REVIEWED, 0))
             result = makeReviewResult(msg,
                                       (GERRIT_LABEL_VERIFIED, verifiedScore),
                                       (GERRIT_LABEL_REVIEWED, 0))
-            gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                       self.TEST_REVISION,
-                                                       result)
+            calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
+                     call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+            gsp.sendCodeReview.assert_has_calls(calls)
+
         return d
 
     def test_buildsetComplete_success_sends_review(self):
