@@ -140,7 +140,7 @@ class Build(properties.PropertiesMixin):
             if c.who not in blamelist:
                 blamelist.append(c.who)
         for source in self.sources:
-            if source.patch_info:  # Add patch author to blamelist
+            if source.patch:  # Add patch author to blamelist
                 blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
