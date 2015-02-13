@@ -23,6 +23,7 @@ master/docs/buildbot.info-2
 .project
 .pydevproject
 .settings
+*/build/
 master/docs/buildbot
 master/docs/version.texinfo
 master/docs/docs.tgz
