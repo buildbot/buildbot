@@ -127,12 +127,12 @@ class MtrLogObserver(LogLineObserver):
 
         else:
             m = self._line_re3.search(stripLine)
+
             if m:
                 stuff = m.group(1)
                 self.closeTestFail()
                 testList = stuff.split(" ")
                 self.doCollectWarningTests(testList)
-
             elif (self._line_re2.search(stripLine) or
                   self._line_re4.search(stripLine) or
                   self._line_re5.search(stripLine) or
@@ -141,7 +141,6 @@ class MtrLogObserver(LogLineObserver):
                   (stripLine.startswith("------------------------------------------------------------")
                    and self.testFail is not None)):
                 self.closeTestFail()
-
             else:
                 self.addTestFailOutput(stripLine + "\n")
 
@@ -278,9 +277,12 @@ class MTR(Test):
     def __init__(self, dbpool=None, test_type=None, test_info="",
                  description=None, descriptionDone=None,
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
-                 parallel=4, logfiles={}, lazylogfiles=True,
+                 parallel=4, logfiles=None, lazylogfiles=True,
                  warningPattern="MTR's internal check of the test case '.*' failed",
                  mtr_subdir="mysql-test", **kwargs):
+
+        if logfiles is None:
+            logfiles = {}
 
         if description is None:
             description = ["testing"]
@@ -449,9 +451,10 @@ VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
         def collectTestFail(self, testname, variant, result, info, text):
             # Insert asynchronously into database.
             dbpool = self.step.dbpool
-            run_id = self.step.getProperty("mtr_id")
             if dbpool is None:
                 return defer.succeed(None)
+
+            run_id = self.step.getProperty("mtr_id")
             if variant is None:
                 variant = ""
             d = self.step.runQueryWithRetry("""
@@ -467,6 +470,7 @@ VALUES (%s, %s, %s, %s, %s)
             dbpool = self.step.dbpool
             if dbpool is None:
                 return defer.succeed(None)
+
             run_id = self.step.getProperty("mtr_id")
             warn_id = self.step.getProperty("mtr_warn_id")
             self.step.setProperty("mtr_warn_id", warn_id + 1)
