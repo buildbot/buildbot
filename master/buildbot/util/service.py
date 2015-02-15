@@ -195,22 +195,19 @@ class AsyncMultiService(AsyncService, service.MultiService):
 
     def startService(self):
         service.Service.startService(self)
-        l = []
-        for svc in self:
-            # handle any deferreds, passing up errors and success
-            l.append(defer.maybeDeferred(svc.startService))
-        return defer.gatherResults(l, consumeErrors=True)
+
+        return defer.gatherResults(
+            [defer.maybeDeferred(svc.startService) for svc in self],
+            consumeErrors=True)
 
     def stopService(self):
         service.Service.stopService(self)
-        l = []
-        services = list(self)
-        services.reverse()
-        for svc in services:
-            l.append(defer.maybeDeferred(svc.stopService))
+
         # unlike MultiService, consume errors in each individual deferred, and
         # pass the first error in a child service up to our caller
-        return defer.gatherResults(l, consumeErrors=True)
+        return defer.gatherResults(
+            [defer.maybeDeferred(svc.startService) for svc in reversed(list(self))],
+            consumeErrors=True)
 
     def addService(self, service):
         if service.name is not None:
@@ -235,11 +232,12 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
     configured = False
 
     def __init__(self, *args, **kwargs):
-        name = kwargs.pop("name", None)
-        if name is not None:
-            self.name = name
-        if self.name is None:
+        name = kwargs.pop("name", self.name)
+        if name is None:
             raise ValueError("%s: must pass a name to constructor" % type(self))
+
+        self.name = name
+
         self.checkConfig(*args, **kwargs)
         self._config_args = args
         self._config_kwargs = kwargs
@@ -247,10 +245,12 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
 
     def getConfigDict(self):
         _type = type(self)
-        return {'name': self.name,
-                'class': _type.__module__ + "." + _type.__name__,
-                'args': self._config_args,
-                'kwargs': self._config_kwargs}
+        return {
+            'name': self.name,
+            'class': '%s.%s' % (_type.__module__, _type.__name__),
+            'args': self._config_args,
+            'kwargs': self._config_kwargs
+        }
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # get from the config object its sibling config
