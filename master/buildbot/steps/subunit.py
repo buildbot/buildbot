@@ -32,6 +32,11 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     parser in the most direct fashion.
     """
 
+    # XXX(sa2ajj): what are these?  I could not find anything that does anything
+    # with these?
+    expectedTests = 0
+    contextLevel = 0
+
     def __init__(self):
         logobserver.LogLineObserver.__init__(self)
         TestResult.__init__(self)
@@ -91,9 +96,6 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.addAResult(test, FAILURE, 'FAILURE', err)
         self.step.setProgress('tests failed', len(self.failures) +
                               len(self.errors))
-
-    expectedTests = 0
-    contextLevel = 0
 
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""
