@@ -106,6 +106,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * :bb:chsrc:`GitPoller` now supports detecting new branches
 
+* Added StashStatusPush status hook for Atlassian Stash
+
 Fixes
 ~~~~~
 
