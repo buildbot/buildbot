@@ -75,9 +75,19 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                              [{'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid}
                               for buildermasterid in buildermasterids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                # TODO
-                # if the row is already present, silently fail..
+                # if some rows are already present, insert one by one.
                 pass
+            else:
+                return
+
+            for buildermasterid in buildermasterids:
+                # insert them one by one
+                q = cfg_tbl.insert()
+                try:
+                    conn.execute(q, {'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid})
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                    # if the row is already present, silently fail..
+                    pass
 
         return self.db.pool.do(thd)
 

@@ -1343,6 +1343,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                     name=row.name,
                     info=row.info)
             elif isinstance(row, ConfiguredBuildslave):
+                row.id = row.buildermasterid * 10000 + row.buildslaveid
                 self.configured[row.id] = dict(
                     buildermasterid=row.buildermasterid,
                     buildslaveid=row.buildslaveid)

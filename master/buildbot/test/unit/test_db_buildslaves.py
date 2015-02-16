@@ -459,6 +459,27 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
+    def test_buildslaveConfiguredTwice(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove builder 21, and add 22
+        yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=10)
+
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[20, 22])
+
+        # configure again (should eat the duplicate insertion errors)
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[20, 21, 22])
+
+        bs = yield self.db.buildslaves.getBuildslave(30)
+        self.assertEqual(sorted(bs['configured_on']), sorted([
+            {'builderid': 20, 'masterid': 11},
+            {'builderid': 20, 'masterid': 10},
+            {'builderid': 21, 'masterid': 10},
+            {'builderid': 22, 'masterid': 10}]))
+
+    @defer.inlineCallbacks
     def test_nothingConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
