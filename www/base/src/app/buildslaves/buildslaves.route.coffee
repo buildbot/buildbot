@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'buildslaves'
@@ -16,3 +16,13 @@ class State extends Config
             name: name
             url: '/buildslaves'
             data: cfg
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:'Slaves'
+            caption: 'Slaves page related settings'
+            items:[
+                type:'bool'
+                name:'show_old_slaves'
+                caption:'Show old slaves'
+                default_value: false
+            ]

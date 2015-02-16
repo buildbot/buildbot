@@ -6,13 +6,20 @@
                 th Status
                 th Builders
                 th Infos
-            tr(ng-repeat='buildslave in buildslaves')
+            tr(ng-repeat='buildslave in buildslaves',
+               ng-show="settings.show_old_slaves.value || buildslave.configured_on.length > 0")
                 td {{buildslave.name}}
                 td {{buildslave.connected_to.length}} connection
                 td 
-                    span(ng-repeat="builder in buildslave.builders")
-                        a(ui-sref="builder({builder: builder.builderid})")
-                            | {{ builder.name }}
+                    span(ng-repeat="buildermaster in buildslave.configured_on")
+                        a(ui-sref="builder({builder: buildermaster.builderid})")
+                            | {{ buildersById[buildermaster.builderid].name +
+                            |    maybeGetMasterNameFromBuilderMaster(buildermaster)}}
                         | &nbsp;
                 td 
                     rawdata(data='buildslave.slaveinfo')
+    .row
+        .form-group
+            label.checkbox-inline
+                input(type="checkbox" name="{{settings.show_old_slaves.name}}" ng-model="settings.show_old_slaves.value")
+                | {{settings.show_old_slaves.caption}}
