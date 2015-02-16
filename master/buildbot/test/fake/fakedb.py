@@ -1343,6 +1343,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                     name=row.name,
                     info=row.info)
             elif isinstance(row, ConfiguredBuildslave):
+                row.id = row.buildermasterid * 10000 + row.buildslaveid
                 self.configured[row.id] = dict(
                     buildermasterid=row.buildermasterid,
                     buildslaveid=row.buildslaveid)
@@ -1427,12 +1428,14 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+    def deconfigureAllBuidslavesForMaster(self, masterid):
         buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
                             if mid == masterid]
         for k, v in self.configured.items():
-            if v['buildslaveid'] == buildslaveid and v['buildermasterid'] in buildermasterids:
+            if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
+
+    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
 
         buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
                             if mid == masterid and builderid in builderids]

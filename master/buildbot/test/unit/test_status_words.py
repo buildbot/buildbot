@@ -20,7 +20,6 @@ from buildbot.status import words
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import compat
 from buildbot.util import datetime2epoch
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -583,7 +582,6 @@ class TestContactChannel(unittest.TestCase):
             self.assertEqual(len(self.sent), 1)  # who cares what it says..
         return d
 
-    @compat.usesFlushLoggedErrors
     def test_handleMessage_exception(self):
         self.patch_send()
 

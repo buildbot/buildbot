@@ -178,12 +178,16 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.status = Status(self)
         self.status.setServiceParent(self)
 
+        self.masterHouskeepingTimer = 0
+
         @defer.inlineCallbacks
         def heartbeat():
             if self.masterid is not None:
                 yield self.data.updates.masterActive(name=self.name,
                                                      masterid=self.masterid)
-            yield self.data.updates.expireMasters()
+            # force housekeeping once a day
+            yield self.data.updates.expireMasters((self.masterHouskeepingTimer % (24 * 60)) == 0)
+            self.masterHouskeepingTimer += 1
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
         self.masterHeartbeatService.setServiceParent(self)
 

@@ -25,7 +25,6 @@ from buildbot.db import exceptions
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
-from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
 from twisted.internet import defer
@@ -186,7 +185,6 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.assertLogged("GOT HERE")
         return d
 
-    @compat.usesFlushLoggedErrors
     def test_startup_error(self):
         reactor = self.make_reactor()
 

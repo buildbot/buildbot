@@ -28,7 +28,6 @@ from buildbot.steps import shell
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
-from buildbot.test.util import compat
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 from twisted.trial import unittest
@@ -482,7 +481,6 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
                            state_string="'cmd' (failure)")
         return self.runStep()
 
-    @compat.usesFlushLoggedErrors
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
@@ -853,7 +851,6 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.do_test_suppressions(step, supps_file, stdout, 2,
                                          exp_warning_log)
 
-    @compat.usesFlushLoggedErrors
     def test_suppressions_warningExtractor_exc(self):
         def warningExtractor(step, line, match):
             raise RuntimeError("oh noes")

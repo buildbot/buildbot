@@ -13,8 +13,15 @@
 #
 # Copyright Buildbot Team Members
 """
-Mark a test as a todo one
+Various decorators for test cases
 """
+
+import os
+
+from twisted.python import runtime
+
+
+_FLAKY_ENV_VAR = 'RUN_FLAKY_TESTS'
 
 
 def todo(message):
@@ -28,3 +35,20 @@ def todo(message):
         func.todo = message
         return func
     return wrap
+
+
+def flaky(bugNumber):
+    def wrap(fn):
+        if not os.environ.get(_FLAKY_ENV_VAR):
+            fn.skip = ("Flaky test (http://trac.buildbot.net/ticket/%d) "
+                       "- set $%s to run anyway" % (bugNumber, _FLAKY_ENV_VAR))
+        return fn
+    return wrap
+
+
+def skipUnlessPlatformIs(platform):
+    def closure(test):
+        if runtime.platformType != platform:
+            test.skip = "not a %s platform" % platform
+        return test
+    return closure

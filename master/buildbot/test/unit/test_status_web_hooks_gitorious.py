@@ -18,7 +18,6 @@ import calendar
 import buildbot.status.web.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
-from buildbot.test.util import compat
 
 from twisted.trial import unittest
 
@@ -102,7 +101,6 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d.addCallback(check_changes)
         return d
 
-    @compat.usesFlushLoggedErrors
     def testGitWithNoJson(self):
         self.request = FakeRequest()
         self.request.uri = "/change_hook/gitorious"

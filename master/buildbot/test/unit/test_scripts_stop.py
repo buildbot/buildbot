@@ -20,9 +20,9 @@ import signal
 import time
 
 from buildbot.scripts import stop
-from buildbot.test.util import compat
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.trial import unittest
 
 
@@ -69,13 +69,13 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(kill_sequence, [])
         return rv
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_not_running(self):
         rv = self.do_test_stop(mkconfig(), [], is_running=False)
         self.assertInStdout('not running')
         self.assertEqual(rv, 0)
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_dead_but_pidfile_remains(self):
         rv = self.do_test_stop(mkconfig(),
                                [(signal.SIGTERM, OSError(3, 'No such process'))])
@@ -83,7 +83,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))
         self.assertInStdout('not running')
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_dead_but_pidfile_remains_quiet(self):
         rv = self.do_test_stop(mkconfig(quiet=True),
                                [(signal.SIGTERM, OSError(3, 'No such process'))],)
@@ -91,7 +91,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))
         self.assertWasQuiet()
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_dead_but_pidfile_remains_wait(self):
         rv = self.do_test_stop(mkconfig(),
                                [(signal.SIGTERM, OSError(3, 'No such process'))],
@@ -99,7 +99,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertEqual(rv, 0)
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_slow_death_wait(self):
         rv = self.do_test_stop(mkconfig(), [
             (signal.SIGTERM, None),
@@ -116,7 +116,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertInStdout('is dead')
         self.assertEqual(rv, 0)
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_slow_death_wait_timeout(self):
         rv = self.do_test_stop(mkconfig(), [
             (signal.SIGTERM, None),
@@ -127,7 +127,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertInStdout('never saw process')
         self.assertEqual(rv, 1)
 
-    @compat.skipUnlessPlatformIs('posix')
+    @skipUnlessPlatformIs('posix')
     def test_stop_clean(self):
         rv = self.do_test_stop(mkconfig(clean=True), [
             (signal.SIGUSR1, None), ], wait=False)

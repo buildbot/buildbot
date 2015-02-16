@@ -841,6 +841,41 @@ In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty
 
 You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
 
+StashStatusPush
+~~~~~~~~~~~~~~~
+
+.. @cindex StashStatusPush
+.. py:class:: buildbot.status.status_stash.StashStatusPush
+
+::
+
+    from buildbot.plugins import status
+
+    ss = status.StashStatusPush('https://stash.example.com:8080/',
+                                'stash_username',
+                                'secret_password')
+    c['status'].append(ss)
+
+:class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
+The build status is published to a specific commit SHA in Stash.
+It tracks the last build for each builderName for each commit built.
+
+Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
+
+It uses the standard Python Twisted Agent to make REST requests to the stash server.
+It uses HTTP Basic AUTH.
+As a result, we recommend you use https in your base_url rather than http.
+If you use https, it requires `pyOpenSSL`.
+
+Configuration requires exactly 3 parameters:
+
+``base_url``
+    the base url of the stash host, up to and optionally including the first `/` of the path.
+``user``
+    the stash user to post as
+``password``
+    the stash user's password
+
 .. _Change-Hooks:
 
 Change Hooks

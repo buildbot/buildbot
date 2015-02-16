@@ -739,12 +739,21 @@ buildslaves
 
     .. py:method:: buildslaveConfigured(buildslaveid, masterid, builderids)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer buildslaveid: the ID of the buildslave or None
         :param integer masterid: the ID of the master to which it configured
         :param list of integer builderids: the ID of the builders to which it is configured
         :returns: Deferred
 
         Record the given buildslave as being configured on the given master and for given builders.
+
+
+    .. py:method:: deconfigureAllBuidslavesForMaster(masterid)
+
+        :param integer masterid: the ID of the master to which it configured
+        :returns: Deferred
+
+        Unregister all the slaves configured to a master for given builders.
+        This shall happen when master disabled or before reconfiguration
 
 changes
 ~~~~~~~

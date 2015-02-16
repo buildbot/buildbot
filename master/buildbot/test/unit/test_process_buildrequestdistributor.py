@@ -19,7 +19,6 @@ from buildbot.db import buildrequests
 from buildbot.process import buildrequestdistributor
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import compat
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
 from twisted.internet import defer
@@ -220,7 +219,6 @@ class Test(TestBRDBase):
         self.quiet_deferred.addCallback(check)
         return self.quiet_deferred
 
-    @compat.usesFlushLoggedErrors
     def test_maybeStartBuildsOn_exception(self):
         self.addBuilders(['bldr1'])
 
@@ -332,7 +330,6 @@ class Test(TestBRDBase):
                                          dict(bldr1=1, bldr2=1, bldr3=1),
                                          ['bldr1', 'bldr2', 'bldr3'])
 
-    @compat.usesFlushLoggedErrors
     def test_sortBuilders_custom_exception(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['x', 'y'])
@@ -743,7 +740,6 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[], exp_builds=[])
 
-    @compat.usesFlushLoggedErrors
     @defer.inlineCallbacks
     def test_nextBuild_fails(self):
         def nextBuildRaises(*args):
@@ -870,7 +866,6 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(lst[-1])
         return self.do_test_nextBuild(nextBuild, exp_choice=[13, 12, 11, 10])
 
-    @compat.usesFlushLoggedErrors
     def test_nextBuild_exception(self):
         def nextBuild(bldr, lst):
             raise RuntimeError("")
@@ -878,7 +873,6 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         return result
 
-    @compat.usesFlushLoggedErrors
     def test_nextBuild_failure(self):
         def nextBuild(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))

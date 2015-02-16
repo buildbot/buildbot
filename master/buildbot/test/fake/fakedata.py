@@ -127,7 +127,7 @@ class FakeUpdates(object):
         self.thisMasterActive = False
         return defer.succeed(None)
 
-    def expireMasters(self):
+    def expireMasters(self, forceHouseKeeping=False):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
@@ -397,6 +397,10 @@ class FakeUpdates(object):
     def buildslaveDisconnected(self, buildslaveid, masterid):
         return self.master.db.buildslaves.buildslaveDisconnected(
             buildslaveid=buildslaveid,
+            masterid=masterid)
+
+    def deconfigureAllBuidslavesForMaster(self, masterid):
+        return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
             masterid=masterid)
 
 

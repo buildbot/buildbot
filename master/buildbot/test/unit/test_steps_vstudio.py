@@ -806,7 +806,8 @@ class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command=['%VCENV_BAT%', 'x86', '&&',
-                                 'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=x64'],
+                                 'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=x64',
+                                 '/t:Rebuild'],
                         env={'VCENV_BAT': '"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat"'})
             + 0
         )
