@@ -35,8 +35,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                 info={},
             ))
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-
+    def deconfigureAllBuidslavesForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and slave
             # as sqlalchemy does not support delete with join, we need to do that in 2 queries
@@ -46,27 +45,39 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(bm_tbl)
             q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
             q = q.where(bm_tbl.c.masterid == masterid)
-            q = q.where(cfg_tbl.c.buildslaveid == buildslaveid)
             buildermasterids = [row['buildermasterid'] for row in conn.execute(q)]
-            q = cfg_tbl.delete()
-            q = q.where(cfg_tbl.c.buildslaveid == buildslaveid)
-            q = q.where(cfg_tbl.c.buildermasterid.in_(buildermasterids))
-            conn.execute(q)
-            # finally, get the buildermasterids that are configured
+            if buildermasterids:
+                q = cfg_tbl.delete()
+                q = q.where(cfg_tbl.c.buildermasterid.in_(buildermasterids))
+                conn.execute(q)
+
+        return self.db.pool.do(thd)
+
+    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+        # nothing to add
+        if not builderids:
+            return defer.succeed(None)
+
+        def thd(conn):
+
+            # get the buildermasterids that are configured
+            cfg_tbl = self.db.model.configured_buildslaves
             bm_tbl = self.db.model.builder_masters
             q = sa.select([bm_tbl.c.id], from_obj=[bm_tbl])
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(bm_tbl.c.builderid.in_(builderids))
             buildermasterids = [row['id'] for row in conn.execute(q)]
-            for buildermasterid in buildermasterids:
-                q = cfg_tbl.insert()
-                try:
-                    conn.execute(q,
-                                 {'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid})
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    # TODO
-                    # if the row is already present, silently fail..
-                    pass
+
+            # and insert them
+            q = cfg_tbl.insert()
+            try:
+                conn.execute(q,
+                             [{'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid}
+                              for buildermasterid in buildermasterids])
+            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                # TODO
+                # if the row is already present, silently fail..
+                pass
 
         return self.db.pool.do(thd)
 

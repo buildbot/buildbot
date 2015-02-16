@@ -100,6 +100,9 @@ class BuildslaveManager(service.ReconfigurableServiceMixin,
         timer = metrics.Timer("BuildSlaveManager.reconfigServiceSlaves")
         timer.start()
 
+        # first we deconfigure everything to let the slaves register again
+        yield self.master.data.updates.deconfigureAllBuidslavesForMaster(self.master.masterid)
+
         # arrange slaves by name
         old_by_name = dict([(s.slavename, s)
                             for s in list(self)

@@ -242,7 +242,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.expireMasters,  # fake
             self.rtype.expireMasters)  # real
-        def expireMasters(self):
+        def expireMasters(self, forceHouseKeeping=False):
             pass
 
     @defer.inlineCallbacks
