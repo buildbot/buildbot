@@ -171,6 +171,7 @@ setup_args = {
         "buildbot.steps.package.rpm",
         "buildbot.steps.source",
         "buildbot.util",
+        "buildbot.wamp",
         "buildbot.www",
     ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
