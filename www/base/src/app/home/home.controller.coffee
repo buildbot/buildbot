@@ -1,11 +1,8 @@
 class Home extends Controller
-    constructor: ($scope, recentStorage, buildbotService, config, $location, $wamp) ->
+    constructor: ($scope, recentStorage, buildbotService, config, $location) ->
         $scope.baseurl = $location.absUrl().split("#")[0]
         $scope.config = config
         $scope.recent = {}
-        console.log $wamp
-        $wamp.call('com.timeservice.now').then (res) ->
-            console.log res
 
         recentStorage.getAll().then (e) ->
             $scope.recent.recent_builders = e.recent_builders

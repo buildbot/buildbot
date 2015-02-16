@@ -53,7 +53,6 @@ class _buildsummary extends Controller('common')
 
         $scope.$watch 'buildid', (buildid) ->
             $scope.buldid = buildid
-
             buildbotService.one('builds', $scope.buildid)
             .bind($scope).then (build) ->
                 buildbotService.one('builders', build.builderid).bind($scope)
@@ -66,3 +65,18 @@ class _buildsummary extends Controller('common')
                         logs = buildbotService.one("steps", step.stepid).all("logs")
                         logs.bind $scope,
                             dest: step
+            if false # how it will look like with new api
+                bb = new buildbotService()
+                $scope.$on("$destroy", bb.destroy)
+
+                bb.bind ["builds", $scope.buildid],
+                    childs:
+                        builder: ['builders', '$builderid']
+
+                .then (build) ->
+                    $scope.build = build
+                    bb.bind ['builds', build.buildid, 'steps'],
+                        childs:
+                            logs: ['steps', '$stepid', 'logs']
+                    .then (steps) ->
+                        $scope.steps = steps

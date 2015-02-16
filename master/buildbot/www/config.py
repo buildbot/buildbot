@@ -58,6 +58,8 @@ class IndexResource(resource.Resource):
         config['title'] = self.master.config.title
         config['titleURL'] = self.master.config.titleURL
         config['multiMaster'] = self.master.config.multiMaster
+        if "wamp" in self.master.config.protocols:
+            config['wamp'] = self.master.config.protocols['wamp']
 
         def toJson(obj):
             obj = IConfigured(obj).getConfigDict()

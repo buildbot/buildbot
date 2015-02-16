@@ -13,9 +13,10 @@ class Route extends Config
             apptitle = "Buildbot"
         glMenuServiceProvider.setAppTitle(apptitle)
         # all states config are in the modules
-        url = config.buildbotURL
-        if url?
-            url = url.replace("http://", "ws://").replace("https://", "wss://") + "ws"
+        if config.wamp?
             $wampProvider.init
-                url: url,
-                realm: 'buildbot'
+                url: config.wamp.router_url,
+                realm: config.wamp.realm
+        else
+            $wampProvider.init
+                url: "ws://foo.com",

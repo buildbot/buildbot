@@ -8,5 +8,6 @@ class RouteChangeListener extends Run
             setTimeout ->
                 glNotificationService.notify(msg:config.on_load_warning)
             , 500
-        if not window.__karma__?
+
+        if config.wamp?
             $wamp.open()
