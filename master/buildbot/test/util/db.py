@@ -119,7 +119,7 @@ class RealDatabaseMixin(object):
                 os.makedirs(basedir)
 
         self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default)
-
+        self.basedir = basedir
         self.db_engine = enginestrategy.create_engine(self.db_url,
                                                       basedir=basedir)
         # if the caller does not want a pool, we're done.
