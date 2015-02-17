@@ -23,6 +23,7 @@ from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationErro
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
 from buildbot.schedulers.forcesched import CodebaseParameter
 from buildbot.test.util import scheduler
+from mock import Mock
 
 class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -37,7 +38,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
                             **kw):
         sched = self.attachScheduler(
-                ForceScheduler(name=name, builderNames=builderNames,**kw),
+                ForceScheduler(name=name, builderNames=builderNames, **kw),
                 self.OBJECTID)
         sched.master.config = config.MasterConfig()
 
@@ -391,3 +392,62 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                               expectKind=dict,                              
                               klass=NestedParameter, fields=fields, name='')
 
+    @defer.inlineCallbacks
+    def test_specifySlave(self):
+        sched = self.makeScheduler()
+        res = yield sched.force('user', 'a', branch='a', repository='http://repo', reason='because',
+                                selected_slave='slave1')
+        bsid, brids = res
+        self.db.buildsets.assertBuildset(bsid, dict(
+            reason="A build was forced by 'user': because",
+            brids=brids,
+            external_idstring=None,
+            properties=[('buildLatestRev', (True, 'Force Build Form')),
+                              ('owner', ('user', 'Force Build Form')),
+                              ('reason', ('because', 'Force Build Form')),
+                              ('scheduler', ('testsched', 'Scheduler')),
+                              ('selected_slave', ('slave1', 'Force Build Form'))],
+            sourcestampsetid=100),
+            {'': {'branch': 'a', 'codebase': '', 'project': '', 'repository': 'http://repo', 'revision': '',
+                  'sourcestampsetid': 100}})
+
+    @defer.inlineCallbacks
+    def test_addBuildForEachSlave(self):
+        sched = self.makeScheduler()
+        self.master.botmaster = Mock()
+        builder = Mock()
+        builder.name = 'a'
+        self.master.botmaster.getBuilders = lambda: [builder]
+
+        def makeFakeSlave(name):
+            builder_slave = Mock()
+            slave = Mock()
+            slave.slavename = name
+            slave.isConnected = lambda: True
+            builder_slave.slave = slave
+            return builder_slave
+
+        builder.slaves = [makeFakeSlave('slave-00'), makeFakeSlave('slave-01'), makeFakeSlave('slave-02')]
+
+        res = yield sched.force('user', 'a', branch='a', repository='http://repo', reason='because',
+                                selected_slave='allCompatible')
+
+        self.assertTrue(len(res) == 3)
+
+        def checkBuildset(res, slavename, ssid):
+            bsid, brids = res.result
+            self.db.buildsets.assertBuildset(bsid, dict(
+                reason="A build was forced by 'user': because",
+                brids=brids,
+                external_idstring=None,
+                properties=[('buildLatestRev', (True, 'Force Build Form')),
+                                  ('owner', ('user', 'Force Build Form')),
+                                  ('reason', ('because', 'Force Build Form')),
+                                  ('scheduler', ('testsched', 'Scheduler')),
+                                  ('selected_slave', (slavename, 'Scheduler'))],
+                sourcestampsetid=ssid),
+                {'': {'branch': 'a', 'codebase': '', 'project': '', 'repository': 'http://repo', 'revision': '',
+                      'sourcestampsetid': ssid}})
+
+        for i in range(3):
+            checkBuildset(res[i], 'slave-0%s' % i, 100 + i)
