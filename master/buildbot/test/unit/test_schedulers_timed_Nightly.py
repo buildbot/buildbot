@@ -15,6 +15,7 @@
 
 import time
 import mock
+from mock import Mock
 from twisted.trial import unittest
 from twisted.internet import defer, task
 from twisted.python import log
@@ -33,7 +34,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     # minutes past the hour) and subtracted before the time offset is reported.
     localtime_offset = time.timezone % 3600
 
-    def makeScheduler(self, firstBuildDuration=0, **kwargs):
+    def makeScheduler(self, firstBuildDuration=0, mockBuildForLatest=True, **kwargs):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
                 self.OBJECTID)
 
@@ -56,7 +57,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 return d
             else:
                 return defer.succeed(None)
-        sched.addBuildsetForLatest = addBuildsetForLatest
+        if mockBuildForLatest:
+            sched.addBuildsetForLatest = addBuildsetForLatest
 
         def addBuildsetForChanges(reason='', external_idstring='', changeids=[]):
             self.events.append('B%s@%d' % (`changeids`.replace(' ',''),
@@ -206,3 +208,40 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
         return self.sched.stopService()
+
+    def test_runAllSlaves(self):
+        sched = self.makeScheduler(mockBuildForLatest=False, name='test', builderNames=['test'], branch='master',
+                                   minute=[5, 35],
+                                   properties={"run_all_slaves": True})
+
+        sched.startService()
+
+        sched.master.botmaster = Mock()
+        builder = Mock()
+        builder.name = 'test'
+        self.master.botmaster.getBuilders = lambda: [builder]
+
+        def makeFakeSlave(name):
+            builder_slave = Mock()
+            slave = Mock()
+            slave.slavename = name
+            slave.isConnected = lambda: True
+            builder_slave.slave = slave
+            return builder_slave
+
+        builder.slaves = [makeFakeSlave('slave-00'), makeFakeSlave('slave-01'), makeFakeSlave('slave-02')]
+
+        self.clock.advance(0)
+        while self.clock.seconds() < self.localtime_offset + 10*60:
+            self.clock.advance(60)
+
+        for i in range(3):
+            self.db.buildsets.assertBuildset(200+i, dict(
+                reason="The Nightly scheduler named 'test' triggered this build",
+                external_idstring=None,
+                properties=[('run_all_slaves', (True, 'Scheduler')),
+                            ('scheduler', ('test', 'Scheduler')),
+                            ('selected_slave', ('slave-0%s' % i, 'Scheduler'))],
+                sourcestampsetid=100+i),
+                {'': {'branch': 'master', 'codebase': '', 'project': '', 'repository': '', 'revision': None,
+                      'sourcestampsetid': 100+i}})
