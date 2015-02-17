@@ -13,29 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from autobahn.wamp import exception
 from autobahn.wamp.types import PublishOptions
+from autobahn.wamp.types import SubscribeOptions
 from twisted.internet import defer
 
 from buildbot.mq import base
 from buildbot.util import service
 from buildbot.util import toJson
-from buildbot.util import tuplematch
 
 import json
 
 
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     NAMESPACE = u"org.buildbot.mq"
-    EMULATED_WILDCARDS = {
-        'unclaimed_buildrequests': ('buildrequests', None, 'unclaimed'),
-        'new_buildsets': ('buildsets', None, 'new'),
-        'complete_buildsets': ('buildsets', None, 'complete'),
-        'new_buildrequests': ('buildrequests', None, 'new'),
-        'new_changes': ('changes', None, 'new'),
-        'new_builds': ('builds', None, 'new'),
-        'finished_builds': ('builds', None, 'finished'),
-    }
 
     def __init__(self, master):
         base.MQBase.__init__(self, master)
@@ -45,6 +35,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     @classmethod
     def messageTopic(cls, routingKey):
+        routingKey = [key if key is not None else u"" for key in routingKey]
         return cls.NAMESPACE + u"." + u".".join(routingKey)
 
     @defer.inlineCallbacks
@@ -52,13 +43,7 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
         service = yield self.master.wamp.getService()
         _data = json.loads(json.dumps(data, default=toJson))
         options = PublishOptions(excludeMe=False)
-        try:
-            service.publish(self.messageTopic(routingKey), _data, options=options)
-            for k, v in self.EMULATED_WILDCARDS.items():
-                if tuplematch.matchTuple(routingKey, v):
-                    service.publish(self.messageTopic([k]), {'route': routingKey, 'data': _data}, options=options)
-        except exception.TransportLost:
-            pass
+        service.publish(self.messageTopic(routingKey), dict(topic=routingKey, data=_data), options=options)
 
     def startConsuming(self, callback, _filter, persistent_name=None):
         if persistent_name is not None:
@@ -76,8 +61,6 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
 class QueueRef(base.QueueRef):
 
-    __slots__ = ['unreg', 'filter', 'emulated', 'unreg']
-
     def __init__(self, callback):
         base.QueueRef.__init__(self, callback)
         self.unreg = None
@@ -87,22 +70,16 @@ class QueueRef(base.QueueRef):
         self.filter = _filter
         self.emulated = False
         if None in _filter:
-            for k, v in WampMQ.EMULATED_WILDCARDS.items():
-                if v == _filter:
-                    yield self.subscribe(service, [k])
-                    self.emulated = True
-                    return
-            print "wampmq: wildcard are not supported!", _filter
-            return
+            options = SubscribeOptions(match=u"wildcard")
+        else:
+            options = None
         _filter = WampMQ.messageTopic(_filter)
-        self.unreg = yield service.subscribe(self.invoke, _filter)
+        self.unreg = yield service.subscribe(self.invoke, _filter, options=options)
         if self.callback is None:
             yield self.stopConsuming()
 
     def invoke(self, msg):
-        if self.emulated:
-            return base.QueueRef.invoke(self, msg['route'], msg['data'])
-        return base.QueueRef.invoke(self, self._filter, msg['data'])
+        return base.QueueRef.invoke(self, msg[u'topic'], msg[u'data'])
 
     def stopConsuming(self):
         self.callback = None
