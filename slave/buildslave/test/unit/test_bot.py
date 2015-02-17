@@ -212,7 +212,7 @@ class FakeStep(object):
 
 class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def setUp(self):
         self.basedir = os.path.abspath("basedir")
         if os.path.exists(self.basedir):
@@ -223,10 +223,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot.startService()
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
-        wfd = defer.waitForDeferred(
-            self.bot.remote_setBuilderList([('sb', 'sb')]))
-        yield wfd
-        builders = wfd.getResult()
+        builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
         self.setUpCommand()
@@ -280,8 +277,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                           command=['echo', 'hello'],
-                                          workdir='workdir',
-                                      ))
+                                          workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 
@@ -314,8 +310,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                           command=['sleep', '10'],
-                                          workdir='workdir',
-                                      ))
+                                          workdir='workdir'))
         d.addCallback(do_start)
 
         # wait a jiffy..
@@ -360,8 +355,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                           command=['sleep', '10'],
-                                          workdir='workdir',
-                                      ))
+                                          workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 

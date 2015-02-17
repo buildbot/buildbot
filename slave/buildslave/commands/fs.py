@@ -58,7 +58,7 @@ class RemoveDirectory(base.Command):
     def setup(self, args):
         self.logEnviron = args.get('logEnviron', True)
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def start(self):
         args = self.args
         dirnames = args['dir']
@@ -69,18 +69,14 @@ class RemoveDirectory(base.Command):
         if isinstance(dirnames, list):
             assert len(dirnames) != 0
             for dirname in dirnames:
-                wfd = defer.waitForDeferred(self.removeSingleDir(dirname))
-                yield wfd
-                res = wfd.getResult()
+                res = yield self.removeSingleDir(dirname)
                 # Even if single removal of single file/dir consider it as
                 # failure of whole command, but continue removing other files
                 # Send 'rc' to master to handle failure cases
                 if res != 0:
                     self.rc = res
         else:
-            wfd = defer.waitForDeferred(self.removeSingleDir(dirnames))
-            yield wfd
-            self.rc = wfd.getResult()
+            self.rc = yield self.removeSingleDir(dirnames)
 
         self.sendStatus({'rc': self.rc})
 
