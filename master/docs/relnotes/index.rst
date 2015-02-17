@@ -303,6 +303,8 @@ Changes and Removals
 
 * :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overriden to support dynamic triggering.
 
+* ```master.cfg`` is now parsed from a thread. Previously it was run in the main thread, and thus slowing down the master in case of big config, or network access done to generate the config.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
