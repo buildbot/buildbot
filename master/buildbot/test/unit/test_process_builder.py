@@ -165,6 +165,30 @@ class TestBuilderBuildCreation(unittest.TestCase):
                 exp_claims=[10], exp_builds=[('slave-03', [10])])
 
     @defer.inlineCallbacks
+    def test_maybeStartBuildByPriority(self):
+        yield self.makeBuilder(mergeRequests=False)
+
+        self.setSlaveBuilders({'slave-01': 1})
+
+        rows = [fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='az', revision='az', codebase='c', repository='z'),
+                fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='bw', revision='bz', codebase='f', repository='w'),
+                fakedb.SourceStampSet(id=2),
+                fakedb.SourceStamp(id=3, sourcestampsetid=2, branch='a', revision='az', codebase='c', repository='z'),
+                fakedb.SourceStamp(id=4, sourcestampsetid=2, branch='bw', revision='wz', codebase='f', repository='w'),
+                fakedb.Buildset(id=1, sourcestampsetid=1, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
+                    submitted_at=1300305712, results=-1),
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername='bldr',
+                                    submitted_at=1300305712, priority=15, results=-1),
+                fakedb.BuildRequest(id=2, buildsetid=2, buildername='bldr',
+                                    submitted_at=1300305712, priority=75, results=-1)]
+
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[2], exp_builds=[('slave-01', [2])])
+
+    @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuilding(self):
         yield self.makeBuilder(patch_startbuildfor=False)
         def newBuild(buildrequests):
