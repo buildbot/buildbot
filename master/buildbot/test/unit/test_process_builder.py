@@ -84,8 +84,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
         for name, avail in slavebuilders.iteritems():
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
-            sb.isAvailable.return_value = avail
             sb.slave = mock.Mock()
+            sb.slave.slave_status = mock.Mock(spec=['getName'])
+            sb.slave.slave_status.getName.return_value = name
+            sb.isAvailable.return_value = avail
             sb.prepare = lambda x, y: True
             sb.ping = lambda: True
             sb.buildStarted = lambda: True
@@ -146,6 +148,21 @@ class TestBuilderBuildCreation(unittest.TestCase):
             f.trap(exp_fail)
         d.addErrback(eb)
         return d
+
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_selectedSlave(self):
+        yield self.makeBuilder()
+
+        self.setSlaveBuilders({'slave-01': 1, 'slave-02': 1, 'slave-03': 1, 'slave-04': 1})
+
+        rows = self.base_rows + [
+            fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
+                submitted_at=130000),
+            fakedb.BuildsetProperty(buildsetid=11, property_name='selected_slave',
+                                        property_value='["slave-03", "Force Build Form"]')
+        ]
+        yield self.do_test_maybeStartBuild(rows=rows,
+                exp_claims=[10], exp_builds=[('slave-03', [10])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuilding(self):
