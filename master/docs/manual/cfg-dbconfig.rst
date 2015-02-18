@@ -1,5 +1,6 @@
 .. bb:cfg:: dbconfig
 
+
 DbConfig
 --------
 
@@ -12,10 +13,30 @@ The design is voluntary simplistic, the focus is on the easy use.
 Example ::
 
     from buildbot.plugins import util, buildslave
-    dbConfig = util.DbConfig(c['db']['db_url'], basedir)
+    c = BuildmasterConfig = {}
+    c['db_url'] = 'mysql://user@pass:mysqlserver/buildbot'
+    dbConfig = util.DbConfig(BuildmasterConfig, basedir)
     slaves = dbConfig.get("slaves")
     c['slaves'] = [
         buildslave.BuildSlave(slave['name'], slave['passwd'],
                               properties=slave.get('properties')),
         for slave in slaves
     ]
+
+
+.. py:class:: DbConfig
+
+    .. py:method:: __init__(BuildmasterConfig, basedir)
+
+        :param BuildmasterConfig: the BuildmasterConfig, where db_url is already configured
+        :param basedir: basedir global variable of the master.cfg run environment. Sqlite urls are relative to this dir.
+
+    .. py:method:: get(name, default=MarkerClass)
+
+        :param name: the name of the config variable to retrieve
+        :param default: In case the config variable has not been set yet, default is returned if defined, else KeyError is raised.
+
+    .. py:method:: set(name, value)
+
+        :param name: the name of the config variable to be set
+        :param value: the value of the config variable to be set
