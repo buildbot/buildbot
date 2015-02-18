@@ -256,7 +256,7 @@ class BotBase(service.MultiService):
         ])
         return commands
 
-    @defer.deferredGenerator
+    @defer.inlineCallbacks
     def remote_setBuilderList(self, wanted):
         retval = {}
         wanted_names = set([name for (name, builddir) in wanted])
@@ -280,12 +280,10 @@ class BotBase(service.MultiService):
 
         # disown any builders no longer desired
         to_remove = list(set(self.builders.keys()) - wanted_names)
-        dl = defer.DeferredList([
-            defer.maybeDeferred(self.builders[name].disownServiceParent)
-            for name in to_remove])
-        wfd = defer.waitForDeferred(dl)
-        yield wfd
-        wfd.getResult()
+        if to_remove:
+            yield defer.gatherResults([
+                defer.maybeDeferred(self.builders[name].disownServiceParent)
+                for name in to_remove])
 
         # and *then* remove them from the builder list
         for name in to_remove:
@@ -299,7 +297,7 @@ class BotBase(service.MultiService):
                             "being used by the buildmaster: you can delete "
                             "it now" % dir)
 
-        yield retval  # return value
+        defer.returnValue(retval)
 
     def remote_print(self, message):
         log.msg("message from master:", message)
