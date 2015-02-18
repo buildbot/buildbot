@@ -385,7 +385,7 @@ class GitExtractor(SourceStampExtractor):
         sys.exit(1)
 
     def getPatch(self, res):
-        d = self.dovc(["diff", self.baserev])
+        d = self.dovc(["diff", "--src-prefix=a/", "--dst-prefix=b/", "--no-textconv", "--no-ext-diff", self.baserev])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
