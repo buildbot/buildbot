@@ -335,7 +335,7 @@ setup_args = {
             ('buildbot.www.ldapuserinfos', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth']),
-            ('buildbot.db.state', [
+            ('buildbot.db.dbconfig', [
                 'DbConfig'])
         ])
     ])

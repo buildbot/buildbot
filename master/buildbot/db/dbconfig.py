@@ -38,8 +38,13 @@ class FakePool(object):
 
 class DbConfig(object):
 
-    def __init__(self, db_url, basedir, name="config"):
-        self.db_url = db_url
+    def __init__(self, BuildmasterConfig, basedir, name="config"):
+        if 'db' in BuildmasterConfig:
+            self.db_url = BuildmasterConfig['db']['db_url']
+        elif 'db_url' in BuildmasterConfig:
+            self.db_url = BuildmasterConfig['db_url']
+        else:
+            self.db_url = 'sqlite:///state.sqlite'
         self.basedir = basedir
         self.name = name
 

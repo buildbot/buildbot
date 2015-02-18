@@ -29,7 +29,7 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
         yield threads.deferToThread(self.createDbConfig)
 
     def createDbConfig(self):
-        self.dbConfig = dbconfig.DbConfig(self.db_url, self.basedir)
+        self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
 
     def tearDown(self):
         return self.tearDownRealDatabase()
@@ -42,3 +42,29 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
             self.assertEqual(slaves, slavesInDB)
 
         return threads.deferToThread(thd)
+
+    def test_default(self):
+        def thd():
+            slaves = self.dbConfig.get(u"slaves", "default")
+            self.assertEqual(slaves, "default")
+
+        return threads.deferToThread(thd)
+
+    def test_error(self):
+        def thd():
+            self.assertRaises(KeyError, self.dbConfig.get, u"slaves")
+
+        return threads.deferToThread(thd)
+
+    # supports the 3 different ways to declare db_url in the master.cfg
+    def test_init1(self):
+        obj = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
+        self.assertEqual(obj.db_url, self.db_url)
+
+    def test_init2(self):
+        obj = dbconfig.DbConfig({"db": {"db_url": self.db_url}}, self.basedir)
+        self.assertEqual(obj.db_url, self.db_url)
+
+    def test_init3(self):
+        obj = dbconfig.DbConfig({}, self.basedir)
+        self.assertEqual(obj.db_url, "sqlite:///state.sqlite")
