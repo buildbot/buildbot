@@ -4,11 +4,12 @@
 DbConfig
 --------
 
-DbConfig is an utility for master.cfg to get easy key/value storage in the buildbot database
+DbConfig is an utility for master.cfg to get easy to use key/value storage in the buildbot database
 
 DbConfig can get and store any jsonable object to the db for use by other masters or separate ui plugins to edit them.
 
-The design is voluntary simplistic, the focus is on the easy use.
+The design is voluntary simplistic, the focus is on the easy use rather than efficiency.
+A separate db connection is created each time get() or set() is called.
 
 Example ::
 
