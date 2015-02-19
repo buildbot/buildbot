@@ -108,10 +108,10 @@ class BuildRequestStatus:
     def subscribe(self, observer):
         d = self.getBuilds()
 
+        @d.addCallback
         def notify_old(oldbuilds):
             for bs in oldbuilds:
                 eventually(observer, bs)
-        d.addCallback(notify_old)
         d.addCallback(lambda _:
                       self.status._buildrequest_subscribe(self.brid, observer))
         d.addErrback(log.err, 'while notifying subscribers')

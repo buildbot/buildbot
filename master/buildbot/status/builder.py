@@ -311,11 +311,11 @@ class BuilderStatus(styles.Versioned):
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)
 
+        @d.addCallback
         def make_statuses(brdicts):
             return [BuildRequestStatus(self.name, brdict['brid'],
                                        self.status, brdict=brdict)
                     for brdict in brdicts]
-        d.addCallback(make_statuses)
         return d
 
     def getCurrentBuilds(self):
@@ -616,10 +616,10 @@ class BuilderStatus(styles.Versioned):
         result = self.asDict()
         d = self.getPendingBuildRequestStatuses()
 
+        @d.addCallback
         def combine(statuses):
             result['pendingBuilds'] = len(statuses)
             return result
-        d.addCallback(combine)
         return d
 
     def getMetrics(self):

@@ -52,10 +52,10 @@ class Sender:
         d = f.login(credentials.UsernamePassword(self.username, self.password))
         reactor.connectTCP(self.host, self.port, f)
 
+        @d.addCallback
         def call_addChange(remote):
             d = remote.callRemote('addChange', change)
             d.addCallback(lambda res: remote.broker.transport.loseConnection())
             return d
-        d.addCallback(call_addChange)
 
         return d

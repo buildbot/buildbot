@@ -200,14 +200,14 @@ class TestWorkQueue(unittest.TestCase):
         return work
 
     def expect_errback(self, d):
+        @d.addCallback
         def shouldnt_get_called(f):
             self.failUnlessEqual(True, False)
-        d.addCallback(shouldnt_get_called)
 
+        @d.addErrback
         def errback(f):
             # log.msg("errback called?")
             pass
-        d.addErrback(errback)
         return d
 
     def test_handle_exceptions(self):
@@ -256,32 +256,32 @@ class TestWorkQueue(unittest.TestCase):
         # flags[1] shouldnt already be set, either
         d1 = self.queue.execute(self.delayed_success())
 
+        @d1.addCallback
         def cb1(res):
             self.failUnlessEqual(flags[1], False)
             flags[1] = True
             self.failUnlessEqual(flags[2], False)
             self.failUnlessEqual(flags[3], False)
-        d1.addCallback(cb1)
 
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False
         d2 = self.queue.execute(self.delayed_success())
 
+        @d2.addCallback
         def cb2(res):
             assert flags[2] == False
             flags[2] = True
             assert flags[1]
             assert flags[3] == False
-        d2.addCallback(cb2)
 
         # When third deferred fires, only flags[3] should be unset
         d3 = self.queue.execute(self.delayed_success())
 
+        @d3.addCallback
         def cb3(res):
             assert flags[3] == False
             flags[3] = True
             assert flags[1]
             assert flags[2]
-        d3.addCallback(cb3)
 
         return defer.DeferredList([d1, d2, d3], fireOnOneErrback=True)

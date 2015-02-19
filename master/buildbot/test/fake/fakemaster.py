@@ -41,11 +41,11 @@ class FakeCache(object):
     def get(self, key, **kwargs):
         d = self.miss_fn(key, **kwargs)
 
+        @d.addCallback
         def mkref(x):
             if x is not None:
                 weakref.ref(x)
             return x
-        d.addCallback(mkref)
         return d
 
     def put(self, key, val):

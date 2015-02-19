@@ -212,11 +212,11 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """Get a Change object; returns a deferred"""
         d = self.master.db.changes.getChange(number)
 
+        @d.addCallback
         def chdict2change(chdict):
             if not chdict:
                 return None
             return changes.Change.fromChdict(self.master, chdict)
-        d.addCallback(chdict2change)
         return d
 
     def getSchedulers(self):
@@ -253,10 +253,10 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
 
+        @d.addCallback
         def make_status_objects(bsdicts):
             return [buildset.BuildSetStatus(bsdict, self)
                     for bsdict in bsdicts]
-        d.addCallback(make_status_objects)
         return d
 
     def generateFinishedBuilds(self, builders=[], branches=[],
@@ -480,12 +480,12 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             return
         d = self.master.db.buildsets.getBuildset(bsid)
 
+        @d.addCallback
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             if bss.isFinished():
                 for d in self._buildset_finished_waiters.pop(bsid):
                     eventually(d.callback, bss)
-        d.addCallback(do_notifies)
         d.addErrback(log.err, 'while notifying for buildset finishes')
 
     def _builder_subscribe(self, buildername, watcher):
@@ -499,12 +499,12 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         bsid = msg['bsid']
         d = self.master.db.buildsets.getBuildset(bsid)
 
+        @d.addCallback
         def do_notifies(bsdict):
             bss = buildset.BuildSetStatus(bsdict, self)
             for t in self.watchers:
                 if hasattr(t, 'buildsetSubmitted'):
                     t.buildsetSubmitted(bss)
-        d.addCallback(do_notifies)
         return d
 
     def bs_complete_consumer_cb(self, key, msg):

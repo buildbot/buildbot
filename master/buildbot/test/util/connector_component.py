@@ -39,22 +39,22 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
         """Set up C{self.db}, using the given db_url and basedir."""
         d = self.setUpRealDatabase(table_names=table_names, basedir=basedir)
 
+        @d.addCallback
         def finish_setup(_):
             self.db = FakeDBConnector()
             self.db.pool = self.db_pool
             self.db.master = fakemaster.make_master()
             self.db.model = model.Model(self.db)
-        d.addCallback(finish_setup)
         return d
 
     def tearDownConnectorComponent(self):
         d = self.tearDownRealDatabase()
 
+        @d.addCallback
         def finish_cleanup(_):
             self.db_pool.shutdown()
             # break some reference loops, just for fun
             del self.db.pool
             del self.db.model
             del self.db
-        d.addCallback(finish_cleanup)
         return d

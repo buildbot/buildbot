@@ -49,21 +49,21 @@ class BuildSetStatus:
         d = self.master.data.get(('buildrequests', ),
                                  filters=[resultspec.Filter('buildsetid', 'eq', [self.id])])
 
+        @d.addCallback
         def get_objects(brdicts):
             return dict([
                 (brd['buildername'], BuildRequestStatus(brd['buildername'],
                                                         brd['brid'], self.status))
                 for brd in brdicts])
-        d.addCallback(get_objects)
         return d
 
     def getBuilderNames(self):
         d = self.master.data.get(('buildrequests', ),
                                  filters=[resultspec.Filter('buildsetid', 'eq', [self.id])])
 
+        @d.addCallback
         def get_names(brdicts):
             return sorted([brd['buildername'] for brd in brdicts])
-        d.addCallback(get_names)
         return d
 
     def waitUntilFinished(self):

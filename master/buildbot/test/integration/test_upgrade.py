@@ -207,16 +207,16 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         # TypeError.  Reflection is only used for tests, so we can just skip
         # this test on such platforms.  We still get the advantage of trying
         # the upgrade, at any rate.
+        @d.addErrback
         def catch_TypeError(f):
             f.trap(TypeError)
             raise unittest.SkipTest("model comparison skipped: bugs in schema "
                                     "reflection on this sqlite version")
-        d.addErrback(catch_TypeError)
 
+        @d.addCallback
         def check(diff):
             if diff:
                 self.fail("\n" + str(diff))
-        d.addCallback(check)
         return d
 
     def do_test_upgrade(self, pre_callbacks=[]):
@@ -674,11 +674,11 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
 
+        @d.addCallback
         def make_dbc(_):
             master = fakemaster.make_master()
             self.db = connector.DBConnector(master, self.basedir)
             return self.db.setup(check_version=False)
-        d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
 
@@ -699,11 +699,11 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failIf(c is None)
             self.assertEquals(sorted(c['files']),
                               sorted([u"foo", u"bar", u"bing", u"baz"]))
-        d.addCallback(check)
         return d
 
     def testUpgradeChangeProperties(self):
@@ -724,6 +724,7 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c['properties'].get('list')[1], 'Change')
@@ -731,7 +732,6 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
             self.assertEquals(c['properties'].get('num')[0], 13)
             self.assertEquals(c['properties'].get('str')[0], u'SNOW\N{SNOWMAN}MAN')
             self.assertEquals(c['properties'].get('d')[0], dict(a=1, b=2))
-        d.addCallback(check)
         return d
 
     def testUpgradeChangeNoRevision(self):
@@ -745,9 +745,9 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failUnless(c is None)
-        d.addCallback(check)
         return d
 
 

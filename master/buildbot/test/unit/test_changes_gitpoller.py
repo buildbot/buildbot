@@ -52,10 +52,10 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
         d = defer.succeed(None)
 
+        @d.addCallback
         def call_empty(_):
             # we should get an Exception with empty output from git
             return methodToTest(self.dummyRevStr)
-        d.addCallback(call_empty)
 
         def cb_empty(_):
             if emptyRaisesException:
@@ -64,6 +64,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         def eb_empty(f):
             if not emptyRaisesException:
                 self.fail("getProcessOutput should NOT have failed on empty output")
+
         d.addCallbacks(cb_empty, eb_empty)
         d.addCallback(lambda _: self.assertAllCommandsRan())
 
@@ -74,9 +75,9 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             .exit(1),
         )
 
+        @d.addCallback
         def call_exception(_):
             return methodToTest(self.dummyRevStr)
-        d.addCallback(call_exception)
 
         def cb_exception(_):
             self.fail("getProcessOutput should have failed on stderr output")
@@ -93,10 +94,11 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             .stdout(desiredGoodOutput)
         )
 
+        @d.addCallback
         def call_desired(_):
             return methodToTest(self.dummyRevStr)
-        d.addCallback(call_desired)
 
+        @d.addCallback
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
             # check types
@@ -104,7 +106,6 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
                 self.assertIsInstance(r, unicode)
             elif isinstance(r, list):
                 [self.assertIsInstance(e, unicode) for e in r]
-        d.addCallback(cb_desired)
         d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 
@@ -161,10 +162,10 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.setUpGetProcessOutput()
         d = self.setUpChangeSource()
 
+        @d.addCallback
         def create_poller(_):
             self.poller = gitpoller.GitPoller(self.REPOURL)
             self.poller.master = self.master
-        d.addCallback(create_poller)
         return d
 
     def tearDown(self):
@@ -215,7 +216,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         d = self.assertFailure(self.poller.poll(), EnvironmentError)
 
-        d.addCallback(lambda _: self.assertAllCommandsRan)
+        d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 
     def test_poll_failFetch(self):
@@ -228,7 +229,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         )
 
         d = self.assertFailure(self.poller.poll(), EnvironmentError)
-        d.addCallback(lambda _: self.assertAllCommandsRan)
+        d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 
     def test_poll_failRevParse(self):
@@ -1054,11 +1055,11 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.patch(base.PollingChangeSource, "startService", startService)
         d = self.poller.startService()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
             self.assertEqual(self.poller.lastRev, {})
             startService.assert_called_once_with(self.poller)
-        d.addCallback(check)
         return d
 
     def test_startService_loadLastRev(self):
@@ -1071,12 +1072,12 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         d = self.poller.startService()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.poller.lastRev, {
                 "master": "fa3ae8ed68e664d4db24798611b352e3c6509930"
             })
             startService.assert_called_once_with(self.poller)
-        d.addCallback(check)
         return d
 
 

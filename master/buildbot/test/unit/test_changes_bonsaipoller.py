@@ -231,10 +231,10 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeSource()
 
+        @d.addCallback
         def create_poller(_):
             self.attachChangeSource(BonsaiPoller('http://bonsai.mozilla.org',
                                                  'all', 'seamonkey'))
-        d.addCallback(create_poller)
         return d
 
     def tearDown(self):
@@ -265,15 +265,16 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
         self.fakeGetPage(badUnparsedResult)
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [])
-        d.addCallback(check)
         return d
 
     def test_poll_good(self):
         self.fakeGetPage(goodUnparsedResult)
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': 'sar@gmail.com',
@@ -323,5 +324,4 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
                 'src': None,
                 'when_timestamp': 1089822728,
             }])
-        d.addCallback(check)
         return d

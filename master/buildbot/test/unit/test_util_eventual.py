@@ -43,9 +43,9 @@ class Eventually(unittest.TestCase):
     def assertResults(self, exp):
         d = eventual.flushEventualQueue()
 
+        @d.addCallback
         def cb(_):
             self.assertEqual(self.results, exp)
-        d.addCallback(cb)
         return d
 
     # tests

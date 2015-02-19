@@ -144,12 +144,12 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             patchSet=dict(revision="abcdef", number="12")
         )))
 
+        @d.addCallback
         def check(_):
             self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
             for k, v in c.items():
                 self.assertEqual(self.expected_change[k], v)
-        d.addCallback(check)
         return d
 
     change_merged_event = {
@@ -169,21 +169,22 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             'somehost', 'some_choosy_user', handled_events=["change-merged"])
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
+        @d.addCallback
         def check(_):
             self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
             self.failUnlessEqual(c["category"], "change-merged")
             self.assertEqual(c["branch"], "br")
-        d.addCallback(check)
         return d
 
     def test_handled_events_filter_false(self):
         s = self.newChangeSource(
             'somehost', 'some_choosy_user')
         d = s.lineReceived(json.dumps(self.change_merged_event))
-        check = lambda _: self.failUnlessEqual(
-            len(self.master.data.updates.changesAdded), 0)
-        d.addCallback(check)
+
+        @d.addCallback
+        def check(_):
+            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 0)
         return d
 
     def test_custom_handler(self):
@@ -198,11 +199,11 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s.eventReceived_change_merged = types.MethodType(custom_handler, s)
         d = s.lineReceived(json.dumps(self.change_merged_event))
 
+        @d.addCallback
         def check(_):
             self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
             self.failUnlessEqual(c['project'], "world")
-        d.addCallback(check)
         return d
 
 

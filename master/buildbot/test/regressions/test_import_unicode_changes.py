@@ -24,13 +24,13 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
 
+        @d.addCallback
         def make_dbc(_):
             master = fakemaster.make_master()
             master.config.db['db_url'] = self.db_url
             self.db = DBConnector(master, self.basedir)
             return self.db.setup(check_version=False)
 
-        d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d
 
@@ -51,11 +51,11 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c['author'], u"Frosty the \N{SNOWMAN}")
             self.assertEquals(c['comments'], u"Frosty the \N{SNOWMAN}")
-        d.addCallback(check)
         return d
 
     def testNonUnicodeChange(self):
@@ -82,11 +82,11 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c['author'], "Frosty the Snowman")
             self.assertEquals(c['comments'], "Frosty the Snowman")
-        d.addCallback(check)
         return d
 
     def testUTF16Change(self):
@@ -105,9 +105,9 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.changes.getChange(1))
 
+        @d.addCallback
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c['author'], u"Frosty the \N{SNOWMAN}")
             self.assertEquals(c['comments'], u"Frosty the \N{SNOWMAN}")
-        d.addCallback(check)
         return d

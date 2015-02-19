@@ -251,11 +251,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return res.rowcount
         d = self.db.pool.do(thd)
 
+        @d.addCallback
         def log_nonzero_count(count):
             if count != 0:
                 log.msg("unclaimed %d expired buildrequests (over %d seconds "
                         "old)" % (count, old))
-        d.addCallback(log_nonzero_count)
         return d
 
     @staticmethod

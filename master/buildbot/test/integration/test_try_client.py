@@ -111,12 +111,12 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             d = self.sch.watcher.poll()
             d.addErrback(log.err, 'while polling')
 
+            @d.addCallback
             def finished(_):
                 st = mock.Mock()
                 st.value.signal = None
                 st.value.exitCode = 0
                 pp.processEnded(st)
-            d.addCallback(finished)
 
         self.patch(reactor, 'spawnProcess', spawnProcess)
 

@@ -149,20 +149,20 @@ class Git(Source):
 
         d = self.checkBranchSupport()
 
+        @d.addCallback
         def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
+        @d.addCallback
         def checkPatched(patched):
             if patched:
                 return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
             else:
                 return 0
-        d.addCallback(checkPatched)
 
         if self.mode == 'incremental':
             d.addCallback(lambda _: self.incremental())
@@ -269,6 +269,7 @@ class Git(Source):
         self.workdir = self.srcdir
         d.addCallback(lambda _: self.incremental())
 
+        @d.addCallback
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
                                               {'fromdir': self.srcdir,
@@ -278,24 +279,22 @@ class Git(Source):
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
-        d.addCallback(copy)
 
+        @d.addCallback
         def resetWorkdir(_):
             self.workdir = old_workdir
             return 0
-
-        d.addCallback(resetWorkdir)
         return d
 
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             log.msg("Closing log, sending result of the command %s " %
                     (self.cmd))
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -354,7 +353,8 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
@@ -362,7 +362,6 @@ class Git(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def _fetch(self, _):
@@ -376,6 +375,7 @@ class Git(Source):
 
         d = self._dovccmd(command)
 
+        @d.addCallback
         def checkout(_):
             if self.revision:
                 rev = self.revision
@@ -384,18 +384,16 @@ class Git(Source):
             command = ['reset', '--hard', rev, '--']
             abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
             return self._dovccmd(command, abandonOnFailure)
-        d.addCallback(checkout)
-
-        def renameBranch(res):
-            if res != 0:
-                return res
-            d = self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
-            # Ignore errors
-            d.addCallback(lambda _: res)
-            return d
 
         if self.branch != 'HEAD':
-            d.addCallback(renameBranch)
+            @d.addCallback
+            def renameBranch(res):
+                if res:
+                    return res
+                d = self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
+                # Ignore errors
+                d.addCallback(lambda _: res)
+                return d
         return d
 
     @defer.inlineCallbacks
@@ -496,6 +494,7 @@ class Git(Source):
 
         d = self._fullClone()
 
+        @d.addCallback
         def clobber(res):
             if res != 0:
                 if self.clobberOnFailure:
@@ -504,7 +503,6 @@ class Git(Source):
                     raise buildstep.BuildStepFailed()
             else:
                 return res
-        d.addCallback(clobber)
         return d
 
     def _doClobber(self):
@@ -515,11 +513,11 @@ class Git(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def checkRemoval(res):
-            if res != 0:
+        @d.addCallback
+        def checkRemoval(_):
+            if cmd.rc != 0:
                 raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
+            return cmd.rc
         return d
 
     def computeSourceRevision(self, changes):
@@ -554,6 +552,7 @@ class Git(Source):
     def checkBranchSupport(self):
         d = self._dovccmd(['--version'], collectStdout=True)
 
+        @d.addCallback
         def checkSupport(stdout):
             gitInstalled = False
             if 'git' in stdout:
@@ -562,28 +561,26 @@ class Git(Source):
             if LooseVersion(version) < LooseVersion("1.6.5"):
                 self.supportsBranch = False
             return gitInstalled
-        d.addCallback(checkSupport)
         return d
 
     def applyPatch(self, patch):
         d = self._dovccmd(['update-index', '--refresh'])
 
+        @d.addCallback
         def applyAlready(res):
             return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
-        d.addCallback(applyAlready)
         return d
 
     def _sourcedirIsUpdatable(self):
         if self.slaveVersionIsOlderThan('listdir', '2.16'):
             d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
 
+            @d.addCallback
             def checkWithPathExists(exists):
                 if(exists):
                     return "update"
                 else:
                     return "clone"
-
-            d.addCallback(checkWithPathExists)
         else:
             cmd = buildstep.RemoteCommand('listdir',
                                           {'dir': self.workdir,
@@ -592,6 +589,7 @@ class Git(Source):
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
 
+            @d.addCallback
             def checkWithListdir(_):
                 files = cmd.updates['files'][0]
                 if '.git' in files:
@@ -600,5 +598,4 @@ class Git(Source):
                     return "clobber"
                 else:
                     return "clone"
-            d.addCallback(checkWithListdir)
         return d

@@ -665,13 +665,13 @@ class Contact(base.StatusReceiver):
                                                  properties=properties.asDict(),
                                                  waited_for=False)
 
+        @d.addCallback
         def subscribe(xxx_todo_changeme):
             (bsid, brids) = xxx_todo_changeme
             assert 0, "rewrite to not use the status hierarchy"  # TODO
             # ireq = BuildRequest(self, self.useRevisions)
             # buildreq.subscribe(ireq.started)
 
-        d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 
     command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"

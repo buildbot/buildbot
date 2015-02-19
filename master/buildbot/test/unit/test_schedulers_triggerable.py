@@ -182,12 +182,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
 
+        @d.addCallback
         def fired(xxx_todo_changeme):
             (result, brids) = xxx_todo_changeme
             self.assertEqual(result, 3)  # from sendCompletionMessage
             self.assertEqual(brids, {77: 1000})
             self.fired = True
-        d.addCallback(fired)
         d.addErrback(log.err)
 
         # check that the scheduler has subscribed to buildset changes, but

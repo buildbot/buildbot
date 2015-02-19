@@ -473,28 +473,28 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         d = self.db.state.getObjectId(self.name,
                                       "buildbot.master.BuildMaster")
 
+        @d.addCallback
         def keep(id):
             self._object_id = id
             return id
-        d.addCallback(keep)
         return d
 
     def _getState(self, name, default=None):
         "private wrapper around C{self.db.state.getState}"
         d = self.getObjectId()
 
+        @d.addCallback
         def get(objectid):
             return self.db.state.getState(objectid, name, default)
-        d.addCallback(get)
         return d
 
     def _setState(self, name, value):
         "private wrapper around C{self.db.state.setState}"
         d = self.getObjectId()
 
+        @d.addCallback
         def set(objectid):
             return self.db.state.setState(objectid, name, value)
-        d.addCallback(set)
         return d
 
 

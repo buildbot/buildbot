@@ -84,20 +84,20 @@ class SVN(Source):
 
         d = self.checkSvn()
 
+        @d.addCallback
         def checkInstall(svnInstalled):
             if not svnInstalled:
                 raise buildstep.BuildStepFailed("SVN is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
+        @d.addCallback
         def checkPatched(patched):
             if patched:
                 return self.purge(False)
             else:
                 return 0
-        d.addCallback(checkPatched)
 
         if self.mode == 'full':
             d.addCallback(self.full)
@@ -209,10 +209,10 @@ class SVN(Source):
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -237,7 +237,8 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if cmd.didFail() and abandonOnFailure:
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
@@ -249,7 +250,6 @@ class SVN(Source):
                 return cmd.stderr
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def _getMethod(self):
@@ -341,6 +341,7 @@ class SVN(Source):
             command.append('--no-ignore')
         d = self._dovccmd(command, collectStdout=True)
 
+        @d.addCallback
         def parseAndRemove(stdout):
             files = []
             for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
@@ -354,14 +355,13 @@ class SVN(Source):
                 else:
                     d = self.runRmdir(files, abandonOnFailure=False)
             return d
-        d.addCallback(parseAndRemove)
 
+        @d.addCallback
         def evaluateCommand(rc):
             if rc != 0:
                 log.msg("Failed removing files")
                 raise buildstep.BuildStepFailed()
             return rc
-        d.addCallback(evaluateCommand)
         return d
 
     @staticmethod
@@ -400,11 +400,9 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluate(cmd):
-            if cmd.rc != 0:
-                return False
-            return True
-        d.addCallback(lambda _: evaluate(cmd))
+        @d.addCallback
+        def evaluate(_):
+            return cmd.rc == 0
         return d
 
     def computeSourceRevision(self, changes):

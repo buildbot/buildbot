@@ -300,13 +300,12 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.setUpChangeSource()
 
+        @d.addCallback
         def create_poller(_):
             self.attachChangeSource(BitbucketPullrequestPoller(
                 owner='owner',
                 slug='slug',
             ))
-
-        d.addCallback(create_poller)
         return d
 
     def tearDown(self):
@@ -338,15 +337,15 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         self._fakeGetPage404()
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.fail(
                 'Polling a non-existent repository should result in a 404.')
 
+        @d.addErrback
         def err(e):
             self.assertEqual(e.getErrorMessage(), '404 Not Found')
 
-        d.addCallback(check)
-        d.addErrback(err)
         return d
 
     def test_poll_no_pull_requests(self):
@@ -354,10 +353,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         self._fakeGetPage(rest.request())
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(len(self.master.data.updates.changesAdded), 0)
-
-        d.addCallback(check)
         return d
 
     def test_poll_new_pull_requests(self):
@@ -367,6 +365,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'contributor',
@@ -383,8 +382,6 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
             }])
-
-        d.addCallback(check)
         return d
 
     def test_poll_no_updated_pull_request(self):
@@ -394,6 +391,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'contributor',
@@ -414,12 +412,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             # repoll
             d = self.changesource.poll()
 
+            @d.addCallback
             def check2(_):
                 self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-
-            d.addCallback(check2)
-
-        d.addCallback(check)
         return d
 
     def test_poll_updated_pull_request(self):
@@ -429,6 +424,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'contributor',
@@ -449,6 +445,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             self.patch(client, "getPage", self.pr_list2.getPage)
             d = self.changesource.poll()
 
+            @d.addCallback
             def check2(_):
                 self.assertEqual(self.master.data.updates.changesAdded, [
                     {
@@ -482,11 +479,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                         'when_timestamp': 1381869500,
                     }
                 ])
-
-            d.addCallback(check2)
             return d
-
-        d.addCallback(check)
         return d
 
     def test_poll_pull_request_filter_False(self):
@@ -501,10 +494,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(len(self.master.data.updates.changesAdded), 0)
-
-        d.addCallback(check)
         return d
 
     def test_poll_pull_request_filter_True(self):
@@ -519,6 +511,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'contributor',
@@ -535,8 +528,6 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
             }])
-
-        d.addCallback(check)
         return d
 
     def test_poll_pull_request_not_useTimestamps(self):
@@ -552,6 +543,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         d = self.changesource.poll()
 
+        @d.addCallback
         def check(_):
             self.assertEqual(self.master.data.updates.changesAdded, [{
                 'author': u'contributor',
@@ -568,6 +560,4 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'src': u'bitbucket',
                 'when_timestamp': 1396825656,
             }])
-
-        d.addCallback(check)
         return d

@@ -445,10 +445,10 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
 
         d = self.conn.remoteSetBuilderList(builders=blist)
 
+        @d.addCallback
         def sentBuilderList(ign):
             self._old_builder_list = blist
             return ign
-        d.addCallback(sentBuilderList)
         return d
 
     def shutdownRequested(self):
@@ -888,6 +888,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return why
         d.addCallbacks(_sent, _set_failed)
 
+        @d.addCallback
         def _substantiated(res):
             log.msg(r"Slave %s substantiated \o/" % self.slavename)
             self.substantiated = True
@@ -903,5 +904,4 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # ``attached``
             if not self.building:
                 self._setBuildWaitTimer()
-        d.addCallback(_substantiated)
         return d

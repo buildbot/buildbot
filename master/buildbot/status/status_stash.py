@@ -40,12 +40,12 @@ def logIfNot2XX(response):
     if 200 < response.code <= 300:
         return
 
+    d = readBody(response)
+
+    @d.addCallback
     def cbBody(body):
         error_message = 'StashStatusPush received %s with body: %s'
         log.err(error_message % (response.code, body))
-
-    d = readBody(response)
-    d.addCallback(cbBody)
     return d
 
 

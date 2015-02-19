@@ -64,8 +64,8 @@ class ChangeImportMixin(db.RealDatabaseMixin):
     def tearDownChangeImport(self):
         d = self.tearDownRealDatabase()
 
+        @d.addCallback
         def rmtree(_):
             if os.path.exists(self.basedir):
                 shutil.rmtree(self.basedir)
-        d.addCallback(rmtree)
         return d

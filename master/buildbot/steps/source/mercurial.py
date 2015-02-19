@@ -99,12 +99,12 @@ class Mercurial(Source):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
         d = self.checkHg()
 
+        @d.addCallback
         def checkInstall(hgInstalled):
             if not hgInstalled:
                 raise BuildSlaveTooOldError(
                     "Mercurial is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
         if self.branchType == 'dirname':
@@ -190,10 +190,10 @@ class Mercurial(Source):
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -201,6 +201,7 @@ class Mercurial(Source):
         d = self._dovccmd(
             ['parents', '--template', '{node}\\n'], collectStdout=True)
 
+        @d.addCallback
         def _setrev(stdout):
             revision = stdout.strip()
             if len(revision) != 40:
@@ -208,7 +209,6 @@ class Mercurial(Source):
             log.msg("Got Mercurial revision %s" % (revision, ))
             self.updateSourceProperty('got_revision', revision)
             return 0
-        d.addCallback(_setrev)
         return d
 
     @defer.inlineCallbacks
@@ -245,7 +245,8 @@ class Mercurial(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
@@ -253,7 +254,6 @@ class Mercurial(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def computeSourceRevision(self, changes):
@@ -275,9 +275,9 @@ class Mercurial(Source):
         else:
             d = self._dovccmd(['identify', '--branch'], collectStdout=True)
 
+            @d.addCallback
             def _getbranch(stdout):
                 return stdout.strip()
-            d.addCallback(_getbranch).addErrback
             return d
 
     def _getMethod(self):
@@ -296,6 +296,7 @@ class Mercurial(Source):
         d = self._dovccmd(
             command, collectStdout=True, decodeRC={0: SUCCESS, 1: SUCCESS})
 
+        @d.addCallback
         def parseAndRemove(stdout):
             files = []
             for filename in stdout.splitlines():
@@ -314,7 +315,6 @@ class Mercurial(Source):
                     d = self.runCommand(cmd)
                     d.addCallback(lambda _: cmd.rc)
             return d
-        d.addCallback(parseAndRemove)
         d.addCallback(self._update)
         return d
 
@@ -369,11 +369,9 @@ class Mercurial(Source):
     def checkHg(self):
         d = self._dovccmd(['--version'])
 
+        @d.addCallback
         def check(res):
-            if res == 0:
-                return True
-            return False
-        d.addCallback(check)
+            return res == 0
         return d
 
     def applyPatch(self, patch):

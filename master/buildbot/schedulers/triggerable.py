@@ -60,13 +60,13 @@ class Triggerable(base.BaseScheduler):
 
         resultsDeferred = defer.Deferred()
 
+        @idsDeferred.addCallback
         def setup_waiter(ids):
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
             self._updateWaiters()
             return ids
 
-        idsDeferred.addCallback(setup_waiter)
         return idsDeferred, resultsDeferred
 
     @defer.inlineCallbacks

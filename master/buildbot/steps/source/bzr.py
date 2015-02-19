@@ -67,20 +67,20 @@ class Bzr(Source):
 
         d = self.checkBzr()
 
+        @d.addCallback
         def checkInstall(bzrInstalled):
             if not bzrInstalled:
                 raise BuildSlaveTooOldError("bzr is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
+        @d.addCallback
         def checkPatched(patched):
             if patched:
                 return self._dovccmd(['clean-tree', '--ignored', '--force'])
             else:
                 return 0
-        d.addCallback(checkPatched)
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -132,11 +132,11 @@ class Bzr(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
+        @d.addCallback
         def checkRemoval(res):
-            if res != 0:
+            if cmd.rc != 0:
                 raise RuntimeError("Failed to delete directory")
-            return res
-        d.addCallback(lambda _: checkRemoval(cmd.rc))
+            return cmd.rc
         return d
 
     def clobber(self):
@@ -151,6 +151,7 @@ class Bzr(Source):
         d = self.runCommand(cmd)
         d.addCallback(lambda _: self.incremental())
 
+        @d.addCallback
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
                                               {'fromdir': 'source',
@@ -159,7 +160,6 @@ class Bzr(Source):
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
-        d.addCallback(copy)
         return d
 
     def clean(self):
@@ -211,12 +211,12 @@ class Bzr(Source):
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             log.msg("Closing log, sending result of the command %s " %
                     (self.cmd))
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -238,7 +238,8 @@ class Bzr(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
@@ -246,17 +247,14 @@ class Bzr(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def checkBzr(self):
         d = self._dovccmd(['--version'])
 
+        @d.addCallback
         def check(res):
-            if res == 0:
-                return True
-            return False
-        d.addCallback(check)
+            return res == 0
         return d
 
     def _getMethod(self):
@@ -271,6 +269,7 @@ class Bzr(Source):
         d = self._dovccmd(["version-info", "--custom", "--template='{revno}"],
                           collectStdout=True)
 
+        @d.addCallback
         def setrev(stdout):
             revision = stdout.strip("'")
             try:
@@ -282,5 +281,4 @@ class Bzr(Source):
             log.msg("Got Git revision %s" % (revision, ))
             self.updateSourceProperty('got_revision', revision)
             return 0
-        d.addCallback(setrev)
         return d

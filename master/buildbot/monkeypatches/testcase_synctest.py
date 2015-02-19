@@ -146,10 +146,11 @@ def assertNoResult(self, deferred):
     """
     result = []
 
+    @deferred.addBoth
     def cb(res):
         result.append(res)
         return res
-    deferred.addBoth(cb)
+
     if result:
         # If there is already a failure, the self.fail below will
         # report it, so swallow it in the deferred

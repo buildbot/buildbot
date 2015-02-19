@@ -882,10 +882,10 @@ class LoggingBuildStep(BuildStep):
 
         d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(cmd, results)
             return results
-        d.addCallback(_gotResults)  # returns results
         d.addCallback(self.finished)
         d.addErrback(self.failed)
 

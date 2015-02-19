@@ -210,6 +210,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         d = self.getNextBuildTime(self.lastActuated)
 
         # set up the new timer
+        @d.addCallback
         def set_timer(actuateAt):
             now = self.now()
             self.actuateAt = max(actuateAt, now)
@@ -221,8 +222,6 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
                             (self.__class__.__name__, self.name))
                 self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                               self._actuate)
-        d.addCallback(set_timer)
-
         return d
 
     def _actuate(self):

@@ -68,6 +68,7 @@ class WorkQueue(object):
 
         # Whenever a piece of work is done, whether it worked or not
         # call this to schedule the next piece of work
+        @d2.addBoth
         def _work_done(res):
             log.msg("Completed a piece of work")
             self.queue.pop(0)
@@ -75,7 +76,6 @@ class WorkQueue(object):
                 log.msg("Preparing next piece of work")
                 eventually(self._process)
             return res
-        d2.addBoth(_work_done)
 
         # When the work is done, trigger d
         d2.chainDeferred(d)
@@ -230,12 +230,12 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         log.msg("Cloning base image: %s %s'" % (clone_cmd, clone_args))
 
+        d = utils.getProcessValue(clone_cmd, clone_args.split())
+
+        @d.addBoth
         def _log_result(res):
             log.msg("Cloning exit code was: %d" % res)
             return res
-
-        d = utils.getProcessValue(clone_cmd, clone_args.split())
-        d.addBoth(_log_result)
         return d
 
     @defer.inlineCallbacks
@@ -291,17 +291,17 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         else:
             d = domain.destroy()
 
+        @d.addCallback
         def _disconnect(res):
             log.msg("VM destroyed (%s): Forcing its connection closed." % self.name)
             return AbstractBuildSlave.disconnect(self)
-        d.addCallback(_disconnect)
 
+        @d.addBoth
         def _disconnected(res):
             log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.name)
             if self.base_image:
                 os.remove(self.image)
             self.botmaster.maybeStartBuildsForSlave(self.name)
             return res
-        d.addBoth(_disconnected)
 
         return d

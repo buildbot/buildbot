@@ -113,11 +113,11 @@ class P4(Source):
 
         d = self.checkP4()
 
+        @d.addCallback
         def checkInstall(p4Installed):
             if not p4Installed:
                 raise BuildSlaveTooOldError("p4 is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
 
         if self.use_tickets and self.p4passwd:
             d.addCallback(self._acquireTicket)
@@ -180,10 +180,10 @@ class P4(Source):
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -235,7 +235,8 @@ class P4(Source):
 
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if cmd.rc != 0:
                 if debug_logging:
                     log.msg("P4:_dovccmd():Source step failed while running command %s" % cmd)
@@ -244,7 +245,6 @@ class P4(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def _getMethod(self):
@@ -340,6 +340,7 @@ class P4(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
+        @d.addCallback
         def _setrev(_):
             stdout = cmd.stdout.strip()
             # Example output from p4 changes -m1 #have
@@ -357,7 +358,6 @@ class P4(Source):
                 log.msg("Got p4 revision %s" % (revision,))
             self.updateSourceProperty('got_revision', revision)
             return 0
-        d.addCallback(lambda _: _setrev(cmd.rc))
         return d
 
     def purge(self, ignore_ignores):
@@ -379,11 +379,11 @@ class P4(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluate(cmd):
+        @d.addCallback
+        def evaluate(_):
             if cmd.rc != 0:
                 return False
             return True
-        d.addCallback(lambda _: evaluate(cmd))
         return d
 
     def computeSourceRevision(self, changes):

@@ -77,6 +77,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequest(44))
 
+        @d.addCallback
         def check(brdict):
             self.assertEqual(brdict,
                              dict(buildrequestid=44, buildsetid=self.BSID,
@@ -86,15 +87,14 @@ class Tests(interfaces.InterfaceTests):
                                   results=75, claimed_at=self.CLAIMED_AT,
                                   submitted_at=self.SUBMITTED_AT,
                                   complete_at=self.COMPLETE_AT, waited_for=False))
-        d.addCallback(check)
         return d
 
     def test_getBuildRequest_missing(self):
         d = self.db.buildrequests.getBuildRequest(44)
 
+        @d.addCallback
         def check(brdict):
             self.assertEqual(brdict, None)
-        d.addCallback(check)
         return d
 
     def do_test_getBuildRequests_claim_args(self, **kwargs):
@@ -119,10 +119,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
-        d.addCallback(check)
         return d
 
     def test_getBuildRequests_no_claimed_arg(self):
@@ -157,10 +157,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
-        d.addCallback(check)
         return d
 
     def do_test_getBuildRequests_complete_arg(self, **kwargs):
@@ -186,10 +186,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
-        d.addCallback(check)
         return d
 
     def test_getBuildRequests_complete_none(self):
@@ -221,10 +221,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(bsid=self.BSID))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted([70, 72]))
-        d.addCallback(check)
         return d
 
     def test_getBuildRequests_combo(self):
@@ -275,9 +275,9 @@ class Tests(interfaces.InterfaceTests):
                                                              claimed=self.MASTER_ID,
                                                              complete=True, bsid=self.BSID))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual([br['buildrequestid'] for br in brlist], [44])
-        d.addCallback(check)
         return d
 
     def do_test_getBuildRequests_branch_arg(self, **kwargs):
@@ -307,10 +307,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(**kwargs))
 
+        @d.addCallback
         def check(brlist):
             self.assertEqual(sorted([br['buildrequestid'] for br in brlist]),
                              sorted(expected))
-        d.addCallback(check)
         return d
 
     def test_getBuildRequests_branch(self):
@@ -349,6 +349,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
 
+        @d.addCallback
         def check(results):
             self.assertNotEqual(expected, None,
                                 "unexpected success from claimBuildRequests")
@@ -356,13 +357,12 @@ class Tests(interfaces.InterfaceTests):
                 sorted([(r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
                         for r in results]),
                 sorted(expected))
-        d.addCallback(check)
 
+        @d.addErrback
         def fail(f):
             if not expfailure:
                 raise f
             f.trap(expfailure)
-        d.addErrback(fail)
         return d
 
     def test_claimBuildRequests_single(self):
@@ -429,6 +429,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(claimed=True))
 
+        @d.addCallback
         def check(results):
             # check that [1,1000) were not claimed, and 1000 is still claimed
             self.assertEqual([
@@ -437,7 +438,6 @@ class Tests(interfaces.InterfaceTests):
             ][:10], [
                 (1000, self.OTHER_MASTER_ID, epoch2datetime(1300103810))
             ])
-        d.addCallback(check)
         return d
 
     def test_claimBuildRequests_sequential(self):
@@ -458,9 +458,9 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(claimed=False))
 
+        @d.addCallback
         def check(results):
             self.assertEqual(results, [])
-        d.addCallback(check)
         return d
 
     def do_test_reclaimBuildRequests(self, rows, now, brids, expected=None,
@@ -475,6 +475,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
 
+        @d.addCallback
         def check(results):
             self.assertNotEqual(expected, None,
                                 "unexpected success from claimBuildRequests")
@@ -485,13 +486,12 @@ class Tests(interfaces.InterfaceTests):
                 ]),
                 sorted(expected)
             )
-        d.addCallback(check)
 
+        @d.addErrback
         def fail(f):
             if not expfailure:
                 raise f
             f.trap(expfailure)
-        d.addErrback(fail)
         return d
 
     def test_reclaimBuildRequests(self):
@@ -522,6 +522,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
 
+        @d.addCallback
         def check(results):
             self.assertEqual(sorted(
                 (r['buildrequestid'], r['claimed_at'], r['claimed_by_masterid'])
@@ -530,7 +531,6 @@ class Tests(interfaces.InterfaceTests):
                 (44, epoch2datetime(1300103810), self.MASTER_ID),
                 (45, epoch2datetime(1300103810), self.OTHER_MASTER_ID),
             ])
-        d.addCallback(check)
         return d
 
     def do_test_completeBuildRequests(self, rows, now, expected=None,
@@ -548,6 +548,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests())
 
+        @d.addCallback
         def check(results):
             self.assertNotEqual(expected, None,
                                 "unexpected success from completeBuildRequests")
@@ -555,13 +556,12 @@ class Tests(interfaces.InterfaceTests):
                 (r['buildrequestid'], r['complete'], r['results'], r['complete_at'])
                 for r in results
             ), sorted(expected))
-        d.addCallback(check)
 
+        @d.addErrback
         def fail(f):
             if not expfailure:
                 raise f
             f.trap(expfailure)
-        d.addErrback(fail)
         return d
 
     def test_completeBuildRequests(self):
@@ -682,10 +682,10 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(claimed=False))
 
+        @d.addCallback
         def check(results):
             self.assertEqual(sorted([r['buildrequestid'] for r in results]),
                              sorted(expected))
-        d.addCallback(check)
         return d
 
     def test_unclaimExpiredRequests(self):

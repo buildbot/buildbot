@@ -228,6 +228,7 @@ class TestSlaveComm(unittest.TestCase):
 
         login_d = factory.login(creds, slavebuildslave)
 
+        @login_d.addCallback
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
@@ -238,7 +239,6 @@ class TestSlaveComm(unittest.TestCase):
             self._detach_deferreds.append(slavebuildslave.detach_d)
 
             return slavebuildslave
-        login_d.addCallback(logged_in)
 
         self.connector = reactor.connectTCP("127.0.0.1", self.port, factory)
 
