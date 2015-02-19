@@ -45,7 +45,7 @@ upgrade_message = textwrap.dedent("""\
     The Buildmaster database needs to be upgraded before this version of
     buildbot can run.  Use the following command-line
 
-        buildbot upgrade-master path/to/master
+        buildbot upgrade-master {basedir}
 
     to upgrade the database, and try starting the buildmaster again.  You may
     want to make a backup of your buildmaster before doing so.
@@ -115,7 +115,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
             def check_current(res):
                 if not res:
-                    for l in upgrade_message.split('\n'):
+                    for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
                         log.msg(l)
                     raise exceptions.DatabaseNotReadyError()
             d.addCallback(check_current)
