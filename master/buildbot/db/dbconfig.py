@@ -50,8 +50,12 @@ class DbConfig(object):
         self.name = name
 
     def getDb(self):
-        db_engine = enginestrategy.create_engine(self.db_url,
-                                                 basedir=self.basedir)
+        try:
+            db_engine = enginestrategy.create_engine(self.db_url,
+                                                     basedir=self.basedir)
+        except Exception:
+            # db_url is probably trash. Just ignore, config.py db part will create proper message
+            return None
         db = FakeDBConnector()
         db.master = FakeMaster()
         db.pool = FakePool()

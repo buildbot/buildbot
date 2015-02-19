@@ -77,8 +77,8 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         # as we will open the db twice, we can't use in memory sqlite
         yield self.setUpRealDatabase(table_names=[], sqlite_memory=False)
 
-    def createDbConfig(self):
-        return dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
+    def createDbConfig(self, db_url=None):
+        return dbconfig.DbConfig({"db_url": db_url or self.db_url}, self.basedir)
 
     def test_default(self):
         def thd():
@@ -90,6 +90,27 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
     def test_error(self):
         def thd():
             db = self.createDbConfig()
+            self.assertRaises(KeyError, db.get, u"slaves")
+
+        return threads.deferToThread(thd)
+
+    def test_bad_url(self):
+        def thd():
+            db = self.createDbConfig("garbage://")
+            self.assertRaises(KeyError, db.get, u"slaves")
+
+        return threads.deferToThread(thd)
+
+    def test_bad_url2(self):
+        def thd():
+            db = self.createDbConfig("trash")
+            self.assertRaises(KeyError, db.get, u"slaves")
+
+        return threads.deferToThread(thd)
+
+    def test_bad_url3(self):
+        def thd():
+            db = self.createDbConfig("sqlite://bad")
             self.assertRaises(KeyError, db.get, u"slaves")
 
         return threads.deferToThread(thd)
