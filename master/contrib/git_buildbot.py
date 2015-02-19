@@ -239,7 +239,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
     logging.info("Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
 
-    mergebasecommand = subprocess.Popen("git merge-base %s %s" % (oldrev, newrev), stdout=subprocess.PIPE);
+    mergebasecommand = subprocess.Popen("git merge-base %s %s" % (oldrev, newrev), stdout=subprocess.PIPE)
     (baserev, err) = mergebasecommand.communicate()
     baserev = baserev.strip() # remove newline
     
