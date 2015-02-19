@@ -16,6 +16,7 @@
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state
+from sqlalchemy.exc import OperationalError
 
 
 class FakeDBConnector(object):
@@ -58,16 +59,29 @@ class DbConfig(object):
         db.master.caches = FakeCacheManager()
         db.model = model.Model(db)
         db.state = state.StateConnectorComponent(db)
-        self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
+        try:
+            self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
+        except OperationalError as e:
+            if "no such table" in str(e):
+                db.pool.engine.close()
+                return None
+            else:
+                raise
         return db
 
     def get(self, name, default=state.StateConnectorComponent.Thunk):
         db = self.getDb()
-        ret = db.state.thdGetState(db.pool.engine, self.objectid, name, default=default)
-        db.pool.engine.close()
+        if db is not None:
+            ret = db.state.thdGetState(db.pool.engine, self.objectid, name, default=default)
+            db.pool.engine.close()
+        else:
+            if default is not state.StateConnectorComponent.Thunk:
+                return default
+            raise KeyError("Db not yet initialized")
         return ret
 
     def set(self, name, value):
         db = self.getDb()
-        db.state.thdSetState(db.pool.engine, self.objectid, name, value)
-        db.pool.engine.close()
+        if db is not None:
+            db.state.thdSetState(db.pool.engine, self.objectid, name, value)
+            db.pool.engine.close()

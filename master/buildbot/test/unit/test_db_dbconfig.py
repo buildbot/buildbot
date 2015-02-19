@@ -68,3 +68,28 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
     def test_init3(self):
         obj = dbconfig.DbConfig({}, self.basedir)
         self.assertEqual(obj.db_url, "sqlite:///state.sqlite")
+
+
+class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        # as we will open the db twice, we can't use in memory sqlite
+        yield self.setUpRealDatabase(table_names=[], sqlite_memory=False)
+
+    def createDbConfig(self):
+        return dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
+
+    def test_default(self):
+        def thd():
+            db = self.createDbConfig()
+            self.assertEqual("foo", db.get(u"slaves", "foo"))
+
+        return threads.deferToThread(thd)
+
+    def test_error(self):
+        def thd():
+            db = self.createDbConfig()
+            self.assertRaises(KeyError, db.get, u"slaves")
+
+        return threads.deferToThread(thd)
