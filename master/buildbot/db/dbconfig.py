@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.config import MasterConfig
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state
@@ -40,12 +41,7 @@ class FakePool(object):
 class DbConfig(object):
 
     def __init__(self, BuildmasterConfig, basedir, name="config"):
-        if 'db' in BuildmasterConfig:
-            self.db_url = BuildmasterConfig['db']['db_url']
-        elif 'db_url' in BuildmasterConfig:
-            self.db_url = BuildmasterConfig['db_url']
-        else:
-            self.db_url = 'sqlite:///state.sqlite'
+        self.db_url = MasterConfig.getDbUrlFromConfig(BuildmasterConfig, throwErrors=False)
         self.basedir = basedir
         self.name = name
 
