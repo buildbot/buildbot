@@ -195,4 +195,4 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        self.fp = StringIO(s)
+        FileReader.__init__(self, StringIO(s))

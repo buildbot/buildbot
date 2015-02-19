@@ -43,6 +43,8 @@ class RpmSpec(ShellCommand):
         @type kwargs: dict
         @param kwargs: All further keyword arguments.
         """
+        ShellCommand.__init__(self, **kwargs)
+
         self.specfile = specfile
         self._pkg_name = None
         self._pkg_version = None
