@@ -140,15 +140,16 @@ class SlaveStatus:
             self.graceful_callbacks.remove(watcher)
 
     def asDict(self):
-        result = {}
-        # Constant
-        result['name'] = self.getName()
-        result['access_uri'] = self.getAccessURI()
+        result = {
+            # Constant
+            'name': self.getName(),
+            'access_uri': self.getAccessURI(),
 
-        # Transient (since it changes when the slave reconnects)
-        result['host'] = self.getHost()
-        result['admin'] = self.getAdmin()
-        result['version'] = self.getVersion()
-        result['connected'] = self.isConnected()
-        result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
+            # Transient (since it changes when the slave reconnects)
+            'host': self.getHost(),
+            'admin': self.getAdmin(),
+            'version': self.getVersion(),
+            'connected': self.isConnected(),
+            'runningBuilds': [b.asDict() for b in self.getRunningBuilds()]
+        }
         return result

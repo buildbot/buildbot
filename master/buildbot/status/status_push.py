@@ -102,10 +102,11 @@ class StatusPush(StatusReceiverMultiService):
         self.task = None
         self.stopped = False
         self.lastIndex = -1
-        self.state = {}
-        self.state['started'] = str(datetime.datetime.utcnow())
-        self.state['next_id'] = 1
-        self.state['last_id_pushed'] = 0
+        self.state = {
+            'started': str(datetime.datetime.utcnow()),
+            'next_id': 1,
+            'last_id_pushed': 0
+        }
         # Try to load back the state.
         if self.path and os.path.isdir(self.path):
             state_path = os.path.join(self.path, 'state')

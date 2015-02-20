@@ -390,23 +390,24 @@ class BuildStepStatus(styles.Versioned):
         self.wasUpgraded = True
 
     def asDict(self):
-        result = {}
-        # Constant
-        result['name'] = self.getName()
+        result = {
+            # Constant
+            'name': self.getName(),
 
-        # Transient
-        result['text'] = self.getText()
-        result['results'] = self.getResults()
-        result['isStarted'] = self.isStarted()
-        result['isFinished'] = self.isFinished()
-        result['times'] = self.getTimes()
-        result['expectations'] = self.getExpectations()
-        result['eta'] = self.getETA()
-        result['urls'] = self.getURLs()
-        result['step_number'] = self.step_number
-        result['hidden'] = self.hidden
-        result['logs'] = [[l.getName(), None]  # used to be (name, URL)
-                          for l in self.getLogs()]
+            # Transient
+            'text': self.getText(),
+            'results': self.getResults(),
+            'isStarted': self.isStarted(),
+            'isFinished': self.isFinished(),
+            'times': self.getTimes(),
+            'expectations': self.getExpectations(),
+            'eta': self.getETA(),
+            'urls': self.getURLs(),
+            'step_number': self.step_number,
+            'hidden': self.hidden,
+            'logs': [[l.getName(), None]  # used to be (name, URL)
+                     for l in self.getLogs()]
+        }
         return result
 # styles.Versioned requires this latter, as it keys the version numbers on the
 # fully qualified class name.  This module appeared in two different modules

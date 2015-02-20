@@ -605,28 +605,29 @@ class BuilderStatus(styles.Versioned):
         self.prune()  # conserve disk
 
     def asDict(self):
-        result = {}
-        # Constant
-        # TODO(maruel): Fix me. We don't want to leak the full path.
-        result['basedir'] = os.path.basename(self.basedir)
-        result['tags'] = self.getTags()
-        result['slaves'] = self.slavenames
-        result['schedulers'] = [s.name
-                                for s in self.status.master.allSchedulers()
-                                if self.name in s.builderNames]
-        # TODO(maruel): Add cache settings? Do we care?
-
-        # Transient
         # Collect build numbers.
         # Important: Only grab the *cached* builds numbers to reduce I/O.
         current_builds = [b.getNumber() for b in self.currentBuilds]
         cached_builds = sorted(set(self.buildCache.keys() + current_builds))
-        result['cachedBuilds'] = cached_builds
-        result['currentBuilds'] = current_builds
-        result['state'] = self.getState()[0]
-        # lies, but we don't have synchronous access to this info; use
-        # asDict_async instead
-        result['pendingBuilds'] = 0
+
+        result = {
+            # Constant
+            # TODO(maruel): Fix me. We don't want to leak the full path.
+            'basedir': os.path.basename(self.basedir),
+            'tags': self.getTags(),
+            'slaves': self.slavenames,
+            'schedulers': [s.name for s in self.status.master.allSchedulers()
+                           if self.name in s.builderNames],
+            # TODO(maruel): Add cache settings? Do we care?
+
+            # Transient
+            'cachedBuilds': cached_builds,
+            'currentBuilds': current_builds,
+            'state': self.getState()[0],
+            # lies, but we don't have synchronous access to this info; use
+            # asDict_async instead
+            'pendingBuilds': 0
+        }
         return result
 
     def asDict_async(self):

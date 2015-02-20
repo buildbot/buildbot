@@ -452,13 +452,14 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             t.changeAdded(change)
 
     def asDict(self):
-        result = {}
-        # Constant
-        result['title'] = self.getTitle()
-        result['titleURL'] = self.getTitleURL()
-        result['buildbotURL'] = self.getBuildbotURL()
-        # TODO: self.getSchedulers()
-        # self.getChangeSources()
+        result = {
+            # Constant
+            'title': self.getTitle(),
+            'titleURL': self.getTitleURL(),
+            'buildbotURL': self.getBuildbotURL(),
+            # TODO: self.getSchedulers()
+            # self.getChangeSources()
+        }
         return result
 
     def build_started(self, brid, buildername, build_status):
