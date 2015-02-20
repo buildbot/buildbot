@@ -38,20 +38,19 @@ class MasterShellCommand(BuildStep):
     description = 'Running'
     descriptionDone = 'Ran'
     descriptionSuffix = None
-    renderables = ['command', 'env', 'workdir']
+    renderables = ['command', 'env']
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, command,
-                 env=None, workdir=None, usePTY=0, interruptSignal="KILL",
-                 **kwargs):
+    def __init__(self, command, **kwargs):
+        self.env = kwargs.pop('env', None)
+        self.usePTY = kwargs.pop('usePTY', 0)
+        self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
+
         BuildStep.__init__(self, **kwargs)
 
         self.command = command
-        self.env = env
-        self.masterWorkdir = workdir
-        self.usePTY = usePTY
-        self.interruptSignal = interruptSignal
+        self.masterWorkdir = self.workdir
 
     class LocalPP(ProcessProtocol):
 
