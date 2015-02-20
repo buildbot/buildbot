@@ -675,6 +675,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(slaves=[sl]), self.errors)
         self.assertResults(slaves=[sl])
 
+    def test_load_slaves_friendly_name(self):
+        sl = buildslave.BuildSlave("bot1name", "bot1passwd",
+                                   max_builds=1, friendlyName="win8.1-test-machine")
+        self.cfg.load_slaves(self.filename,
+                dict(slaves=[sl]), self.errors)
+        self.assertResults(slaves=[sl])
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {}, self.errors)

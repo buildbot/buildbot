@@ -869,6 +869,8 @@ class FakeStateComponent(FakeDBComponent):
             self.t.assertEqual(json.loads(state[k]), v,
                     "state is %r" % (state,))
 
+    def getObjectStateByKey(self, objects, filteredKey, storedKey):
+        return defer.succeed({})
 
 class FakeBuildRequestsComponent(FakeDBComponent):
 
