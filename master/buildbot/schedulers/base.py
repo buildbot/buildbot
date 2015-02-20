@@ -34,7 +34,7 @@ class BaseScheduler(ClusteredService, StateMixin):
     compare_attrs = ClusteredService.compare_attrs + \
         ('builderNames', 'properties', 'codebases')
 
-    def __init__(self, name, builderNames, properties,
+    def __init__(self, name, builderNames, properties=None,
                  codebases=DEFAULT_CODEBASES):
         ClusteredService.__init__(self, name)
 
@@ -52,6 +52,8 @@ class BaseScheduler(ClusteredService, StateMixin):
 
         self.builderNames = builderNames
 
+        if properties is None:
+            properties = {}
         self.properties = Properties()
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")

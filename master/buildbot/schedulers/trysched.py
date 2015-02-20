@@ -77,10 +77,8 @@ class Try_Jobdir(TryBase):
 
     compare_attrs = ('jobdir',)
 
-    def __init__(self, name, builderNames, jobdir,
-                 properties={}):
-        TryBase.__init__(self, name=name, builderNames=builderNames,
-                         properties=properties)
+    def __init__(self, name, builderNames, jobdir, **kwargs):
+        TryBase.__init__(self, name, builderNames, **kwargs)
         self.jobdir = jobdir
         self.watcher = JobdirService(scheduler=self)
 
@@ -414,13 +412,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 class Try_Userpass(TryBase):
     compare_attrs = ('name', 'builderNames', 'port', 'userpass', 'properties')
 
-    def __init__(self, name, builderNames, port, userpass,
-                 properties=None):
-        if properties is None:
-            properties = {}
-
-        TryBase.__init__(self, name=name, builderNames=builderNames,
-                         properties=properties)
+    def __init__(self, name, builderNames, port, userpass, **kwargs):
+        TryBase.__init__(self, name, builderNames, **kwargs)
         self.port = port
         self.userpass = userpass
         self.registrations = []
