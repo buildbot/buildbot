@@ -63,8 +63,7 @@ def patch_bug4520():
 def patch_bug5079():
     # this bug is patched in Twisted-12.0.0; it was probably
     # present in Twisted-8.x.0, but the patch doesn't work
-    if (twisted.version < versions.Version('twisted', 12, 0, 0) and
-            twisted.version >= versions.Version('twisted', 9, 0, 0)):
+    if twisted.version < versions.Version('twisted', 12, 0, 0):
         from buildbot.monkeypatches import bug5079
         bug5079.patch()
 
