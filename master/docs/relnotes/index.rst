@@ -195,6 +195,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* `BonsaiPoller` is removed.
+
 ..
     TODO: "executive summary" of changes: new-style steps, status classes missing, etc.
 

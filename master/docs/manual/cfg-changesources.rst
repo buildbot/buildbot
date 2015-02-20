@@ -524,49 +524,6 @@ It watches a project in which the branch name is simply the next path component,
                          split_file=lambda branchfile: branchfile.split('/',1))
     c['change_source'] = s
 
-.. bb:chsrc:: BonsaiPoller
-
-.. _BonsaiPoller:
-
-BonsaiPoller
-~~~~~~~~~~~~
-
-The :bb:chsrc:`BonsaiPoller` periodically polls a Bonsai server.
-This is a CGI script accessed through a web server that provides information about a CVS tree, for example the Mozilla bonsai server at http://bonsai.mozilla.org.
-Bonsai servers are usable by both humans and machines.
-In this case, the buildbot's change source forms a query which asks about any files in the specified branch which have changed since the last query.
-
-:bb:chsrc:`BonsaiPoller` accepts the following arguments:
-
-``bonsaiURL``
-    The base URL of the Bonsai server, e.g., ``http://bonsai.mozilla.org``
-
-``module``
-    The module to look for changes in.
-    Commonly this is ``all``.
-
-``branch``
-    The branch to look for changes in.
-    This will appear in the ``branch`` field of the resulting change objects.
-
-``tree``
-    The tree to look for changes in.
-    Commonly this is ``all``.
-
-``cvsroot``
-    The CVS root of the repository.
-    Usually this is ``/cvsroot``.
-
-``pollInterval``
-    The time (in seconds) between queries for changes.
-
-``pollAtLaunch``
-    Determines when the first poll occurs.
-    True = immediately on launch, False = wait for one pollInterval (default).
-
-``project``
-    The project name to attach to all change objects produced by this change source.
-
 .. bb:chsrc:: SVNPoller
 
 .. _SVNPoller:
