@@ -75,8 +75,7 @@ class Change:
             when = datetime2epoch(when)
         change.when = when
 
-        change.files = chdict['files'][:]
-        change.files.sort()
+        change.files = sorted(chdict['files'])
 
         change.properties = Properties()
         for n, (v, s) in chdict['properties'].iteritems():
@@ -122,8 +121,7 @@ class Change:
         self.project = project
 
         # keep a sorted list of the files, for easier display
-        self.files = (files or [])[:]
-        self.files.sort()
+        self.files = sorted(files or [])
 
     def __setstate__(self, dict):
         self.__dict__ = dict

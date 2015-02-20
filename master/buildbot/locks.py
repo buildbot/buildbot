@@ -321,6 +321,4 @@ class SlaveLock(BaseLockId):
         self.maxCountForSlave = maxCountForSlave
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForSlaveList = self.maxCountForSlave.items()
-        self._maxCountForSlaveList.sort()
-        self._maxCountForSlaveList = tuple(self._maxCountForSlaveList)
+        self._maxCountForSlaveList = tuple(sorted(self.maxCountForSlave.items()))
