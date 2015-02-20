@@ -180,3 +180,33 @@ class TestStateConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_getObjectStateByKey(self):
+        d = self.insertTestData(
+            [fakedb.Object(id=1, name='https://github.com/Unity-Technologies/buildbot.git', class_name='GitPoller'),
+             fakedb.ObjectState(objectid='1', name='lastRev',
+                                value_json='{"staging": "97ae8b254839aad207ae841765a645c4247fac57",'+
+                                           ' "master": "5384a30f2f774258647fdf6cbb387e7a385776dc",'+
+                                           ' "katana": "3fdf2ccbb97cb662ab1f9a6bf6c59482ebabe60b",'+
+                                           ' "buildbot-0.8.6": "2719db681f1fc812ce0e8bdea899cd43cd3d9f68",'+
+                                           ' "buildbot-0.8.7": "4ed9634056182dc3825165dc6a71b2ba98b08e5e",'+
+                                           ' "buildbot-0.8.4": "c8bcb29d2a240087a3db2bee42abf986989887a1",'+
+                                           ' "buildbot-0.8.5": "80a524bb75ccac88894a22827d7df2fddcd81557",'+
+                                           ' "buildbot-0.8.2": "9561ca2d7062e2727d338c87aab6430dce2dc81e"}')])
+        selection = {'https://github.com/Unity-Technologies/buildbot.git':
+                         {'codebase': 'katana-buildbot',
+                          'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
+                          'branch': 'katana', 'revision': ''}}
+
+
+        def check(result):
+            expected_result = {'https://github.com/Unity-Technologies/buildbot.git':
+                                   {'codebase': 'katana-buildbot',
+                                    'revision': u'3fdf2ccbb97cb662ab1f9a6bf6c59482ebabe60b',
+                                    'branch': 'katana',
+                                    'display_repository':'https://github.com/Unity-Technologies/buildbot.git'}}
+
+            self.assertEqual(result, expected_result)
+
+        d.addCallback(lambda _: self.db.state.getObjectStateByKey(selection, 'branch', 'revision'))
+        d.addCallback(check)
+        return d
