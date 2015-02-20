@@ -314,9 +314,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 raise EnvironmentError('command %s %s in %s on repourl %s failed with exit code %d: %s'
                                        % (command, args, path, self.repourl, code, stderr))
             return stdout.strip()
-        # XXX(sa2ajj): or should we use addCallback as a decorator and not pass
-        # `command`, `args`, and `path` but use them directly as we do in
-        # pretty much all other places?
         d.addCallback(_convert_nonzero_to_failure,
                       command,
                       args,
