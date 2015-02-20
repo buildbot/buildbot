@@ -313,9 +313,11 @@ class SlaveLock(BaseLockId):
     compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
     lockClass = RealSlaveLock
 
-    def __init__(self, name, maxCount=1, maxCountForSlave={}):
+    def __init__(self, name, maxCount=1, maxCountForSlave=None):
         self.name = name
         self.maxCount = maxCount
+        if maxCountForSlave is None:
+            maxCountForSlave = {}
         self.maxCountForSlave = maxCountForSlave
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples

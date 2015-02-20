@@ -36,13 +36,17 @@ class CVS(Source):
     renderables = ["cvsroot"]
 
     def __init__(self, cvsroot=None, cvsmodule='', mode='incremental',
-                 method=None, branch=None, global_options=[], extra_options=[],
+                 method=None, branch=None, global_options=None, extra_options=None,
                  login=None, **kwargs):
 
         self.cvsroot = cvsroot
         self.cvsmodule = cvsmodule
         self.branch = branch
+        if global_options is None:
+            global_options = []
         self.global_options = global_options
+        if extra_options is None:
+            extra_options = []
         self.extra_options = extra_options
         self.login = login
         self.mode = mode

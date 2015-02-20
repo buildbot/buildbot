@@ -259,9 +259,14 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     for bsdict in bsdicts]
         return d
 
-    def generateFinishedBuilds(self, builders=[], branches=[],
+    def generateFinishedBuilds(self, builders=None, branches=None,
                                num_builds=None, finished_before=None,
                                max_search=200):
+        if builders is None:
+            builders = []
+
+        if branches is None:
+            branches = []
 
         def want_builder(bn):
             if builders:

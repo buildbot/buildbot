@@ -73,8 +73,10 @@ class FakeUpdates(object):
 
     def addChange(self, files=None, comments=None, author=None,
                   revision=None, when_timestamp=None, branch=None, category=None,
-                  revlink=u'', properties={}, repository=u'', codebase=None,
+                  revlink=u'', properties=None, repository=u'', codebase=None,
                   project=u'', src=None):
+        if properties is None:
+            properties = {}
 
         # double-check args, types, etc.
         if files is not None:
@@ -131,9 +133,15 @@ class FakeUpdates(object):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
-                    properties={}, builderids=[], external_idstring=None,
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+                    properties=None, builderids=None, external_idstring=None,
                     parent_buildid=None, parent_relationship=None):
+        if sourcestamps is None:
+            sourcestamps = []
+        if properties is None:
+            properties = {}
+        if builderids is None:
+            builderids = []
         # assert types
         self.testcase.assertIsInstance(scheduler, unicode)
         self.testcase.assertIsInstance(sourcestamps, list)

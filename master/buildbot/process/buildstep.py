@@ -211,7 +211,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         io = StringIO.StringIO(alltext)
         return io.readlines()
 
-    def getChunks(self, channels=[], onlyText=False):
+    def getChunks(self, channels=None, onlyText=False):
         chunks = self.chunks
         if channels:
             channels = set(channels)
@@ -824,10 +824,12 @@ class LoggingBuildStep(BuildStep):
 
     renderables = ['logfiles', 'lazylogfiles']
 
-    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+    def __init__(self, logfiles=None, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
+        if logfiles is None:
+            logfiles = {}
         if logfiles and not isinstance(logfiles, dict):
             config.error(
                 "the ShellCommand 'logfiles' parameter must be a dictionary")
@@ -855,7 +857,9 @@ class LoggingBuildStep(BuildStep):
         kwargs['logfiles'] = self.logfiles
         return kwargs
 
-    def startCommand(self, cmd, errorMessages=[]):
+    def startCommand(self, cmd, errorMessages=None):
+        if errorMessages is None:
+            errorMessages = []
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
@@ -1053,10 +1057,13 @@ class ShellMixin(object):
     ]
     renderables = _shellMixinArgs
 
-    def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+    def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         assert self.isNewStyle(
         ), "ShellMixin is only compatible with new-style steps"
         constructorArgs = constructorArgs.copy()
+
+        if prohibitArgs is None:
+            prohibitArgs = []
 
         def bad(arg):
             config.error("invalid %s argument %s" %

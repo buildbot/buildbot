@@ -115,10 +115,16 @@ class VisualStudio(ShellCommand):
                  config='release',
                  useenv=False,
                  project=None,
-                 INCLUDE=[],
-                 LIB=[],
-                 PATH=[],
+                 INCLUDE=None,
+                 LIB=None,
+                 PATH=None,
                  **kwargs):
+        if INCLUDE is None:
+            INCLUDE = []
+        if LIB is None:
+            LIB = []
+        if PATH is None:
+            PATH = []
         self.installdir = installdir
         self.mode = mode
         self.projectfile = projectfile

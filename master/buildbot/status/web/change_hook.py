@@ -32,7 +32,7 @@ class ChangeHookResource(resource.Resource):
     contentType = "text/html; charset=utf-8"
     children = {}
 
-    def __init__(self, dialects={}):
+    def __init__(self, dialects=None):
         """
         The keys of 'dialects' select a modules to load under
         master/buildbot/status/web/hooks/
@@ -41,6 +41,8 @@ class ChangeHookResource(resource.Resource):
         """
         resource.Resource.__init__(self)
 
+        if dialects is None:
+            dialects = {}
         self.dialects = dialects
         self.request_dialect = None
 

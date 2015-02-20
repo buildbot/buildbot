@@ -203,8 +203,8 @@ class IRC(base.StatusReceiverMultiService):
                      "useRevisions", "tags", "useColors",
                      "lostDelay", "failedDelay", "allowShutdown"]
 
-    def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
-                 allowForce=False, tags=None, password=None, notify_events={},
+    def __init__(self, host, nick, channels, pm_to_nicks=None, port=6667,
+                 allowForce=False, tags=None, password=None, notify_events=None,
                  showBlameList=True, useRevisions=False,
                  useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
                  allowShutdown=False, **kwargs
@@ -225,11 +225,15 @@ class IRC(base.StatusReceiverMultiService):
         self.port = port
         self.nick = nick
         self.channels = channels
+        if pm_to_nicks is None:
+            pm_to_nicks = []
         self.pm_to_nicks = pm_to_nicks
         self.password = password
         self.allowForce = allowForce
         self.useRevisions = useRevisions
         self.tags = tags
+        if notify_events is None:
+            notify_events = {}
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 

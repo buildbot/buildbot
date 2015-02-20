@@ -85,8 +85,10 @@ class Change:
         return defer.succeed(change)
 
     def __init__(self, who, files, comments, revision=None, when=None,
-                 branch=None, category=None, revlink='', properties={},
+                 branch=None, category=None, revlink='', properties=None,
                  repository='', codebase='', project='', _fromChdict=False):
+        if properties is None:
+            properties = {}
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return

@@ -368,10 +368,11 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
     @defer.inlineCallbacks
     def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, who="", comment="", properties={}):
+                        builderNames, who="", comment="", properties=None):
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
-
+        if properties is None:
+            properties = {}
         # build the intersection of the request and our configured list
         builderNames = self.scheduler.filterBuilderList(builderNames)
         if not builderNames:
@@ -414,7 +415,10 @@ class Try_Userpass(TryBase):
     compare_attrs = ('name', 'builderNames', 'port', 'userpass', 'properties')
 
     def __init__(self, name, builderNames, port, userpass,
-                 properties={}):
+                 properties=None):
+        if properties is None:
+            properties = {}
+
         TryBase.__init__(self, name=name, builderNames=builderNames,
                          properties=properties)
         self.port = port

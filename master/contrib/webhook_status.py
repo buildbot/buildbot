@@ -46,7 +46,7 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
 
     agent = 'buildbot webhook'
 
-    def __init__(self, url, categories=None, extra_params={},
+    def __init__(self, url, categories=None, extra_params=None,
                  max_attempts=MAX_ATTEMPTS, retry_multiplier=RETRY_MULTIPLIER):
         status.base.StatusReceiverMultiService.__init__(self)
         if isinstance(url, basestring):
@@ -54,11 +54,15 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
         else:
             self.urls = url
         self.categories = categories
+        if extra_params is None:
+            extra_params = {}
         self.extra_params = extra_params
         self.max_attempts = max_attempts
         self.retry_multiplier = retry_multiplier
 
-    def _transmit(self, event, params={}):
+    def _transmit(self, event, params=None):
+        if params is None:
+            params = {}
 
         cat = dict(params).get('category', None)
         if (cat and self.categories) and cat not in self.categories:

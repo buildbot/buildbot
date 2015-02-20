@@ -231,10 +231,13 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True):
         if not command:
             raise ValueError("No command specified")
+
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         cmd = remotecommand.RemoteShellCommand(self.workdir, ['hg', '--verbose'] + command,
                                                env=self.env,
                                                logEnviron=self.logEnviron,

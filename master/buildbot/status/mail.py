@@ -259,7 +259,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                  tags=None, builders=None, addLogs=False,
                  relayhost="localhost", buildSetSummary=False,
                  subject="buildbot %(result)s in %(title)s on %(builder)s",
-                 lookup=None, extraRecipients=[],
+                 lookup=None, extraRecipients=None,
                  sendToInterestedUsers=True, customMesg=None,
                  messageFormatter=defaultMessage, extraHeaders=None,
                  addPatch=True, useTls=False,
@@ -396,6 +396,9 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                     chronological.
         """
         base.StatusReceiverMultiService.__init__(self)
+
+        if extraRecipients is None:
+            extraRecipients = []
 
         if not isinstance(extraRecipients, (list, tuple)):
             config.error("extraRecipients must be a list or tuple")

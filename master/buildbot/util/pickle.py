@@ -422,8 +422,10 @@ HEADER = 2
 
 class LogFileScanner(netstrings.NetstringParser):
 
-    def __init__(self, chunk_cb, channels=[]):
+    def __init__(self, chunk_cb, channels=None):
         self.chunk_cb = chunk_cb
+        if channels is None:
+            channels = []
         self.channels = channels
         netstrings.NetstringParser.__init__(self)
 
@@ -579,7 +581,7 @@ class LogFile:
         # this produces one ginormous string
         return "".join(self.old_getChunks([STDOUT, STDERR], onlyText=True))
 
-    def old_getChunks(self, channels=[], onlyText=False):
+    def old_getChunks(self, channels=None, onlyText=False):
         # generate chunks for everything that was logged at the time we were
         # first called, so remember how long the file was when we started.
         # Don't read beyond that point. The current contents of
@@ -591,6 +593,8 @@ class LogFile:
         # point. To use this in subscribe(catchup=True) without missing any
         # data, you must insure that nothing will be added to the log during
         # yield() calls.
+        if channels is None:
+            channels = []
 
         f = self.getFile()
         if not self.finished:

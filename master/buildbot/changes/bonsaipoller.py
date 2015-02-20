@@ -50,7 +50,9 @@ class BonsaiResult:
 
     """I hold a list of CiNodes"""
 
-    def __init__(self, nodes=[]):
+    def __init__(self, nodes=None):
+        if nodes is None:
+            nodes = []
         self.nodes = nodes
 
     def __cmp__(self, other):
@@ -77,10 +79,12 @@ class CiNode:
 
     """I hold information baout one <ci> node, including a list of files"""
 
-    def __init__(self, log="", who="", date=0, files=[]):
+    def __init__(self, log="", who="", date=0, files=None):
         self.log = log
         self.who = who
         self.date = date
+        if files is None:
+            files = []
         self.files = files
 
 

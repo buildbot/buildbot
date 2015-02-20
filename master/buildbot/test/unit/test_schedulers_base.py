@@ -518,7 +518,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             self.fake_addBuildsetForChanges,  # Real
         )
         def addBuildsetForChanges(self, waited_for=False, reason='',
-                                  external_idstring=None, changeids=[], builderNames=None,
+                                  external_idstring=None, changeids=None, builderNames=None,
                                   properties=None,
                                   **kw):
             pass
@@ -530,7 +530,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             sched.addBuildsetForSourceStamps,  # Real
             self.fake_addBuildsetForSourceStamps,  # Fake
         )
-        def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=[],
+        def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
                                        reason='', external_idstring=None, properties=None,
                                        builderNames=None, **kw):
             pass
@@ -542,7 +542,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             sched.addBuildsetForSourceStampsWithDefaults,  # Real
             self.fake_addBuildsetForSourceStampsWithDefaults,  # Fake
         )
-        def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps,
+        def addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                    waited_for=False, properties=None, builderNames=None,
                                                    **kw):
             pass

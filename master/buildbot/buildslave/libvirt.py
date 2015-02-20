@@ -157,8 +157,13 @@ class Connection(object):
 
 class LibVirtSlave(AbstractLatentBuildSlave):
 
-    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None, max_builds=None, notify_on_missing=[],
-                 missing_timeout=60 * 20, build_wait_timeout=60 * 10, properties={}, locks=None):
+    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None, max_builds=None, notify_on_missing=None,
+                 missing_timeout=60 * 20, build_wait_timeout=60 * 10, properties=None, locks=None):
+        if notify_on_missing is None:
+            notify_on_missing = []
+        if properties is None:
+            properties = {}
+
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
 

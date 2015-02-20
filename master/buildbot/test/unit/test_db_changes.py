@@ -85,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.db.changes.addChange)
         def addChange(self, author=None, files=None, comments=None, is_dir=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink='', properties={}, repository='', codebase='',
+                      revlink='', properties=None, repository='', codebase='',
                       project='', uid=None):
             pass
 

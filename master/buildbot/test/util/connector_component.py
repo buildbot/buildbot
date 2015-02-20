@@ -35,8 +35,11 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
     @ivar db.model: DB model
     """
 
-    def setUpConnectorComponent(self, table_names=[], basedir='basedir'):
+    def setUpConnectorComponent(self, table_names=None, basedir='basedir'):
         """Set up C{self.db}, using the given db_url and basedir."""
+        if table_names is None:
+            table_names = []
+
         d = self.setUpRealDatabase(table_names=table_names, basedir=basedir)
 
         @d.addCallback

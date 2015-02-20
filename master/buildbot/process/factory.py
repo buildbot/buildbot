@@ -87,12 +87,23 @@ class BuildFactory(util.ComparableMixin):
 class GNUAutoconf(BuildFactory):
 
     def __init__(self, source, configure="./configure",
-                 configureEnv={},
-                 configureFlags=[],
+                 configureEnv=None,
+                 configureFlags=None,
                  reconf=None,
-                 compile=["make", "all"],
-                 test=["make", "check"],
-                 distcheck=["make", "distcheck"]):
+                 compile=None,
+                 test=None,
+                 distcheck=None):
+        if configureEnv is None:
+            configureEnv = {}
+        if configureFlags is None:
+            configureFlags = []
+        if compile is None:
+            compile = ["make", "all"]
+        if test is None:
+            test = ["make", "check"]
+        if distcheck is None:
+            distcheck = ["make", "distcheck"]
+
         BuildFactory.__init__(self, [source])
 
         if reconf is True:
@@ -157,11 +168,15 @@ class Trial(BuildFactory):
     recurse = False
 
     def __init__(self, source,
-                 buildpython=["python"], trialpython=[], trial=None,
+                 buildpython=None, trialpython=None, trial=None,
                  testpath=".", randomly=None, recurse=None,
                  tests=None, useTestCaseNames=False, env=None):
         BuildFactory.__init__(self, [source])
         assert tests or useTestCaseNames, "must use one or the other"
+        if buildpython is None:
+            buildpython = ["python"]
+        if trialpython is None:
+            trialpython = []
         if trial is not None:
             self.trial = trial
         if randomly is not None:
@@ -193,9 +208,11 @@ class BasicBuildFactory(GNUAutoconf):
     # really a "GNU Autoconf-created tarball -in-CVS tree" builder
 
     def __init__(self, cvsroot, cvsmodule,
-                 configure=None, configureEnv={},
+                 configure=None, configureEnv=None,
                  compile="make all",
                  test="make check", cvsCopy=False):
+        if configureEnv is None:
+            configureEnv = {}
         mode = "full"
         method = "clobber"
         if cvsCopy:
@@ -211,9 +228,11 @@ class QuickBuildFactory(BasicBuildFactory):
     useProgress = False
 
     def __init__(self, cvsroot, cvsmodule,
-                 configure=None, configureEnv={},
+                 configure=None, configureEnv=None,
                  compile="make all",
                  test="make check", cvsCopy=False):
+        if configureEnv is None:
+            configureEnv = {}
         mode = "incremental"
         source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
@@ -225,9 +244,11 @@ class QuickBuildFactory(BasicBuildFactory):
 class BasicSVN(GNUAutoconf):
 
     def __init__(self, svnurl,
-                 configure=None, configureEnv={},
+                 configure=None, configureEnv=None,
                  compile="make all",
                  test="make check"):
+        if configureEnv is None:
+            configureEnv = {}
         source = SVN(svnurl=svnurl, mode="incremental")
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,

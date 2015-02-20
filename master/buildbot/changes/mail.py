@@ -84,8 +84,10 @@ class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
     def __init__(self, maildir, prefix=None, category='',
-                 repository='', properties={}):
+                 repository='', properties=None):
         MaildirSource.__init__(self, maildir, prefix, category, repository)
+        if properties is None:
+            properties = {}
         self.properties = properties
 
     def parse(self, m, prefix=None):

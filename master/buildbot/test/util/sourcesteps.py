@@ -40,12 +40,15 @@ class SourceStepMixin(steps.BuildStepMixin):
 
     # utilities
 
-    def setupStep(self, step, args={}, patch=None, **kwargs):
+    def setupStep(self, step, args=None, patch=None, **kwargs):
         """
         Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
         and then does setup specific to a Source step.
         """
         step = steps.BuildStepMixin.setupStep(self, step, **kwargs)
+
+        if args is None:
+            args = {}
 
         ss = self.sourcestamp = mock.Mock(name="sourcestamp")
         ss.ssid = 9123

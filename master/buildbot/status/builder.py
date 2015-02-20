@@ -372,7 +372,7 @@ class BuilderStatus(styles.Versioned):
         return set([ss.branch
                     for ss in build.getSourceStamps()])
 
-    def generateFinishedBuilds(self, branches=[],
+    def generateFinishedBuilds(self, branches=None,
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
@@ -380,7 +380,10 @@ class BuilderStatus(styles.Versioned):
                                max_search=200,
                                filter_fn=None):
         got = 0
-        branches = set(branches)
+        if branches is None:
+            branches = set()
+        else:
+            branches = set(branches)
         for Nb in itertools.count(1):
             if Nb > self.nextBuildNumber:
                 break
@@ -414,7 +417,7 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[], categories=[], committers=[], projects=[], minTime=0):
+    def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -428,9 +431,20 @@ class BuilderStatus(styles.Versioned):
         # interleave two event streams (one from self.getBuild and the other
         # from self.getEvent), which would be simpler than this control flow
 
+        if branches is None:
+            branches = set()
+        else:
+            branches = set(branches)
+        if categories is None:
+            categories = []
+        if committers is None:
+            committers = []
+        if projects is None:
+            projects = []
+
         eventIndex = -1
         e = self.getEvent(eventIndex)
-        branches = set(branches)
+
         for Nb in range(1, self.nextBuildNumber + 1):
             b = self.getBuild(-Nb)
             if not b:
@@ -488,22 +502,26 @@ class BuilderStatus(styles.Versioned):
     def setSlavenames(self, names):
         self.slavenames = names
 
-    def addEvent(self, text=[]):
+    def addEvent(self, text=None):
         # this adds a duration event. When it is done, the user should call
         # e.finish(). They can also mangle it by modifying .text
         e = Event()
         e.started = util.now()
+        if text is None:
+            text = []
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)
         return e  # they are free to mangle it further
 
-    def addPointEvent(self, text=[]):
+    def addPointEvent(self, text=None):
         # this adds a point event, one which occurs as a single atomic
         # instant of time.
         e = Event()
         e.started = util.now()
         e.finished = 0
+        if text is None:
+            text = []
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)

@@ -219,10 +219,13 @@ class Darcs(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True, wkdir=None):
         if not command:
             raise ValueError("No command specified")
+
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         workdir = wkdir or self.workdir
         cmd = remotecommand.RemoteShellCommand(workdir, command,
                                                env=self.env,
