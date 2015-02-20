@@ -1164,19 +1164,13 @@ class TestProperty(unittest.TestCase):
         return d
 
     def testIgnoreFalseValue(self):
-        self.props.setProperty("do-tests-string", "", "scheduler")
-        self.props.setProperty("do-tests-int", 0, "scheduler")
-        self.props.setProperty("do-tests-list", [], "scheduler")
         self.props.setProperty("do-tests-None", None, "scheduler")
 
-        value = [Property("do-tests-string", default="Hello!"),
-                 Property("do-tests-int", default="Hello!"),
-                 Property("do-tests-list", default="Hello!"),
-                 Property("do-tests-None", default="Hello!")]
+        value = [Property("do-tests-None", default="Hello!")]
 
         d = self.build.render(value)
         d.addCallback(self.failUnlessEqual,
-                      ["Hello!"] * 4)
+                      ["Hello!"])
         return d
 
     def testDefaultWhenFalse(self):

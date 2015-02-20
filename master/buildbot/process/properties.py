@@ -609,7 +609,7 @@ class Property(util.ComparableMixin):
 
             @d.addCallback
             def checkDefault(rv):
-                if rv:
+                if rv is not None:
                     return rv
                 else:
                     return props.render(self.default)
