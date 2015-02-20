@@ -49,13 +49,10 @@ rev5 = "2.4"
 file5 = "mozilla/xpcom/threads/test.cpp"
 
 nodes = []
-files = []
-files.append(FileNode(rev1, file1))
+files = [FileNode(rev1, file1)]
 nodes.append(CiNode(log1, who1, date1, files))
 
-files = []
-files.append(FileNode(rev2, file2))
-files.append(FileNode(rev3, file3))
+files = [FileNode(rev2, file2), FileNode(rev3, file3)]
 nodes.append(CiNode(log2, who2, date2, files))
 
 nodes.append(CiNode(log3, who3, date3, []))

@@ -348,6 +348,4 @@ class Sphinx(ShellCommand):
         if not done:
             return ["building"]
 
-        description = [self.name]
-        description.append('%d warnings' % len(self.warnings))
-        return description
+        return [self.name, '%d warnings' % len(self.warnings)]

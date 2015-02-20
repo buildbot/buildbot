@@ -230,9 +230,11 @@ class VC6(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", MSVCDir + '\\MFC\\LIB')
 
     def start(self):
-        command = ["msdev"]
-        command.append(self.projectfile)
-        command.append("/MAKE")
+        command = [
+            "msdev",
+            self.projectfile,
+            "/MAKE"
+        ]
         if self.project is not None:
             command.append(self.project + " - " + self.config)
         else:
@@ -275,8 +277,10 @@ class VC7(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
 
     def start(self):
-        command = ["devenv.com"]
-        command.append(self.projectfile)
+        command = [
+            "devenv.com",
+            self.projectfile
+        ]
         if self.mode == "rebuild":
             command.append("/Rebuild")
         elif self.mode == "clean":
@@ -346,8 +350,10 @@ VS2005 = VC8
 class VCExpress9(VC8):
 
     def start(self):
-        command = ["vcexpress"]
-        command.append(self.projectfile)
+        command = [
+            "vcexpress",
+            self.projectfile
+        ]
         if self.mode == "rebuild":
             command.append("/Rebuild")
         elif self.mode == "clean":
