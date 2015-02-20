@@ -38,18 +38,6 @@ def onlyOnce(fn):
 
 
 @onlyOnce
-def patch_bug4881():
-    # this patch doesn't apply (or even import!) on Windows
-    if sys.platform == 'win32':
-        return
-
-    # this bug was only present in Twisted-10.2.0
-    if twisted.version == versions.Version('twisted', 10, 2, 0):
-        from buildbot.monkeypatches import bug4881
-        bug4881.patch()
-
-
-@onlyOnce
 def patch_bug4520():
     # this bug was patched in twisted-11.1.0, and only affects py26 and up
     py_26 = (sys.version_info[0] > 2 or
@@ -159,7 +147,6 @@ def patch_all(for_tests=False):
         patch_decorators()
         patch_mock_asserts()
 
-    patch_bug4881()
     patch_bug4520()
     patch_bug5079()
     patch_sqlalchemy2364()
