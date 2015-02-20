@@ -197,6 +197,10 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * `BonsaiPoller` is removed.
 
+* ``buildbot.ec2buildslave`` is removed use ``buildbot.buildslave.ec2`` instead.
+
+* ``buildbot.libvirtbuildslave`` is removed use ``buildbot.buildslave.libvirt`` instead.
+
 ..
     TODO: "executive summary" of changes: new-style steps, status classes missing, etc.
 
