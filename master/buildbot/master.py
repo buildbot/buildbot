@@ -23,6 +23,7 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet import threads
 from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
@@ -207,8 +208,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         try:
             # load the configuration file, treating errors as fatal
             try:
-                self.config = config.MasterConfig.loadConfig(self.basedir,
-                                                             self.configFileName)
+                # run the master.cfg in thread, so that it can use blocking code
+                self.config = yield threads.deferToThread(
+                    config.MasterConfig.loadConfig, self.basedir, self.configFileName)
 
             except config.ConfigErrors, e:
                 log.msg("Configuration Errors:")
