@@ -1126,7 +1126,8 @@ class ShellMixin(object):
         kwargs['env'].update(self.env)
         kwargs['stdioLogName'] = stdioLogName
 
-        kwargs['workdir'] = self.workdir
+        if not kwargs.get('workdir'):
+            kwargs['workdir'] = self.workdir
 
         # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(
