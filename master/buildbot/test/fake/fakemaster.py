@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os.path
+import os
 import weakref
 
 from buildbot import config
