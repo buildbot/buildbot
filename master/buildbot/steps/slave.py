@@ -15,7 +15,6 @@
 
 import stat
 
-from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
@@ -24,7 +23,6 @@ from buildbot.status.results import SUCCESS
 
 
 class SlaveBuildStep(buildstep.BuildStep):
-
     pass
 
 
@@ -72,7 +70,6 @@ class SetPropertiesFromEnv(SlaveBuildStep):
 
 
 class FileExists(SlaveBuildStep):
-
     """
     Check for the existence of a file on the slave.
     """
@@ -86,10 +83,7 @@ class FileExists(SlaveBuildStep):
         self.file = file
 
     def start(self):
-        slavever = self.slaveVersion('stat')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about stat")
+        self.checkSlaveHasCommand('stat')
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -110,7 +104,6 @@ class FileExists(SlaveBuildStep):
 
 
 class CopyDirectory(SlaveBuildStep):
-
     """
     Copy a directory tree on the slave.
     """
@@ -131,10 +124,7 @@ class CopyDirectory(SlaveBuildStep):
         self.maxTime = maxTime
 
     def start(self):
-        slavever = self.slaveVersion('cpdir')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about cpdir")
+        self.checkSlaveHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
         if self.timeout:
@@ -172,7 +162,6 @@ class CopyDirectory(SlaveBuildStep):
 
 
 class RemoveDirectory(SlaveBuildStep):
-
     """
     Remove a directory tree on the slave.
     """
@@ -190,10 +179,7 @@ class RemoveDirectory(SlaveBuildStep):
         self.dir = dir
 
     def start(self):
-        slavever = self.slaveVersion('rmdir')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about rmdir")
+        self.checkSlaveHasCommand('rmdir')
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -208,7 +194,6 @@ class RemoveDirectory(SlaveBuildStep):
 
 
 class MakeDirectory(SlaveBuildStep):
-
     """
     Create a directory on the slave.
     """
@@ -226,10 +211,7 @@ class MakeDirectory(SlaveBuildStep):
         self.dir = dir
 
     def start(self):
-        slavever = self.slaveVersion('mkdir')
-        if not slavever:
-            raise BuildSlaveTooOldError("slave is too old, does not know "
-                                        "about mkdir")
+        self.checkSlaveHasCommand('mkdir')
         cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -244,7 +226,6 @@ class MakeDirectory(SlaveBuildStep):
 
 
 class CompositeStepMixin():
-
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write
