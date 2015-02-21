@@ -938,6 +938,20 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
+    def test_example_override_workdir(self):
+        # Test that makeRemoteShellCommand(workdir=X) works.
+        self.setupStep(SimpleShellCommand(
+            makeRemoteShellCommandKwargs={'workdir': '/alternate'},
+            command=['foo', properties.Property('bar', 'BAR')]))
+        self.expectCommands(
+            ExpectShell(workdir='/alternate', command=['foo', 'BAR'])
+            + 0,
+        )
+        # TODO: status is only set at the step start, so BAR isn't rendered
+        self.expectOutcome(result=SUCCESS, status_text=["'foo'"])
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_example_env(self):
         self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
         self.build.builder.config.env = {'FOO': 'FOO'}
