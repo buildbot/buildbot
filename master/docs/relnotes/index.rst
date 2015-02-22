@@ -36,8 +36,8 @@ Other goals:
 Requirements
 ~~~~~~~~~~~~
 
-The buildbot-master package requires Python 2.6 -- Python 2.5 is no longer supported.
-The buildbot-slave package continues to support Python 2.4 through Python 2.7.
+The buildbot-master package requires Python 2.6 or higher -- Python 2.5 is no longer supported.
+The buildbot-slave package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
 
 No additional software or systems, aside from some minor Python packages, are required.
 

@@ -27,7 +27,7 @@ At a bare minimum, you'll need the following for both the buildmaster and a buil
 Python: http://www.python.org
 
   Buildbot requires Python-2.6 or later on the master, although Python-2.7 is recommended.
-  The slave runs on Python-2.4.
+  The slave runs on Python-2.5.
 
 Twisted: http://twistedmatrix.com
 
