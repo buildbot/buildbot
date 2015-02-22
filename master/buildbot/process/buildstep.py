@@ -878,7 +878,11 @@ class ShellMixin(object):
                 kwargs['workdir'] = self.build.workdir
 
         # the rest of the args go to RemoteShellCommand
-        cmd = remotecommand.RemoteShellCommand(**kwargs)
+        cmd = remotecommand.RemoteShellCommand(
+            collectStdout=collectStdout,
+            collectStderr=collectStderr,
+            **kwargs
+        )
 
         # set up logging
         if stdio is not None:
