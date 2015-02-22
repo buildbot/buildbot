@@ -844,7 +844,12 @@ class ShellMixin(object):
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:
-            stdio = yield self.addLog(stdioLogName)
+            # Reuse an existing log if possible; otherwise, create one.
+            try:
+                stdio = yield self.getLog(stdioLogName)
+            except KeyError:
+                stdio = yield self.addLog(stdioLogName)
+
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
 
         # check for the usePTY flag
