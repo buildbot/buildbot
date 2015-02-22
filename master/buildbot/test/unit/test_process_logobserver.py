@@ -16,6 +16,7 @@
 from buildbot.process import logobserver
 from twisted.trial import unittest
 
+
 class BufferedLogObserver(unittest.TestCase):
 
     def setUp(self):
