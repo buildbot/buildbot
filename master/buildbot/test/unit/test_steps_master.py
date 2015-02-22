@@ -28,8 +28,8 @@ from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import runtime
-from twisted.trial import unittest
 from twisted.python.filepath import FilePath
+from twisted.trial import unittest
 
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
