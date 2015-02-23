@@ -349,6 +349,8 @@ class GitExtractor(SourceStampExtractor):
         for l in res.split("\n"):
             if l.strip():
                 parts = l.strip().split("=", 2)
+                if len(parts) < 2:
+                    parts.append('true')
                 self.config[parts[0]] = parts[1]
         return self.config
 
