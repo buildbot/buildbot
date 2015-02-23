@@ -237,10 +237,16 @@ class LibVirtSlave(AbstractLatentBuildSlave):
 
         d = utils.getProcessValue(clone_cmd, clone_args.split())
 
-        @d.addBoth
         def _log_result(res):
             log.msg("Cloning exit code was: %d" % res)
             return res
+
+        def _log_error(err):
+            log.err("Cloning failed: %s" % err)
+            return err
+
+        d.addCallbacks(_log_result, _log_error)
+
         return d
 
     @defer.inlineCallbacks
