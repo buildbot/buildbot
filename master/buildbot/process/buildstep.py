@@ -844,7 +844,12 @@ class ShellMixin(object):
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:
-            stdio = yield self.addLog(stdioLogName)
+            # Reuse an existing log if possible; otherwise, create one.
+            try:
+                stdio = yield self.getLog(stdioLogName)
+            except KeyError:
+                stdio = yield self.addLog(stdioLogName)
+
         kwargs['command'] = flatten(kwargs['command'], (list, tuple))
 
         # check for the usePTY flag
@@ -878,7 +883,11 @@ class ShellMixin(object):
                 kwargs['workdir'] = self.build.workdir
 
         # the rest of the args go to RemoteShellCommand
-        cmd = remotecommand.RemoteShellCommand(**kwargs)
+        cmd = remotecommand.RemoteShellCommand(
+            collectStdout=collectStdout,
+            collectStderr=collectStderr,
+            **kwargs
+        )
 
         # set up logging
         if stdio is not None:
