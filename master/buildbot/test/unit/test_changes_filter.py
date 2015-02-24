@@ -18,15 +18,24 @@ import re
 from twisted.trial import unittest
 
 from buildbot.changes import filter
+from buildbot.process.properties import Properties
 from buildbot.test.fake.state import State
 
 
 class Change(State):
+
+    def __init__(self, **kw):
+        State.__init__(self, **kw)
+        # change.properties is a IProperties
+        props = Properties()
+        props.update(self.properties, "test")
+        self.properties = props
     project = ''
     repository = ''
     branch = ''
     category = ''
     codebase = ''
+    properties = {}
 
 
 class ChangeFilter(unittest.TestCase):
@@ -112,7 +121,7 @@ class ChangeFilter(unittest.TestCase):
         self.no(Change(project='p', repository='r', branch='b', category='x'),
                 "three match -> False")
         self.no(Change(project='p', repository='r', branch='b', category='c',
-                codebase='x'), "four match -> False")
+                       codebase='x'), "four match -> False")
         self.yes(Change(project='p', repository='r', branch='b', category='c',
                         codebase='cb'), "all match -> True")
         self.check()
@@ -128,4 +137,15 @@ class ChangeFilter(unittest.TestCase):
                 "none match and fn returns True -> False")
         self.yes(Change(project='p', repository='r', branch='b', category='c', ff=True),
                  "all match and fn returns True -> False")
+        self.check()
+
+    def test_filter_props(self):
+        self.setfilter()
+        self.filt.checks.update(
+            self.filt.createChecks(
+                ("ref-updated", None, None, "prop:event.type"),
+            ))
+        self.yes(Change(properties={'event.type': 'ref-updated'}), "matching property")
+        self.no(Change(properties={'event.type': 'patch-uploaded'}), "non matching property")
+        self.no(Change(properties={}), "no property")
         self.check()
