@@ -24,18 +24,19 @@ from buildbot.test.fake.state import State
 
 class Change(State):
 
-    def __init__(self, **kw):
-        State.__init__(self, **kw)
-        # change.properties is a IProperties
-        props = Properties()
-        props.update(self.properties, "test")
-        self.properties = props
     project = ''
     repository = ''
     branch = ''
     category = ''
     codebase = ''
     properties = {}
+
+    def __init__(self, **kw):
+        State.__init__(self, **kw)
+        # change.properties is a IProperties
+        props = Properties()
+        props.update(self.properties, "test")
+        self.properties = props
 
 
 class ChangeFilter(unittest.TestCase):
