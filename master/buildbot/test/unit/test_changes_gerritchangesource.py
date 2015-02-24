@@ -16,12 +16,14 @@
 import types
 
 from buildbot.changes import gerritchangesource
+from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
 from buildbot.util import json
 from twisted.trial import unittest
 
 
 class TestGerritHelpers(unittest.TestCase):
+
     def test_proper_json(self):
         self.assertEqual(u"Justin Case <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
@@ -209,12 +211,8 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 class TestGerritChangeFilter(unittest.TestCase):
 
     def test_basic(self):
-        class Change(object):
 
-            def __init__(self, chdict):
-                self.__dict__ = chdict
-
-        ch = Change(TestGerritChangeSource.expected_change)
+        ch = Change(**TestGerritChangeSource.expected_change)
         f = gerritchangesource.GerritChangeFilter(
             branch=["br"], eventtype=["patchset-created"])
         self.assertTrue(f.filter_change(ch))
