@@ -18,25 +18,7 @@ import re
 from twisted.trial import unittest
 
 from buildbot.changes import filter
-from buildbot.process.properties import Properties
-from buildbot.test.fake.state import State
-
-
-class Change(State):
-
-    project = ''
-    repository = ''
-    branch = ''
-    category = ''
-    codebase = ''
-    properties = {}
-
-    def __init__(self, **kw):
-        State.__init__(self, **kw)
-        # change.properties is a IProperties
-        props = Properties()
-        props.update(self.properties, "test")
-        self.properties = props
+from buildbot.test.fake.change import Change
 
 
 class ChangeFilter(unittest.TestCase):
