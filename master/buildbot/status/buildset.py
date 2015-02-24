@@ -117,7 +117,7 @@ class BuildSetSummaryNotifierMixin:
         builders = yield defer.gatherResults([self.master.data.get(("builders", _id))
                                               for _id in builderids])
 
-        buildersbyid = {builder['builderid']: builder for builder in builders}
+        buildersbyid = dict([(builder['builderid'], builder) for builder in builders])
 
         buildproperties = yield defer.gatherResults(
             [self.master.data.get(("builds", build['buildid'], 'properties'))
