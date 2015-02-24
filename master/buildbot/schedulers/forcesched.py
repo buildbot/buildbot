@@ -568,7 +568,7 @@ class ForceScheduler(base.BaseScheduler):
                  buttonName="Force Build",
                  codebases=None,
                  label=None,
-                 properties=[],
+                 properties=None,
                  ):
         """
         Initialize a ForceScheduler.
@@ -622,6 +622,8 @@ class ForceScheduler(base.BaseScheduler):
             config.error("ForceScheduler reason must be a StringParameter: %r" %
                          reason)
 
+        if properties is None:
+            properties = []
         if not self.checkIfListOfType(properties, BaseParameter):
             config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
                          properties)

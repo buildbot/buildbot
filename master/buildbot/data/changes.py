@@ -119,10 +119,12 @@ class Change(base.ResourceType):
     @defer.inlineCallbacks
     def addChange(self, files=None, comments=None, author=None, revision=None,
                   when_timestamp=None, branch=None, category=None, revlink=u'',
-                  properties={}, repository=u'', codebase=None, project=u'',
+                  properties=None, repository=u'', codebase=None, project=u'',
                   src=None, _reactor=reactor):
         metrics.MetricCountEvent.log("added_changes", 1)
 
+        if properties is None:
+            properties = {}
         # add the source to the properties
         for k in properties:
             properties[k] = (properties[k], u'Change')

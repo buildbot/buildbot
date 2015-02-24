@@ -641,9 +641,9 @@ class FlattenList(util.ComparableMixin):
     def getRenderingFor(self, props):
         d = props.render(self.nestedlist)
 
+        @d.addCallback
         def flat(r):
             return flatten(r, self.types)
-        d.addCallback(flat)
         return d
 
     def __add__(self, b):

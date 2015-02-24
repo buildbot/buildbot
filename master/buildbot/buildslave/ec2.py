@@ -58,15 +58,27 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
-                 max_builds=None, notify_on_missing=[], missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties={}, locks=None,
-                 spot_instance=False, max_spot_price=1.6, volumes=[],
-                 placement=None, price_multiplier=1.2, tags={}, retry=1,
+                 max_builds=None, notify_on_missing=None, missing_timeout=60 * 20,
+                 build_wait_timeout=60 * 10, properties=None, locks=None,
+                 spot_instance=False, max_spot_price=1.6, volumes=None,
+                 placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX'):
 
         if not boto:
             config.error("The python module 'boto' is needed to use a "
                          "EC2LatentBuildSlave")
+
+        if notify_on_missing is None:
+            notify_on_missing = []
+
+        if properties is None:
+            properties = {}
+
+        if volumes is None:
+            volumes = []
+
+        if tags is None:
+            tags = {}
 
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,

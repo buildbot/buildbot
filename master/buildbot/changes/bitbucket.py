@@ -159,24 +159,24 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         # Return a deferred datetime object for the given pull request number or None.
         d = self._getStateObjectId()
 
+        @d.addCallback
         def oid_callback(oid):
+            current = self.master.db.state.getState(oid, 'pull_request%d' % pr_id, None)
+
+            @current.addCallback
             def result_callback(result):
                 return result
-            current = self.master.db.state.getState(oid, 'pull_request%d' % pr_id, None)
-            current.addCallback(result_callback)
             return current
-
-        d.addCallback(oid_callback)
         return d
 
     def _setCurrentRev(self, pr_id, rev):
         # Set the datetime entry for a specifed pull request.
         d = self._getStateObjectId()
 
+        @d.addCallback
         def oid_callback(oid):
             return self.master.db.state.setState(oid, 'pull_request%d' % pr_id, rev)
 
-        d.addCallback(oid_callback)
         return d
 
     def _getStateObjectId(self):

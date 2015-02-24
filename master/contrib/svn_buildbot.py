@@ -267,13 +267,14 @@ class ChangeSender:
             print "quitting! because", why
             reactor.stop()
 
+        d.addCallback(quit, "SUCCESS")
+
+        @d.addErrback
         def failed(f):
             print "FAILURE"
             print f
             reactor.stop()
 
-        d.addCallback(quit, "SUCCESS")
-        d.addErrback(failed)
         reactor.callLater(60, quit, "TIMEOUT")
         reactor.run()
 

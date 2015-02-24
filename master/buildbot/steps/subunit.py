@@ -92,9 +92,6 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.step.setProgress('tests failed', len(self.failures) +
                               len(self.errors))
 
-    expectedTests = 0
-    contextLevel = 0
-
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""
         self.seen_tags.update(new_tags)

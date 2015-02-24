@@ -134,11 +134,12 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello\n")
         self.expectOutcome(result=SUCCESS)
 
+        d = self.runStep()
+
+        @d.addBoth
         def _restore_env(res):
             del os.environ['WORLD']
             return res
-        d = self.runStep()
-        d.addBoth(_restore_env)
         return d
 
     def test_env_list_subst(self):
@@ -154,12 +155,13 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
             self.expectLogfile('stdio', "hello:world\n")
         self.expectOutcome(result=SUCCESS)
 
+        d = self.runStep()
+
+        @d.addBoth
         def _restore_env(res):
             del os.environ['WORLD']
             del os.environ['LIST']
             return res
-        d = self.runStep()
-        d.addBoth(_restore_env)
         return d
 
     def test_prop_rendering(self):

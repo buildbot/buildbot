@@ -49,7 +49,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                  builderNames=None, branch=NotABranch, branches=NotABranch,
-                 fileIsImportant=None, properties={}, categories=None,
+                 fileIsImportant=None, categories=None,
                  reason="The %(classname)s scheduler named '%(name)s' triggered this build",
                  change_filter=None, onlyImportant=False, **kwargs):
         if shouldntBeSet is not self.NotSet:
@@ -60,7 +60,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 "fileIsImportant must be a callable")
 
         # initialize parent classes
-        base.BaseScheduler.__init__(self, name, builderNames, properties, **kwargs)
+        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
 
         self.treeStableTimer = treeStableTimer
         if fileIsImportant is not None:

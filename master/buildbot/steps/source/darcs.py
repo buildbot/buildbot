@@ -70,20 +70,19 @@ class Darcs(Source):
 
         d = self.checkDarcs()
 
+        @d.addCallback
         def checkInstall(darcsInstalled):
             if not darcsInstalled:
                 raise BuildSlaveTooOldError("Darcs is not installed on slave")
             return 0
-        d.addCallback(checkInstall)
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
+        @d.addCallback
         def checkPatched(patched):
             if patched:
                 return self.copy()
             else:
                 return 0
-
-        d.addCallback(checkPatched)
 
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
@@ -105,11 +104,9 @@ class Darcs(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluate(cmd):
-            if cmd.rc != 0:
-                return False
-            return True
-        d.addCallback(lambda _: evaluate(cmd))
+        @d.addCallback
+        def evaluate(_):
+            return cmd.rc == 0
         return d
 
     @defer.inlineCallbacks
@@ -140,6 +137,7 @@ class Darcs(Source):
         self.workdir = 'source'
         d.addCallback(lambda _: self.incremental())
 
+        @d.addCallback
         def copy(_):
             cmd = remotecommand.RemoteCommand('cpdir',
                                               {'fromdir': 'source',
@@ -149,13 +147,11 @@ class Darcs(Source):
             cmd.useLog(self.stdio_log, False)
             d = self.runCommand(cmd)
             return d
-        d.addCallback(copy)
 
+        @d.addCallback
         def resetWorkdir(_):
             self.workdir = 'build'
             return 0
-
-        d.addCallback(resetWorkdir)
         return d
 
     def clobber(self):
@@ -208,12 +204,12 @@ class Darcs(Source):
     def finish(self, res):
         d = defer.succeed(res)
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(self.cmd, results)
             log.msg("Closing log, sending result of the command %s " %
                     (self.cmd))
             return results
-        d.addCallback(_gotResults)
         d.addCallback(self.finished)
         return d
 
@@ -223,10 +219,13 @@ class Darcs(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0: SUCCESS},
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True, wkdir=None):
         if not command:
             raise ValueError("No command specified")
+
+        if decodeRC is None:
+            decodeRC = {0: SUCCESS}
         workdir = wkdir or self.workdir
         cmd = remotecommand.RemoteShellCommand(workdir, command,
                                                env=self.env,
@@ -238,7 +237,8 @@ class Darcs(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
@@ -246,7 +246,6 @@ class Darcs(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def _sourcedirIsUpdatable(self):
@@ -267,10 +266,9 @@ class Darcs(Source):
         log.msg("Downloading file: %s" % (filename))
         d = self.runCommand(cmd)
 
+        @d.addCallback
         def evaluateCommand(_):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-
-        d.addCallback(evaluateCommand)
         return d

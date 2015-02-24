@@ -53,15 +53,19 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
-                  category=None, revlink='', properties={}, repository='', codebase='',
+                  category=None, revlink='', properties=None, repository='', codebase='',
                   project='', uid=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
+
         if is_dir is not None:
             log.msg("WARNING: change source is providing deprecated "
                     "value is_dir (ignored)")
         if when_timestamp is None:
             when_timestamp = epoch2datetime(_reactor.seconds())
+
+        if properties is None:
+            properties = {}
 
         # verify that source is 'Change' for each property
         for pv in properties.values():
@@ -238,10 +242,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
 
         # then turn those into changes, using the cache
+        @d.addCallback
         def get_changes(changeids):
             return defer.gatherResults([self.getChange(changeid)
                                         for changeid in changeids])
-        d.addCallback(get_changes)
         return d
 
     def getChanges(self):
@@ -256,10 +260,10 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         d = self.db.pool.do(thd)
 
         # then turn those into changes, using the cache
+        @d.addCallback
         def get_changes(changeids):
             return defer.gatherResults([self.getChange(changeid)
                                         for changeid in changeids])
-        d.addCallback(get_changes)
         return d
 
     def getChangesCount(self):

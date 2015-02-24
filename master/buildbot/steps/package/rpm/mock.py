@@ -99,9 +99,9 @@ class Mock(ShellCommand):
                                                         self.mock_logfiles)})
         d = self.runCommand(cmd)
 
+        @d.addCallback
         def removeDone(cmd):
             ShellCommand.start(self)
-        d.addCallback(removeDone)
         d.addErrback(self.failed)
 
 

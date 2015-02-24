@@ -57,7 +57,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.data.updates.addChange)
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink=u'', properties={}, repository=u'', codebase=None,
+                      revlink=u'', properties=None, repository=u'', codebase=None,
                       project=u'', src=None):
             pass
 
@@ -73,8 +73,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_updates_addBuildset(self):
         @self.assertArgSpecMatches(self.data.updates.addBuildset)
-        def addBuildset(self, waited_for, scheduler=None, sourcestamps=[],
-                        reason='', properties={}, builderids=[],
+        def addBuildset(self, waited_for, scheduler=None, sourcestamps=None,
+                        reason='', properties=None, builderids=None,
                         external_idstring=None,
                         parent_buildid=None, parent_relationship=None):
             pass

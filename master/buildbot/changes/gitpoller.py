@@ -91,9 +91,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         d = self.getState('lastRev', {})
 
+        @d.addCallback
         def setLastRev(lastRev):
             self.lastRev = lastRev
-        d.addCallback(setLastRev)
         d.addCallback(lambda _: base.PollingChangeSource.activate(self))
         d.addErrback(log.err, 'while initializing GitPoller repository')
 
@@ -191,6 +191,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         args = ['--no-walk', r'--format=%ct', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
 
+        @d.addCallback
         def process(git_output):
             if self.usetimestamps:
                 try:
@@ -201,7 +202,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 return stamp
             else:
                 return None
-        d.addCallback(process)
         return d
 
     def _get_commit_files(self, rev):
@@ -215,22 +215,22 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 file = match.groups()[0].decode('string_escape')
             return self._decode(file)
 
+        @d.addCallback
         def process(git_output):
             fileList = [decode_file(file) for file in itertools.ifilter(lambda s: len(s), git_output.splitlines())]
             return fileList
-        d.addCallback(process)
         return d
 
     def _get_commit_author(self, rev):
         args = ['--no-walk', r'--format=%aN <%aE>', rev, '--']
         d = self._dovccmd('log', args, path=self.workdir)
 
+        @d.addCallback
         def process(git_output):
             git_output = self._decode(git_output)
             if len(git_output) == 0:
                 raise EnvironmentError('could not get commit author for rev')
             return git_output
-        d.addCallback(process)
         return d
 
     @defer.inlineCallbacks

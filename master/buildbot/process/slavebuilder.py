@@ -98,10 +98,10 @@ class AbstractSlaveBuilder(object):
         d.addCallback(lambda _:
                       self.slave.conn.remotePrint(message="attached"))
 
+        @d.addCallback
         def setIdle(res):
             self.state = IDLE
             return self
-        d.addCallback(setIdle)
 
         return d
 
@@ -132,11 +132,11 @@ class AbstractSlaveBuilder(object):
                 # is updated before the ping completes
             Ping().ping(self.slave.conn).addCallback(self._pong)
 
+        @d.addCallback
         def reset_state(res):
             if self.state == PINGING:
                 self.state = oldstate
             return res
-        d.addCallback(reset_state)
         return d
 
     def _pong(self, res):
@@ -224,20 +224,20 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         log.msg("substantiating slave %s" % (self,))
         d = self.substantiate(build)
 
+        @d.addCallback
+        def substantiation_cancelled(res):
+            # if res is False, latent slave cancelled subtantiation
+            if not res:
+                self.state = LATENT
+            return res
+
+        @d.addErrback
         def substantiation_failed(f):
             builder_status.addPointEvent(['removing', 'latent',
                                           self.slave.slavename])
             self.slave.disconnect()
             # TODO: should failover to a new Build
             return f
-
-        def substantiation_cancelled(res):
-            # if res is False, latent slave cancelled subtantiation
-            if not res:
-                self.state = LATENT
-            return res
-        d.addCallback(substantiation_cancelled)
-        d.addErrback(substantiation_failed)
         return d
 
     def substantiate(self, build):

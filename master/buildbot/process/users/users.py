@@ -20,12 +20,7 @@ from twisted.python import log
 
 from buildbot.util import flatten
 
-try:
-    from hashlib import sha1 as sha
-    assert sha
-except ImportError:
-    # For Python 2.4
-    import sha
+from hashlib import sha1
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
@@ -162,11 +157,7 @@ def encrypt(passwd):
 
     @returns: encrypted/salted string
     """
-    try:
-        m = sha()
-    except TypeError:
-        m = sha.new()
-
+    m = sha1()
     salt = os.urandom(salt_len).encode('hex_codec')
     m.update(passwd + salt)
     crypted = salt + m.hexdigest()
@@ -183,11 +174,7 @@ def check_passwd(guess, passwd):
 
     @returns: boolean
     """
-    try:
-        m = sha()
-    except TypeError:
-        m = sha.new()
-
+    m = sha1()
     salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
     m.update(guess + salt)
     crypted_guess = salt + m.hexdigest()

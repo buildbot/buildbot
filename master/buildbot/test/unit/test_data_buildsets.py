@@ -166,8 +166,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuildset,  # fake
             self.rtype.addBuildset)  # real
-        def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason='',
-                        properties={}, builderids=[], external_idstring=None,
+        def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
+                        properties=None, builderids=None, external_idstring=None,
                         parent_buildid=None, parent_relationship=None):
             pass
 

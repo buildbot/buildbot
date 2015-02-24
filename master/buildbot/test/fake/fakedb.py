@@ -751,8 +751,11 @@ class FakeChangesComponent(FakeDBComponent):
     @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
-                  category=None, revlink='', properties={}, repository='',
+                  category=None, revlink='', properties=None, repository='',
                   codebase='', project='', uid=None, _reactor=reactor):
+        if properties is None:
+            properties = {}
+
         if self.changes:
             changeid = max(self.changes.iterkeys()) + 1
         else:
@@ -1545,7 +1548,9 @@ class FakeStateComponent(FakeDBComponent):
 
     # assertions
 
-    def assertState(self, objectid, missing_keys=[], **kwargs):
+    def assertState(self, objectid, missing_keys=None, **kwargs):
+        if missing_keys is None:
+            missing_keys = []
         state = self.states[objectid]
         for k in missing_keys:
             self.t.assertFalse(k in state, "%s in %s" % (k, state))

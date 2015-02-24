@@ -72,6 +72,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         d = self.brd.stopService()
 
         # then wait for all builds to finish
+        @d.addCallback
         def wait(_):
             l = []
             for builder in self.builders.values():
@@ -82,9 +83,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             else:
                 log.msg("Waiting for %i build(s) to finish" % len(l))
                 return defer.DeferredList(l)
-        d.addCallback(wait)
 
         # Finally, shut the whole process down
+        @d.addCallback
         def shutdown(ign):
             # Double check that we're still supposed to be shutting down
             # The shutdown may have been cancelled!
@@ -102,7 +103,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 _reactor.stop()
             else:
                 self.brd.startService()
-        d.addCallback(shutdown)
         d.addErrback(log.err, 'while processing cleanShutdown')
 
     def cancelCleanShutdown(self):

@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os.path
+import os
 
 from buildbot.process import remotetransfer
 from buildbot.status.results import FAILURE

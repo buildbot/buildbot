@@ -128,10 +128,16 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=[], reason=u'',
-                    properties={}, builderids=[], external_idstring=None,
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+                    properties=None, builderids=None, external_idstring=None,
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):
+        if sourcestamps is None:
+            sourcestamps = []
+        if properties is None:
+            properties = {}
+        if builderids is None:
+            builderids = []
         submitted_at = int(_reactor.seconds())
         bsid, brids = yield self.master.db.buildsets.addBuildset(
             sourcestamps=sourcestamps, reason=reason,

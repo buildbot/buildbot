@@ -30,15 +30,23 @@ from twisted.python import log
 class Trigger(BuildStep):
     name = "trigger"
 
-    renderables = ['set_properties', 'schedulerNames', 'sourceStamps',
-                   'updateSourceStamp', 'alwaysUseLatest', 'parent_relationship']
+    renderables = [
+        'alwaysUseLatest',
+        'parent_relationship',
+        'schedulerNames',
+        'set_properties',
+        'sourceStamps',
+        'updateSourceStamp'
+    ]
 
     flunkOnFailure = True
 
-    def __init__(self, schedulerNames=[], sourceStamp=None, sourceStamps=None,
+    def __init__(self, schedulerNames=None, sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={},
-                 copy_properties=[], parent_relationship="Triggered from", **kwargs):
+                 waitForFinish=False, set_properties=None,
+                 copy_properties=None, parent_relationship="Triggered from", **kwargs):
+        if schedulerNames is None:
+            schedulerNames = []
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
@@ -62,6 +70,12 @@ class Trigger(BuildStep):
             self.updateSourceStamp = not (alwaysUseLatest or self.sourceStamps)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
+
+        if set_properties is None:
+            set_properties = {}
+        if copy_properties is None:
+            copy_properties = []
+
         properties = {}
         properties.update(set_properties)
         for i in copy_properties:

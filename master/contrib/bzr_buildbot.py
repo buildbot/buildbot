@@ -426,24 +426,24 @@ def send_change(branch, old_revno, old_revid, new_revno, new_revid, hook):
     deferred = pbcf.login(
         twisted.cred.credentials.UsernamePassword(user, passwd))
 
+    @deferred.addCallback
     def sendChanges(remote):
         """Send changes to buildbot."""
         bzrlib.trace.mutter("bzrbuildout sending changes: %s", change)
         change['src'] = 'bzr'
         return remote.callRemote('addChange', change)
 
-    deferred.addCallback(sendChanges)
-
     def quit(ignore, msg):
         bzrlib.trace.note("bzrbuildout: %s", msg)
         reactor.stop()
 
+    deferred.addCallback(quit, "SUCCESS")
+
+    @deferred.addErrback
     def failed(failure):
         bzrlib.trace.warning("bzrbuildout: FAILURE\n %s", failure)
         reactor.stop()
 
-    deferred.addCallback(quit, "SUCCESS")
-    deferred.addErrback(failed)
     reactor.callLater(60, quit, None, "TIMEOUT")
     bzrlib.trace.note(
         "bzr_buildbot: SENDING CHANGES to buildbot master %s:%d on %s",

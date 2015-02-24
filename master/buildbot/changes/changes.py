@@ -75,8 +75,7 @@ class Change:
             when = datetime2epoch(when)
         change.when = when
 
-        change.files = chdict['files'][:]
-        change.files.sort()
+        change.files = sorted(chdict['files'])
 
         change.properties = Properties()
         for n, (v, s) in chdict['properties'].iteritems():
@@ -85,8 +84,10 @@ class Change:
         return defer.succeed(change)
 
     def __init__(self, who, files, comments, revision=None, when=None,
-                 branch=None, category=None, revlink='', properties={},
+                 branch=None, category=None, revlink='', properties=None,
                  repository='', codebase='', project='', _fromChdict=False):
+        if properties is None:
+            properties = {}
         # skip all this madness if we're being built from the database
         if _fromChdict:
             return
@@ -120,8 +121,7 @@ class Change:
         self.project = project
 
         # keep a sorted list of the files, for easier display
-        self.files = (files or [])[:]
-        self.files.sort()
+        self.files = sorted(files or [])
 
     def __setstate__(self, dict):
         self.__dict__ = dict
@@ -162,27 +162,27 @@ class Change:
 
     def asDict(self):
         '''returns a dictonary with suitable info for html/mail rendering'''
-        result = {}
-
         files = [dict(name=f) for f in self.files]
         files.sort(cmp=lambda a, b: a['name'] < b['name'])
 
-        # Constant
-        result['number'] = self.number
-        result['branch'] = self.branch
-        result['category'] = self.category
-        result['who'] = self.getShortAuthor()
-        result['comments'] = self.comments
-        result['revision'] = self.revision
-        result['rev'] = self.revision
-        result['when'] = self.when
-        result['at'] = self.getTime()
-        result['files'] = files
-        result['revlink'] = getattr(self, 'revlink', None)
-        result['properties'] = self.properties.asList()
-        result['repository'] = getattr(self, 'repository', None)
-        result['codebase'] = getattr(self, 'codebase', '')
-        result['project'] = getattr(self, 'project', None)
+        result = {
+            # Constant
+            'number': self.number,
+            'branch': self.branch,
+            'category': self.category,
+            'who': self.getShortAuthor(),
+            'comments': self.comments,
+            'revision': self.revision,
+            'rev': self.revision,
+            'when': self.when,
+            'at': self.getTime(),
+            'files': files,
+            'revlink': getattr(self, 'revlink', None),
+            'properties': self.properties.asList(),
+            'repository': getattr(self, 'repository', None),
+            'codebase': getattr(self, 'codebase', ''),
+            'project': getattr(self, 'project', None)
+        }
         return result
 
     def getShortAuthor(self):

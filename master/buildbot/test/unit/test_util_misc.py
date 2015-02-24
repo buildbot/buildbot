@@ -34,9 +34,9 @@ class deferredLocked(unittest.TestCase):
             return defer.succeed(None)
         d = check_locked(1, 2)
 
+        @d.addCallback
         def check_unlocked(_):
             self.assertFalse(l.locked)
-        d.addCallback(check_unlocked)
         return d
 
     def test_fn_fails(self):
@@ -81,9 +81,9 @@ class deferredLocked(unittest.TestCase):
         obj.aLock = defer.DeferredLock()
         d = obj.check_locked(1, 2)
 
+        @d.addCallback
         def check_unlocked(_):
             self.assertFalse(obj.aLock.locked)
-        d.addCallback(check_unlocked)
         return d
 
 

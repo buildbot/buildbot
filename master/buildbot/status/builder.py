@@ -311,11 +311,11 @@ class BuilderStatus(styles.Versioned):
         d = db.buildrequests.getBuildRequests(claimed=False,
                                               buildername=self.name)
 
+        @d.addCallback
         def make_statuses(brdicts):
             return [BuildRequestStatus(self.name, brdict['brid'],
                                        self.status, brdict=brdict)
                     for brdict in brdicts]
-        d.addCallback(make_statuses)
         return d
 
     def getCurrentBuilds(self):
@@ -372,7 +372,7 @@ class BuilderStatus(styles.Versioned):
         return set([ss.branch
                     for ss in build.getSourceStamps()])
 
-    def generateFinishedBuilds(self, branches=[],
+    def generateFinishedBuilds(self, branches=None,
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
@@ -380,7 +380,10 @@ class BuilderStatus(styles.Versioned):
                                max_search=200,
                                filter_fn=None):
         got = 0
-        branches = set(branches)
+        if branches is None:
+            branches = set()
+        else:
+            branches = set(branches)
         for Nb in itertools.count(1):
             if Nb > self.nextBuildNumber:
                 break
@@ -414,7 +417,7 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[], categories=[], committers=[], projects=[], minTime=0):
+    def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -428,9 +431,20 @@ class BuilderStatus(styles.Versioned):
         # interleave two event streams (one from self.getBuild and the other
         # from self.getEvent), which would be simpler than this control flow
 
+        if branches is None:
+            branches = set()
+        else:
+            branches = set(branches)
+        if categories is None:
+            categories = []
+        if committers is None:
+            committers = []
+        if projects is None:
+            projects = []
+
         eventIndex = -1
         e = self.getEvent(eventIndex)
-        branches = set(branches)
+
         for Nb in range(1, self.nextBuildNumber + 1):
             b = self.getBuild(-Nb)
             if not b:
@@ -488,22 +502,26 @@ class BuilderStatus(styles.Versioned):
     def setSlavenames(self, names):
         self.slavenames = names
 
-    def addEvent(self, text=[]):
+    def addEvent(self, text=None):
         # this adds a duration event. When it is done, the user should call
         # e.finish(). They can also mangle it by modifying .text
         e = Event()
         e.started = util.now()
+        if text is None:
+            text = []
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)
         return e  # they are free to mangle it further
 
-    def addPointEvent(self, text=[]):
+    def addPointEvent(self, text=None):
         # this adds a point event, one which occurs as a single atomic
         # instant of time.
         e = Event()
         e.started = util.now()
         e.finished = 0
+        if text is None:
+            text = []
         e.text = text
         self.events.append(e)
         self.prune(events_only=True)
@@ -587,28 +605,29 @@ class BuilderStatus(styles.Versioned):
         self.prune()  # conserve disk
 
     def asDict(self):
-        result = {}
-        # Constant
-        # TODO(maruel): Fix me. We don't want to leak the full path.
-        result['basedir'] = os.path.basename(self.basedir)
-        result['tags'] = self.getTags()
-        result['slaves'] = self.slavenames
-        result['schedulers'] = [s.name
-                                for s in self.status.master.allSchedulers()
-                                if self.name in s.builderNames]
-        # TODO(maruel): Add cache settings? Do we care?
-
-        # Transient
         # Collect build numbers.
         # Important: Only grab the *cached* builds numbers to reduce I/O.
         current_builds = [b.getNumber() for b in self.currentBuilds]
         cached_builds = sorted(set(self.buildCache.keys() + current_builds))
-        result['cachedBuilds'] = cached_builds
-        result['currentBuilds'] = current_builds
-        result['state'] = self.getState()[0]
-        # lies, but we don't have synchronous access to this info; use
-        # asDict_async instead
-        result['pendingBuilds'] = 0
+
+        result = {
+            # Constant
+            # TODO(maruel): Fix me. We don't want to leak the full path.
+            'basedir': os.path.basename(self.basedir),
+            'tags': self.getTags(),
+            'slaves': self.slavenames,
+            'schedulers': [s.name for s in self.status.master.allSchedulers()
+                           if self.name in s.builderNames],
+            # TODO(maruel): Add cache settings? Do we care?
+
+            # Transient
+            'cachedBuilds': cached_builds,
+            'currentBuilds': current_builds,
+            'state': self.getState()[0],
+            # lies, but we don't have synchronous access to this info; use
+            # asDict_async instead
+            'pendingBuilds': 0
+        }
         return result
 
     def asDict_async(self):
@@ -616,10 +635,10 @@ class BuilderStatus(styles.Versioned):
         result = self.asDict()
         d = self.getPendingBuildRequestStatuses()
 
+        @d.addCallback
         def combine(statuses):
             result['pendingBuilds'] = len(statuses)
             return result
-        d.addCallback(combine)
         return d
 
     def getMetrics(self):

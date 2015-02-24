@@ -140,7 +140,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             self.rtype.addChange)  # real
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink=u'', properties={}, repository=u'', codebase=None,
+                      revlink=u'', properties=None, repository=u'', codebase=None,
                       project=u'', src=None):
             pass
 

@@ -64,7 +64,7 @@ class GoogleCodeAtomPoller(base.PollingChangeSource):
         @param  pollinterval:   The time (in seconds) between queries for
                                 changes (default is 1 hour)
         """
-        base.PollingChangeSource(pollInterval=pollinterval)
+        base.PollingChangeSource.__init__(self, pollInterval=pollinterval)
 
         self.feedurl = feedurl
         self.branch = None

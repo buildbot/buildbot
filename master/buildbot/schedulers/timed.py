@@ -44,12 +44,11 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     class NoBranch:
         pass
 
-    def __init__(self, name, builderNames, properties={}, reason='',
+    def __init__(self, name, builderNames, reason='',
                  createAbsoluteSourceStamps=False, onlyIfChanged=False,
                  branch=NoBranch, change_filter=None, fileIsImportant=None,
                  onlyImportant=False, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, properties,
-                                    **kwargs)
+        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
 
         # tracking for when to start the next build
         self.lastActuated = None
@@ -210,6 +209,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         d = self.getNextBuildTime(self.lastActuated)
 
         # set up the new timer
+        @d.addCallback
         def set_timer(actuateAt):
             now = self.now()
             self.actuateAt = max(actuateAt, now)
@@ -221,8 +221,6 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
                             (self.__class__.__name__, self.name))
                 self.actuateAtTimer = self._reactor.callLater(untilNext,
                                                               self._actuate)
-        d.addCallback(set_timer)
-
         return d
 
     def _actuate(self):
@@ -258,11 +256,9 @@ class Periodic(Timed):
     def __init__(self, name, builderNames, periodicBuildTimer,
                  reason="The Periodic scheduler named '%(name)s' triggered this build",
                  **kwargs):
-        Timed.__init__(self, name=name, builderNames=builderNames,
-                       reason=reason, **kwargs)
+        Timed.__init__(self, name, builderNames, reason=reason, **kwargs)
         if periodicBuildTimer <= 0:
-            config.error(
-                "periodicBuildTimer must be positive")
+            config.error("periodicBuildTimer must be positive")
         self.periodicBuildTimer = periodicBuildTimer
 
     def getNextBuildTime(self, lastActuated):
@@ -278,8 +274,7 @@ class NightlyBase(Timed):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  **kwargs):
-        Timed.__init__(self, name=name, builderNames=builderNames,
-                       **kwargs)
+        Timed.__init__(self, name, builderNames, **kwargs)
 
         self.minute = minute
         self.hour = hour

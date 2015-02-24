@@ -183,9 +183,9 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if not self._prefix:
             d.addCallback(lambda _: self.get_prefix())
 
+            @d.addCallback
             def set_prefix(prefix):
                 self._prefix = prefix
-            d.addCallback(set_prefix)
 
         d.addCallback(self.get_logs)
         d.addCallback(self.parse_logs)
@@ -212,6 +212,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(self.extra_args)
         d = self.getProcessOutput(args)
 
+        @d.addCallback
         def determine_prefix(output):
             try:
                 doc = xml.dom.minidom.parseString(output)
@@ -239,7 +240,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             log.msg("SVNPoller: svnurl=%s, root=%s, so prefix=%s" %
                     (self.svnurl, root, prefix))
             return prefix
-        d.addCallback(determine_prefix)
         return d
 
     def get_logs(self, _):

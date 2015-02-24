@@ -41,11 +41,11 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
 
         d = self.setUpRealDatabase()
 
+        @d.addCallback
         def make_dbc(_):
             master = fakemaster.make_master()
             self.db = connector.DBConnector(master, self.basedir)
             self.db.pool = self.db_pool
-        d.addCallback(make_dbc)
         return d
 
     def tearDownMigrateTest(self):

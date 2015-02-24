@@ -67,9 +67,9 @@ class ChangeSourceMixin(object):
         "stop the change source again; returns a deferred"
         d = self.changesource.stopService()
 
+        @d.addCallback
         def mark_stopped(_):
             self.started = False
-        d.addCallback(mark_stopped)
         return d
 
     def setChangeSourceToMaster(self, otherMaster):

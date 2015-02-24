@@ -190,12 +190,11 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
+        @d.addCallback
         def evaluateCommand(_):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-
-        d.addCallback(evaluateCommand)
         return d
 
     def patch(self, _, patch):
@@ -224,12 +223,11 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             log.msg("Downloading file: %s" % (filename))
             d = self.runCommand(cmd)
 
+            @d.addCallback
             def evaluateCommand(_):
                 if cmd.didFail():
                     raise buildstep.BuildStepFailed()
                 return cmd.rc
-
-            d.addCallback(evaluateCommand)
             return d
 
         d = _downloadFile(diff, ".buildbot-diff")
@@ -240,11 +238,11 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         cmd.useLog(self.stdio_log, False)
         d.addCallback(lambda _: self.runCommand(cmd))
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def sourcedirIsPatched(self):

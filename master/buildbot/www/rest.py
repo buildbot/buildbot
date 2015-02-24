@@ -117,10 +117,6 @@ class V2RootResource(resource.Resource):
             writeError(str(e) or "invalid control action", errcode=501,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
-        except exceptions.InvalidControlException, e:
-            writeError(str(e) or "invalid control action", errcode=501,
-                       jsonrpccode=JSONRPC_CODES["method_not_found"])
-            return
         except BadRequest, e:
             writeError(str(e) or "invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])

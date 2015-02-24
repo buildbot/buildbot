@@ -33,7 +33,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
                  groupName,
                  avatarPattern=None,
                  avatarData=None,
-                 accountExtraFields=[]):
+                 accountExtraFields=None):
         avatar.AvatarBase.__init__(self)
         auth.UserInfoProviderBase.__init__(self)
         self.uri = uri
@@ -48,6 +48,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         self.groupBase = groupBase
         self.avatarPattern = avatarPattern
         self.avatarData = avatarData
+        if accountExtraFields is None:
+            accountExtraFields = []
         self.accountExtraFields = accountExtraFields
 
     def connectLdap(self):

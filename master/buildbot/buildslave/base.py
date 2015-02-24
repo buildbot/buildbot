@@ -55,8 +55,8 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
     reconfig_priority = 64
 
     def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None, keepalive_interval=3600):
+                 notify_on_missing=None, missing_timeout=3600,
+                 properties=None, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -72,6 +72,9 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
         @type locks: dictionary
         """
         name = ascii2unicode(name)
+
+        if properties is None:
+            properties = {}
 
         service.AsyncMultiService.__init__(self)
         self.slavename = ascii2unicode(name)
@@ -100,6 +103,9 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
         self.properties.setProperty("slavename", name, "BuildSlave")
 
         self.lastMessageReceived = 0
+
+        if notify_on_missing is None:
+            notify_on_missing = []
         if isinstance(notify_on_missing, str):
             notify_on_missing = [notify_on_missing]
         self.notify_on_missing = notify_on_missing
@@ -107,6 +113,7 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
             if not isinstance(i, str):
                 config.error(
                     'notify_on_missing arg %r is not a string' % (i,))
+
         self.missing_timeout = missing_timeout
         self.missing_timer = None
 
@@ -445,10 +452,10 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
 
         d = self.conn.remoteSetBuilderList(builders=blist)
 
+        @d.addCallback
         def sentBuilderList(ign):
             self._old_builder_list = blist
             return ign
-        d.addCallback(sentBuilderList)
         return d
 
     def shutdownRequested(self):
@@ -629,9 +636,15 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     _shutdown_callback_handle = None
 
     def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=[], missing_timeout=60 * 20,
+                 notify_on_missing=None, missing_timeout=60 * 20,
                  build_wait_timeout=60 * 10,
-                 properties={}, locks=None):
+                 properties=None, locks=None):
+        if notify_on_missing is None:
+            notify_on_missing = []
+
+        if properties is None:
+            properties = {}
+
         AbstractBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, properties, locks)
@@ -888,6 +901,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return why
         d.addCallbacks(_sent, _set_failed)
 
+        @d.addCallback
         def _substantiated(res):
             log.msg(r"Slave %s substantiated \o/" % self.slavename)
             self.substantiated = True
@@ -903,5 +917,4 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # ``attached``
             if not self.building:
                 self._setBuildWaitTimer()
-        d.addCallback(_substantiated)
         return d

@@ -33,9 +33,11 @@ class FakeRequest(Mock):
     redirected_to = None
     failure = None
 
-    def __init__(self, args={}, content=''):
+    def __init__(self, args=None, content=''):
         Mock.__init__(self)
 
+        if args is None:
+            args = {}
         self.args = args
         self.content = StringIO(content)
         self.site = Mock()

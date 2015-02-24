@@ -487,11 +487,11 @@ class AsyncLRUCacheTest(unittest.TestCase):
             check(c, self.lru.get(c))
             for c in chars])
 
+        @d.addCallback
         def post_check(_):
             self.assertEqual(misses[0], 26)
             self.assertEqual(self.lru.misses, 26)
             self.assertEqual(self.lru.hits, 4 * 26)
-        d.addCallback(post_check)
         return d
 
     def test_slow_fetch(self):
@@ -514,9 +514,9 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         d = defer.gatherResults(ds)
 
+        @d.addCallback
         def check(_):
             self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
-        d.addCallback(check)
         return d
 
     def test_slow_failure(self):

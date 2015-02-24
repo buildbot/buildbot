@@ -211,7 +211,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         io = StringIO.StringIO(alltext)
         return io.readlines()
 
-    def getChunks(self, channels=[], onlyText=False):
+    def getChunks(self, channels=None, onlyText=False):
         chunks = self.chunks
         if channels:
             channels = set(channels)
@@ -248,11 +248,11 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     renderables = results.ResultComputingConfigMixin.resultConfig + [
         'alwaysRun',
-        'doStepIf',
-        'hideStepIf',
         'description',
         'descriptionDone',
         'descriptionSuffix',
+        'doStepIf',
+        'hideStepIf',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
@@ -262,23 +262,25 @@ class BuildStep(results.ResultComputingConfigMixin,
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    parms = ['name', 'locks',
-             'haltOnFailure',
-             'flunkOnWarnings',
-             'flunkOnFailure',
-             'warnOnWarnings',
-             'warnOnFailure',
-             'alwaysRun',
-             'progressMetrics',
-             'useProgress',
-             'doStepIf',
-             'hideStepIf',
-             'description',
-             'descriptionDone',
-             'descriptionSuffix',
-             'logEncoding',
-             'workdir',
-             ]
+    parms = [
+        'alwaysRun',
+        'description',
+        'descriptionDone',
+        'descriptionSuffix',
+        'doStepIf',
+        'flunkOnFailure',
+        'flunkOnWarnings',
+        'haltOnFailure',
+        'hideStepIf',
+        'locks',
+        'logEncoding',
+        'name',
+        'progressMetrics',
+        'useProgress',
+        'warnOnFailure',
+        'warnOnWarnings',
+        'workdir',
+    ]
 
     name = "generic"
     description = None  # set this to a list of short strings to override
@@ -301,8 +303,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     def __init__(self, **kwargs):
         for p in self.__class__.parms:
             if p in kwargs:
-                setattr(self, p, kwargs[p])
-                del kwargs[p]
+                setattr(self, p, kwargs.pop(p))
+
         if kwargs:
             config.error("%s.__init__ got unexpected keyword argument(s) %s"
                          % (self.__class__, kwargs.keys()))
@@ -340,7 +342,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @property
     def workdir(self):
         # default the workdir appropriately
-        if self._workdir is not None:
+        if self._workdir is not None or self.build is None:
             return self._workdir
         else:
             # see :ref:`Factory-Workdir-Functions` for details on how to customize this
@@ -822,10 +824,12 @@ class LoggingBuildStep(BuildStep):
 
     renderables = ['logfiles', 'lazylogfiles']
 
-    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+    def __init__(self, logfiles=None, lazylogfiles=False, log_eval_func=None,
                  *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
+        if logfiles is None:
+            logfiles = {}
         if logfiles and not isinstance(logfiles, dict):
             config.error(
                 "the ShellCommand 'logfiles' parameter must be a dictionary")
@@ -853,7 +857,9 @@ class LoggingBuildStep(BuildStep):
         kwargs['logfiles'] = self.logfiles
         return kwargs
 
-    def startCommand(self, cmd, errorMessages=[]):
+    def startCommand(self, cmd, errorMessages=None):
+        if errorMessages is None:
+            errorMessages = []
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
         log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd  # so we can interrupt it
@@ -882,10 +888,10 @@ class LoggingBuildStep(BuildStep):
 
         d.addCallback(lambda res: self.evaluateCommand(cmd))  # returns results
 
+        @d.addCallback
         def _gotResults(results):
             self.setStatus(cmd, results)
             return results
-        d.addCallback(_gotResults)  # returns results
         d.addCallback(self.finished)
         d.addErrback(self.failed)
 
@@ -1051,10 +1057,13 @@ class ShellMixin(object):
     ]
     renderables = _shellMixinArgs
 
-    def setupShellMixin(self, constructorArgs, prohibitArgs=[]):
+    def setupShellMixin(self, constructorArgs, prohibitArgs=None):
         assert self.isNewStyle(
         ), "ShellMixin is only compatible with new-style steps"
         constructorArgs = constructorArgs.copy()
+
+        if prohibitArgs is None:
+            prohibitArgs = []
 
         def bad(arg):
             config.error("invalid %s argument %s" %

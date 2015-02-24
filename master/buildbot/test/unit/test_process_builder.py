@@ -260,7 +260,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         def canStartBuild_deferred(bldr, slave, breq):
             record.append((bldr, slave, breq))
-            return (slave, breq) == ('slave', 100)
             return defer.succeed((slave, breq) == ('slave', 100))
         self.bldr.config.canStartBuild = canStartBuild_deferred
 

@@ -212,13 +212,13 @@ class Repo(Source):
         self.step_status.setText(["%s" % (" ".join(command[:2]))])
         d = self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
+        @d.addCallback
+        def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
                 self.descriptionDone = "repo failed at: %s" % (" ".join(command[:2]))
                 self.stdio_log.addStderr("Source step failed while running command %s\n" % cmd)
                 raise buildstep.BuildStepFailed()
             return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def repoDir(self):
@@ -244,6 +244,7 @@ class Repo(Source):
 
         d = self.doRepoSync()
 
+        @d.addErrback
         def maybeRetry(why):
             # in case the tree was corrupted somehow because of previous build
             # we clobber one time, and retry everything
@@ -252,7 +253,6 @@ class Repo(Source):
                                          "\nRetry after clobber...")
                 return self.doRepoSync(forceClobber=True)
             return why  # propagate to self.failed
-        d.addErrback(maybeRetry)
         yield d
         yield self.maybeUpdateTarball()
 

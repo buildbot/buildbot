@@ -412,7 +412,7 @@ In this case you likely will want to have a dedicated workdir per repository, si
 Here is an example how you can achieve workdir-per-repo::
 
         def workdir(source_stamp):
-            return hashlib.md5 (source_stamp.repository).hexdigest()[:8]
+            return hashlib.md5(source_stamp.repository).hexdigest()[:8]
 
         build_factory = factory.BuildFactory()
         build_factory.workdir = workdir

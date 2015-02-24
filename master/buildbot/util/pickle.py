@@ -390,23 +390,24 @@ class BuildStepStatus(styles.Versioned):
         self.wasUpgraded = True
 
     def asDict(self):
-        result = {}
-        # Constant
-        result['name'] = self.getName()
+        result = {
+            # Constant
+            'name': self.getName(),
 
-        # Transient
-        result['text'] = self.getText()
-        result['results'] = self.getResults()
-        result['isStarted'] = self.isStarted()
-        result['isFinished'] = self.isFinished()
-        result['times'] = self.getTimes()
-        result['expectations'] = self.getExpectations()
-        result['eta'] = self.getETA()
-        result['urls'] = self.getURLs()
-        result['step_number'] = self.step_number
-        result['hidden'] = self.hidden
-        result['logs'] = [[l.getName(), None]  # used to be (name, URL)
-                          for l in self.getLogs()]
+            # Transient
+            'text': self.getText(),
+            'results': self.getResults(),
+            'isStarted': self.isStarted(),
+            'isFinished': self.isFinished(),
+            'times': self.getTimes(),
+            'expectations': self.getExpectations(),
+            'eta': self.getETA(),
+            'urls': self.getURLs(),
+            'step_number': self.step_number,
+            'hidden': self.hidden,
+            'logs': [[l.getName(), None]  # used to be (name, URL)
+                     for l in self.getLogs()]
+        }
         return result
 # styles.Versioned requires this latter, as it keys the version numbers on the
 # fully qualified class name.  This module appeared in two different modules
@@ -422,8 +423,10 @@ HEADER = 2
 
 class LogFileScanner(netstrings.NetstringParser):
 
-    def __init__(self, chunk_cb, channels=[]):
+    def __init__(self, chunk_cb, channels=None):
         self.chunk_cb = chunk_cb
+        if channels is None:
+            channels = []
         self.channels = channels
         netstrings.NetstringParser.__init__(self)
 
@@ -579,7 +582,7 @@ class LogFile:
         # this produces one ginormous string
         return "".join(self.old_getChunks([STDOUT, STDERR], onlyText=True))
 
-    def old_getChunks(self, channels=[], onlyText=False):
+    def old_getChunks(self, channels=None, onlyText=False):
         # generate chunks for everything that was logged at the time we were
         # first called, so remember how long the file was when we started.
         # Don't read beyond that point. The current contents of
@@ -591,6 +594,8 @@ class LogFile:
         # point. To use this in subscribe(catchup=True) without missing any
         # data, you must insure that nothing will be added to the log during
         # yield() calls.
+        if channels is None:
+            channels = []
 
         f = self.getFile()
         if not self.finished:

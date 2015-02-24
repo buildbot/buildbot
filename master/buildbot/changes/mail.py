@@ -57,11 +57,12 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     def messageReceived(self, filename):
         d = defer.succeed(None)
 
+        @d.addCallback
         def parse_file(_):
             f = self.moveToCurDir(filename)
             return self.parse_file(f, self.prefix)
-        d.addCallback(parse_file)
 
+        @d.addCallback
         def add_change(chtuple):
             src, chdict = None, None
             if chtuple:
@@ -71,7 +72,6 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
-        d.addCallback(add_change)
 
         return d
 
@@ -84,8 +84,10 @@ class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
     def __init__(self, maildir, prefix=None, category='',
-                 repository='', properties={}):
+                 repository='', properties=None):
         MaildirSource.__init__(self, maildir, prefix, category, repository)
+        if properties is None:
+            properties = {}
         self.properties = properties
 
     def parse(self, m, prefix=None):

@@ -166,23 +166,23 @@ class Dispatcher(service.AsyncService):
             d = defer.maybeDeferred(afactory, mind, username)
 
         # check that we got a perspective
+        @d.addCallback
         def check(persp):
             if not persp:
                 raise ValueError("no perspective for '%s'" % username)
             return persp
-        d.addCallback(check)
 
         # call the perspective's attached(mind)
+        @d.addCallback
         def call_attached(persp):
             d = defer.maybeDeferred(persp.attached, mind)
             d.addCallback(lambda _: persp)  # keep returning the perspective
             return d
-        d.addCallback(call_attached)
 
         # return the tuple requestAvatar is expected to return
+        @d.addCallback
         def done(persp):
             return (pb.IPerspective, persp, lambda: persp.detached(mind))
-        d.addCallback(done)
 
         return d
 
@@ -193,12 +193,12 @@ class Dispatcher(service.AsyncService):
             password, _ = self.users[creds.username]
             d = defer.maybeDeferred(creds.checkPassword, password)
 
+            @d.addCallback
             def check(matched):
                 if not matched:
                     log.msg("invalid login from user '%s'" % creds.username)
                     return failure.Failure(error.UnauthorizedLogin())
                 return creds.username
-            d.addCallback(check)
             return d
         else:
             log.msg("invalid login from unknown user '%s'" % creds.username)

@@ -113,12 +113,12 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         if check_version:
             d = self.model.is_current()
 
+            @d.addCallback
             def check_current(res):
                 if not res:
                     for l in upgrade_message.split('\n'):
                         log.msg(l)
                     raise exceptions.DatabaseNotReadyError()
-            d.addCallback(check_current)
         else:
             d = defer.succeed(None)
 

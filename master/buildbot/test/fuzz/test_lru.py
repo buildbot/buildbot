@@ -80,10 +80,10 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
                     results[:-100] = []
             d.addCallback(check, key)
 
+            @d.addErrback
             def eb(f):
                 errors.append(f)
                 return f  # unhandled error -> in the logs
-            d.addErrback(eb)
 
             # give the reactor some time to process pending events
             if random.uniform(0, 1.0) < 0.5:

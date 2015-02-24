@@ -28,9 +28,8 @@ class Triggerable(base.BaseScheduler):
 
     compare_attrs = base.BaseScheduler.compare_attrs
 
-    def __init__(self, name, builderNames, properties={}, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, properties,
-                                    **kwargs)
+    def __init__(self, name, builderNames, **kwargs):
+        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
         self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
@@ -60,13 +59,13 @@ class Triggerable(base.BaseScheduler):
 
         resultsDeferred = defer.Deferred()
 
+        @idsDeferred.addCallback
         def setup_waiter(ids):
             bsid, brids = ids
             self._waiters[bsid] = (resultsDeferred, brids)
             self._updateWaiters()
             return ids
 
-        idsDeferred.addCallback(setup_waiter)
         return idsDeferred, resultsDeferred
 
     @defer.inlineCallbacks

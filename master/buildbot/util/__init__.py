@@ -227,14 +227,14 @@ def in_reactor(f):
         def async():
             d = defer.maybeDeferred(f, *args, **kwargs)
 
+            @d.addErrback
             def eb(f):
                 f.printTraceback()
-            d.addErrback(eb)
 
+            @d.addBoth
             def do_stop(r):
                 result.append(r)
                 reactor.stop()
-            d.addBoth(do_stop)
         reactor.callWhenRunning(async)
         reactor.run()
         return result[0]

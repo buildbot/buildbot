@@ -123,10 +123,11 @@ class CmdInterface(basic.LineReceiver):
             self.transport.write('not attached\n# ')
             return
 
+        d = self.bot.runCommand(line)
+
+        @d.addBoth
         def _done(res):
             self.transport.write("\n# ")
-        d = self.bot.runCommand(line)
-        d.addBoth(_done)
 
 
 class FakeMaster(service.AsyncMultiService):

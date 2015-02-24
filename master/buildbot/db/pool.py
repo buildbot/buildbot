@@ -71,12 +71,12 @@ def timed_do_fn(f):
                 log.msg("%s - thd end" % (descr,))
         d = f(callable_wrap, *args, **kwargs)
 
+        @d.addBoth
         def after(x):
             end_time = time.time()
             elapsed = (end_time - start_time) * 1000
             log.msg("%s - after (%0.2f ms elapsed)" % (descr, elapsed))
             return x
-        d.addBoth(after)
         return d
     wrap.__name__ = f.__name__
     wrap.__doc__ = f.__doc__

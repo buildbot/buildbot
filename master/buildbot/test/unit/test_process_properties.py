@@ -46,12 +46,13 @@ class FakeSource:
         self.revision = None
 
     def asDict(self):
-        ds = {}
-        ds['branch'] = self.branch
-        ds['codebase'] = self.codebase
-        ds['project'] = self.project
-        ds['repository'] = self.repository
-        ds['revision'] = self.revision
+        ds = {
+            'branch': self.branch,
+            'codebase': self.codebase,
+            'project': self.project,
+            'repository': self.repository,
+            'revision': self.revision
+        }
         return ds
 
 

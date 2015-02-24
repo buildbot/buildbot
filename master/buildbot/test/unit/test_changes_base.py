@@ -83,9 +83,9 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         d = self.setUpChangeSource()
 
+        @d.addCallback
         def create_changesource(_):
             self.attachChangeSource(self.Subclass(name="DummyCS"))
-        d.addCallback(create_changesource)
         return d
 
     def tearDown(self):
@@ -106,10 +106,10 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
 
+        @d.addCallback
         def check(_):
             # note that it does *not* poll at time 0
             self.assertEqual(loops, [5.0, 10.0])
-        d.addCallback(check)
         reactor.callWhenRunning(d.callback, None)
         return d
 
@@ -128,11 +128,11 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
 
+        @d.addCallback
         def check(_):
             # note that it keeps looping after error
             self.assertEqual(loops, [5.0, 10.0])
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
-        d.addCallback(check)
         reactor.callWhenRunning(d.callback, None)
         return d
 
@@ -172,9 +172,9 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
 
+        @d.addCallback
         def check(_):
             # note that it *does* poll at time 0
             self.assertEqual(loops, [0.0, 5.0, 10.0])
-        d.addCallback(check)
         reactor.callWhenRunning(d.callback, None)
         return d
