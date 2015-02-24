@@ -94,6 +94,8 @@ def mockBuilder(master, master_status, buildername, proj):
                   factory=BuildFactory(),
                   slavebuilddir="test", tags=['tag1', 'tag2'])
     builder.builder_status = BuilderStatus(buildername, None, master)
+    builder.builder_status.setSlavenames(['build-slave-01'])
+    builder.builder_status.setTags(['tag1', 'tag2'])
     builder.builder_status.status = master_status
     builder.builder_status.project = proj
     builder.builder_status.pendingBuildCache = PendingBuildsCache(builder.builder_status)
@@ -169,13 +171,13 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         project_dict = yield project_json.asDict(self.request)
 
         def jsonBuilders(builder_name):
-            return {'name': builder_name, 'tags': [],
+            return {'name': builder_name, 'tags': ['tag1', 'tag2'],
                 'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +
                        '?katana-buildbot_branch=katana',
                 'friendly_name': builder_name,
                 'project': 'Katana',
                 'state': 'offline',
-                'slaves': [], 'currentBuilds': [], 'pendingBuilds': 0}
+                'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0}
 
         expected_project_dict = {'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
                                  'builders': [
@@ -247,10 +249,11 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                         'eta': None, 'builderFriendlyName': 'builder-01',
                         'failure_url': None, 'slave_friendly_name': 'build-slave-01',
                         'times': (None, 1422441501.21, 1422441501.21)},
-                   'name': 'builder-01', 'tags': [],
+                   'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
                    'friendly_name': 'builder-01',
-                   'project': 'Katana', 'state': 'offline', 'slaves': [], 'currentBuilds': [], 'pendingBuilds': 0}],
+                   'project': 'Katana', 'state': 'offline', 'slaves': ['build-slave-01'],
+                   'currentBuilds': [], 'pendingBuilds': 0}],
              'latestRevisions': {}}
 
         self.assertEqual(project_dict, expected_project_dict)
@@ -283,9 +286,9 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
 
         self.assertEqual(project_builder_dict,
                          {'name': 'builder-01',
-                          'tags': [],
+                          'tags': ['tag1', 'tag2'],
                           'url': 'http://localhost:8080/projects/Katana/builders/'+
                                  'builder-01?katana-buildbot_branch=katana',
                           'friendly_name': 'builder-01',
                           'project': 'Katana',
-                          'state': 'offline', 'slaves': [], 'currentBuilds': [], 'pendingBuilds': 0})
+                          'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
