@@ -259,7 +259,7 @@ class TestGerritStatusPush(unittest.TestCase):
         build = {}
         build['builder'] = dict(name=u'dummyBuilder')
         build['results'] = buildResult
-        build['properties'] = {k: (v, 'test') for k, v in self.TEST_PROPS.items()}
+        build['properties'] = dict([(k, (v, 'test')) for k, v in self.TEST_PROPS.items()])
 
         # TODO: actually status api is never calling buildFinished()
         gsp.buildFinished(u'dummyBuilder', build, buildResult)
