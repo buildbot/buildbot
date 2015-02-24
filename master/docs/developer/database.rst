@@ -739,7 +739,7 @@ buildslaves
 
     .. py:method:: buildslaveConfigured(buildslaveid, masterid, builderids)
 
-        :param integer buildslaveid: the ID of the buildslave or None
+        :param integer buildslaveid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it configured
         :param list of integer builderids: the ID of the builders to which it is configured
         :returns: Deferred
