@@ -104,7 +104,7 @@ class DataConnector(service.AsyncService):
         try:
             return self.matcher[path]
         except KeyError:
-            raise exceptions.InvalidPathError("/".join([str(p) for p in path]))
+            raise exceptions.InvalidPathError("Invalid path: " + "/".join([str(p) for p in path]))
 
     def getResourceType(self, name):
         return getattr(self.rtypes, name)

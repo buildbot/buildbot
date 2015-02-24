@@ -241,7 +241,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_not_found(self):
         yield self.render_resource(self.rsrc, '/not/found')
         self.assertRequest(
-            contentJson=dict(error='invalid path'),
+            contentJson=dict(error='Invalid path: not/found'),
             contentType='text/plain; charset=utf-8',
             responseCode=404)
 
@@ -507,7 +507,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     def test_invalid_path(self):
         yield self.render_control_resource(self.rsrc, '/not/found')
         self.assertJsonRpcError(
-            message='invalid path',
+            message='Invalid path: not/found',
             jsonrpccode=JSONRPC_CODES['invalid_request'],
             responseCode=404)
 

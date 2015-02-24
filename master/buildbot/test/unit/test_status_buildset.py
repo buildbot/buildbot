@@ -17,7 +17,6 @@ from buildbot.status.buildset import BuildSetSummaryNotifierMixin
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake.fakebuild import FakeBuildStatus
 from mock import Mock
 from twisted.trial import unittest
 
@@ -25,32 +24,7 @@ from twisted.trial import unittest
 class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
 
     def run_fake_build(self, notifier, info=None):
-        notifier.master = fakemaster.make_master()
-        notifier.master_status = notifier.master.status
-
-        builders = []
-        builds = []
-
-        for i in [0, 1, 2]:
-            builder = Mock()
-            build = FakeBuildStatus()
-
-            builder.getBuild.return_value = build
-            builder.name = "Builder%d" % i
-
-            build.results = SUCCESS
-            build.finished = True
-            build.reason = "testReason"
-            build.getBuilder.return_value = builder
-
-            builders.append(builder)
-            builds.append(build)
-
-        def fakeGetBuilder(buildername):
-            return {"Builder0": builders[0], "Builder1": builders[1], "Builder2": builders[2]}[buildername]
-
-        notifier.master_status.getBuilder = fakeGetBuilder
-        notifier.master.db = fakedb.FakeDBConnector(notifier.master, self)
+        notifier.master = fakemaster.make_master(wantMq=True, wantDb=True, wantData=True, testcase=self)
 
         notifier.master.db.insertTestData([
             fakedb.Master(id=92),
@@ -60,16 +34,15 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             fakedb.Builder(id=81, name='Builder1'),
             fakedb.Builder(id=82, name='Builder2'),
             fakedb.BuildRequest(id=10, buildsetid=99, builderid=80),
-            fakedb.Build(number=0, buildrequestid=10, masterid=92, buildslaveid=13),
+            fakedb.Build(number=0, buildrequestid=10, masterid=92, buildslaveid=13, builderid=80),
             fakedb.BuildRequest(id=11, buildsetid=99, builderid=81),
-            fakedb.Build(number=0, buildrequestid=11, masterid=92, buildslaveid=13),
+            fakedb.Build(number=0, buildrequestid=11, masterid=92, buildslaveid=13, builderid=81),
             fakedb.BuildRequest(id=12, buildsetid=99, builderid=82),
-            fakedb.Build(number=0, buildrequestid=12, masterid=92, buildslaveid=13)
+            fakedb.Build(number=0, buildrequestid=12, masterid=92, buildslaveid=13, builderid=82)
         ])
 
         if info is not None:
             info['bsid'] = 99
-            info['builds'] = builds
 
         d = notifier._buildsetComplete('buildset.99.complete',
                                        {'bsid': 99, 'result': SUCCESS})
@@ -97,7 +70,12 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             # check that the buildrequest itself entirely matches, since many
             # of the fields are constructed not by us directly.
             ((buildset, builds), _) = fakeBSS.call_args
-            self.assertEqual(builds, info['builds'])
+            self.assertEqual(len(builds), 3)
+            self.assertEqual(builds[0]['builder']['name'], 'Builder0')
+            self.assertEqual(builds[0]['properties'], {})
+            self.assertEqual(builds[0]['number'], 0)
+            self.assertEqual(builds[0]['buildid'], 1000)
+            self.assertEqual(builds[1]['buildid'], 1001)
 
             self.assertEqual(buildset['bsid'], info['bsid'])
 
