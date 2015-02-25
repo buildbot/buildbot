@@ -92,11 +92,6 @@ There are several common arguments for schedulers, although not all are availabl
 ``reason``
     A string that will be used as the reason for the triggered build.
 
-``createAbsoluteSourceStamps``
-    This option only has effect when using multiple codebases.
-    When ``True``, it uses the last seen revision for each codebase that does not have a change.
-    When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
-
 The remaining subsections represent a catalog of the available Scheduler types.
 All these Schedulers are defined in modules under :mod:`buildbot.schedulers`, and the docstrings there are the best source of documentation on the arguments taken by each one.
 
@@ -221,7 +216,9 @@ The arguments to this scheduler are:
 ``reason``
 
 ``createAbsoluteSourceStamps``
-    See :ref:`Configuring-Schedulers`.
+    This option only has effect when using multiple codebases.
+    When ``True``, it uses the last seen revision for each codebase that does not have a change.
+    When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
 
 ``treeStableTimer``
     The scheduler will wait for this many seconds before starting the build.
@@ -427,7 +424,10 @@ The full list of parameters is:
 ``codebases``
 
 ``createAbsoluteSourceStamps``
-    See :ref:`Configuring-Schedulers`.
+    This option only has effect when using multiple codebases.
+    When ``True``, it uses the last seen revision for each codebase that does not have a change.
+    When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
+
     Note that ``fileIsImportant``, ``change_filter`` and ``createAbsoluteSourceStamps`` are only relevant if ``onlyIfChanged`` is ``True``.
 
 ``onlyIfChanged``
