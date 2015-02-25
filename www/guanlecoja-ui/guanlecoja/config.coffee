@@ -16,7 +16,7 @@ gulp.task "publish", ['default'], ->
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.4.0"
+        version: "1.4.1"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
@@ -73,7 +73,7 @@ config =
                 version: '~0.11.0'
                 files: 'ui-bootstrap-tpls.js'
             "angular-ui-router":
-                version: '~0.2.10'
+                version: '~0.2.13'
                 files: 'release/angular-ui-router.js'
             "angular-recursion":
                 version: '~1.0.1'
