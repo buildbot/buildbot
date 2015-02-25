@@ -25,6 +25,8 @@ from twisted.internet import defer
 from buildbot.status.results import SUCCESS
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
+from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.process import buildrequest
 
 
 class PastBuildsJsonResource(unittest.TestCase):
@@ -292,3 +294,68 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'friendly_name': 'builder-01',
                           'project': 'Katana',
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
+
+
+class TestSinglePendingBuildsJsonResource(unittest.TestCase):
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+
+    @defer.inlineCallbacks
+    def test_getSinglePendingBuilds(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        self.master_status.getBuilder = lambda x: builder.builder_status
+
+        def getBuildRequestStatus(id):
+            brstatus = BuildRequestStatus(builder.builder_status.name, id, self.master_status)
+            brstatus._buildrequest = mock.Mock()
+            brstatus.getSubmitTime = lambda: 1418823086
+            brstatus.getReason = lambda: 'because'
+            from buildbot.sourcestamp import SourceStamp
+            ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
+            brstatus.getSourceStamps = lambda: {}
+            brstatus.getSourceStamp = lambda: ss
+            return brstatus
+
+        def getPendingBuildRequestStatuses():
+            requests = [1, 2, 3]
+            return [getBuildRequestStatus(id) for id in requests]
+
+        builder.builder_status.getPendingBuildRequestStatuses = getPendingBuildRequestStatuses
+        pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
+        pending_dict = yield pending_json.asDict(self.request)
+
+        def pendingBuildRequestDict(brid):
+            return {'brid': brid, 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01',
+                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?'+
+                                  'katana-buildbot_branch=katana',
+                    'builds': [],
+                    'reason': 'because',
+                    'slaves': ['build-slave-01'],
+                    'source': {'branch': 'b',
+                               'changes': [],
+                               'codebase': '',
+                               'hasPatch': False,
+                               'project': '',
+                               'repository': 'z',
+                               'revision': None,
+                               'revision_short': ''},
+                    'sources': [],
+                    'submittedAt': 1418823086}
+
+        self.assertEqual(pending_dict, [pendingBuildRequestDict(1),
+                                        pendingBuildRequestDict(2),
+                                        pendingBuildRequestDict(3)])
