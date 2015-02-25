@@ -23,6 +23,10 @@ from buildbot.status.builder import BuilderStatus, PendingBuildsCache
 from buildbot.status.build import BuildStatus
 from twisted.internet import defer
 from buildbot.status.results import SUCCESS
+from buildbot.config import BuilderConfig
+from buildbot.process.factory import BuildFactory
+from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.process import buildrequest
 
 
 class PastBuildsJsonResource(unittest.TestCase):
@@ -72,40 +76,62 @@ class PastBuildsJsonResource(unittest.TestCase):
         )
 
 
+def setUpProject():
+    katana = {'katana-buildbot':
+                  {'project': 'general',
+                   'display_name': 'Katana buildbot',
+                   'defaultbranch': 'katana',
+                   'repository': 'https://github.com/Unity-Technologies/buildbot.git',
+                   'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
+                   'branch': ['master', 'staging', 'katana']}}
+    project = ProjectConfig(name="Katana", codebases=[katana])
+    return project
+
+
+def mockBuilder(master, master_status, buildername, proj):
+    builder = mock.Mock()
+    builder.config = BuilderConfig(name=buildername, friendly_name=buildername,
+                  project=proj,
+                  slavenames=['build-slave-01'],
+                  factory=BuildFactory(),
+                  slavebuilddir="test", tags=['tag1', 'tag2'])
+    builder.builder_status = BuilderStatus(buildername, None, master)
+    builder.builder_status.setSlavenames(['build-slave-01'])
+    builder.builder_status.setTags(['tag1', 'tag2'])
+    builder.builder_status.status = master_status
+    builder.builder_status.project = proj
+    builder.builder_status.pendingBuildCache = PendingBuildsCache(builder.builder_status)
+    builder.builder_status.nextBuildNumber = 1
+    builder.builder_status.basedir = '/basedir'
+    builder.builder_status.saveYourself = lambda skipBuilds=True: True
+
+    return builder
+
+
+def setUpFakeMasterWithProjects(project, obj):
+    master = fakemaster.make_master(wantDb=True, testcase=obj)
+    master.getProject = lambda x: project
+    master.getProjects = lambda: {'Katana': project}
+    return master
+
+
+def setUpFakeMasterStatus(fakemaster):
+    master_status = master.Status(fakemaster)
+    slave = mock.Mock()
+    slave.getFriendlyName = lambda: 'build-slave-01'
+    master_status.getSlave = lambda x: slave
+    return master_status
+
+
 class TestSingleProjectJsonResource(unittest.TestCase):
 
-    def mockBuilder(self, buildername, proj):
-        builder = mock.Mock()
-        builder.config = mock.Mock()
-        builder.config.project = proj
-        builder.builder_status = BuilderStatus(buildername, None, self.master)
-        builder.builder_status.status = self.master_status
-        builder.builder_status.project = proj
-        builder.builder_status.pendingBuildCache = PendingBuildsCache(builder.builder_status)
-        builder.builder_status.nextBuildNumber = 1
-        builder.builder_status.basedir = '/basedir'
-        builder.builder_status.saveYourself = lambda skipBuilds=True: True
-
-        return builder
 
     def setUp(self):
-        katana = {'katana-buildbot':
-                      {'project': 'general',
-                       'display_name': 'Katana buildbot',
-                       'defaultbranch': 'katana',
-                       'repository': 'https://github.com/Unity-Technologies/buildbot.git',
-                       'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
-                       'branch': ['master', 'staging', 'katana']}}
+        self.project = setUpProject()
 
-        self.project = ProjectConfig(name="Katana", codebases=[katana])
+        self.master = setUpFakeMasterWithProjects(self.project, self)
 
-        self.master = fakemaster.make_master(wantDb=True, testcase=self)
-        self.master.getProject = lambda x: self.project
-        self.master.getProjects = lambda: {'Katana': self.project}
-        self.master_status = master.Status(self.master)
-        slave = mock.Mock()
-        slave.getFriendlyName = lambda: 'build-slave-01'
-        self.master_status.getSlave = lambda x: slave
+        self.master_status = setUpFakeMasterStatus(self.master)
         self.master.status = self.master_status
 
         self.request = mock.Mock()
@@ -115,17 +141,21 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         self.request.path = 'json/projects/Katana'
 
 
-
     @defer.inlineCallbacks
     def test_getBuildersByProject(self):
 
         self.master.botmaster.builderNames = ["builder-01", "builder-02", "builder-03", "builder-04"]
 
-        self.master.botmaster.builders = {'builder-01': self.mockBuilder('builder-01', "project-01"),
-                                'builder-02': self.mockBuilder('builder-02', "Katana"),
-                                'builder-03': self.mockBuilder('builder-03', "Katana"),
-                                'builder-04': self.mockBuilder('builder-04', "Katana"),
-                                'builder-01': self.mockBuilder('builder-05', "project-02")}
+        self.master.botmaster.builders = {'builder-01': mockBuilder(self.master, self.master_status,
+                                                                    'builder-01', "project-01"),
+                                'builder-02': mockBuilder(self.master, self.master_status,
+                                                          'builder-02', "Katana"),
+                                'builder-03': mockBuilder(self.master, self.master_status,
+                                                          'builder-03', "Katana"),
+                                'builder-04': mockBuilder(self.master, self.master_status,
+                                                          'builder-04', "Katana"),
+                                'builder-01': mockBuilder(self.master, self.master_status,
+                                                          'builder-05', "project-02")}
 
         project_json = status_json.SingleProjectJsonResource(self.master_status, self.project)
 
@@ -143,13 +173,13 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         project_dict = yield project_json.asDict(self.request)
 
         def jsonBuilders(builder_name):
-            return {'name': builder_name, 'tags': [],
+            return {'name': builder_name, 'tags': ['tag1', 'tag2'],
                 'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +
                        '?katana-buildbot_branch=katana',
                 'friendly_name': builder_name,
                 'project': 'Katana',
                 'state': 'offline',
-                'slaves': [], 'currentBuilds': [], 'pendingBuilds': 0}
+                'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0}
 
         expected_project_dict = {'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
                                  'builders': [
@@ -171,7 +201,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
 
         self.master.botmaster.builderNames = ["builder-01"]
 
-        builder = self.mockBuilder("builder-01", "Katana")
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
         self.master.botmaster.builders = {'builder-01': builder}
 
         def mockFinishedBuilds(branches=[], codebases={},
@@ -221,10 +251,111 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                         'eta': None, 'builderFriendlyName': 'builder-01',
                         'failure_url': None, 'slave_friendly_name': 'build-slave-01',
                         'times': (None, 1422441501.21, 1422441501.21)},
-                   'name': 'builder-01', 'tags': [],
+                   'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
                    'friendly_name': 'builder-01',
-                   'project': 'Katana', 'state': 'offline', 'slaves': [], 'currentBuilds': [], 'pendingBuilds': 0}],
+                   'project': 'Katana', 'state': 'offline', 'slaves': ['build-slave-01'],
+                   'currentBuilds': [], 'pendingBuilds': 0}],
              'latestRevisions': {}}
 
         self.assertEqual(project_dict, expected_project_dict)
+
+
+class TestSingleProjectBuilderJsonResource(unittest.TestCase):
+
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+    @defer.inlineCallbacks
+    def test_getSingleProjectBuilder(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        project_builder_json = status_json.SingleProjectBuilderJsonResource(self.master_status, builder.builder_status)
+
+        project_builder_dict = yield project_builder_json.asDict(self.request)
+
+        self.assertEqual(project_builder_dict,
+                         {'name': 'builder-01',
+                          'tags': ['tag1', 'tag2'],
+                          'url': 'http://localhost:8080/projects/Katana/builders/'+
+                                 'builder-01?katana-buildbot_branch=katana',
+                          'friendly_name': 'builder-01',
+                          'project': 'Katana',
+                          'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
+
+
+class TestSinglePendingBuildsJsonResource(unittest.TestCase):
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+
+    @defer.inlineCallbacks
+    def test_getSinglePendingBuilds(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        self.master_status.getBuilder = lambda x: builder.builder_status
+
+        def getBuildRequestStatus(id):
+            brstatus = BuildRequestStatus(builder.builder_status.name, id, self.master_status)
+            brstatus._buildrequest = mock.Mock()
+            brstatus.getSubmitTime = lambda: 1418823086
+            brstatus.getReason = lambda: 'because'
+            from buildbot.sourcestamp import SourceStamp
+            ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
+            brstatus.getSourceStamps = lambda: {}
+            brstatus.getSourceStamp = lambda: ss
+            return brstatus
+
+        def getPendingBuildRequestStatuses():
+            requests = [1, 2, 3]
+            return [getBuildRequestStatus(id) for id in requests]
+
+        builder.builder_status.getPendingBuildRequestStatuses = getPendingBuildRequestStatuses
+        pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
+        pending_dict = yield pending_json.asDict(self.request)
+
+        def pendingBuildRequestDict(brid):
+            return {'brid': brid, 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01',
+                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?'+
+                                  'katana-buildbot_branch=katana',
+                    'builds': [],
+                    'reason': 'because',
+                    'slaves': ['build-slave-01'],
+                    'source': {'branch': 'b',
+                               'changes': [],
+                               'codebase': '',
+                               'hasPatch': False,
+                               'project': '',
+                               'repository': 'z',
+                               'revision': None,
+                               'revision_short': ''},
+                    'sources': [],
+                    'submittedAt': 1418823086}
+
+        self.assertEqual(pending_dict, [pendingBuildRequestDict(1),
+                                        pendingBuildRequestDict(2),
+                                        pendingBuildRequestDict(3)])
