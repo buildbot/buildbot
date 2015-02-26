@@ -104,6 +104,11 @@ class Tests(interfaces.InterfaceTests):
         def buildslaveConfigured(self, buildslaveid, masterid, builderids):
             pass
 
+    def test_signature_deconfigureAllBuidslavesForMaster(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.deconfigureAllBuidslavesForMaster)
+        def deconfigureAllBuidslavesForMaster(self, masterid):
+            pass
+
     @defer.inlineCallbacks
     def test_findBuildslaveId_insert(self):
         id = yield self.db.buildslaves.findBuildslaveId(name=u"xyz")
@@ -172,7 +177,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[10, 11], configured_on=[
                                   {'builderid': 20, 'masterid': 10},
                                   {'builderid': 20, 'masterid': 11},
-                              ]))
+                                  ]))
 
     @defer.inlineCallbacks
     def test_getBuildslave_by_name_not_configured(self):
@@ -248,7 +253,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                              ], connected_to=[]))
+                                  ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getBuildslave_with_multiple_masters_builderid_masterid(self):
@@ -260,7 +265,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                              ], connected_to=[]))
+                                  ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getBuildslave_by_name_with_multiple_masters_builderid_masterid(self):
@@ -272,7 +277,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                              ], connected_to=[]))
+                                  ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getBuildslaves_no_config(self):
@@ -440,7 +445,10 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_buildslaveConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
+
         # should remove builder 21, and add 22
+        yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=10)
+
         yield self.db.buildslaves.buildslaveConfigured(
             buildslaveid=30, masterid=10, builderids=[20, 22])
 
@@ -449,6 +457,54 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 20, 'masterid': 11},
             {'builderid': 20, 'masterid': 10},
             {'builderid': 22, 'masterid': 10}]))
+
+    @defer.inlineCallbacks
+    def test_buildslaveConfiguredTwice(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove builder 21, and add 22
+        yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=10)
+
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[20, 22])
+
+        # configure again (should eat the duplicate insertion errors)
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[20, 21, 22])
+
+        bs = yield self.db.buildslaves.getBuildslave(30)
+        self.assertEqual(sorted(bs['configured_on']), sorted([
+            {'builderid': 20, 'masterid': 11},
+            {'builderid': 20, 'masterid': 10},
+            {'builderid': 21, 'masterid': 10},
+            {'builderid': 22, 'masterid': 10}]))
+
+    @defer.inlineCallbacks
+    def test_nothingConfigured(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove builder 21, and add 22
+        yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=10)
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[])
+
+        # should only keep builder for master 11
+        bs = yield self.db.buildslaves.getBuildslave(30)
+        self.assertEqual(sorted(bs['configured_on']), sorted([
+            {'builderid': 20, 'masterid': 11}]))
+
+    @defer.inlineCallbacks
+    def test_deconfiguredAllSlaves(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        res = yield self.db.buildslaves.getBuildslaves(masterid=11)
+        self.assertEqual(len(res), 2)
+
+        # should remove all slave configured for masterid 11
+        yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=11)
+
+        res = yield self.db.buildslaves.getBuildslaves(masterid=11)
+        self.assertEqual(len(res), 0)
 
 
 class RealTests(Tests):

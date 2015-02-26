@@ -16,7 +16,6 @@ class Builders extends Controller
                     active = true
             return active
         $scope.settings = bbSettingsService.getSettingsGroup("Builders")
-        console.log $scope.settings
         $scope.$watch('settings', ->
             bbSettingsService.save()
         , true)

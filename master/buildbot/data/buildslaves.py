@@ -130,3 +130,12 @@ class Buildslave(base.ResourceType):
             masterid=masterid)
         bs = yield self.master.data.get(('buildslaves', buildslaveid))
         self.produceEvent(bs, 'disconnected')
+
+    @base.updateMethod
+    def deconfigureAllBuidslavesForMaster(self, masterid):
+        # unconfigure all slaves for this master
+        return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
+            masterid=masterid)
+
+    def _masterDeactivated(self, masterid):
+        return self.deconfigureAllBuidslavesForMaster(masterid)

@@ -746,6 +746,15 @@ buildslaves
 
         Record the given buildslave as being configured on the given master and for given builders.
 
+
+    .. py:method:: deconfigureAllBuidslavesForMaster(masterid)
+
+        :param integer masterid: the ID of the master to which it configured
+        :returns: Deferred
+
+        Unregister all the slaves configured to a master for given builders.
+        This shall happen when master disabled or before reconfiguration
+
 changes
 ~~~~~~~
 
