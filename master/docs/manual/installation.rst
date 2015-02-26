@@ -29,6 +29,9 @@ Python: http://www.python.org
   Buildbot requires Python-2.6 or later on the master, although Python-2.7 is recommended.
   The slave runs on Python-2.5.
 
+  Note that this should be a "normal" build of Python.
+  Builds of Python with debugging enabled or other unusual build parameters are likely to cause incorrect behavior.
+
 Twisted: http://twistedmatrix.com
 
   Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the slave.
