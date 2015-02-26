@@ -18,6 +18,7 @@ from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import ProgrammingError
 
 
 class FakeDBConnector(object):
@@ -61,12 +62,11 @@ class DbConfig(object):
         db.state = state.StateConnectorComponent(db)
         try:
             self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
-        except OperationalError as e:
-            if "no such table" in str(e):
-                db.pool.engine.close()
-                return None
-            else:
-                raise
+        except (ProgrammingError, OperationalError):
+            # ProgrammingError: mysql&pg, OperationalError: sqlite
+            # assume db is not initialized
+            db.pool.engine.close()
+            return None
         return db
 
     def get(self, name, default=state.StateConnectorComponent.Thunk):
