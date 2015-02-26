@@ -1076,10 +1076,14 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
+        badargs = set()
         for arg in constructorArgs.keys():
             if arg not in BuildStep.parms:
-                bad(arg)
-                del constructorArgs[arg]
+                badargs.add(arg)
+        # delete bad args *after* completing the iteration
+        for arg in badargs:
+            bad(arg)
+            del constructorArgs[arg]
         return constructorArgs
 
     @defer.inlineCallbacks
