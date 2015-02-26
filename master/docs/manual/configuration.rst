@@ -25,3 +25,4 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-statustargets
     cfg-www
     cfg-services
+    cfg-dbconfig

@@ -1260,6 +1260,8 @@ state
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
 
+    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environnement)
+
 users
 ~~~~~
 

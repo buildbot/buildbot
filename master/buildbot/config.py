@@ -49,6 +49,8 @@ class ConfigErrors(Exception):
 
 _errors = None
 
+DEFAULT_DB_URL = 'sqlite:///state.sqlite'
+
 
 def error(error):
     if _errors is not None:
@@ -97,7 +99,7 @@ class MasterConfig(util.ComparableMixin):
             property_value=re.compile(r'^[\w\.\-\/\~:]*$'),
         )
         self.db = dict(
-            db_url='sqlite:///state.sqlite',
+            db_url=DEFAULT_DB_URL,
         )
         self.mq = dict(
             type='simple',
@@ -388,24 +390,27 @@ class MasterConfig(util.ComparableMixin):
             else:
                 self.validation.update(validation)
 
-    def load_db(self, filename, config_dict):
+    @staticmethod
+    def getDbUrlFromConfig(config_dict, throwErrors=True):
+
         if 'db' in config_dict:
             db = config_dict['db']
-            if set(db.keys()) - set(['db_url', 'db_poll_interval']):
+            if set(db.keys()) - set(['db_url', 'db_poll_interval']) and throwErrors:
                 error("unrecognized keys in c['db']")
-            self.db.update(db)
-        if 'db_url' in config_dict:
-            self.db['db_url'] = config_dict['db_url']
-        if 'db_poll_interval' in config_dict:
-            self.db['db_poll_interval'] = config_dict["db_poll_interval"]
+            config_dict = db
+
+        if 'db_poll_interval' in config_dict and throwErrors:
+            warnDeprecated("0.8.7", "db_poll_interval is deprecated and will be ignored")
 
         # we don't attempt to parse db URLs here - the engine strategy will do
         # so.
+        if 'db_url' in config_dict:
+            return config_dict['db_url']
 
-        # db_poll_interval is deprecated
-        if 'db_poll_interval' in self.db:
-            warnDeprecated("0.8.7", "db_poll_interval is deprecated and will be ignored")
-            del self.db['db_poll_interval']
+        return DEFAULT_DB_URL
+
+    def load_db(self, filename, config_dict):
+        self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
 
     def load_mq(self, filename, config_dict):
         from buildbot.mq import connector  # avoid circular imports
