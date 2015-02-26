@@ -83,7 +83,7 @@ class ChangeFilter(ComparableMixin):
             return False
         for chg_attr, (filt_list, filt_re, filt_fn) in self.checks.items():
             if chg_attr.startswith("prop:"):
-                chg_val = change.properties.get(chg_attr.split(":", 1)[1], '')
+                chg_val = change.properties.getProperty(chg_attr.split(":", 1)[1], '')
             else:
                 chg_val = getattr(change, chg_attr, '')
             if filt_list is not None and chg_val not in filt_list:
