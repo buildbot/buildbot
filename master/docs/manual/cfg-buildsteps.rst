@@ -598,6 +598,10 @@ This step takes the following arguments:
         This maintains a ``source`` directory for source, which it updates copies to the build directory.
         This allows Buildbot to start with a fresh directory, without downloading the entire repository on every build.
 
+``login``
+    Password to use while performing login to the remote CVS server.
+    Default is ``None`` meaning that no login needs to be peformed.
+
 .. bb:step:: Bzr
 
 .. _Step-Bzr:
