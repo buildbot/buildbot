@@ -5,7 +5,6 @@ from buildbot.steps import artifact
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.fake import fakemaster, fakedb
-from buildbot.status import master
 
 class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
@@ -15,7 +14,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def setupStep(self, step, brqs=None):
+    def setupStep(self, step, brqs=None, winslave=False):
         steps.BuildStepMixin.setupStep(self, step)
 
         fake_br = fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", complete=1, results=0)
@@ -30,6 +29,12 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
         breqs = [fake_br]
         if brqs:
             breqs += brqs
+
+        self.build.slavebuilder.slave.slave_environ = {}
+
+        if winslave:
+            self.build.slavebuilder.slave.slave_environ['os'] = 'Windows_NT'
+
         m.db.insertTestData(breqs)
 
 
@@ -53,8 +58,27 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
                                    artifactServerURL="http://srv.com/dir"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command=['rsync', '-var', 'myartifact.py',
-                                 'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py'])
+                        command='n=0; false; until [[ $? -eq 0 || $n -ge 5 ]]; do n=$[$n+1]; sleep 5; '+
+                                'rsync -var --partial myartifact.py'+
+                                ' usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py;'+
+                                ' done')
+            + ExpectShell.log('stdio', stdout='')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['Artifact(s) uploaded.'])
+        return self.runStep()
+
+    def test_upload_artifact_Win(self):
+        self.setupStep(artifact.UploadArtifact(artifact="myartifact.py", artifactDirectory="mydir",
+                                   artifactServer='usr@srv.com', artifactServerDir='/home/srv/web/dir',
+                                   artifactServerURL="http://srv.com/dir"), winslave=True)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --partial '+
+                                'myartifact.py '+
+                                'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py'+
+                                ' && exit 0)')
             + ExpectShell.log('stdio', stdout='')
             + 0
         )
@@ -71,9 +95,30 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command=['rsync', '-var',
-                                 'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py',
-                                 'myartifact.py'])
+                        command='n=0; false; until [[ $? -eq 0 || $n -ge 5 ]]; '+
+                                'do n=$[$n+1]; sleep 5; rsync -var --partial '+
+                                'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py'+
+                                ' myartifact.py; done')
+            + ExpectShell.log('stdio', stdout='')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["Downloaded 'B'."])
+        return self.runStep()
+
+
+    def test_download_artifact_Win(self):
+        fake_trigger = fakedb.BuildRequest(id=2, buildsetid=2, buildername="B", complete=1,
+                                           results=0, triggeredbybrid=1, startbrid=1)
+        self.setupStep(artifact.DownloadArtifact(artifactBuilderName="B", artifact="myartifact.py",
+                                     artifactDirectory="mydir",
+                                     artifactServer='usr@srv.com',
+                                     artifactServerDir='/home/srv/web/dir'), [fake_trigger], winslave=True)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --partial '+
+                                'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py'+
+                                ' myartifact.py && exit 0)')
             + ExpectShell.log('stdio', stdout='')
             + 0
         )
@@ -93,9 +138,10 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command=['rsync', '-var',
-                                 'usr@srv.com:/home/srv/web/dir/B_2_17_12_2014_13_31_26_+0000/mydir/myartifact.py',
-                                 'myartifact.py'])
+                        command='n=0; false; until [[ $? -eq 0 || $n -ge 5 ]]; '+
+                                'do n=$[$n+1]; sleep 5; rsync -var --partial'+
+                                ' usr@srv.com:/home/srv/web/dir/B_2_17_12_2014_13_31_26_+0000/mydir/myartifact.py'+
+                                ' myartifact.py; done')
             + ExpectShell.log('stdio', stdout='')
             + 0
         )

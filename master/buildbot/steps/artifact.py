@@ -235,6 +235,34 @@ class CreateArtifactDirectory(ShellCommand):
         self.setCommand(command)
         ShellCommand.start(self)
 
+
+def checkWindowsSlaveEnvironment(step, key):
+    return key in step.build.slavebuilder.slave.slave_environ.keys() \
+           and step.build.slavebuilder.slave.slave_environ[key] == 'Windows_NT'
+
+
+def _isWindowsSlave(step):
+        slave_os = step.build.slavebuilder.slave.os and step.build.slavebuilder.slave.os == 'Windows'
+        slave_env = checkWindowsSlaveEnvironment(step, 'os') or checkWindowsSlaveEnvironment(step, 'OS')
+        return slave_os or slave_env
+
+
+def retryCommandLinuxOS(command):
+    return 'n=0; false; until [[ $? -eq 0 || $n -ge 5 ]]; do n=$[$n+1]; sleep 5; ' + command + "; done"
+
+
+def retryCommandWindowsOS(command):
+    return 'for /L %%i in (1,1,5) do (sleep 5 & ' + command + ' && exit 0)'
+
+
+def rsyncWithRetry(step, origin, destination):
+    if _isWindowsSlave(step):
+        command = retryCommandWindowsOS("rsync -var --partial %s %s" % (origin, destination))
+    else:
+        command = retryCommandLinuxOS("rsync -var --partial %s %s" % (origin, destination))
+    return command
+
+
 class UploadArtifact(ShellCommand):
 
     name = "Upload Artifact(s)"
@@ -266,7 +294,8 @@ class UploadArtifact(ShellCommand):
 
 
         remotelocation = self.artifactServer + ":" + self.artifactServerDir + "/" + artifactPath + "/" + self.artifact.replace(" ", r"\ ")
-        command = ["rsync", "-var", self.artifact, remotelocation]
+
+        command = rsyncWithRetry(self, self.artifact, remotelocation)
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
         self.setCommand(command)
@@ -276,6 +305,7 @@ class UploadArtifact(ShellCommand):
         if results == SUCCESS:
             self.addURL(self.artifact, self.artifactURL)
         ShellCommand.finished(self, results)
+
 
 class DownloadArtifact(ShellCommand):
     name = "Download Artifact(s)"
@@ -295,6 +325,7 @@ class DownloadArtifact(ShellCommand):
         descriptionDone="Downloaded '%s'." % artifactBuilderName
         ShellCommand.__init__(self, name=name, description=description, descriptionDone=descriptionDone,  **kwargs)
 
+
     @defer.inlineCallbacks
     def start(self):
         if self.master is None:
@@ -310,7 +341,9 @@ class DownloadArtifact(ShellCommand):
             artifactPath += "/%s" % self.artifactDirectory
 
         remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
-        command = ["rsync", "-var", remotelocation, self.artifactDestination]
+
+        command = rsyncWithRetry(self, remotelocation, self.artifactDestination)
+
         self.setCommand(command)
         ShellCommand.start(self)
 
