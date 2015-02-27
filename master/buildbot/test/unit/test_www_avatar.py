@@ -39,7 +39,7 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/?email=foo')
         self.assertEquals(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                                               'def654fccc4a4d8?s=32&d=http%3A%2F%2Fa%2Fb%2Fimg%2Fnobody.png'))
+                                    'def654fccc4a4d8?s=32&d=retro'))
 
     @defer.inlineCallbacks
     def test_custom(self):
@@ -70,4 +70,4 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, '/?email=foo')
         self.assertEquals(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                                               'def654fccc4a4d8?s=32&d=http%3A%2F%2Fa%2Fb%2Fimg%2Fnobody.png'))
+                                    'def654fccc4a4d8?s=32&d=retro'))
