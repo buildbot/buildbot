@@ -14,19 +14,19 @@
                     
     .row
         ul.list-group
-            li.list-group-item(ng-repeat="change in changes", 
-                               ng-click="change.show_details=!change.show_details")
+            li.list-group-item(ng-repeat="change in changes")
                 span.no-select
                     .change-avatar(ng-if="change.author_email")
                         a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name }}")
                             img(ng-src="avatar?email={{change.author_email}}")
                     | &nbsp;
-                    a(ng-if="change.revlink", ng-src="change.revlink")
+                    a(ng-if="change.revlink", ng-href="{{change.revlink}}")
                         | {{ change.comments.split("\n")[0] }}
                     span(ng-if="!change.revlink")
                         | {{ change.comments.split("\n")[0] }}
                     | &nbsp;
-                    i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
+                    i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}",
+                                                        ng-click="change.show_details=!change.show_details")
                 div.anim-changedetails(ng-show="change.show_details")
                     table.table.table-striped.table-condensed(ng-show="change.show_details")
                       tr(ng-if="change.category")
