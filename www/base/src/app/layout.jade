@@ -13,7 +13,7 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
         block content
         block footer
 
-    script(src="scripts.js")
+    script(src="scripts.js?_#{(new Date()).getTime()}")
     | {% for app in config.plugins -%}
     script(src="{{app}}/scripts.js")
     link(rel='stylesheet', href='{{app}}/styles.css')
