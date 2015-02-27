@@ -83,19 +83,19 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
     def test_default_origin(self):
         self.master.config.buildbotURL = 'http://server/path/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], ['http\\:\\/\\/server\\Z(?ms)'])
+        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
 
         self.master.config.buildbotURL = 'http://server/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], ['http\\:\\/\\/server\\Z(?ms)'])
+        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
 
         self.master.config.buildbotURL = 'http://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], ['http\\:\\/\\/server\\:8080\\Z(?ms)'])
+        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\:8080\Z(?ms)'])
 
         self.master.config.buildbotURL = 'https://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], ['https\\:\\/\\/server\\:8080\\Z(?ms)'])
+        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'https\:\/\/server\:8080\Z(?ms)'])
 
 
 class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
