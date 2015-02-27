@@ -21,8 +21,9 @@ class State extends Config
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/builders'
+            url: '/builders?tags'
             data: cfg
+            reloadOnSearch: false
 
         $stateProvider.state(state)
 

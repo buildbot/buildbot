@@ -4,8 +4,19 @@
       tr
           th Builder Name
           th Builds
+          th
+            span(ng-show="tags_filter.length==0") Tags
+            span(ng-show="tags_filter.length < 5", ng-repeat="tag in tags_filter")
+                span.label.label-success(ng-click="toggleTag(tag)")
+                  | {{ tag }}
+                | &nbsp;
+            span(ng-show="tags_filter.length >= 5")
+                span.label.label-success
+                  | {{ tags_filter.length }} tags
+            span(ng-show="tags_filter.length > 0")
+                span.label.label-danger(ng-click="tags_filter = []") x
           th(style="width:20%px;") Slaves
-        tr(ng-repeat='builder in builders' ng-show="settings.show_old_builders.value || hasActiveMaster(builder)")
+        tr(ng-repeat='builder in builders | filter: isBuilderFiltered')
           td(style="width:200px")
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
@@ -14,6 +25,11 @@
                 a(ui-sref='build({builder: builder.builderid, build: build.number})')
                     span.badge-status(ng-class="results2class(build, 'pulse')")
                       | {{ build.number }}
+          td(style="width:20%;")
+            span(ng-repeat="tag in builder.tags")
+                span.label(ng-click="toggleTag(tag)", ng-class="isTagFiltered(tag) ? 'label-success': 'label-default'")
+                  | {{ tag }}
+                | &nbsp;
           td(style="width:20%;")
             span(data-ng-repeat="slave in builder.buildslaves")
                 a(ui-sref='slave({slave: slave.slaveid})')
