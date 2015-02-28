@@ -39,7 +39,6 @@ class SVN(Source):
     name = 'svn'
 
     renderables = ['repourl']
-    possible_modes = ('incremental', 'full')
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
     def __init__(self, repourl=None, mode='incremental',
@@ -58,8 +57,9 @@ class SVN(Source):
         self.preferLastChangedRev = preferLastChangedRev
         Source.__init__(self, **kwargs)
         errors = []
-        if self.mode not in self.possible_modes:
-            errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
+        modeMethod = 'mode_' + self.mode
+        if not hasattr(self, modeMethod):
+            errors.append("mode %s is not allowed" % (self.mode))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
@@ -99,10 +99,7 @@ class SVN(Source):
             else:
                 return 0
 
-        if self.mode == 'full':
-            d.addCallback(self.full)
-        elif self.mode == 'incremental':
-            d.addCallback(self.incremental)
+        d.addCallback(getattr(self, 'mode_' + self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
@@ -112,7 +109,7 @@ class SVN(Source):
         return d
 
     @defer.inlineCallbacks
-    def full(self, _):
+    def mode_full(self, _):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -130,7 +127,7 @@ class SVN(Source):
             yield self.fresh()
 
     @defer.inlineCallbacks
-    def incremental(self, _):
+    def mode_incremental(self, _):
         updatable = yield self._sourcedirIsUpdatable()
 
         if not updatable:
@@ -175,7 +172,7 @@ class SVN(Source):
         try:
             old_workdir = self.workdir
             self.workdir = checkout_dir
-            yield self.incremental(None)
+            yield self.mode_incremental(None)
         finally:
             self.workdir = old_workdir
         self.workdir = old_workdir
