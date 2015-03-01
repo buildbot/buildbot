@@ -78,14 +78,21 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertEqual(step._cvsEntriesContainStickyDates('/file/1.1/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'), True)
         self.assertEqual(step._cvsEntriesContainStickyDates('/file1/1.1/Fri May 17 23:20:00//\n/file2/1.1.2.3/Fri May 17 23:20:00//D2013.10.08.11.20.33\nD'), True)
 
-    def test_mode_full_clean(self):
+    def test_mode_full_clean_and_login(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True))
+                    login="a password"))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['cvs',
+                                 '-d',
+                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
+                                 'login'],
+                        initialStdin="a password\n")
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
@@ -120,8 +127,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clean_patch(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True), patch=(1, 'patch'))
+                    cvsmodule="mozilla/browser/", mode='full', method='clean'),
+            patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -179,7 +186,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True, timeout=1))
+                    timeout=1))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -221,7 +228,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    branch='branch', login=True))
+                    branch='branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -259,8 +266,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clean_branch_sourcestamp(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True), args={'branch': 'my_branch'})
+                    cvsmodule="mozilla/browser/", mode='full', method='clean'),
+            args={'branch': 'my_branch'})
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -298,8 +305,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_fresh(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='fresh',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full', method='fresh'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -336,8 +342,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_clobber(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='full', method='clobber',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='full', method='clobber')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -365,7 +370,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clobber_retry(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='full', method='clobber',
-                       login=True, retry=(0, 2))
+                       retry=(0, 2))
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -412,8 +417,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_copy(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='full', method='copy',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='full', method='copy')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -455,8 +459,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_full_copy_wrong_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='full', method='copy',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='full', method='copy')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -496,8 +499,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -531,8 +533,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_sticky_date(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='incremental')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -575,8 +576,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental_password_windows(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:dustin:secrets@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -613,7 +613,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
-                    branch='my_branch', login=True))
+                    branch='my_branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -649,7 +649,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
-                    branch='HEAD', login=True),
+                    branch='HEAD'),
             args=dict(revision='2012-08-16 16:05:16 +0000'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -686,8 +686,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental_branch_sourcestamp(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True), args={'branch': 'my_branch'})
+                    cvsmodule="mozilla/browser/", mode='incremental'),
+            args={'branch': 'my_branch'})
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -722,16 +722,10 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental_not_loggedin(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=False))
+                    cvsmodule="mozilla/browser/", mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
-            + 0,
-            ExpectShell(workdir='wkdir',
-                        command=['cvs', '-d',
-                                 ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot',
-                                 'login'])
             + 0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
                                 logEnviron=True))
@@ -762,8 +756,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_no_existing_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='incremental')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -794,7 +787,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental_retry(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True, retry=(0, 1))
+                       retry=(0, 1))
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -834,8 +827,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_wrong_repo(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='incremental')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -866,8 +858,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_mode_incremental_wrong_module(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                       cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True)
+                       cvsmodule="mozilla/browser/", mode='incremental')
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -904,8 +895,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clean_no_existing_repo(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -931,8 +921,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_clean_wrong_repo(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -959,8 +948,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_no_method(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -998,7 +986,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_incremental_with_options(self):
         step = cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                        cvsmodule="mozilla/browser/", mode='incremental',
-                       login=True, global_options=['-q'], extra_options=['-l'])
+                       global_options=['-q'], extra_options=['-l'])
         self.setupStep(step)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1029,7 +1017,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True, env={'abc': '123'}, logEnviron=False))
+                    env={'abc': '123'}, logEnviron=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'],
@@ -1068,8 +1056,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_command_fails(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='incremental',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -1082,8 +1069,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_cvsdiscard_fails(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='fresh',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full', method='fresh'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
@@ -1119,8 +1105,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_slave_connection_lost(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
-                    cvsmodule="mozilla/browser/", mode='full', method='clean',
-                    login=True))
+                    cvsmodule="mozilla/browser/", mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['cvs', '--version'])
