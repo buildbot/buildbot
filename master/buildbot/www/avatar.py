@@ -31,11 +31,16 @@ class AvatarBase(config.ConfiguredMixin):
 
 class AvatarGravatar(AvatarBase):
     name = "gravatar"
+    # gravatar does not want intranet URL, which is most of where the bots are
+    # just use same default as github (retro)
+    default = "retro"
 
     def getUserAvatar(self, email, size, defaultAvatarUrl):
         # construct the url
         gravatar_url = "//www.gravatar.com/avatar/"
         gravatar_url += hashlib.md5(email.lower()).hexdigest() + "?"
+        if self.default != "url":
+            defaultAvatarUrl = self.default
         gravatar_url += urllib.urlencode({'s': str(size), 'd': defaultAvatarUrl})
         raise resource.Redirect(gravatar_url)
 
