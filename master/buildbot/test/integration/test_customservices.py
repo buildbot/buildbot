@@ -21,15 +21,18 @@ from twisted.internet import defer
 # The custom step is using a CustomService, in order to calculate its result
 # we make sure that we can reconfigure the master while build is running
 
+observed_num_reconfig = None
 
 class CustomServiceMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_customService(self):
+        global observed_num_reconfig
 
-        build = yield self.doForceBuild(wantSteps=True)
+        observed_num_reconfig = None
+        yield self.doForceBuild(wantSteps=True)
 
-        self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
+        self.assertEqual(observed_num_reconfig, 1)
 
         myService = self.master.namedServices['myService']
         self.assertEqual(myService.num_reconfig, 1)
@@ -39,10 +42,11 @@ class CustomServiceMaster(RunMasterBase):
         # are reconfigured as expected
         yield self.master.reconfig()
 
-        build = yield self.doForceBuild(wantSteps=True)
+        observed_num_reconfig = None
+        yield self.doForceBuild(wantSteps=True)
 
         self.assertEqual(myService.num_reconfig, 2)
-        self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 2')
+        self.assertEqual(observed_num_reconfig, 2)
 
         yield self.master.reconfig()
 
@@ -65,22 +69,24 @@ class CustomServiceMaster(RunMasterBase):
 
 num_reconfig = 0
 
-
 def masterConfig():
     global num_reconfig
     num_reconfig += 1
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
+    from buildbot.status.results import SUCCESS
     from buildbot.schedulers.forcesched import ForceScheduler
-    from buildbot.steps.shell import ShellCommand
+    from buildbot.process.buildstep import BuildStep
     from buildbot.util.service import BuildbotService
 
-    class MyShellCommand(ShellCommand):
+    class MyShellCommand(BuildStep):
 
-        def getResultSummary(self):
+        def run(self):
             service = self.master.namedServices['myService']
-            return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
+            global observed_num_reconfig
+            observed_num_reconfig = service.num_reconfig
+            return SUCCESS
 
     class MyService(BuildbotService):
         name = "myService"
@@ -95,7 +101,7 @@ def masterConfig():
             builderNames=["testy"])]
 
     f = BuildFactory()
-    f.addStep(MyShellCommand(command='echo hei'))
+    f.addStep(MyShellCommand())
     c['builders'] = [
         BuilderConfig(name="testy",
                       slavenames=["local1"],
