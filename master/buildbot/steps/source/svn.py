@@ -58,8 +58,9 @@ class SVN(Source):
         Source.__init__(self, **kwargs)
         errors = []
         modeMethod = 'mode_' + self.mode
-        if not hasattr(self, modeMethod):
-            errors.append("mode %s is not allowed" % (self.mode))
+        if not self._hasAttrGroupMember('mode', self.mode):
+            errors.append("mode %s is not one of %s" %
+                          (self.mode, self._listAttrGroupMembers('mode')))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
@@ -99,7 +100,7 @@ class SVN(Source):
             else:
                 return 0
 
-        d.addCallback(getattr(self, 'mode_' + self.mode))
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
