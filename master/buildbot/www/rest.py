@@ -29,6 +29,7 @@ from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error
+from urlparse import urlparse
 
 
 class BadRequest(Exception):
@@ -370,8 +371,9 @@ class V2RootResource(resource.Resource):
                 request.write(data)
 
     def reconfigResource(self, new_config):
-        # buildbotURL will always ends with a '/', not the Origin header.
-        origin_self = new_config.buildbotURL.rstrip('/')
+        # buildbotURL may contain reverse proxy path, Origin header is just scheme + host + port
+        buildbotURL = urlparse(new_config.buildbotURL)
+        origin_self = buildbotURL.scheme + "://" + buildbotURL.netloc
         # pre-translate the origin entries in the config
         self.origins = [re.compile(fnmatch.translate(o.lower()))
                         for o in new_config.www.get('allowed_origins',
