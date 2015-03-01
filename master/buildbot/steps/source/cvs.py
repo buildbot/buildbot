@@ -229,28 +229,25 @@ class CVS(Source):
 
     def checkLogin(self, _):
         if self.login:
-            d = defer.succeed(0)
+            d = self._dovccmd(['-d', self.cvsroot, 'login'],
+                              initialStdin=self.login + "\n")
         else:
-            d = self._dovccmd(['-d', self.cvsroot, 'login'])
-
-            def setLogin(res):
-                # this happens only if the login command succeeds.
-                self.login = True
-                return res
-            d.addCallback(setLogin)
+            d = defer.succeed(0)
 
         return d
 
-    def _dovccmd(self, command, workdir=None, abandonOnFailure=True):
+    def _dovccmd(self, command, workdir=None, abandonOnFailure=True,
+                 initialStdin=None):
         if workdir is None:
             workdir = self.workdir
         if not command:
             raise ValueError("No command specified")
-        cmd = buildstep.RemoteShellCommand(workdir, ['cvs'] +
-                                           command,
+        cmd = buildstep.RemoteShellCommand(workdir,
+                                           ['cvs'] + command,
                                            env=self.env,
                                            timeout=self.timeout,
-                                           logEnviron=self.logEnviron)
+                                           logEnviron=self.logEnviron,
+                                           initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
