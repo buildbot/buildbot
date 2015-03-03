@@ -122,6 +122,71 @@ def setUpFakeMasterStatus(fakemaster):
     master_status.getSlave = lambda x: slave
     return master_status
 
+def fakeBuildStatus(master, builder, num):
+        build_status = BuildStatus(builder.builder_status, master, num)
+        build_status.finished = 1422441501.21
+        build_status.reason ='A build was forced by user@localhost'
+        build_status.slavename = 'build-slave-01'
+        build_status.results = SUCCESS
+        return build_status
+
+class TestPastBuildsJsonResource(unittest.TestCase):
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+    @defer.inlineCallbacks
+    def test_getPastBuildsJsonResource(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        def mockFinishedBuilds(branches=[], codebases={},
+                               num_builds=None,
+                               max_buildnum=None,
+                               finished_before=None,
+                               results=None,
+                               max_search=2000,
+                               useCache=False):
+
+
+            finished_builds = []
+            for n in range(15):
+                finished_builds.append(fakeBuildStatus(self.master, builder, n))
+            return finished_builds
+
+        builder.builder_status.generateFinishedBuilds = mockFinishedBuilds
+
+        builds_json = status_json.PastBuildsJsonResource(self.master_status, 15,  builder_status=builder.builder_status)
+        builds_dict = yield builds_json.asDict(self.request)
+        self.assertTrue(len(builds_dict) == 15)
+
+        def expectedDict(num):
+            return {'artifacts': None, 'blame': [], 'builderFriendlyName': 'builder-01','builderName': 'builder-01',
+                    'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
+                    'currentStep': None, 'eta': None, 'failure_url': None, 'isWaiting': False, 'logs': [],
+                    'number': num, 'properties': [], 'reason': 'A build was forced by user@localhost',
+                    'results': 0, 'results_text': 'success', 'slave': 'build-slave-01',
+                    'slave_friendly_name': 'build-slave-01', 'slave_url': None,
+                    'sourceStamps': [], 'steps': [],
+                    'text': [], 'times': (None, 1422441501.21, 1422441501.21),
+                    'url': {
+                        'path':
+                            'http://localhost:8080/builders/builder-01/builds/%d?katana-buildbot_branch=katana' % num,
+                        'text': 'builder-01 #%d' % num}}
+
+        for b in builds_dict:
+            self.assertEqual(b, expectedDict(builds_dict.index(b)))
+
 
 class TestSingleProjectJsonResource(unittest.TestCase):
 
@@ -212,13 +277,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                                max_search=2000,
                                useCache=False):
 
-            build_status = BuildStatus(builder.builder_status, self.master, 1)
-            build_status.finished = 1422441501.21
-            build_status.reason ='A build was forced by user@localhost'
-            build_status.slavename = 'build-slave-01'
-            build_status.results = SUCCESS
-
-            return [build_status]
+            return [fakeBuildStatus(self.master, builder, 1)]
 
         builder.builder_status.generateFinishedBuilds = mockFinishedBuilds
 
