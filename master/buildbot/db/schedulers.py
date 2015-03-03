@@ -30,13 +30,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
 
     def classifyChanges(self, schedulerid, classifications):
         def thd(conn):
-            transaction = conn.begin()
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
                 ((tbl.c.schedulerid == schedulerid)
                  & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in classifications.items():
+                transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = important and 1 or 0
@@ -54,7 +54,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                                  wc_changeid=changeid,
                                  important=imp_int)
 
-            transaction.commit()
+                transaction.commit()
         return self.db.pool.do(thd)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):
