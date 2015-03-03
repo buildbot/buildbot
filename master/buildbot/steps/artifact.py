@@ -248,15 +248,15 @@ def _isWindowsSlave(step):
 
 
 def retryCommandLinuxOS(command):
-    return 'for i in 1 2 3 4 5; do sleep 5; ' + command + '; if [ $? -eq 0 ]; then exit $?; fi; done; exit -1'
+    return 'for i in 1 2 3 4 5; do ' + command + '; if [ $? -eq 0 ]; then exit 0; else sleep 5; fi; done; exit -1'
 
 
 def retryCommandWindowsOS(command):
     return 'for /L %%i in (1,1,5) do (sleep 5 & ' + command + ' && exit 0)'
 
 def retryCommandWindowsOSPwShell(command):
-    return 'powershell.exe -C {for ($i=1; $i -le  5; $i++){ sleep 5; '+ command \
-           +'; if ($?) { exit $? } }; exit $? }'
+    return 'powershell.exe -C for ($i=1; $i -le  5; $i++) { '+ command \
+           +'; if ($?) { exit 0 } else { sleep 5} } exit -1'
 
 def rsyncWithRetry(step, origin, destination):
     if _isWindowsSlave(step):
