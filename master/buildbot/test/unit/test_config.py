@@ -682,6 +682,16 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(slaves=[sl]), self.errors)
         self.assertResults(slaves=[sl])
 
+    def test_load_projects(self):
+        proj = config.ProjectConfig(name="Katana",
+                            codebases=[{'k': {'repository': 'https://github.com/Unity-Technologies/buildbot.git',
+                                  'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
+                                  'display_name': 'katana-repo',
+                                  'branch': 'katana',
+                                  'project': 'general'}}])
+        self.cfg.load_projects(self.filename, dict(projects=[proj]), self.errors)
+        self.assertResults(projects={'Katana': proj})
+
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {}, self.errors)
         self.assertResults(change_sources=[])
