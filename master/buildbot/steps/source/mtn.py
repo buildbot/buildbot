@@ -34,7 +34,6 @@ class Monotone(Source):
     name = 'monotone'
 
     renderables = ['repourl']
-    possible_modes = ('incremental', 'full')
     possible_methods = ('clobber', 'copy', 'fresh', 'clean')
 
     def __init__(self, repourl=None, branch=None, progress=False, mode='incremental',
@@ -51,8 +50,9 @@ class Monotone(Source):
         Source.__init__(self, **kwargs)
         errors = []
 
-        if self.mode not in self.possible_modes:
-            errors.append("mode %s is not one of %s" % (self.mode, self.possible_modes))
+        if not self._hasAttrGroupMember('mode', self.mode):
+            errors.append("mode %s is not one of %s" %
+                          (self.mode, self._listAttrGroupMembers('mode')))
         if self.mode == 'incremental' and self.method:
             errors.append("Incremental mode does not require method")
 
@@ -91,10 +91,7 @@ class Monotone(Source):
                 return self.clean()
             else:
                 return 0
-        if self.mode == 'full':
-            d.addCallback(lambda _: self.full())
-        elif self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
@@ -104,7 +101,7 @@ class Monotone(Source):
         return d
 
     @defer.inlineCallbacks
-    def full(self):
+    def mode_full(self, _):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -126,7 +123,7 @@ class Monotone(Source):
             raise ValueError("Unknown method, check your configuration")
 
     @defer.inlineCallbacks
-    def incremental(self):
+    def mode_incremental(self, _):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self._retryClone()
@@ -150,7 +147,7 @@ class Monotone(Source):
         d = self.runCommand(cmd)
 
         self.workdir = 'source'
-        d.addCallback(lambda _: self.incremental())
+        d.addCallback(self.mode_incremental)
 
         @d.addCallback
         def copy(_):
