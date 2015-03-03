@@ -876,7 +876,7 @@ class ShellMixin(object):
         kwargs['env'].update(self.env)
         kwargs['stdioLogName'] = stdioLogName
         # default the workdir appropriately
-        if not self.workdir:
+        if not kwargs.get('workdir') and not self.workdir:
             if callable(self.build.workdir):
                 kwargs['workdir'] = self.build.workdir(self.build.sources)
             else:

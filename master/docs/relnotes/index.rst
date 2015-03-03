@@ -74,6 +74,8 @@ Features
 
 * :bb:step:`MasterShellCommand` now renders the ``path`` argument.
 
+* :class:`~buildbot.process.buildstep.ShellMixin`: the ``workdir`` can now be overridden in the call to ``makeRemoteShellCommand``.
+
 * GitHub status target now allows to specify a different base URL for the API (usefule for GitHub enterprise installations).
   This feature requires `txgithub` of version 0.2.0 or better.
 
