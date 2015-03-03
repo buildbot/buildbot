@@ -21,6 +21,7 @@ from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.status.builder import BuilderStatus, PendingBuildsCache
 from buildbot.status.build import BuildStatus
+from buildbot.status.slave import SlaveStatus
 from twisted.internet import defer
 from buildbot.status.results import SUCCESS
 from buildbot.config import BuilderConfig
@@ -129,6 +130,52 @@ def fakeBuildStatus(master, builder, num):
         build_status.slavename = 'build-slave-01'
         build_status.results = SUCCESS
         return build_status
+
+
+class TestBuilderSlavesJsonResources(unittest.TestCase):
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+    @defer.inlineCallbacks
+    def test_getBuilderSlavesJsonResources(self):
+
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        self.master_status.getBuilderNames = lambda : ["builder-01"]
+        self.master_status.getBuilder = lambda x: builder.builder_status
+
+        def getSlaveStatus(slave):
+            slave_status = SlaveStatus(slave)
+            slave_status.master = self.master
+            return slave_status
+
+        self.master_status.getSlave = getSlaveStatus
+
+        slaves = status_json.BuilderSlavesJsonResources(self.master_status, builder.builder_status)
+        slaves_dict = yield slaves.asDict(self.request)
+
+        self.assertEqual(slaves_dict,
+                         {'build-slave-01':
+                              {'name': 'build-slave-01',
+                               'url': 'http://localhost:8080/buildslaves/build-slave-01',
+                               'runningBuilds': [], 'friendly_name': None, 'admin': None, 'host': None,
+                               'version': None, 'connected': False, 'eid': -1, 'lastMessage': 0,
+                               'health': 0,
+                               'builders': [{'url': 'http://localhost:8080/projects/Katana/builders/builder-01',
+                                             'friendly_name': 'builder-01', 'name': 'builder-01'}],
+                               'access_uri': None}})
 
 class TestPastBuildsJsonResource(unittest.TestCase):
 
