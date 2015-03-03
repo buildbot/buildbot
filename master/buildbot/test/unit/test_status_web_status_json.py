@@ -27,7 +27,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot.process import buildrequest
+from buildbot.sourcestamp import SourceStamp
 
 
 class PastBuildsJsonResource(unittest.TestCase):
@@ -130,6 +130,50 @@ def fakeBuildStatus(master, builder, num):
         build_status.slavename = 'build-slave-01'
         build_status.results = SUCCESS
         return build_status
+
+class TestBuildJsonResource(unittest.TestCase):
+
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        self.request = mock.Mock()
+        self.request.args = {"katana-buildbot_branch": ["katana"]}
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'projects', 'Katana']
+        self.request.path = 'json/projects/Katana'
+
+
+    @defer.inlineCallbacks
+    def test_getBuildJsonResource(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+        build_status = fakeBuildStatus(self.master, builder, 1)
+        ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
+        build_status.getSourceStamps = lambda : [ss]
+        build_json = status_json.BuildJsonResource(self.master_status, build_status)
+        build_dict = yield build_json.asDict(self.request)
+        self.assertTrue(build_dict,
+                        {'results_text': 'success', 'slave': 'build-slave-01',
+                         'slave_url': None, 'builderName': 'builder-01',
+                         'url':
+                             {'path': 'http://localhost:8080/builders/builder-01/builds/1'+
+                                      '?katana-buildbot_branch=katana&_branch=b', 'text': 'builder-01 #1'},
+                         'text': [], 'sourceStamps': [{'codebase': '', 'revision_short': '',
+                                                       'repository': 'z', 'hasPatch': False, 'project': '',
+                                                       'branch': 'b', 'display_repository': 'z', 'changes': [],
+                                                       'revision': None}],
+                         'results': 0, 'number': 1, 'currentStep': None,
+                         'times': (None, 1422441501.21, 1422441501.21),
+                         'blame': [],
+                         'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01'+
+                                        '?katana-buildbot_branch=katana&_branch=b',
+                         'reason': 'A build was forced by user@localhost', 'eta': None,
+                         'isWaiting': False, 'builderFriendlyName': 'builder-01',
+                         'steps': [], 'properties': [], 'slave_friendly_name': 'build-slave-01', 'logs': []})
 
 
 class TestBuilderSlavesJsonResources(unittest.TestCase):
@@ -430,7 +474,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus._buildrequest = mock.Mock()
             brstatus.getSubmitTime = lambda: 1418823086
             brstatus.getReason = lambda: 'because'
-            from buildbot.sourcestamp import SourceStamp
+
             ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
             brstatus.getSourceStamps = lambda: {}
             brstatus.getSourceStamp = lambda: ss
