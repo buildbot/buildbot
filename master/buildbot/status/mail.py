@@ -30,6 +30,9 @@ from twisted.internet import reactor
 from twisted.python import log as twlog
 from zope.interface import implements
 
+from buildbot.interfaces import IRenderable
+from buildbot.util import flatten
+
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
     ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
@@ -266,7 +269,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                       of the Interested Users. If False, only
                                       send mail to the extraRecipients list.
 
-        @type  extraRecipients: tuple of strings
+        @type  extraRecipients: array or tuple of strings/renderables, or a renderable itself
         @param extraRecipients: a list of email addresses to which messages
                                 should be sent (in addition to the
                                 InterestedUsers list, which includes any
@@ -275,7 +278,9 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
                                 mailing list and deliver to that, then let
                                 subscribers come and go as they please.  The
                                 addresses in this list are used literally (they
-                                are not processed by lookup).
+                                are not processed by lookup).  If using renderables,
+                                the renderable may return a list of recipients.
+                                extraRecipients itself can be a renderable
 
         @type  subject: string
         @param subject: a string to be used as the subject line of the message.
@@ -384,14 +389,19 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         """
         base.StatusReceiverMultiService.__init__(self)
 
-        if not isinstance(extraRecipients, (list, tuple)):
+        if IRenderable.providedBy(extraRecipients):
+            pass
+        elif not isinstance(extraRecipients, (list, tuple)):
             config.error("extraRecipients must be a list or tuple")
         else:
             for r in extraRecipients:
+                if IRenderable.providedBy(r):
+                    # renderable that we'll call later
+                    continue
                 if not isinstance(r, str) or not VALID_EMAIL.search(r):
                     config.error(
-                        "extra recipient %r is not a valid email" % (r,))
-        self.extraRecipients = extraRecipients
+                        "extra recipient %r is not a valid email nor a renderable" % (r,))
+        self._extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
         if isinstance(mode, basestring):
@@ -527,9 +537,21 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         if builds:
             self.buildMessage("(whole buildset)", builds, buildset['results'])
 
+    def _renderRecipients(self, build):
+        self.extraRecipients = []
+        for recipient in flatten([build.render(recipient) for recipient in build.render(self._extraRecipients)]):
+            if not isinstance(recipient, basestring) or not VALID_EMAIL.search(recipient):
+                twlog.msg("INVALID RECIPIENT EMAIL: {}".format(recipient))
+                continue
+            self.extraRecipients.append(recipient)
+
     def buildFinished(self, name, build, results):
         if (not self.buildSetSummary and
                 self.isMailNeeded(build, results)):
+
+            # Update self.extraRecipients in case any extraRecipients are renderable.
+            self._renderRecipients(build)
+
             # for testing purposes, buildMessage returns a Deferred that fires
             # when the mail has been sent. To help unit tests, we return that
             # Deferred here even though the normal IStatusReceiver.buildFinished
