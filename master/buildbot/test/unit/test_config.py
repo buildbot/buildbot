@@ -636,6 +636,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(builders=[bldr]), self.errors)
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
+        self.assertEqual(self.cfg.builders[0].project, "default")
 
     @compat.usesFlushWarnings
     def test_load_builders_abs_builddir(self):
