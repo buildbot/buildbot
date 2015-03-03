@@ -60,16 +60,21 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_classifyChanges_again(self):
         # test reclassifying changes, which may happen during some timing
-        # conditions
+        # conditions.  It's important that this test uses multiple changes,
+        # only one of which already exists
         yield self.insertTestData([
             self.ss92,
             self.change3,
+            self.change4,
+            self.change5,
+            self.change6,
             self.scheduler24,
-            fakedb.SchedulerChange(schedulerid=24, changeid=3, important=0),
+            fakedb.SchedulerChange(schedulerid=24, changeid=5, important=0),
         ])
-        yield self.db.schedulers.classifyChanges(24, {3: True})
+        yield self.db.schedulers.classifyChanges(
+                24, {3: True, 4: False, 5: True, 6: False})
         res = yield self.db.schedulers.getChangeClassifications(24)
-        self.assertEqual(res, {3: True})
+        self.assertEqual(res, {3: True, 4: False, 5: True, 6: False})
 
     def test_signature_flushChangeClassifications(self):
         @self.assertArgSpecMatches(
