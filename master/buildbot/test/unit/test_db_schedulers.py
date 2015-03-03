@@ -85,14 +85,21 @@ class TestSchedulersConnectorComponent(
 
     def test_classifyChanges_again(self):
         # test reclassifying changes, which may happen during some timing
-        # conditions
+        # conditions.  It's important that this test uses multiple changes,
+        # only one of which already exists
         d = self.insertTestData([
+        # conditions.  It's important that this test uses multiple changes,
+        # only one of which already exists
             self.change3,
+            self.change4,
+            self.change5,
+            self.change6,
             self.scheduler24,
-            fakedb.SchedulerChange(objectid=24, changeid=3, important=0),
+            fakedb.SchedulerChange(objectid=24, changeid=5, important=0),
         ])
         d.addCallback(lambda _:
-                      self.db.schedulers.classifyChanges(24, {3: True}))
+                      self.db.schedulers.classifyChanges(
+                          24, {3: True, 4: False, 5: True, 6: False}))
 
         def check(_):
             def thd(conn):
@@ -101,7 +108,9 @@ class TestSchedulersConnectorComponent(
                 r = conn.execute(q)
                 rows = [(row.objectid, row.changeid, row.important)
                         for row in r.fetchall()]
-                self.assertEqual(rows, [(24, 3, 1)])
+                self.assertEqual(sorted(rows),
+                                 sorted([(24, 3, 1), (24, 4, 0),
+                                         (24, 5, 1), (24, 6, 0)]))
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
