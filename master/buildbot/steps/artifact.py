@@ -248,19 +248,23 @@ def _isWindowsSlave(step):
 
 
 def retryCommandLinuxOS(command):
-    return 'n=0; false; until [[ $? -eq 0 || $n -ge 5 ]]; do n=$[$n+1]; sleep 5; ' + command + "; done"
+    return 'for i in 1 2 3 4 5; do ' + command + '; if [ $? -eq 0 ]; then exit 0; else sleep 5; fi; done; exit -1'
 
 
 def retryCommandWindowsOS(command):
     return 'for /L %%i in (1,1,5) do (sleep 5 & ' + command + ' && exit 0)'
 
+def retryCommandWindowsOSPwShell(command):
+    return 'powershell.exe -C for ($i=1; $i -le  5; $i++) { '+ command \
+           +'; if ($?) { exit 0 } else { sleep 5} } exit -1'
 
 def rsyncWithRetry(step, origin, destination):
     if _isWindowsSlave(step):
-        command = retryCommandWindowsOS("rsync -var --partial %s %s" % (origin, destination))
-    else:
-        command = retryCommandLinuxOS("rsync -var --partial %s %s" % (origin, destination))
-    return command
+        if step.usePowerShell:
+            return retryCommandWindowsOSPwShell("rsync -var --partial %s %s" % (origin, destination))
+        return retryCommandWindowsOS("rsync -var --partial %s %s" % (origin, destination))
+
+    return retryCommandLinuxOS("rsync -var --partial %s %s" % (origin, destination))
 
 
 class UploadArtifact(ShellCommand):
@@ -269,13 +273,15 @@ class UploadArtifact(ShellCommand):
     description="Uploading artifact(s) to remote artifact server..."
     descriptionDone="Artifact(s) uploaded."
 
-    def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerURL=None, **kwargs):
+    def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
+                 artifactServerURL=None, usePowerShell=True, **kwargs):
         self.artifact=artifact
         self.artifactURL = None
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
         self.artifactServerURL = artifactServerURL
+        self.usePowerShell = usePowerShell
         ShellCommand.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
@@ -312,7 +318,8 @@ class DownloadArtifact(ShellCommand):
     description="Downloading artifact(s) from the remote artifacts server..."
     descriptionDone="Artifact(s) downloaded."
 
-    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None, artifactServer=None, artifactServerDir=None, **kwargs):
+    def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None,
+                 artifactServer=None, artifactServerDir=None, usePowerShell=True, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
@@ -320,6 +327,7 @@ class DownloadArtifact(ShellCommand):
         self.artifactServerDir = artifactServerDir
         self.artifactDestination = artifactDestination or artifact
         self.master = None
+        self.usePowerShell = usePowerShell
         name = "Download Artifact for '%s'" % artifactBuilderName
         description = "Downloading artifact '%s'..." % artifactBuilderName
         descriptionDone="Downloaded '%s'." % artifactBuilderName
