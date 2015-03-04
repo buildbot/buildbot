@@ -337,7 +337,7 @@ class BuilderStatus(styles.Versioned):
 
     def matchesAnyTag(self, tags):
         # Need to guard against None with the "or []".
-        return set(self.tags or []).isdisjoint(tags)
+        return not set(self.tags or []).isdisjoint(tags)
 
     def matchesAllTags(self, tags):
         # Need to guard against None with the "or []".
