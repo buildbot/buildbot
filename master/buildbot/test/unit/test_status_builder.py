@@ -43,7 +43,7 @@ class TestBuilderStatus(unittest.TestCase):
         sut = self.makeBuilderStatus()
 
         self.assertFalse(sut.matchesAnyTag(set()))
-        self.assertFalse(sut.matchesAnyTag({'any-tag', 'tag'}))
+        self.assertFalse(sut.matchesAnyTag(set(('any-tag', 'tag')))
 
     def test_matchesAnyTag_no_match(self):
         """
@@ -53,8 +53,8 @@ class TestBuilderStatus(unittest.TestCase):
         sut.tags = {'one'}
 
         self.assertFalse(sut.matchesAnyTag(set()))
-        self.assertFalse(sut.matchesAnyTag({'no-such-tag'}))
-        self.assertFalse(sut.matchesAnyTag({'other-tag', 'tag'}))
+        self.assertFalse(sut.matchesAnyTag(set('no-such-tag')))
+        self.assertFalse(sut.matchesAnyTag(set('other-tag', 'tag')))
 
     def test_matchesAnyTag_with_match(self):
         """
@@ -63,5 +63,5 @@ class TestBuilderStatus(unittest.TestCase):
         sut = self.makeBuilderStatus()
         sut.tags = {'one', 'two'}
 
-        self.assertTrue(sut.matchesAnyTag({'two'}))
-        self.assertTrue(sut.matchesAnyTag({'two', 'one'}))
+        self.assertTrue(sut.matchesAnyTag(set('two')))
+        self.assertTrue(sut.matchesAnyTag(set('two', 'one')))
