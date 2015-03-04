@@ -336,7 +336,7 @@ class BuilderStatus(styles.Versioned):
 
     def matchesAnyTag(self, tags):
         # Need to guard against None with the "or []".
-        return not set(self.tags or []).isdisjoint(tags)
+        return bool(set(self.tags or []) & set(tags))
 
     def getBuildByRevision(self, rev):
         number = self.nextBuildNumber - 1
