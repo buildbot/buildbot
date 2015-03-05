@@ -1,1 +1,1 @@
-require("test-guanlecoja")(require("gulp"))
+require("guanlecoja")(require("gulp"))
