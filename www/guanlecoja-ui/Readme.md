@@ -87,7 +87,7 @@ Menu items are defined in `$stateProvider.state`'s data. glMenuService scans the
 
 Set the breadcrumbs of glTopMenu. In some cases, the automated breadcrumb from glTopMenu is unsuitable. In this case, you can use glBreadcrumbService to override it.
 
-#### `glBreadcrumService.setBreadcrumb(breadcrumb_list)`
+#### `glBreadcrumbService.setBreadcrumb(breadcrumb_list)`
 
 breadcrumb_list is a list of objects containing following attributes:
 
