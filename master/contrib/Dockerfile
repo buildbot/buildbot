@@ -70,7 +70,7 @@ run /bin/echo -e "\
 run apt-get update
 run DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip python-dev \
     supervisor git sudo ssh
-run pip install -v sqlalchemy==0.7.9 buildbot buildbot_slave
+run pip install buildbot buildbot_slave
 
 # Set ssh superuser (username: admin   password: admin)
 run mkdir /data /var/run/sshd
