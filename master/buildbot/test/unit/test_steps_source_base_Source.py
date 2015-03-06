@@ -141,6 +141,7 @@ class TestSourceDescription(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.description, ['svn', 'update', '(running)'])
         self.assertEqual(step.descriptionDone, ['svn', 'update'])
 
+
 class AttrGroup(Source):
 
     def other_method(self):
@@ -151,6 +152,7 @@ class AttrGroup(Source):
 
     def mode_incremental(self):
         pass
+
 
 class TestSourceAttrGroup(sourcesteps.SourceStepMixin, unittest.TestCase):
 
