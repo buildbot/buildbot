@@ -54,7 +54,7 @@
 # ssh -p $(docker port $CONTAINER_ID 22 | cut -d: -f 2) admin@localhost
 #
 # Base docker image
-from ubuntu:12.04
+from ubuntu:14.04
 
 # Make dpkg happy with the upstart issue
 ## appears to not be necessary anymore --dustin
@@ -64,13 +64,13 @@ from ubuntu:12.04
 # Install buildbot and its dependencies
 
 run /bin/echo -e "\
-    deb http://archive.ubuntu.com/ubuntu precise main universe\n\
-    deb http://archive.ubuntu.com/ubuntu precise-updates main universe" > \
+    deb http://archive.ubuntu.com/ubuntu trusty main universe\n\
+    deb http://archive.ubuntu.com/ubuntu trusty-updates main universe" > \
     /etc/apt/sources.list
 run apt-get update
 run DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip python-dev \
     supervisor git sudo ssh
-run pip install sqlalchemy==0.7.9 buildbot buildbot_slave
+run pip install -v sqlalchemy==0.7.9 buildbot buildbot_slave
 
 # Set ssh superuser (username: admin   password: admin)
 run mkdir /data /var/run/sshd
