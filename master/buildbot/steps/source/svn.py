@@ -57,7 +57,6 @@ class SVN(Source):
         self.preferLastChangedRev = preferLastChangedRev
         Source.__init__(self, **kwargs)
         errors = []
-        modeMethod = 'mode_' + self.mode
         if not self._hasAttrGroupMember('mode', self.mode):
             errors.append("mode %s is not one of %s" %
                           (self.mode, self._listAttrGroupMembers('mode')))
