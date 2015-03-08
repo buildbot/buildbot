@@ -66,19 +66,20 @@ class BaseScheduler(ClusteredService, StateMixin):
         known_keys = set(['branch', 'repository', 'revision'])
         if codebases is None:
             config.error("Codebases cannot be None")
+        elif isinstance(codebases, list):
+            codebases = dict((codebase, {}) for codebase in codebases)
+        elif not isinstance(codebases, dict):
+            config.error("Codebases must be a dict of dicts, or list of strings")
         else:
-            if not isinstance(codebases, dict):
-                config.error("Codebases must be a dict of dicts")
-            else:
-                for codebase, attrs in codebases.iteritems():
-                    if not isinstance(attrs, dict):
-                        config.error("Codebases must be a dict of dicts")
-                    else:
-                        unk = set(attrs) - known_keys
-                        if unk:
-                            config.error(
-                                "Unknown codebase keys %s for codebase %s"
-                                % (', '.join(unk), codebase))
+            for codebase, attrs in codebases.iteritems():
+                if not isinstance(attrs, dict):
+                    config.error("Codebases must be a dict of dicts")
+                else:
+                    unk = set(attrs) - known_keys
+                    if unk:
+                        config.error(
+                            "Unknown codebase keys %s for codebase %s"
+                            % (', '.join(unk), codebase))
 
         self.codebases = codebases
 
@@ -271,7 +272,7 @@ class BaseScheduler(ClusteredService, StateMixin):
 
                 ss = {
                     'codebase': codebase,
-                    'repository': cb['repository'],
+                    'repository': cb.get('repository', ''),
                     'branch': cb.get('branch', None),
                     'revision': cb.get('revision', None),
                     'project': '',

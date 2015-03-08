@@ -72,6 +72,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                      {"repository": u"", "branch": u"", "revision": u""}}
         self.makeScheduler(codebases=codebases)
 
+    def test_constructor_codebases_valid_list(self):
+        codebases = ['codebase1']
+        self.makeScheduler(codebases=codebases)
+
     def test_constructor_codebases_invalid(self):
         # scheduler only accepts codebases with at least repository set
         codebases = {"codebase1": {"dictionary": "", "that": "", "fails": ""}}
@@ -83,6 +87,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
         cbd = yield sched.getCodebaseDict('lib')
         self.assertEqual(cbd, {'repository': 'librepo'})
+
+    @defer.inlineCallbacks
+    def test_getCodebaseDict_constructedFromList(self):
+        sched = self.makeScheduler(codebases=['lib', 'lib2'])
+        cbd = yield sched.getCodebaseDict('lib')
+        self.assertEqual(cbd, {})
 
     def test_getCodebaseDict_not_found(self):
         sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})

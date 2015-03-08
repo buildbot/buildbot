@@ -31,6 +31,8 @@ Slave
 Features
 ~~~~~~~~
 
+* Schedulers: the ``codebases`` parameter can now be specified in a simple list-of-strings form.
+
 Fixes
 ~~~~~
 
