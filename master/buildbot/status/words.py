@@ -1028,8 +1028,6 @@ class IRC(base.StatusReceiverMultiService):
                      "useRevisions", "categories", "useColors",
                      "lostDelay", "failedDelay", "allowShutdown"]
 
-    factory = IrcStatusFactory
-
     def __init__(self, host, nick, channels, pm_to_nicks=[], port=6667,
             allowForce=False, categories=None, password=None, notify_events={},
             noticeOnChannel = False, showBlameList = True, useRevisions=False,
@@ -1053,7 +1051,7 @@ class IRC(base.StatusReceiverMultiService):
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 
-        self.f = self.factory(self.nick, self.password,
+        self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
