@@ -37,8 +37,9 @@ def defaultReviewCB(builderName, build, result, status, arg):
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=defaultReviewCB, startCB=None,
-                port=29418, reviewArg=None, **kwargs):
+    def __init__(self, server, username, reviewCB=defaultReviewCB,
+                startCB=None, port=29418, reviewArg=None,
+                startArg=None, **kwargs):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
         @param username:  Gerrit SSH server's username.
