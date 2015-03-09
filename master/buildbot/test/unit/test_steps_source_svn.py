@@ -48,6 +48,17 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                           <target path=".">
                           </target>
                           </status>"""
+    svn_info_stdout = textwrap.dedent("""Path: .
+                         URL: https://svn.example.com/svn/trunk
+                         Repository Root: https://svn.example.com/svn
+                         Repository UUID: 21b45634-0984-11de-b025-799c3e7cca98
+                         Revision: 100
+                         Node Kind: directory
+                         Schedule: normal
+                         Last Changed Author: reiern70
+                         Last Changed Rev: 100
+                         Last Changed Date: 2012-01-19 16:41:47 +0530 (Thu, 19 Jan 2012)
+                      """)
     def setUp(self):
         return self.setUpSourceStep()
 
@@ -96,9 +107,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', 'pass', '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -134,9 +145,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         timeout=1,
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -164,9 +175,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -190,9 +201,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -222,9 +233,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -254,9 +265,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -279,9 +290,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -307,9 +318,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -345,8 +356,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
@@ -385,8 +396,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache', '--depth', 'infinite'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + ExpectShell.log('stdio', stdout='\n')
             + 0,
         )
@@ -428,8 +439,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100\n')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -464,8 +475,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100\n')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -502,8 +513,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100\n')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -527,8 +538,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -555,8 +566,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -600,8 +611,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -643,8 +654,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive', '--no-auth-cache'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
-            + ExpectShell.log('stdio', stdout='100')
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio', stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -679,9 +690,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -718,9 +729,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'logEnviron': True})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -754,9 +765,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -796,9 +807,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='source',
                         timeout=1,
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -835,9 +846,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  'source', 'wkdir'])
             + 0,
             ExpectShell(workdir='source',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -872,10 +883,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         env={'abc': '123'})
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'],
+                        command=['svn', 'info'],
                         env={'abc': '123'})
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -910,10 +921,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         logEnviron=False)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'],
+                        command=['svn', 'info'],
                         logEnviron=False)
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
@@ -973,7 +984,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', 'pass', '--random'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['svnversion'])
+                        command=['svn', 'info'])
             + ExpectShell.log('stdio',
                 stdout='1x0y0')
             + 0,

@@ -279,8 +279,7 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svnversion'],
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -288,12 +287,11 @@ class SVN(Source):
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
         def _setrev(_):
-            stdout = cmd.stdout.strip()
-            revision = stdout.rstrip('MSP')
-            revision = revision.split(':')[-1]
+            stdout = cmd.stdout
+            match = re.search('Revision:(.+?)\n', stdout)
             try:
-                int(revision)
-            except ValueError:
+                revision = int(match.group(1))
+            except (AttributeError, ValueError):
                 msg =("SVN.parseGotRevision unable to parse output "
                       "of svnversion: '%s'" % stdout)
                 log.msg(msg)
