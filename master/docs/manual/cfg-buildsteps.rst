@@ -1911,6 +1911,29 @@ filename can be specified with a property. ::
 
 This step requires slave version 0.8.4 or later.
 
+.. bb:step:: CopyDirectory
+
+CopyDirectory
++++++++++++++++
+
+This command copies a directory on the slave. ::
+
+    from buildbot.steps.slave import CopyDirectory
+    f.addStep(CopyDirectory(src="build/data", dest="tmp/data"))
+
+This step requires slave version 0.8.5 or later.
+
+The CopyDirectory step takes the following arguments:
+
+``timeout``
+    if the copy command fails to produce any output for this many seconds, it
+    is assumed to be locked up and will be killed. This defaults to
+    120 seconds. Pass ``None`` to disable.
+
+``maxTime``
+    if the command takes longer than this many seconds, it will be
+    killed. This is disabled by default.
+
 .. bb:step:: RemoveDirectory
 
 RemoveDirectory

@@ -39,7 +39,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty("five", 5, "them")
         self.properties.setProperty("six", 99, "them")
         self.expectOutcome(result=SUCCESS,
-                status_text=["SetPropertiesFromEnv"])
+                status_text=["Set"])
         self.expectProperty('one', "1", source='me')
         self.expectNoProperty('two')
         self.expectNoProperty('three')
@@ -56,7 +56,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.buildslave.slave_environ = { "ENV": 'EE' }
         self.buildslave.slave_system = 'win32'
         self.expectOutcome(result=SUCCESS,
-                status_text=["SetPropertiesFromEnv"])
+                status_text=["Set"])
         self.expectProperty('eNv', 'EE', source='me')
         self.expectLogfile("properties",
                 "eNv = 'EE'")
@@ -128,6 +128,66 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         return d
 
 
+class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_success(self):
+        self.setupStep(slave.CopyDirectory(src="s", dest="d"))
+        self.expectCommands(
+            Expect('cpdir', { 'fromdir' : 's', 'todir' : 'd' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["Copied", "s", "to", "d"])
+        return self.runStep()
+
+    def test_timeout(self):
+        self.setupStep(slave.CopyDirectory(src="s", dest="d", timeout=300))
+        self.expectCommands(
+            Expect('cpdir', { 'fromdir' : 's', 'todir' : 'd', 'timeout': 300 })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["Copied", "s", "to", "d"])
+        return self.runStep()
+
+    def test_maxTime(self):
+        self.setupStep(slave.CopyDirectory(src="s", dest="d", maxTime=10))
+        self.expectCommands(
+            Expect('cpdir', { 'fromdir' : 's', 'todir' : 'd', 'maxTime': 10 })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["Copied", "s", "to", "d"])
+        return self.runStep()
+
+    def test_failure(self):
+        self.setupStep(slave.CopyDirectory(src="s", dest="d"))
+        self.expectCommands(
+            Expect('cpdir', { 'fromdir' : 's', 'todir' : 'd' })
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["Copying", "s", "to", "d", "failed."])
+        return self.runStep()
+
+    def test_render(self):
+        self.setupStep(slave.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y")))
+        self.properties.setProperty('x', 'XXX', 'here')
+        self.properties.setProperty('y', 'YYY', 'here')
+        self.expectCommands(
+            Expect('cpdir', { 'fromdir' : 'XXX', 'todir' : 'YYY' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["Copied", "XXX", "to", "YYY"])
+        return self.runStep()
+
 class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
@@ -143,7 +203,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["RemoveDirectory"])
+                status_text=["Deleted"])
         return self.runStep()
 
     def test_failure(self):
@@ -164,7 +224,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["RemoveDirectory"])
+                status_text=["Deleted"])
         return self.runStep()
 
 class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
@@ -182,7 +242,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["MakeDirectory"])
+                status_text=["Created"])
         return self.runStep()
 
     def test_failure(self):
@@ -203,5 +263,5 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["MakeDirectory"])
+                status_text=["Created"])
         return self.runStep()

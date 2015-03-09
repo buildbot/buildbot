@@ -18,15 +18,19 @@ from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
-class SetPropertiesFromEnv(buildstep.BuildStep):
+class SlaveBuildStep(buildstep.BuildStep):
+    def describe(self, done=False):
+        return self.descriptionDone if done else self.description
+
+class SetPropertiesFromEnv(SlaveBuildStep):
     """
     Sets properties from envirionment variables on the slave.
 
     Note this is transfered when the slave first connects
     """
     name='SetPropertiesFromEnv'
-    description='Setting'
-    descriptionDone='Set'
+    description=['Setting']
+    descriptionDone=['Set']
 
     def __init__(self, variables, source="SlaveEnvironment", **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
@@ -57,9 +61,10 @@ class SetPropertiesFromEnv(buildstep.BuildStep):
                                        runtime=True)
                 log.append("%s = %r" % (variable, value))
         self.addCompleteLog("properties", "\n".join(log))
+        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
-class FileExists(buildstep.BuildStep):
+class FileExists(SlaveBuildStep):
     """
     Check for the existence of a file on the slave.
     """
@@ -100,13 +105,64 @@ class FileExists(buildstep.BuildStep):
             self.step_status.setText(["Not a file."])
             self.finished(FAILURE)
 
-class RemoveDirectory(buildstep.BuildStep):
+class CopyDirectory(SlaveBuildStep):
+    """
+    Copy a directory tree on the slave.
+    """
+    name='CopyDirectory'
+    description=['Copying']
+    descriptionDone=['Copied']
+
+    renderables = [ 'src', 'dest' ]
+
+    haltOnFailure = True
+    flunkOnFailure = True
+
+    def __init__(self, src, dest, timeout=None, maxTime=None, **kwargs):
+        buildstep.BuildStep.__init__(self, **kwargs)
+        self.src = src
+        self.dest = dest
+        self.timeout = timeout
+        self.maxTime = maxTime
+
+    def start(self):
+        slavever = self.slaveVersion('cpdir')
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about cpdir")
+
+        args = {'fromdir': self.src, 'todir': self.dest }
+        if self.timeout:
+            args['timeout'] = self.timeout
+        if self.maxTime:
+            args['maxTime'] = self.maxTime
+
+        cmd = buildstep.RemoteCommand('cpdir', args)
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addErrback(self.failed)
+
+    def commandComplete(self, cmd):
+        if cmd.didFail():
+            self.step_status.setText(["Copying", self.src, "to", self.dest, "failed."])
+            self.finished(FAILURE)
+            return
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
+
+    def describe(self, done=False):
+        desc = self.descriptionDone if done else self.description
+        desc = desc[:]
+        desc.extend([self.src, "to", self.dest])
+        return desc
+        
+class RemoveDirectory(SlaveBuildStep):
     """
     Remove a directory tree on the slave.
     """
     name='RemoveDirectory'
-    description='Deleting'
-    desciprtionDone='Deleted'
+    description=['Deleting']
+    descriptionDone=['Deleted']
 
     renderables = [ 'dir' ]
 
@@ -132,15 +188,16 @@ class RemoveDirectory(buildstep.BuildStep):
             self.step_status.setText(["Delete failed."])
             self.finished(FAILURE)
             return
+        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
-class MakeDirectory(buildstep.BuildStep):
+class MakeDirectory(SlaveBuildStep):
     """
     Create a directory on the slave.
     """
     name='MakeDirectory'
-    description='Creating'
-    desciprtionDone='Created'
+    description=['Creating']
+    descriptionDone=['Created']
 
     renderables = [ 'dir' ]
 
@@ -166,6 +223,7 @@ class MakeDirectory(buildstep.BuildStep):
             self.step_status.setText(["Create failed."])
             self.finished(FAILURE)
             return
+        self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
 
 
