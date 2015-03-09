@@ -409,7 +409,28 @@ class MasterConfig(util.ComparableMixin):
 
         return DEFAULT_DB_URL
 
-    def load_db(self, filename, config_dict):
+    @staticmethod
+    def getEnvironmentVersions():
+        import twisted 
+        from buildbot import version as bbversion
+
+        py_version_info = (sys.version_info.major,
+                           sys.version_info.minor,
+                           sys.version_info.micro)
+        pyversion = '.'.join(map(str, py_version_info))
+
+        tx_version_info= (twisted.version.major,
+                          twisted.version.minor,
+                          twisted.version.micro)
+        txversion = '.'.join(map(str, tx_version_info))
+
+        return {
+            'pyversion': pyversion,
+            'bbversion': bbversion,
+            'txversion': txversion,
+        }
+
+    def load_db(self, filenamekk, config_dict):
         self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
 
     def load_mq(self, filename, config_dict):
@@ -592,11 +613,19 @@ class MasterConfig(util.ComparableMixin):
         allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
                        'plugins', 'auth', 'avatar_methods', 'logfileName',
-                       'logRotateLength', 'maxRotatedFiles'])
+                       'logRotateLength', 'maxRotatedFiles', 'versions'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
                   (', '.join(unknown),))
+
+        if www_cfg.get('versions') is None:
+            www_cfg['versions'] = {}
+
+        if not isinstance(www_cfg['versions'], dict):
+            error("'versions' must be a dictionary")
+
+        www_cfg['env_versions'] = self.getEnvironmentVersions()
 
         self.www.update(www_cfg)
 
