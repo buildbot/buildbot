@@ -871,6 +871,25 @@ class TestWithProperties(unittest.TestCase):
         d.addCallback(self.failUnlessEqual, '30')
         return d
 
+    def testColon(self):
+        self.props.setProperty('some:property', 10, 'test')
+        command = WithProperties('%(some:property:-with-default)s')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, '10')
+        return d
+
+    def testColon_default(self):
+        command = WithProperties('%(some:property:-with-default)s')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, 'with-default')
+        return d
+
+    def testColon_colon(self):
+        command = WithProperties('%(some:property:-with:default)s')
+        d = self.build.render(command)
+        d.addCallback(self.failUnlessEqual, 'with:default')
+        return d
+
 class TestProperties(unittest.TestCase):
     def setUp(self):
         self.props = Properties()

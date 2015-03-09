@@ -37,15 +37,18 @@ def defaultReviewCB(builderName, build, result, status, arg):
 class GerritStatusPush(StatusReceiverMultiService):
     """Event streamer to a gerrit ssh server."""
 
-    def __init__(self, server, username, reviewCB=defaultReviewCB, port=29418, reviewArg=None,
-                 **kwargs):
+    def __init__(self, server, username, reviewCB=defaultReviewCB, startCB=None,
+                port=29418, reviewArg=None, **kwargs):
         """
         @param server:    Gerrit SSH server's address to use for push event notifications.
         @param username:  Gerrit SSH server's username.
         @param reviewCB:  Callback that is called each time a build is finished, and that is used
                           to define the message and review approvals depending on the build result.
+        @param startCB:   Callback that is called each time a build is started.
+                          Used to define the message sent to Gerrit.
         @param port:      Gerrit SSH server's port.
-        @param reviewArg: Optional argument that is passed to the callback.
+        @param reviewArg: Optional argument passed to the review callback.
+        @param startArg:  Optional argument passed to the start callback.
         """
         StatusReceiverMultiService.__init__(self)
         # Parameters.
@@ -54,6 +57,8 @@ class GerritStatusPush(StatusReceiverMultiService):
         self.gerrit_port = port
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
+        self.startCB = startCB
+        self.startArg = startArg
 
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
@@ -80,18 +85,26 @@ class GerritStatusPush(StatusReceiverMultiService):
     def builderAdded(self, name, builder):
         return self # subscribe to this builder
 
+    def buildStarted(self, builderName, build):
+        if self.startCB is not None:
+            message = self.startCB(builderName, build, self.startArg)
+            self.sendCodeReviews(build, message)
+
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
+        message, verified, reviewed = self.reviewCB(builderName, build, result, self.reviewArg)
+        self.sendCodeReviews(build, message, verified, reviewed)
+
+    def sendCodeReviews(self, build, message, verified=0, reviewed=0):
+        if message is None:
+            return
 
         # Gerrit + Repo
         downloads = build.getProperty("repo_downloads")
         downloaded = build.getProperty("repo_downloaded")
-        if downloads is not None and downloaded is not None: 
+        if downloads is not None and downloaded is not None:
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
-                message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
-                if message is None:
-                    return
                 for i in range(0, len(downloads)):
                     try:
                         project, change1 = downloads[i].split(" ")
@@ -116,9 +129,6 @@ class GerritStatusPush(StatusReceiverMultiService):
                 revision = None
 
             if project is not None and revision is not None:
-                message, verified, reviewed = self.reviewCB(builderName, build, result, self.status, self.reviewArg)
-                if message is None:
-                    return
                 self.sendCodeReview(project, revision, message, verified, reviewed)
                 return
 
