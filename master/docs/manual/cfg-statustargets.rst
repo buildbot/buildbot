@@ -1318,6 +1318,22 @@ Some of the commands currently available:
 :samp:`help {COMMAND}`
     Describe a command. Use :command:`help commands` to get a list of known
     commands.
+
+:samp:`shutdown {ARG}`
+    Control the shutdown process of the buildbot master.
+    Available arguments are:
+
+    ``check``
+        Check if the buildbot master is running or shutting down
+
+    ``start``
+        Start clean shutdown
+
+    ``stop``
+        Stop clean shutdown
+
+    ``now``
+        Shutdown immediately without waiting for the builders to finish
     
 ``source``
     Announce the URL of the Buildbot's home page.
