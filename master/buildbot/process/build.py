@@ -195,11 +195,11 @@ class Build(properties.PropertiesMixin):
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir",
+            self.setProperty("builddir",
                     self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
-                    "slave")
+                    "Slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
