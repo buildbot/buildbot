@@ -5,15 +5,17 @@
         .row
           .col-sm-4
             ul
-              li Buildbot version: {{config.bbversion}}
-              li Twisted version: {{config.txversion}}
+              li Python version: {{config.env_versions.pyversion}}
+              li Buildbot version: {{config.env_versions.bbversion}}
+              li Twisted version: {{config.env_versions.txversion}}
               li Project Infos:
-                a(ng-href="{{config.projecturl}}") {{config.projectname}}
+                a(ng-href="{{config.titleURL}}") {{config.title}}
+              li(ng-repeat="(k, v) in config.versions" ng-bind-template="{{k}}: {{v}}")
         .row
           small
 
             | buildbot-www is configured using:
-            rawdata(data='config.config')
+            rawdata(data='config')
             | buildbot-www is using the following open-source JavaScript libraries:
             dl.dl-horizontal
               div(ng-repeat='module in bower_configs')
