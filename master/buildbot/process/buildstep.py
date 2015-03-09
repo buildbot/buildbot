@@ -638,6 +638,7 @@ class BuildStep(object, properties.PropertiesMixin):
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
             d.callback(None)
+        self.releaseLocks()
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))

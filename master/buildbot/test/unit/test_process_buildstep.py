@@ -21,8 +21,9 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, SKIPPED
-from buildbot.test.fake import fakebuild, remotecommand
+from buildbot.test.fake import fakebuild, remotecommand, botmaster, fakemaster
 from buildbot.test.util import steps, compat
+from buildbot.locks import SlaveLock
 
 class FakeLogFile:
     def __init__(self, text):
@@ -160,6 +161,68 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
     def test_hideStepIf_fails(self):
         # 0/0 causes DivideByZeroError, which should be flagged as an exception
         self._setupWaterfallTest(hideStepIf=lambda : 0/0, expect=False, expectedResult=EXCEPTION)
+        return self.runStep()
+
+    def setupLockEnv(self):
+        self.build.locks = []
+        self.build.builder = mock.Mock()
+        self.build.builder.botmaster = botmaster.FakeBotMaster(fakemaster.make_master())
+
+    def test_locks_released_after_success(self):
+        l = SlaveLock('lock')
+        lock_access = l.access('exclusive')
+
+        class FakeBuildStepCheckLock(buildstep.BuildStep):
+            def __init__(self,unit_test_obj,*args,**kw):
+                self.unit_test_obj = unit_test_obj
+                buildstep.BuildStep.__init__(self,*args,**kw)
+
+            def start(self):
+                return self.finished(SUCCESS)
+
+            def finished(self,res):
+                slavebuilder = self.build.slavebuilder.slave
+                getLockByID=self.build.builder.botmaster.getLockByID
+                real_lock = getLockByID(lock_access.lockid)
+                l = real_lock.getLock(slavebuilder)
+                self.unit_test_obj.assert_(not l.isAvailable(self,lock_access))
+                buildstep.BuildStep.finished(self,res)
+                self.unit_test_obj.assert_(l.isAvailable(self,lock_access))
+
+        step=FakeBuildStepCheckLock(self,locks=[lock_access])
+        self.setupStep(step)
+        self.setupLockEnv()
+        self.expectOutcome(result=SUCCESS,
+                           status_text=['generic'])
+        return self.runStep()
+
+    def test_locks_released_after_interrupt(self):
+        l = SlaveLock('lock')
+        lock_access = l.access('exclusive')
+        l.access = lambda mode: lock_access
+
+        class InterruptBuildStep(buildstep.BuildStep):
+            def __init__(self,unit_test_obj,*args,**kw):
+                self.unit_test_obj = unit_test_obj
+                buildstep.BuildStep.__init__(self,*args,**kw)
+
+            def start(self):
+                self.interrupt("stop")
+
+            def interrupt(self,arg):
+                slavebuilder = self.build.slavebuilder.slave
+                getLockByID = self.build.builder.botmaster.getLockByID
+                real_lock = getLockByID(lock_access.lockid)
+                l = real_lock.getLock(slavebuilder)
+                self.unit_test_obj.assert_(not l.isAvailable(self,lock_access))
+                buildstep.BuildStep.interrupt(self,arg)
+                self.unit_test_obj.assert_(l.isAvailable(self,lock_access))
+                buildstep.BuildStep.finished(self,EXCEPTION)
+        step=InterruptBuildStep(self,locks=[l])
+        self.setupStep(step)
+        self.setupLockEnv()
+        self.expectOutcome(result=EXCEPTION,
+                           status_text=['generic','(build was interrupted)'])
         return self.runStep()
 
     @compat.usesFlushLoggedErrors
