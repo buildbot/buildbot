@@ -1012,7 +1012,8 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=[],
             env={},
             properties={},
-            mergeRequests=False)
+            mergeRequests=False,
+            description=None)
 
     def test_args(self):
         cfg = config.BuilderConfig(
@@ -1020,7 +1021,8 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             project="default",
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda : 'ns', nextBuild=lambda : 'nb', locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr')
+            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
             name='b',
@@ -1031,7 +1033,8 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=['l'],
             env={'x':10},
             properties={'y':20},
-            mergeRequests='mr')
+            mergeRequests='mr',
+            description='buzz')
 
     def test_no_project(self):
         self.assertRaisesConfigError(
@@ -1080,9 +1083,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             project="default",
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=ns, nextBuild=nb, locks=['l'],
-            env=dict(x=10), properties=dict(y=20), mergeRequests='mr')
+            env=dict(x=10), properties=dict(y=20), mergeRequests='mr',
+            description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
             'category': 'c',
+            'description': 'buzz',
             'env': {'x': 10},
             'factory': self.factory,
             'locks': ['l'],

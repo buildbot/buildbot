@@ -263,6 +263,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         cxt['name'] = b.getName()
         cxt['friendly_name'] = b.getFriendlyName()
 
+        cxt['description'] = b.getDescription()
         req.setHeader('Cache-Control', 'no-cache')
 
         codebases = {}

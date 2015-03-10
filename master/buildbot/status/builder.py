@@ -69,9 +69,10 @@ class BuilderStatus(styles.Versioned):
     unavailable_build_numbers = set()
     status = None
 
-    def __init__(self, buildername, category, master, friendly_name=None):
+    def __init__(self, buildername, category, master, friendly_name=None, description=None):
         self.name = buildername
         self.category = category
+        self.description = description
         self.master = master
         self.project = None
         self.friendly_name = friendly_name
@@ -320,6 +321,13 @@ class BuilderStatus(styles.Versioned):
 
     def setTags(self, tags):
         self.tags = tags
+
+    def setDescription(self, description):
+        # used during reconfig
+        self.description = description
+
+    def getDescription(self):
+        return self.description
 
     def getState(self):
         return (self.currentBigState, self.currentBuilds)

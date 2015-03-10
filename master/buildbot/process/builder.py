@@ -86,10 +86,12 @@ class Builder(config.ReconfigurableServiceMixin,
             self.builder_status = self.master.status.builderAdded(
                     builder_config.name,
                     builder_config.builddir,
-                    builder_config.category, builder_config.friendly_name)
+                    builder_config.category, builder_config.friendly_name,
+                    builder_config.description)
 
         self.config = builder_config
 
+        self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])

@@ -55,7 +55,8 @@ class FakeStatus(object):
     def __init__(self):
         self.master = None
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None):
+
+    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
         return FakeBuilderStatus(self.master)
 
     def build_started(self, brid, buildername, build_status):
@@ -65,6 +66,9 @@ class FakeBuilderStatus(object):
 
     def __init__(self, master=None):
         self.master = master
+
+    def setDescription(self, description):
+        pass
 
     def setCategory(self, category):
         pass

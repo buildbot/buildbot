@@ -123,6 +123,10 @@ Other optional keys may be set on each ``BuilderConfig``:
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`Interpolate`.
 
+``description``
+    A builder may be given an arbitrary description, which will show up in the
+    web status on the builder's page.
+
 .. index:: Builds; merging
 
 .. _Merging-Build-Requests:
