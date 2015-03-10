@@ -713,6 +713,7 @@ class BuilderStatus(styles.Versioned):
         result['name'] = self.name
         result['url'] = self.status.getURLForThing(self) + codebases_to_args(codebases)
         result['friendly_name'] = self.getFriendlyName()
+        result['description'] = self.getDescription()
         result['project'] = self.project
         result['slaves'] = self.slavenames
         result['tags'] = self.tags

@@ -94,9 +94,9 @@ def mockBuilder(master, master_status, buildername, proj):
     builder.config = BuilderConfig(name=buildername, friendly_name=buildername,
                   project=proj,
                   slavenames=['build-slave-01'],
-                  factory=BuildFactory(),
+                  factory=BuildFactory(), description="Describing my builder",
                   slavebuilddir="test", tags=['tag1', 'tag2'])
-    builder.builder_status = BuilderStatus(buildername, None, master)
+    builder.builder_status = BuilderStatus(buildername, None, master, description="Describing my builder")
     builder.builder_status.setSlavenames(['build-slave-01'])
     builder.builder_status.setTags(['tag1', 'tag2'])
     builder.builder_status.status = master_status
@@ -333,6 +333,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                 'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +
                        '?katana-buildbot_branch=katana',
                 'friendly_name': builder_name,
+                'description': 'Describing my builder',
                 'project': 'Katana',
                 'state': 'offline',
                 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0}
@@ -403,6 +404,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                         'times': (None, 1422441501.21, 1422441501.21)},
                    'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
+                   'description': 'Describing my builder',
                    'friendly_name': 'builder-01',
                    'project': 'Katana', 'state': 'offline', 'slaves': ['build-slave-01'],
                    'currentBuilds': [], 'pendingBuilds': 0}],
@@ -442,6 +444,7 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'url': 'http://localhost:8080/projects/Katana/builders/'+
                                  'builder-01?katana-buildbot_branch=katana',
                           'friendly_name': 'builder-01',
+                          'description': 'Describing my builder',
                           'project': 'Katana',
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
