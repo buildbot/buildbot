@@ -319,8 +319,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
-        d = self.brd.maybeStartBuildsOn([buildername])
-        d.addErrback(log.err)
+        self.brd.maybeStartBuildsOn([buildername])
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
@@ -330,16 +329,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param slave_name: the name of the slave
         """
         builders = self.getBuildersForSlave(slave_name)
-        d = self.brd.maybeStartBuildsOn([ b.name for b in builders ])
-        d.addErrback(log.err)
+        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
     def maybeStartBuildsForAllBuilders(self):
         """
         Call this when something suggests that this would be a good time to start some
         builds, but nothing more specific.
         """
-        d = self.brd.maybeStartBuildsOn(self.builderNames)
-        d.addErrback(log.err)
+        self.brd.maybeStartBuildsOn(self.builderNames)
 
 class BuildRequestDistributor(service.Service):
     """
@@ -366,15 +363,24 @@ class BuildRequestDistributor(service.Service):
         self.activity_lock = defer.DeferredLock()
         self.active = False
 
-    def stopService(self):
-        # let the parent stopService succeed between activity; then the loop
-        # will stop calling itself, since self.running is false
-        d = self.activity_lock.acquire()
-        d.addCallback(lambda _ : service.Service.stopService(self))
-        d.addBoth(lambda _ : self.activity_lock.release())
-        return d
+        self._pendingMSBOCalls = []
 
     @defer.inlineCallbacks
+    def stopService(self):
+        # Lots of stuff happens asynchronously here, so we need to let it all
+        # quiesce.  First, let the parent stopService succeed between
+        # activities; then the loop will stop calling itself, since
+        # self.running is false.
+        yield self.activity_lock.acquire()
+        yield service.Service.stopService(self)
+        yield self.activity_lock.release()
+
+        # now let any outstanding calls to maybeStartBuildsOn to finish, so
+        # they don't get interrupted in mid-stride.  This tends to be
+        # particularly painful because it can occur when a generator is gc'd.
+        if self._pendingMSBOCalls:
+            yield defer.DeferredList(self._pendingMSBOCalls)
+
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -384,6 +390,17 @@ class BuildRequestDistributor(service.Service):
         @param new_builders: names of new builders that should be given the
         opportunity to check for new requests.
         """
+        if not self.running:
+            return
+
+        d = self._maybeStartBuildsOn(new_builders)
+        self._pendingMSBOCalls.append(d)
+        @d.addBoth
+        def remove(x):
+            self._pendingMSBOCalls.remove(d)
+
+    @defer.inlineCallbacks
+    def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
