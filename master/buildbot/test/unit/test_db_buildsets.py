@@ -402,10 +402,8 @@ class TestBuildsetsConnectorComponent(
 
     def insert_test_getRecentBuildsets_data(self):
         return self.insertTestData([
-            fakedb.Change(changeid=91, branch='branch_a', repository='repo_a'),
             fakedb.SourceStamp(id=91, branch='branch_a', repository='repo_a',
                                sourcestampsetid=91),
-            fakedb.SourceStampChange(sourcestampid=91, changeid=91),
             fakedb.SourceStampSet(id=91),
 
             fakedb.Buildset(id=91, sourcestampsetid=91, complete=0,
