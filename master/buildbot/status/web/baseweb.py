@@ -21,6 +21,7 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
 from twisted.web import server, distrib, static, resource
+from twisted.internet import defer
 from twisted.spread import pb
 from twisted.web.util import Redirect
 from buildbot import config
@@ -346,6 +347,10 @@ class WebStatus(service.MultiService):
         # If we were given a site object, go ahead and use it. (if not, we add one later)
         self.site = site
 
+        # keep track of our child services
+        self.http_svc = None
+        self.distrib_svc = None
+
         # store the log settings until we create the site object
         self.logRotateLength = logRotateLength
         self.maxRotatedFiles = maxRotatedFiles        
@@ -470,11 +475,11 @@ class WebStatus(service.MultiService):
         self.site.buildbot_service = self
 
         if self.http_port is not None:
-            s = strports.service(self.http_port, self.site)
+            self.http_svc = s = strports.service(self.http_port, self.site)
             s.setServiceParent(self)
         if self.distrib_port is not None:
             f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            s = strports.service(self.distrib_port, f)
+            self.distrib_svc = s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
         self.setupSite()
@@ -524,6 +529,7 @@ class WebStatus(service.MultiService):
     def registerChannel(self, channel):
         self.channels[channel] = 1 # weakrefs
 
+    @defer.inlineCallbacks
     def stopService(self):
         for channel in self.channels:
             try:
@@ -532,7 +538,16 @@ class WebStatus(service.MultiService):
                 log.msg("WebStatus.stopService: error while disconnecting"
                         " leftover clients")
                 log.err()
-        return service.MultiService.stopService(self)
+        yield service.MultiService.stopService(self)
+
+        # having shut them down, now remove our child services so they don't
+        # start up again if we're re-started
+        if self.http_svc:
+            yield self.http_svc.disownServiceParent()
+            self.http_svc = None
+        if self.distrib_svc:
+            yield self.distrib_svc.disownServiceParent()
+            self.distrib_svc = None
 
     def getStatus(self):
         return self.master.getStatus()

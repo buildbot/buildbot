@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.spread import pb
 from twisted.cred import credentials
-from buildbot import pbmanager   
+from buildbot import pbmanager
 
 class TestPBManager(unittest.TestCase):
 
@@ -37,6 +37,12 @@ class TestPBManager(unittest.TestCase):
         persp.attached = lambda mind : defer.succeed(None)
         self.connections.append(username)
         return defer.succeed(persp)
+
+    def test_repr(self):
+        reg = self.pbm.register('tcp:9989', "x", "y", self.perspectiveFactory)
+        self.assertEqual(`self.pbm.dispatchers['tcp:9989']`,
+                '<pbmanager.Dispatcher for x on tcp:9989>')
+        self.assertEqual(`reg`, '<pbmanager.Registration for x on tcp:9989>')
 
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"

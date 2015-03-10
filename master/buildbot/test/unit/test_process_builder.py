@@ -19,7 +19,6 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status import master
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.test.fake import fakebuild
 from buildbot.process import builder, factory
@@ -36,8 +35,8 @@ class BuilderMixin(object):
         config_args = dict(name=name, slavename="slv", builddir="bdir",
                      slavebuilddir="sbdir", project='default', factory=self.factory)
         config_args.update(config_kwargs)
-        builder_config = config.BuilderConfig(**config_args)
-        self.bldr = builder.Builder(builder_config.name, _addServices=False)
+        self.builder_config = config.BuilderConfig(**config_args)
+        self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
         self.master.db = self.db = fakedb.FakeDBConnector(self)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
@@ -51,7 +50,7 @@ class BuilderMixin(object):
         self.bldr.startService()
 
         mastercfg = config.MasterConfig()
-        mastercfg.builders = [ builder_config ]
+        mastercfg.builders = [ self.builder_config ]
         return self.bldr.reconfigService(mastercfg)
 
 class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
@@ -1057,3 +1056,20 @@ class TestRebuild(BuilderMixin, unittest.TestCase):
                                                           properties = {})
 
 
+class TestReconfig(BuilderMixin, unittest.TestCase):
+    """Tests that a reconfig properly updates all attributes"""
+
+    @defer.inlineCallbacks
+    def test_reconfig(self):
+        yield self.makeBuilder(description="Old", category="OldCat")
+        self.builder_config.description = "New"
+        self.builder_config.category = "NewCat"
+
+        mastercfg = config.MasterConfig()
+        mastercfg.builders = [ self.builder_config ]
+        yield self.bldr.reconfigService(mastercfg)
+        self.assertEqual(
+                dict(description=self.bldr.builder_status.getDescription(),
+                    category=self.bldr.builder_status.getCategory()),
+                dict(description="New",
+                    category="NewCat"))

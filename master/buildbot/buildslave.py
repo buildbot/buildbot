@@ -197,6 +197,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         self.startMissingTimer()
         return service.MultiService.startService(self)
 
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
         # Given a new BuildSlave, configure this one identically.  Because
         # BuildSlave objects are remotely referenced, we can't replace them
@@ -210,7 +211,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.password != new.password or
             new_config.slavePortnum != self.registered_port):
             if self.registration:
-                self.registration.unregister()
+                yield self.registration.unregister()
+                self.registration = None
             self.password = new.password
             self.registered_port = new_config.slavePortnum
             self.registration = self.master.pbmanager.register(
@@ -239,18 +241,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # update the attached slave's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
-        d = self.updateSlave()
+        yield self.updateSlave()
 
-        # and chain up
-        d.addCallback(lambda _ :
-            config.ReconfigurableServiceMixin.reconfigService(self,
-                                                            new_config))
-
-        return d
+        yield config.ReconfigurableServiceMixin.reconfigService(self,
+                                                            new_config)
 
     def stopService(self):
         if self.registration:
             self.registration.unregister()
+            self.registration = None
         self.stopMissingTimer()
         return service.MultiService.stopService(self)
 

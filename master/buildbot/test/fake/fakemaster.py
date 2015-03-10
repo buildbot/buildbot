@@ -68,10 +68,16 @@ class FakeBuilderStatus(object):
         self.master = master
 
     def setDescription(self, description):
-        pass
+        self._description = description
+
+    def getDescription(self):
+        return self._description
 
     def setCategory(self, category):
-        pass
+        self._category = category
+
+    def getCategory(self):
+        return self._category
 
     def setProject(self, project):
         pass
