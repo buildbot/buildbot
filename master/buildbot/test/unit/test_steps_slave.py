@@ -311,7 +311,8 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         cmd_args = ('foo', {'bar': False})
         @defer.inlineCallbacks
         def testFunc(x):
-            res = yield x.runRemoteCommand(*cmd_args, abandonOnFailure=False)
+            res = yield x.runRemoteCommand(*cmd_args,
+                                **dict(abandonOnFailure=False))
             x.step_status.setText([str(res)])
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(Expect(*cmd_args)+1)

@@ -74,8 +74,8 @@ class Repo(Source):
 
         @type update_tarball: lambda (properties,bool) : float
         @param update_tarball: function to determine the update tarball policy,
-	       		       given properties, and boolean indicating whether
-			       the last repo sync was on all branches
+                                      given properties, and boolean indicating whether
+                               the last repo sync was on all branches
                                Returns: max age of tarball in seconds, or None, if we
                                want to skip tarball update
 
@@ -427,7 +427,7 @@ class Repo(Source):
              repo forall -c rm -f .git/index.lock
              repo forall -c git clean -f -d -x 2>/dev/null
              repo forall -c git reset --hard HEAD 2>/dev/null
-	     rm -f %(workdir)s/.repo/project.list
+             rm -f %(workdir)s/.repo/project.list
              """) % self.__dict__
     def doCleanup(self):
         command = self._getCleanupCommand()

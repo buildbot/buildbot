@@ -6,51 +6,7 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot |version|.
-Buildbot 0.8.7 was released on September 22, 2012.
-Buildbot 0.8.7p1 was released on November 21, 2012.
-
-0.8.7p1
--------
-
-In addition to what's listed below, the 0.8.7p1 release adds the following.
-
-* The ``SetPropertiesFromEnv`` step now correctly gets environment variables from the slave, rather than those set on the master.
-  Also, it logs the changes made to properties.
-
-* The master-side ``Git`` source step now doesn't try to clone a branch called ``HEAD``.
-  This is what ``git`` does by default, and specifying it explicitly doesn't work as expected.
-
-* The ``Git`` step properly deals with the case when there is a file called ``FETCH_HEAD``
-  in the checkout.
-
-* Buildbot no longer forks when told not to daemonize.
-
-* Buildbot's startup is now more robust. See :bb:bug:`1992`.
-
-* The ``Trigger`` step uses the provided list of source stamps exactly, if given, instead of adding them to the sourcestamps of the current build.
-  In 0.8.7, they were combined with the source stamps for the current build.
-
-* The ``Trigger`` step again completely ignores the source stamp of the current build, if ``alwaysUseLatest`` is set.
-  In 0.8.7, this was mistakenly changed to only ignore the specified revision of the source stamp.
-
-* The ``Triggerable`` scheduler is again properly passing changes through to the scheduled builds.
-  See :bb:bug:`2376`.
-
-* Web change hooks log errors, allowing debugging.
-
-* The ``base`` change hook now properly decodes the provided date.
-
-* ``CVSMailDir`` has been fixed.
-
-* Importing ``buildbot.test`` no longer causes python to exit, if ``mock`` insn't installed.
-  The fixes ``pydoc -k`` when buildbot is installed.
-
-* ``Mercurial`` properly updates to the correct branch, when using ``inrepo`` branches.
-
-* Buildbot now doesn't fail on invalid UTF-8 in a number of places.
-
-* Many documenation updates and fixes.
+The following are the release notes for Buildbot 0.8.7.
 
 Master
 ------
@@ -80,7 +36,7 @@ Features
 
 * ``IRenderable.getRenderingFor`` can now return a deferred.
 
-* The mercurial hook now supports multiple masters.  See :bb:pull:`436`.
+* The mercurial hook now supports multple masters.  See :bb:pull:`436`.
 
 * There's a new poller for Mercurial: :bb:chsrc:`HgPoller`. 
 
@@ -114,15 +70,10 @@ Features
 
 * The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
-* The ``nextSlave`` builder configuration argument can return a Deferred.
-
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Buildbot master now requires at least Python-2.5 and Twisted-9.0.0.
-
-* Passing a :py:class:`~buildbot.process.buildstep.BuildStep` subclass (rather than instance) to :py:meth:`~buildbot.process.factory.BuildFactory.addStep` is no longer supported.
-  The ``addStep`` method now takes exactly one argument.
 
 * Buildbot master requires ``python-dateutil`` version 1.5 to support the
   Nightly scheduler.
@@ -261,10 +212,5 @@ git log itself:
 Older Versions
 --------------
 
-Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/relnotes/` directory of the source tree.
-Newer versions are also available here:
-
-.. toctree::
-    :maxdepth: 1
-
-    0.8.6
+Release notes for older versions of Buildbot are available in the :bb:src:`master/docs/release-notes/` directory of the source tree.
+Starting with version 0.8.6, they are also available under the appropriate version at http://buildbot.net/buildbot/docs.
