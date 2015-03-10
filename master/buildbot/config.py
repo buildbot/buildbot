@@ -409,25 +409,7 @@ class MasterConfig(util.ComparableMixin):
 
         return DEFAULT_DB_URL
 
-    @staticmethod
-    def getEnvironmentVersions():
-        import twisted 
-        from buildbot import version as bbversion
-
-        pyversion = '.'.join(map(str, sys.version_info[:3]))
-
-        tx_version_info= (twisted.version.major,
-                          twisted.version.minor,
-                          twisted.version.micro)
-        txversion = '.'.join(map(str, tx_version_info))
-
-        return [
-            ('Python version', pyversion),
-            ('Buildbot version', bbversion),
-            ('Twisted version', txversion),
-        ]
-
-    def load_db(self, filenamekk, config_dict):
+    def load_db(self, filename, config_dict):
         self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
 
     def load_mq(self, filename, config_dict):
