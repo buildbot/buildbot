@@ -50,7 +50,7 @@ class TestBuilderStatus(unittest.TestCase):
         Return False when requested tags don't match.
         """
         sut = self.makeBuilderStatus()
-        sut.tags = {'one'}
+        sut.tags = set('one')
 
         self.assertFalse(sut.matchesAnyTag(set()))
         self.assertFalse(sut.matchesAnyTag(set(('no-such-tag',))))
@@ -61,7 +61,7 @@ class TestBuilderStatus(unittest.TestCase):
         Return True when at least one of the requested tags match.
         """
         sut = self.makeBuilderStatus()
-        sut.tags = {'one', 'two'}
+        sut.tags = set('one', 'two')
 
         self.assertTrue(sut.matchesAnyTag(set(('two',))))
         self.assertTrue(sut.matchesAnyTag(set(('two', 'one'))))
