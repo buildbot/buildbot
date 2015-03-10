@@ -17,6 +17,11 @@
 from buildbot import monkeypatches
 monkeypatches.patch_all(for_tests=True)
 
+# we set pedantic mode for the unit tests
+# which will ensure that it is always json-able
+from buildbot.util import namespace
+namespace.pedantic = True
+
 # import mock so we bail out early if it's not installed
 try:
     import mock
