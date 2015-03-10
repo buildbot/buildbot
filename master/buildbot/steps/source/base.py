@@ -161,7 +161,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         Returns a list of all members in the attribute group.
         """
         from inspect import getmembers, ismethod
-        methods = getmembers(self, lambda m: ismethod)
+        methods = getmembers(self, ismethod)
         group_prefix = attrGroup + '_'
         group_len = len(group_prefix)
         group_members = [method[0][group_len:]
