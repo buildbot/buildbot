@@ -61,7 +61,7 @@ class TestBuilderStatus(unittest.TestCase):
         Return True when at least one of the requested tags match.
         """
         sut = self.makeBuilderStatus()
-        sut.tags = set('one', 'two')
+        sut.tags = set(('one', 'two'))
 
         self.assertTrue(sut.matchesAnyTag(set(('two',))))
         self.assertTrue(sut.matchesAnyTag(set(('two', 'one'))))
