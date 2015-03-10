@@ -29,7 +29,7 @@ class Bzr(Source):
 
     def __init__(self, repourl=None, baseURL=None, mode='incremental',
                  method=None, defaultBranch=None, **kwargs):
-        
+
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
@@ -244,7 +244,7 @@ class Bzr(Source):
         def setrev(stdout):
             revision = stdout.strip("'")
             try:
-                revision = int(revision)
+                int(revision)
             except ValueError:
                 log.msg("Invalid revision number")
                 raise buildstep.BuildStepFailed()
@@ -254,4 +254,4 @@ class Bzr(Source):
             return 0
         d.addCallback(setrev)
         return d
-    
+
