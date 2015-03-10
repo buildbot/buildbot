@@ -262,7 +262,7 @@ The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/me
 (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is
-a suffix of the name of the repository, or ``inrepo``, which uses hg's
+a suffix of the name of the repository, or ``inrepo``, which uses Hg's
 named-branches support. Make sure this setting matches your changehook, if you
 have that installed. ::
 
@@ -283,7 +283,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the
    branch name should be appended to the ``repourl`` or the branch
-   is a mercurial named branch and can be found within the ``repourl``.
+   is a Mercurial named branch and can be found within the ``repourl``.
 
 ``clobberOnBranchChange``
    boolean, defaults to ``True``. If set and using inrepos branches,
@@ -341,11 +341,11 @@ The Git step takes the following arguments:
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this
-   decides whether or not buildbot should consider git submodules.
+   decides whether or not buildbot should consider Git submodules.
    Default: ``False``.
 
 ``shallow``
-   (optional): instructs git to attempt shallow clones (``--depth
+   (optional): instructs Git to attempt shallow clones (``--depth
    1``). If the user/scheduler asks for a specific revision, this
    parameter is ignored. 
 
@@ -421,10 +421,10 @@ The Git step takes the following arguments:
 
    * ``getDescription=False``: disables this feature explicitly
    * ``getDescription=True`` or empty ``dict()``: Run `git describe` with no args
-   * ``getDescription={...}``: a dict with keys named the same as the git option.
+   * ``getDescription={...}``: a dict with keys named the same as the Git option.
      Each key's value can be ``False`` or ``None`` to explicitly skip that argument.
      
-     For the following keys, a value of ``True`` appends the same-named git argument:
+     For the following keys, a value of ``True`` appends the same-named Git argument:
      
       * ``all`` : `--all`
       * ``always``: `--always`
@@ -435,7 +435,7 @@ The Git step takes the following arguments:
       * ``tags``: `--tags`
       * ``dirty``: `--dirty`
      
-     For the following keys, an integer or string value (depending on what git expects)
+     For the following keys, an integer or string value (depending on what Git expects)
      will set the argument's parameter appropriately. Examples show the key-value pair:
      
       * ``match=foo``: `--match foo`
@@ -713,7 +713,7 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the git objects. This feature helps
+    directory which contains all the Git objects. This feature helps
     to minimize network usage on very big projects.
 
 ``jobs``
@@ -781,7 +781,7 @@ sources are coming from.
         problems if the build process does not handle dependencies
         properly (sometimes you must do a *clean build* to make sure
         everything gets compiled), or if source files are deleted but
-        generated files can influence test behavior (e.g. python's
+        generated files can influence test behavior (e.g. Python's
         .pyc files), or when source directories are deleted but
         generated files prevent CVS from removing them. Builds ought
         to be correct regardless of whether they are done *from
@@ -1110,7 +1110,7 @@ The Mercurial step takes the following arguments:
 ``branchType``
     either 'dirname' (default) or 'inrepo' depending on whether
     the branch name should be appended to the ``baseURL``
-    or the branch is a mercurial named branch and can be
+    or the branch is a Mercurial named branch and can be
     found within the ``repourl``.
 
 ``clobberOnBranchChange``
@@ -1228,7 +1228,7 @@ The ``Git`` step takes the following arguments:
 
 ``submodules``
     (optional): when initializing/updating a Git repository, this decides whether
-    or not buildbot should consider git submodules.  Default: ``False``.
+    or not buildbot should consider Git submodules.  Default: ``False``.
 
 ``reference``
     (optional): use the specified string as a path to a reference
@@ -1236,7 +1236,7 @@ The ``Git`` step takes the following arguments:
     this path first instead of the main repository, if they exist.
 
 ``shallow``
-    (optional): instructs git to attempt shallow clones (``--depth 1``).  If the
+    (optional): instructs Git to attempt shallow clones (``--depth 1``).  If the
     user/scheduler asks for a specific revision, this parameter is ignored.
 
 ``progress``
@@ -1303,7 +1303,7 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for
     fast bootstrap. If not present the tarball will be created
     automatically after first sync. It is a copy of the ``.repo``
-    directory which contains all the git objects. This feature helps
+    directory which contains all the Git objects. This feature helps
     to minimize network usage on very big projects.
 
 ``jobs``
@@ -1649,7 +1649,7 @@ false-positives. To use a different regexp, provide a
     f.addStep(Compile(command=["make", "test"],
                       warningPattern="^Warning: "))
 
-The ``warningPattern=`` can also be a pre-compiled python regexp
+The ``warningPattern=`` can also be a pre-compiled Python regexp
 object: this makes it possible to add flags like ``re.I`` (to use
 case-insensitive matching).
 
@@ -2242,7 +2242,7 @@ found in the shell search path.  It can be overridden with the ``trial``
 parameter.  This is useful for Twisted's own unittests, which want to use the
 copy of bin/trial that comes with the sources.
 
-To influence the version of python being used for the tests, or to add flags to
+To influence the version of Python being used for the tests, or to add flags to
 the command, set the ``python`` parameter. This can be a string (like
 ``python2.2``) or a list (like ``['python2.3', '-Wall']``).
 

@@ -337,7 +337,7 @@ for each tree you use, so it may be more convenient to use the
 ``try_topfile`` approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (darcs, mercurial, git, monotone) do not require
+directories (Darcs, Mercurial, Git, Monotone) do not require
 :command:`try` to know the top directory, so the :option:`--try-topfile`
 and :option:`--try-topdir` arguments will be ignored.
 
@@ -792,7 +792,7 @@ command will look for a special directory named :file:`.buildbot`,
 starting from the current directory (where the command was run) and
 crawling upwards, eventually looking in the user's home directory. It
 will look for a file named :file:`options` in this directory, and will
-evaluate it as a python script, looking for certain names to be set.
+evaluate it as a Python script, looking for certain names to be set.
 You can just put simple ``name = 'value'`` pairs in this file to
 set the options.
 

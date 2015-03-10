@@ -572,7 +572,7 @@ User Objects
 User Objects allow Buildbot to better manage users throughout its various
 interactions with users (see :ref:`Change-Sources` and :ref:`Status-Targets`).
 The User Objects are stored in the Buildbot database and correlate the various
-attributes that a user might have: irc, git, etc.
+attributes that a user might have: irc, Git, etc.
 
 Changes
 +++++++

@@ -263,7 +263,7 @@ The available caches are:
 ``Changes``
     the number of change objects to cache in memory.
     This should be larger than the number of changes that typically arrive in the span of a few minutes, otherwise your schedulers will be reloading changes from the database every time they run.
-    For distributed version control systems, like git or hg, several thousand changes may arrive at once, so setting this parameter to something like 10000 isn't unreasonable.
+    For distributed version control systems, like Git or Hg, several thousand changes may arrive at once, so setting this parameter to something like 10000 isn't unreasonable.
 
     This parameter is the same as the deprecated global parameter :bb:cfg:`changeCacheSize`.  Its default value is 10.
 

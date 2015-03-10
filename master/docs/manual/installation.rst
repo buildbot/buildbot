@@ -31,7 +31,7 @@ buildslave:
 
 Python: http://www.python.org
 
-  Buildbot requires python-2.5 or later on the master, although Python-2.7 is
+  Buildbot requires Python-2.5 or later on the master, although Python-2.7 is
   recommended.  The slave run on Python-2.4.
 
 Twisted: http://twistedmatrix.com
@@ -80,13 +80,13 @@ sqlite3: http://www.sqlite.org
 
 pysqlite: http://pypi.python.org/pypi/pysqlite
 
-  The SQLite Python package is required for python-2.5 and earlier (it is already
-  included in python-2.5 and later, but the version in python-2.5 has nasty bugs)
+  The SQLite Python package is required for Python-2.5 and earlier (it is already
+  included in Python-2.5 and later, but the version in Python-2.5 has nasty bugs)
 
 simplejson: http://pypi.python.org/pypi/simplejson
 
-  The simplejson package is required for python-2.5 and earlier (it is already
-  included as json in python-2.6 and later)
+  The simplejson package is required for Python-2.5 and earlier (it is already
+  included as json in Python-2.6 and later)
 
 Jinja2: http://jinja.pocoo.org/
 
@@ -144,7 +144,7 @@ and for the slave:
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot and Buildslave are installed using the standard python
+Buildbot and Buildslave are installed using the standard Python
 `distutils <http://docs.python.org/library/distutils.html>`_ process. For either
 component, after unpacking the tarball, the process is:
 
@@ -176,7 +176,7 @@ when it tries to load the libraries, then something went wrong.
 ``pydoc buildbot`` is another useful diagnostic tool.
 
 Windows users will find these files in other places. You will need to
-make sure that python can find the libraries, and will probably find
+make sure that Python can find the libraries, and will probably find
 it convenient to have :command:`buildbot` on your :envvar:`PATH`.
 
 .. _Installation-in-a-Virtualenv:
@@ -678,7 +678,7 @@ Other Buildslave Configuration
     commandline arguments into byte strings in order to pass to the operating
     system when spawning new processes.
     
-    The default value is what python's :func:`sys.getfilesystemencoding()` returns, which
+    The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which
     on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale
     settings.
     
@@ -962,9 +962,9 @@ Cron jobs are typically run with a minimal shell (:file:`/bin/sh`, not
 commands. You may want to use explicit paths, because the :envvar:`PATH`
 is usually quite short and doesn't include anything set by your
 shell's startup scripts (:file:`.profile`, :file:`.bashrc`, etc). If
-you've installed buildbot (or other python libraries) to an unusual
+you've installed buildbot (or other Python libraries) to an unusual
 location, you may need to add a :envvar:`PYTHONPATH` specification (note
-that python will do tilde-expansion on :envvar:`PYTHONPATH` elements by
+that Python will do tilde-expansion on :envvar:`PYTHONPATH` elements by
 itself). Sometimes it is safer to fully-specify everything:
 
 .. code-block:: none

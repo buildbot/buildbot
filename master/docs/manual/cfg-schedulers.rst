@@ -896,7 +896,7 @@ file is something like::
                                 label="force a make clean", default=False),
 
                     StringParameter(name="pull_url",
-                        label="optionally give a public git pull url:<br>",
+                        label="optionally give a public Git pull url:<br>",
                         default="", size=80)
                  ]
                  )
@@ -979,7 +979,7 @@ StringParameter
 ::
 
     StringParameter(name="pull_url",
-        label="optionally give a public git pull url:<br>",
+        label="optionally give a public Git pull url:<br>",
         default="", size=80)
 
 This parameter type will show a single-line text-entry box, and allow the user
@@ -1017,7 +1017,7 @@ the StringParameter arguments, this type allows:
 
 This class could be subclassed in order to have more customization e.g.
 
-    * developer could send a list of git branches to pull from
+    * developer could send a list of Git branches to pull from
 
     * developer could send a list of gerrit changes to cherry-pick,
 
