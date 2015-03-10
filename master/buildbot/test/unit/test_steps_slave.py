@@ -15,9 +15,10 @@
 
 import stat
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot.steps import slave
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
-from buildbot.process import properties
+from buildbot.process import properties, buildstep
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps, compat
 from buildbot.interfaces import BuildSlaveTooOldError
@@ -265,3 +266,116 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                 status_text=["Created"])
         return self.runStep()
+
+class CompositeUser(buildstep.LoggingBuildStep, slave.CompositeStepMixin):
+    def __init__(self, payload):
+        self.payload = payload
+        self.logEnviron=False
+        buildstep.LoggingBuildStep.__init__(self)
+    def start(self):
+        self.addLogForRemoteCommands('stdio')
+        d = self.payload(self)
+        d.addCallback(self.commandComplete)
+        d.addErrback(self.failed)
+    def commandComplete(self,res):
+        self.finished(FAILURE if res else SUCCESS)
+
+class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_runRemoteCommand(self):
+        cmd_args = ('foo', {'bar': False})
+        def testFunc(x):
+            x.runRemoteCommand(*cmd_args)
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(Expect(*cmd_args)+0)
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+
+    def test_runRemoteCommandFail(self):
+        cmd_args = ('foo', {'bar': False})
+        @defer.inlineCallbacks
+        def testFunc(x):
+            yield x.runRemoteCommand(*cmd_args)
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(Expect(*cmd_args)+1)
+        self.expectOutcome(result=FAILURE,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_runRemoteCommandFailNoAbandon(self):
+        cmd_args = ('foo', {'bar': False})
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.runRemoteCommand(*cmd_args, abandonOnFailure=False)
+            x.step_status.setText([str(res)])
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(Expect(*cmd_args)+1)
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["True"])
+        return self.runStep()
+
+    def test_mkdir(self):
+        self.setupStep(CompositeUser(lambda x:x.runMkdir("d")))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["generic"])
+        return self.runStep()
+
+    def test_rmdir(self):
+        self.setupStep(CompositeUser(lambda x:x.runRmdir("d")))
+        self.expectCommands(
+            Expect('rmdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["generic"])
+        return self.runStep()
+
+    def test_mkdir_fail(self):
+        self.setupStep(CompositeUser(lambda x:x.runMkdir("d")))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 1
+        )
+        self.expectOutcome(result=FAILURE,
+                status_text=["generic"])
+        return self.runStep()
+
+    def test_abandonOnFailure(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            yield x.runMkdir("d")
+            yield x.runMkdir("d")
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 1
+            )
+        self.expectOutcome(result=FAILURE,
+                           status_text=["generic"])
+        return self.runStep()
+
+    def test_notAbandonOnFailure(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            yield x.runMkdir("d", abandonOnFailure=False)
+            yield x.runMkdir("d", abandonOnFailure=False)
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('mkdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 1,
+            Expect('mkdir', { 'dir' : 'd' , 'logEnviron': False})
+            + 1
+            )
+        self.expectOutcome(result=SUCCESS,
+                           status_text=["generic"])
+        return self.runStep()
+

@@ -681,6 +681,73 @@ The step takes the following arguments:
         updated then copied to ``build`` for next steps.
 
 
+.. bb:step:: Repo
+
+Repo
++++++++++++++++++
+
+.. py:class:: buildbot.steps.source.repo.Repo
+
+The :bb:step:`Repo` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
+init and sync.
+
+It is a drop-in replacement for `Repo (Slave-Side)`, which should not be used anymore
+for new and old projects.
+
+The Repo step takes the following arguments:
+
+``manifest_url``
+    (required): the URL at which the Repo's manifests source repository is available.
+
+``manifest_branch``
+    (optional, defaults to ``master``): the manifest repository branch
+    on which repo will take its manifest. Corresponds to the ``-b``
+    argument to the :command:`repo init` command.
+
+``manifest_file``
+    (optional, defaults to ``default.xml``): the manifest
+    filename. Corresponds to the ``-m`` argument to the :command:`repo
+    init` command.
+
+``tarball``
+    (optional, defaults to ``None``): the repo tarball used for
+    fast bootstrap. If not present the tarball will be created
+    automatically after first sync. It is a copy of the ``.repo``
+    directory which contains all the git objects. This feature helps
+    to minimize network usage on very big projects.
+
+``jobs``
+    (optional, defaults to ``None``): Number of projects to fetch
+    simultaneously while syncing. Passed to repo sync subcommand with "-j".
+
+``sync_all_branches``
+    (optional, defaults to if "manifest_override" property exists? -> True else -> False):
+    callback to control the policy of repo sync -c
+
+``update_tarball``
+    (optional, defaults to "one week if we did not sync all branches"):
+    callback to control the policy of updating of the tarball
+    given properties, and boolean indicating whether
+    the last repo sync was on all branches
+    Returns: max age of tarball in seconds, or -1, if we
+    want to skip tarball update
+    The default value should be good tradeof on size of the tarball,
+    and update frequency compared to cost of tarball creation
+
+This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
+automatically use the :command:`repo download` command of repo to
+download the additionnal changes introduced by a pending changeset.
+
+.. index:: Properties; Gerrit integration
+
+Gerrit integration can be also triggered using forced build with following properties:
+``repo_d``, ``repo_d[0-9]``, ``repo_download``, ``repo_download[0-9]``
+with values in format: ``project/change_number/patchset_number``.
+All of these properties will be translated into a :command:`repo download`.
+This feature allows integrators to build with several pending interdependent changes,
+which at the moment cannot be described properly in Gerrit, and can only be described
+by humans.
+
 .. _Source-Checkout-Slave-Side:
 
 Source Checkout (Slave-Side)
@@ -1214,6 +1281,8 @@ Repo (Slave-Side)
 
 The :bb:step:`Repo (Slave-Side)` build step performs a `Repo <http://lwn.net/Articles/304488/>`_
 init and sync.
+
+This step is obsolete and should not be used anymore. please use: `Repo` instead
 
 The Repo step takes the following arguments:
 

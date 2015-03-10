@@ -63,7 +63,7 @@ class SVN(Source):
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkSvn()
         def checkInstall(svnInstalled):
@@ -93,7 +93,7 @@ class SVN(Source):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             # blow away the old (un-updatable) directory
-            yield self._rmdir(self.workdir)
+            yield self.runRmdir(self.workdir)
 
             # then do a checkout
             checkout_cmd = ['checkout', self.repourl, '.']
@@ -111,7 +111,7 @@ class SVN(Source):
 
         if not updatable:
             # blow away the old (un-updatable) directory
-            yield self._rmdir(self.workdir)
+            yield self.runRmdir(self.workdir)
 
             # and plan to do a checkout
             command = ['checkout', self.repourl, '.']
@@ -126,13 +126,8 @@ class SVN(Source):
 
     @defer.inlineCallbacks
     def clobber(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
-        
+        yield self.runRmdir(self.workdir)
+
         checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
@@ -157,13 +152,7 @@ class SVN(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        cmd = buildstep.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
+        yield self.runRmdir(self.workdir)
 
         # temporarily set workdir = 'source' and do an incremental checkout
         try:
@@ -204,14 +193,6 @@ class SVN(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
-    @defer.inlineCallbacks
-    def _rmdir(self, dir):
-        cmd = buildstep.RemoteCommand('rmdir',
-                {'dir': dir, 'logEnviron': self.logEnviron })
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-        if cmd.didFail():
-            raise buildstep.BuildStepFailed()
 
     def _dovccmd(self, command, collectStdout=False):
         assert command, "No command specified"
@@ -255,15 +236,10 @@ class SVN(Source):
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.svn',
-                                               'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-
-        if cmd.didFail():
+        res = yield self.pathExists(self.workdir+"/.svn")
+        if not res:
             defer.returnValue(False)
             return
-
         # then run 'svn info' to check that the URL matches our repourl
         stdout = yield self._dovccmd(['info'], collectStdout=True)
 
@@ -320,12 +296,7 @@ class SVN(Source):
                 if self.slaveVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    cmd = buildstep.RemoteCommand('rmdir', {'dir': files,
-                                                            'logEnviron':
-                                                            self.logEnviron,})
-                    cmd.useLog(self.stdio_log, False)
-                    d = self.runCommand(cmd)
-                    d.addCallback(lambda _: cmd.rc)
+                    d = self.runRmdir(files, abandonOnFailure=False)
             return d
         d.addCallback(parseAndRemove)
         def evaluateCommand(rc):
@@ -358,12 +329,9 @@ class SVN(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            cmd = buildstep.RemoteCommand('rmdir', {'dir': filename,
-                                                    'logEnviron': self.logEnviron,})
-            cmd.useLog(self.stdio_log, False)
-            yield self.runCommand(cmd)
-            if cmd.rc != 0:
-                defer.returnValue(cmd.rc)
+            res = yield self.runRmdir(filename, abandonOnFailure=False)
+            if res:
+                defer.returnValue(res)
                 return
         defer.returnValue(0)
 

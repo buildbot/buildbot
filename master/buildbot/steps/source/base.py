@@ -18,8 +18,9 @@ from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from twisted.internet import defer
+from buildbot.steps.slave import CompositeStepMixin
 
-class Source(LoggingBuildStep):
+class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
