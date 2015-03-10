@@ -38,16 +38,16 @@ class SVN(Source):
 
     name = 'svn'
 
-    renderables = ['repourl']
+    renderables = ['svnurl']
     possible_modes = ('incremental', 'full')
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
-    def __init__(self, repourl=None, mode='incremental',
+    def __init__(self, svnurl=None, mode='incremental',
                  method=None, username=None,
                  password=None, extra_args=None, keep_on_purge=None,
                  depth=None, preferLastChangedRev=False, **kwargs):
 
-        self.repourl = repourl
+        self.svnurl = svnurl
         self.username = username
         self.password = password
         self.extra_args = extra_args
@@ -63,8 +63,8 @@ class SVN(Source):
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
 
-        if repourl is None:
-            errors.append("you must provide repourl")
+        if svnurl is None:
+            errors.append("you must provide svnurl")
 
         if errors:
             raise ConfigErrors(errors)
@@ -268,7 +268,7 @@ class SVN(Source):
             defer.returnValue(False)
             return
 
-        # then run 'svn info --xml' to check that the URL matches our repourl
+        # then run 'svn info --xml' to check that the URL matches our svnurl
         stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True, collectStderr=True, abandonOnFailure=False)
 
         # svn: E155037: Previous operation has not finished; run 'cleanup' if it was interrupted
@@ -283,7 +283,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(extractedurl == self.svnUriCanonicalize(self.repourl))
+        defer.returnValue(extractedurl == self.svnUriCanonicalize(self.svnurl))
         return
 
     @defer.inlineCallbacks
@@ -458,7 +458,7 @@ class SVN(Source):
             return canonical_uri
 
     def _checkout(self):
-        checkout_cmd = ['checkout', self.repourl, '.']
+        checkout_cmd = ['checkout', self.svnurl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
         if self.retry:
