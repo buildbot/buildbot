@@ -31,8 +31,13 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
             'from buildbot.test.integration.test_master \\\n'
             'import BuildmasterConfig\n')
 
+    def tearDown(self):
+        return self.tearDownDirs()
+
     @defer.inlineCallbacks
-    def test_master1(self):
+    def do_test_master(self):
+        raise unittest.SkipTest("see #2395")
+
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         m.config = config.MasterConfig.loadConfig(
@@ -42,21 +47,35 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         yield m.db.setup(check_version=False)
         yield m.db.model.upgrade()
 
-        # start the service
+        # stub out m.db.setup since it was already called above
+        m.db.setup = lambda : None
+
+        # mock reactor.stop (which trial *really* doesn't
+        # like test code to call!)
         mock_reactor = mock.Mock(spec=reactor)
         mock_reactor.callWhenRunning = reactor.callWhenRunning
+
+        # start the service
         yield m.startService(_reactor=mock_reactor)
         self.failIf(mock_reactor.stop.called,
             "startService tried to stop the reactor; check logs")
 
         # stop the service
         yield m.stopService()
+
+        # and shutdown the db threadpool, as is normally done at reactor stop
+        m.db.pool.shutdown()
+
         # (trial will verify all reactor-based timers have been cleared, etc.)
 
     # run this test twice, to make sure the first time shut everything down
     # correctly; if this second test fails, but the first succeeds, then
     # something is not cleaning up correctly in stopService.
-    test_master2 = test_master1
+    def test_master1(self):
+        return self.do_test_master()
+
+    def test_master2(self):
+        return self.do_test_master()
 
 # master configuration
 
@@ -77,7 +96,7 @@ from buildbot.config import BuilderConfig
 from buildbot.status import html
 from buildbot.config import ProjectConfig
 c['slaves'] = [BuildSlave ("local1", "localpw")]
-c['slavePortnum'] = 9989
+c['slavePortnum'] = 0
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
@@ -97,7 +116,7 @@ c['builders'].append(
       slavenames=["local1"],
       factory=f1))
 c['status'] = []
-c['status'].append(html.WebStatus(http_port=8010))
+c['status'].append(html.WebStatus(http_port=0))
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
