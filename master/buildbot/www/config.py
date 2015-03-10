@@ -34,8 +34,33 @@ class IndexResource(resource.Resource):
     def reconfigResource(self, new_config):
         self.config = new_config.www
 
+        versions = self.getEnvironmentVersions()
+
+        if isinstance(self.config.get('versions'), list):
+            versions += self.config['versions']
+
+        self.config['versions'] = versions
+
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderIndex)
+
+    def getEnvironmentVersions(self):
+        import sys
+        import twisted
+        from buildbot import version as bbversion
+
+        pyversion = '.'.join(map(str, sys.version_info[:3]))
+
+        tx_version_info = (twisted.version.major,
+                           twisted.version.minor,
+                           twisted.version.micro)
+        txversion = '.'.join(map(str, tx_version_info))
+
+        return [
+            ('Python', pyversion),
+            ('Buildbot', bbversion),
+            ('Twisted', txversion),
+        ]
 
     @defer.inlineCallbacks
     def renderIndex(self, request):
@@ -53,6 +78,7 @@ class IndexResource(resource.Resource):
             config.update({"user": session.user_info})
         else:
             config.update({"user": {"anonymous": True}})
+
         config.update(self.config)
         config['buildbotURL'] = self.master.config.buildbotURL
         config['title'] = self.master.config.title

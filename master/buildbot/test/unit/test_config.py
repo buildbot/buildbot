@@ -853,6 +853,31 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http-access.log'))
 
+    def test_load_www_versions(self):
+        custom_versions = [
+            ('Test Custom Component', '0.0.1'),
+            ('Test Custom Component 2', '0.1.0'),
+        ]
+        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
+        self.assertResults(www=dict(port=None,
+                                    plugins={}, auth={'name': 'NoAuth'},
+                                    avatar_methods={'name': 'gravatar'},
+                                    versions=custom_versions,
+                                    logfileName='http.log'))
+
+    def test_load_www_versions_not_list(self):
+        custom_versions = {
+            'Test Custom Component': '0.0.1',
+            'Test Custom Component 2': '0.0.2',
+        }
+        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
+        self.assertConfigError(self.errors, 'Invalid www configuration value of versions')
+
+    def test_load_www_versions_value_invalid(self):
+        custom_versions = [('a', '1'), 'abc', ('b',)]
+        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
+        self.assertConfigError(self.errors, 'Invalid www configuration value of versions')
+
     def test_load_www_unknown(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(foo="bar")))

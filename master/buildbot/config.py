@@ -592,11 +592,25 @@ class MasterConfig(util.ComparableMixin):
         allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
                        'plugins', 'auth', 'avatar_methods', 'logfileName',
-                       'logRotateLength', 'maxRotatedFiles'])
+                       'logRotateLength', 'maxRotatedFiles', 'versions'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
                   (', '.join(unknown),))
+
+        versions = www_cfg.get('versions')
+
+        if versions is not None:
+            cleaned_versions = []
+            if not isinstance(versions, list):
+                error('Invalid www configuration value of versions')
+            else:
+                for i, v in enumerate(versions):
+                    if not isinstance(v, tuple) or len(v) < 2:
+                        error('Invalid www configuration value of versions')
+                        break
+                    cleaned_versions.append(v)
+            www_cfg['versions'] = cleaned_versions
 
         self.www.update(www_cfg)
 

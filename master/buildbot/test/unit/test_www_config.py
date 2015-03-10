@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import json
 import mock
 
 from buildbot.test.util import www
@@ -28,7 +29,10 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
     def test_render(self):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
-        master = self.make_master(url='h:/a/b/', auth=_auth)
+
+        custom_versions = [('test compoent', '0.1.2'), ('test component 2', '0.2.1')]
+
+        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
         rsrc = config.IndexResource(master, "foo")
         rsrc.reconfigResource(master.config)
         rsrc.jinja = mock.Mock()
@@ -36,18 +40,23 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.jinja.get_template = lambda x: template
         template.render = lambda configjson, config: configjson
 
+        vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
+
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = exp % vjson
         self.assertIn(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = exp % vjson
         self.assertIn(res, exp)
 
-        master = self.make_master(url='h:/a/c/', auth=_auth)
+        master = self.make_master(url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = exp % vjson
         self.assertIn(res, exp)

@@ -74,6 +74,22 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
     The amount of log files that will be kept when rotating
     (Default to the same value as for the :file:`twisted.log` file, set in :file:`buildbot.tac`)
 
+``versions``
+    Custom component versions that you'd like to display on the About page.
+    Buildbot will automatically prepend the versions of python, twisted and buildbot itself to the list.
+
+    ``versions`` should be a list of tuples. for example::
+
+        c['www'] = {
+            # ...
+            'versions': [
+                ('master.cfg', '0.1'),
+                ('OS', 'Ubuntu 14.04'),
+            ]
+        }
+
+    The first element of a tuple stands for the name of the component, the second stands for the corresponding version.
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
