@@ -2,12 +2,16 @@ from fiximports import FixImports
 from textwrap import dedent
 from twisted.trial import unittest
 
+#returning functions
+def d_setUp():
+    return None
 
 class TestFixImports(unittest.TestCase):
 
     def setUp(self):
         self.fiximports = FixImports()
-        self.fiximports.printErrorMsg = lambda *_: None
+        ret_msg = d_setUp()
+        self.fiximports.printErrorMsg = ret_msg
 
     def oneTest(self, src, expected):
         src = dedent(src)
