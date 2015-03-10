@@ -731,7 +731,7 @@ The Repo step takes the following arguments:
     the last repo sync was on all branches
     Returns: max age of tarball in seconds, or -1, if we
     want to skip tarball update
-    The default value should be good tradeof on size of the tarball,
+    The default value should be good trade off on size of the tarball,
     and update frequency compared to cost of tarball creation
 
 This Source step integrates with :bb:chsrc:`GerritChangeSource`, and will
@@ -1804,11 +1804,11 @@ The available constructor arguments are
     for building cmake generate projects.
 
 ``platform``
-    This is a madatory argument for MsBuild specifying the target platform
+    This is a mandatory argument for MsBuild specifying the target platform
     such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
     driver targets that appear once Windows Driver Kit 8 is installed.
 
-Here is an example on how to drive compilatin with Visual Studio 2010::
+Here is an example on how to drive compilation with Visual Studio 2010::
 
     from buildbot.steps.VisualStudio import VS2010
 
