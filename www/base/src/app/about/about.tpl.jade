@@ -7,7 +7,7 @@
             ul
               li Project Infos:
                 a(ng-href="{{config.titleURL}}") {{config.title}}
-              li(ng-repeat="v in config.versions" ng-bind-template="{{v[0]}} version: {{v[1]}}")
+              li(ng-repeat="v in config.versions") {{v[0]}} version: {{v[1]}}
         .row
           small
 
