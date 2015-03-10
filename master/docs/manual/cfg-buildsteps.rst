@@ -1727,14 +1727,17 @@ source code filenames involved).
 .. bb:step:: VC2005
 .. bb:step:: VC2008
 .. bb:step:: VCExpress9
+.. bb:step:: MsBuild
 
 Visual C++
 ++++++++++
 
-This step is meant to handle compilation using Microsoft compilers. 
-VC++ 6-9, VS2003, VS2005, VS2008, and VCExpress9 are supported. This step will take care
-of setting up a clean compilation environment, parse the generated
-output in real time and deliver as detailed as possible information
+These steps are meant to handle compilation using Microsoft compilers.
+VC++ 6-10 (aka Visual Studio 2003-2010 and VCExpress9) are supported via calling
+``devenv``. VS2012 as well as Windows Driver Kit 8 are supported via the new
+``MsBuild`` step. These steps will take care of setting up a clean compilation
+environment, parsing the generated
+output in real time and delivering as detailed as possible information
 about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes are:
@@ -1744,9 +1747,11 @@ All of the classes are in :mod:`buildbot.steps.vstudio`.  The available classes 
  * ``VC8``
  * ``VC9``
  * ``VS2003``
- * ``VC2005``
- * ``VC2008``
+ * ``VS2005``
+ * ``VS2008``
+ * ``VS2010``
  * ``VCExpress9``
+ * ``MsBuild``
 
 The available constructor arguments are
 
@@ -1790,22 +1795,43 @@ The available constructor arguments are
 
 ``arch``
     That one is only available with the class VS2005 (VC8). It gives the
-    target architecture of the built artifact. It defaults to ``x86``.
+    target architecture of the built artifact. It defaults to ``x86`` and
+    does not apply to ``MsBuild``. Please see ``platform`` below.
 
 ``project``
     This gives the specific project to build from within a
     workspace. It defaults to building all projects. This is useful
     for building cmake generate projects.
 
-Here is an example on how to use this step::
+``platform``
+    This is a madatory argument for MsBuild specifying the target platform
+    such as 'Win32', 'x64' or 'Vista Debug'. The last one is an example of
+    driver targets that appear once Windows Driver Kit 8 is installed.
 
-    from buildbot.steps.VisualStudio import VS2005
+Here is an example on how to drive compilatin with Visual Studio 2010::
 
-    f.addStep(VS2005(
-            projectfile="project.sln", config="release",
+    from buildbot.steps.VisualStudio import VS2010
+
+    f.addStep(
+        VS2010(projectfile="project.sln", config="release",
             arch="x64", mode="build",
-            INCLUDE=[r'D:\WINDDK\Include\wnet'],
-            LIB=[r'D:\WINDDK\lib\wnet\amd64']))
+               INCLUDE=[r'C:\3rd-pary\libmagic\include'],
+               LIB=[r'C:\3rd-party\libmagic\lib-x64']))
+
+Here is a similar example using "msbuild"::
+
+    from buildbot.steps.VisualStudio import MsBuild
+
+    # Build one project in Release mode for Win32
+    f.addStep(
+        MsBuild(projectfile="trunk.sln", config="Release", platform="Win32",
+                workdir="trunk",
+                project="tools\\protoc"))
+
+    # Build the entire solution in Debug mode for x64
+    f.addStep(
+        MsBuild(projectfile="trunk.sln", config='Debug', platform='x64',
+                workdir="trunk"))
 
 .. bb:step:: Test
 
