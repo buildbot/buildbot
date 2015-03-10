@@ -163,6 +163,36 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return [ self._row2dict(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
+    def getRecentBuildsets(self, count, branch=None, repository=None,
+                           complete=None):
+        def thd(conn):
+            bs_tbl = self.db.model.buildsets
+            ch_tbl = self.db.model.changes
+            j = sa.join(self.db.model.buildsets,
+                               self.db.model.sourcestampsets)
+            j = j.join(self.db.model.sourcestamps)
+            j = j.join(self.db.model.sourcestamp_changes)
+            j = j.join(ch_tbl)
+            q = sa.select(columns=[bs_tbl], from_obj=[j],
+                                         distinct=True)
+            q = q.order_by(sa.desc(bs_tbl.c.id))
+            q = q.limit(count)
+
+            if complete is not None:
+                if complete:
+                    q = q.where(bs_tbl.c.complete != 0)
+                else:
+                    q = q.where((bs_tbl.c.complete == 0) |
+                                (bs_tbl.c.complete == None))
+            if branch:
+              q = q.where(ch_tbl.c.branch == branch)
+            if repository:
+              q = q.where(ch_tbl.c.repository == repository)
+            res = conn.execute(q)
+            return list(reversed([ self._row2dict(row)
+                                  for row in res.fetchall() ]))
+        return self.db.pool.do(thd)
+
     def getBuildsetProperties(self, buildsetid):
         """
         Return the properties for a buildset, in the same format they were
