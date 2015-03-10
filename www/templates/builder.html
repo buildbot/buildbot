@@ -24,7 +24,13 @@
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
         <a href="#" class="custom-build more-info fl-right m-top4" title="Run Custom Build" data-popup-title="Run Custom Build" data-builder-name="{{ builder_name }}" data-builder-url="{{ builder_url }}" data-return-page="pending_json">Run build
         </a>
-      {% endif %}          
+      {% endif %}
+
+    {% if description %}
+    
+    <div class="head-2">{{ description }}</div>
+
+    {% endif %}
      
       <h2 class="head-2">
         Current Builds
