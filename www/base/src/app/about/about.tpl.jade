@@ -5,12 +5,9 @@
         .row
           .col-sm-4
             ul
-              li Python version: {{config.env_versions.pyversion}}
-              li Buildbot version: {{config.env_versions.bbversion}}
-              li Twisted version: {{config.env_versions.txversion}}
               li Project Infos:
                 a(ng-href="{{config.titleURL}}") {{config.title}}
-              li(ng-repeat="(k, v) in config.versions" ng-bind-template="{{k}}: {{v}}")
+              li(ng-repeat="v in config.versions" ng-bind-template="{{v[0]}}: {{v[1]}}")
         .row
           small
 

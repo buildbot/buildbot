@@ -414,21 +414,18 @@ class MasterConfig(util.ComparableMixin):
         import twisted 
         from buildbot import version as bbversion
 
-        py_version_info = (sys.version_info.major,
-                           sys.version_info.minor,
-                           sys.version_info.micro)
-        pyversion = '.'.join(map(str, py_version_info))
+        pyversion = '.'.join(map(str, sys.version_info[:3]))
 
         tx_version_info= (twisted.version.major,
                           twisted.version.minor,
                           twisted.version.micro)
         txversion = '.'.join(map(str, tx_version_info))
 
-        return {
-            'pyversion': pyversion,
-            'bbversion': bbversion,
-            'txversion': txversion,
-        }
+        return [
+            ('Python version', pyversion),
+            ('Buildbot version', bbversion),
+            ('Twisted version', txversion),
+        ]
 
     def load_db(self, filenamekk, config_dict):
         self.db = dict(db_url=self.getDbUrlFromConfig(config_dict))
@@ -620,12 +617,12 @@ class MasterConfig(util.ComparableMixin):
                   (', '.join(unknown),))
 
         if www_cfg.get('versions') is None:
-            www_cfg['versions'] = {}
+            www_cfg['versions'] = []
 
-        if not isinstance(www_cfg['versions'], dict):
-            error("'versions' must be a dictionary")
+        if not isinstance(www_cfg['versions'], list):
+            error("'versions' must be a list of tuples")
 
-        www_cfg['env_versions'] = self.getEnvironmentVersions()
+        www_cfg['versions'] = self.getEnvironmentVersions() + www_cfg['versions']
 
         self.www.update(www_cfg)
 
