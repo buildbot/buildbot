@@ -132,8 +132,16 @@ class Command:
     # builder methods:
     #  sendStatus(dict) (zero or more)
     #  commandComplete() or commandInterrupted() (one, at end)
+    # 3.3+ functions
+    def list_args(x):
+        global args
+        l=[]
+        if x not in args:
+            l.append(x)
+        return l
+            
 
-    requiredArgs = []
+    #requiredArgs = []
     debug = False
     interrupted = False
     # set by Builder, cleared on shutdown or when the Deferred fires
@@ -147,7 +155,7 @@ class Command:
         self.args = args
         self.startTime = None
 
-        missingArgs = filter(lambda arg: arg not in args, self.requiredArgs)
+        missingArgs = list_args(arg)
         if missingArgs:
             raise ValueError("%s is missing args: %s" %
                              (self.__class__.__name__, ", ".join(missingArgs)))
