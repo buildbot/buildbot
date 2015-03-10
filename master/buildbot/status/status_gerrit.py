@@ -323,9 +323,9 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             return
 
         # Gerrit + Git
-        if build.getProperty("gerrit_branch") is not None:  # used only to verify Gerrit source
+        if build.getProperty("event.change.id") is not None:  # used only to verify Gerrit source
             project = build.getProperty("project")
-            revision = build.getProperty("got_revision")
+            revision = build.getProperty("got_revision") or build.getProperty("revision")
 
             # review doesn't really work with multiple revisions, so let's
             # just assume it's None there
