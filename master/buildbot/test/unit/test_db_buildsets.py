@@ -416,6 +416,7 @@ class TestBuildsetsConnectorComponent(
                     external_idstring='extid', reason='rsn2'),
 
             # buildset unrelated to the change
+            fakedb.SourceStampSet(id=1),
             fakedb.Buildset(id=93, sourcestampsetid=1, complete=1,
                     complete_at=298297877, results=7, submitted_at=266761877,
                     external_idstring='extid', reason='rsn2'),
