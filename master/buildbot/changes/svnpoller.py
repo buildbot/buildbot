@@ -77,7 +77,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = ("svnurl", "split_file",
+    compare_attrs = ("repourl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath", "pollAtLaunch")
@@ -86,7 +86,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     last_change = None
     loop = None
 
-    def __init__(self, svnurl, split_file=None,
+    def __init__(self, repourl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollInterval=10 * 60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None,
@@ -98,15 +98,15 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             pollInterval = pollinterval
 
         if name is None:
-            name = svnurl
+            name = repourl
 
         base.PollingChangeSource.__init__(self, name=name,
                                           pollInterval=pollInterval,
                                           pollAtLaunch=pollAtLaunch)
 
-        if svnurl.endswith("/"):
-            svnurl = svnurl[:-1]  # strip the trailing slash
-        self.svnurl = svnurl
+        if repourl.endswith("/"):
+            repourl = repourl[:-1]  # strip the trailing slash
+        self.repourl = repourl
         self.extra_args = extra_args
         self.split_file = split_file or split_file_alwaystrunk
         self.svnuser = svnuser
@@ -129,24 +129,24 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 with open(self.cachepath, "r") as f:
                     self.last_change = int(f.read().strip())
                     log.msg("SVNPoller: SVNPoller(%s) setting last_change to %s" % (
-                        self.svnurl, self.last_change))
+                        self.repourl, self.last_change))
                 # try writing it, too
                 with open(self.cachepath, "w") as f:
                     f.write(str(self.last_change))
             except Exception:
                 self.cachepath = None
                 log.msg(("SVNPoller: SVNPoller(%s) cache file corrupt or unwriteable; " +
-                         "skipping and not using") % self.svnurl)
+                         "skipping and not using") % self.repourl)
                 log.err()
 
     def describe(self):
-        return "SVNPoller: watching %s" % self.svnurl
+        return "SVNPoller: watching %s" % self.repourl
 
     def poll(self):
         # Our return value is only used for unit testing.
 
         # we need to figure out the repository root, so we can figure out
-        # repository-relative pathnames later. Each SVNURL is in the form
+        # repository-relative pathnames later. Each REPOURL is in the form
         # (ROOT)/(PROJECT)/(BRANCH)/(FILEPATH), where (ROOT) is something
         # like svn://svn.twistedmatrix.com/svn/Twisted (i.e. there is a
         # physical repository at /svn/Twisted on that host), (PROJECT) is
@@ -157,17 +157,17 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         # "trunk" or "branches/2.0.x", and (FILEPATH) is a tree-relative
         # filename like "twisted/internet/defer.py".
 
-        # our self.svnurl attribute contains (ROOT)/(PROJECT) combined
+        # our self.repourl attribute contains (ROOT)/(PROJECT) combined
         # together in a way that we can't separate without svn's help. If the
-        # user is not using the split_file= argument, then self.svnurl might
+        # user is not using the split_file= argument, then self.repourl might
         # be (ROOT)/(PROJECT)/(BRANCH) . In any case, the filenames we will
         # get back from 'svn log' will be of the form
         # (PROJECT)/(BRANCH)/(FILEPATH), but we want to be able to remove
         # that (PROJECT) prefix from them. To do this without requiring the
-        # user to tell us how svnurl is split into ROOT and PROJECT, we do an
+        # user to tell us how repourl is split into ROOT and PROJECT, we do an
         # 'svn info --xml' command at startup. This command will include a
         # <root> element that tells us ROOT. We then strip this prefix from
-        # self.svnurl to determine PROJECT, and then later we strip the
+        # self.repourl to determine PROJECT, and then later we strip the
         # PROJECT prefix from the filenames reported by 'svn log --xml' to
         # get a (BRANCH)/(FILEPATH) that can be passed to split_file() to
         # turn into separate BRANCH and FILEPATH values.
@@ -203,7 +203,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         return d
 
     def get_prefix(self):
-        args = ["info", "--xml", "--non-interactive", self.svnurl]
+        args = ["info", "--xml", "--non-interactive", self.repourl]
         if self.svnuser:
             args.append("--username=%s" % self.svnuser)
         if self.svnpasswd is not None:
@@ -229,16 +229,16 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             rootnode = rootnodes[0]
             root = "".join([c.data for c in rootnode.childNodes])
             # root will be a unicode string
-            if not self.svnurl.startswith(root):
+            if not self.repourl.startswith(root):
                 log.msg(format="Got root %(root)r from `svn info`, but it is "
-                               "not a prefix of the configured svnurl",
-                        svnurl=self.svnurl, root=root)
-                raise RuntimeError("Configured svnurl doesn't match svn root")
-            prefix = self.svnurl[len(root):]
+                               "not a prefix of the configured repourl",
+                        repourl=self.repourl, root=root)
+                raise RuntimeError("Configured repourl doesn't match svn root")
+            prefix = self.repourl[len(root):]
             if prefix.startswith("/"):
                 prefix = prefix[1:]
-            log.msg("SVNPoller: svnurl=%s, root=%s, so prefix=%s" %
-                    (self.svnurl, root, prefix))
+            log.msg("SVNPoller: repourl=%s, root=%s, so prefix=%s" %
+                    (self.repourl, root, prefix))
             return prefix
         return d
 
@@ -251,7 +251,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             args.extend(["--password=%s" % self.svnpasswd])
         if self.extra_args:
             args.extend(self.extra_args)
-        args.extend(["--limit=%d" % (self.histmax), self.svnurl])
+        args.extend(["--limit=%d" % (self.histmax), self.repourl])
         d = self.getProcessOutput(args)
         return d
 
@@ -408,7 +408,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                         revlink=revlink,
                         category=self.category,
                         repository=util.ascii2unicode(
-                            branches[branch].get('repository', self.svnurl)),
+                            branches[branch].get('repository', self.repourl)),
                         project=util.ascii2unicode(
                             branches[branch].get('project', self.project)),
                         codebase=util.ascii2unicode(

@@ -149,7 +149,7 @@ Customizing SVNPoller
 ---------------------
 
 Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: :samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`.
-When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}` string.
+When you create the :bb:chsrc:`SVNPoller`, you give it a ``repourl`` value that includes all of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}` string.
 The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of a checked-out tree).
 The details of how these strings are split up depend upon how your repository names its branches.
 
@@ -171,19 +171,19 @@ To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing els
 
     from buildbot.plugins import changes
     c['change_source'] = changes.SVNPoller(
-       svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/amanda/trunk")
+       repourl="https://svn.amanda.sourceforge.net/svnroot/amanda/amanda/trunk")
 
 In this case, every Change that our :bb:chsrc:`SVNPoller` produces will have its branch attribute set to ``None``, to indicate that the Change is on the trunk.
 No other sub-projects or branches will be tracked.
 
 If we want our ChangeSource to follow multiple branches, we have to do two things.
-First we have to change our ``svnurl=`` argument to watch more than just ``amanda/trunk``.
+First we have to change our ``repourl=`` argument to watch more than just ``amanda/trunk``.
 We will set it to ``amanda`` so that we'll see both the trunk and all the branches.
 Second, we have to tell :bb:chsrc:`SVNPoller` how to split the :samp:`({PROJECT-plus-BRANCH})({FILEPATH})` strings it gets from the repository out into :samp:`({BRANCH})` and :samp:`({FILEPATH})`.
 
 We do the latter by providing a ``split_file`` function.
 This function is responsible for splitting something like ``branches/3_3/common-src/amanda.h`` into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``.
-The function is always given a string that names a file relative to the subdirectory pointed to by the :bb:chsrc:`SVNPoller`\'s ``svnurl=`` argument.
+The function is always given a string that names a file relative to the subdirectory pointed to by the :bb:chsrc:`SVNPoller`\'s ``repourl=`` argument.
 It is expected to return a dictionary with at least the ``path`` key.
 The splitter may optionally set ``branch``, ``project`` and ``repository``.
 For backwards compatibility it may return a tuple of ``(branchname, path)``.
@@ -236,7 +236,7 @@ To use it you would do this::
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
-       svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
+       repourl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
        split_file=util.svn.split_file_projects_branches)
 
 Note here that we are monitoring at the root of the repository, and that within that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and ``branches``.
@@ -265,7 +265,7 @@ This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlie
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
 
 But what happens when we want to track multiple Nevow branches?
-We have to point our ``svnurl=`` high enough to see all those branches, but we also don't want to include Quotient changes (since we're only building Nevow).
+We have to point our ``repourl=`` high enough to see all those branches, but we also don't want to include Quotient changes (since we're only building Nevow).
 To accomplish this, we must rely upon the ``split_file`` function to help us tell the difference between files that belong to Nevow and those that belong to Quotient, as well as figuring out which branch each one is on.
 
 ::
@@ -922,7 +922,7 @@ Inclusion in the :file:`master.cfg` file
 The simplest technique is to simply put the step class definitions in your :file:`master.cfg` file, somewhere before the :class:`BuildFactory` definition where you actually use it in a clause like::
 
     f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(SVN(repourl="stuff"))
     f.addStep(Framboozle())
 
 Remember that :file:`master.cfg` is secretly just a Python program with one job: populating the :data:`BuildmasterConfig` dictionary.
@@ -955,14 +955,14 @@ Once we've done this, our :file:`master.cfg` can look like::
 
     from framboozle import Framboozle
     f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(SVN(repourl="stuff"))
     f.addStep(Framboozle())
 
 or::
 
     import framboozle
     f = BuildFactory()
-    f.addStep(SVN(svnurl="stuff"))
+    f.addStep(SVN(repourl="stuff"))
     f.addStep(framboozle.Framboozle())
 
 (check out the Python docs for details about how ``import`` and ``from A import B`` work).
@@ -1059,7 +1059,7 @@ When it's committed to the master, the usage is the same as in the previous appr
 
     ...
     f = util.BuildFactory()
-    f.addStep(steps.SVN(svnurl="stuff"))
+    f.addStep(steps.SVN(repourl="stuff"))
     f.addStep(steps.Framboozle())
     ...
 

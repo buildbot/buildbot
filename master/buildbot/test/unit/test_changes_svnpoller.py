@@ -284,10 +284,10 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller('file://', name='MyName')
         self.assertEqual("MyName", s.name)
 
-    def test_strip_svnurl(self):
+    def test_strip_repourl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
         s = self.attachSVNPoller(base + "/")
-        self.failUnlessEqual(s.svnurl, base)
+        self.failUnlessEqual(s.repourl, base)
 
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
@@ -635,8 +635,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         extra_args = ['--no-auth-cache', ]
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
 
-        s = self.attachSVNPoller(svnurl=base, extra_args=extra_args)
+        s = self.attachSVNPoller(repourl=base, extra_args=extra_args)
         self.failUnlessEqual(s.extra_args, extra_args)
+
+    def test_use_svnurl(self):
+        base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
+        self.assertRaises(TypeError, self.attachSVNPoller, svnurl=base)
 
 
 class TestSplitFile(unittest.TestCase):
