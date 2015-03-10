@@ -30,12 +30,31 @@ class IndexResource(resource.Resource):
         resource.Resource.__init__(self, master)
         loader = jinja2.FileSystemLoader(staticdir)
         self.jinja = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
+        self.env_versions = self.getEnvironmentVersions()
 
     def reconfigResource(self, new_config):
         self.config = new_config.www
 
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderIndex)
+
+    def getEnvironmentVersions(self):
+        import sys
+        import twisted 
+        from buildbot import version as bbversion
+
+        pyversion = '.'.join(map(str, sys.version_info[:3]))
+
+        tx_version_info= (twisted.version.major,
+                          twisted.version.minor,
+                          twisted.version.micro)
+        txversion = '.'.join(map(str, tx_version_info))
+
+        return [
+            ('Python version', pyversion),
+            ('Buildbot version', bbversion),
+            ('Twisted version', txversion),
+        ]
 
     @defer.inlineCallbacks
     def renderIndex(self, request):
@@ -53,11 +72,20 @@ class IndexResource(resource.Resource):
             config.update({"user": session.user_info})
         else:
             config.update({"user": {"anonymous": True}})
+
+        www = self.master.config.www
+        versions = []
+        versions += self.env_versions 
+
+        if isinstance(www.get('versions'), list):
+            versions += www['versions']
+
         config.update(self.config)
         config['buildbotURL'] = self.master.config.buildbotURL
         config['title'] = self.master.config.title
         config['titleURL'] = self.master.config.titleURL
         config['multiMaster'] = self.master.config.multiMaster
+        config['versions'] = versions
 
         def toJson(obj):
             obj = IConfigured(obj).getConfigDict()
