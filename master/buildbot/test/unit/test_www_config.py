@@ -40,7 +40,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.jinja.get_template = lambda x: template
         template.render = lambda configjson, config: configjson
 
-        vjson = json.dumps([] + rsrc.env_versions + custom_versions)
+        vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
 
         res = yield self.render_resource(rsrc, '/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
@@ -54,9 +54,9 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         exp = exp % vjson
         self.assertIn(res, exp)
 
-        master = self.make_master(url='h:/a/c/', auth=_auth)
+        master = self.make_master(url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
-        exp = '{"titleURL": "http://buildbot.net", "title": "Buildbot", "versions": %s, "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
+        exp = '{"titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         exp = exp % vjson
         self.assertIn(res, exp)
