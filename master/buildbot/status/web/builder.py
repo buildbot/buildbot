@@ -34,7 +34,51 @@ from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 import collections
 
-class ForceAllBuildsActionResource(ActionResource):
+class ForceAction(ActionResource):
+    @defer.inlineCallbacks
+    def force(self, req, builderNames):
+        master = self.getBuildmaster(req)
+        owner = self.getAuthz(req).getUsernameFull(req)
+        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
+        if schedulername == "<unknown>":
+            defer.returnValue((path_to_builder(req, self.builder_status),
+                               "forcescheduler arg not found"))
+            return
+
+        args = {}
+        # decode all of the args
+        encoding = getRequestCharset(req)
+        for name, argl in req.args.iteritems():
+           if name == "checkbox":
+               # damn html's ungeneric checkbox implementation...
+               for cb in argl:
+                   args[cb.decode(encoding)] = True
+           else:
+               args[name] = [ arg.decode(encoding) for arg in argl ]
+
+        for sch in master.allSchedulers():
+            if schedulername == sch.name:
+                try:
+                    yield sch.force(owner, builderNames, **args)
+                    msg = ""
+                except ValidationError, e:
+                    msg = html.escape(e.message.encode('ascii','ignore'))
+                break
+
+        # send the user back to the proper page
+        returnpage = args.get("returnpage", None)
+        if  "builders" in returnpage:
+            defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
+        elif "builders_json" in returnpage:
+            s = self.getStatus(req)
+            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject())))
+        elif "pending_json" in returnpage and builderNames > 0:
+            s = self.getStatus(req)
+            defer.returnValue((s.getBuildbotURL() + path_to_json_pending(req, builderNames[0])))
+        defer.returnValue((path_to_builder(req, self.builder_status)))
+
+
+class ForceAllBuildsActionResource(ForceAction):
 
     def __init__(self, status, selectedOrAll):
         self.status = status
@@ -50,19 +94,14 @@ class ForceAllBuildsActionResource(ActionResource):
             defer.returnValue(path_to_authzfail(req))
             return
 
-        builders = None
         if self.selectedOrAll == 'all':
-            builders = self.status.getBuilderNames()
+            builderNames = None
         elif self.selectedOrAll == 'selected':
-            builders = [b for b in req.args.get("selected", []) if b]
+            builderNames = [b for b in req.args.get("selected", []) if b]
 
-        for bname in builders:
-            builder_status = self.status.getBuilder(bname)
-            ar = ForceBuildActionResource(builder_status)
-            d = ar.performAction(req)
-            d.addErrback(log.err, "(ignored) while trying to force build")
-        # back to the welcome page
-        defer.returnValue(path_to_root(req))
+        path_to_return = yield self.force(req, builderNames)
+        # send the user back to the builder page
+        defer.returnValue(path_to_return)
 
 class StopAllBuildsActionResource(ActionResource):
 
@@ -122,7 +161,7 @@ class PingBuilderActionResource(ActionResource):
         # send the user back to the builder page
         defer.returnValue(path_to_builder(req, self.builder_status))
 
-class ForceBuildActionResource(ActionResource):
+class ForceBuildActionResource(ForceAction):
 
     def __init__(self, builder_status):
         self.builder_status = builder_status
@@ -138,48 +177,11 @@ class ForceBuildActionResource(ActionResource):
             defer.returnValue(path_to_authzfail(req))
             return
 
-        master = self.getBuildmaster(req)
-        owner = self.getAuthz(req).getUsernameFull(req)
-        schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
-        if schedulername == "<unknown>":
-            defer.returnValue((path_to_builder(req, self.builder_status),
-                               "forcescheduler arg not found"))
-            return
+        builderName = self.builder_status.getName()
 
-        args = req.args.copy()
-
-        # decode all of the args
-        encoding = getRequestCharset(req)
-        for name, argl in args.iteritems():
-            args[name] = [ urllib.unquote(arg).decode(encoding) for arg in argl ]
-
-        # damn html's ungeneric checkbox implementation...
-        for cb in args.get("checkbox", []):
-            args[cb] = True
-
-        builder_name = self.builder_status.getName()
-
-        for sch in master.allSchedulers():
-            if schedulername == sch.name:
-                try:
-                    yield sch.force(owner, builder_name, **args)
-                    msg = ""
-                except ValidationError, e:
-                    msg = html.escape(e.message.encode('ascii','ignore'))
-                break
-
+        path_to_return = yield self.force(req, [builderName])
         # send the user back to the builder page
-        returnpage = args.get("returnpage", None)
-        if returnpage is None:
-            defer.returnValue((path_to_builder(req, self.builder_status)))
-        elif "builders" in returnpage:
-            defer.returnValue((path_to_builders(req, self.builder_status.getProject())))
-        elif "builders_json" in returnpage:
-            s = self.getStatus(req)
-            defer.returnValue((s.getBuildbotURL() + path_to_json_builders(req, self.builder_status.getProject())))
-        elif "pending_json" in returnpage:
-            s = self.getStatus(req)
-            defer.returnValue((s.getBuildbotURL() + path_to_json_pending(req, builder_name)))
+        defer.returnValue(path_to_return)
 
 def buildForceContextForField(req, default_props, sch, field, master, buildername):
     pname = "%s.%s"%(sch.name, field.fullName)

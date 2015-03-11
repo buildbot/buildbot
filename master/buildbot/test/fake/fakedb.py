@@ -765,6 +765,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if 'brids' in expected_buildset:
             buildset['brids'] = self.allBuildRequests(bsid)
 
+        if 'builders' in expected_buildset:
+            buildset['builders'] = self.allBuildRequests(bsid).keys()
+
         for ss in dictOfssDict.itervalues():
             if 'id' in ss:
                 del ss['id']

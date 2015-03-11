@@ -43,6 +43,13 @@ class ScheduleOnMultipleSlavesMixin(object):
 
         return False
 
+    def getFirstBuilderName(self, builderNames):
+        if len(builderNames) > 0:
+            if isinstance(builderNames, set):
+                return list(builderNames)[0]
+            return builderNames[0]
+        return None
+
     def addBuildForEachSlave(self, function, **kwargs):
         #Check for properties existing
         properties = None
@@ -59,9 +66,10 @@ class ScheduleOnMultipleSlavesMixin(object):
         #Get all the slaves
         slaves = []
         if kwargs.has_key("builderNames"):
-            builder_name = kwargs["builderNames"][0]
+            builderNames = kwargs["builderNames"]
+            builder_name = self.getFirstBuilderName(builderNames)
         else:
-            builder_name = self.builderNames[0]
+            builder_name = self.getFirstBuilderName(self.builderNames)
         builder = None
         for b in self.master.botmaster.getBuilders():
             if b.name == builder_name:
