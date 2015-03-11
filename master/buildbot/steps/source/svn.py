@@ -99,10 +99,7 @@ class SVN(Source):
             else:
                 return 0
 
-        if self.mode == 'full':
-            d.addCallback(self.full)
-        elif self.mode == 'incremental':
-            d.addCallback(self.incremental)
+        d.addCallback(getattr(self, self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
