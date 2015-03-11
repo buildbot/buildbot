@@ -134,9 +134,13 @@ class V2RootResource(resource.Resource):
     # JSONRPC2 support
 
     def decodeJsonRPC2(self, request):
-        # Content-Type is ignored, so that AJAX requests can be sent without
-        # incurring CORS preflight overheads.  The JSONRPC spec does not
-        # suggest a Content-Type anyway.
+        # Verify the content-type.  Browsers are easily convinced to send
+        # POST data to arbitrary URLs via 'form' elements, but they won't
+        # use the application/json content-type.
+        if request.getHeader('content-type') != 'application/json':
+            raise BadJsonRpc2('Invalid content-type (use application/json)',
+                              JSONRPC_CODES["invalid_request"])
+
         try:
             data = json.loads(request.content.read())
         except Exception, e:

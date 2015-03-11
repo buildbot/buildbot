@@ -189,7 +189,7 @@ The following parts of the protocol are not supported:
 * batch requests
 
 Requests are sent as an HTTP POST, containing the request JSON in the body.
-The content-type header is ignored; for compatibility with simple CORS requests (avoiding preflight checks), use ``text/plain``.
+The content-type header must be ``application/json``.
 
 A simple example:
 

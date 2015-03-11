@@ -156,14 +156,15 @@ class WwwTestMixin(RequiresWwwMixin):
         return request.deferred
 
     def render_control_resource(self, rsrc, path='/', params={},
-                                requestJson=None, action="notfound", id=None):
+                                requestJson=None, action="notfound", id=None,
+                                content_type='application/json'):
         # pass *either* a request or postpath
         id = id or self.UUID
         request = self.make_request(path)
         request.method = "POST"
         request.content = StringIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
-        request.input_headers = {'content-type': 'application/json'}
+        request.input_headers = {'content-type': content_type}
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
             d = defer.succeed(rv)
