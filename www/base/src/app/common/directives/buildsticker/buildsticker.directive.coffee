@@ -5,7 +5,6 @@ class Buildsticker extends Directive('common')
             restrict: 'E'
             scope: {build: '='}
             templateUrl: 'views/buildsticker.html'
-            compile: RecursionHelper.compile
             controller: '_buildstickerController'
         }
 
