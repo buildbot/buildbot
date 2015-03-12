@@ -97,7 +97,7 @@ To illustrate use of locks, a few examples.
                                 maxCountForSlave={'fast': 3, 'new': 2})
 
     f = util.BuildFactory()
-    f.addStep(steps.SVN(repourl="http://example.org/svn/Trunk"))
+    f.addStep(steps.SVN(svnurl="http://example.org/svn/Trunk"))
     f.addStep(steps.ShellCommand(command="make all"))
     f.addStep(steps.ShellCommand(command="make test",
                                  locks=[db_lock.access('exclusive')]))

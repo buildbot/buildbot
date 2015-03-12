@@ -10,7 +10,7 @@ Each :class:`BuildFactory` can be created with a list of steps, or the factory c
     from buildbot.plugins import util, steps
 
     f = util.BuildFactory()
-    f.addStep(steps.SVN(repourl="http://svn.example.org/Trunk/"))
+    f.addStep(steps.SVN(svnurl="http://svn.example.org/Trunk/"))
     f.addStep(steps.ShellCommand(command=["make", "all"]))
     f.addStep(steps.ShellCommand(command=["make", "test"]))
 
