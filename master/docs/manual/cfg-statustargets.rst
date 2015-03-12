@@ -1008,7 +1008,7 @@ One advantage of this is your buildbot instance can poll at launch (using the po
 Suppose you have a poller configured like this::
 
     c['change_source'] = SVNPoller(
-        repourl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
         split_file=split_file_branches,
         pollInterval=24*60*60,
         pollAtLaunch=True)
