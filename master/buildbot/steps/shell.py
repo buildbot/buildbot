@@ -289,10 +289,13 @@ class SetPropertyFromCommand(ShellCommand):
     name = "setproperty"
     renderables = ['property']
 
-    def __init__(self, property=None, extract_fn=None, strip=True, **kwargs):
+    def __init__(self, property=None, extract_fn=None, strip=True,
+                 includeStdout=True, includeStderr=False, **kwargs):
         self.property = property
         self.extract_fn = extract_fn
         self.strip = strip
+        self.includeStdout = includeStdout
+        self.includeStderr = includeStderr
 
         if not ((property is not None) ^ (extract_fn is not None)):
             config.error(
@@ -300,8 +303,12 @@ class SetPropertyFromCommand(ShellCommand):
 
         ShellCommand.__init__(self, **kwargs)
 
+        if self.extract_fn:
+            self.includeStderr = True
+
         self.observer = logobserver.BufferLogObserver(
-            wantStdout=True, wantStderr=self.extract_fn)
+            wantStdout=self.includeStdout,
+            wantStderr=self.includeStderr)
         self.addLogObserver('stdio', self.observer)
 
         self.property_changes = {}
