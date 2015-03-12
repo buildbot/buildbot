@@ -214,7 +214,7 @@ To complete our example, here's a change source that polls a SVN repository ever
 
     from buildbot.plugins import changes, util
 
-    svnpoller = changes.SVNPoller(svnurl="svn://myrepo/projects/coolproject",
+    svnpoller = changes.SVNPoller(repourl="svn://myrepo/projects/coolproject",
                                   svnuser="foo",
                                   svnpasswd="bar",
                                   pollinterval=120,
@@ -225,11 +225,11 @@ To complete our example, here's a change source that polls a SVN repository ever
 This poller watches the whole "coolproject" section of the repository, so it will detect changes in all the branches.
 We could have said::
 
-    svnurl = "svn://myrepo/projects/coolproject/trunk"
+    repourl = "svn://myrepo/projects/coolproject/trunk"
 
 or::
 
-    svnurl = "svn://myrepo/projects/coolproject/branches/7.2"
+    repourl = "svn://myrepo/projects/coolproject/branches/7.2"
 
 to watch only a specific branch.
 
