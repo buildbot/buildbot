@@ -16,10 +16,10 @@
 from twisted.trial import unittest
 from buildbot.steps.source import git
 from buildbot.status.results import SUCCESS, FAILURE
-from buildbot.test.util import sourcesteps
+from buildbot.test.util import config, sourcesteps
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
-class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpSourceStep()
@@ -531,6 +531,34 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
+    def test_mode_full_clobber_no_shallow(self):
+        self.setupStep(
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', method='clobber'))
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clone',
+                                 '--branch', 'HEAD',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        return self.runStep()
+
     def test_mode_incremental_retryFetch(self):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
@@ -690,7 +718,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_copy(self):
         self.setupStep(
                 git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                        mode='full', method='copy', shallow=True))
+                        mode='full', method='copy'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -722,6 +750,10 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
+    def test_mode_full_copy_shallow(self):
+        self.assertRaisesConfigError("shallow only possible with mode 'full' and method 'clobber'", lambda :
+                git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', method='copy', shallow=True))
 
     def test_mode_incremental_no_existing_repo(self):
         self.setupStep(
@@ -842,7 +874,7 @@ class TestGit(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_repourl(self):
-        self.assertRaises(AssertionError, lambda :
+        self.assertRaisesConfigError("must provide repourl", lambda :
                 git.Git(mode="full"))
 
     def test_mode_full_fresh_revision(self):
