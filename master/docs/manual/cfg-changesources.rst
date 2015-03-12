@@ -538,11 +538,11 @@ It can watch a single branch or multiple branches.
 
 :bb:chsrc:`SVNPoller` accepts the following arguments:
 
-``repourl``
+``svnurl``
     The base URL path to watch, like ``svn://svn.twistedmatrix.com/svn/Twisted/trunk``, or ``http://divmod.org/svn/Divmo/``, or even ``file:///home/svn/Repository/ProjectA/branches/1.5/``.
     This must include the access scheme, the location of the repository (both the hostname for remote ones, and any additional directory names necessary to get to the repository), and the sub-path within the repository's virtual filesystem for the project and branch of interest.
 
-    The :bb:chsrc:`SVNPoller` will only pay attention to files inside the subdirectory specified by the complete repourl.
+    The :bb:chsrc:`SVNPoller` will only pay attention to files inside the subdirectory specified by the complete svnurl.
 
 ``split_file``
     A function to convert pathnames into ``(branch, relative_pathname)`` tuples.
@@ -609,14 +609,14 @@ For a poller that is only monitoring trunk, the default split file function is a
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
-        repourl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
+        svnurl="svn://svn.twistedmatrix.com/svn/Twisted/trunk",
         split_file=util.svn.split_file_alwaystrunk)
 
 For repositories with the ``/trunk`` and :samp:`/branches/{BRANCH}` layout, ``split_file_branches`` will do the job::
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
-        repourl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
         split_file=util.svn.split_file_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any changes to the ``project`` attribute of the poller.
@@ -625,7 +625,7 @@ For repositories with the :samp:`{PROJECT}/trunk` and :samp:`{PROJECT}/branches/
 
     from buildbot.plugins import changes, util
     c['change_source'] = changes.SVNPoller(
-        repourl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
+        svnurl="https://amanda.svn.sourceforge.net/svnroot/amanda/",
         split_file=util.svn.split_file_projects_branches)
 
 When using this splitter the poller will set the ``project`` attribute of any changes to the project determined by the splitter.
