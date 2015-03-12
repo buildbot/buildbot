@@ -545,7 +545,6 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
-                                 '--branch', 'HEAD',
                                  'http://github.com/buildbot/buildbot.git',
                                  '.'])
             + 0,
@@ -556,7 +555,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
-        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Source')
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
     def test_mode_incremental_retryFetch(self):
