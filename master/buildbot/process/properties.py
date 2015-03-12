@@ -443,7 +443,8 @@ class Interpolate(util.ComparableMixin, object):
                 repl = None
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
-                codebase = attr = repl = None
+                return {}, None, None
+
         if not Interpolate.identifier_re.match(codebase):
             config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None

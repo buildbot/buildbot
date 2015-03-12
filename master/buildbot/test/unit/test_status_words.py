@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import mock, os, signal
+import mock
 from twisted.trial import unittest
 from twisted.application import internet
 from twisted.internet import task, reactor
@@ -219,14 +219,12 @@ class TestIrcContactChannel(unittest.TestCase):
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
 
     def test_command_shutdown_now(self):
-        self.killargs = None
-        def kill(*args):
-            self.killargs = args
-        self.patch(os, 'kill', kill)
+        stop = mock.Mock()
+        self.patch(reactor, 'stop', stop)
         self.do_test_command('shutdown', args='now', allowShutdown=True)
         self.assertEqual(self.bot.factory.allowShutdown, True)
         self.assertEqual(self.bot.master.botmaster.shuttingDown, False)
-        self.assertEqual(self.killargs, (os.getpid(), signal.SIGTERM))
+        stop.assert_called_with()
 
     def test_command_source(self):
         self.do_test_command('source')

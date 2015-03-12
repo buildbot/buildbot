@@ -330,6 +330,10 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
         self.assertRaisesConfigError("Attribute must be alphanumeric for src Interpolation 'a:a+a'",
                 lambda: Interpolate("echo '%(src:a:a+a)s'"))
 
+    def test_src_missing_attr(self):
+        self.assertRaisesConfigError("Must specify both codebase and attr",
+                lambda: Interpolate("echo '%(src:a)s'"))
+
 
 class TestInterpolatePositional(unittest.TestCase):
     def setUp(self):
