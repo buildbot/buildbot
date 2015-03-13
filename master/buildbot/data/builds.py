@@ -139,7 +139,7 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def newBuild(self, builderid, buildrequestid, buildslaveid):
+    def addBuild(self, builderid, buildrequestid, buildslaveid):
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,
