@@ -26,5 +26,5 @@
         h2 Welcome to buildbot
         h4 {{ builds_running.length }} Build{{ builds_running.length > 1 ? 's' : '' }} running currently
         ul
-          li(ng-repeat="build in builds_running")
-            buildsummary(buildid="build.buildid", condensed="true")
+          li.unstyled(ng-repeat="build in builds_running")
+            buildsticker(build="build")
