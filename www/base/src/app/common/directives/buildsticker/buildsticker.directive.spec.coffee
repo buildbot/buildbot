@@ -48,8 +48,6 @@ describe 'buildsticker controller', ->
         startedSpan = row1.children().eq(1)
         stateSpan = row1.children().eq(2)
 
-        console.log buildLink.html()
-
         # the link of build should be correct
         expect(buildLink.attr('href')).toBe('#/builders/2/builds/1')
 
