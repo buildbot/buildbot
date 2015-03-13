@@ -33,5 +33,10 @@ def _visit_insert_from_select(element, compiler, **kw):
 
 def sa_version():
     if hasattr(sa, '__version__'):
-        return tuple(map(int, sa.__version__.split('.')))
+        def tryint(s):
+            try:
+                return int(s)
+            except:
+                return -1
+        return tuple(map(tryint, sa.__version__.split('.')))
     return (0,0,0) # "it's old"

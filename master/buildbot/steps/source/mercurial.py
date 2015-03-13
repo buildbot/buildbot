@@ -377,7 +377,7 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/hgrc',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/hgrc'),
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -389,7 +389,7 @@ class Mercurial(Source):
         return d
 
     def _sourcedirContainsJournal(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/journal',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/store/journal'),
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -401,7 +401,7 @@ class Mercurial(Source):
         return d
 
     def _sourcedirContainsLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/lock',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/store/lock'),
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
@@ -413,7 +413,7 @@ class Mercurial(Source):
         return d
 
     def _sourcedirContainsWorkdirLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/wlock',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/wlock'),
                                                'logEnviron': self.logEnviron})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)

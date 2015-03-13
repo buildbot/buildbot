@@ -185,7 +185,7 @@ class Bzr(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.bzr',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.bzr'),
                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)

@@ -434,7 +434,7 @@ class Git(Source):
         return changes[-1].revision
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.git',
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.git'),
                                                'logEnviron': self.logEnviron,})
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)

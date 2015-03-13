@@ -15,6 +15,7 @@
 
 import textwrap
 from twisted.trial import unittest
+from twisted.python.reflect import namedModule
 from buildbot.steps.source import svn
 from buildbot.status.results import SUCCESS, FAILURE
 from buildbot.test.util import sourcesteps
@@ -277,6 +278,40 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+
+    def test_mode_incremental_win32path(self):
+        self.setupStep(
+                svn.SVN(repourl='http://svn.local/app/trunk',
+                        mode='incremental',username='user',
+                        password='pass', extra_args=['--random']))
+        self.build.path_module = namedModule("ntpath")
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file=r'wkdir\.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + ExpectShell.log('stdio',
+                stdout="URL: http://svn.local/app/trunk")
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache', '--username', 'user',
+                                 '--password', 'pass', '--random'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn', 'info'])
+            + ExpectShell.log('stdio',
+                stdout='100')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
     def test_mode_full_clobber(self):

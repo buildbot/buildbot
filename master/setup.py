@@ -189,8 +189,7 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 9.0.0',
         'Jinja2 >= 2.1',
-        # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
-        'sqlalchemy >= 0.6, <= 0.7.10',
+        'sqlalchemy >= 0.6, < 0.8',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
         'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',

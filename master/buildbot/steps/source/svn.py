@@ -236,10 +236,15 @@ class SVN(Source):
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         # first, perform a stat to ensure that this is really an svn directory
-        res = yield self.pathExists(self.workdir+"/.svn")
-        if not res:
+        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.svn'),
+                                               'logEnviron': self.logEnviron,})
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if cmd.didFail():
             defer.returnValue(False)
             return
+
         # then run 'svn info' to check that the URL matches our repourl
         stdout = yield self._dovccmd(['info'], collectStdout=True)
 

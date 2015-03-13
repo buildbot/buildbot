@@ -450,8 +450,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             self.slave_basedir = state.get("slave_basedir")
             self.slave_system = state.get("slave_system")
             self.slave = bot
-            if self.slave_system == "win32":
-                self.path_module = namedModule("win32path")
+            if self.slave_system == "nt":
+                self.path_module = namedModule("ntpath")
             else:
                 # most eveything accepts / as separator, so posix should be a
                 # reasonable fallback
