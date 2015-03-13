@@ -1,5 +1,5 @@
 .panel.panel-default.buildsticker(ng-class="results2class(build)")
-  .panel-heading.no-select
+  .panel-body.no-select
     .row
       span.pull-right.label(ng-class="results2class(build)") {{results2text(build)}}
       a(ui-sref="build({builder:builder.builderid, build:build.number})")
