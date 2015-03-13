@@ -46,6 +46,8 @@ class Mock(ShellCommand):
 
     name = "mock"
 
+    renderables = ["root", "resultdir"]
+
     haltOnFailure = 1
     flunkOnFailure = 1
 
