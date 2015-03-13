@@ -25,5 +25,6 @@
       .well
         h2 Welcome to buildbot
         h4 {{ builds_running.length }} Build{{ builds_running.length > 1 ? 's' : '' }} running currently
-        .sticker-container
-            buildsticker(build="build" ng-repeat="build in builds_running")
+        ul
+          li.unstyled(ng-repeat="build in builds_running")
+            buildsticker(build="build")
