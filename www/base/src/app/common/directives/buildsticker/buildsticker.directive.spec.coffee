@@ -1,7 +1,7 @@
 beforeEach module 'app'
 
 describe 'buildsticker controller', ->
-    buildbotService = mqService = $httpBackend = $rootScope = $compile = null
+    buildbotService = mqService = $httpBackend = $rootScope = $compile = results = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
@@ -12,6 +12,7 @@ describe 'buildsticker controller', ->
         mqService = $injector.get('mqService')
         $controller = $injector.get('$controller')
         $q = $injector.get('$q')
+        results = $injector.get('RESULTS')
 
         # stub out the actual backend of mqservice
         spyOn(mqService,"setBaseUrl").and.returnValue(null)
@@ -32,23 +33,59 @@ describe 'buildsticker controller', ->
         $httpBackend.expectDataGET('builders/1')
         element = $compile("<buildsticker build='build'></buildsticker>")($rootScope)
         $httpBackend.flush()
-        $rootScope.build.started_at = moment.unix() # avoid test failed due to time changes
         $rootScope.$digest()
-        html = element.html()
 
-        expectHtml = '''
-        <div class="panel-heading no-select">
-            <div class="row">
-                <span ng-class="results2class(build)" class="pull-right label ng-binding results_WARNINGS">WARNINGS</span>
-                <a ui-sref="build({builder:builder.builderid, build:build.number})" class="ng-binding" href="#/builders/2/builds/1">11/1</a>
-            </div>
-            <div class="row">
-                <span ng-show="build.complete" class="pull-right ng-binding ng-hide">0 s</span>
-                <span ng-show="!build.complete" class="pull-right ng-binding">0 s</span>
-                <span class="ng-binding">mystate_string</span>
-            </div>
-        </div>
-        '''
-        expectHtml = (s.trim() for s in expectHtml.split('\n')).join('')
+        build = $rootScope.build
 
-        expect(html).toBe(expectHtml)
+        sticker = element.children().eq(0)
+
+        row0 = sticker.children().eq(0)
+        row1 = sticker.children().eq(1)
+
+        resultSpan = row0.children().eq(0)
+        buildLink = row0.children().eq(1)
+        durationSpan = row1.children().eq(0)
+        startedSpan = row1.children().eq(1)
+        stateSpan = row1.children().eq(2)
+
+        console.log buildLink.html()
+
+        # the link of build should be correct
+        expect(buildLink.attr('href')).toBe('#/builders/2/builds/1')
+
+        # pending state
+        build.complete = false
+        build.results = -1
+        build.state_string = 'pending'
+        $rootScope.$digest()
+        expect(resultSpan.hasClass('results_PENDING')).toBe(true)
+        expect(resultSpan.text()).toBe('...')
+        expect(durationSpan.hasClass('ng-hide')).toBe(true)
+        expect(startedSpan.hasClass('ng-hide')).toBe(false)
+        expect(stateSpan.text()).toBe('pending')
+
+        # success state
+        build.complete = true
+        build.complete_at = 2
+        build.results = results.SUCCESS
+        build.state_string = 'finished'
+        $rootScope.$digest()
+        expect(resultSpan.hasClass('results_SUCCESS')).toBe(true)
+        expect(resultSpan.text()).toBe('SUCCESS')
+        expect(durationSpan.hasClass('ng-hide')).toBe(false)
+        expect(startedSpan.hasClass('ng-hide')).toBe(true)
+        expect(durationSpan.text()).toBe('1 s')
+        expect(stateSpan.text()).toBe('finished')
+        
+        # failed state
+        build.complete = true
+        build.complete_at = 2
+        build.results = results.FAILURE
+        build.state_string = 'failed'
+        $rootScope.$digest()
+        expect(resultSpan.hasClass('results_FAILURE')).toBe(true)
+        expect(resultSpan.text()).toBe('FAILURE')
+        expect(durationSpan.hasClass('ng-hide')).toBe(false)
+        expect(startedSpan.hasClass('ng-hide')).toBe(true)
+        expect(durationSpan.text()).toBe('1 s')
+        expect(stateSpan.text()).toBe('failed')
