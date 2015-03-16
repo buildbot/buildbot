@@ -1,25 +1,22 @@
 # About #
 
-This is buildbot-www, the Buildbot UI.
+This directory contains the components that comprise the Buildbot web
+interface.  The core interface is defined in `www/base`, with other plugins
+in sibling directories.
 
 # Connection to Python #
 
-The setup.py script here is designed to create sdist (source-distribution)
-packages containing pre-built Angular files.  This means that installing the
+The setup.py script in each directory is designed to create wheel packages
+containing pre-built Angular files.  This means that installing the
 buildbot-www package from PyPi gets all of the code required to run the
 Buildbot UI, without any requirement for Node.js or any NPM install.
 
 The ordinary 'python setup.py sdist' and 'python setup.py install' commands
 will work just as expected.
 
-# Hacking #
+# For Python Hackers #
 
-To hack on the UI, first install it into your Python virtualenv with `pip
-install -e www`, run from the top-level of the git repository.  This will
-configure the Python glue to use the built version at `www/buildbot_www`.
-This command will use Node.js and NPM to install all of the prerequisites for
-building the UI.
-
-Then, simply treat the `www` directory as a normal AngularJs project.  Either
-run `gulp` to build on demand, or use `gulp dev` to set up a watcher to
-build whenever files change.
+If you're finding yourself facing errors due to buildbot_www not being
+installed, try running `make prebuilt-frontend` in the root directory; this
+will install prebuilt versions of each of these distributions, based on the
+latest commits to the upstream master.
