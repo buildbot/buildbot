@@ -142,6 +142,9 @@ class TestCheckconfig(unittest.TestCase):
 
     def setUp(self):
         self.loadConfig = mock.Mock(spec=checkconfig._loadConfig, return_value=3)
+        # checkconfig is decorated with @in_reactor, so strip that decoration
+        # since the reactor is already running
+        self.patch(checkconfig, 'checkconfig', checkconfig.checkconfig._orig)
         self.patch(checkconfig, '_loadConfig', self.loadConfig)
 
     def test_checkconfig_default(self):
