@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.status.results import SUCCESS
 from buildbot.steps.package.rpm import mock
 from buildbot.test.fake.remotecommand import Expect
@@ -68,6 +69,24 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
                                   'state.log': 'RESULT/state.log'})
             + 0)
         self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_resultdir_renderable(self):
+        resultdir_text = "RESULT"
+        self.setupStep(mock.Mock(root='TESTROOT', resultdir = Interpolate('%(kw:resultdir)s', resultdir = resultdir_text)))
+        self.expectCommands(
+            Expect('rmdir', {'dir': ['build/RESULT/build.log',
+                                     'build/RESULT/root.log',
+                                     'build/RESULT/state.log']})
+            + 0,
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command=['mock', '--root', 'TESTROOT',
+                                 '--resultdir', 'RESULT'],
+                        logfiles={'build.log': 'RESULT/build.log',
+                                  'root.log': 'RESULT/root.log',
+                                  'state.log': 'RESULT/state.log'})
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string="'mock --root ...'")
         return self.runStep()
 
 
