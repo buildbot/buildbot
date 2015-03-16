@@ -308,7 +308,9 @@ class V2RootResource(resource.Resource):
             rspec = self.decodeResultSpec(request, ep)
             data = yield ep.get(rspec, kwargs)
             if data is None:
-                writeError("not found", errcode=404)
+                writeError(("not found while getting from endpoint %s with "
+                            "arguments %s and %s") % (str(ep), str(rspec),
+                            str(kwargs)), errcode=404)
                 return
 
             if ep.isRaw:
