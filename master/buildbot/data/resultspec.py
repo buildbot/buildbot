@@ -75,6 +75,10 @@ class ResultSpec(object):
         self.limit = limit
         self.offset = offset
 
+    def __repr__(self):
+        return "ResultSpec(**" + repr(dict(filters=self.filters, fields=self.fields, order=self.order,
+                                           limit=self.limit, offset=self.offset)) + ")"
+
     def popFilter(self, field, op):
         for f in self.filters:
             if f.field == field and f.op == op:
