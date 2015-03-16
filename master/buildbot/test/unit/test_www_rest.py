@@ -545,6 +545,16 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
             jsonrpccode=JSONRPC_CODES['parse_error'])
 
     @defer.inlineCallbacks
+    def test_invalid_content_type(self):
+        yield self.render_control_resource(self.rsrc, '/test',
+                                           requestJson='{"jsonrpc": "2.0", "method": "foo",'
+                                           '"id":"abcdef", "params": {}}',
+                                           content_type='application/x-www-form-urlencoded')
+        self.assertJsonRpcError(
+            message=re.compile('Invalid content-type'),
+            jsonrpccode=JSONRPC_CODES['invalid_request'])
+
+    @defer.inlineCallbacks
     def test_list_request(self):
         yield self.render_control_resource(self.rsrc, '/test',
                                            requestJson="[1,2]")
