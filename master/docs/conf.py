@@ -215,7 +215,7 @@ latex_logo = os.path.join('_images', 'header-text-transparent.png')
 # latex_show_pagerefs = False
 
 # If true, show URL addresses after external links.
-latex_show_urls = True
+latex_show_urls = 'inline'
 
 # Additional stuff for the LaTeX preamble.
 # latex_preamble = ''
