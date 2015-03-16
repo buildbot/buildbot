@@ -2216,11 +2216,17 @@ To avoid stripping, add ``strip=False``.
 
 The ``property`` argument can be specified as a  :ref:`Interpolate` object, allowing the property name to be built from other property values.
 
+Passing ``includeStdout=False`` (default ``True``) stops capture from stdout.
+
+Passing ``includeStderr=True`` (default ``False``) allows capture from stderr.
+
 The more advanced usage allows you to specify a function to extract properties from the command output.
 Here you can use regular expressions, string interpolation, or whatever you would like.
 In this form, :func:`extract_fn` should be passed, and not :class:`Property`.
 The :func:`extract_fn` function is called with three arguments: the exit status of the command, its standard output as a string, and its standard error as a string.
 It should return a dictionary containing all new properties.
+
+Note that passing in :func:`extract_fn` will set ``includeStderr`` to ``True``.
 
 ::
 
