@@ -14,42 +14,78 @@
 # Copyright  Team Members
 
 from buildbot.util import json
-from buildbot.www import websocket
-from twisted.internet import protocol
+from twisted.internet import defer
 from twisted.python import log
 
+from autobahn.twisted.resource import WebSocketResource
+from autobahn.twisted.websocket import WebSocketServerFactory
+from autobahn.twisted.websocket import WebSocketServerProtocol
 
-class WsProtocol(protocol.Protocol):
+
+class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
         self.master = master
         self.qrefs = {}
 
-    def dataReceived(self, frame):
+    def sendJsonMessage(self, **msg):
+        self.sendMessage(json.dumps(msg).encode('utf8'))
+
+    def onMessage(self, frame, isBinary):
         log.msg("FRAME %s" % frame)
         # parse the incoming request
-        # TODO: error handling
+
         frame = json.loads(frame)
-        req = frame['req']
-        if req == 'startConsuming':
-            path = tuple(frame['path'])
-            options = frame['options']
+        _id = frame.get("_id")
+        if _id is None:
+            self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)
+            return
+        cmd = frame.pop("cmd", None)
+        if cmd is None:
+            self.sendJsonMessage(error="no 'cmd' in websocket frame", code=400, _id=None)
+            return
+        cmdmeth = "cmd_" + cmd
+        meth = getattr(self, cmdmeth, None)
+        if meth is None:
+            self.sendJsonMessage(error="no such command '%s'" % (cmd, ), code=404, _id=_id)
+            return
+        try:
+            meth(**frame)
+        except TypeError as e:
+            self.sendJsonMessage(error="Invalid method argument '%s'" % (str(e), ), code=400, _id=_id)
+            return
+        except Exception as e:
+            self.sendJsonMessage(error="Internal Error '%s'" % (str(e), ), code=500, _id=_id)
+            log.err("while calling command %s" % (cmd, ))
+            return
 
-            # if it's already subscribed, don't leak a subscription
-            if path in self.qrefs:
-                return
+    def ack(self, _id):
+        return self.sendJsonMessage(msg="OK", code=200, _id=_id)
 
-            def callback(key, message):
-                content = json.dumps(dict(path=path, key=key, message=message))
-                self.transport.write(content)
-            d = self.master.data.startConsuming(callback, options, path)
+    def parsePath(self, path):
+        path = path.split(".")
+        return tuple([str(p) if p != "*" else None for p in path])
 
-            @d.addCallback
-            def register(qref):
-                if path in self.qrefs:
-                    qref.stopConsuming()
-                self.qrefs[path] = qref
-            d.addErrback("while starting consumption")
+    @defer.inlineCallbacks
+    def cmd_startConsuming(self, path, _id):
+        # if it's already subscribed, don't leak a subscription
+        if path in self.qrefs:
+            self.ack(_id=_id)
+            return
+
+        def callback(key, message):
+            self.sendJsonMessage(path=path, key=key, message=message, _id=_id)
+
+        qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
+
+        if path in self.qrefs or self.qrefs is None:  # race conditions handling
+            qref.stopConsuming()
+
+        self.qrefs[path] = qref
+        self.ack(_id=_id)
+
+    def cmd_ping(self, _id):
+        self.sendJsonMessage(msg="pong", code=200, _id=_id)
 
     def connectionLost(self, reason):
         log.msg("connection lost", system=self)
@@ -58,9 +94,10 @@ class WsProtocol(protocol.Protocol):
         self.qrefs = None  # to be sure we don't add any more
 
 
-class WsProtocolFactory(protocol.Factory):
+class WsProtocolFactory(WebSocketServerFactory):
 
     def __init__(self, master):
+        WebSocketServerFactory.__init__(self)
         self.master = master
 
     def buildProtocol(self, addr):
@@ -69,7 +106,7 @@ class WsProtocolFactory(protocol.Factory):
         return p
 
 
-class WsResource(websocket.WebSocketsResource):
+class WsResource(WebSocketResource):
 
     def __init__(self, master):
-        websocket.WebSocketsResource.__init__(self, WsProtocolFactory(master))
+        WebSocketResource.__init__(self, WsProtocolFactory(master))
