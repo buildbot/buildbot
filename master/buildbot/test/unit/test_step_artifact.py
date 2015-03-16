@@ -58,7 +58,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
                                    artifactServerURL="http://srv.com/dir"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command='for i in 1 2 3 4 5; do rsync -var --partial myartifact.py '+
+                        command='for i in 1 2 3 4 5; do rsync -var --progress --partial myartifact.py '+
                                 'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py;'+
                                 ' if [ $? -eq 0 ]; then exit 0; else sleep 5; fi; done; exit -1')
             + ExpectShell.log('stdio', stdout='')
@@ -74,7 +74,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --partial '+
+                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --progress --partial '+
                                 'myartifact.py '+
                                 'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py'+
                                 ' && exit 0)')
@@ -93,7 +93,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command='powershell.exe -C for ($i=1; $i -le  5; $i++) '+
-                                '{ rsync -var --partial myartifact.py '+
+                                '{ rsync -var --progress --partial myartifact.py '+
                                 'usr@srv.com:/home/srv/web/dir/build_1_17_12_2014_13_31_26_+0000/mydir/myartifact.py;'+
                                 ' if ($?) { exit 0 } else { sleep 5} } exit -1')
             + ExpectShell.log('stdio', stdout='')
@@ -113,7 +113,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command='for i in 1 2 3 4 5; do rsync -var --partial '+
+                        command='for i in 1 2 3 4 5; do rsync -var --progress --partial '+
                                 'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py'+
                                 ' myartifact.py; if [ $? -eq 0 ]; then exit 0; else sleep 5; fi; done; exit -1')
             + ExpectShell.log('stdio', stdout='')
@@ -133,7 +133,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --partial '+
+                        command='for /L %%i in (1,1,5) do (sleep 5 & rsync -var --progress --partial '+
                                 'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py'+
                                 ' myartifact.py && exit 0)')
             + ExpectShell.log('stdio', stdout='')
@@ -154,7 +154,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command='powershell.exe -C for ($i=1; $i -le  5; $i++) '+
-                                '{ rsync -var --partial '+
+                                '{ rsync -var --progress --partial '+
                                 'usr@srv.com:/home/srv/web/dir/B_2_01_01_1970_00_00_00_+0000/mydir/myartifact.py '+
                                 'myartifact.py; if ($?) { exit 0 } else { sleep 5} } exit -1')
             + ExpectShell.log('stdio', stdout='')
@@ -175,7 +175,7 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command='for i in 1 2 3 4 5; do rsync -var --partial '+
+                        command='for i in 1 2 3 4 5; do rsync -var --progress --partial '+
                                 'usr@srv.com:/home/srv/web/dir/B_2_17_12_2014_13_31_26_+0000/mydir/myartifact.py '+
                                 'myartifact.py; if [ $? -eq 0 ]; then exit 0; else sleep 5; fi; done; exit -1')
             + ExpectShell.log('stdio', stdout='')
