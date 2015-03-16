@@ -140,6 +140,35 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
+    def _hasAttrGroupMember(self, attrGroup, attr):
+        """
+        The hasattr equivalent for attribute groups: returns whether the given
+        member is in the attribute group.
+        """
+        method_name = '%s_%s' % (attrGroup, attr)
+        return hasattr(self, method_name)
+
+    def _getAttrGroupMember(self, attrGroup, attr):
+        """
+        The getattr equivalent for attribute groups: gets and returns the
+        attribute group member.
+        """
+        method_name = '%s_%s' % (attrGroup, attr)
+        return getattr(self, method_name)
+
+    def _listAttrGroupMembers(self, attrGroup):
+        """
+        Returns a list of all members in the attribute group.
+        """
+        from inspect import getmembers, ismethod
+        methods = getmembers(self, ismethod)
+        group_prefix = attrGroup + '_'
+        group_len = len(group_prefix)
+        group_members = [method[0][group_len:]
+                         for method in methods
+                         if method[0].startswith(group_prefix)]
+        return group_members
+
     def updateSourceProperty(self, name, value, source=''):
         """
         Update a property, indexing the property by codebase if codebase is not

@@ -71,7 +71,7 @@ from buildbot.steps.python_twisted import Trial
 from buildbot.steps.shell import Compile
 from buildbot.steps.source.cvs import CVS
 f1 = factory.BuildFactory()
-f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
+f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", method="copy"))
 f1.addStep(Compile(command=["python", "./setup.py", "build"]))
 # original lacked testChanges=True; this failed at the time
 f1.addStep(Trial(testChanges=True, testpath="."))
@@ -110,7 +110,7 @@ from buildbot.steps.python_twisted import Trial
 from buildbot.steps.shell import Compile
 from buildbot.steps.source.cvs import CVS
 f1 = factory.BuildFactory()
-f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", mode="copy"))
+f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", method="copy"))
 f1.addStep(Compile(command=["python", "./setup.py", "build"]))
 f1.addStep(Trial(testChanges=True, testpath="."))
 b1 = {'name': "buildbot-full",

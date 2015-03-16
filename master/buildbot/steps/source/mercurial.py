@@ -33,7 +33,6 @@ class Mercurial(Source):
     name = "hg"
 
     renderables = ["repourl"]
-    possible_modes = ('incremental', 'full')
     possible_methods = (None, 'clean', 'fresh', 'clobber')
     possible_branchTypes = ('inrepo', 'dirname')
 
@@ -77,9 +76,9 @@ class Mercurial(Source):
         Source.__init__(self, **kwargs)
 
         errors = []
-        if self.mode not in self.possible_modes:
+        if not self._hasAttrGroupMember('mode', self.mode):
             errors.append("mode %s is not one of %s" %
-                          (self.mode, self.possible_modes))
+                          (self.mode, self._listAttrGroupMembers('mode')))
         if self.method not in self.possible_methods:
             errors.append("method %s is not one of %s" %
                           (self.method, self.possible_methods))
@@ -114,10 +113,7 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             self.update_branch = (branch or 'default')
 
-        if self.mode == 'full':
-            d.addCallback(lambda _: self.full())
-        elif self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
@@ -127,7 +123,7 @@ class Mercurial(Source):
         d.addErrback(self.failed)
 
     @defer.inlineCallbacks
-    def full(self):
+    def mode_full(self, _):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -143,7 +139,7 @@ class Mercurial(Source):
         else:
             raise ValueError("Unknown method, check your configuration")
 
-    def incremental(self):
+    def mode_incremental(self, _):
         if self.method is not None:
             raise ValueError(self.method)
 

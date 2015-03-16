@@ -122,10 +122,7 @@ class P4(Source):
         if self.use_tickets and self.p4passwd:
             d.addCallback(self._acquireTicket)
 
-        if self.mode == 'full':
-            d.addCallback(self.full)
-        elif self.mode == 'incremental':
-            d.addCallback(self.incremental)
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.finish)
@@ -133,7 +130,7 @@ class P4(Source):
         return d
 
     @defer.inlineCallbacks
-    def full(self, _):
+    def mode_full(self, _):
         if debug_logging:
             log.msg("P4:full()..")
 
@@ -160,7 +157,7 @@ class P4(Source):
             log.msg("P4: full() sync done.")
 
     @defer.inlineCallbacks
-    def incremental(self, _):
+    def mode_incremental(self, _):
         if debug_logging:
             log.msg("P4:incremental()")
 

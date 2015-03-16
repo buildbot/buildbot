@@ -50,7 +50,9 @@ class Bzr(Source):
         if baseURL is not None and defaultBranch is None:
             raise ValueError("you must provide defaultBranch with baseURL")
 
-        assert self.mode in ['incremental', 'full']
+        if not self._hasAttrGroupMember('mode', self.mode):
+            raise ValueError("mode %s is not one of %s" %
+                             (self.mode, self._listAttrGroupMembers('mode')))
 
         if self.mode == 'full':
             assert self.method in ['clean', 'fresh', 'clobber', 'copy', None]
@@ -82,10 +84,7 @@ class Bzr(Source):
             else:
                 return 0
 
-        if self.mode == 'full':
-            d.addCallback(lambda _: self.full())
-        elif self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
@@ -95,7 +94,7 @@ class Bzr(Source):
         return d
 
     @defer.inlineCallbacks
-    def incremental(self):
+    def mode_incremental(self, _):
         updatable = yield self._sourcedirIsUpdatable()
         if updatable:
             command = ['update']
@@ -106,7 +105,7 @@ class Bzr(Source):
             yield self._doFull()
 
     @defer.inlineCallbacks
-    def full(self):
+    def mode_full(self, _):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -149,7 +148,7 @@ class Bzr(Source):
                                                     'logEnviron': self.logEnviron, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
-        d.addCallback(lambda _: self.incremental())
+        d.addCallback(self.mode_incremental)
 
         @d.addCallback
         def copy(_):

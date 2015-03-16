@@ -131,8 +131,9 @@ class Git(Source):
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
         if isinstance(self.mode, basestring):
-            if self.mode not in ['incremental', 'full']:
-                bbconfig.error("Git: mode must be 'incremental' or 'full'.")
+            if not self._hasAttrGroupMember('mode', self.mode):
+                bbconfig.error("Git: mode must be %s" %
+                               (' or '.join(self._listAttrGroupMembers('mode'))))
             if isinstance(self.method, basestring):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
@@ -164,10 +165,7 @@ class Git(Source):
             else:
                 return 0
 
-        if self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
-        elif self.mode == 'full':
-            d.addCallback(lambda _: self.full())
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
         if patch:
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
@@ -177,7 +175,7 @@ class Git(Source):
         return d
 
     @defer.inlineCallbacks
-    def full(self):
+    def mode_full(self, _):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -200,7 +198,7 @@ class Git(Source):
             raise ValueError("Unknown method, check your configuration")
 
     @defer.inlineCallbacks
-    def incremental(self):
+    def mode_incremental(self, _):
         action = yield self._sourcedirIsUpdatable()
         # if not updateable, do a full checkout
         if action == "clobber":
@@ -267,7 +265,7 @@ class Git(Source):
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(lambda _: self.incremental())
+        d.addCallback(self.mode_incremental)
 
         @d.addCallback
         def copy(_):

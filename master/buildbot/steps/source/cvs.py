@@ -52,6 +52,10 @@ class CVS(Source):
         self.mode = mode
         self.method = method
         self.srcdir = 'source'
+
+        if not self._hasAttrGroupMember('mode', self.mode):
+            raise ValueError("mode %s is not one of %s" %
+                             (self.mode, self._listAttrGroupMembers('mode')))
         Source.__init__(self, **kwargs)
 
     def startVC(self, branch, revision, patch):
@@ -76,10 +80,7 @@ class CVS(Source):
                 return self.purge(False)
             else:
                 return 0
-        if self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
-        elif self.mode == 'full':
-            d.addCallback(lambda _: self.full())
+        d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
             d.addCallback(self.patch, patch)
@@ -89,7 +90,7 @@ class CVS(Source):
         return d
 
     @defer.inlineCallbacks
-    def incremental(self):
+    def mode_incremental(self, _):
         updatable = yield self._sourcedirIsUpdatable()
         if updatable:
             rv = yield self.doUpdate()
@@ -98,7 +99,7 @@ class CVS(Source):
         defer.returnValue(rv)
 
     @defer.inlineCallbacks
-    def full(self):
+    def mode_full(self, _):
         if self.method == 'clobber':
             rv = yield self.clobber()
             defer.returnValue(rv)
@@ -158,7 +159,7 @@ class CVS(Source):
         d = self.runCommand(cmd)
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(lambda _: self.incremental())
+        d.addCallback(self.mode_incremental)
 
         @d.addCallback
         def copy(_):
