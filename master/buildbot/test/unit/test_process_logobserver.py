@@ -47,7 +47,7 @@ class TestLogObserver(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_sequence(self):
-        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        logid = yield self.master.data.updates.addLog(1, u'mine', u's')
         l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = MyLogObserver()
         lo.setLog(l)
@@ -95,7 +95,7 @@ class TestLineConsumerLogObesrver(unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_sequence(self, consumer):
-        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        logid = yield self.master.data.updates.addLog(1, u'mine', u's')
         l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = logobserver.LineConsumerLogObserver(consumer)
         lo.setLog(l)
@@ -159,7 +159,7 @@ class TestLogLineObserver(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_sequence(self):
-        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        logid = yield self.master.data.updates.addLog(1, u'mine', u's')
         l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = MyLogLineObserver()
         lo.setLog(l)
@@ -195,7 +195,7 @@ class TestOutputProgressObserver(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_sequence(self):
-        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        logid = yield self.master.data.updates.addLog(1, u'mine', u's')
         l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo = logobserver.OutputProgressObserver('stdio')
         step = mock.Mock()
@@ -214,7 +214,7 @@ class TestBufferObserver(unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_sequence(self, lo):
-        logid = yield self.master.data.updates.newLog(1, u'mine', u's')
+        logid = yield self.master.data.updates.addLog(1, u'mine', u's')
         l = log.Log.new(self.master, 'mine', 's', logid, 'utf-8')
         lo.setLog(l)
 

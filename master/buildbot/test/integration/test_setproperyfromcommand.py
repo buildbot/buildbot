@@ -26,7 +26,7 @@ class SetProperyFromCommand(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_setProp(self):
-        oldNewLog = self.master.data.updates.newLog
+        oldNewLog = self.master.data.updates.addLog
 
         @defer.inlineCallbacks
         def newLog(*arg, **kw):
@@ -35,7 +35,7 @@ class SetProperyFromCommand(RunMasterBase):
             yield task.deferLater(reactor, .1, lambda: None)
             res = yield oldNewLog(*arg, **kw)
             defer.returnValue(res)
-        self.master.data.updates.newLog = newLog
+        self.master.data.updates.addLog = newLog
         build = yield self.doForceBuild(wantProperties=True)
 
         self.assertEqual(build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))

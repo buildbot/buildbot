@@ -228,9 +228,9 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def doOldStyleCustomBuildStep(self, slowDB=False):
-        # patch out newLog to delay until we're ready
+        # patch out addLog to delay until we're ready
         newLogDeferreds = []
-        oldNewLog = self.master.data.updates.newLog
+        oldNewLog = self.master.data.updates.addLog
 
         def finishNewLog(self):
             for d in newLogDeferreds:
@@ -243,7 +243,7 @@ class RunSteps(unittest.TestCase):
             return d
         if slowDB:
             self.patch(self.master.data.updates,
-                       "newLog", delayedNewLog)
+                       "addLog", delayedNewLog)
             self.patch(OldStyleCustomBuildStep,
                        "_run_finished_hook", finishNewLog)
 
