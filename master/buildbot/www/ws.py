@@ -63,7 +63,7 @@ class WsProtocol(WebSocketServerProtocol):
         return self.sendJsonMessage(msg="OK", code=200, _id=_id)
 
     def parsePath(self, path):
-        path = path.split(".")
+        path = path.split("/")
         return tuple([str(p) if p != "*" else None for p in path])
 
     @defer.inlineCallbacks
@@ -74,7 +74,7 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         def callback(key, message):
-            self.sendJsonMessage(path=path, key=key, message=message, _id=_id)
+            self.sendJsonMessage(key="/".join(key), message=message)
 
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
 

@@ -1,10 +1,9 @@
 beforeEach module 'app'
 
 describe 'mq service', ->
-    mqService = $scope = $httpBackend = null
-    es =
-        addEventListener: (event, cb) ->
-            this["on#{event}"] = cb
+    mqService = $scope = $httpBackend = $rootScope = null
+    ws =
+        send: ->
 
     # common event receiver
     event_receiver =
@@ -12,12 +11,12 @@ describe 'mq service', ->
         receiver2: ->
 
     injected = ($injector) ->
-        $httpBackend = $injector.get('$httpBackend')
-        decorateHttpBackend($httpBackend)
-        $scope = $injector.get('$rootScope').$new()
+        $rootScope = $injector.get('$rootScope')
+        $scope = $rootScope.$new()
         mqService = $injector.get('mqService')
         # stub out the actual backend of mqservice
-        spyOn(mqService,"getEventSource").and.returnValue(es)
+        spyOn(mqService,"getWebSocket").and.returnValue(ws)
+        spyOn(ws,"send").and.returnValue(null)
         spyOn(event_receiver,"receiver1").and.returnValue(null)
         spyOn(event_receiver,"receiver2").and.returnValue(null)
 
@@ -30,14 +29,12 @@ describe 'mq service', ->
         expect(mqService._match("a/b/*/*", "a/b/c/d/e")).toBe(false)
 
     it 'should setup everything in setBaseURL', ->
-        expect(es.onopen).toBeUndefined()
-        mqService.setBaseUrl("sse/")
-        expect(mqService.getEventSource).toHaveBeenCalled()
-        expect(es.onopen).toBeDefined()
-        expect(es.onerror).toBeDefined()
-        expect(es.onmessage).toBeDefined()
-        expect(es.onhandshake).toBeDefined()
-        expect(es.onevent).toBeDefined()
+        expect(ws.onopen).toBeUndefined()
+        mqService.setBaseUrl("ws")
+        expect(mqService.getWebSocket).toHaveBeenCalled()
+        expect(ws.onopen).toBeDefined()
+        expect(ws.onerror).toBeDefined()
+        expect(ws.onmessage).toBeDefined()
 
     it 'should work with simple pub/sub usecase', ->
         mqService.setBaseUrl("sse/")
@@ -70,31 +67,46 @@ describe 'mq service', ->
         expect(event_receiver.receiver1).not.toHaveBeenCalled()
 
     it 'should use the backend to register to messages', ->
-        $httpBackend.expectGET('sse/add/<cid>/1/bla').respond("")
-        $httpBackend.expectGET('sse/add/<cid>/*/bla').respond("")
-        mqService.setBaseUrl("sse/")
-        mqService.on("1/bla", event_receiver.receiver1)
-        mqService.on("*/bla", event_receiver.receiver2)
-        es.onopen()
-        $httpBackend.verifyNoOutstandingRequest()
-        es.onhandshake({data:"<cid>"})
-        $httpBackend.flush()
+        mqService.setBaseUrl("ws/")
+        called = []
+        unregs = []
+        p1 = mqService.on("1/bla", event_receiver.receiver1)
+        p2 = mqService.on("*/bla", event_receiver.receiver2)
+        p1.then (unreg) ->
+            called.push('p1')
+            unregs.push(unreg)
+        p2.then (unreg) ->
+            called.push('p2')
+            unregs.push(unreg)
+        ws.readyState = 1
+        ws.onopen()
+        expect(ws.send).toHaveBeenCalledWith('{"cmd":"startConsuming","path":"1/bla","_id":2}')
+        expect(ws.send).toHaveBeenCalledWith('{"cmd":"startConsuming","path":"*/bla","_id":3}')
+        # fake the response
+        ws.onmessage(data: '{"msg":"OK","code":200,"_id":3}')
+        ws.onmessage(data: '{"msg":"OK","code":200,"_id":2}')
+        $rootScope.$apply()
+        expect(called).toEqual(["p1", "p2"])
 
-    it 'should unregister on scope close', ->
-        $httpBackend.expectGET('sse/add/<cid>/1/bla').respond("")
-        $httpBackend.expectGET('sse/add/<cid>/*/bla').respond("")
-        mqService.setBaseUrl("sse/")
-        mqService.on("1/bla", event_receiver.receiver1, $scope)
-        mqService.on("*/bla", event_receiver.receiver2, $scope)
-        es.onopen()
-        $httpBackend.verifyNoOutstandingRequest()
-        es.onhandshake({data:"<cid>"})
-        $httpBackend.flush()
-        $httpBackend.expectGET('sse/remove/<cid>/1/bla').respond("")
-        $httpBackend.expectGET('sse/remove/<cid>/*/bla').respond("")
-        $scope.$destroy()
-        $httpBackend.flush()
-        expect ->
-            mqService.broadcast("1/bla", {"msg":true})
-        .toThrow()
-        expect(event_receiver.receiver1).not.toHaveBeenCalled()
+        # fake the message
+        msg = '{"message": {"buildid": 1}, "key": "1/bla"}'
+        ws.onmessage(data: msg)
+        expect(event_receiver.receiver1).toHaveBeenCalledWith({"buildid": 1}, "1/bla")
+        expect(event_receiver.receiver2).toHaveBeenCalledWith({"buildid": 1}, "1/bla")
+
+        # unregister
+        called = []
+        p1 = unregs[0]()
+        p2 = unregs[1]()
+        $rootScope.$apply()
+        expect(ws.send).toHaveBeenCalledWith('{"cmd":"stopConsuming","path":"1/bla","_id":4}')
+        expect(ws.send).toHaveBeenCalledWith('{"cmd":"stopConsuming","path":"*/bla","_id":5}')
+        p1.then (unreg) ->
+            called.push('p1')
+        p2.then (unreg) ->
+            called.push('p2')
+        expect(called).toEqual([])
+        ws.onmessage(data: '{"msg":"OK","code":200,"_id":4}')
+        ws.onmessage(data: '{"msg":"OK","code":200,"_id":5}')
+        $rootScope.$apply()
+        expect(called).toEqual(["p1", "p2"])

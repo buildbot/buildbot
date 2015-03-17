@@ -7,9 +7,9 @@ class MqService extends Factory('common')
             return matcher.test(value)
 
         listeners = {}
-        eventsource = null
-        cid = null
-        basepath = null
+        ws = null
+        curid = 1
+        pending_msgs = {}
         deferred = null
         lostConnection = false
         self =
@@ -30,10 +30,12 @@ class MqService extends Factory('common')
                 unsub =  ->
                     namedListeners.splice(namedListeners.indexOf(listener), 1)
                     if namedListeners.length == 0
-                        self.stopConsuming(name)
+                        p = self.stopConsuming(name)
                         delete listeners[name]
+                    else
+                        p = $q.when(0)
+                    return p
                 $scope?.$on("$destroy", unsub)
-
                 return p.then -> unsub
 
             broadcast: (eventname, message) ->
@@ -51,31 +53,31 @@ class MqService extends Factory('common')
                     throw Error("broadcasting #{eventname} without listeners!")
 
             # this is intended to be mocked in unittests
-            getEventSource: (url) ->
-                return new EventSource(url + "listen")
+            getWebSocket: (url) ->
+                return new WebSocket(url)
 
             setBaseUrl: (url) ->
-                cid = null
+                pending_msgs = {}
                 makedeferred = ->
                     deferred = $q.defer()
                     deferred.promise.then(makedeferred)
                 makedeferred()
-                basepath = url
-                eventsource = self.getEventSource(url)
-                eventsource.onopen = (e) ->
-                    cid = null
+                ws = self.getWebSocket(url)
 
-                eventsource.onerror = (e) ->
+                ws.onerror = (e) ->
                     console.error(e)
                     lostConnection = true
-                eventsource.onmessage = (e) ->
-                    console.log "got message!", e
+                    if navigator.onLine
+                        self.setBaseUrl(url)
+                    else
+                        window.addEventListener "online", ->
+                            self.setBaseUrl(url)
 
-                eventsource.addEventListener "handshake", (e) ->
-                    cid = e.data
+                ws.onopen = (e) ->
                     # now we got our handshake, we can start consuming
                     # what was registered in between
                     # this is still racy, as we can have miss some events during this handshake time
+                    pending_msgs = {}
                     allp = []
                     for k, v of listeners
                         allp.push(self.startConsuming(k))
@@ -85,18 +87,33 @@ class MqService extends Factory('common')
                         if lostConnection
                             $rootScope.$broadcast("lost-sync")
 
-                eventsource.addEventListener "event", (e) ->
-                    e.msg = JSON.parse(e.data)
-                    $rootScope.$apply ->
-                        self.broadcast(e.msg.key, e.msg.message)
+                ws.onmessage = (e) ->
+                    msg = JSON.parse(e.data)
+                    if msg._id? and pending_msgs[msg._id]?
+                        if msg.code != 200
+                            pending_msgs[msg._id].reject(msg)
+                        else
+                            pending_msgs[msg._id].resolve(msg)
+                        delete pending_msgs[msg._id]
+                    else
+                        $rootScope.$apply ->
+                            self.broadcast(msg.key, msg.message)
+            sendMessage: (args) ->
+                curid += 1
+                args._id = curid
+                d = $q.defer()
+                d.promise._id = curid
+                pending_msgs[curid] = d
+                ws.send(JSON.stringify(args))
+                return d.promise
 
-            startConsuming: (name) ->
-                if cid?
-                    return $http.get(basepath + "add/#{cid}/#{name}")
+            startConsuming: (path) ->
+                if ws.readyState == 1
+                    return self.sendMessage(cmd:"startConsuming", path:path)
                 else
                     return deferred.promise
-            stopConsuming: (name) ->
-                if cid?
-                    $http.get(basepath + "remove/#{cid}/#{name}")
+            stopConsuming: (path) ->
+                if ws.readyState == 1
+                    return self.sendMessage(cmd:"stopConsuming", path:path)
 
         return self

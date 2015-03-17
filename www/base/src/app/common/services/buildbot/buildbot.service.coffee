@@ -1,5 +1,5 @@
 class BuildbotService extends Factory
-    constructor: ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLSSE,
+    constructor: ($log, Restangular, mqService, $rootScope, BASEURLAPI, BASEURLWS,
         SINGULARS, $q, $timeout, config) ->
         jsonrpc2_id = 1
         referenceid = 1
@@ -185,7 +185,7 @@ class BuildbotService extends Factory
             RestangularConfigurer.setBaseUrl(BASEURLAPI)
             RestangularConfigurer.setOnElemRestangularized(onElemRestangularized)
             RestangularConfigurer.setResponseExtractor(responseExtractor)
-            mqService.setBaseUrl(BASEURLSSE)
+            mqService.setBaseUrl(BASEURLWS)
 
         self = Restangular.withConfig(configurer)
         self.bindHierarchy = ($scope, $stateParams, paths) ->
@@ -197,3 +197,7 @@ class BuildbotService extends Factory
             return $q.all(l)
         addSomeAndMemoize(self)
         return self
+
+class BuildbotServiceConfig extends Config
+    constructor: (RestangularProvider) ->
+        RestangularProvider.setDefaultHeaders({'content-type': "application/json"})

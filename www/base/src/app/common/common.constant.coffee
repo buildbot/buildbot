@@ -6,9 +6,16 @@ invert_constant = (constant_name, inverted_constant_name) ->
 class Baseurlapi extends Constant('common')
     constructor: ->
         return 'api/v2/'
-class Baseurlsse extends Constant('common')
+
+class Baseurlws extends Constant('common')
     constructor: ->
-        return 'sse/'
+        href = location.href.toString()
+        if location.hash != ""
+            href = href.replace(location.hash, "")
+        if href[href.length - 1] != "/"
+            href = href + "/"
+
+        return href.replace(/^http/, "ws") + "ws"
 
 class Plurals extends Constant('common')
     constructor: ->

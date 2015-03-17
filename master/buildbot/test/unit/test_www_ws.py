@@ -49,10 +49,10 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
             '{"_id": null, "code": 400, "error": "no \'_id\' in websocket frame"}')
 
     def test_startConsuming(self):
-        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds.*.*", _id=1)), False)
+        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
             '{"msg": "OK", "code": 200, "_id": 1}')
         self.master.mq.verifyMessages = False
         self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
         self.proto.sendMessage.assert_called_with(
-            '{"path": "builds.*.*", "message": {"buildid": 1}, "_id": 1, "key": ["builds", "1", "new"]}')
+            '{"message": {"buildid": 1}, "key": "builds/1/new"}')
