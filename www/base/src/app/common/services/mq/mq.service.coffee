@@ -5,7 +5,6 @@ class MqService extends Factory('common')
             # ultra simple matcher used to route event back to the original subscriber
             matcher = new RegExp("^"+matcher.replace(/\*/g, "[^/]+") + "$")
             return matcher.test(value)
-        window.$rootScope = $rootScope
         listeners = {}
         ws = null
         curid = 1
@@ -66,13 +65,17 @@ class MqService extends Factory('common')
 
                 ws = self.getWebSocket(url)
 
-                ws.onerror = (e) ->
+                ws.onerror = (e) -> $rootScope.$apply ->
+                    console.log(e)
+                ws.onclose = (e) -> $rootScope.$apply ->
+                    console.log(e)
                     # forget all listeners, they will register back when connection is restored
                     $rootScope.$broadcast("mq.lost_connection", e)
                     lostConnection = true
                     listeners = {}
 
-                ws.onopen = (e) ->
+                ws.onopen = (e) -> $rootScope.$apply ->
+                    console.log e
                     pending_msgs = {}
                     allp = []
                     for k, v of listeners
@@ -86,7 +89,7 @@ class MqService extends Factory('common')
                         else
                             $rootScope.$broadcast("mq.first_connection", e)
 
-                ws.onmessage = (e) ->
+                ws.onmessage = (e) ->  $rootScope.$apply ->
                     msg = JSON.parse(e.data)
                     if msg._id? and pending_msgs[msg._id]?
                         if msg.code != 200
@@ -95,8 +98,7 @@ class MqService extends Factory('common')
                             pending_msgs[msg._id].resolve(msg)
                         delete pending_msgs[msg._id]
                     else if msg.k? and msg.m?
-                        $rootScope.$apply ->
-                            self.broadcast(msg.k, msg.m)
+                        self.broadcast(msg.k, msg.m)
                     else
                         $rootScope.$broadcast("mq.unkown_msg", msg)
 
