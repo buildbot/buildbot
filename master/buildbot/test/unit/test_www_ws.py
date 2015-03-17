@@ -31,28 +31,28 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
 
     def test_ping(self):
         self.proto.onMessage(json.dumps(dict(cmd="ping", _id=1)), False)
-        self.proto.sendMessage.assert_called_with('{"msg": "pong", "code": 200, "_id": 1}')
+        self.proto.sendMessage.assert_called_with('{"msg":"pong","code":200,"_id":1}')
 
     def test_bad_cmd(self):
         self.proto.onMessage(json.dumps(dict(cmd="poing", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
-            '{"_id": 1, "code": 404, "error": "no such command \'poing\'"}')
+            '{"_id":1,"code":404,"error":"no such command \'poing\'"}')
 
     def test_no_cmd(self):
         self.proto.onMessage(json.dumps(dict(_id=1)), False)
         self.proto.sendMessage.assert_called_with(
-            '{"_id": null, "code": 400, "error": "no \'cmd\' in websocket frame"}')
+            '{"_id":null,"code":400,"error":"no \'cmd\' in websocket frame"}')
 
     def test_no_id(self):
         self.proto.onMessage(json.dumps(dict(cmd="ping")), False)
         self.proto.sendMessage.assert_called_with(
-            '{"_id": null, "code": 400, "error": "no \'_id\' in websocket frame"}')
+            '{"_id":null,"code":400,"error":"no \'_id\' in websocket frame"}')
 
     def test_startConsuming(self):
         self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
-            '{"msg": "OK", "code": 200, "_id": 1}')
+            '{"msg":"OK","code":200,"_id":1}')
         self.master.mq.verifyMessages = False
         self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
         self.proto.sendMessage.assert_called_with(
-            '{"m": {"buildid": 1}, "k": "builds/1/new"}')
+            '{"k":"builds/1/new","m":{"buildid":1}}')

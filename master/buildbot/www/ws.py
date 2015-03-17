@@ -30,7 +30,7 @@ class WsProtocol(WebSocketServerProtocol):
         self.qrefs = {}
 
     def sendJsonMessage(self, **msg):
-        self.sendMessage(json.dumps(msg, default=toJson).encode('utf8'))
+        self.sendMessage(json.dumps(msg, default=toJson, separators=(',', ':')).encode('utf8'))
 
     def onMessage(self, frame, isBinary):
         log.msg("FRAME %s" % frame)
