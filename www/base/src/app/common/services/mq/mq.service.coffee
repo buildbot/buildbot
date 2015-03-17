@@ -54,7 +54,7 @@ class MqService extends Factory('common')
 
             # this is intended to be mocked in unittests
             getWebSocket: (url) ->
-                return new WebSocket(url)
+                return new ReconnectingWebSocket(url)
 
             setBaseUrl: (url) ->
                 pending_msgs = {}
@@ -62,16 +62,14 @@ class MqService extends Factory('common')
                     deferred = $q.defer()
                     deferred.promise.then(makedeferred)
                 makedeferred()
+
                 ws = self.getWebSocket(url)
 
                 ws.onerror = (e) ->
-                    console.error(e)
+                    # forget all listeners, they will register back when connection is restored
+                    $rootScope.$broadcast("mq.lost_connection", e)
                     lostConnection = true
-                    if navigator.onLine
-                        self.setBaseUrl(url)
-                    else
-                        window.addEventListener "online", ->
-                            self.setBaseUrl(url)
+                    listeners = {}
 
                 ws.onopen = (e) ->
                     # now we got our handshake, we can start consuming
@@ -81,11 +79,12 @@ class MqService extends Factory('common')
                     allp = []
                     for k, v of listeners
                         allp.push(self.startConsuming(k))
+
                     $q.all(allp).then ->
                         deferred.resolve()
                         # this will trigger bound data to re fetch the full-data
                         if lostConnection
-                            $rootScope.$broadcast("lost-sync")
+                            $rootScope.$broadcast("mq.restored_connection", e)
 
                 ws.onmessage = (e) ->
                     msg = JSON.parse(e.data)
@@ -95,9 +94,12 @@ class MqService extends Factory('common')
                         else
                             pending_msgs[msg._id].resolve(msg)
                         delete pending_msgs[msg._id]
-                    else
+                    else if msg.k? and msg.m?
                         $rootScope.$apply ->
-                            self.broadcast(msg.key, msg.message)
+                            self.broadcast(msg.k, msg.m)
+                    else
+                        $rootScope.$broadcast("mq.unkown_msg", msg)
+
             sendMessage: (args) ->
                 curid += 1
                 args._id = curid

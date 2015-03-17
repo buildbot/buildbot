@@ -55,4 +55,4 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
         self.master.mq.verifyMessages = False
         self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
         self.proto.sendMessage.assert_called_with(
-            '{"message": {"buildid": 1}, "key": "builds/1/new"}')
+            '{"m": {"buildid": 1}, "k": "builds/1/new"}')

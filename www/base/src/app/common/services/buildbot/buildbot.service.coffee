@@ -155,7 +155,7 @@ class BuildbotService extends Factory
                             for child in res
                                 opts.onchild(child)
                         opts.dest[opts.dest_key] = res
-                        unsub_lostsync = $rootScope.$on "lost-sync", ->
+                        unsub_lostsync = $rootScope.$on "mq.restored_connection", ->
                             unsub_lostsync()
                             delete references[myreferenceid]
                             unbind()

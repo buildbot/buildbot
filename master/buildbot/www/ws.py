@@ -14,6 +14,7 @@
 # Copyright  Team Members
 
 from buildbot.util import json
+from buildbot.util import toJson
 from twisted.internet import defer
 from twisted.python import log
 
@@ -29,7 +30,7 @@ class WsProtocol(WebSocketServerProtocol):
         self.qrefs = {}
 
     def sendJsonMessage(self, **msg):
-        self.sendMessage(json.dumps(msg).encode('utf8'))
+        self.sendMessage(json.dumps(msg, default=toJson).encode('utf8'))
 
     def onMessage(self, frame, isBinary):
         log.msg("FRAME %s" % frame)
@@ -74,7 +75,8 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         def callback(key, message):
-            self.sendJsonMessage(key="/".join(key), message=message)
+            # protocol is deliberatly concise in size
+            self.sendJsonMessage(k="/".join(key), m=message)
 
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
 

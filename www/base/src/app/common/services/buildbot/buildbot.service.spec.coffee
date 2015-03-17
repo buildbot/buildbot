@@ -202,7 +202,7 @@ describe 'buildbot service', ->
         expect($scope.builds.length).toBe(2)
         $httpBackend.expectDataGET 'builds',
             nItems:2
-        $rootScope.$broadcast("lost-sync")
+        $rootScope.$broadcast("mq.restored_connection")
         $httpBackend.flush()
         $rootScope.$digest()
         expect($scope.builds.length).toBe(2)

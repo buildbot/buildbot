@@ -89,7 +89,7 @@ describe 'mq service', ->
         expect(called).toEqual(["p1", "p2"])
 
         # fake the message
-        msg = '{"message": {"buildid": 1}, "key": "1/bla"}'
+        msg = '{"m": {"buildid": 1}, "k": "1/bla"}'
         ws.onmessage(data: msg)
         expect(event_receiver.receiver1).toHaveBeenCalledWith({"buildid": 1}, "1/bla")
         expect(event_receiver.receiver2).toHaveBeenCalledWith({"buildid": 1}, "1/bla")
