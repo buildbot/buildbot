@@ -99,7 +99,7 @@ class Mercurial(Source):
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
         d = self.checkHg()
         def checkInstall(hgInstalled):
             if not hgInstalled:
@@ -377,52 +377,16 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/hgrc'),
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/hgrc'))
 
     def _sourcedirContainsJournal(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/store/journal'),
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/store/journal'))
 
     def _sourcedirContainsLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/store/lock'),
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/store/lock'))
 
     def _sourcedirContainsWorkdirLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.hg/wlock'),
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/wlock'))
 
     def _removeAddedFilesAndUpdate(self, _):
         command = ['locate', 'set:added()']

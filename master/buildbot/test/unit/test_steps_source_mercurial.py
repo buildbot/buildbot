@@ -945,6 +945,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.workdir = "build"
         step.stdio_log = Mock()
         step.runCommand = self.runCommand
+        step.rc_log = Mock()
         self.currentCommandRC = -1
         self.clobberRepository = False
         self.patch(buildstep.RemoteCommand, "didFail", self.checkDidFail)

@@ -57,7 +57,7 @@ class Bzr(Source):
             self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         if self.repourl is None:
             #We only want os path characters if its not a web url
@@ -185,16 +185,7 @@ class Bzr(Source):
         return d
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.bzr'),
-                                               'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.bzr'))
 
     def computeSourceRevision(self, changes):
         if not changes:

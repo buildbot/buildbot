@@ -218,7 +218,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield service.MultiService.stopService(self)
+        if self.running:
+            yield service.MultiService.stopService(self)
         if self.db_loop:
             self.db_loop.stop()
             self.db_loop = None

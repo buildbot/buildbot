@@ -128,7 +128,7 @@ class Git(Source):
         self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkGit()
         def checkInstall(gitInstalled):
@@ -434,16 +434,7 @@ class Git(Source):
         return changes[-1].revision
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.build.path_module.join(self.workdir, '.git'),
-                                               'logEnviron': self.logEnviron,})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.git'))
 
     def _updateSubmodule(self, _):
         if self.submodules:
