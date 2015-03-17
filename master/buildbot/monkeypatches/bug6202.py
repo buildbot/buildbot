@@ -13,20 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
-from twisted.trial import unittest
+from twisted.python import log
+from twisted.application import internet
+from twisted.application import service
 
-def patch_testcase_patch():
-    """
-    Patch out TestCase.patch to skip the test on version combinations where it
-    does not work.
-
-    (used for debugging only)
-    """
-    # Twisted-9.0.0 and earlier did not have a UnitTest.patch that worked on
-    # Python-2.7
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
-        def nopatch(self, *args):
-            raise unittest.SkipTest('unittest.TestCase.patch is not available')
-        unittest.TestCase.patch = nopatch
+def patch():
+    log.msg("Applying patch for http://twistedmatrix.com/trac/ticket/6202")
+    old_stopService = internet.TimerService.stopService
+    def new_stopService(self):
+        if hasattr(self, '_loop'):
+            return old_stopService(self)
+        else:
+            return service.Service.stopService(self)
+    internet.TimerService.stopService = new_stopService
