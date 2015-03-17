@@ -172,7 +172,7 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=None,
-                 public_html="public_html", site=None, numbuilds=20,
+                 public_html="public_html", site=None, numbuilds=15,
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
