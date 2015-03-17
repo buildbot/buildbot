@@ -452,7 +452,9 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_details_none(self):
         yield self.render_resource(self.rsrc, '/test/0')
         self.assertRequest(
-            contentJson=dict(error="not found"),
+            contentJson=dict(error="not found while getting from endpoint for /test/n:testid with arguments"
+                             " ResultSpec(**{'fields': None, 'limit': None, 'order': None, 'filters': [], "
+                             "'offset': None}) and {'testid': 0}"),
             contentType='text/plain; charset=utf-8',
             responseCode=404)
 
