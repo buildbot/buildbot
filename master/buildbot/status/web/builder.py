@@ -250,10 +250,11 @@ def builder_info(build, req, codebases_arg={}):
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
 
-    def __init__(self, status, builder_status):
+    def __init__(self, status, builder_status, numbuilds=15):
         HtmlResource.__init__(self)
         self.status = status
         self.builder_status = builder_status
+        self.numbuilds = numbuilds
 
     def getPageTitle(self, request):
         return "Katana - %s" % self.builder_status.getFriendlyName()
@@ -271,7 +272,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         codebases = {}
         getCodebasesArg(request=req, codebases=codebases)
 
-        num_builds = int(req.args.get('numbuilds', ['15'])[0])
+        num_builds = int(req.args.get('numbuilds', [self.numbuilds])[0])
 
         cxt['builder_url'] = path_to_builder(req, b, codebases=True)
         cxt['path_to_codebases'] = path_to_codebases(req, project)
@@ -554,9 +555,10 @@ class BuildersResource(HtmlResource):
     pageTitle = "Katana - Builders"
     addSlash = True
 
-    def __init__(self, project):
+    def __init__(self, project, numbuilds=15):
         HtmlResource.__init__(self)
         self.project = project
+        self.numbuilds = numbuilds
 
     @defer.inlineCallbacks
     def content(self, req, cxt):
@@ -594,7 +596,7 @@ class BuildersResource(HtmlResource):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
             builder_status = s.getBuilder(path)
-            return StatusResourceBuilder(s, builder_status)
+            return StatusResourceBuilder(s, builder_status, self.numbuilds)
         if path == "_all":
             return StatusResourceAllBuilders(self.getStatus(req))
         if path == "_selected":

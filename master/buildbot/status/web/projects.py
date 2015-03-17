@@ -29,6 +29,10 @@ from buildbot.status.web.status_json import SingleProjectJsonResource
 class ProjectsResource(HtmlResource):
     pageTitle = "Katana - Projects"
 
+    def __init__(self, numbuilds=20):
+        HtmlResource.__init__(self)
+        self.numbuilds = numbuilds
+
     def content(self, req, cxt):
         status = self.getStatus(req)
 
@@ -77,16 +81,17 @@ class ProjectsResource(HtmlResource):
         projects = status.getProjects()
 
         if path in projects:
-            return CodeBasesResource(projects[path])
+            return CodeBasesResource(projects[path], self.numbuilds)
         return HtmlResource.getChild(self, path, req)
     
 
 class CodeBasesResource(HtmlResource):
     pageTitle = "Katana - Codebases"
 
-    def __init__(self, project):
+    def __init__(self, project, numbuilds=15):
         HtmlResource.__init__(self)
         self.project = project
+        self.numbuilds = numbuilds
 
     @defer.inlineCallbacks
     def content(self, request, cxt):
@@ -116,9 +121,9 @@ class CodeBasesResource(HtmlResource):
 
     def getChild(self, path, req):
         if path == "builders":
-            return BuildersResource(self.project)
+            return BuildersResource(self.project, self.numbuilds)
         elif path == "comparison":
-            return BranchComparisonResource(self.project)
+            return BranchComparisonResource(self.project, self.numbuilds)
 
         return HtmlResource.getChild(self, path, req)
 
@@ -127,9 +132,10 @@ class CodeBasesResource(HtmlResource):
 class BranchComparisonResource(HtmlResource):
     pageTitle = "Katana - Branch Comparison"
 
-    def __init__(self, project):
+    def __init__(self, project, numbuilds=15):
         HtmlResource.__init__(self)
         self.project = project
+        self.numbuilds = numbuilds
 
     @defer.inlineCallbacks
     def content(self, request, cxt):
@@ -246,5 +252,5 @@ class BranchComparisonResource(HtmlResource):
 
     def getChild(self, path, req):
         if path == "builders":
-            return BuildersResource(self.project)
+            return BuildersResource(self.project, self.numbuilds)
         return HtmlResource.getChild(self, path, req)
