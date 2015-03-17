@@ -192,9 +192,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             (bsid, brids) = xxx_todo_changeme
             self.assertEqual((bsid, brids), expectedReturn)
             # check the correct message was received
-            self.assertEqual(
-                sorted(self.master.mq.productions),
-                sorted(expectedMessages))
+            self.master.mq.assertProductions(expectedMessages, orderMatters=False)
             # and that the correct data was inserted into the db
             self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
         d.addCallback(check)
@@ -224,6 +222,12 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
     def _buildRequestMessage2(self, brid, bsid, builderid):
         return (
             ('buildrequests', str(brid), 'new'),
+            self._buildRequestMessageDict(brid, bsid, builderid))
+
+    def _buildRequestMessage3(self, brid, bsid, builderid):
+        return (
+            ('builders', str(builderid),
+             'buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildsetMessage(self, bsid, external_idstring=u'extid',
@@ -261,8 +265,10 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         expectedMessages = [
             self._buildRequestMessage1(1000, 200, 42),
             self._buildRequestMessage2(1000, 200, 42),
+            self._buildRequestMessage3(1000, 200, 42),
             self._buildRequestMessage1(1001, 200, 43),
             self._buildRequestMessage2(1001, 200, 43),
+            self._buildRequestMessage3(1001, 200, 43),
             self._buildsetMessage(200),
         ]
         expectedBuildset = dict(reason=u'because',
