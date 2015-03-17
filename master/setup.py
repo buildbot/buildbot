@@ -193,7 +193,7 @@ else:
         'sqlalchemy >= 0.6, <= 0.7.10',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
-        'sqlalchemy-migrate ==0.6.1, ==0.7.0, ==0.7.1, ==0.7.2',
+        'sqlalchemy-migrate ==0.7.2',
         'python-dateutil==1.5',
     ]
     setup_args['tests_require'] = [
