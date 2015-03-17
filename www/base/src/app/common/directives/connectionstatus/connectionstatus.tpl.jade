@@ -1,0 +1,6 @@
+.connectionstatus.anim-fade(ng-show="alertenabled")
+    .alert.alert-warning(ng-show="connectionlost")
+        i.fa.fa-spin.fa-spinner
+        | &nbsp;Connection Lost. Retrying...
+    .alert.alert-success(ng-hide="connectionlost")
+        | Connection restored!

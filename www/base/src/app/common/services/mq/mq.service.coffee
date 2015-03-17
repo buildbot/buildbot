@@ -5,7 +5,7 @@ class MqService extends Factory('common')
             # ultra simple matcher used to route event back to the original subscriber
             matcher = new RegExp("^"+matcher.replace(/\*/g, "[^/]+") + "$")
             return matcher.test(value)
-
+        window.$rootScope = $rootScope
         listeners = {}
         ws = null
         curid = 1
@@ -54,6 +54,7 @@ class MqService extends Factory('common')
 
             # this is intended to be mocked in unittests
             getWebSocket: (url) ->
+                # we use reconnecting websocket for automatic reconnection
                 return new ReconnectingWebSocket(url)
 
             setBaseUrl: (url) ->
@@ -72,9 +73,6 @@ class MqService extends Factory('common')
                     listeners = {}
 
                 ws.onopen = (e) ->
-                    # now we got our handshake, we can start consuming
-                    # what was registered in between
-                    # this is still racy, as we can have miss some events during this handshake time
                     pending_msgs = {}
                     allp = []
                     for k, v of listeners
@@ -82,9 +80,11 @@ class MqService extends Factory('common')
 
                     $q.all(allp).then ->
                         deferred.resolve()
-                        # this will trigger bound data to re fetch the full-data
                         if lostConnection
+                            # this will trigger bound data to re fetch the full-data
                             $rootScope.$broadcast("mq.restored_connection", e)
+                        else
+                            $rootScope.$broadcast("mq.first_connection", e)
 
                 ws.onmessage = (e) ->
                     msg = JSON.parse(e.data)

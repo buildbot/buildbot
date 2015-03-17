@@ -38,6 +38,19 @@ tl;dr is:
   }
 }
 
+/* animation for  */
+.anim-fade {
+    -webkit-transition: .5s linear all;
+    transition:  .5s linear all;
+    opacity: 1;
+    &.ng-hide-remove,
+    &.ng-hide-add,.list.ng-hide {
+      display:block!important;
+    }
+    &.ng-hide {
+        opacity: 0;
+    }
+}
 /* animation for validation tooltips in force forms */
 .anim-popover {
   &.ng-enter,
