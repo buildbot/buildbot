@@ -18,6 +18,7 @@ import sys
 
 from buildbot import config
 from buildbot.scripts.base import getConfigFileFromTac
+from buildbot.util import in_reactor
 
 
 def _loadConfig(basedir, configFile, quiet):
@@ -36,6 +37,7 @@ def _loadConfig(basedir, configFile, quiet):
     return 0
 
 
+@in_reactor
 def checkconfig(config):
     quiet = config.get('quiet')
     configFile = config.get('configFile', os.getcwd())
