@@ -20,7 +20,7 @@ from mock import Mock
 from twisted.trial import unittest
 
 
-class EventResource(www.WwwTestMixin, unittest.TestCase):
+class WsResource(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.master = master = self.make_master(url='h:/a/b/')
