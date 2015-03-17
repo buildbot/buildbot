@@ -589,6 +589,9 @@ class Git(Source):
 
             @d.addCallback
             def checkWithListdir(_):
+                if 'files' not in cmd.updates:
+                    # no files - directory doesn't exist
+                    return "clone"
                 files = cmd.updates['files'][0]
                 if '.git' in files:
                     return "update"
