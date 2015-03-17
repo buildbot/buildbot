@@ -16,8 +16,8 @@
 import mock
 from buildbot import interfaces
 from buildbot.process import buildstep
-from buildbot.test.fake import remotecommand, fakebuild
 from buildbot.status.buildstep import BuildStepStatus
+from buildbot.test.fake import remotecommand, fakebuild, slave
 
 
 class BuildStepMixin(object):
@@ -97,7 +97,7 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = mock.Mock(name="buildslave")
+        self.buildslave = step.buildslave = slave.FakeSlave()
 
         # step.step_status
 
