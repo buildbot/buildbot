@@ -389,10 +389,16 @@ class HttpStatusPush(StatusPush):
 
         while True:
             items = self.queue.popChunk(chunkSize)
+            newitems = []
+            for item in items:
+                if hasattr(item, 'asDict'):
+                    newitems.append(item.asDict())
+                else:
+                    newitems.append(item)
             if self.debug:
-                packets = json.dumps(items, indent=2, sort_keys=True)
+                packets = json.dumps(newitems, indent=2, sort_keys=True)
             else:
-                packets = json.dumps(items, separators=(',',':'))
+                packets = json.dumps(newitems, separators=(',',':'))
             params = {'packets': packets}
             params.update(self.extra_post_params)
             data = urllib.urlencode(params)

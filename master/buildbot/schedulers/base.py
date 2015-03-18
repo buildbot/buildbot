@@ -257,11 +257,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
             # use change_consumption_lock to ensure the service does not stop
             # while this change is being processed
-            d = self._change_consumption_lock.acquire()
-            d.addCallback(lambda _ : self.gotChange(change, important))
-            def release(x):
-                self._change_consumption_lock.release()
-            d.addBoth(release)
+            d = self._change_consumption_lock.run(self.gotChange, change, important)
             d.addErrback(log.err, 'while processing change')
         self._change_subscription = self.master.subscribeToChanges(changeCallback)
 
@@ -272,14 +268,11 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption
-        d = self._change_consumption_lock.acquire()
-        def stop(x):
+        def stop():
             if self._change_subscription:
                 self._change_subscription.unsubscribe()
                 self._change_subscription = None
-            self._change_consumption_lock.release()
-        d.addBoth(stop)
-        return d
+        return self._change_consumption_lock.run(stop)
 
     def gotChange(self, change, important):
         """
