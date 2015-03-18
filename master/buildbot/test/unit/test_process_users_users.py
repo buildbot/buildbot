@@ -122,7 +122,7 @@ class UsersTests(unittest.TestCase):
                                                 attr_data='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='email',
                                                 attr_data='tyler@mayhem.net')])
-        d = users.getUserContact(self.master, contact_type='email', uid=1)
+        d = users.getUserContact(self.master, contact_types=['email'], uid=1)
         def check(contact):
             self.assertEqual(contact, 'tyler@mayhem.net')
         d.addCallback(check)
@@ -134,14 +134,14 @@ class UsersTests(unittest.TestCase):
                                                 attr_data='tdurden'),
                                 fakedb.UserInfo(uid=1, attr_type='email',
                                                 attr_data='tyler@mayhem.net')])
-        d = users.getUserContact(self.master, contact_type='blargh', uid=1)
+        d = users.getUserContact(self.master, contact_types=['blargh'], uid=1)
         def check(contact):
             self.assertEqual(contact, None)
         d.addCallback(check)
         return d
 
     def test_getUserContact_uid_not_found(self):
-        d = users.getUserContact(self.master, contact_type='email', uid=1)
+        d = users.getUserContact(self.master, contact_types=['email'], uid=1)
         def check(contact):
             self.assertEqual(contact, None)
         d.addCallback(check)
