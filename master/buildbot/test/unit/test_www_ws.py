@@ -56,3 +56,21 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
         self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
         self.proto.sendMessage.assert_called_with(
             '{"k":"builds/1/new","m":{"buildid":1}}')
+
+    def test_startConsumingBadPath(self):
+        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False)
+        self.proto.sendMessage.assert_called_with(
+            '{"_id":1,"code":400,"error":"invalid path format \'{}\'"}')
+
+    def test_stopConsumingNotRegistered(self):
+        self.proto.onMessage(json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=1)), False)
+        self.proto.sendMessage.assert_called_with(
+            '{"_id":1,"code":400,"error":"path was not consumed \'builds/*/*\'"}')
+
+    def test_stopConsuming(self):
+        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
+        self.proto.sendMessage.assert_called_with(
+            '{"msg":"OK","code":200,"_id":1}')
+        self.proto.onMessage(json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=2)), False)
+        self.proto.sendMessage.assert_called_with(
+            '{"msg":"OK","code":200,"_id":2}')
