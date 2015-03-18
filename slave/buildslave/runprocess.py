@@ -780,6 +780,8 @@ class RunProcess:
         self.kill(msg)
 
     def isDead(self):
+        if self.process.pid is None:
+            return True
         pid = int(self.process.pid)
         try:
             os.kill(pid, 0)
@@ -788,6 +790,7 @@ class RunProcess:
         return False  # alive
 
     def checkProcess(self):
+        self.sigtermTimer = None
         if not self.isDead():
             hit = self.sendSig(self.interruptSignal)
         else:
