@@ -708,8 +708,12 @@ class BuildStep(object, properties.PropertiesMixin):
         try:
             if self.progress:
                 self.progress.finish()
-            self.addHTMLLog("err.html", formatFailure(why))
-            self.addCompleteLog("err.text", why.getTraceback())
+            try:
+                self.addCompleteLog("err.text", why.getTraceback())
+                self.addHTMLLog("err.html", formatFailure(why))
+            except Exception:
+                log.err(Failure(), "error while formatting exceptions")
+
             # could use why.getDetailedTraceback() for more information
             self.step_status.setText(["'%s'" % self.name, "exception"])
             self.step_status.setText2(["'%s'" % self.name])
@@ -719,17 +723,16 @@ class BuildStep(object, properties.PropertiesMixin):
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
             self.step_status.setHidden(hidden)
-        except:
-            log.msg("exception during failure processing")
-            log.err()
+        except Exception:
+            log.err(Failure(), "exception during failure processing")
             # the progress stuff may still be whacked (the StepStatus may
             # think that it is still running), but the build overall will now
             # finish
+
         try:
             self.releaseLocks()
-        except:
-            log.msg("exception while releasing locks")
-            log.err()
+        except Exception:
+            log.err(Failure(), "exception while releasing locks")
 
         log.msg("BuildStep.failed now firing callback")
         self.deferred.callback(results)
