@@ -264,7 +264,7 @@ class Build(properties.PropertiesMixin):
             self.builder.builder_status.addPointEvent(["setupBuild",
                                                        "exception"])
             self.finished = True
-            self.results = FAILURE
+            self.results = EXCEPTION
             self.deferred = None
             d.callback(self)
             return d

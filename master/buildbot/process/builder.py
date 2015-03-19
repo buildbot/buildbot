@@ -376,6 +376,18 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
+        # IMPORTANT: no yielding is allowed from here to the startBuild call!
+
+        # it's possible that we lost the slave remote between the ping above
+        # and now.  If so, bail out.  The build.startBuild call below transfers
+        # responsibility for monitoring this connection to the Build instance,
+        # so this check ensures we hand off a working connection.
+        if not slavebuilder.remote:
+            log.msg("slave disappeared before build could start")
+            run_cleanups()
+            defer.returnValue(False)
+            return
+
         # let status know
         self.master.status.build_started(req.id, self.name, bs)
 
@@ -384,11 +396,15 @@ class Builder(config.ReconfigurableServiceMixin,
         # (through our BuilderStatus object, which is its parent).  Finally it
         # will start the actual build process.  This is done with a fresh
         # Deferred since _startBuildFor should not wait until the build is
-        # finished.
-        d = build.startBuild(bs, self.expectations, slavebuilder)
+        # finished.  This uses `maybeDeferred` to ensure that any exceptions
+        # raised by startBuild are treated as deferred errbacks (see
+        # http://trac.buildbot.net/ticket/2428).
+        d = defer.maybeDeferred(build.startBuild,
+                bs, self.expectations, slavebuilder)
         d.addCallback(self.buildFinished, slavebuilder, bids)
         # this shouldn't happen. if it does, the slave will be wedged
-        d.addErrback(log.err)
+        d.addErrback(log.err, 'from a running build; this is a '
+            'serious error - please file a bug at http://buildbot.net')
 
         # make sure the builder's status is represented correctly
         self.updateBigStatus()
