@@ -582,7 +582,7 @@ class WebStatus(service.MultiService):
                         duplicate_webstatus += 1
 
         if duplicate_webstatus:
-            errors.addError(
+            config.error(
                 "%d Webstatus objects have same port: %s"
                     % (duplicate_webstatus, self.http_port),
             )

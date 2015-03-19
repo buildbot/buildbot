@@ -83,7 +83,7 @@ class StatusReceiverBase:
     def slaveDisconnected(self, slaveName):
         pass
 
-    def checkConfig(self, otherStatusReceivers, errors):
+    def checkConfig(self, otherStatusReceivers):
         pass
 
 class StatusReceiverMultiService(StatusReceiverBase, service.MultiService,
