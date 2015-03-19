@@ -50,6 +50,7 @@ class RemoteCommand(pb.Referenceable):
         self.collectStdout = collectStdout
         self.collectStderr = collectStderr
         self.stdout = ''
+        self.stderr = ''
 
         self._startTime = None
         self._remoteElapsed = None
