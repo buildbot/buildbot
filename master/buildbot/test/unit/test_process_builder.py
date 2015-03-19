@@ -195,15 +195,18 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         yield self.do_test_maybeStartBuild(rows=rows,
                 exp_claims=[2], exp_builds=[('slave-01', [2])])
 
+    def setupMethods(self, newBuild):
+        self.bldr.config.factory.newBuild = newBuild
+        self.bldr.notifyRequestsRemoved = lambda x: True
+        self.bldr.buildFinished = lambda build, sb, bids: True
+
     @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuilding(self):
         yield self.makeBuilder(patch_startbuildfor=False)
         def newBuild(buildrequests):
             return fakebuild.FakeBuild(buildrequests)
 
-        self.bldr.config.factory.newBuild = newBuild
-
-        self.bldr.notifyRequestsRemoved = lambda x: True
+        self.setupMethods(newBuild)
 
         self.setSlaveBuilders({'test-slave11':1})
         rows = [fakedb.SourceStampSet(id=1),
@@ -230,9 +233,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         def newBuild(buildrequests):
             return fakebuild.FakeBuild(buildrequests)
 
-        self.bldr.config.factory.newBuild = newBuild
-
-        self.bldr.notifyRequestsRemoved = lambda x: True
+        self.setupMethods(newBuild)
 
         self.setSlaveBuilders({'test-slave11':1})
         rows = [fakedb.SourceStampSet(id=1),
