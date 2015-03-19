@@ -124,7 +124,7 @@ setup_args = {
               "buildbot.steps.package",
               "buildbot.steps.package.deb",
               "buildbot.steps.package.rpm",
-              "buildbot.steps.source",
+              "buildbot.steps.source", "buildbot.steps.source.custom",
               "buildbot.process",
               "buildbot.process.users",
               "buildbot.clients",
