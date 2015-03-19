@@ -29,13 +29,13 @@ from buildbot import version
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 
-def include(d, e):
+def include(d, e, package_path=None):
     """Generate a pair of (directory, file-list) for installation.
 
     'd' -- A directory
     'e' -- A glob pattern"""
-    
-    return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
+    package_path = package_path or d
+    return (d, [f for f in glob.glob('%s/%s'%(package_path, e)) if os.path.isfile(f)])
 
 class install_data_twisted(install_data):
     """make sure data files are installed in package.
@@ -116,7 +116,7 @@ setup_args = {
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
         ],
-
+    'package_dir': {'www': '../www'},
     'packages': ["buildbot",
               "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
               "buildbot.changes",
@@ -138,7 +138,7 @@ setup_args = {
               "buildbot.test.fake",
               "buildbot.test.unit",
               "buildbot.test.util",
-              "buildbot.test.regressions",
+              "buildbot.test.regressions", "www"
               ],
     'data_files': [
                 ("buildbot", [
@@ -151,15 +151,15 @@ setup_args = {
                 ("buildbot/clients", [
                     "buildbot/clients/debug.glade",
                 ]),
-                ("buildbot/status/web/files", [
-                    "buildbot/status/web/files/default.css",
-                    "buildbot/status/web/files/bg_gradient.jpg",
-                    "buildbot/status/web/files/robots.txt",
-                    "buildbot/status/web/files/templates_readme.txt",
-                    "buildbot/status/web/files/favicon.ico",
-                ]),
-                include("buildbot/status/web/templates", '*.html'),
-                include("buildbot/status/web/templates", '*.xml'),
+                include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
+                include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
+                include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),
+                include("www/images", '*', package_path="../www/images"),
+                include("www/prod/css", '*', package_path="../www/prod/css"),
+                include("www/prod/script", '*', package_path="../www/prod/script"),
+                ("www", ["../www/favicon.ico", "../www/robots.txt", "../www/templates_readme.txt"]),
+                include("www/templates", '*.html', package_path="../www/templates"),
+                include("www/templates", '*.xml', package_path="../www/templates"),
                 ("buildbot/scripts", [
                     "buildbot/scripts/sample.cfg",
                     "buildbot/scripts/buildbot_tac.tmpl",
