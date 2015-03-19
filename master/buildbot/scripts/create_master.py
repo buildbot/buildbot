@@ -24,6 +24,7 @@ from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot import config as config_module
 from buildbot import monkeypatches
+import shutil
 
 def makeBasedir(config):
     if os.path.exists(config['basedir']):
@@ -72,12 +73,16 @@ def makeSampleConfig(config):
         f.write(config_sample)
     os.chmod(target, 0600)
 
+
+def getWWWFolder():
+    path = "../../../www/"
+    src = util.sibpath(__file__, path)
+    if not os.path.exists(src):
+        src = util.sibpath(__file__, "../../www/")
+    return src
+
 def makePublicHtml(config):
-    files = {
-        'bg_gradient.jpg' : "../../../www/images/bg_gradient.jpg",
-        'robots.txt' : "../../../www/robots.txt",
-        'favicon.ico' : "../../../www/favicon.ico",
-    }
+
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
         if not config['quiet']:
@@ -85,18 +90,25 @@ def makePublicHtml(config):
         return
     else:
         os.mkdir(webdir)
+
+    www_folder = getWWWFolder()
+
+    if not os.path.exists(www_folder):
+        print "error creating master: could not find www folder: "+www_folder
+        return
+
+    shutil.copytree(os.path.join(www_folder, "fonts"), os.path.join(webdir, "fonts"))
+    shutil.copytree(os.path.join(www_folder, "images"), os.path.join(webdir, "images"))
+    shutil.copytree(os.path.join(www_folder, "prod"), os.path.join(webdir, "prod"))
+    shutil.copy2(os.path.join(www_folder, "robots.txt"), os.path.join(webdir, "robots.txt"))
+    shutil.copy2(os.path.join(www_folder, "favicon.ico"), os.path.join(webdir, "favicon.ico"))
+
     if not config['quiet']:
         print "populating public_html/"
-    for target, source in files.iteritems():
-        source = util.sibpath(__file__, source)
-        target = os.path.join(webdir, target)
-        with open(target, "wt") as f:
-            with open(source, "rt") as i:
-                f.write(i.read())
 
 def makeTemplatesDir(config):
     files = {
-        'README.txt' : "../../../www/templates_readme.txt",
+        'README.txt' : getWWWFolder() + "templates_readme.txt",
     }
     template_dir = os.path.join(config['basedir'], "templates")
     if os.path.exists(template_dir):
