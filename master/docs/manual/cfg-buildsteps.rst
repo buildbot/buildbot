@@ -495,8 +495,7 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
 
 ``password``
    (optional): if specified, this will be passed to the ``svn`` binary
-   with a ``--password`` option. The password itself will be suitably
-   obfuscated in the logs.
+   with a ``--password`` option.
 
 ``extra_args``
    (optional): if specified, an array of strings that will be passed
