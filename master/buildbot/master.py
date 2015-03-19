@@ -57,6 +57,10 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.www import service as wwwservice
 
+try:
+    from buildbot.wamp import connector as wampconnector
+except ImportError:
+    wampconnector = None
 #
 
 
@@ -152,6 +156,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
 
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
+
+        if wampconnector is not None:
+            self.wamp = wampconnector.WampConnector(self)
+            self.wamp.setServiceParent(self)
 
         self.db = dbconnector.DBConnector(self, self.basedir)
         self.db.setServiceParent(self)

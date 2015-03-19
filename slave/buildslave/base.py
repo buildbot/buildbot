@@ -115,7 +115,10 @@ class SlaveBuilderBase(service.Service):
     # Builder
     def remote_startBuild(self):
         """This is invoked before the first step of any new build is run.  It
-        doesn't do much, but masters call it so it's still here."""
+        doesn't do much, but masters call it so it's still here.
+
+        Recent masters don't call it anymore, so don't do anything here.
+        """
         pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
@@ -176,7 +179,6 @@ class SlaveBuilderBase(service.Service):
         number in the process. It adds the update to a queue, and asks the
         master to acknowledge the update so it can be removed from that
         queue."""
-
         if not self.running:
             # .running comes from service.Service, and says whether the
             # service is running or not. If we aren't running, don't send any

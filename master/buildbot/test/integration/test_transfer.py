@@ -59,6 +59,10 @@ class TransferStepsMasterNull(TransferStepsMasterPb):
     proto = "null"
 
 
+class TransferStepsMasterWamp(TransferStepsMasterPb):
+    proto = "wamp"
+
+
 # master configuration
 def masterConfig():
     c = {}

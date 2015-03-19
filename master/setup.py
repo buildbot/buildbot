@@ -171,6 +171,7 @@ setup_args = {
         "buildbot.steps.package.rpm",
         "buildbot.steps.source",
         "buildbot.util",
+        "buildbot.wamp",
         "buildbot.www",
     ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
@@ -377,6 +378,7 @@ else:
         # version.
         'sqlalchemy-migrate==0.7.2',
         'python-dateutil>=1.5',
+
     ]
 
     setup_args['extras_require'] = {
@@ -385,6 +387,10 @@ else:
             'pep8',
             'pylint==1.1.0',
             'pyflakes',
+        ],
+        'wamp': [
+            # autobahn for wamp and websockets
+            'autobahn>=0.9.5',
         ],
     }
 

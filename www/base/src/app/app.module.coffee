@@ -5,5 +5,6 @@ class App extends App
         'ui.router'
         'restangular'
         'RecursionHelper'
+        'vxWamp'
         'guanlecoja.ui'
     ]

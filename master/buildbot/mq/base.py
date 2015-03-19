@@ -36,7 +36,7 @@ class QueueRef(object):
     def invoke(self, routing_key, data):
         if not self.callback:
             return
-
+        print routing_key
         try:
             x = self.callback(routing_key, data)
         except Exception:

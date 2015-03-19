@@ -22,7 +22,6 @@ from buildbot.www import avatar
 from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
-from buildbot.www import ws
 from twisted.application import strports
 from twisted.internet import defer
 from twisted.python import log
@@ -144,19 +143,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /api
         root.putChild('api', rest.RestRootResource(self.master))
 
-        # /ws
-        root.putChild('ws', ws.WsResource(self.master))
-
         # /sse
         root.putChild('sse', sse.EventResource(self.master))
 
         self.root = root
 
-        def either(a, b):  # a if a else b for py2.4
-            if a:
-                return a
-            else:
-                return b
+        either = lambda a, b: a if a else b
 
         rotateLength = either(new_config.www.get('logRotateLength'), self.master.log_rotation.rotateLength)
         maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
