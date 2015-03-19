@@ -163,8 +163,8 @@ class MasterConfig(object):
             try:
                 exec f in localDict
             except ConfigErrors, e:
-                for error in e.errors:
-                    error(error)
+                for err in e.errors:
+                    error(err)
                 raise errors
             except:
                 log.err(failure.Failure(), 'error while parsing config file:')
@@ -475,7 +475,7 @@ class MasterConfig(object):
             elif isinstance(b, dict):
                 return BuilderConfig(**b)
             else:
-                error("%r is not a builder config (in c['builders']")
+                error("%r is not a builder config (in c['builders']" % (b,))
         builders = [ mapper(b) for b in builders ]
 
         for builder in builders:
