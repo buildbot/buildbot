@@ -40,6 +40,7 @@ from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, NOT_REBUILT
+from buildbot.util.eventual import eventually
 from buildbot import monkeypatches
 from buildbot import config
 
@@ -199,7 +200,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
-                    _reactor.callLater(0, self.reconfig)
+                    eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
             # call the parent method

@@ -24,6 +24,7 @@ from buildbot.test.util import compat
 from buildbot.process import botmaster, builder, factory
 from buildbot import pbmanager, buildslave, config
 from buildbot.status import master
+from buildbot.util.eventual import eventually
 from buildbot.test.fake import fakemaster
 
 class FakeSlaveBuilder(pb.Referenceable):
@@ -64,7 +65,7 @@ class FakeSlaveBuildSlave(pb.Referenceable):
     def remote_setBuilderList(self, builder_info):
         builder_names = [ n for n, dir in builder_info ]
         slbuilders = [ FakeSlaveBuilder() for n in builder_names ]
-        reactor.callLater(0, self.callWhenBuilderListSet)
+        eventually(self.callWhenBuilderListSet)
         return dict(zip(builder_names, slbuilders))
 
 

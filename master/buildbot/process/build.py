@@ -19,7 +19,7 @@ import types
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.python.failure import Failure
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
@@ -27,6 +27,7 @@ from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
 
 
 class Build(properties.PropertiesMixin):
@@ -553,7 +554,7 @@ class Build(properties.PropertiesMixin):
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
-        reactor.callLater(0, self.releaseLocks)
+        eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None
 

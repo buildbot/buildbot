@@ -16,9 +16,10 @@
 
 import os
 
-from twisted.internet import defer, utils, reactor, threads
+from twisted.internet import defer, utils, threads
 from twisted.python import log, failure
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
+from buildbot.util.eventual import eventually
 from buildbot import config
 
 try:
@@ -65,7 +66,7 @@ class WorkQueue(object):
             self.queue.pop(0)
             if self.queue:
                 log.msg("Preparing next piece of work")
-                reactor.callLater(0, self._process)
+                eventually(self._process)
             return res
         d2.addBoth(_work_done)
 

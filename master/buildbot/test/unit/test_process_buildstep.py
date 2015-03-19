@@ -16,13 +16,14 @@
 import re
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, SKIPPED
 from buildbot.test.fake import fakebuild, remotecommand
 from buildbot.test.util import steps, compat
+from buildbot.util.eventual import eventually
 
 class FakeLogFile:
     def __init__(self, text):
@@ -85,7 +86,7 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
         def start(self):
-            reactor.callLater(0, self.finished, 0)
+            eventually(self.finished, 0)
 
     def setUp(self):
         return self.setUpBuildStep()

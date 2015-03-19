@@ -19,6 +19,7 @@ from buildbot import util
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.test.util import compat
+from buildbot.util.eventual import eventually
 
 class deferredLocked(unittest.TestCase):
     def test_name(self):
@@ -94,7 +95,7 @@ class SerializedInvocation(unittest.TestCase):
             def done():
                 events.append('TM')
                 d.callback(None)
-            reactor.callLater(0, done)
+            eventually(done)
             return d
         si = misc.SerializedInvocation(testfn)
 

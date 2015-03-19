@@ -16,7 +16,7 @@
 import re
 
 from zope.interface import implements
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 from twisted.protocols import basic
 from twisted.spread import pb
 from twisted.python import log, components
@@ -29,6 +29,7 @@ from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
 from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
 
 class BuildStepFailed(Exception):
     pass
@@ -196,7 +197,7 @@ class RemoteCommand(pb.Referenceable):
         # call the real remoteComplete a moment later, but first return an
         # acknowledgement so the slave can retire the completion message.
         if self.active:
-            reactor.callLater(0, self._finished, failure)
+            eventually(self._finished, failure)
         return None
 
     def addStdout(self, data):
@@ -633,7 +634,7 @@ class BuildStep(object, properties.PropertiesMixin):
             # the step immediately; we skip calling finished() as
             # subclasses may have overridden that an expect it to be called
             # after start() (bug #837)
-            reactor.callLater(0, self._finishFinished, SKIPPED)
+            eventually(self._finishFinished, SKIPPED)
 
     def start(self):
         raise NotImplementedError("your subclass must implement this method")

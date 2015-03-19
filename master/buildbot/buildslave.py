@@ -31,6 +31,7 @@ from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 from buildbot.locks import LockAccess
 from buildbot.util import subscription
+from buildbot.util.eventual import eventually
 from buildbot import config
 
 class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
@@ -493,7 +494,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             subs = self.detached_subs
             self.detached_subs = None
             subs.deliver()
-        reactor.callLater(0, notif)
+        eventually(notif)
 
     def subscribeToDetach(self, callback):
         """
@@ -539,7 +540,7 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         # notifyOnDisconnect runs the callback with one argument, the
         # RemoteReference being disconnected.
         def _disconnected(rref):
-            reactor.callLater(0, d.callback, None)
+            eventually(d.callback, None)
         slave.notifyOnDisconnect(_disconnected)
         tport = slave.broker.transport
         # this is the polite way to request that a socket be closed

@@ -36,6 +36,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
 from buildbot.util import json
 from buildbot.util import now
+from buildbot.util.eventual import fireEventually
 
 
 class SourceStampExtractor:
@@ -839,7 +840,7 @@ class Try(pb.Referenceable):
         # funky
         print "using '%s' connect method" % self.connect
         self.exitcode = 0
-        d = defer.Deferred()
+        d = fireEventually(None)
         if bool(self.config.get("get-builder-names")):
             d.addCallback(lambda res: self.getAvailableBuilderNames())
         else:
@@ -855,7 +856,6 @@ class Try(pb.Referenceable):
         d.addCallback(self.cleanup)
         d.addCallback(lambda res: reactor.stop())
 
-        reactor.callLater(0, d.callback, None)
         reactor.run()
         sys.exit(self.exitcode)
 
