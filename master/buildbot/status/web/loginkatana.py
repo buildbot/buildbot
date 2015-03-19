@@ -6,8 +6,6 @@ from buildbot.status.web.base import HtmlResource, ActionResource, \
 import urllib
 from twisted.python import log
 
-NOT_AUTORIZED = "?autorized=False"
-
 
 class LoginKatanaResource(HtmlResource):
     pageTitle = "Katana - Login"
