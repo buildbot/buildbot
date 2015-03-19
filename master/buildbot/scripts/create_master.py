@@ -97,11 +97,11 @@ def makePublicHtml(config):
         print "error creating master: could not find www folder: "+www_folder
         return
 
-    shutil.copytree(www_folder+"fonts", webdir+"/fonts")
-    shutil.copytree(www_folder+"images", webdir+"/images")
-    shutil.copytree(www_folder+"prod", webdir+"/prod")
-    shutil.copy2(www_folder+"robots.txt", webdir+"/robots.txt")
-    shutil.copy2(www_folder+"favicon.ico", webdir+"/favicon.ico")
+    shutil.copytree(os.path.join(www_folder, "fonts"), os.path.join(webdir, "fonts"))
+    shutil.copytree(os.path.join(www_folder, "images"), os.path.join(webdir, "images"))
+    shutil.copytree(os.path.join(www_folder, "prod"), os.path.join(webdir, "prod"))
+    shutil.copy2(os.path.join(www_folder, "robots.txt"), os.path.join(webdir, "robots.txt"))
+    shutil.copy2(os.path.join(www_folder, "favicon.ico"), os.path.join(webdir, "favicon.ico"))
 
     if not config['quiet']:
         print "populating public_html/"
