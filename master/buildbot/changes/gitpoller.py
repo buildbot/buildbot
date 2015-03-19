@@ -16,6 +16,7 @@
 import itertools
 import os
 import re
+import time
 import urllib
 
 from twisted.internet import defer
@@ -26,6 +27,10 @@ from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
 from buildbot.util.state import StateMixin
+
+
+class GitError(Exception):
+    """Raised when git exits with code 128."""
 
 
 class GitPoller(base.PollingChangeSource, StateMixin):
@@ -145,7 +150,13 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def poll(self):
-        yield self._dovccmd('init', ['--bare', self.workdir])
+        while True:
+            try:
+                yield self._dovccmd('init', ['--bare', self.workdir])
+            except GitError, e:
+                log.msg(e)
+            else:
+                break
 
         branches = self.branches
         if branches is True or callable(branches):
@@ -159,8 +170,16 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
             for branch in branches
         ]
-        yield self._dovccmd('fetch',
-                            [self.repourl] + refspecs, path=self.workdir)
+
+        while True:
+            try:
+                yield self._dovccmd('fetch', [self.repourl] + refspecs,
+                                    path=self.workdir)
+            except GitError, e:
+                log.msg(e)
+                time.sleep(self.pollInterval)
+            else:
+                break
 
         revs = {}
         log.msg('gitpoller: processing changes from "%s"' % (self.repourl,))
@@ -311,6 +330,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
             if code != 0:
+                if code == 128:
+                    raise GitError('command %s %s in %s on repourl %s failed with exit code %d: %s'
+                            % (command, args, path, self.repourl, code, stderr))
                 raise EnvironmentError('command %s %s in %s on repourl %s failed with exit code %d: %s'
                                        % (command, args, path, self.repourl, code, stderr))
             return stdout.strip()

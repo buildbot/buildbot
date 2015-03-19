@@ -285,6 +285,19 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
             })
 
+    def test_poll_GitError(self):
+        # Raised when git exits with status code 128
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
+            .exit(128),
+        )
+
+        d = self.assertFailure(self.poller._dovccmd('init', ['--bare',
+                               'gitpoller-work']), gitpoller.GitError)
+
+        d.addCallback(lambda _: self.assertAllCommandsRan())
+        return d
+
     def test_poll_nothingNew(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
