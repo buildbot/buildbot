@@ -22,6 +22,7 @@ from buildbot.changes import gitpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
+from buildbot.test.util import logging
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -153,6 +154,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
 class TestGitPoller(gpo.GetProcessOutputMixin,
                     changesource.ChangeSourceMixin,
+                    logging.LoggingMixin,
                     unittest.TestCase):
 
     REPOURL = 'git@example.com:foo/baz.git'
@@ -284,6 +286,31 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(self.poller.lastRev, {
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
             })
+
+    def test_poll_GitError(self):
+        # Raised when git exits with status code 128. See issue 2468
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
+            .exit(128),
+        )
+
+        d = self.assertFailure(self.poller._dovccmd('init', ['--bare',
+                               'gitpoller-work']), gitpoller.GitError)
+
+        d.addCallback(lambda _: self.assertAllCommandsRan())
+        return d
+
+    def test_poll_GitError_log(self):
+        self.setUpLogging()
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
+            .exit(128),
+        )
+
+        d = self.poller.poll()
+        d.addCallback(lambda _: self.assertAllCommandsRan())
+        self.assertLogged("command.*on repourl.*failed.*exit code 128.*")
+        return d
 
     def test_poll_nothingNew(self):
         # Test that environment variables get propagated to subprocesses
