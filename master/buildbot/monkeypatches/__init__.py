@@ -138,13 +138,6 @@ def patch_LoopingCall_reset():
         loopingcall_reset.patch()
 
 
-@onlyOnce
-def patch_IpV6ForAutobahn():
-    if twisted.version.major == 11:
-        from buildbot.monkeypatches import fakeipv6
-        fakeipv6.patch()
-
-
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
@@ -161,4 +154,3 @@ def patch_all(for_tests=False):
     patch_gatherResults()
     patch_python14653()
     patch_LoopingCall_reset()
-    patch_IpV6ForAutobahn()
