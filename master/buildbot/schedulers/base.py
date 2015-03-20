@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 import copy
 
-import logging
 from zope.interface import implements
 from twisted.python import failure, log
 from twisted.application import service
@@ -239,9 +238,9 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
             if change_filter and not change_filter.filter_change(change):
                 return
             if change.codebase not in self.codebases:
-                log.msg('change contains codebase %s that is not processed by'
-                    ' scheduler %s' % (change.codebase, self.name),
-                    logLevel=logging.DEBUG)
+                log.msg(format='change contains codebase %(codebase)s that is'
+                    'not processed by scheduler %(scheduler)s',
+                    codebase=change.codebase, name=self.name)
                 return
             if fileIsImportant:
                 try:

@@ -312,6 +312,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
+    def getLockFromLockAccess(self, access):
+        # Convert a lock-access object into an actual Lock instance.
+        if not isinstance(access, locks.LockAccess):
+            # Buildbot 0.7.7 compability: user did not specify access
+            access = access.defaultAccess()
+        lock = self.getLockByID(access.lockid)
+        return lock
+
     def maybeStartBuildsForBuilder(self, buildername):
         """
         Call this when something suggests that a particular builder may now

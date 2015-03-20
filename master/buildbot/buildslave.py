@@ -133,12 +133,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             s.unsubscribe()
 
         # convert locks into their real form
-        locks = []
-        for access in self.access:
-            if not isinstance(access, LockAccess):
-                access = access.defaultAccess()
-            lock = self.botmaster.getLockByID(access.lockid)
-            locks.append((lock, access))
+        locks = [ (self.botmaster.getLockFromLockAccess(a), a)
+                    for a in self.access ]
         self.locks = [(l.getLock(self), la) for l, la in locks]
         self.lock_subscriptions = [ l.subscribeToReleases(self._lockReleased)
                                     for l, la in self.locks ]

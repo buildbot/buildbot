@@ -18,6 +18,7 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import pbmanager
+from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
 from buildbot.process import properties
 import mock
@@ -44,10 +45,13 @@ class FakeCaches(object):
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
 
-
+'''
 class FakeBotMaster(object):
-    builders = {}
-    pass
+
+    def __init__(self, master=None):
+        self.master = master
+        self.builders = {}
+'''
 
 
 class FakeStatus(object):
@@ -118,10 +122,11 @@ class FakeMaster(object):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.basedir = 'basedir'
-        self.botmaster = FakeBotMaster()
+        self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
+        self.locks = {}
 
     def getStatus(self):
         return self.status
@@ -141,6 +146,11 @@ class FakeMaster(object):
 
     def buildRequestRemoved(self, bsid, brid, buildername):
         pass
+
+    def getLockByID(self, lockid):
+        if not lockid in self.locks:
+            self.locks[lockid] = lockid.lockClass(lockid)
+        return self.locks[lockid]
 
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantDb=False, testcase=None, **kwargs):

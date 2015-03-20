@@ -22,6 +22,8 @@ from buildbot.process.properties import Properties
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION, NOT_REBUILT
 from buildbot.locks import SlaveLock
 from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.test.fake.fakemaster import FakeBotMaster, FakeMaster
+from buildbot import config
 
 from mock import Mock
 
@@ -68,15 +70,6 @@ class FakeBuildStep:
         self.alwaysRun = False
         self.name = 'fake'
 
-class FakeMaster:
-    def __init__(self):
-        self.locks = {}
-        self.parent = Mock()
-        
-    def getLockByID(self, lockid):
-        if not lockid in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        return self.locks[lockid]
 
 class FakeBuildStatus(Mock):
     implements(interfaces.IProperties)   
@@ -104,10 +97,16 @@ class TestBuild(unittest.TestCase):
         self.request = r
         self.master = FakeMaster()
 
+        self.master.botmaster = FakeBotMaster(master=self.master)
+
+        self.builder = self.createBuilder()
         self.build = Build([r])
-        self.builder = Mock()
-        self.builder.botmaster = self.master
         self.build.setBuilder(self.builder)
+
+    def createBuilder(self):
+        bldr = Mock()
+        bldr.botmaster = self.master.botmaster
+        return bldr
 
     def testRunSuccessfulBuild(self):
         b = self.build
@@ -204,7 +203,7 @@ class TestBuild(unittest.TestCase):
             return real_lock.old_claim(owner, access)
         real_lock.old_claim = real_lock.claim
         real_lock.claim = claim
-        b.setLocks([l])
+        b.setLocks([lock_access])
 
         step = Mock()
         step.return_value = step
@@ -223,9 +222,8 @@ class TestBuild(unittest.TestCase):
         counting locks cannot jump ahead of exclusive locks"""
         eBuild = self.build
 
+        cBuilder = self.createBuilder()
         cBuild = Build([self.request])
-        cBuilder = Mock()
-        cBuilder.botmaster = self.master
         cBuild.setBuilder(cBuilder)
 
         eSlavebuilder = Mock()
@@ -236,7 +234,7 @@ class TestBuild(unittest.TestCase):
 
         l = SlaveLock('lock', 2)
         claimLog = []
-        realLock = self.master.getLockByID(l).getLock(slave)
+        realLock = self.master.botmaster.getLockByID(l).getLock(slave)
         def claim(owner, access):
             claimLog.append(owner)
             return realLock.oldClaim(owner, access)
@@ -285,7 +283,7 @@ class TestBuild(unittest.TestCase):
             return real_lock.old_claim(owner, access)
         real_lock.old_claim = real_lock.claim
         real_lock.claim = claim
-        b.setLocks([l])
+        b.setLocks([lock_access])
 
         step = Mock()
         step.return_value = step
@@ -311,7 +309,7 @@ class TestBuild(unittest.TestCase):
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
-        b.setLocks([l])
+        b.setLocks([lock_access])
 
         step = Mock()
         step.return_value = step
@@ -344,7 +342,7 @@ class TestBuild(unittest.TestCase):
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
-        b.setLocks([l])
+        b.setLocks([lock_access])
 
         step = Mock()
         step.return_value = step

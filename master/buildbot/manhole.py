@@ -23,10 +23,18 @@ import base64
 from twisted.python import log
 from twisted.application import service, strports
 from twisted.cred import checkers, portal
-from twisted.conch import manhole, telnet, manhole_ssh, checkers as conchc
+from twisted.conch import manhole, telnet
+try:
+    from twisted.conch import checkers as conchc, manhole_ssh
+    _hush_pyflakes = [manhole_ssh, conchc]
+    del _hush_pyflakes
+except ImportError:
+    manhole_ssh = None
+    conchc = None
 from twisted.conch.insults import insults
 from twisted.internet import protocol
 
+from buildbot import config
 from buildbot.util import ComparableMixin
 from zope.interface import implements # requires Twisted-2.0 or later
 
@@ -67,34 +75,35 @@ class chainedProtocolFactory:
     def __call__(self):
         return insults.ServerProtocol(manhole.ColoredManhole, self.namespace)
 
-class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
-    """Accept connections using SSH keys from a given file.
+if conchc:
+    class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
+        """Accept connections using SSH keys from a given file.
 
-    SSHPublicKeyDatabase takes the username that the prospective client has
-    requested and attempts to get a ~/.ssh/authorized_keys file for that
-    username. This requires root access, so it isn't as useful as you'd
-    like.
+        SSHPublicKeyDatabase takes the username that the prospective client has
+        requested and attempts to get a ~/.ssh/authorized_keys file for that
+        username. This requires root access, so it isn't as useful as you'd
+        like.
 
-    Instead, this subclass looks for keys in a single file, given as an
-    argument. This file is typically kept in the buildmaster's basedir. The
-    file should have 'ssh-dss ....' lines in it, just like authorized_keys.
-    """
+        Instead, this subclass looks for keys in a single file, given as an
+        argument. This file is typically kept in the buildmaster's basedir. The
+        file should have 'ssh-dss ....' lines in it, just like authorized_keys.
+        """
 
-    def __init__(self, authorized_keys_file):
-        self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
+        def __init__(self, authorized_keys_file):
+            self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
 
-    def checkKey(self, credentials):
-        with open(self.authorized_keys_file) as f:
-            for l in f.readlines():
-                l2 = l.split()
-                if len(l2) < 2:
-                    continue
-                try:
-                    if base64.decodestring(l2[1]) == credentials.blob:
-                        return 1
-                except binascii.Error:
-                    continue
-        return 0
+        def checkKey(self, credentials):
+            with open(self.authorized_keys_file) as f:
+                for l in f.readlines():
+                    l2 = l.split()
+                    if len(l2) < 2:
+                        continue
+                    try:
+                        if base64.decodestring(l2[1]) == credentials.blob:
+                            return 1
+                    except binascii.Error:
+                        continue
+            return 0
 
 
 class _BaseManhole(service.MultiService):
@@ -225,6 +234,8 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
                          use when authenticating the remote user.
         """
 
+        if not manhole_ssh:
+            config.error("pycrypto required for ssh mahole.")
         self.username = username
         self.password = password
 
@@ -255,6 +266,9 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
                         as used by sshd in ~/.ssh/authorized_keys .
         """
 
+        if not manhole_ssh:
+            config.error("pycrypto required for ssh mahole.")
+
         # TODO: expanduser this, and make it relative to the buildmaster's
         # basedir
         self.keyfile = keyfile
@@ -278,6 +292,9 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
         @param checker: an instance of a twisted.cred 'checker' which will
                         perform authentication
         """
+
+        if not manhole_ssh:
+            config.error("pycrypto required for ssh mahole.")
 
         _BaseManhole.__init__(self, port, checker)
 

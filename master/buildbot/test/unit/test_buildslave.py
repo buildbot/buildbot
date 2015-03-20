@@ -212,7 +212,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.MasterLock('masterlock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock.access("counting")])
         bs.setServiceParent(botmaster)
 
     def test_setServiceParent_slaveLocks(self):
@@ -223,5 +223,5 @@ class TestAbstractBuildSlave(unittest.TestCase):
         botmaster = FakeBotMaster(master)
         botmaster.startService()
         lock = locks.SlaveLock('lock')
-        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock])
+        bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock.access("counting")])
         bs.setServiceParent(botmaster)

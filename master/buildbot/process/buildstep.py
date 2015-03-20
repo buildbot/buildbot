@@ -472,10 +472,12 @@ class BuildStep(object, properties.PropertiesMixin):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
         if kwargs:
-            why = "%s.__init__ got unexpected keyword argument(s) %s" \
-                  % (self, kwargs.keys())
-            raise TypeError(why)
+            config.error("%s.__init__ got unexpected keyword argument(s) %s" \
+                  % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
+
+        if not isinstance(self.name, str):
+            config.error("BuildStep name must be a string: %r" % (self.name,))
 
         self._acquiringLock = None
         self.stopped = False
@@ -519,24 +521,27 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+
     def setStepLocks(self, initialLocks):
-        lock_list = []
-        for access in initialLocks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.build.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        initialLocks = lock_list
+        # convert all locks into their real form
+        initialLocks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
+                        for access in initialLocks]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
         return [(l.getLock(self.build.slavebuilder.slave), la) for l, la in initialLocks]
+
 
     def startStep(self, remote):
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        self.locks = self.setStepLocks(self.locks)
+        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access) 
+                        for access in self.locks ]        
+         # then narrow SlaveLocks down to the slave that this build is being
+         # run on
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) 
+                        for l, la in self.locks ]
+
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
