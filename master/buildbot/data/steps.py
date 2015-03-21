@@ -134,7 +134,7 @@ class Step(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def newStep(self, buildid, name):
+    def addStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
             buildid=buildid, name=name, state_string=u'pending')
         yield self.generateEvent(stepid, 'new')

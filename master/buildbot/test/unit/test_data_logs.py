@@ -196,8 +196,8 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_newLog(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.newLog,  # fake
-            self.rtype.newLog)  # real
+            self.master.data.updates.addLog,  # fake
+            self.rtype.addLog)  # real
         def newLog(self, stepid, name, type):
             pass
 
@@ -212,7 +212,7 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
                 return defer.fail(KeyError())
             return defer.succeed(23)
         self.patch(self.master.db.logs, 'addLog', addLog)
-        logid = yield self.rtype.newLog(
+        logid = yield self.rtype.addLog(
             stepid=13, name=u'foo', type=u's')
         self.assertEqual(logid, 23)
         self.assertEqual(tries, [

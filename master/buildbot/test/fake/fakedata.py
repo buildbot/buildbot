@@ -277,7 +277,7 @@ class FakeUpdates(object):
         self.changesourceMasters[changesourceid] = masterid
         return defer.succeed(True)
 
-    def newBuild(self, builderid, buildrequestid, buildslaveid):
+    def addBuild(self, builderid, buildrequestid, buildslaveid):
         validation.verifyType(self.testcase, 'builderid', builderid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
@@ -313,7 +313,7 @@ class FakeUpdates(object):
                               validation.StringValidator())
         return defer.succeed(None)
 
-    def newStep(self, buildid, name):
+    def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
@@ -352,7 +352,7 @@ class FakeUpdates(object):
                               validation.BooleanValidator())
         return defer.succeed(None)
 
-    def newLog(self, stepid, name, type):
+    def addLog(self, stepid, name, type):
         validation.verifyType(self.testcase, 'stepid', stepid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,

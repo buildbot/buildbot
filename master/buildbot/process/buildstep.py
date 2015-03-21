@@ -432,7 +432,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
-        self.stepid, self.number, self.name = yield self.master.data.updates.newStep(
+        self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
         yield self.master.data.updates.startStep(self.stepid)
@@ -681,7 +681,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.build.getSlaveName()
 
     def addLog(self, name, type='s', logEncoding=None):
-        d = self.master.data.updates.newLog(self.stepid,
+        d = self.master.data.updates.addLog(self.stepid,
                                             util.ascii2unicode(name),
                                             unicode(type))
 
@@ -712,7 +712,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)
-        logid = yield self.master.data.updates.newLog(self.stepid,
+        logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
         l = self._newLog(name, u't', logid)
         yield l.addContent(text)
@@ -722,7 +722,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
-        logid = yield self.master.data.updates.newLog(self.stepid,
+        logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
         l = self._newLog(name, u'h', logid)
         yield l.addContent(html)

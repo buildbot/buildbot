@@ -155,14 +155,14 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_newStep(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.newStep,  # fake
-            self.rtype.newStep)  # real
+            self.master.data.updates.addStep,  # fake
+            self.rtype.addStep)  # real
         def newStep(self, buildid, name):
             pass
 
     @defer.inlineCallbacks
     def test_newStep(self):
-        stepid, number, name = yield self.rtype.newStep(buildid=10,
+        stepid, number, name = yield self.rtype.addStep(buildid=10,
                                                         name=u'name')
         msgBody = {
             'buildid': 10,
@@ -198,7 +198,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def test_fake_newStep(self):
         self.assertEqual(
-            len((yield self.master.data.updates.newStep(buildid=10,
+            len((yield self.master.data.updates.addStep(buildid=10,
                                                         name=u'ten'))),
             3)
 

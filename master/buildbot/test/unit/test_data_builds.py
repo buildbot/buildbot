@@ -176,20 +176,20 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_newBuild(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.newBuild,  # fake
-            self.rtype.newBuild)  # real
+            self.master.data.updates.addBuild,  # fake
+            self.rtype.addBuild)  # real
         def newBuild(self, builderid, buildrequestid, buildslaveid):
             pass
 
     def test_newBuild(self):
-        return self.do_test_callthrough('addBuild', self.rtype.newBuild,
+        return self.do_test_callthrough('addBuild', self.rtype.addBuild,
                                         builderid=10, buildrequestid=13, buildslaveid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         buildslaveid=20, masterid=self.master.masterid,
                                                         state_string=u'created'))
 
     def test_newBuildEvent(self):
-        return self.do_test_event(self.rtype.newBuild,
+        return self.do_test_event(self.rtype.addBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event)])

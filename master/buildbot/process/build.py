@@ -240,7 +240,7 @@ class Build(properties.PropertiesMixin):
         # then we just assign the bulid to the first buildrequest
         brid = self.requests[0].id
         self.buildid, self.number = \
-            yield self.master.data.updates.newBuild(
+            yield self.master.data.updates.addBuild(
                 builderid=(yield self.builder.getBuilderId()),
                 buildrequestid=brid,
                 buildslaveid=slave.buildslaveid)
