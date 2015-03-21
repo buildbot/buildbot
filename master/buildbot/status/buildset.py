@@ -16,6 +16,7 @@
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.status.buildrequest import BuildRequestStatus
+from buildbot.util import flatten
 from twisted.internet import defer
 from zope.interface import implements
 
@@ -79,6 +80,7 @@ class BuildSetSummaryNotifierMixin:
 
     _buildsetCompleteConsumer = None
 
+    @defer.inlineCallbacks
     def summarySubscribe(self):
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
@@ -99,28 +101,31 @@ class BuildSetSummaryNotifierMixin:
 
         # first, just get the buildset and all build requests for our buildset
         # id
-        dl = [self.master.db.buildsets.getBuildset(bsid=bsid),
-              self.master.db.buildrequests.getBuildRequests(bsid=bsid)]
+        dl = [self.master.data.get(("buildsets", bsid)),
+              self.master.data.get(('buildrequests', ),
+                                   filters=[resultspec.Filter('buildsetid', 'eq', [bsid])])]
         (buildset, breqs) = yield defer.gatherResults(dl)
 
         # next, get the bdictlist for each build request
-        dl = []
-        for breq in breqs:
-            d = self.master.db.builds.getBuilds(
-                buildrequestid=breq['buildrequestid'])
-            dl.append(d)
+        dl = [self.master.data.get(("buildrequests", breq['buildrequestid'], 'builds'))
+              for breq in breqs]
 
-        buildinfo = yield defer.gatherResults(dl)
+        builds = yield defer.gatherResults(dl)
+        builds = flatten([list(build) for build in builds])
+        builderids = set([build['builderid'] for build in builds])
 
-        # next, get the builder for each build request, and for each bdict,
-        # look up the actual build object, using the bdictlist retrieved above
-        builds = []
-        for (breq, bdictlist) in zip(breqs, buildinfo):
-            builder = self.master_status.getBuilder(breq['buildername'])
-            for bdict in bdictlist:
-                build = builder.getBuild(bdict['number'])
-                if build is not None:
-                    builds.append(build)
+        builders = yield defer.gatherResults([self.master.data.get(("builders", _id))
+                                              for _id in builderids])
+
+        buildersbyid = dict([(builder['builderid'], builder) for builder in builders])
+
+        buildproperties = yield defer.gatherResults(
+            [self.master.data.get(("builds", build['buildid'], 'properties'))
+             for build in builds])
+
+        for build, properties in zip(builds, buildproperties):
+            build['builder'] = buildersbyid[build['builderid']]
+            build['properties'] = properties
 
         if builds:
             # We've received all of the information about the builds in this

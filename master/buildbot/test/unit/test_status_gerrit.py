@@ -21,7 +21,6 @@ from buildbot.status.status_gerrit import GerritStatusPush
 from buildbot.status.status_gerrit import makeReviewResult
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake.fakebuild import FakeBuildStatus
 from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -83,27 +82,10 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     return (str(buildInfoList), verified, 0)
 
 
-def _get_prepared_gsp(*args, **kwargs):
-    """
-    get an instance of GerritStatusPush prepared for testing
-
-    Hostname and username are "hardcoded", the rest is taken from the provided
-    parameters.
-    """
-    gsp = GerritStatusPush('host.example.com', 'username', *args, **kwargs)
-
-    gsp.master = fakemaster.make_master()
-    gsp.master_status = gsp.master.status
-
-    gsp.sendCodeReview = Mock()
-
-    return gsp
-
-
 class TestGerritStatusPush(unittest.TestCase):
 
-    TEST_PROJECT = 'testProject'
-    TEST_REVISION = 'd34db33fd43db33f'
+    TEST_PROJECT = u'testProject'
+    TEST_REVISION = u'd34db33fd43db33f'
     TEST_PROPS = {
         'gerrit_branch': 'refs/changes/34/1234/1',
         'project': TEST_PROJECT,
@@ -111,37 +93,27 @@ class TestGerritStatusPush(unittest.TestCase):
     }
     THING_URL = 'http://thing.example.com'
 
+    def _get_prepared_gsp(self, *args, **kwargs):
+        """
+        get an instance of GerritStatusPush prepared for testing
+
+        Hostname and username are "hardcoded", the rest is taken from the provided
+        parameters.
+        """
+        gsp = GerritStatusPush('host.example.com', 'username', *args, **kwargs)
+
+        gsp.master = fakemaster.make_master(wantMq=True, wantDb=True, wantData=True, testcase=self)
+        gsp.master_status = gsp.master.status
+
+        gsp.sendCodeReview = Mock()
+
+        return gsp
+
+    @defer.inlineCallbacks
     def run_fake_summary_build(self, gsp, buildResults, finalResult,
                                resultText, expWarning=False):
-        buildpairs = []
-        i = 0
-        for i in xrange(len(buildResults)):
-            buildResult = buildResults[i]
-
-            builder = Mock()
-            build = FakeBuildStatus()
-
-            builder.getBuild.return_value = build
-            builder.name = "Builder-%d" % i
-            builder.getName.return_value = builder.name
-            builder._builderid = i
-            build.results = buildResult
-            build.finished = True
-            build.reason = "testReason"
-            build.getBuilder.return_value = builder
-            build.getResults.return_value = build.results
-            build.getText.return_value = ['buildText']
-            build.getProperty = self.TEST_PROPS.get
-
-            buildpairs.append((builder, build))
-
-        def fakeGetBuilder(buildername):
-            # e.g. Builder-5 will be buildpairs[5][0]
-            return buildpairs[int(buildername.split("-")[1])][0]
-
-        gsp.master_status.getBuilder = fakeGetBuilder
-        gsp.master_status.getURLForThing = Mock()
-        gsp.master_status.getURLForThing.return_value = self.THING_URL
+        gsp.master_status.getURLForBuild = Mock()
+        gsp.master_status.getURLForBuild.return_value = self.THING_URL
 
         gsp.master.db = fakedb.FakeDBConnector(gsp.master, self)
 
@@ -152,33 +124,39 @@ class TestGerritStatusPush(unittest.TestCase):
         ]
 
         breqid = 1000
-        for (builder, build) in buildpairs:
-            fakedata.append(fakedb.Builder(id=builder._builderid, name=builder.name))
+        for i in xrange(len(buildResults)):
+            buildResult = buildResults[i]
+            buildername = u"Builder-%d" % i
+            builderid = i
+            buildid = 100 + breqid
+            fakedata.append(fakedb.Builder(id=builderid, name=buildername))
             fakedata.append(fakedb.BuildRequest(id=breqid, buildsetid=99,
-                                                builderid=builder._builderid))
-            fakedata.append(fakedb.Build(number=0, buildrequestid=breqid,
-                                         masterid=92, buildslaveid=13))
+                                                builderid=builderid))
+            fakedata.append(fakedb.Build(number=0, buildrequestid=breqid, id=buildid,
+                                         masterid=92, buildslaveid=13,
+                                         builderid=builderid,
+                                         results=buildResult,
+                                         state_string=u'buildText'))
+            for k, v in self.TEST_PROPS.items():
+                fakedata.append(fakedb.BuildProperty(buildid=buildid, name=k, value=v))
             breqid = breqid + 1
 
         gsp.master.db.insertTestData(fakedata)
 
-        d = gsp._buildsetComplete('buildset.99.complete',
-                                  dict(bsid=99, result=SUCCESS))
+        yield gsp._buildsetComplete('buildset.99.complete',
+                                    dict(bsid=99, result=SUCCESS))
 
-        @d.addCallback
-        def check(_):
-            info = []
-            for i in xrange(len(buildResults)):
-                info.append({'name': "Builder-%d" % i, 'result': buildResults[i],
-                             'resultText': resultText[i], 'text': 'buildText',
-                             'url': self.THING_URL})
-            if expWarning:
-                self.assertEqual([w['message'] for w in self.flushWarnings()],
-                                 ['The Gerrit status callback uses the old '
-                                  'way to communicate results.  The outcome '
-                                  'might be not what is expected.'])
-            return str(info)
-        return d
+        info = []
+        for i in xrange(len(buildResults)):
+            info.append({'name': u"Builder-%d" % i, 'result': buildResults[i],
+                         'resultText': resultText[i], 'text': u'buildText',
+                         'url': self.THING_URL})
+        if expWarning:
+            self.assertEqual([w['message'] for w in self.flushWarnings()],
+                             ['The Gerrit status callback uses the old '
+                              'way to communicate results.  The outcome '
+                              'might be not what is expected.'])
+        defer.returnValue(str(info))
 
     # check_summary_build and check_summary_build_legacy differ in two things:
     #   * the callback used
@@ -186,7 +164,7 @@ class TestGerritStatusPush(unittest.TestCase):
 
     def check_summary_build(self, buildResults, finalResult, resultText,
                             verifiedScore):
-        gsp = _get_prepared_gsp(summaryCB=testSummaryCB)
+        gsp = self._get_prepared_gsp(summaryCB=testSummaryCB)
 
         d = self.run_fake_summary_build(gsp, buildResults, finalResult,
                                         resultText)
@@ -202,7 +180,7 @@ class TestGerritStatusPush(unittest.TestCase):
 
     def check_summary_build_legacy(self, buildResults, finalResult, resultText,
                                    verifiedScore):
-        gsp = _get_prepared_gsp(summaryCB=legacyTestSummaryCB)
+        gsp = self._get_prepared_gsp(summaryCB=legacyTestSummaryCB)
 
         d = self.run_fake_summary_build(gsp, buildResults, finalResult,
                                         resultText, expWarning=True)
@@ -278,10 +256,13 @@ class TestGerritStatusPush(unittest.TestCase):
         return d
 
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
-        build = FakeBuildStatus(name="build")
-        build.getProperty = self.TEST_PROPS.get
+        build = {}
+        build['builder'] = dict(name=u'dummyBuilder')
+        build['results'] = buildResult
+        build['properties'] = dict([(k, (v, 'test')) for k, v in self.TEST_PROPS.items()])
 
-        gsp.buildFinished('dummyBuilder', build, buildResult)
+        # TODO: actually status api is never calling buildFinished()
+        gsp.buildFinished(u'dummyBuilder', build, buildResult)
 
         if expWarning:
             self.assertEqual([w['message'] for w in self.flushWarnings()],
@@ -289,12 +270,12 @@ class TestGerritStatusPush(unittest.TestCase):
                               'way to communicate results.  The outcome '
                               'might be not what is expected.'])
 
-        return defer.succeed(str({'name': 'dummyBuilder', 'result': buildResult}))
+        return defer.succeed(str({'name': u'dummyBuilder', 'result': buildResult}))
 
     # same goes for check_single_build and check_single_build_legacy
 
     def check_single_build(self, buildResult, verifiedScore):
-        gsp = _get_prepared_gsp(reviewCB=testReviewCB)
+        gsp = self._get_prepared_gsp(reviewCB=testReviewCB)
 
         d = self.run_fake_single_build(gsp, buildResult)
 
@@ -308,7 +289,7 @@ class TestGerritStatusPush(unittest.TestCase):
         return d
 
     def check_single_build_legacy(self, buildResult, verifiedScore):
-        gsp = _get_prepared_gsp(reviewCB=legacyTestReviewCB)
+        gsp = self._get_prepared_gsp(reviewCB=legacyTestReviewCB)
 
         d = self.run_fake_single_build(gsp, buildResult, expWarning=True)
 

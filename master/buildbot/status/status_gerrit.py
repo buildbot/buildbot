@@ -249,7 +249,6 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         self.master = self.master_status.master
 
     def startService(self):
-        print """Starting up."""
         if self.summaryCB:
             # TODO: handle deferred
             self.summarySubscribe().addErrback(log.err, 'while subscribing')
@@ -276,7 +275,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
     def sendBuildSetSummary(self, buildset, builds):
         if self.summaryCB:
             def getBuildInfo(build):
-                result = build.getResults()
+                result = build['results']
                 resultText = {
                     SUCCESS: "succeeded",
                     FAILURE: "failed",
@@ -284,12 +283,11 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                     EXCEPTION: "encountered an exception",
                 }.get(result, "completed with unknown result %d" % result)
 
-                return {'name': build.getBuilder().getName(),
+                return {'name': build['builder']['name'],
                         'result': result,
                         'resultText': resultText,
-                        'text': ' '.join(build.getText()),
-                        'url': self.master_status.getURLForThing(build),
-                        }
+                        'text': build['state_string'],
+                        'url': self.master_status.getURLForBuild(build['builderid'], build['number'], )}
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
             result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg))
@@ -299,12 +297,13 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         message = result.get('message', None)
         if message is None:
             return
-
+        props = build['properties']
         # Gerrit + Repo
-        downloads = build.getProperty("repo_downloads")
-        downloaded = build.getProperty("repo_downloaded")
+        downloads = props.get("repo_downloads")
+        downloaded = props.get("repo_downloaded")
         if downloads is not None and downloaded is not None:
-            downloaded = downloaded.split(" ")
+            downloaded = downloaded[0].split(" ")
+            downloads = downloads[0]
             if downloads and 2 * len(downloads) == len(downloaded):
                 for i in range(0, len(downloads)):
                     try:
@@ -320,14 +319,17 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             return
 
         # Gerrit + Git
-        if build.getProperty("gerrit_branch") is not None:  # used only to verify Gerrit source
-            project = build.getProperty("project")
-            revision = build.getProperty("got_revision")
+        if props.get("gerrit_branch") is not None:  # used only to verify Gerrit source
+            project = props.get("event.change.project", props.get("project", [None]))[0]
+            revision = props.get("got_revision", [None])[0]
 
             # review doesn't really work with multiple revisions, so let's
             # just assume it's None there
             if isinstance(revision, dict):
-                revision = None
+                if len(revision) > 1:
+                    revision = None
+                else:
+                    revision = revision.values()[0]
 
             if project is not None and revision is not None:
                 self.sendCodeReview(project, revision, result)
