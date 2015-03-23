@@ -404,6 +404,8 @@ class BuildRequestDistributor(service.Service):
         @d.addBoth
         def remove(x):
             self._pendingMSBOCalls.remove(d)
+            return x
+        d.addErrback(log.err, "while strting builds on %s" % (new_builders,))
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):

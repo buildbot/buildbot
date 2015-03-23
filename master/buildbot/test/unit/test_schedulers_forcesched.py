@@ -21,11 +21,12 @@ from buildbot.schedulers.forcesched import IntParameter, FixedParameter
 from buildbot.schedulers.forcesched import BooleanParameter, UserNameParameter
 from buildbot.schedulers.forcesched import ChoiceStringParameter, ValidationError
 from buildbot.schedulers.forcesched import NestedParameter, AnyPropertyParameter
-from buildbot.schedulers.forcesched import CodebaseParameter
+from buildbot.schedulers.forcesched import CodebaseParameter, BaseParameter
 from buildbot.test.util import scheduler
 from mock import Mock
+from buildbot.test.util.config import ConfigErrorsMixin
 
-class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
+class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
 
     OBJECTID = 19
 
@@ -204,31 +205,32 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_bad_codebases(self):
         # cant specify both codebases and branch/revision/project/repository:
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=['foo'], branch=StringParameter('name'))
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=['foo'], revision=StringParameter('name'))
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=['foo'], project=StringParameter('name'))
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=['foo'], repository=StringParameter('name'))
+        self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], branch=StringParameter('name')))
+        self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], revision=StringParameter('name')))
+        self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], project=StringParameter('name')))
+        self.assertRaisesConfigError("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=['foo'], repository=StringParameter('name')))
         
         # codebases must be a list of either string or BaseParameter types
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=[123],)
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=[IntParameter('foo')],)
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=[123],))
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects:",
+             lambda: ForceScheduler(name='foo', builderNames=['bar'],
+                                    codebases=[IntParameter('foo')],))
         
         # codebases cannot be empty
-        self.assertRaises(ValidationError, ForceScheduler,
-                          name='foo', builderNames=['bar'],
-                          codebases=[])
+        self.assertRaisesConfigError("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed:",
+                                     lambda: ForceScheduler(name='foo',
+                                                            builderNames=['bar'],
+                                                            codebases=[]))
         
     @defer.inlineCallbacks
     def test_good_codebases(self):
@@ -508,3 +510,58 @@ class TestForceScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
         for i in range(3):
             checkBuildset(res[i], 'slave-0%s' % i, 100 + i)
+
+    def test_bad_reason(self):
+        self.assertRaisesConfigError("ForceScheduler reason must be a StringParameter",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], reason="foo"))
+
+    def test_bad_username(self):
+        self.assertRaisesConfigError("ForceScheduler username must be a StringParameter",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+             	                    codebases=['bar'], username="foo"))
+
+    def test_notstring_name(self):
+        self.assertRaisesConfigError("ForceScheduler name must be a unicode string:",
+             lambda: ForceScheduler(name=1234, builderNames=[],
+                                    codebases=['bar'], username="foo"))
+
+    def test_emptystring_name(self):
+        self.assertRaisesConfigError("ForceScheduler name must not be empty:",
+             lambda: ForceScheduler(name='', builderNames=[],
+                                    codebases=['bar'], username="foo"))
+
+    def test_integer_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched', builderNames=1234,
+                                    codebases=['bar'], username="foo"))
+
+    def test_listofints_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched', builderNames=[1234],
+                                    codebases=['bar'], username="foo"))
+
+    def test_listofmixed_builderNames(self):
+        self.assertRaisesConfigError("ForceScheduler builderNames must be a list of strings:",
+             lambda: ForceScheduler(name='testsched',
+                                    builderNames=['test', 1234],
+                                    codebases=['bar'], username="foo")) 
+
+    def test_integer_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=1234))
+
+    def test_listofints_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=[1234, 2345]))
+
+    def test_listofmixed_properties(self):
+        self.assertRaisesConfigError("ForceScheduler properties must be a list of BaseParameters:",
+             lambda: ForceScheduler(name='testsched', builderNames=[],
+                                    codebases=['bar'], username="foo",
+                                    properties=[BaseParameter(name="test",),
+                                                4567]))

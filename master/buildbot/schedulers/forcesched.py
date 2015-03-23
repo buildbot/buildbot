@@ -20,6 +20,7 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot import config 
 
 class ValidationError(ValueError):
     pass
@@ -411,6 +412,22 @@ class ForceScheduler(base.BaseScheduler):
                      'reason', 'username',
                      'forcedProperties' )
 
+    def checkIfType(self, obj, chkType):
+        return isinstance(obj, chkType)
+
+    def checkIfListOfType(self, obj, chkType):
+        isListOfType = True 
+
+        if self.checkIfType(obj, list):
+           for item in obj:
+               if not self.checkIfType(item, chkType):
+                  isListOfType = False
+                  break 
+        else:
+           isListOfType = False
+ 
+        return isListOfType
+
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
             reason=StringParameter(name="reason", label="Reason", default="", length=20),
@@ -452,10 +469,10 @@ class ForceScheduler(base.BaseScheduler):
 
         @param username: the "owner" for a build (may not be shown depending
                          on the Auth configuration for the master)
-        @type reason: BaseParameter or None (to disable this field)
+        @type username: BaseParameter
 
         @param reason: the "reason" for a build
-        @type reason: BaseParameter or None (to disable this field)
+        @type reason: BaseParameter
 
         @param codebases: the codebases for a build
         @type codebases: list of string's or CodebaseParameter's;
@@ -466,14 +483,39 @@ class ForceScheduler(base.BaseScheduler):
         @type properties: list of BaseParameter's
         """
 
-        self.reason = reason
-        self.username = username
+        if not self.checkIfType(name, str):
+           config.error("ForceScheduler name must be a unicode string: %r" %
+                        name)
+
+        if not name:
+           config.error("ForceScheduler name must not be empty: %r " %
+                        name)
+
+        if not self.checkIfListOfType(builderNames, str):
+           config.error("ForceScheduler builderNames must be a list of strings: %r" %
+                         builderNames)
+
+        if self.checkIfType(reason, BaseParameter):
+            self.reason = reason
+        else:
+            config.error("ForceScheduler reason must be a StringParameter: %r" %
+                         reason) 
+ 
+        if not self.checkIfListOfType(properties, BaseParameter):
+            config.error("ForceScheduler properties must be a list of BaseParameters: %r" %
+                         properties)
+
+        if self.checkIfType(username, BaseParameter):
+            self.username = username
+        else:
+            config.error("ForceScheduler username must be a StringParameter: %r" %
+                         username) 
         
         self.forcedProperties = []
         
         if any((branch, revision, repository, project)):
             if codebases:
-                raise ValidationError("Must either specify 'codebases' or the 'branch/revision/repository/project' parameters")
+                config.error("ForceScheduler: Must either specify 'codebases' or the 'branch/revision/repository/project' parameters: %r " % (codebases,))
             
             codebases = [
                 CodebaseParameter(codebase='',
@@ -488,14 +530,14 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases =[CodebaseParameter(codebase='')]
         elif not codebases:
-            raise ValidationError("'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed")
+            config.error("ForceScheduler: 'codebases' cannot be empty; use CodebaseParameter(codebase='', hide=True) if needed: %r " % (codebases,))
         
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, basestring):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                raise ValidationError("'codebases' must be a list of strings or CodebaseParameter objects")
+                config.error("ForceScheduler: 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (codebases,))
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(branch='',repository='',revision='')
