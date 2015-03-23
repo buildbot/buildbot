@@ -45,14 +45,6 @@ class FakeCaches(object):
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
 
-'''
-class FakeBotMaster(object):
-
-    def __init__(self, master=None):
-        self.master = master
-        self.builders = {}
-'''
-
 
 class FakeStatus(object):
 
