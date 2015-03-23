@@ -28,7 +28,7 @@ from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.sourcestamp import SourceStamp
-
+from buildbot.process.properties import Properties
 
 class PastBuildsJsonResource(unittest.TestCase):
     def setUp(self):
@@ -481,6 +481,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
             brstatus.getSourceStamps = lambda: {}
             brstatus.getSourceStamp = lambda: ss
+            brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
         def getPendingBuildRequestStatuses():
@@ -496,6 +497,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                     'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?'+
                                   'katana-buildbot_branch=katana',
                     'builds': [],
+                    'properties': [],
                     'reason': 'because',
                     'slaves': ['build-slave-01'],
                     'source': {'branch': 'b',

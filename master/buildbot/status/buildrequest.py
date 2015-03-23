@@ -76,6 +76,11 @@ class BuildRequestStatus:
         defer.returnValue(br.bsid)
 
     @defer.inlineCallbacks
+    def getBuildProperties(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.properties)
+
+    @defer.inlineCallbacks
     def getSourceStamp(self):
         br = yield self._getBuildRequest()
         defer.returnValue(br.source)
@@ -158,6 +163,8 @@ class BuildRequestStatus:
         result['brid'] = self.brid
         result['source'] = ss.asDict()
         result['sources'] = [s.asDict() for s in sources.values()]
+        props = yield self.getBuildProperties()
+        result['properties'] = props.asList()
         result['builderName'] = self.getBuilderName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
