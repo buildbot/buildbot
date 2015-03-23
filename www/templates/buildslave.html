@@ -15,7 +15,12 @@
             <div class="rounded-container">
                 <div id="slaveInfo" class="col-md-12" data-shutdown-url="{% if authz.advertiseAction('gracefulShutdown', request) %}{{ shutdown_url }}{% endif %}" data-graceful="{{  slave.getGraceful() }}">
                 </div>
-
+                <div>
+                {% if authz.advertiseAction('pauseSlave', request) %}
+                        <h2>Pause Slave</h2>
+                        {{ forms.pause_slave(pause_url, authz, slave.isPaused()) }}
+                {% endif %}
+                </div>
                 <div class="col-md-6">
                     <h2 class="head-2 fl-left"> Current builds </h2>
                     <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>

@@ -46,6 +46,28 @@ class ShutdownActionResource(ActionResource):
         defer.returnValue(url)
 
 
+class PauseActionResource(ActionResource):
+
+    def __init__(self, slave, state):
+        self.slave = slave
+        self.action = "pauseSlave"
+        self.state = state
+
+    @defer.inlineCallbacks
+    def performAction(self, request):
+        res = yield self.getAuthz(request).actionAllowed(self.action,
+                                                        request,
+                                                        self.slave)
+
+        url = None
+        if res:
+            self.slave.setPaused(self.state)
+            url = path_to_slave(request, self.slave)
+        else:
+            url = path_to_authzfail(request)
+        defer.returnValue(url)
+
+
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
     addSlash = False
@@ -62,6 +84,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         slave = s.getSlave(self.slavename)
         if path == "shutdown":
             return ShutdownActionResource(slave)
+        if path == "pause" or path == "unpause":
+            return PauseActionResource(slave, path == "pause")
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):
@@ -108,9 +132,15 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         slave = s.getSlave(self.slavename)
         connect_count = slave.getConnectCount()
 
+        if slave.isPaused():
+            pause_url = request.childLink("unpause")
+        else:
+            pause_url = request.childLink("pause")
+
         ctx.update(dict(slave=slave,
                         slavename=slave.getFriendlyName(),
                         shutdown_url=request.childLink("shutdown"),
+                        pause_url = pause_url,
                         authz=self.getAuthz(request),
                         this_url="../../../" + path_to_slave(request, slave),
                         access_uri=slave.getAccessURI()),

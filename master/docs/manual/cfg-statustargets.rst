@@ -443,6 +443,9 @@ authentication.  The actions are:
 ``gracefulShutdown``
     gracefully shut down a slave when it is finished with its current build
 
+``pauseSlave``
+    temporarily stop running new builds on a slave
+
 ``stopBuild``
     stop a running build
 

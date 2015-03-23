@@ -603,6 +603,10 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         L{maybeStartBuildsForSlave} to be called at that time, or builds on
         this slave will not start.
         """
+
+        if self.slave_status.isPaused():
+            return False
+
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
         if self.slave_status.getGraceful():
@@ -714,6 +718,18 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
             return
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down slave')
+
+    def pause(self):
+        """Stop running new builds on the slave."""
+        self.slave_status.setPaused(True)
+
+    def unpause(self):
+        """Restart running new builds on the slave."""
+        self.slave_status.setPaused(False)
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
+
+    def isPaused(self):
+        return self.paused
 
 class BuildSlave(AbstractBuildSlave):
 

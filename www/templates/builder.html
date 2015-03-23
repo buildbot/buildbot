@@ -137,13 +137,15 @@
                   </b>
                 </td>
                 {% if s.connected %}
-                  <td class="idle">connected</td>
-                  <td>{{ s.admin|email if s.admin else ""}}</td>
+                    {% if s.paused %}
+                      <td class="paused">paused</td>
+                    {% else %}
+                      <td class="idle">connected</td>
+                    {% endif %}
                 {% else %}
                   <td class="offline">offline</td>
-                  <td>&nbsp;</td>
                 {% endif %}
-                
+                  <td>{{ s.admin|email if s.admin else ""}}</td>
               {% else %}
                 <td>no slaves attached</td>
                 </tr>
