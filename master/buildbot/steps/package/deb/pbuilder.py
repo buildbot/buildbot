@@ -151,7 +151,9 @@ class DebPbuilder(WarningCountingShellCommand):
             d.addCallback(lambda res: self.startBuild(cmd))
             return d
         s = cmd.updates["stat"][-1]
-        if stat.S_ISREG(s[stat.ST_MODE]):
+        # basetgz will be a file when running in pbuilder
+        # and a directory in case of cowbuilder
+        if stat.S_ISREG(s[stat.ST_MODE]) or stat.S_ISDIR(s[stat.ST_MODE]):
             log.msg("%s found." % self.basetgz)
             age = time.time() - s[stat.ST_MTIME]
             if age >= self.maxAge:
@@ -168,11 +170,15 @@ class DebPbuilder(WarningCountingShellCommand):
                 return d
             return self.startBuild(cmd)
         else:
-            log.msg("%s is not a file." % self.basetgz)
+            log.msg("%s is not a file or a directory." % self.basetgz)
             self.finished(FAILURE)
 
-    def startBuild(self, dummy):
-        return WarningCountingShellCommand.start(self)
+    def startBuild(self, cmd):
+        if cmd.rc != 0:
+            log.msg("Failure when running %s." % cmd)
+            self.finished(FAILURE)
+        else:
+            return WarningCountingShellCommand.start(self)
 
     def commandComplete(self, cmd):
         out = cmd.logs['stdio'].getText()
