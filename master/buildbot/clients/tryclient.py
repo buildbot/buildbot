@@ -778,23 +778,26 @@ class Try(pb.Referenceable):
             return self.statusDone()
 
     def printStatus(self):
-        names = self.buildRequests.keys()
-        names.sort()
-        for n in names:
-            if n not in self.outstanding:
-                # the build is finished, and we have results
-                code, text = self.results[n]
-                t = builder.Results[code]
-                if text:
-                    t += " (%s)" % " ".join(text)
-            elif self.builds[n]:
-                t = self.currentStep[n] or "building"
-                if self.ETA[n]:
-                    t += " [ETA %ds]" % (self.ETA[n] - now())
-            else:
-                t = "no build"
-            self.announce("%s: %s" % (n, t))
-        self.announce("")
+        try:
+            names = self.buildRequests.keys()
+            names.sort()
+            for n in names:
+                if n not in self.outstanding:
+                    # the build is finished, and we have results
+                    code, text = self.results[n]
+                    t = builder.Results[code]
+                    if text:
+                        t += " (%s)" % " ".join(text)
+                elif self.builds[n]:
+                    t = self.currentStep[n] or "building"
+                    if self.ETA[n]:
+                        t += " [ETA %ds]" % (self.ETA[n] - now())
+                else:
+                    t = "no build"
+                self.announce("%s: %s" % (n, t))
+            self.announce("")
+        except Exception:
+            log.err(None, "printing status")
 
     def statusDone(self):
         if self.printloop:

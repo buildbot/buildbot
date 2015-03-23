@@ -253,14 +253,18 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     def updateBigStatus(self):
-        if not self.builder_status:
-            return
-        if not self.slaves:
-            self.builder_status.setBigState("offline")
-        elif self.building or self.old_building:
-            self.builder_status.setBigState("building")
-        else:
-            self.builder_status.setBigState("idle")
+        try:
+            # Catch exceptions here, since this is called in a LoopingCall.
+            if not self.builder_status:
+                return
+            if not self.slaves:
+                self.builder_status.setBigState("offline")
+            elif self.building or self.old_building:
+                self.builder_status.setBigState("building")
+            else:
+                self.builder_status.setBigState("idle")
+        except Exception:
+            log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):

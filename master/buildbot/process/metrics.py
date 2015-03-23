@@ -332,37 +332,40 @@ def _get_rss():
     return 0
 
 def periodicCheck(_reactor=reactor):
-    # Measure how much garbage we have
-    garbage_count = len(gc.garbage)
-    MetricCountEvent.log('gc.garbage', garbage_count, absolute=True)
-    if garbage_count == 0:
-        level = ALARM_OK
-    else:
-        level = ALARM_WARN
-    MetricAlarmEvent.log('gc.garbage', level=level)
+    try:
+        # Measure how much garbage we have
+        garbage_count = len(gc.garbage)
+        MetricCountEvent.log('gc.garbage', garbage_count, absolute=True)
+        if garbage_count == 0:
+            level = ALARM_OK
+        else:
+            level = ALARM_WARN
+        MetricAlarmEvent.log('gc.garbage', level=level)
 
-    if resource:
-        r = resource.getrusage(resource.RUSAGE_SELF)
-        attrs = ['ru_utime', 'ru_stime', 'ru_maxrss', 'ru_ixrss', 'ru_idrss',
-                'ru_isrss', 'ru_minflt', 'ru_majflt', 'ru_nswap',
-                'ru_inblock', 'ru_oublock', 'ru_msgsnd', 'ru_msgrcv',
-                'ru_nsignals', 'ru_nvcsw', 'ru_nivcsw']
-        for i,a in enumerate(attrs):
-            # Linux versions prior to 2.6.32 didn't report this value, but we
-            # can calculate it from /proc/<pid>/statm
-            v = r[i]
-            if a == 'ru_maxrss' and v == 0:
-                v = _get_rss() * resource.getpagesize() / 1024
-            MetricCountEvent.log('resource.%s' % a, v, absolute=True)
-        MetricCountEvent.log('resource.pagesize', resource.getpagesize(), absolute=True)
-    # Measure the reactor delay
-    then = util.now(_reactor)
-    dt = 0.1
-    def cb():
-        now = util.now(_reactor)
-        delay = (now - then) - dt
-        MetricTimeEvent.log("reactorDelay", delay)
-    _reactor.callLater(dt, cb)
+        if resource:
+            r = resource.getrusage(resource.RUSAGE_SELF)
+            attrs = ['ru_utime', 'ru_stime', 'ru_maxrss', 'ru_ixrss', 'ru_idrss',
+                    'ru_isrss', 'ru_minflt', 'ru_majflt', 'ru_nswap',
+                    'ru_inblock', 'ru_oublock', 'ru_msgsnd', 'ru_msgrcv',
+                    'ru_nsignals', 'ru_nvcsw', 'ru_nivcsw']
+            for i,a in enumerate(attrs):
+                # Linux versions prior to 2.6.32 didn't report this value, but we
+                # can calculate it from /proc/<pid>/statm
+                v = r[i]
+                if a == 'ru_maxrss' and v == 0:
+                    v = _get_rss() * resource.getpagesize() / 1024
+                MetricCountEvent.log('resource.%s' % a, v, absolute=True)
+            MetricCountEvent.log('resource.pagesize', resource.getpagesize(), absolute=True)
+        # Measure the reactor delay
+        then = util.now(_reactor)
+        dt = 0.1
+        def cb():
+            now = util.now(_reactor)
+            delay = (now - then) - dt
+            MetricTimeEvent.log("reactorDelay", delay)
+        _reactor.callLater(dt, cb)
+    except Exception:
+        log.err(None, "while collecting VM metrics")
 
 class MetricLogObserver(config.ReconfigurableServiceMixin,
                         service.MultiService):
@@ -488,4 +491,4 @@ class MetricLogObserver(config.ReconfigurableServiceMixin,
                 for line in report.split("\n"):
                     log.msg(line)
         except:
-            log.err()
+            log.err(None, "generating metric report")
