@@ -326,7 +326,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -353,7 +354,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+                                       logEnviron=True,
+                                       timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -548,7 +550,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', '--depth', '1',
@@ -575,7 +578,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -692,7 +696,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                       logEnviron=True))
+                                       logEnviron=True,
+                                       timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -730,7 +735,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -758,7 +764,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True)),
+                                 logEnviron=True,
+                                 timeout=1200)),
             Expect('stat', dict(file='source/.git',
                                 logEnviron=True))
             + 0,
@@ -771,7 +778,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True})
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='build',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -825,7 +832,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -856,7 +864,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -886,7 +895,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
@@ -958,7 +968,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                  'http://github.com/buildbot/buildbot.git', '.'])
             + 1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone', 
@@ -1188,7 +1199,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', '--version'])
             + 0,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
+                                 logEnviron=True,
+                                 timeout=1200))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'clone',
