@@ -203,6 +203,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
                     eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
 
+            if hasattr(signal, "SIGUSR1"):
+                def sigusr1(*args):
+                    _reactor.callLater(0, self.botmaster.cleanShutdown)
+                signal.signal(signal.SIGUSR1, sigusr1)
+
             # call the parent method
             yield defer.maybeDeferred(lambda :
                     service.MultiService.startService(self))

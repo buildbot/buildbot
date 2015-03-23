@@ -246,7 +246,7 @@ Codebase
 
 This attribute specifies the codebase to which this change was made.
 As described :ref:`above <Source-Stamps>`, multiple repositories may contain the same codebase.
-A change's codebase is usually determined by the bb:cfg:`codebaseGenerator` configuration.
+A change's codebase is usually determined by the :bb:cfg:`codebaseGenerator` configuration.
 By default the codebase is ''; this value is used automatically for single-codebase configurations.
 
 .. _Attr-Revision:

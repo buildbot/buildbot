@@ -23,7 +23,7 @@ from buildbot.scripts import stop
 from buildbot.test.util import dirs, misc, compat
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'))
+    config = dict(quiet=False, clean=False, basedir=os.path.abspath('basedir'))
     config.update(kwargs)
     return config
 
@@ -117,3 +117,10 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
                 wait=True)
         self.assertInStdout('never saw process')
         self.assertEqual(rv, 1)
+
+    @compat.skipUnlessPlatformIs('posix')
+    def test_stop_clean(self):
+        rv = self.do_test_stop(mkconfig(clean=True), [
+                (signal.SIGUSR1, None), ], wait=False)
+        self.assertInStdout('sent SIGUSR1 to process')
+        self.assertEqual(rv, 0)

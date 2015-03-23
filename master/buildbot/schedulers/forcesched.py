@@ -412,22 +412,6 @@ class ForceScheduler(base.BaseScheduler):
                      'reason', 'username',
                      'forcedProperties' )
 
-    def checkIfType(self, obj, chkType):
-        return isinstance(obj, chkType)
-
-    def checkIfListOfType(self, obj, chkType):
-        isListOfType = True 
-
-        if self.checkIfType(obj, list):
-           for item in obj:
-               if not self.checkIfType(item, chkType):
-                  isListOfType = False
-                  break 
-        else:
-           isListOfType = False
- 
-        return isListOfType
-
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
             reason=StringParameter(name="reason", label="Reason", default="", length=20),
@@ -554,6 +538,22 @@ class ForceScheduler(base.BaseScheduler):
         # this is used to simplify the template
         self.all_fields = [ NestedParameter(name='', fields=[username, reason]) ]
         self.all_fields.extend(self.forcedProperties)
+
+    def checkIfType(self, obj, chkType):
+        return isinstance(obj, chkType)
+
+    def checkIfListOfType(self, obj, chkType):
+        isListOfType = True 
+
+        if self.checkIfType(obj, list):
+           for item in obj:
+               if not self.checkIfType(item, chkType):
+                  isListOfType = False
+                  break 
+        else:
+           isListOfType = False
+ 
+        return isListOfType
 
     def startService(self):
         pass
