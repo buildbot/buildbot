@@ -165,14 +165,22 @@ class FakeMaster(object):
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
         self.log_rotation = FakeLogRotation()
 
+    @property
+    def master(self):
+        return self
+
     def getObjectId(self):
         return defer.succeed(self._master_id)
 
     def subscribeToBuildRequests(self, callback):
         pass
 
+    def removeService(self, child):
+        pass
 
 # Leave this alias, in case we want to add more behavior later
+
+
 def make_master(wantMq=False, wantDb=False, wantData=False,
                 testcase=None, url=None, **kwargs):
     master = FakeMaster(**kwargs)

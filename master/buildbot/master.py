@@ -125,6 +125,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
+    @property
+    def master(self):
+        return self
+
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
