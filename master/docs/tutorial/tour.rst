@@ -368,3 +368,6 @@ To make a description of the change show up, use the
 To use ssh instead of a private username/password database, see
 :bb:sched:`Try_Jobdir`.
 
+For further reading
+-------------------
+See also the user-contributed tutorial :ref:`fiveminutes`

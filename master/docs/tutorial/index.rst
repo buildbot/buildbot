@@ -8,4 +8,5 @@ Contents:
 
    firstrun
    tour
+   fiveminutes
 
