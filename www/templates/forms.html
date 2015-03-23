@@ -247,24 +247,9 @@
   </form>
 {% endmacro %}
 
-{% macro rebuild_build(rebuild_url, authz, exactly, ss, builderName, url) %}
+{% macro rebuild_build(rebuild_url, authz, ss, builderName, url) %}
 <div class="forms-inline">
  <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
-
-    {% if exactly %}
-      <p>This build was built from a specific set of
-          source files, and can be rebuilt exactly
-          as it was here.</p>
-    {% else %}
-      <p>This build was built from the most recent revision
-      {% if ss.branch %}
-        (along branch {{ ss.branch }})
-      {% endif %}
-      and thus it might not be possible to rebuild it
-      exactly. <br/>Any changes that have been committed
-      after this build was started <b>will</b> be
-      included in a rebuild.</p>
-    {% endif %}
 
 
   {% if on_all %}

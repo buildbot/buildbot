@@ -37,6 +37,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * Build steps now require that their name be a string.
   Previously, they would accept anything, but not behave appropriately.
 
+* The web status no longer displays a potentially misleading message, indicating whether the build
+  can be rebuilt exactly.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

@@ -51,7 +51,7 @@
   <h2 class="head-2">
     Resubmit Build
   </h2>
-  {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0], builder.name, path_to_builder) }}
+  {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, sourcestamps[0], builder.name, path_to_builder) }}
     <div class="divider"></div>
 {% endif %}
 
