@@ -31,11 +31,11 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``workdir`` property has been renamed to ``builddir``.
 * The ``Blocker`` step has been removed.
 
-* StatusReceivers' checkConfig method should no longer take an `errors`
-  parameter. It should indicate errors by calling :py:function:`~buildbot.config.error`.
+* StatusReceivers' checkConfig method should no longer take an `errors` parameter.
+  It should indicate errors by calling :py:func:`~buildbot.config.error`.
 
-* Build steps now require that their name be a string. Previously, they would accept anything, but not
-  behave appropriately.
+* Build steps now require that their name be a string.
+  Previously, they would accept anything, but not behave appropriately.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

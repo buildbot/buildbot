@@ -45,7 +45,11 @@ class SourceStampExtractor:
         self.treetop = treetop
         self.repository = repository
         self.branch = branch
-        self.exe = which(self.vcexe)[0]
+        exes = which(self.vcexe)
+        if not exes:
+            print "Could not find executable '%s'." % self.vcexe
+            sys.exit(1)
+        self.exe = exes[0]
 
     def dovc(self, cmd):
         """This accepts the arguments of a command, without the actual
@@ -106,8 +110,8 @@ class CVSExtractor(SourceStampExtractor):
             # branch. A bare 'cvs diff' will tell you about the changes
             # relative to your checked-out versions, but I know of no way to
             # find out what those checked-out versions are.
-            raise RuntimeError("Sorry, CVS 'try' builds don't work with "
-                               "branches")
+            print "Sorry, CVS 'try' builds don't work with branches"
+            sys.exit(1)
         args = ['-q', 'diff', '-u', '-D', self.baserev]
         d = self.dovc(args)
         d.addCallback(self.readPatch, self.patchlevel)
@@ -146,8 +150,8 @@ class SVNExtractor(SourceStampExtractor):
             if m:
                 self.baserev = int(m.group(1))
                 return
-        raise IndexError("Could not find 'Status against revision' in "
-                         "SVN output: %s" % res)
+        print "Could not find 'Status against revision' in SVN output: %s" % res
+        sys.exit(1)
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-r%d" % self.baserev])
@@ -215,13 +219,16 @@ class PerforceExtractor(SourceStampExtractor):
             self.baserev = m.group(1)
             return
 
-        raise IndexError("Could not find change number in output: %s" % res)
+        print "Could not find change number in output: %s" % res
+        sys.exit(1)
 
     def readPatch(self, res, patchlevel):
         #
         # extract the actual patch from "res"
         #
-        assert self.branch, "you must specify a branch"
+        if not self.branch:
+            print "you must specify a branch"
+            sys.exit(1)
         mpatch = ""
         found = False
         for line in res.split("\n"):
@@ -234,7 +241,9 @@ class PerforceExtractor(SourceStampExtractor):
             else:
                 mpatch += line
                 mpatch += "\n"
-        assert found, "could not parse patch file"
+        if not found:
+            print "could not parse patch file"
+            sys.exit(1)
         self.patch = (patchlevel, mpatch)
 
     def getPatch(self, res):
@@ -322,7 +331,8 @@ class GitExtractor(SourceStampExtractor):
             d = self.readConfig()
             d.addCallback(self.parseTrackingBranch)
             return d
-        raise IndexError("Could not find current GIT branch: %s" % res)
+        print "Could not find current GIT branch: %s" % res
+        sys.exit(1)
 
     def getPatch(self, res):
         d = self.dovc(["diff", self.baserev])
@@ -369,7 +379,8 @@ def getSourceStamp(vctype, treetop, branch=None, repository=None):
     elif vctype == "mtn":
         cls = MonotoneExtractor
     else:
-        raise KeyError("unknown vctype '%s'" % vctype)
+        print "unknown vctype '%s'" % vctype
+        sys.exit(1)
     return cls(treetop, branch, repository).get()
 
 
@@ -430,8 +441,9 @@ def getTopdir(topfile, start=None):
             break                       # we've hit the root
         here = next
         toomany -= 1
-    raise ValueError("Unable to find topfile '%s' anywhere from %s upwards"
+    print ("Unable to find topfile '%s' anywhere from %s upwards"
                      % (topfile, start))
+    sys.exit(1)
 
 
 class RemoteTryPP(protocol.ProcessProtocol):
@@ -478,7 +490,8 @@ class BuildSetStatusGrabber:
 
     def go(self, dummy=None):
         if self.retryCount == 0:
-            raise RuntimeError("couldn't find matching buildset")
+            print "couldn't find matching buildset"
+            sys.exit(1)
         self.retryCount -= 1
         d = self.status.callRemote("getBuildSets")
         d.addCallback(self._gotSets)
@@ -502,7 +515,9 @@ class Try(pb.Referenceable):
     def __init__(self, config):
         self.config = config
         self.connect = self.getopt('connect')
-        assert self.connect, "you must specify a connect style: ssh or pb"
+        if self.connect not in ['ssh', 'pb']:
+            print "you must specify a connect style: ssh or pb"
+            sys.exit(1)
         self.builderNames = self.getopt('builders')
         self.project = self.getopt('project', '')
         self.who = self.getopt('who')
@@ -549,7 +564,11 @@ class Try(pb.Referenceable):
                     treedir = os.path.expanduser(topdir)
                 else:
                     topfile = self.getopt("topfile")
-                    treedir = getTopdir(topfile)
+                    if topfile:
+                        treedir = getTopdir(topfile)
+                    else:
+                        print "Must specify topdir or topfile."
+                        sys.exit(1)
             else:
                 treedir = os.getcwd()
             d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
@@ -816,8 +835,8 @@ class Try(pb.Referenceable):
             d.addCallback(self._getBuilderNames, self._getBuilderNames2)
             return d
         if self.connect == "ssh":
-            raise RuntimeError(
-                "ssh connection type not supported for this command")
+            print "Cannot get availble builders over ssh."
+            sys.exit(1)
         raise RuntimeError(
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
@@ -852,6 +871,7 @@ class Try(pb.Referenceable):
             d.addCallback(lambda res: deliver())
             d.addCallback(lambda res: self.announce("job has been delivered"))
             d.addCallback(lambda res: self.getStatus())
+        d.addErrback(self.trapSystemExit)
         d.addErrback(log.err)
         d.addCallback(self.cleanup)
         d.addCallback(lambda res: reactor.stop())
@@ -859,10 +879,9 @@ class Try(pb.Referenceable):
         reactor.run()
         sys.exit(self.exitcode)
 
-    def logErr(self, why):
-        log.err(why)
-        print "error during 'try' processing"
-        print why
+    def trapSystemExit(self, why):
+        why.trap(SystemExit)
+        self.exitcode = why.value.code
 
     def cleanup(self, res=None):
         if self.buildsetStatus:
