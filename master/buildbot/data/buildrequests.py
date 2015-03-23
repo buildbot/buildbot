@@ -108,6 +108,7 @@ class BuildRequest(base.ResourceType):
     eventPathPatterns = """
         /buildsets/:buildsetid/builders/:builderid/buildrequests/:buildrequestid
         /buildrequests/:buildrequestid
+        /builders/:builderid/buildrequests/:buildrequestid
     """
 
     class EntityType(types.Entity):

@@ -14,42 +14,98 @@
 # Copyright  Team Members
 
 from buildbot.util import json
-from buildbot.www import websocket
-from twisted.internet import protocol
+from buildbot.util import toJson
+from twisted.internet import defer
 from twisted.python import log
 
+from autobahn.twisted.resource import WebSocketResource
+from autobahn.twisted.websocket import WebSocketServerFactory
+from autobahn.twisted.websocket import WebSocketServerProtocol
 
-class WsProtocol(protocol.Protocol):
+
+class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
         self.master = master
         self.qrefs = {}
 
-    def dataReceived(self, frame):
+    def sendJsonMessage(self, **msg):
+        return self.sendMessage(json.dumps(msg, default=toJson, separators=(',', ':')).encode('utf8'))
+
+    def onMessage(self, frame, isBinary):
         log.msg("FRAME %s" % frame)
         # parse the incoming request
-        # TODO: error handling
+
         frame = json.loads(frame)
-        req = frame['req']
-        if req == 'startConsuming':
-            path = tuple(frame['path'])
-            options = frame['options']
+        _id = frame.get("_id")
+        if _id is None:
+            return self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)
+        cmd = frame.pop("cmd", None)
+        if cmd is None:
+            return self.sendJsonMessage(error="no 'cmd' in websocket frame", code=400, _id=None)
+        cmdmeth = "cmd_" + cmd
+        meth = getattr(self, cmdmeth, None)
+        if meth is None:
+            return self.sendJsonMessage(error="no such command '%s'" % (cmd, ), code=404, _id=_id)
+        try:
+            return meth(**frame)
+        except TypeError as e:
+            return self.sendJsonMessage(error="Invalid method argument '%s'" % (str(e), ), code=400, _id=_id)
+        except Exception as e:
+            log.err("while calling command %s" % (cmd, ))
+            return self.sendJsonMessage(error="Internal Error '%s'" % (str(e), ), code=500, _id=_id)
 
-            # if it's already subscribed, don't leak a subscription
-            if path in self.qrefs:
-                return
+    def ack(self, _id):
+        return self.sendJsonMessage(msg="OK", code=200, _id=_id)
 
-            def callback(key, message):
-                content = json.dumps(dict(path=path, key=key, message=message))
-                self.transport.write(content)
-            d = self.master.data.startConsuming(callback, options, path)
+    def parsePath(self, path):
+        path = path.split("/")
+        return tuple([str(p) if p != "*" else None for p in path])
 
-            @d.addCallback
-            def register(qref):
-                if path in self.qrefs:
-                    qref.stopConsuming()
-                self.qrefs[path] = qref
-            d.addErrback("while starting consumption")
+    def isPath(self, path):
+        if not isinstance(path, basestring):
+            return False
+        return True
+
+    @defer.inlineCallbacks
+    def cmd_startConsuming(self, path, _id):
+        if not self.isPath(path):
+            yield self.sendJsonMessage(error="invalid path format '%s'" % (str(path), ), code=400, _id=_id)
+            return
+
+        # if it's already subscribed, don't leak a subscription
+        if path in self.qrefs:
+            yield self.ack(_id=_id)
+            return
+
+        def callback(key, message):
+            # protocol is deliberatly concise in size
+            return self.sendJsonMessage(k="/".join(key), m=message)
+
+        qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
+
+        if path in self.qrefs or self.qrefs is None:  # race conditions handling
+            qref.stopConsuming()
+
+        self.qrefs[path] = qref
+        self.ack(_id=_id)
+
+    @defer.inlineCallbacks
+    def cmd_stopConsuming(self, path, _id):
+        if not self.isPath(path):
+            yield self.sendJsonMessage(error="invalid path format '%s'" % (str(path), ), code=400, _id=_id)
+            return
+
+        # only succeed if path has been started
+        if path in self.qrefs:
+            qref = self.qrefs.pop(path)
+            yield qref.stopConsuming()
+            yield self.ack(_id=_id)
+            return
+        yield self.sendJsonMessage(error="path was not consumed '%s'" % (str(path), ), code=400, _id=_id)
+
+    def cmd_ping(self, _id):
+        self.sendJsonMessage(msg="pong", code=200, _id=_id)
 
     def connectionLost(self, reason):
         log.msg("connection lost", system=self)
@@ -58,9 +114,10 @@ class WsProtocol(protocol.Protocol):
         self.qrefs = None  # to be sure we don't add any more
 
 
-class WsProtocolFactory(protocol.Factory):
+class WsProtocolFactory(WebSocketServerFactory):
 
     def __init__(self, master):
+        WebSocketServerFactory.__init__(self)
         self.master = master
 
     def buildProtocol(self, addr):
@@ -69,7 +126,7 @@ class WsProtocolFactory(protocol.Factory):
         return p
 
 
-class WsResource(websocket.WebSocketsResource):
+class WsResource(WebSocketResource):
 
     def __init__(self, master):
-        websocket.WebSocketsResource.__init__(self, WsProtocolFactory(master))
+        WebSocketResource.__init__(self, WsProtocolFactory(master))

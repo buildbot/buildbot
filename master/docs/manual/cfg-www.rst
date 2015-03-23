@@ -307,3 +307,68 @@ Currently only one provider is available:
             .. code-block:: bash
 
                 pip install python3-ldap
+
+
+
+.. _Reverse_Proxy_Config:
+
+Reverse Proxy Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is usually better to put buildbot behind a reverse proxy in production.
+
+* Provides automatic gzip compression
+* Provides SSL support with a widely used implementation
+* Provides support for http/2 or spdy for fast parallel REST api access from the browser
+
+Reverse proxy however might be problematic for websocket, you have to configure it specifically to pass web socket requests.
+Here is an nginx configuration that is known to work (nginx 1.6.2):
+
+.. code-block:: none
+
+
+    server {
+            # Enable SSL and SPDY
+            listen 443 ssl spdy default_server;
+
+            server_name yourdomain.com;
+
+            root html;
+            index index.html index.htm;
+
+            ssl on;
+            ssl_certificate /etc/nginx/ssl/server.cer;
+            ssl_certificate_key /etc/nginx/ssl/server.key;
+
+            # put a one day session timeout for websockets to stay longer
+            ssl_session_cache      shared:SSL:1440m;
+            ssl_session_timeout  1440m;
+            add_header        Alternate-Protocol  443:npn-spdy/3;
+
+            # please consult latest nginx documentation for current secure encryption settings
+            ssl_protocols ..
+            ssl_ciphers ..
+            ssl_prefer_server_ciphers   on;
+            #
+
+            # force https
+            add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;";
+            spdy_headers_comp 5;
+
+            # you could use / if you use domain based proxy instead of path based proxy
+            location /buildbot/ {
+                proxy_pass http://localhost:5000/;
+            }
+            location /buildbot/sse/ {
+                # proxy buffering will prevent sse to work
+                proxy_buffering off;
+                proxy_pass http://localhost:5000/sse/;
+            }
+            # required for websocket
+            location /buildbot/ws {
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_pass http://localhost:5000/ws;
+            }
+    }
