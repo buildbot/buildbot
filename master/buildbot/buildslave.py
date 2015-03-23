@@ -923,7 +923,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def _setBuildWaitTimer(self):
         self._clearBuildWaitTimer()
-        if self.build_wait_timeout < 0:
+        if self.build_wait_timeout <= 0:
             return
         self.build_wait_timer = reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
