@@ -57,7 +57,12 @@ Let's dive in by typing at the terminal::
   cd tmp/buildbot
   virtualenv --no-site-packages sandbox
   source sandbox/bin/activate
+  easy_install sqlalchemy==0.7.10
   easy_install buildbot
+
+.. note::
+
+    The requirement to install SQLAlchemy-0.7.10 is due to a conflict between newer versions of SQLAlchemy and SQLAlchemy-Migrate.
 
 Creating a master
 -----------------

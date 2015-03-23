@@ -311,6 +311,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                                      "requestSubmitted": filters,
                                                      "requestCancelled": filters,
                                                  }}
+        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
 
         builds_json = PastBuildsJsonResource(self.status, num_builds,  builder_status=self.builder_status)
         builds_dict = yield builds_json.asDict(req)
