@@ -119,6 +119,7 @@ class GitHubStatus(StatusReceiverMultiService):
             'state': 'pending',
             'description': description,
             'builderName': builderName,
+            'context': builderName,
             'startDateTime': datetime.fromtimestamp(startTime).isoformat(' '),
             'endDateTime': 'In progress',
             'duration': 'In progress',
@@ -153,6 +154,7 @@ class GitHubStatus(StatusReceiverMultiService):
             'state': state,
             'description': description,
             'builderName': builderName,
+            'context': builderName,
             'startDateTime': datetime.fromtimestamp(startTime).isoformat(' '),
             'endDateTime': datetime.fromtimestamp(endTime).isoformat(' '),
             'duration': duration,
@@ -199,6 +201,7 @@ class GitHubStatus(StatusReceiverMultiService):
             sha=status['sha'].encode('utf-8'),
             state=status['state'].encode('utf-8'),
             target_url=status['targetURL'].encode('utf-8'),
+            context=status['context'].encode('utf-8'),
             description=status['description'].encode('utf-8'),
         )
 

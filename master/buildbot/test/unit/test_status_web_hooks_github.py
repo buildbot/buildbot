@@ -136,6 +136,30 @@ gitJsonPayloadEmpty = """
   "ref": "refs/heads/master"
 }
 """
+_CT_ENCODED = 'application/x-www-form-urlencoded'
+_CT_JSON = 'application/json'
+
+
+def _prepare_request(event, payload):
+    """
+    ...
+    """
+    request = FakeRequest()
+
+    request.uri = "/change_hook/github"
+    request.method = "GET"
+    request.received_headers = {
+        'X-GitHub-Event': event
+    }
+
+    if isinstance(payload, str):
+        request.content = StringIO(payload)
+        request.received_headers['Content-Type'] = _CT_JSON
+    else:
+        request.args['payload'] = payload
+        request.received_headers['Content-Type'] = _CT_ENCODED
+
+    return request
 
 _CT_ENCODED = 'application/x-www-form-urlencoded'
 _CT_JSON = 'application/json'
@@ -519,3 +543,9 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
             self.assertEqual(self.request.written, expected)
 
         return d
+
+    def test_git_with_non_branch_changes_encoded(self):
+        self._check_git_with_non_branch_changes([gitJsonPayloadNonBranch])
+
+    def test_git_with_non_branch_changes_json(self):
+        self._check_git_with_non_branch_changes(gitJsonPayloadNonBranch)
