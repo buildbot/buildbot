@@ -369,7 +369,7 @@ If the options described above are not sufficient, more complex substitutions ca
 
 Renderables are objects providing the :class:`~buildbot.interfaces.IRenderable` interface.
 That interface is simple - objects must provide a `getRenderingFor` method.
-The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string.
+The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string or a deferred firing with a string.
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
@@ -398,4 +398,4 @@ This is equivalent to::
         return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=now)])
 
-Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a renderer can be used directly.
+Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.
