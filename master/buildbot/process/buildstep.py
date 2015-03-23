@@ -24,7 +24,7 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
 
-from buildbot import interfaces, locks, util, config
+from buildbot import interfaces, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
