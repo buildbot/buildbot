@@ -16,7 +16,7 @@ if [ $# -eq 0 ]; then
     echo "USAGE: common/validate.sh oldrev"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
-    echo "      sphinx, pyflakes, mock, and coverage."
+    echo "      sphinx, pyflakes, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     exit 1
 fi
@@ -64,19 +64,8 @@ if [ -n "${TRIALTMP}" ]; then
     TEMP_DIRECTORY_OPT="--temp-directory ${TRIAL_TMP}"
 fi
 
-coverage erase || exit 1
-coverage run --rcfile=.coveragerc \
-    sandbox/bin/trial --reporter summary ${TEMP_DIRECTORY_OPT} ${TEST} \
-    || not_ok "tests failed"
-
 status "running pyflakes"
 make pyflakes || not_ok "failed pyflakes"
-
-status "coverage report"
-coverage report > covreport || exit 1
-head -n2 covreport || exit 1
-tail -n1 covreport || exit 1
-rm covreport || exit 1
 
 status "building docs"
 make -C master/docs VERSION=latest clean html || not_ok "docs failed"

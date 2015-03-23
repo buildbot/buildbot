@@ -347,6 +347,16 @@ class TestIrcContactChannel(unittest.TestCase):
         self.contact.handleAction('stupids nick', 'me')
         self.assertEqual(self.actions, ['stupids me too'])
 
+    def test_unclosed_quote(self):
+        self.do_test_command('list', args='args\'', exp_UsageError=True)
+        self.do_test_command('status', args='args\'', exp_UsageError=True)
+        self.do_test_command('notify', args='args\'', exp_UsageError=True)
+        self.do_test_command('watch', args='args\'', exp_UsageError=True)
+        self.do_test_command('force', args='args\'', exp_UsageError=True)
+        self.do_test_command('stop', args='args\'', exp_UsageError=True)
+        self.do_test_command('last', args='args\'', exp_UsageError=True)
+        self.do_test_command('help', args='args\'', exp_UsageError=True)
+
 
 class FakeContact(object):
 
