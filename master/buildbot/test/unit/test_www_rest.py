@@ -669,3 +669,16 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
             responseCode=500)
         # the error gets logged, too:
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+
+
+class ContentTypeParser(unittest.TestCase):
+
+    def test_simple(self):
+        self.assertEqual(rest.ContentTypeParser("application/json").gettype(), "application/json")
+
+    def test_complex(self):
+        self.assertEqual(rest.ContentTypeParser("application/json; Charset=UTF-8").gettype(),
+                         "application/json")
+
+    def test_text(self):
+        self.assertEqual(rest.ContentTypeParser("text/plain; Charset=UTF-8").gettype(), "text/plain")
