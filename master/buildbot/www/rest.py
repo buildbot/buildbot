@@ -17,6 +17,7 @@ from __future__ import with_statement
 
 import datetime
 import fnmatch
+import mimetools
 import re
 import types
 
@@ -43,6 +44,18 @@ class BadJsonRpc2(Exception):
         self.jsonrpccode = jsonrpccode
 
 
+class ContentTypeParser(mimetools.Message):
+
+    def __init__(self, contenttype):
+        self.typeheader = contenttype
+        self.encodingheader = None
+        self.parsetype()
+        self.parseplist()
+
+URL_ENCODED = "application/x-www-form-urlencoded"
+JSON_ENCODED = "application/json"
+
+
 class RestRootResource(resource.Resource):
     version_classes = {}
 
@@ -65,7 +78,7 @@ class RestRootResource(resource.Resource):
                 self.putChild('latest', child)
 
     def render(self, request):
-        request.setHeader("content-type", 'application/json')
+        request.setHeader("content-type", JSON_ENCODED)
         min_vers = self.master.config.www.get('rest_minimum_version', 0)
         api_versions = dict(('v%d' % v, '%sapi/v%d' % (self.base_url, v))
                             for v in self.version_classes
@@ -73,8 +86,6 @@ class RestRootResource(resource.Resource):
         return json.dumps(dict(api_versions=api_versions))
 
 
-URL_ENCODED = "application/x-www-form-urlencoded"
-JSON_ENCODED = "application/json"
 JSONRPC_CODES = dict(parse_error=-32700,
                      invalid_request=-32600,
                      method_not_found=-32601,
@@ -137,7 +148,7 @@ class V2RootResource(resource.Resource):
         # Verify the content-type.  Browsers are easily convinced to send
         # POST data to arbitrary URLs via 'form' elements, but they won't
         # use the application/json content-type.
-        if request.getHeader('content-type') != 'application/json':
+        if ContentTypeParser(request.getHeader('content-type')).gettype() != JSON_ENCODED:
             raise BadJsonRpc2('Invalid content-type (use application/json)',
                               JSONRPC_CODES["invalid_request"])
 
@@ -204,7 +215,6 @@ class V2RootResource(resource.Resource):
                 request.write(data)
 
     # JSONAPI support
-
     def decodeResultSpec(self, request, endpoint):
         reqArgs = request.args
 
