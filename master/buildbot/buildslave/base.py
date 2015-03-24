@@ -77,7 +77,7 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
             properties = {}
 
         service.AsyncMultiService.__init__(self)
-        self.slavename = ascii2unicode(name)
+        self.slavename = name
         self.password = password
 
         # protocol registration
