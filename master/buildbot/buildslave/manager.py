@@ -64,10 +64,8 @@ class BuildslaveManager(service.BuildbotServiceManager):
 
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
-        self.setName('buildslaves')
-        self.master = master
 
-        self.pb = bbpb.Listener(self.master)
+        self.pb = bbpb.Listener(master)
         self.pb.setServiceParent(self)
 
         # BuildslaveRegistration instances keyed by buildslave name

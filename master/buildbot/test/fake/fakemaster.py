@@ -165,6 +165,7 @@ class FakeMaster(service.MasterService):
         self.masterid = master_id
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
         self.log_rotation = FakeLogRotation()
+        service.MasterService.__init__(self)
 
     def getObjectId(self):
         return defer.succeed(self._master_id)

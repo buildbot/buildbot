@@ -83,7 +83,6 @@ class AbstractBuildSlave(service.BuildbotService, object):
         self.registration = None
 
         # these are set when the service is started
-        self.botmaster = None
         self.manager = None
         self.buildslaveid = None
 
@@ -127,6 +126,12 @@ class AbstractBuildSlave(service.BuildbotService, object):
     def slavename(self):
         # slavename is now an alias to twisted.Service's name
         return self.name
+
+    @property
+    def botmaster(self):
+        if self.master is None:
+            return None
+        return self.master.botmaster
 
     def updateLocks(self):
         """Convert the L{LockAccess} objects in C{self.locks} into real lock
@@ -204,7 +209,6 @@ class AbstractBuildSlave(service.BuildbotService, object):
         # botmaster needs to set before setServiceParent which calls startService
 
         self.manager = parent
-        self.botmaster = parent.master.botmaster
         return service.BuildbotService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks

@@ -25,6 +25,7 @@ from twisted.spread import pb
 class Listener(base.Listener):
 
     def __init__(self, master):
+        assert master
         base.Listener.__init__(self, master)
 
         # username : (password, portstr, PBManager registration)
@@ -205,8 +206,7 @@ class Connection(base.Connection, pb.Avatar):
         remoteCommand = RemoteCommand(remoteCommand)
         args = self.createArgsProxies(args)
         return slavebuilder.callRemote('startCommand',
-                                       remoteCommand, commandId, commandName, args
-                                       )
+                                       remoteCommand, commandId, commandName, args)
 
     @defer.inlineCallbacks
     def remoteShutdown(self):

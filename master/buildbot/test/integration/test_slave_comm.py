@@ -147,6 +147,7 @@ class TestSlaveComm(unittest.TestCase):
     @ivar connector: outbound TCP connection from slave to master
     """
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
@@ -154,15 +155,17 @@ class TestSlaveComm(unittest.TestCase):
         # set the slave port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
-        self.pbmanager.startService()
+        self.pbmanager.setServiceParent(self.master)
 
         self.buildslaves = self.master.buildslaves = bslavemanager.BuildslaveManager(self.master)
-        self.buildslaves.startService()
+        self.buildslaves.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster(self.master)
-        self.botmaster.startService()
+        self.botmaster.setServiceParent(self.master)
 
         self.master.status = master.Status(self.master)
+        self.master.botmaster = self.botmaster
+        yield self.master.startService()
 
         self.buildslave = None
         self.port = None

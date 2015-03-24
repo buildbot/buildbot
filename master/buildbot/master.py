@@ -171,6 +171,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.status = Status(self)
         self.status.setServiceParent(self)
 
+        self.service_manager = service.BuildbotServiceManager()
+        self.service_manager.setServiceParent(self)
+
         self.masterHouskeepingTimer = 0
 
         @defer.inlineCallbacks
@@ -260,9 +263,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             yield self.data.updates.masterStopped(name=self.name,
                                                   masterid=self.masterid)
 
-            for serviceFactory in self.config.services.values():
-                yield serviceFactory.setServiceParent(self)
-
             # call the parent method
             yield service.AsyncMultiService.startService(self)
 
@@ -337,19 +337,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         changes_made = False
         failed = False
         try:
-            old_config = self.config
             new_config = config.MasterConfig.loadConfig(self.basedir,
                                                         self.configFileName)
             changes_made = True
             self.config = new_config
-            for name in old_config.services:
-                if name not in new_config.services:
-                    serv = self.namedServices[name]
-                    yield serv.disownServiceParent()
-
-            for name in new_config.services:
-                if name not in old_config.services:
-                    yield new_config.services[name].setServiceParent(self)
 
             yield self.reconfigServiceWithBuildbotConfig(new_config)
 
