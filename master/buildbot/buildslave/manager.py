@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from buildbot import util
 from buildbot.buildslave.protocols import pb as bbpb
+from buildbot.interfaces import IBuildSlave
 from buildbot.process import metrics
 from buildbot.util import misc
 from buildbot.util import service
@@ -106,7 +106,7 @@ class BuildslaveManager(service.ReconfigurableServiceMixin,
         # arrange slaves by name
         old_by_name = dict([(s.slavename, s)
                             for s in list(self)
-                            if interfaces.IBuildSlave.providedBy(s)])
+                            if IBuildSlave.providedBy(s)])
         old_set = set(old_by_name.iterkeys())
         new_by_name = dict([(s.slavename, s)
                             for s in new_config.slaves])

@@ -21,8 +21,8 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 try:
     import novaclient.exceptions as nce
@@ -149,7 +149,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.slavename,
                          instance.id, instance.name))
-                raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                raise LatentBuildSlaveFailedToSubstantiate(
                     instance.id, instance.status)
         if inst.status == ACTIVE:
             minutes = duration // 60
@@ -164,7 +164,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
                      instance.id, inst.status))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise LatentBuildSlaveFailedToSubstantiate(
                 instance.id, inst.status)
 
     def stop_instance(self, fast=False):

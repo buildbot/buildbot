@@ -23,8 +23,8 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.util import json
 
 try:
@@ -137,7 +137,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         if (not self._image_exists(docker_client, image)):
             log.msg("Image '%s' not found" % image)
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise LatentBuildSlaveFailedToSubstantiate(
                 'Image "%s" not found on docker host.' % image
             )
 
@@ -150,7 +150,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
         if instance.get('Id') is None:
             log.msg('Failed to create the container')
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise LatentBuildSlaveFailedToSubstantiate(
                 'Failed to start container'
             )
         shortid = instance['Id'][:6]

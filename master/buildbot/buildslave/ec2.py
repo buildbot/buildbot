@@ -35,7 +35,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot import interfaces
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.buildslave.base import AbstractLatentBuildSlave
 
 PENDING = 'pending'
@@ -283,7 +283,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         log.msg('%s %s failed to start instance %s (%s)' %
                 (self.__class__.__name__, self.slavename,
                     self.instance.id, self.instance.state))
-        raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+        raise LatentBuildSlaveFailedToSubstantiate(
             self.instance.id, self.instance.state)
 
     def _start_instance(self):
@@ -371,7 +371,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.slavename,
                      self.current_spot_price, self.max_spot_price))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+            raise LatentBuildSlaveFailedToSubstantiate()
         else:
             if self.retry > 1:
                 log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
@@ -407,11 +407,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     self.attempt = 0
                     log.msg('%s %s failed to substantiate after %d requests' %
                             (self.__class__.__name__, self.slavename, self.retry))
-                    raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+                    raise LatentBuildSlaveFailedToSubstantiate()
         else:
             instance_id, image_id, start_time, success = self._submit_request()
             if not success:
-                raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+                raise LatentBuildSlaveFailedToSubstantiate()
         return instance_id, image_id, start_time
 
     def _wait_for_instance(self, image):
@@ -483,5 +483,5 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.slavename,
                      request.id, request_status))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise LatentBuildSlaveFailedToSubstantiate(
                 request.id, request.status)
