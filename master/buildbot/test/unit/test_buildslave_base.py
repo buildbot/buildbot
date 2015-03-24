@@ -192,7 +192,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         old.missing_timer = mock.Mock(name='missing_timer')
         yield old.startService()
 
-        yield old.reconfigService(*new._config_args, **new._config_kwargs)
+        yield old.reconfigServiceWithSibling(new)
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
@@ -237,8 +237,6 @@ class TestAbstractBuildSlave(unittest.TestCase):
     def test_stopService(self):
         slave = self.createBuildslave()
         yield slave.startService()
-
-        yield slave.reconfigService(*slave._config_args, **slave._config_kwargs)
 
         reg = slave.registration
 
@@ -446,7 +444,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         yield slave.shutdown()
-        self.assertEqual(slave.conn.remoteCalls, [('remoteShutdown',)])
+        self.assertEqual(slave.conn.remoteCalls, [('remoteSetBuilderList', []), ('remoteShutdown',)])
 
     @defer.inlineCallbacks
     def test_slave_shutdown_not_connected(self):

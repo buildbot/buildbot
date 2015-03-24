@@ -71,5 +71,6 @@ class FakeBuildslaveRegistration(object):
         return defer.succeed(None)
 
     def update(self, slave_config, global_config):
-        self.updates.append(slave_config.slavename)
+        if slave_config.slavename not in self.updates:
+            self.updates.append(slave_config.slavename)
         return defer.succeed(None)

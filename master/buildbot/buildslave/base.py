@@ -205,7 +205,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
 
         self.manager = parent
         self.botmaster = parent.master.botmaster
-        return service.AsyncMultiService.setServiceParent(self, parent)
+        return service.BuildbotService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks
     def startService(self):
@@ -215,7 +215,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
             self.name)
 
         yield self._getSlaveInfo()
-        yield service.AsyncMultiService.startService(self)
+        yield service.BuildbotService.startService(self)
 
     @defer.inlineCallbacks
     def reconfigService(self, name, password, max_builds=None,
@@ -269,7 +269,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        yield service.AsyncMultiService.stopService(self)
+        yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):
         if self.notify_on_missing and self.missing_timeout and self.parent:

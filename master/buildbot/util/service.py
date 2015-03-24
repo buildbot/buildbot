@@ -256,13 +256,22 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # get from the config object its sibling config
         config_sibling = getattr(new_config, self.config_attr)[self.name]
+        return self.reconfigServiceWithSibling(config_sibling)
 
+    def reconfigServiceWithSibling(self, sibling):
         # only reconfigure if different as ComparableMixin says.
-        if self.configured and config_sibling == self:
+        if self.configured and sibling == self:
             return defer.succeed(None)
         self.configured = True
-        return self.reconfigService(*config_sibling._config_args,
-                                    **config_sibling._config_kwargs)
+        return self.reconfigService(*sibling._config_args,
+                                    **sibling._config_kwargs)
+
+    @defer.inlineCallbacks
+    def startService(self):
+        if not self.configured:
+            # reconfigServiceWithSibling with self, means first configuration
+            yield self.reconfigServiceWithSibling(self)
+        yield AsyncMultiService.startService(self)
 
     @property
     def master(self):
@@ -334,11 +343,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         for n, child in self.namedServices.iteritems():
             # get from the config object its sibling config
             config_sibling = new_by_name[n]
-            # only reconfigure if different as ComparableMixin says.
-            if child.configured and config_sibling == child:
-                continue
-            yield child.reconfigService(*config_sibling._config_args,
-                                        **config_sibling._config_kwargs)
+            yield child.reconfigServiceWithSibling(config_sibling)
 
     def setServiceParent(self, parent):
         self.master = parent
