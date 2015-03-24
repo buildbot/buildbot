@@ -635,19 +635,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     build_wait_timer = None
     _shutdown_callback_handle = None
 
-    def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=None, missing_timeout=60 * 20,
+    def __init__(self, name, password,
                  build_wait_timeout=60 * 10,
-                 properties=None, locks=None):
-        if notify_on_missing is None:
-            notify_on_missing = []
+                 **kwargs):
+        AbstractBuildSlave.__init__(self, name, password, **kwargs)
 
-        if properties is None:
-            properties = {}
-
-        AbstractBuildSlave.__init__(
-            self, name, password, max_builds, notify_on_missing,
-            missing_timeout, properties, locks)
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
 

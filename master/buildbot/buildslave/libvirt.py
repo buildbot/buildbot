@@ -156,21 +156,12 @@ class Connection(object):
 
 
 class LibVirtSlave(AbstractLatentBuildSlave):
-
-    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None, max_builds=None, notify_on_missing=None,
-                 missing_timeout=60 * 20, build_wait_timeout=60 * 10, properties=None, locks=None):
-        if notify_on_missing is None:
-            notify_on_missing = []
-        if properties is None:
-            properties = {}
-
-        AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
-                                          missing_timeout, build_wait_timeout, properties, locks)
-
+    def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
+                 **kwargs):
+        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
         if not libvirt:
             config.error("The python module 'libvirt' is needed to use a LibVirtSlave")
 
-        self.name = name
         self.connection = connection
         self.image = hd_image
         self.base_image = base_image
@@ -195,7 +186,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         domains = yield self.connection.all()
         for d in domains:
             name = yield d.name()
-            if name.startswith(self.name):
+            if name.startswith(self.slavename):
                 self.domain = d
                 self.substantiated = True
                 break
@@ -261,7 +252,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-            log.msg("Cannot start_instance '%s' as already active" % self.name)
+            log.msg("Cannot start_instance '%s' as already active" % self.slavename)
             defer.returnValue(False)
 
         yield self._prepare_base_image()
@@ -270,12 +261,12 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             if self.xml:
                 self.domain = yield self.connection.create(self.xml)
             else:
-                self.domain = yield self.connection.lookupByName(self.name)
+                self.domain = yield self.connection.lookupByName(self.slavename)
                 yield self.domain.create()
         except Exception:
             log.err(failure.Failure(),
                     "Cannot start a VM (%s), failing gracefully and triggering"
-                    "a new build check" % self.name)
+                    "a new build check" % self.slavename)
             self.domain = None
             defer.returnValue(False)
 
@@ -288,7 +279,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
-        log.msg("Attempting to stop '%s'" % self.name)
+        log.msg("Attempting to stop '%s'" % self.slavename)
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
             return defer.succeed(None)
@@ -297,22 +288,22 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         self.domain = None
 
         if self.graceful_shutdown and not fast:
-            log.msg("Graceful shutdown chosen for %s" % self.name)
+            log.msg("Graceful shutdown chosen for %s" % self.slavename)
             d = domain.shutdown()
         else:
             d = domain.destroy()
 
         @d.addCallback
         def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." % self.name)
+            log.msg("VM destroyed (%s): Forcing its connection closed." % self.slavename)
             return AbstractBuildSlave.disconnect(self)
 
         @d.addBoth
         def _disconnected(res):
-            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.name)
+            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.slavename)
             if self.base_image:
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForSlave(self.name)
+            self.botmaster.maybeStartBuildsForSlave(self.slavename)
             return res
 
         return d

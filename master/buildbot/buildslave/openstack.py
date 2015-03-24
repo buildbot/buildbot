@@ -53,11 +53,10 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                  block_devices=None,
                  image=None,
                  meta=None,
-                 max_builds=None, notify_on_missing=None, missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties=None, locks=None,
                  # Have a nova_args parameter to allow passing things directly
                  # to novaclient v1.1.
-                 nova_args=None):
+                 nova_args=None,
+                 **kwargs):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
@@ -66,15 +65,8 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
 
-        if notify_on_missing is None:
-            notify_on_missing = []
+        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
 
-        if properties is None:
-            properties = {}
-
-        AbstractLatentBuildSlave.__init__(
-            self, name, password, max_builds, notify_on_missing,
-            missing_timeout, build_wait_timeout, properties, locks)
         self.flavor = flavor
         self.os_username = os_username
         self.os_password = os_password
