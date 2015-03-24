@@ -4,7 +4,9 @@ Contributing to Buildbot
 .. contents::
    :local:
 
-Thank you for contributing to Buildbot!
+We value your contribution to Buildbot and thank you for it!
+
+If it happens that your contribution is not reviewed within two days, please do not hesitate to remind about it by leaving a comment "Please review this PR".
 
 What appears below is just a quick summary.
 See http://trac.buildbot.net/wiki/Development for the full story.
