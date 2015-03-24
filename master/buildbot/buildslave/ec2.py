@@ -338,7 +338,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             goal = (SHUTTINGDOWN, TERMINATED)
             instance.update()
         else:
-            goal = (TERMINATED,)
+            goal = TERMINATED,
         while instance.state not in goal:
             time.sleep(interval)
             duration += interval
@@ -432,6 +432,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                         (self.__class__.__name__, self.slavename, duration // 60,
                          self.instance.id))
             self.instance.update()
+
         if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
             minutes = duration // 60
