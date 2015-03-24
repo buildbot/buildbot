@@ -67,7 +67,7 @@ class LogRotation(object):
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
@@ -124,10 +124,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService)
                                 os.path.abspath(self.basedir or '.')))
         self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
-
-    @property
-    def master(self):
-        return self
 
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,

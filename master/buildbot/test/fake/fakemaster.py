@@ -25,6 +25,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.util import service
 from twisted.internet import defer
 from zope.interface import implements
 
@@ -141,7 +142,7 @@ class FakeLogRotation(object):
     maxRotatedFiles = 42
 
 
-class FakeMaster(object):
+class FakeMaster(service.MasterService):
 
     """
     Create a fake Master instance: a Mock with some convenience
@@ -165,17 +166,10 @@ class FakeMaster(object):
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
         self.log_rotation = FakeLogRotation()
 
-    @property
-    def master(self):
-        return self
-
     def getObjectId(self):
         return defer.succeed(self._master_id)
 
     def subscribeToBuildRequests(self, callback):
-        pass
-
-    def removeService(self, child):
         pass
 
 # Leave this alias, in case we want to add more behavior later

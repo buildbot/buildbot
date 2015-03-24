@@ -227,6 +227,21 @@ class AsyncMultiService(AsyncService, service.MultiService):
         else:
             return defer.succeed(None)
 
+    # We recurse over the parent services until we find a MasterService
+    @property
+    def master(self):
+        if self.parent is None:
+            return None
+        return self.parent.master
+
+
+class MasterService(AsyncMultiService):
+    # master service is the service that stops the master property recursion
+
+    @property
+    def master(self):
+        return self
+
 
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
                       ReconfigurableServiceMixin, util.ComparableMixin):
@@ -273,12 +288,6 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
             yield self.reconfigServiceWithSibling(self)
         yield AsyncMultiService.startService(self)
 
-    @property
-    def master(self):
-        if self.parent is None:
-            return None
-        return self.parent.master
-
     def checkConfig(self, *args, **kwargs):
         return defer.succeed(True)
 
@@ -290,7 +299,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                              ReconfigurableServiceMixin, util.ComparableMixin):
     compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
     config_attr = "services"
-    name = None
+    name = "services"
     configured = False
 
     def getConfigDict(self):
@@ -344,7 +353,3 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             # get from the config object its sibling config
             config_sibling = new_by_name[n]
             yield child.reconfigServiceWithSibling(config_sibling)
-
-    def setServiceParent(self, parent):
-        self.master = parent
-        return AsyncService.setServiceParent(self, parent)
