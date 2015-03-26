@@ -99,25 +99,28 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if not users_row:
                 return None
 
-            # make UsDict to return
-            usdict = UsDict()
-
             # gather all attr_type and attr_data entries from users_info table
             q = tbl_info.select(whereclause=(tbl_info.c.uid == uid))
             rows = conn.execute(q).fetchall()
-            for row in rows:
-                usdict[row.attr_type] = row.attr_data
 
-            # add the users_row data *after* the attributes in case attr_type
-            # matches one of these keys.
-            usdict['uid'] = users_row.uid
-            usdict['identifier'] = users_row.identifier
-            usdict['bb_username'] = users_row.bb_username
-            usdict['bb_password'] = users_row.bb_password
-
-            return usdict
+            return self.thd_createUsDict(users_row, rows)
         d = self.db.pool.do(thd)
         return d
+
+    def thd_createUsDict(self, users_row, rows):
+        # make UsDict to return
+        usdict = UsDict()
+        for row in rows:
+            usdict[row.attr_type] = row.attr_data
+
+        # add the users_row data *after* the attributes in case attr_type
+        # matches one of these keys.
+        usdict['uid'] = users_row.uid
+        usdict['identifier'] = users_row.identifier
+        usdict['bb_username'] = users_row.bb_username
+        usdict['bb_password'] = users_row.bb_password
+
+        return usdict
 
     def getUserByUsername(self, username):
         def thd(conn):
@@ -130,23 +133,11 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if not users_row:
                 return None
 
-            # make UsDict to return
-            usdict = UsDict()
-
             # gather all attr_type and attr_data entries from users_info table
             q = tbl_info.select(whereclause=(tbl_info.c.uid == users_row.uid))
             rows = conn.execute(q).fetchall()
-            for row in rows:
-                usdict[row.attr_type] = row.attr_data
 
-            # add the users_row data *after* the attributes in case attr_type
-            # matches one of these keys.
-            usdict['uid'] = users_row.uid
-            usdict['identifier'] = users_row.identifier
-            usdict['bb_username'] = users_row.bb_username
-            usdict['bb_password'] = users_row.bb_password
-
-            return usdict
+            return self.thd_createUsDict(users_row, rows)
         d = self.db.pool.do(thd)
         return d
 
