@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import random, weakref
+import weakref
 from zope.interface import implements
 from twisted.python import log, failure
 from twisted.spread import pb
@@ -27,10 +27,9 @@ from buildbot.status.builder import RETRY
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
+from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
 
-from buildbot.db import buildrequests
-import sys
 
 class Builder(config.ReconfigurableServiceMixin,
               pb.Referenceable,
@@ -104,13 +103,6 @@ class Builder(config.ReconfigurableServiceMixin,
     def stopService(self):
         d = defer.maybeDeferred(lambda :
                 service.MultiService.stopService(self))
-        def flushMaybeStartBuilds(_):
-            # at this point, self.running = False, so another maybeStartBuild
-            # invocation won't hurt anything, but it also will not complete
-            # until any currently-running invocations are done, so we know that
-            # the builder is quiescent at that time.
-            return self.maybeStartBuild()
-        d.addCallback(flushMaybeStartBuilds)
         return d
 
     def __repr__(self):
@@ -266,6 +258,20 @@ class Builder(config.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
+    def getAvailableSlaves(self):
+        return [sb for sb in self.slaves
+                if sb.isAvailable()]
+
+    def canStartWithSlavebuilder(self, slavebuilder):
+        locks = [(self.botmaster.getLockFromLockAccess(access), access)
+                    for access in self.config.locks ]
+        return Build.canStartWithSlavebuilder(locks, slavebuilder)
+
+    def canStartBuild(self, slavebuilder, breq):
+        if callable(self.config.canStartBuild):
+            return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
+        return defer.succeed(True)
+
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
         """Start a build on the given slave.
@@ -311,7 +317,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         #check slave is still available
-        ready = slavebuilder in self.getAvailableSlaveBuilders()
+        ready = slavebuilder in self.getAvailableSlaves()
         if ready:
             try:
                 ready = yield slavebuilder.prepare(self.builder_status, build)
@@ -493,15 +499,15 @@ class Builder(config.ReconfigurableServiceMixin,
             self.master.buildRequestRemoved(br.bsid, br.id, self.name)
 
     @defer.inlineCallbacks
-    def mergeBuildingRequests(self, brdicts, brids, breqs):
+    def mergeBuildingRequests(self, brids, breqs):
         # check only the first br others will be compatible to merge
-        brobj = yield self._brdictToBuildRequest(brdicts[0])
         for b in self.building:
-            if self._defaultMergeRequestFn(b.requests[0], brobj):
+            if self._defaultMergeRequestFn(b.requests[0], breqs[0]):
                 building = b.requests
                 b.requests = b.requests + breqs
                 try:
-                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs, brids, b.build_status.number)
+                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
+                                                                            brids, b.build_status.number)
                 except:
                     b.requests = building
                     raise
@@ -528,11 +534,6 @@ class Builder(config.ReconfigurableServiceMixin,
         defer.returnValue(unclaimed_requests)
         return
 
-    # Build Creation
-    def getAvailableSlaveBuilders(self):
-        return [sb for sb in self.slaves
-                if sb.isAvailable()]
-
     def getSelectedSlaveFromBuildRequest(self, brdict):
         """
         Grab the selected slave and return the slave object
@@ -551,6 +552,28 @@ class Builder(config.ReconfigurableServiceMixin,
         """
         return brdict['brobj'].properties.hasProperty("selected_slave")
 
+    # Build Creation
+    @defer.inlineCallbacks
+    def maybeStartBuild(self, slavebuilder, breqs):
+        # This method is called by the botmaster whenever this builder should
+        # start a set of buildrequests on a slave. Do not call this method
+        # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
+        # the other similar methods if more appropriate
+
+        # first, if we're not running, then don't start builds; stopService
+        # uses this to ensure that any ongoing maybeStartBuild invocations
+        # are complete before it stops.
+        if not self.running:
+            defer.returnValue(False)
+            return
+
+        # If the build fails from here on out (e.g., because a slave has failed),
+        # it will be handled outside of this function. TODO: test that!
+
+        build_started = yield self._startBuildFor(slavebuilder, breqs)
+        defer.returnValue(build_started)
+
+    '''
     @defer.inlineCallbacks
     def maybeStartBuild(self):
         # This method is called by the botmaster whenever this builder should
@@ -566,7 +589,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # Check for available slaves.  If there are no available slaves, then
         # there is no sense continuing
-        available_slavebuilders = self.getAvailableSlaveBuilders()
+        available_slavebuilders = self.getAvailableSlaves()
 
         # now, get the available build requests
         unclaimed_requests = \
@@ -662,7 +685,7 @@ class Builder(config.ReconfigurableServiceMixin,
             if not slavebuilder:
                 break
 
-            if slavebuilder not in self.getAvailableSlaveBuilders():
+            if slavebuilder not in self.getAvailableSlaves():
                 log.msg(("nextSlave chose a nonexistent or unavailable slave for builder "
                          "'%s'; cannot start build") % self.name)
                 break
@@ -708,10 +731,11 @@ class Builder(config.ReconfigurableServiceMixin,
         self._breakBrdictRefloops(unclaimed_requests)
         self.updateBigStatus()
         return
+    '''
 
     # a few utility functions to make the maybeStartBuild a bit shorter and
     # easier to read
-
+    '''
     def _chooseSlave(self, available_slavebuilders):
         """
         Choose the next slave, using the C{nextSlave} configuration if
@@ -725,6 +749,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     self.config.nextSlave(self, available_slavebuilders))
         else:
             return defer.succeed(random.choice(available_slavebuilders))
+    '''
 
     @defer.inlineCallbacks
     def _chooseBuild(self, buildrequests):
@@ -763,7 +788,7 @@ class Builder(config.ReconfigurableServiceMixin,
         d.addCallback(to_brdict)
         return d
 
-    def _getMergeRequestsFn(self):
+    def getMergeRequestsFn(self):
         """Helper function to determine which mergeRequests function to use
         from L{_mergeRequests}, or None for no merging"""
         # first, seek through builder, global, and the default
@@ -800,7 +825,7 @@ class Builder(config.ReconfigurableServiceMixin,
         return self.getBoolProperty(req1, "buildLatestRev") == self.getBoolProperty(req2, "buildLatestRev")
 
     def _defaultMergeRequestFn(self, req1, req2):
-        if self.propertiesMatch(req1,req2):
+        if self.propertiesMatch(req1, req2):
             return req1.canBeMergedWith(req2)
         return False
 

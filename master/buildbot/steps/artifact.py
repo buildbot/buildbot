@@ -399,9 +399,9 @@ class AcquireBuildLocks(LoggingBuildStep):
     def findAvailableSlaveBuilder(self):
         d = defer.succeed(None)
         slavebuilder = None
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
+        if not self.locksAvailable and len(self.build.builder.getAvailableSlaves()) > 0:
             # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
-            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
+            slavebuilder = random.choice(self.build.builder.getAvailableSlaves())
 
         if slavebuilder is not None:
             d = slavebuilder.ping()

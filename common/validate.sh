@@ -27,9 +27,11 @@ status() {
 }
 
 ok=true
+problem_summary=""
 not_ok() {
     ok=false
     echo "${RED}** ${*} **${NORM}"
+    problem_summary="$problem_summary"$'\n'"${RED}**${NORM} ${*}"
 }
 
 check_long_lines() {
@@ -46,6 +48,14 @@ check_long_lines() {
     $long_lines
 }
 
+check_relnotes() {
+    if git diff --exit-code "$REVRANGE" >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 if ! git diff --no-ext-diff --quiet --exit-code; then
     not_ok "changed files in working copy"
     exit 1
@@ -54,18 +64,22 @@ fi
 echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
+status "running tests"
+if [ -n "${TRIALTMP}" ]; then
+    TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
+fi
+sandbox/bin/trial --reporter summary ${TEMP_DIRECTORY_OPT} ${TEST} \
+    || not_ok "tests failed"
+
 status "checking formatting"
 git diff "$REVRANGE" | grep -q $'+.*\t' && not_ok "$REVRANGE adds tabs"
 check_long_lines && not_ok "$REVRANGE adds long lines"
 
-status "running tests"
-if [ -n "${TRIALTMP}" ]; then
-    echo rm -rf ${TRIALTMP}
-    TEMP_DIRECTORY_OPT="--temp-directory ${TRIAL_TMP}"
-fi
+status "checking for release notes"
+check_relnotes || not_ok "$REVRANGE does not add release notes"
 
 status "running pyflakes"
-make pyflakes || not_ok "failed pyflakes"
+sandbox/bin/pyflakes master/buildbot slave/buildslave || not_ok "failed pyflakes"
 
 status "building docs"
 make -C master/docs VERSION=latest clean html || not_ok "docs failed"
@@ -75,6 +89,6 @@ if $ok; then
     echo "${GREEN}GOOD!${NORM}"
     exit 0
 else
-    echo "${RED}NO GOOD!${NORM}"
+    echo "${RED}NO GOOD!${NORM}$problem_summary"
     exit 1
 fi

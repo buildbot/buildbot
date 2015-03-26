@@ -606,7 +606,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
         self.master.config.mergeRequests = global_param
 
-        fn = self.bldr._getMergeRequestsFn()
+        fn = self.bldr.getMergeRequestsFn()
 
         if fn == builder.Builder._defaultMergeRequestFn:
             fn = "default"

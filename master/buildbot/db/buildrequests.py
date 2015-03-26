@@ -360,8 +360,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             transaction = conn.begin()
             try:
-                claimed_at = self.getClaimedAtValue(_reactor)
-                self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
                 # parameter lists supported by the DBAPI aren't
                 iterator = iter(brids[1:])

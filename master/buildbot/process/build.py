@@ -267,6 +267,14 @@ class Build(properties.PropertiesMixin):
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
+    @staticmethod
+    def canStartWithSlavebuilder(lockList, slavebuilder):
+        for lock, access in lockList:
+            slave_lock = lock.getLock(slavebuilder.slave)
+            if not slave_lock.isAvailable(None, access):
+                return False
+        return True
+
     def acquireLocks(self, res=None):
         self._acquiringLock = None
         if not self.locks:

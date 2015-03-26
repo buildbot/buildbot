@@ -1044,12 +1044,23 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getUnclaimedBuildRequest(self, sorted=False):
-
         rv = []
         for bs in self.reqs.values():
             rv.append(dict(brid=bs.id, buildername=bs.buildername, reason=bs.reason))
 
         return rv
+
+    def unclaimBuildRequests(self, brids):
+        for brid in brids:
+            try:
+                self.claims.pop(brid)
+            except KeyError:
+                print "trying to unclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))                
+            
+        return defer.succeed(None)
+
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
