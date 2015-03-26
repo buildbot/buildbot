@@ -109,6 +109,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * Added StashStatusPush status hook for Atlassian Stash
 
+* :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+
 Fixes
 ~~~~~
 
