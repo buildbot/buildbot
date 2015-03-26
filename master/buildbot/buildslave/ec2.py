@@ -279,13 +279,6 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             return threads.deferToThread(self._start_instance)
 
-    def _failed_to_start(self):
-        log.msg('%s %s failed to start instance %s (%s)' %
-                (self.__class__.__name__, self.slavename,
-                    self.instance.id, self.instance.state))
-        raise LatentBuildSlaveFailedToSubstantiate(
-            self.instance.id, self.instance.state)
-
     def _start_instance(self):
         image = self.get_image()
         reservation = image.run(
@@ -300,7 +293,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
-            self._failed_to_start()
+            self.failed_to_start(self.instance.id, self.instance.state)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
@@ -445,7 +438,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self._attach_volumes()
             return self.instance.id, image.id, start_time
         else:
-            self._failed_to_start()
+            self.failed_to_start(self.instance.id, self.instance.state)
 
     def _wait_for_request(self, reservation):
         duration = 0

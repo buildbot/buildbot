@@ -27,6 +27,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import ILatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.mail import MailNotifier
@@ -643,6 +644,12 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
+
+    def failed_to_start(self, instance_id, instance_state):
+        log.msg('%s %s failed to start instance %s (%s)' %
+                (self.__class__.__name__, self.slavename,
+                    instance_id, instance_state))
+        raise LatentBuildSlaveFailedToSubstantiate(instance_id, instance_state)
 
     def start_instance(self, build):
         # responsible for starting instance that will try to connect with this

@@ -161,11 +161,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
-            log.msg('%s %s failed to start instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename,
-                     instance.id, inst.status))
-            raise LatentBuildSlaveFailedToSubstantiate(
-                instance.id, inst.status)
+            self.failed_to_start(instance.id, inst.status)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
