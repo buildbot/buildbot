@@ -319,7 +319,6 @@ class KatanaBuildChooser(BasicBuildChooser):
     def __init__(self, bldr, master):
         BasicBuildChooser.__init__(self, bldr, master)
 
-
     @defer.inlineCallbacks
     def chooseNextBuild(self):
         # Return the next build, as a (slave, [breqs]) pair
@@ -340,6 +339,29 @@ class KatanaBuildChooser(BasicBuildChooser):
             log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 
         defer.returnValue((slave, breqs))
+
+    @defer.inlineCallbacks
+    def buildHasSelectedSlave(self, breq):
+        nextBuild = (None, None)
+        if breq.properties.hasProperty("selected_slave"):
+            slavebuilder = self.bldr.getSelectedSlaveFromBuildRequest(breq.brdict)
+
+            if slavebuilder.isAvailable() is False:
+                defer.returnValue(nextBuild)
+                return
+
+            self.slavepool.remove(slavebuilder)
+
+            canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
+            if canStart:
+                defer.returnValue((slavebuilder, breq))
+                return
+
+            # save as a last resort, just in case we need them later
+            if self.rejectedSlaves is not None:
+                self.rejectedSlaves.append(slavebuilder)
+
+        defer.returnValue(nextBuild)
 
 
     @defer.inlineCallbacks
@@ -401,7 +423,12 @@ class KatanaBuildChooser(BasicBuildChooser):
                     defer.returnValue(nextBuild)
                     return
 
-        # run build specific slave ??
+        # run the build on a specific slave
+        if breq.properties.hasProperty("selected_slave"):
+            nextBuild = yield self.buildHasSelectedSlave(breq)
+            defer.returnValue(nextBuild)
+            return
+
         nextBuild = yield BasicBuildChooser.popNextBuild(self)
         defer.returnValue(nextBuild)
 
