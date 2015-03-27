@@ -370,5 +370,7 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection "upgrade";
                   proxy_pass http://localhost:5000/ws;
+                  # raise the proxy timeout for the websocket
+                  proxy_read_timeout 6000s;
             }
     }
