@@ -312,6 +312,8 @@ Changes and Removals
 
 * ```master.cfg`` is now parsed from a thread. Previously it was run in the main thread, and thus slowing down the master in case of big config, or network access done to generate the config.
 
+* :bb:chsrc:`SVNPoller`'s svnurl parameter has been changed to repourl.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
