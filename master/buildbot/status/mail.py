@@ -36,13 +36,6 @@ try:
 except ImportError:
     ESMTPSenderFactory = None
 
-have_ssl = True
-try:
-    from twisted.internet import ssl
-    from OpenSSL.SSL import SSLv3_METHOD
-except ImportError:
-    have_ssl = False
-
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
 from email import charset
@@ -816,12 +809,6 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
     def sendmail(self, s, recipients):
         result = defer.Deferred()
 
-        if have_ssl and self.useTls:
-            client_factory = ssl.ClientContextFactory()
-            client_factory.method = SSLv3_METHOD
-        else:
-            client_factory = None
-
         if self.smtpUser and self.smtpPassword:
             useAuth = True
         else:
@@ -833,8 +820,7 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
             self.fromaddr, recipients, StringIO(s),
-            result, contextFactory=client_factory,
-            requireTransportSecurity=self.useTls,
+            result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
         reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)

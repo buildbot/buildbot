@@ -85,6 +85,8 @@ Features
 
 * Builders can now have multiple "tags" associated with them. Tags can be used in various status classes as filters (eg, on the waterfall page).
 
+* :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+
 Fixes
 ~~~~~
 
