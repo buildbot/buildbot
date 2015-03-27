@@ -173,6 +173,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.service_manager = service.BuildbotServiceManager()
         self.service_manager.setServiceParent(self)
+        self.service_manager.reconfig_priority = 1000
 
         self.masterHouskeepingTimer = 0
 

@@ -232,7 +232,15 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def master(self):
         if self.parent is None:
             return None
-        return self.parent.master
+        # cache the result if not None
+        master = self.parent.master
+        if master is not None:
+            # note that with this caching, that the object will always keep a reference to master, even if disowned
+            # from the system
+            # There is no circular reference, as the reference from master to the child will disappear with disown
+            # and master object is never recreated
+            self.master = master
+        return master
 
 
 class MasterService(AsyncMultiService):
@@ -243,10 +251,8 @@ class MasterService(AsyncMultiService):
         return self
 
 
-class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
-                      ReconfigurableServiceMixin, util.ComparableMixin):
-    compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
-    config_attr = "services"
+class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin):
+    compare_attrs = ('name', '_config_args', '_config_kwargs')
     name = None
     configured = False
 
@@ -267,11 +273,6 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
                 'class': _type.__module__ + "." + _type.__name__,
                 'args': self._config_args,
                 'kwargs': self._config_kwargs}
-
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        # get from the config object its sibling config
-        config_sibling = getattr(new_config, self.config_attr)[self.name]
-        return self.reconfigServiceWithSibling(config_sibling)
 
     def reconfigServiceWithSibling(self, sibling):
         # only reconfigure if different as ComparableMixin says.
@@ -296,11 +297,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
 
 
 class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
-                             ReconfigurableServiceMixin, util.ComparableMixin):
-    compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
+                             ReconfigurableServiceMixin):
     config_attr = "services"
     name = "services"
-    configured = False
 
     def getConfigDict(self):
         return {'name': self.name,
@@ -349,7 +348,12 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 child = new_by_name[n]
                 yield child.setServiceParent(self)
 
-        for n, child in self.namedServices.iteritems():
-            # get from the config object its sibling config
-            config_sibling = new_by_name[n]
+        # get a list of child services to reconfigure
+        reconfigurable_services = [svc for svc in self]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
+
+        for svc in reconfigurable_services:
+            config_sibling = new_by_name[svc.name]
             yield child.reconfigServiceWithSibling(config_sibling)

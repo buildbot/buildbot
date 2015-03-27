@@ -312,7 +312,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         text += " %s\n" % status.getTitleURL()
         text += "\n"
         text += "%s\n" % status.getURLForThing(self.slave_status)
-        subject = "Buildbot: buildslave %s was lost" % self.name
+        subject = "Buildbot: buildslave %s was lost" % (self.name,)
         return self._mail_missing_message(subject, text)
 
     def updateSlave(self):
@@ -396,7 +396,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.removePauseWatcher(self._pauseChanged)
         self.slave_status.setConnected(False)
-        log.msg("BuildSlave.detached(%s)" % self.name)
+        log.msg("BuildSlave.detached(%s)" % (self.name,))
         self.master.status.slaveDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.buildslaveDisconnected(
@@ -422,7 +422,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
 
         if self.conn is None:
             return defer.succeed(None)
-        log.msg("disconnecting old slave %s now" % self.name)
+        log.msg("disconnecting old slave %s now" % (self.name,))
         # When this Deferred fires, we'll be ready to accept the new slave
         return self._disconnect(self.conn)
 
@@ -459,7 +459,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         return d
 
     def shutdownRequested(self):
-        log.msg("slave %s wants to shut down" % self.name)
+        log.msg("slave %s wants to shut down" % (self.name,))
         self.slave_status.setGraceful(True)
 
     def addSlaveBuilder(self, sb):
@@ -747,7 +747,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: buildslave %s never substantiated" % self.name
+        subject = "Buildbot: buildslave %s never substantiated" % (self.name,)
         return self._mail_missing_message(subject, text)
 
     def canStartBuild(self):
@@ -901,12 +901,12 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
         @d.addCallback
         def _substantiated(res):
-            log.msg(r"Slave %s substantiated \o/" % self.name)
+            log.msg(r"Slave %s substantiated \o/" % (self.name,))
             self.substantiated = True
             if not self.substantiation_deferred:
-                log.msg("No substantiation deferred for %s" % self.name)
+                log.msg("No substantiation deferred for %s" % (self.name,))
             if self.substantiation_deferred:
-                log.msg("Firing %s substantiation deferred with success" % self.name)
+                log.msg("Firing %s substantiation deferred with success" % (self.name,))
                 d = self.substantiation_deferred
                 self.substantiation_deferred = None
                 self.substantiation_build = None
