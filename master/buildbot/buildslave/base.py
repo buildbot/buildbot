@@ -27,6 +27,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import ILatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.mail import MailNotifier
@@ -55,7 +56,8 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
     reconfig_priority = 64
 
     def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=None, missing_timeout=3600,
+                 notify_on_missing=None,
+                 missing_timeout=10 * 60,   # Ten minutes
                  properties=None, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
@@ -77,7 +79,7 @@ class AbstractBuildSlave(service.ReconfigurableServiceMixin,
             properties = {}
 
         service.AsyncMultiService.__init__(self)
-        self.slavename = ascii2unicode(name)
+        self.slavename = name
         self.password = password
 
         # protocol registration
@@ -635,21 +637,19 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     build_wait_timer = None
     _shutdown_callback_handle = None
 
-    def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=None, missing_timeout=60 * 20,
+    def __init__(self, name, password,
                  build_wait_timeout=60 * 10,
-                 properties=None, locks=None):
-        if notify_on_missing is None:
-            notify_on_missing = []
+                 **kwargs):
+        AbstractBuildSlave.__init__(self, name, password, **kwargs)
 
-        if properties is None:
-            properties = {}
-
-        AbstractBuildSlave.__init__(
-            self, name, password, max_builds, notify_on_missing,
-            missing_timeout, properties, locks)
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
+
+    def failed_to_start(self, instance_id, instance_state):
+        log.msg('%s %s failed to start instance %s (%s)' %
+                (self.__class__.__name__, self.slavename,
+                    instance_id, instance_state))
+        raise LatentBuildSlaveFailedToSubstantiate(instance_id, instance_state)
 
     def start_instance(self, build):
         # responsible for starting instance that will try to connect with this

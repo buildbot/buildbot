@@ -154,7 +154,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.max_builds, None)
         self.assertEqual(bs.notify_on_missing, [])
-        self.assertEqual(bs.missing_timeout, 3600)
+        self.assertEqual(bs.missing_timeout, 10 * 60)
         self.assertEqual(bs.properties.getProperty('slavename'), 'bot')
         self.assertEqual(bs.access, [])
 

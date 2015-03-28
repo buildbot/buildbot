@@ -35,7 +35,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot import interfaces
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.buildslave.base import AbstractLatentBuildSlave
 
 PENDING = 'pending'
@@ -58,21 +58,14 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  aws_id_file_path=None, user_data=None, region=None,
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
-                 max_builds=None, notify_on_missing=None, missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties=None, locks=None,
                  spot_instance=False, max_spot_price=1.6, volumes=None,
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
-                 retry_price_adjustment=1, product_description='Linux/UNIX'):
+                 retry_price_adjustment=1, product_description='Linux/UNIX',
+                 **kwargs):
 
         if not boto:
             config.error("The python module 'boto' is needed to use a "
                          "EC2LatentBuildSlave")
-
-        if notify_on_missing is None:
-            notify_on_missing = []
-
-        if properties is None:
-            properties = {}
 
         if volumes is None:
             volumes = []
@@ -80,9 +73,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if tags is None:
             tags = {}
 
-        AbstractLatentBuildSlave.__init__(
-            self, name, password, max_builds, notify_on_missing,
-            missing_timeout, build_wait_timeout, properties, locks)
+        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
+
         if not ((ami is not None) ^
                 (valid_ami_owners is not None or
                  valid_ami_location_regex is not None)):
@@ -301,11 +293,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
-            log.msg('%s %s failed to start instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename,
-                     self.instance.id, self.instance.state))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                self.instance.id, self.instance.state)
+            self.failed_to_start(self.instance.id, self.instance.state)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
@@ -338,7 +326,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             goal = (SHUTTINGDOWN, TERMINATED)
             instance.update()
         else:
-            goal = (TERMINATED,)
+            goal = TERMINATED,
         while instance.state not in goal:
             time.sleep(interval)
             duration += interval
@@ -376,7 +364,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.slavename,
                      self.current_spot_price, self.max_spot_price))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+            raise LatentBuildSlaveFailedToSubstantiate()
         else:
             if self.retry > 1:
                 log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
@@ -412,11 +400,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     self.attempt = 0
                     log.msg('%s %s failed to substantiate after %d requests' %
                             (self.__class__.__name__, self.slavename, self.retry))
-                    raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+                    raise LatentBuildSlaveFailedToSubstantiate()
         else:
             instance_id, image_id, start_time, success = self._submit_request()
             if not success:
-                raise interfaces.LatentBuildSlaveFailedToSubstantiate()
+                raise LatentBuildSlaveFailedToSubstantiate()
         return instance_id, image_id, start_time
 
     def _wait_for_instance(self, image):
@@ -432,6 +420,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                         (self.__class__.__name__, self.slavename, duration // 60,
                          self.instance.id))
             self.instance.update()
+
         if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
             minutes = duration // 60
@@ -449,11 +438,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self._attach_volumes()
             return self.instance.id, image.id, start_time
         else:
-            log.msg('%s %s failed to start instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename,
-                     self.instance.id, self.instance.state))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                self.instance.id, self.instance.state)
+            self.failed_to_start(self.instance.id, self.instance.state)
 
     def _wait_for_request(self, reservation):
         duration = 0
@@ -491,5 +476,5 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.slavename,
                      request.id, request_status))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+            raise LatentBuildSlaveFailedToSubstantiate(
                 request.id, request.status)

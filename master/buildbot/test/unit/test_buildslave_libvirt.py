@@ -49,7 +49,6 @@ class TestLibVirtSlave(unittest.TestCase):
         self.assertEqual(bs.connection, self.conn)
         self.assertEqual(bs.image, 'path')
         self.assertEqual(bs.base_image, 'otherpath')
-        self.assertEqual(bs.missing_timeout, 1200)
 
     @defer.inlineCallbacks
     def test_find_existing(self):

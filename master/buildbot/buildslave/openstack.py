@@ -21,8 +21,8 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 try:
     import novaclient.exceptions as nce
@@ -53,11 +53,10 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                  block_devices=None,
                  image=None,
                  meta=None,
-                 max_builds=None, notify_on_missing=None, missing_timeout=60 * 20,
-                 build_wait_timeout=60 * 10, properties=None, locks=None,
                  # Have a nova_args parameter to allow passing things directly
                  # to novaclient v1.1.
-                 nova_args=None):
+                 nova_args=None,
+                 **kwargs):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
@@ -66,15 +65,8 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
 
-        if notify_on_missing is None:
-            notify_on_missing = []
+        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
 
-        if properties is None:
-            properties = {}
-
-        AbstractLatentBuildSlave.__init__(
-            self, name, password, max_builds, notify_on_missing,
-            missing_timeout, build_wait_timeout, properties, locks)
         self.flavor = flavor
         self.os_username = os_username
         self.os_password = os_password
@@ -157,7 +149,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.slavename,
                          instance.id, instance.name))
-                raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                raise LatentBuildSlaveFailedToSubstantiate(
                     instance.id, instance.status)
         if inst.status == ACTIVE:
             minutes = duration // 60
@@ -169,11 +161,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
-            log.msg('%s %s failed to start instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename,
-                     instance.id, inst.status))
-            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
-                instance.id, inst.status)
+            self.failed_to_start(instance.id, inst.status)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
