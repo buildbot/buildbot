@@ -29,7 +29,7 @@ For example, a build factory which consists of an SVN checkout followed by a ``m
     from buildbot.plugins import util, steps
 
     f = util.BuildFactory()
-    f.addStep(steps.SVN(svnurl="http://..", mode="incremental"))
+    f.addStep(steps.SVN(repourl="http://..", mode="incremental"))
     f.addStep(steps.Compile(command=["make", "build"]))
 
 This factory would then be attached to one builder (or several, if desired)::
@@ -180,7 +180,7 @@ The configuration environment variables, the configure flags, and command lines 
 
 Example::
 
-    f = util.GNUAutoconf(source=source.SVN(svnurl=URL, mode="copy"),
+    f = util.GNUAutoconf(source=source.SVN(repourl=URL, mode="copy"),
                          flags=["--disable-nls"])
 
 Required Arguments:
