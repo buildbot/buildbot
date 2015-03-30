@@ -71,8 +71,8 @@ These parameters collectively specify a set of sources from which a build may be
 
 `Subversion <http://subversion.tigris.org>`_,  combines the repository, module, and branch into a single *Subversion URL* parameter.
 Within that scope, source checkouts can be specified by a numeric *revision number* (a repository-wide monotonically-increasing marker, such that each transaction that changes the repository is indexed by a different revision number), or a revision timestamp.
-When branches are used, the repository and module form a static ``baseURL``, while each build has a *revision number* and a *branch* (which defaults to a statically-specified ``defaultBranch``).
-The ``baseURL`` and ``branch`` are simply concatenated together to derive the ``svnurl`` to use for the checkout.
+When branches are used, you need to use :ref:`Interpolate` to produce a correct url that combines repository, module and branch into that single URL.
+Please see :doc:`../guides/svn` for a detailed information about various SVN schemes and corresponding Buildbot configuration parameters.
 
 `Perforce <http://www.perforce.com/>`_ is similar.
 The server is specified through a ``P4PORT`` parameter.
@@ -106,7 +106,7 @@ Instead of a revision number, each build can have a ``context``, which is a stri
 The ``repourl``, ``baseURL``, and ``defaultBranch`` arguments are all handled the same way as with Darcs.
 The *revision*, however, is the hash identifier returned by ``hg identify``.
 
-`Git <http://git.or.cz/>`_ also follows a decentralized model, and each repository can have several branches and tags.
+`Git <http://git-scm.com/>`_ also follows a decentralized model, and each repository can have several branches and tags.
 The source Step is configured with a static ``repourl`` which specifies the location of the repository.
 In addition, an optional ``branch`` parameter can be specified to check out code from a specific branch instead of the default *master* branch.
 The *revision* is specified as a SHA1 hash as returned by e.g. ``git rev-parse``.

@@ -18,6 +18,7 @@ Table Of Contents
 
    tutorial/index
    manual/index
+   guides/index
    developer/index
    relnotes/index
    indices

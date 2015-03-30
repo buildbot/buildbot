@@ -148,7 +148,7 @@ The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
 Customizing SVNPoller
 ---------------------
 
-Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: :samp:`({REPOURL})({PROJECT-plus-BRANCH})({FILEPATH})`.
+Each source file that is tracked by a Subversion repository has a fully-qualified SVN URL in the following form: :samp:`{REPOURL}/{PROJECT-plus-BRANCH}/{FILEPATH}`.
 When you create the :bb:chsrc:`SVNPoller`, you give it a ``svnurl`` value that includes all of the :samp:`{REPOURL}` and possibly some portion of the :samp:`{PROJECT-plus-BRANCH}` string.
 The :bb:chsrc:`SVNPoller` is responsible for producing Changes that contain a branch name and a :samp:`{FILEPATH}` (which is relative to the top of a checked-out tree).
 The details of how these strings are split up depend upon how your repository names its branches.
@@ -170,6 +170,7 @@ One common layout is to have all the various projects that share a repository ge
 To set up a :bb:chsrc:`SVNPoller` that watches the Amanda trunk (and nothing else), we would use the following, using the default ``split_file``::
 
     from buildbot.plugins import changes
+
     c['change_source'] = changes.SVNPoller(
        svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/amanda/trunk")
 
@@ -178,8 +179,8 @@ No other sub-projects or branches will be tracked.
 
 If we want our ChangeSource to follow multiple branches, we have to do two things.
 First we have to change our ``svnurl=`` argument to watch more than just ``amanda/trunk``.
-We will set it to ``amanda`` so that we'll see both the trunk and all the branches.
-Second, we have to tell :bb:chsrc:`SVNPoller` how to split the :samp:`({PROJECT-plus-BRANCH})({FILEPATH})` strings it gets from the repository out into :samp:`({BRANCH})` and :samp:`({FILEPATH})`.
+We will set it to ``https://svn.amanda.sourceforge.net/svnroot/amanda/amanda`` so that we will see both the trunk and all the branches.
+Second, we have to tell :bb:chsrc:`SVNPoller` how to split the :samp:`{PROJECT-plus-BRANCH}/{FILEPATH}` strings it gets from the repository out into :samp:`{BRANCH}` and :samp:`{FILEPATH}`.
 
 We do the latter by providing a ``split_file`` function.
 This function is responsible for splitting something like ``branches/3_3/common-src/amanda.h`` into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``.
@@ -210,15 +211,17 @@ In fact, this is the definition of the provided ``split_file_branches`` function
 So to have our Twisted-watching :bb:chsrc:`SVNPoller` follow multiple branches, we would use this::
 
     from buildbot.plugins import changes, util
+
     c['change_source'] = changes.SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
                                            split_file=util.svn.split_file_branches)
 
-Changes for all sorts of branches (with names like ``"branches/1.5.x"``, and ``None`` to indicate the trunk) will be delivered to the Schedulers.
+Changes for all sorts of branches (with names like ``branches/1.5.x``, and ``None`` to indicate the `trunk`) will be delivered to the Schedulers.
 Each Scheduler is then free to use or ignore each branch as it sees fit.
 
 If you have multiple projects in the same repository your split function can attach a project name to the Change to help the Scheduler filter out unwanted changes::
 
     from buildbot.plugins import util
+
     def split_file_projects_branches(path):
         if not "/" in path:
             return None
@@ -231,17 +234,17 @@ If you have multiple projects in the same repository your split function can att
             return info
         return f
 
-Again, this is provided by default.
+Again, this is provided by default as ``split_file_projects_branches``.
 To use it you would do this::
 
     from buildbot.plugins import changes, util
+
     c['change_source'] = changes.SVNPoller(
        svnurl="https://svn.amanda.sourceforge.net/svnroot/amanda/",
        split_file=util.svn.split_file_projects_branches)
 
-Note here that we are monitoring at the root of the repository, and that within that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and ``branches``.
+Note that here we are monitoring at the root of the repository, and that within that repository is a ``amanda`` subdirectory which in turn has ``trunk`` and ``branches``.
 It is that ``amanda`` subdirectory whose name becomes the ``project`` field of the Change.
-
 
 :samp:`{BRANCHNAME}/{PROJECT}/{FILEPATH}` repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,7 +255,7 @@ This is especially frequent when there are a number of related sub-projects that
 For example, `Divmod.org <http://Divmod.org>`_ hosts a project named `Nevow` as well as one named `Quotient`.
 In a checked-out Nevow tree there is a directory named `formless` that contains a Python source file named :file:`webform.py`.
 This repository is accessible via webdav (and thus uses an `http:` scheme) through the divmod.org hostname.
-There are many branches in this repository, and they use a ``({BRANCHNAME})/({PROJECT})`` naming policy.
+There are many branches in this repository, and they use a ``{BRANCHNAME}/{PROJECT}`` naming policy.
 
 The fully-qualified SVN URL for the trunk version of :file:`webform.py` is ``http://divmod.org/svn/Divmod/trunk/Nevow/formless/webform.py``.
 The 1.5.x branch version of this file would have a URL of ``http://divmod.org/svn/Divmod/branches/1.5.x/Nevow/formless/webform.py``.
@@ -262,6 +265,7 @@ Now suppose we want to have an :bb:chsrc:`SVNPoller` that only cares about the N
 This case looks just like the :samp:`{PROJECT}/{BRANCH}` layout described earlier::
 
     from buildbot.plugins import changes
+
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
 
 But what happens when we want to track multiple Nevow branches?
@@ -271,6 +275,7 @@ To accomplish this, we must rely upon the ``split_file`` function to help us tel
 ::
 
     from buildbot.plugins import changes
+
     c['change_source'] = changes.SVNPoller("http://divmod.org/svn/Divmod",
                                            split_file=my_file_splitter)
 
@@ -311,7 +316,6 @@ The following definition for :meth:`my_file_splitter` will do the job::
 If you later decide you want to get changes for Quotient as well you could replace the last 3 lines with simply::
 
     return dict(project=projectname, branch=branch, path='/'.join(pieces))
-
 
 .. _Writing-Change-Sources:
 
