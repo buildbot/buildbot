@@ -232,15 +232,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def master(self):
         if self.parent is None:
             return None
-        # cache the result if not None
-        master = self.parent.master
-        if master is not None:
-            # note that with this caching, that the object will always keep a reference to master, even if disowned
-            # from the system
-            # There is no circular reference, as the reference from master to the child will disappear with disown
-            # and master object is never recreated
-            self.master = master
-        return master
+        return self.parent.master
 
 
 class MasterService(AsyncMultiService):
@@ -251,7 +243,8 @@ class MasterService(AsyncMultiService):
         return self
 
 
-class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin):
+class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,
+                      ReconfigurableServiceMixin):
     compare_attrs = ('name', '_config_args', '_config_kwargs')
     name = None
     configured = False
@@ -356,4 +349,4 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
         for svc in reconfigurable_services:
             config_sibling = new_by_name[svc.name]
-            yield child.reconfigServiceWithSibling(config_sibling)
+            yield svc.reconfigServiceWithSibling(config_sibling)

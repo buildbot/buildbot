@@ -77,6 +77,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
+    def setupMailNotifier(self, mn):
+        self.status = self.master.status
+        mn.setServiceParent(self.status)
+        self.status.setServiceParent(self.master)
+
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         builds = [FakeBuildStatus(name='build')]
         msgdict = create_msgdict(funnyChars)
@@ -288,10 +293,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             fakedb.Build(number=0, buildrequestid=12, buildslaveid=13,
                          masterid=92),
         ])
-        mn.master = self.master
-
-        self.status = Mock()
-        mn.master_status = Mock()
+        self.setupMailNotifier(mn)
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict = Mock()
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
@@ -347,10 +349,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                          masterid=92),
         ])
-        mn.master = self.master
-
-        self.status = Mock()
-        mn.master_status = Mock()
+        self.setupMailNotifier(mn)
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict = Mock()
         mn.buildMessageDict.return_value = {"body": "body", "type": "text",
@@ -405,7 +404,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                          masterid=92),
         ])
-        mn.master = self.master
+        self.setupMailNotifier(mn)
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -419,8 +418,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.getBuilder.return_value = builder
         build.getResults.return_value = build.results
 
-        self.status = Mock()
-        mn.master_status = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
 
         ss1 = FakeSource(revision='111222', codebase='testlib1')
@@ -482,7 +479,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             fakedb.Build(number=0, buildrequestid=11, buildslaveid=13,
                          masterid=22),
         ])
-        mn.master = self.master
+        self.setupMailNotifier(mn)
 
         builder = Mock()
         builder.getBuild = fakeGetBuild
@@ -496,8 +493,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build.getBuilder.return_value = builder
         build.getResults.return_value = build.results
 
-        self.status = Mock()
-        mn.master_status = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
 
         ss1 = FakeSource(revision='111222', codebase='testlib1')
@@ -798,8 +793,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             return ["Big Bob <bob@mayhem.net>"]
         build.getResponsibleUsers = _getResponsibleUsers
 
-        mn.master = self.master
-        self.status = mn.master_status = mn.buildMessageDict = Mock()
+        self.setupMailNotifier(mn)
+        mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
 
@@ -924,8 +919,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build1.getSourceStamps = fakeGetSSlist(ss1)
         build2.getSourceStamps = fakeGetSSlist(ss2)
 
-        mn.master = self.master
-        self.status = mn.master_status = mn.buildMessageDict = Mock()
+        self.setupMailNotifier(mn)
+        mn.buildMessageDict = Mock()
         mn.master_status.getBuilder = fakeGetBuilder
         mn.buildMessageDict.return_value = {"body": "body", "type": "text"}
 

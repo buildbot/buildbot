@@ -91,8 +91,8 @@ def _get_prepared_gsp(*args, **kwargs):
     parameters.
     """
     gsp = GerritStatusPush('host.example.com', 'username', *args, **kwargs)
-
-    gsp.master = fakemaster.make_master()
+    master = fakemaster.make_master()
+    gsp.setServiceParent(master.status)
     gsp.master_status = gsp.master.status
 
     gsp.sendCodeReview = Mock()

@@ -59,11 +59,10 @@ class FakeCaches(object):
         return FakeCache(name, miss_fn)
 
 
-class FakeStatus(object):
+class FakeStatus(service.BuildbotService):
 
-    def __init__(self, master):
-        self.master = master
-        self.lastBuilderStatus = None
+    name = "status"
+    lastBuilderStatus = None
 
     def builderAdded(self, name, basedir, tags=None, description=None):
         bs = FakeBuilderStatus(self.master)
@@ -87,6 +86,18 @@ class FakeStatus(object):
 
     def getURLForBuildrequest(self, buildrequestid):
         return "URLForBuildrequest/%d" % (buildrequestid,)
+
+    def subscribe(self, _):
+        pass
+
+    def getTitle(self):
+        return "myBuildbot"
+
+    def getURLForThing(self, _):
+        return "h://thing"
+
+    def getBuildbotURL(self):
+        return "h://bb.me"
 
 
 class FakeBuilderStatus(object):
@@ -152,6 +163,7 @@ class FakeMaster(service.MasterService):
     """
 
     def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+        service.MasterService.__init__(self)
         self._master_id = master_id
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
@@ -159,13 +171,12 @@ class FakeMaster(service.MasterService):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
-        self.status = FakeStatus(self)
-        self.status.master = self
+        self.status = FakeStatus()
+        self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
         self.log_rotation = FakeLogRotation()
-        service.MasterService.__init__(self)
 
     def getObjectId(self):
         return defer.succeed(self._master_id)
