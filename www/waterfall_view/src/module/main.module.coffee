@@ -9,39 +9,42 @@ class WaterfallView extends App
 
 class Waterfall extends Controller
     self = null
-    constructor: (@$scope, $q, @$window, @$modal, @buildbotService, d3Service, @dataService, scaleService, config) ->
+    constructor: (@$scope, $q, @$window, @$log, @$modal, @buildbotService, d3Service, @dataService, scaleService, bbSettingsService) ->
         self = @
 
         # Show the loading spinner
         @loading = true
 
-        # Waterfall configuration
-        cfg = config.plugins.waterfall_view
+        # Get Waterfall settings
+        s = bbSettingsService.getSettingsGroup('Waterfall')
         @c =
             # Margins around the chart
             margin:
-                top: cfg.margin?.top or 15
-                right: cfg.margin?.right or 20
-                bottom: cfg.margin?.bottom or 20
-                left: cfg.margin?.left or 70
+                top: s.margin_top_waterfall.value
+                right: s.margin_right_waterfall.value
+                bottom: s.margin_bottom_waterfall.value
+                left: s.margin_left_waterfall.value
 
             # Gap between groups (px)
-            gap: cfg.gap or 30
+            gap: s.gap_waterfall.value
+
+            # Default vertical scaling
+            scaling: s.scaling_waterfall.value
 
             # Minimum builder column width (px)
-            minColumnWidth: cfg.minColumnWidth or 40
+            minColumnWidth: s.min_column_width_waterfall.value
 
             # Y axis time format (new line: ^)
-            timeFormat: cfg.timeFormat or '%x^%H:%M'
+            timeFormat: '%x^%H:%M'
 
             # Lazy load limit
-            limit: cfg.limit or 40
+            limit: s.lazy_limit_waterfall.value
 
             # Idle time threshold in unix time stamp (eg. 300 = 5 min)
-            threshold: cfg.threshold or 300
+            threshold: s.idle_threshold_waterfall.value
 
             # Grey rectangle below buildids
-            buildidBackground: cfg.buildidBackground or false
+            buildidBackground: s.number_background_waterfall.value
 
         # Load data (builds and builders)
         builders = @buildbotService.all('builders').bind(@$scope)
@@ -103,6 +106,18 @@ class Waterfall extends Controller
 
             # Bind scroll event listener
             angular.element(containerParent).bind 'scroll', onScroll
+
+            @$window.onkeydown = (e) =>
+                # +
+                if e.keyCode is 107
+                    e.preventDefault()
+                    @c.scaling *= 1.5
+                    @render()
+                # -
+                else if e.keyCode is 109
+                    e.preventDefault()
+                    @c.scaling /= 1.5
+                    @render()
 
     ###
     # Load more builds
@@ -167,7 +182,7 @@ class Waterfall extends Controller
         h = - @c.gap
         for group in @groups
             h += (group.max - group.min + @c.gap)
-        height = h + @c.margin.top + @c.margin.bottom
+        height = h * @c.scaling + @c.margin.top + @c.margin.bottom
         if height < parseInt @waterfall.style('height').replace('px', ''), 10
             @loadMore()
         @container.style('height', "#{height}px")
@@ -468,6 +483,10 @@ class Waterfall extends Controller
     ###
     render: ->
 
+        containerParent = @container.node().parentNode
+        y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+        time = y.invert(containerParent.scrollTop)
+
         # Set the content width
         @setWidth()
 
@@ -478,3 +497,6 @@ class Waterfall extends Controller
         @drawBuilds()
         @drawXAxis()
         @drawYAxis()
+
+        y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+        containerParent.scrollTop = y(time)

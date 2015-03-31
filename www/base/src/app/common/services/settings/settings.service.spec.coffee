@@ -1,6 +1,6 @@
 describe 'settingsService', ->
     bbSettingsServiceProviderRef = ""
-    beforeEach module "app", (bbSettingsServiceProvider) ->
+    beforeEach module 'common', (bbSettingsServiceProvider) ->
         bbSettingsServiceProviderRef = bbSettingsServiceProvider
 
         localStorage.clear()

@@ -1,12 +1,25 @@
 beforeEach ->
-    module 'waterfall_view'
-    # Mock modalService
     module ($provide) ->
         $provide.service '$modal', -> open: ->
         null
 
+    # Mock bbSettingsProvider
+    module ($provide) ->
+        $provide.provider 'bbSettingsService', class
+            group = {}
+            addSettingsGroup: (g) -> g.items.map (i) ->
+                if i.name is 'lazy_limit_waterfall'
+                    i.default_value = 2
+                group[i.name] = value: i.default_value
+            $get: ->
+                getSettingsGroup: ->
+                    return group
+        null
+
+    module 'waterfall_view'
+
 describe 'Waterfall view controller', ->
-    $rootScope = $state = elem = w = $document = $window = $modal = config = $timeout = null
+    $rootScope = $state = elem = w = $document = $window = $modal = $timeout = bbSettingsService = null
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
@@ -18,7 +31,7 @@ describe 'Waterfall view controller', ->
         $window = $injector.get('$window')
         $modal = $injector.get('$modal')
         $timeout = $injector.get('$timeout')
-        config = $injector.get('config')
+        bbSettingsService = $injector.get('bbSettingsService')
         elem = angular.element('<div></div>')
         elem.append($compile('<ui-view></ui-view>')(scope))
         $document.find('body').append(elem)
@@ -32,8 +45,6 @@ describe 'Waterfall view controller', ->
         spyOn(w, 'mouseMove').and.callThrough()
         spyOn(w, 'click').and.callThrough()
         spyOn(w, 'loadMore').and.callThrough()
-        # We don't want the setHeight to call loadMore
-        spyOn(w, 'setHeight').and.callFake ->
         # Data is loaded
         $timeout.flush()
 
@@ -49,7 +60,8 @@ describe 'Waterfall view controller', ->
         expect(w).toBeDefined()
 
     it 'should bind the builds and builders to scope', ->
-        limit = config.plugins.waterfall_view.limit
+        group = bbSettingsService.getSettingsGroup()
+        limit = group.lazy_limit_waterfall.value
         expect(w.builds).toBeDefined()
         expect(w.builds.length).toBe(limit)
         expect(w.builders).toBeDefined()
@@ -101,9 +113,18 @@ describe 'Waterfall view controller', ->
         spyOn(w, 'getHeight').and.returnValue(900)
         e = d3.select('.inner-content')
         n = e.node()
-        expect(w.loadMore).not.toHaveBeenCalled()
+        callCount = w.loadMore.calls.count()
+        expect(callCount).toBe(1)
         angular.element(n).triggerHandler('scroll')
-        expect(w.loadMore).toHaveBeenCalled()
+        callCount = w.loadMore.calls.count()
+        expect(callCount).toBe(2)
+
+    it 'height should be scalable', ->
+        height = w.getInnerHeight()
+        w.c.scaling *= 10
+        w.render()
+        newHeight = w.getInnerHeight()
+        expect(newHeight).toBe(height * 10)
 
     it 'should have string representations of result codes', ->
         testBuild =

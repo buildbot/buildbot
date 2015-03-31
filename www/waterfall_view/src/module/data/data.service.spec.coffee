@@ -1,6 +1,3 @@
-beforeEach ->
-    module 'waterfall_view'
-
 describe 'Data service', ->
 
     dataService = builds = builders = null
