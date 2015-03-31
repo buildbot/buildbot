@@ -32,8 +32,6 @@ describe 'Waterfall view controller', ->
         spyOn(w, 'mouseMove').and.callThrough()
         spyOn(w, 'click').and.callThrough()
         spyOn(w, 'loadMore').and.callThrough()
-        # We don't want the setHeight to call loadMore
-        spyOn(w, 'setHeight').and.callFake ->
         # Data is loaded
         $timeout.flush()
 
@@ -101,9 +99,18 @@ describe 'Waterfall view controller', ->
         spyOn(w, 'getHeight').and.returnValue(900)
         e = d3.select('.inner-content')
         n = e.node()
-        expect(w.loadMore).not.toHaveBeenCalled()
+        callCount = w.loadMore.calls.count()
+        expect(callCount).toBe(1)
         angular.element(n).triggerHandler('scroll')
-        expect(w.loadMore).toHaveBeenCalled()
+        callCount = w.loadMore.calls.count()
+        expect(callCount).toBe(2)
+
+    it 'height should be scalable', ->
+        height = w.getInnerHeight()
+        w.c.scaling *= 10
+        w.render()
+        newHeight = w.getInnerHeight()
+        expect(newHeight).toBe(height * 10)
 
     it 'should have string representations of result codes', ->
         testBuild =

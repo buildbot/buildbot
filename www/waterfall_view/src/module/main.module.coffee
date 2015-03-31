@@ -31,6 +31,9 @@ class Waterfall extends Controller
             # Minimum builder column width (px)
             minColumnWidth: cfg.minColumnWidth or 40
 
+            # Default vertical scaling
+            scaling: cfg.scaling or 1
+
             # Y axis time format (new line: ^)
             timeFormat: cfg.timeFormat or '%x^%H:%M'
 
@@ -104,6 +107,19 @@ class Waterfall extends Controller
             # Bind scroll event listener
             angular.element(containerParent).bind 'scroll', onScroll
 
+            @$window.onkeydown = (e) =>
+                if e.ctrlKey || e.metaKey
+                    # (ctrl | meta) & '+'
+                    if e.keyCode is 107
+                        e.preventDefault()
+                        @c.scaling *= 1.5
+                        @render()
+                    # (ctrl | meta) & '-'
+                    else if e.keyCode is 109
+                        e.preventDefault()
+                        @c.scaling /= 1.5
+                        @render()
+
     ###
     # Load more builds
     ###
@@ -167,7 +183,7 @@ class Waterfall extends Controller
         h = - @c.gap
         for group in @groups
             h += (group.max - group.min + @c.gap)
-        height = h + @c.margin.top + @c.margin.bottom
+        height = h * @c.scaling + @c.margin.top + @c.margin.bottom
         if height < parseInt @waterfall.style('height').replace('px', ''), 10
             @loadMore()
         @container.style('height', "#{height}px")
@@ -468,6 +484,10 @@ class Waterfall extends Controller
     ###
     render: ->
 
+        containerParent = @container.node().parentNode
+        y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+        time = y.invert(containerParent.scrollTop)
+
         # Set the content width
         @setWidth()
 
@@ -478,3 +498,6 @@ class Waterfall extends Controller
         @drawBuilds()
         @drawXAxis()
         @drawYAxis()
+
+        y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+        containerParent.scrollTop = y(time)
