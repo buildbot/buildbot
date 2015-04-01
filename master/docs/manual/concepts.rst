@@ -72,7 +72,7 @@ These parameters collectively specify a set of sources from which a build may be
 `Subversion <http://subversion.tigris.org>`_,  combines the repository, module, and branch into a single *Subversion URL* parameter.
 Within that scope, source checkouts can be specified by a numeric *revision number* (a repository-wide monotonically-increasing marker, such that each transaction that changes the repository is indexed by a different revision number), or a revision timestamp.
 When branches are used, the repository and module form a static ``baseURL``, while each build has a *revision number* and a *branch* (which defaults to a statically-specified ``defaultBranch``).
-The ``baseURL`` and ``branch`` are simply concatenated together to derive the ``svnurl`` to use for the checkout.
+The ``baseURL`` and ``branch`` are simply concatenated together to derive the ``repourl`` to use for the checkout.
 
 `Perforce <http://www.perforce.com/>`_ is similar.
 The server is specified through a ``P4PORT`` parameter.
@@ -226,7 +226,7 @@ The schedulers get to decide whether the branch should be built or not.
 
 For VC systems like CVS,  Git and Monotone the :attr:`branch` name is unrelated to the filename.
 (That is, the branch name and the filename inhabit unrelated namespaces.)
-For SVN, branches are expressed as subdirectories of the repository, so the file's ``svnurl`` is a combination of some base URL, the branch name, and the filename within the branch.
+For SVN, branches are expressed as subdirectories of the repository, so the file's ``repourl`` is a combination of some base URL, the branch name, and the filename within the branch.
 (In a sense, the branch name and the filename inhabit the same namespace.)
 Darcs branches are subdirectories of a base URL just like SVN.
 Mercurial branches are the same as Darcs.
