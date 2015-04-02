@@ -28,21 +28,23 @@ class UsDict(dict):
 class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    def __init__(self, *args, **kwargs):
+        super(UsersConnectorComponent, self).__init__(*args, **kwargs)
+        self._tbl = self.db.model.users
+        self._tbl_info = self.db.model.users_info
+
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
         # note that since this involves two tables, self.findSomethingId is not
         # helpful
         def thd(conn, no_recurse=False, identifier=identifier):
-            tbl = self.db.model.users
-            tbl_info = self.db.model.users_info
-
-            self.checkLength(tbl.c.identifier, identifier)
-            self.checkLength(tbl_info.c.attr_type, attr_type)
-            self.checkLength(tbl_info.c.attr_data, attr_data)
+            self.checkLength(self._tbl.c.identifier, identifier)
+            self.checkLength(self._tbl_info.c.attr_type, attr_type)
+            self.checkLength(self._tbl_info.c.attr_data, attr_data)
 
             # try to find the user
-            q = sa.select([tbl_info.c.uid],
-                          whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                           tbl_info.c.attr_data == attr_data))
+            q = sa.select([self._tbl_info.c.uid],
+                          whereclause=and_(self._tbl_info.c.attr_type == attr_type,
+                                           self._tbl_info.c.attr_data == attr_data))
             rows = conn.execute(q).fetchall()
 
             if rows:
@@ -56,11 +58,11 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             inserted_user = False
             try:
-                r = conn.execute(tbl.insert(), dict(identifier=identifier))
+                r = conn.execute(self._tbl.insert(), dict(identifier=identifier))
                 uid = r.inserted_primary_key[0]
                 inserted_user = True
 
-                conn.execute(tbl_info.insert(),
+                conn.execute(self._tbl_info.insert(),
                              dict(uid=uid, attr_type=attr_type,
                                   attr_data=attr_data))
 
@@ -90,24 +92,22 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     @base.cached("usdicts")
     def getUser(self, uid):
         def thd(conn):
-            tbl = self.db.model.users
-            tbl_info = self.db.model.users_info
-
-            q = tbl.select(whereclause=(tbl.c.uid == uid))
+            q = self._tbl.select(whereclause=(self._tbl.c.uid == uid))
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == uid))
+            q = self._tbl_info.select(whereclause=(self._tbl_info.c.uid == uid))
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
         d = self.db.pool.do(thd)
         return d
 
-    def thd_createUsDict(self, users_row, rows):
+    @staticmethod
+    def thd_createUsDict(users_row, rows):
         # make UsDict to return
         usdict = UsDict()
         for row in rows:
@@ -124,17 +124,14 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
     def getUserByUsername(self, username):
         def thd(conn):
-            tbl = self.db.model.users
-            tbl_info = self.db.model.users_info
-
-            q = tbl.select(whereclause=(tbl.c.bb_username == username))
+            q = self._tbl.select(whereclause=(self._tbl.c.bb_username == username))
             users_row = conn.execute(q).fetchone()
 
             if not users_row:
                 return None
 
             # gather all attr_type and attr_data entries from users_info table
-            q = tbl_info.select(whereclause=(tbl_info.c.uid == users_row.uid))
+            q = self._tbl_info.select(whereclause=(self._tbl_info.c.uid == users_row.uid))
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
@@ -143,8 +140,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
     def getUsers(self):
         def thd(conn):
-            tbl = self.db.model.users
-            rows = conn.execute(tbl.select()).fetchall()
+            rows = conn.execute(self._tbl.select()).fetchall()
 
             dicts = []
             if rows:
@@ -160,26 +156,24 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                    _race_hook=None):
         def thd(conn):
             transaction = conn.begin()
-            tbl = self.db.model.users
-            tbl_info = self.db.model.users_info
             update_dict = {}
 
             # first, add the identifier is it exists
             if identifier is not None:
-                self.checkLength(tbl.c.identifier, identifier)
+                self.checkLength(self._tbl.c.identifier, identifier)
                 update_dict['identifier'] = identifier
 
             # then, add the creds if they exist
             if bb_username is not None:
                 assert bb_password is not None
-                self.checkLength(tbl.c.bb_username, bb_username)
-                self.checkLength(tbl.c.bb_password, bb_password)
+                self.checkLength(self._tbl.c.bb_username, bb_username)
+                self.checkLength(self._tbl.c.bb_password, bb_password)
                 update_dict['bb_username'] = bb_username
                 update_dict['bb_password'] = bb_password
 
             # update the users table if it needs to be updated
             if update_dict:
-                q = tbl.update(whereclause=(tbl.c.uid == uid))
+                q = self._tbl.update(whereclause=(self._tbl.c.uid == uid))
                 res = conn.execute(q, update_dict)
 
             # then, update the attributes, carefully handling the potential
@@ -187,20 +181,20 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             if attr_type is not None:
                 assert attr_data is not None
 
-                self.checkLength(tbl_info.c.attr_type, attr_type)
-                self.checkLength(tbl_info.c.attr_data, attr_data)
+                self.checkLength(self._tbl_info.c.attr_type, attr_type)
+                self.checkLength(self._tbl_info.c.attr_data, attr_data)
 
                 # first update, then insert
-                q = tbl_info.update(
-                    whereclause=(tbl_info.c.uid == uid)
-                    & (tbl_info.c.attr_type == attr_type))
+                q = self._tbl_info.update(
+                    whereclause=(self._tbl_info.c.uid == uid)
+                    & (self._tbl_info.c.attr_type == attr_type))
                 res = conn.execute(q, attr_data=attr_data)
                 if res.rowcount == 0:
                     _race_hook and _race_hook(conn)
 
                     # the update hit 0 rows, so try inserting a new one
                     try:
-                        q = tbl_info.insert()
+                        q = self._tbl_info.insert()
                         res = conn.execute(q,
                                            uid=uid,
                                            attr_type=attr_type,
@@ -218,20 +212,18 @@ class UsersConnectorComponent(base.DBConnectorComponent):
     def removeUser(self, uid):
         def thd(conn):
             # delete from dependent tables first, followed by 'users'
-            for tbl in [
+            for self._tbl in [
                     self.db.model.change_users,
                     self.db.model.users_info,
                     self.db.model.users,
             ]:
-                conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
+                conn.execute(self._tbl.delete(whereclause=(self._tbl.c.uid == uid)))
         d = self.db.pool.do(thd)
         return d
 
     def identifierToUid(self, identifier):
         def thd(conn):
-            tbl = self.db.model.users
-
-            q = tbl.select(whereclause=(tbl.c.identifier == identifier))
+            q = self._tbl.select(whereclause=(self._tbl.c.identifier == identifier))
             row = conn.execute(q).fetchone()
             if not row:
                 return None
