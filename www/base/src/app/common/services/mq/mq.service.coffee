@@ -1,5 +1,5 @@
 class MqService extends Factory('common')
-    constructor: ($http, $rootScope, $q) ->
+    constructor: ($http, $rootScope, $q, bbSettingsService) ->
         # private variables
         match = (matcher, value) ->
             # ultra simple matcher used to route event back to the original subscriber
@@ -11,6 +11,8 @@ class MqService extends Factory('common')
         pending_msgs = {}
         deferred = null
         lostConnection = false
+        listening = false
+        settings = bbSettingsService.getSettingsGroup("Websockets")
         self =
             # tested internal api
             _match: match
@@ -56,6 +58,22 @@ class MqService extends Factory('common')
                 # we use reconnecting websocket for automatic reconnection
                 return new ReconnectingWebSocket(url)
 
+            maybeClose: ->
+                if document.hidden and listening
+                    if ws.debug
+                        console.log "Tab hidden, stop listening"
+                        console.log "listeners:", listeners
+                    listening = false
+                    ws.maxReconnectAttempts = 1
+                    maybereopen = ->
+                        if not document.hidden
+                            listening = true
+                            document.removeEventListener("visibilitychange", maybereopen)
+                            ws.maxReconnectAttempts = 0
+                            ws.open(true)
+                    document.addEventListener("visibilitychange", maybereopen)
+                    return true
+                return false
             setBaseUrl: (url) ->
                 pending_msgs = {}
                 makedeferred = ->
@@ -64,18 +82,18 @@ class MqService extends Factory('common')
                 makedeferred()
 
                 ws = self.getWebSocket(url)
-
+                ws.debug = settings.debug_websockets.value
+                listening = true
                 ws.onerror = (e) -> $rootScope.$apply ->
-                    console.log(e)
+                    self.maybeClose()
                 ws.onclose = (e) -> $rootScope.$apply ->
-                    console.log(e)
+                    self.maybeClose()
                     # forget all listeners, they will register back when connection is restored
                     $rootScope.$broadcast("mq.lost_connection", e)
                     lostConnection = true
                     listeners = {}
 
                 ws.onopen = (e) -> $rootScope.$apply ->
-                    console.log e
                     pending_msgs = {}
                     allp = []
                     for k, v of listeners
@@ -121,3 +139,16 @@ class MqService extends Factory('common')
                     return self.sendMessage(cmd:"stopConsuming", path:path)
 
         return self
+
+class State extends Config
+    constructor: (bbSettingsServiceProvider) ->
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:'Websockets'
+            caption: 'Websocket'
+            items:[
+                type:'bool'
+                name:'debug_websockets'
+                caption:'Debug Websockets'
+                default_value: false
+            ]
