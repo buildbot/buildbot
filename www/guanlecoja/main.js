@@ -1,66 +1,60 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, serveStatic, sourcemaps, templateCache, uglify, vendors, _,
+  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  require("./vendors");
-
-  vendors = global.vendors;
 
   run_sequence = require('run-sequence');
 
+  require("coffee-script/register");
+
+  path = require('path');
+
+  fs = require('fs');
+
+  _ = require('lodash');
+
+  argv = require('minimist')(process.argv.slice(2));
+
   ngClassify = require('gulp-ng-classify');
+
+  gif = require('gulp-if');
+
+  sourcemaps = require('gulp-sourcemaps');
+
+  coffee = require('gulp-coffee');
+
+  gutil = require('gulp-util');
+
+  annotate = require('gulp-ng-annotate');
+
+  concat = require('gulp-concat');
+
+  cached = require('gulp-cached');
 
   karma = require('gulp-karma');
 
-  path = vendors.path;
+  remember = require('gulp-remember');
 
-  fs = vendors.fs;
+  uglify = require('gulp-uglify');
 
-  _ = vendors._;
+  jade = require('gulp-jade');
 
-  argv = vendors.minimist(process.argv.slice(2));
+  rename = require('gulp-rename');
 
-  gif = vendors.gif;
+  bower = require('gulp-bower-deps');
 
-  sourcemaps = vendors.sourcemaps;
+  templateCache = require('./gulp-angular-templatecache');
 
-  coffee = vendors.coffee;
+  lr = require('gulp-livereload');
 
-  gutil = vendors.gutil;
+  cssmin = require('gulp-minify-css');
 
-  annotate = vendors.annotate;
+  less = require('gulp-less');
 
-  concat = vendors.concat;
+  fixtures2js = require('gulp-fixtures2js');
 
-  cached = vendors.cached;
+  gulp_help = require('gulp-help');
 
-  remember = vendors.remember;
-
-  uglify = vendors.uglify;
-
-  jade = vendors.jade;
-
-  rename = vendors.rename;
-
-  bower = vendors.bower;
-
-  templateCache = vendors.templateCache;
-
-  lr = vendors.lr;
-
-  cssmin = vendors.cssmin;
-
-  less = vendors.less;
-
-  fixtures2js = vendors.fixtures2js;
-
-  gulp_help = vendors.gulp_help;
-
-  connect = vendors.connect;
-
-  serveStatic = vendors["static"];
-
-  require("coffee-script/register");
+  connect = require('connect');
 
   module.exports = function(gulp) {
     var buildConfig, catch_errors, config, coverage, defaultHelp, dev, devHelp, notests, prod, script_sources, _ref;
@@ -87,9 +81,9 @@
     }
     bower = bower(config.bower);
     bower.installtask(gulp);
-    vendors.rimraf.sync(config.dir.build);
+    require('rimraf').sync(config.dir.build);
     if (coverage) {
-      vendors.rimraf.sync(config.dir.coverage);
+      require('rimraf').sync(config.dir.coverage);
     }
     if (notests) {
       config.testtasks = ["notests"];
@@ -197,11 +191,8 @@
       return gulp.src(config.files.index).pipe(catch_errors(jade())).pipe(gulp.dest(config.dir.build));
     });
     gulp.task('server', false, ['index'], function(next) {
-      var app;
       if (config.devserver != null) {
-        app = connect();
-        app.use(serveStatic(config.dir.build));
-        return app.listen(config.devserver.port);
+        return connect().use(connect["static"](config.dir.build)).listen(config.devserver.port, next);
       } else {
         return next();
       }

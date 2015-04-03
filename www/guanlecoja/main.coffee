@@ -1,49 +1,37 @@
-require "./vendors"
-vendors = global.vendors
-
-# Stuff that we can't import via browserify
-
-# runsequence needs to be at the same level as gulp
 run_sequence = require 'run-sequence'
-# ng-classify is in coffee, so it does not work with browserify out of the box
-ngClassify = require 'gulp-ng-classify'
-
-# karma does not work with browserify
-karma = require 'gulp-karma'
-
+require("coffee-script/register")
 
 # utilities
-path = vendors.path
-fs = vendors.fs
-_ = vendors._
+path = require('path')
+fs = require('fs')
+_ = require('lodash')
 
-argv = vendors.minimist(process.argv.slice(2))
+argv = require('minimist')(process.argv.slice(2))
 
 # gulp plugins
-
-gif = vendors.gif
-sourcemaps = vendors.sourcemaps
-coffee = vendors.coffee
-gutil = vendors.gutil
-annotate = vendors.annotate
-concat = vendors.concat
-cached = vendors.cached
-remember = vendors.remember
-uglify = vendors.uglify
-jade = vendors.jade
-rename = vendors.rename
-bower = vendors.bower
-templateCache = vendors.templateCache
-lr = vendors.lr
-cssmin = vendors.cssmin
-less = vendors.less
-fixtures2js = vendors.fixtures2js
-gulp_help = vendors.gulp_help
+ngClassify = require 'gulp-ng-classify'
+gif = require 'gulp-if'
+sourcemaps = require 'gulp-sourcemaps'
+coffee = require 'gulp-coffee'
+gutil = require 'gulp-util'
+annotate = require 'gulp-ng-annotate'
+concat = require 'gulp-concat'
+cached = require 'gulp-cached'
+karma = require 'gulp-karma'
+remember = require 'gulp-remember'
+uglify = require 'gulp-uglify'
+jade = require 'gulp-jade'
+rename = require 'gulp-rename'
+bower = require 'gulp-bower-deps'
+templateCache = require './gulp-angular-templatecache'
+lr = require 'gulp-livereload'
+cssmin = require 'gulp-minify-css'
+less = require 'gulp-less'
+fixtures2js = require 'gulp-fixtures2js'
+gulp_help = require 'gulp-help'
 
 # dependencies for webserver
-connect = vendors.connect
-serveStatic = vendors.static
-require "coffee-script/register"
+connect = require('connect')
 
 module.exports =  (gulp) ->
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
@@ -76,10 +64,10 @@ module.exports =  (gulp) ->
 
     # first thing, we remove the build dir
     # we do it synchronously to simplify things
-    vendors.rimraf.sync(config.dir.build)
+    require('rimraf').sync(config.dir.build)
 
     if coverage
-        vendors.rimraf.sync(config.dir.coverage)
+        require('rimraf').sync(config.dir.coverage)
 
     if notests
         config.testtasks = ["notests"]
@@ -240,9 +228,9 @@ module.exports =  (gulp) ->
     # Run server.
     gulp.task 'server', false, ['index'], (next) ->
         if config.devserver?
-            app = connect()
-            app.use(serveStatic(config.dir.build))
-            app.listen(config.devserver.port)
+            connect()
+            .use(connect.static(config.dir.build))
+            .listen(config.devserver.port, next)
         else
             next()
 
