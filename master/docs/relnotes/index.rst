@@ -95,6 +95,8 @@ Fixes
 * :bb:step:`MasterShellCommand` now correctly logs the working directory where it was run.
 * With Git(), force the updating submodules to ensure local changes by the build are overwitten.
   This both ensures more consistent builds and avoids errors when updating submodules.
+* With Git(), make sure 'git submodule sync' is called before 'git submodule update' to update
+  stale remote urls (:bb:bug:`2155`).
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
