@@ -348,5 +348,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
         for svc in reconfigurable_services:
-            config_sibling = new_by_name[svc.name]
+            if not svc.name:
+                raise ValueError("%r: child %r should have a defined name attribute", self, svc)
+            config_sibling = new_by_name.get(svc.name)
             yield svc.reconfigServiceWithSibling(config_sibling)

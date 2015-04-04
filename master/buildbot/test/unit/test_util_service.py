@@ -560,10 +560,9 @@ class BuildbotService(unittest.TestCase):
     def prepareService(self):
         self.master.config = fakeConfig()
         serv = MyService(1, a=2, name="basic")
-        self.master.config.services = {"basic": serv}
         yield serv.setServiceParent(self.master)
         yield self.master.startService()
-        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+        yield serv.reconfigServiceWithSibling(serv)
         defer.returnValue(serv)
 
     @defer.inlineCallbacks
@@ -579,43 +578,6 @@ class BuildbotService(unittest.TestCase):
             'class': 'buildbot.test.unit.test_util_service.MyService',
             'kwargs': {'a': 2},
             'name': 'basic'})
-
-    @defer.inlineCallbacks
-    def testReconfigNoChange(self):
-        serv = yield self.prepareService()
-        serv.config = None  # 'de-configure' the service
-        # reconfigure with the same config
-        serv2 = MyService(1, a=2, name="basic")
-        self.master.config.services = {"basic": serv2}
-
-        # reconfigure the master
-        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        # the first service is still used
-        self.assertIdentical(self.master.namedServices["basic"], serv)
-        # the second service is not used
-        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
-
-        # reconfigServiceWithConstructorArgs was not called
-        self.assertEqual(serv.config, None)
-
-    @defer.inlineCallbacks
-    def testReconfigWithChanges(self):
-        serv = yield self.prepareService()
-        serv.config = None  # 'de-configure' the service
-
-        # reconfigure with the differnt config
-        serv2 = MyService(1, a=4, name="basic")
-        self.master.config.services = {"basic": serv2}
-
-        # reconfigure the master
-        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        # the first service is still used
-        self.assertIdentical(self.master.namedServices["basic"], serv)
-        # the second service is not used
-        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
-
-        # reconfigServiceWithConstructorArgs was called with new config
-        self.assertEqual(serv.config, ((1,), dict(a=4)))
 
     def testNoName(self):
         self.assertRaises(ValueError, lambda: MyService(1, a=2))

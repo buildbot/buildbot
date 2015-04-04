@@ -23,6 +23,7 @@ from twisted.spread import pb
 
 
 class Listener(base.Listener):
+    name = "pbListener"
 
     def __init__(self, master):
         assert master
