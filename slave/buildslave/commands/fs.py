@@ -198,7 +198,7 @@ class StatFile(base.Command):
     requireArgs = ['file']
 
     def start(self):
-        filename = os.path.join(self.builder.basedir, self.args['file'])
+        filename = os.path.join(self.builder.basedir, self.args.get('workdir', ''), self.args['file'])
 
         try:
             stat = os.stat(filename)
