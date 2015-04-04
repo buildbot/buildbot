@@ -165,6 +165,7 @@ class TestSlaveComm(unittest.TestCase):
 
         self.master.status = master.Status(self.master)
         self.master.botmaster = self.botmaster
+        self.master.data.updates.buildslaveConfigured = lambda *a, **k: None
         yield self.master.startService()
 
         self.buildslave = None
