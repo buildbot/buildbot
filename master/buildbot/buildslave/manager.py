@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot.buildslave.protocols import pb as bbpb
-from buildbot.interfaces import IBuildSlave
 from buildbot.process import metrics
 from buildbot.util import misc
 from buildbot.util import service
