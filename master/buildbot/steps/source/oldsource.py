@@ -171,8 +171,8 @@ class BK(SlaveSource):
                         C{bkurl} and C{baseURL}.
         """
 
-        self.bkurl = _ComputeRepositoryURL(bkurl)
-        self.baseURL = _ComputeRepositoryURL(baseURL)
+        self.bkurl = _ComputeRepositoryURL(self, bkurl)
+        self.baseURL = _ComputeRepositoryURL(self, baseURL)
         self.extra_args = extra_args
 
         Source.__init__(self, **kwargs)
