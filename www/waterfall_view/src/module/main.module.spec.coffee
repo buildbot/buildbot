@@ -14,6 +14,7 @@ beforeEach ->
             $get: ->
                 getSettingsGroup: ->
                     return group
+                save: ->
         null
 
     module 'waterfall_view'
@@ -121,10 +122,14 @@ describe 'Waterfall view controller', ->
 
     it 'height should be scalable', ->
         height = w.getInnerHeight()
-        w.c.scaling *= 10
+        group = bbSettingsService.getSettingsGroup()
+        oldSetting = group.scaling_waterfall.value
+        w.incrementScaleFactor()
         w.render()
         newHeight = w.getInnerHeight()
-        expect(newHeight).toBe(height * 10)
+        expect(newHeight).toBe(height * 1.5)
+        newSetting = group.scaling_waterfall.value
+        expect(newSetting).toBe(oldSetting * 1.5)
 
     it 'should have string representations of result codes', ->
         testBuild =

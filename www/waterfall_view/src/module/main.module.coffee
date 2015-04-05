@@ -9,42 +9,42 @@ class WaterfallView extends App
 
 class Waterfall extends Controller
     self = null
-    constructor: (@$scope, $q, @$window, @$log, @$modal, @buildbotService, d3Service, @dataService, scaleService, bbSettingsService) ->
+    constructor: (@$scope, $q, @$window, @$log, @$modal, @buildbotService, d3Service, @dataService, scaleService, @bbSettingsService) ->
         self = @
 
         # Show the loading spinner
         @loading = true
 
         # Get Waterfall settings
-        s = bbSettingsService.getSettingsGroup('Waterfall')
+        @s = @bbSettingsService.getSettingsGroup('Waterfall')
         @c =
             # Margins around the chart
             margin:
-                top: s.margin_top_waterfall.value
-                right: s.margin_right_waterfall.value
-                bottom: s.margin_bottom_waterfall.value
-                left: s.margin_left_waterfall.value
+                top: 15
+                right: 20
+                bottom: 20
+                left: 70
 
             # Gap between groups (px)
-            gap: s.gap_waterfall.value
+            gap: 30
 
             # Default vertical scaling
-            scaling: s.scaling_waterfall.value
+            scaling: @s.scaling_waterfall.value
 
             # Minimum builder column width (px)
-            minColumnWidth: s.min_column_width_waterfall.value
+            minColumnWidth: @s.min_column_width_waterfall.value
 
             # Y axis time format (new line: ^)
             timeFormat: '%x^%H:%M'
 
             # Lazy load limit
-            limit: s.lazy_limit_waterfall.value
+            limit: @s.lazy_limit_waterfall.value
 
             # Idle time threshold in unix time stamp (eg. 300 = 5 min)
-            threshold: s.idle_threshold_waterfall.value
+            threshold: @s.idle_threshold_waterfall.value
 
             # Grey rectangle below buildids
-            buildidBackground: s.number_background_waterfall.value
+            buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
         builders = @buildbotService.all('builders').bind(@$scope)
@@ -111,13 +111,26 @@ class Waterfall extends Controller
                 # +
                 if e.keyCode is 107
                     e.preventDefault()
-                    @c.scaling *= 1.5
+                    @incrementScaleFactor()
                     @render()
                 # -
                 else if e.keyCode is 109
                     e.preventDefault()
-                    @c.scaling /= 1.5
+                    @decrementScaleFactor()
                     @render()
+
+    ###
+    # Increment and decrement the scale factor
+    ###
+    incrementScaleFactor: ->
+        @c.scaling *= 1.5
+        @s.scaling_waterfall.value *= 1.5
+        @bbSettingsService.save()
+
+    decrementScaleFactor: ->
+        @c.scaling /= 1.5
+        @s.scaling_waterfall.value /= 1.5
+        @bbSettingsService.save()
 
     ###
     # Load more builds
