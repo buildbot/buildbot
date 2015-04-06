@@ -399,7 +399,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             w.unsubscribe(self)
         return base.StatusReceiverMultiService.disownServiceParent(self)
 
-    def builderAdded(self, name, builder):
+    def builderAdded(self, name, builder, friendly_name=None):
         # only subscribe to builders we are interested in
         if self.categories != None and builder.category not in self.categories:
             return None

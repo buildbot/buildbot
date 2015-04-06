@@ -361,7 +361,7 @@ class IRCContact(base.StatusReceiver):
             self.send(r)
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
-    def builderAdded(self, builderName, builder):
+    def builderAdded(self, builderName, builder, friendly_name=None):
         if (self.bot.categories != None and
             builder.category not in self.bot.categories):
             return
