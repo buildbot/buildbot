@@ -17,6 +17,7 @@ from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
+from twisted.python import reflect
 
 from buildbot import util
 from buildbot.util import config
@@ -226,11 +227,25 @@ class AsyncMultiService(AsyncService, service.MultiService):
         else:
             return defer.succeed(None)
 
+    # We recurse over the parent services until we find a MasterService
+    @property
+    def master(self):
+        if self.parent is None:
+            return None
+        return self.parent.master
 
-class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
-                      ReconfigurableServiceMixin, util.ComparableMixin):
-    compare_attrs = ('name', '_config_args', '_config_kwargs', 'config_attr')
-    config_attr = "services"
+
+class MasterService(AsyncMultiService):
+    # master service is the service that stops the master property recursion
+
+    @property
+    def master(self):
+        return self
+
+
+class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,
+                      ReconfigurableServiceMixin):
+    compare_attrs = ('name', '_config_args', '_config_kwargs')
     name = None
     configured = False
 
@@ -238,9 +253,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
         name = kwargs.pop("name", None)
         if name is not None:
             self.name = name
+        self.checkConfig(*args, **kwargs)
         if self.name is None:
             raise ValueError("%s: must pass a name to constructor" % type(self))
-        self.checkConfig(*args, **kwargs)
         self._config_args = args
         self._config_kwargs = kwargs
         AsyncMultiService.__init__(self)
@@ -252,23 +267,88 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin,
                 'args': self._config_args,
                 'kwargs': self._config_kwargs}
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        # get from the config object its sibling config
-        config_sibling = getattr(new_config, self.config_attr)[self.name]
-
+    def reconfigServiceWithSibling(self, sibling):
         # only reconfigure if different as ComparableMixin says.
-        if self.configured and config_sibling == self:
+        if self.configured and sibling == self:
             return defer.succeed(None)
         self.configured = True
-        return self.reconfigService(*config_sibling._config_args,
-                                    **config_sibling._config_kwargs)
+        return self.reconfigService(*sibling._config_args,
+                                    **sibling._config_kwargs)
 
-    def setServiceParent(self, parent):
-        self.master = parent
-        return AsyncService.setServiceParent(self, parent)
+    @defer.inlineCallbacks
+    def startService(self):
+        if not self.configured:
+            # reconfigServiceWithSibling with self, means first configuration
+            yield self.reconfigServiceWithSibling(self)
+        yield AsyncMultiService.startService(self)
 
     def checkConfig(self, *args, **kwargs):
         return defer.succeed(True)
 
     def reconfigService(self, *args, **kwargs):
         return defer.succeed(None)
+
+
+class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
+                             ReconfigurableServiceMixin):
+    config_attr = "services"
+    name = "services"
+
+    def getConfigDict(self):
+        return {'name': self.name,
+                'childs': [v.getConfigDict()
+                           for v in self.namedServices.values()]}
+
+    @defer.inlineCallbacks
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+
+        # arrange childs by name
+        old_by_name = self.namedServices
+        old_set = set(old_by_name.iterkeys())
+        new_config_attr = getattr(new_config, self.config_attr)
+        if isinstance(new_config_attr, list):
+            new_by_name = dict([(s.name, s)
+                                for s in new_config_attr])
+        elif isinstance(new_config_attr, dict):
+            new_by_name = new_config_attr
+        else:
+            raise TypeError("config.%s should be a list or dictionary" % (self.config_attr))
+        new_set = set(new_by_name.iterkeys())
+
+        # calculate new childs, by name, and removed childs
+        removed_names, added_names = util.diffSets(old_set, new_set)
+
+        # find any childs for which the fully qualified class name has
+        # changed, and treat those as an add and remove
+        for n in old_set & new_set:
+            old = old_by_name[n]
+            new = new_by_name[n]
+            # detect changed class name
+            if reflect.qual(old.__class__) != reflect.qual(new.__class__):
+                removed_names.add(n)
+                added_names.add(n)
+
+        if removed_names or added_names:
+            log.msg("adding %d new %s, removing %d" %
+                    (len(added_names), self.config_attr, len(removed_names)))
+
+            for n in removed_names:
+                child = old_by_name[n]
+
+                yield child.disownServiceParent()
+
+            for n in added_names:
+                child = new_by_name[n]
+                yield child.setServiceParent(self)
+
+        # get a list of child services to reconfigure
+        reconfigurable_services = [svc for svc in self]
+
+        # sort by priority
+        reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
+
+        for svc in reconfigurable_services:
+            if not svc.name:
+                raise ValueError("%r: child %r should have a defined name attribute", self, svc)
+            config_sibling = new_by_name.get(svc.name)
+            yield svc.reconfigServiceWithSibling(config_sibling)

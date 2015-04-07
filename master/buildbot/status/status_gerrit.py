@@ -246,7 +246,6 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         StatusReceiverMultiService.setServiceParent(self, parent)
         self.master_status = self.parent
         self.master_status.subscribe(self)
-        self.master = self.master_status.master
 
     def startService(self):
         print """Starting up."""

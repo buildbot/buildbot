@@ -31,7 +31,7 @@ class CustomServiceMaster(RunMasterBase):
 
         self.assertEqual(build['steps'][0]['state_string'], 'num reconfig: 1')
 
-        myService = self.master.namedServices['myService']
+        myService = self.master.service_manager.namedServices['myService']
         self.assertEqual(myService.num_reconfig, 1)
         self.assertTrue(myService.running)
 
@@ -46,7 +46,7 @@ class CustomServiceMaster(RunMasterBase):
 
         yield self.master.reconfig()
 
-        myService2 = self.master.namedServices['myService2']
+        myService2 = self.master.service_manager.namedServices['myService2']
 
         self.assertTrue(myService2.running)
         self.assertEqual(myService2.num_reconfig, 3)
@@ -55,7 +55,7 @@ class CustomServiceMaster(RunMasterBase):
         yield self.master.reconfig()
 
         # second service removed
-        self.assertNotIn('myService2', self.master.namedServices)
+        self.assertNotIn('myService2', self.master.service_manager.namedServices)
         self.assertFalse(myService2.running)
         self.assertEqual(myService2.num_reconfig, 3)
         self.assertEqual(myService.num_reconfig, 4)
@@ -79,7 +79,7 @@ def masterConfig():
     class MyShellCommand(ShellCommand):
 
         def getResultSummary(self):
-            service = self.master.namedServices['myService']
+            service = self.master.service_manager.namedServices['myService']
             return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
 
     class MyService(BuildbotService):

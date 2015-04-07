@@ -547,7 +547,7 @@ class fakeConfig(object):
     pass
 
 
-class fakeMaster(service.AsyncMultiService, service.ReconfigurableServiceMixin):
+class fakeMaster(service.MasterService, service.ReconfigurableServiceMixin):
     pass
 
 
@@ -560,10 +560,9 @@ class BuildbotService(unittest.TestCase):
     def prepareService(self):
         self.master.config = fakeConfig()
         serv = MyService(1, a=2, name="basic")
-        self.master.config.services = {"basic": serv}
         yield serv.setServiceParent(self.master)
         yield self.master.startService()
-        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+        yield serv.reconfigServiceWithSibling(serv)
         defer.returnValue(serv)
 
     @defer.inlineCallbacks
@@ -580,6 +579,34 @@ class BuildbotService(unittest.TestCase):
             'kwargs': {'a': 2},
             'name': 'basic'})
 
+    def testNoName(self):
+        self.assertRaises(ValueError, lambda: MyService(1, a=2))
+
+    def testChecksDone(self):
+        self.assertRaises(config.ConfigErrors, lambda: MyService(1, name="foo"))
+
+
+class BuildbotServiceManager(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakeMaster()
+
+    @defer.inlineCallbacks
+    def prepareService(self):
+        self.master.config = fakeConfig()
+        serv = MyService(1, a=2, name="basic")
+        self.master.config.services = {"basic": serv}
+        self.manager = service.BuildbotServiceManager()
+        yield self.manager.setServiceParent(self.master)
+        yield self.master.startService()
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+        defer.returnValue(serv)
+
+    @defer.inlineCallbacks
+    def testNominal(self):
+        yield self.prepareService()
+        self.assertEqual(self.manager.namedServices["basic"].config, ((1,), dict(a=2)))
+
     @defer.inlineCallbacks
     def testReconfigNoChange(self):
         serv = yield self.prepareService()
@@ -591,9 +618,9 @@ class BuildbotService(unittest.TestCase):
         # reconfigure the master
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         # the first service is still used
-        self.assertIdentical(self.master.namedServices["basic"], serv)
+        self.assertIdentical(self.manager.namedServices["basic"], serv)
         # the second service is not used
-        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
+        self.assertNotIdentical(self.manager.namedServices["basic"], serv2)
 
         # reconfigServiceWithConstructorArgs was not called
         self.assertEqual(serv.config, None)
@@ -610,9 +637,9 @@ class BuildbotService(unittest.TestCase):
         # reconfigure the master
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         # the first service is still used
-        self.assertIdentical(self.master.namedServices["basic"], serv)
+        self.assertIdentical(self.manager.namedServices["basic"], serv)
         # the second service is not used
-        self.assertNotIdentical(self.master.namedServices["basic"], serv2)
+        self.assertNotIdentical(self.manager.namedServices["basic"], serv2)
 
         # reconfigServiceWithConstructorArgs was called with new config
         self.assertEqual(serv.config, ((1,), dict(a=4)))
@@ -622,3 +649,51 @@ class BuildbotService(unittest.TestCase):
 
     def testChecksDone(self):
         self.assertRaises(config.ConfigErrors, lambda: MyService(1, name="foo"))
+
+    @defer.inlineCallbacks
+    def testReconfigWithNew(self):
+        serv = yield self.prepareService()
+
+        # reconfigure with the new service
+        serv2 = MyService(1, a=4, name="basic2")
+        self.master.config.services['basic2'] = serv2
+
+        # the second service is not there yet
+        self.assertIdentical(self.manager.namedServices.get("basic2"), None)
+
+        # reconfigure the master
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+
+        # the first service is still used
+        self.assertIdentical(self.manager.namedServices["basic"], serv)
+        # the second service is created
+        self.assertIdentical(self.manager.namedServices["basic2"], serv2)
+
+        # reconfigServiceWithConstructorArgs was called with new config
+        self.assertEqual(serv2.config, ((1,), dict(a=4)))
+
+    @defer.inlineCallbacks
+    def testReconfigWithDeleted(self):
+        serv = yield self.prepareService()
+        self.assertEqual(serv.running, True)
+
+        # remove all
+        self.master.config.services = {}
+
+        # reconfigure the master
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+
+        # the first service is still used
+        self.assertIdentical(self.manager.namedServices.get("basic"), None)
+        self.assertEqual(serv.running, False)
+
+    @defer.inlineCallbacks
+    def testConfigDict(self):
+        yield self.prepareService()
+        self.assertEqual(self.manager.getConfigDict(), {
+            'childs': [{
+                'args': (1,),
+                'class': 'buildbot.test.unit.test_util_service.MyService',
+                'kwargs': {'a': 2},
+                'name': 'basic'}],
+            'name': 'services'})

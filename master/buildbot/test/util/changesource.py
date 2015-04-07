@@ -52,8 +52,11 @@ class ChangeSourceMixin(object):
     def attachChangeSource(self, cs):
         "Set up a change source for testing; sets its .master attribute"
         self.changesource = cs
-        self.changesource.master = self.master
-
+        # FIXME some changesource does not have master property yet but mailchangesource has :-/
+        try:
+            self.changesource.master = self.master
+        except AttributeError:
+            self.changesource.setServiceParent(self.master)
         # also, now that changesources are ClusteredServices, setting up
         # the clock here helps in the unit tests that check that behavior
         self.changesource.clock = task.Clock()

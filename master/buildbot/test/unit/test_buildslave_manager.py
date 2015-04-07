@@ -25,17 +25,18 @@ from twisted.trial import unittest
 from zope.interface import implements
 
 
-class FakeBuildSlave(service.ReconfigurableServiceMixin, service.AsyncService):
+class FakeBuildSlave(service.BuildbotService):
 
     implements(interfaces.IBuildSlave)
 
     reconfig_count = 0
 
     def __init__(self, slavename):
-        self.slavename = slavename
+        service.BuildbotService.__init__(self, name=slavename)
 
-    def reconfigServiceWithBuildbotConfig(self, new_config):
+    def reconfigService(self):
         self.reconfig_count += 1
+        self.configured = True
         return defer.succeed(None)
 
 
@@ -60,32 +61,19 @@ class TestBuildSlaveManager(unittest.TestCase):
     def tearDown(self):
         return self.buildslaves.stopService()
 
-    def test_reconfigServiceWithBuildbotConfig(self):
-        self.patch(self.buildslaves, 'reconfigServiceSlaves',
-                   mock.Mock(side_effect=lambda c: defer.succeed(None)))
-
-        new_config = mock.Mock()
-        d = self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)
-
-        @d.addCallback
-        def check(_):
-            self.buildslaves.reconfigServiceSlaves.assert_called_with(new_config)
-
-        return d
-
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_add_remove(self):
         sl = FakeBuildSlave('sl1')
         self.new_config.slaves = [sl]
 
-        yield self.buildslaves.reconfigServiceSlaves(self.new_config)
+        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sl.parent, self.buildslaves)
         self.assertEqual(self.buildslaves.slaves, {'sl1': sl})
 
         self.new_config.slaves = []
 
-        yield self.buildslaves.reconfigServiceSlaves(self.new_config)
+        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sl.parent, None)
         self.assertIdentical(sl.master, None)
@@ -93,16 +81,15 @@ class TestBuildSlaveManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_reconfig(self):
         sl = FakeBuildSlave('sl1')
-        self.buildslaves.slaves = dict(sl1=sl)
         sl.setServiceParent(self.buildslaves)
-        sl.master = self.master
+        sl.parent = self.master
         sl.manager = self.buildslaves
         sl.botmaster = self.master.botmaster
 
         sl_new = FakeBuildSlave('sl1')
         self.new_config.slaves = [sl_new]
 
-        yield self.buildslaves.reconfigServiceSlaves(self.new_config)
+        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sl was not replaced..
         self.assertIdentical(self.buildslaves.slaves['sl1'], sl)
@@ -110,16 +97,12 @@ class TestBuildSlaveManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_class_changes(self):
         sl = FakeBuildSlave('sl1')
-        self.buildslaves.slaves = dict(sl1=sl)
         sl.setServiceParent(self.buildslaves)
-        sl.master = self.master
-        sl.manager = self.buildslaves
-        sl.botmaster = self.master.botmaster
 
         sl_new = FakeBuildSlave2('sl1')
         self.new_config.slaves = [sl_new]
 
-        yield self.buildslaves.reconfigServiceSlaves(self.new_config)
+        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sl *was* replaced (different class)
         self.assertIdentical(self.buildslaves.slaves['sl1'], sl_new)

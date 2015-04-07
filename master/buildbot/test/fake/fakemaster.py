@@ -25,6 +25,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
+from buildbot.util import service
 from twisted.internet import defer
 from zope.interface import implements
 
@@ -58,11 +59,10 @@ class FakeCaches(object):
         return FakeCache(name, miss_fn)
 
 
-class FakeStatus(object):
+class FakeStatus(service.BuildbotService):
 
-    def __init__(self, master):
-        self.master = master
-        self.lastBuilderStatus = None
+    name = "status"
+    lastBuilderStatus = None
 
     def builderAdded(self, name, basedir, tags=None, description=None):
         bs = FakeBuilderStatus(self.master)
@@ -86,6 +86,18 @@ class FakeStatus(object):
 
     def getURLForBuildrequest(self, buildrequestid):
         return "URLForBuildrequest/%d" % (buildrequestid,)
+
+    def subscribe(self, _):
+        pass
+
+    def getTitle(self):
+        return "myBuildbot"
+
+    def getURLForThing(self, _):
+        return "h://thing"
+
+    def getBuildbotURL(self):
+        return "h://bb.me"
 
 
 class FakeBuilderStatus(object):
@@ -141,7 +153,7 @@ class FakeLogRotation(object):
     maxRotatedFiles = 42
 
 
-class FakeMaster(object):
+class FakeMaster(service.MasterService):
 
     """
     Create a fake Master instance: a Mock with some convenience
@@ -151,6 +163,7 @@ class FakeMaster(object):
     """
 
     def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
+        service.MasterService.__init__(self)
         self._master_id = master_id
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
@@ -158,8 +171,8 @@ class FakeMaster(object):
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
-        self.status = FakeStatus(self)
-        self.status.master = self
+        self.status = FakeStatus()
+        self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
@@ -171,8 +184,9 @@ class FakeMaster(object):
     def subscribeToBuildRequests(self, callback):
         pass
 
-
 # Leave this alias, in case we want to add more behavior later
+
+
 def make_master(wantMq=False, wantDb=False, wantData=False,
                 testcase=None, url=None, **kwargs):
     master = FakeMaster(**kwargs)
