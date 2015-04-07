@@ -575,14 +575,20 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.bldr.slaves.append(sb)
 
         self.assertEqual(self.master.db.buildrequests.claims, {})
+        from buildbot.process import buildrequestdistributor
+        self.brd = buildrequestdistributor.BuildRequestDistributor(self.master.botmaster)
+        self.brd.startService()
 
-        yield self.bldr.maybeStartBuild()
+        yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
 
         self.assertEqual(self.master.db.buildrequests.claims[1].brid, 1)
         self.build.build_status.saveYourself = lambda: True
         self.build.currentStep.start()
         self.build.lostRemote()
         self.assertEqual(self.master.db.buildrequests.claims, {})
+
+        if self.brd.running:
+            self.brd.stopService()
 
     @defer.inlineCallbacks
     def test_TriggerStepMultiMasterMode(self):

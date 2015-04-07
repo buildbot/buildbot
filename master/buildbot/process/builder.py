@@ -519,21 +519,6 @@ class Builder(config.ReconfigurableServiceMixin,
         defer.returnValue(False)
 
 
-    def removeFromUnclaimRequestsList(self, brdicts, unclaimed_requests):
-        brs = [ br for br in brdicts ]
-        self._breakBrdictRefloops(brdicts)
-        for br in brdicts:
-            unclaimed_requests.remove(br)
-
-    @defer.inlineCallbacks
-    def updateUnclaimedRequest(self, unclaimed_requests):
-        self._breakBrdictRefloops(unclaimed_requests)
-        unclaimed_requests = \
-            yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.name, claimed=False)
-        defer.returnValue(unclaimed_requests)
-        return
-
     def getSelectedSlaveFromBuildRequest(self, brdict):
         """
         Grab the selected slave and return the slave object
@@ -597,19 +582,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
         defer.returnValue(None)
 
-    def _chooseNextBuild(self, buildrequests):
-        # nextBuild expects BuildRequest objects, so instantiate them here
-        # and cache them in the dictionaries
-        d = defer.gatherResults([ self._brdictToBuildRequest(brdict)
-                                  for brdict in buildrequests ],
-                                consumeErrors=True)
-        d.addCallback(lambda requestobjects :
-        self.config.nextBuild(self, requestobjects))
-        def to_brdict(brobj):
-            # get the brdict for this object back
-            return brobj.brdict
-        d.addCallback(to_brdict)
-        return d
 
     def getMergeRequestsFn(self):
         """Helper function to determine which mergeRequests function to use
@@ -652,35 +624,6 @@ class Builder(config.ReconfigurableServiceMixin,
             return req1.canBeMergedWith(req2)
         return False
 
-    @defer.inlineCallbacks
-    def _mergeRequests(self, breq, unclaimed_requests, mergeRequests_fn):
-        """Use C{mergeRequests_fn} to merge C{breq} against
-        C{unclaimed_requests}, where both are build request dictionaries"""
-        # short circuit if there is no merging to do
-        if not mergeRequests_fn or len(unclaimed_requests) == 1:
-            defer.returnValue([ breq ])
-            return
-
-        # we'll need BuildRequest objects, so get those first
-        unclaimed_request_objects = yield defer.gatherResults(
-                [ self._brdictToBuildRequest(brdict)
-                  for brdict in unclaimed_requests ])
-
-        breq_object = unclaimed_request_objects[unclaimed_requests.index(breq)]
-
-        # gather the mergeable requests
-        # NOTE: This is assuming that it checks against itself
-        # otherwise we get a return of an empty array
-        merged_request_objects = []
-        for other_breq_object in unclaimed_request_objects:
-            if (yield defer.maybeDeferred(
-                        lambda : mergeRequests_fn(self, breq_object,
-                                                  other_breq_object))):
-                merged_request_objects.append(other_breq_object)
-
-        # convert them back to brdicts and return
-        merged_requests = [ br.brdict for br in merged_request_objects ]
-        defer.returnValue(merged_requests)
 
     def _brdictToBuildRequest(self, brdict):
         """
@@ -705,15 +648,6 @@ class Builder(config.ReconfigurableServiceMixin,
             return buildrequest
         d.addCallback(keep)
         return d
-
-    def _breakBrdictRefloops(self, requests):
-        """Break the reference loops created by L{_brdictToBuildRequest}"""
-        for brdict in requests:
-            try:
-                if hasattr(brdict['brobj'], 'brdict'):
-                    del brdict['brobj'].brdict
-            except KeyError:
-                pass
 
 
 class BuilderControl:

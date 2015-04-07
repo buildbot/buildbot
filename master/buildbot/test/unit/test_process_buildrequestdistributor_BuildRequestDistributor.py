@@ -20,6 +20,7 @@ from twisted.python import failure
 from buildbot.test.util import compat
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequestdistributor
+from buildbot.process.buildrequestdistributor import BasicBuildChooser
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
 from buildbot.db import buildrequests
@@ -306,8 +307,7 @@ class Test(unittest.TestCase):
                     ['A', 'finished', '(stopped)'])
         self.quiet_deferred.addCallback(check)
         return self.quiet_deferred
-    
-    
+
 class TestMaybeStartBuilds(unittest.TestCase):
 
     def setUp(self):
@@ -322,6 +322,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
                 return 
         self.master.caches = fakemaster.FakeCaches()
         self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
+        self.brd.BuildChooser = BasicBuildChooser
         self.brd.startService()
 
         self.startedBuilds = []
@@ -532,7 +533,8 @@ class TestMaybeStartBuilds(unittest.TestCase):
             ('test-slave2', 12)])
 
     @mock.patch('random.choice', nth_slave(-1))
-    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser', SkipSlavesThatCantGetLock)
+    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser',
+                SkipSlavesThatCantGetLock)
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
         """Another variant that: 
@@ -558,7 +560,9 @@ class TestMaybeStartBuilds(unittest.TestCase):
                 ("test-slave3", 11),
             ]
             return defer.succeed(result in allowed)
+
         self.bldr.config.canStartBuild = _canStartBuild
+        self.brd.BuildChooser = SkipSlavesThatCantGetLock
 
         self.addSlaves({'test-slave1':1, 'test-slave2':1, 'test-slave3':1})
         rows = self.base_rows + [

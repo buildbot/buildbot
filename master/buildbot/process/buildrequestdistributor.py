@@ -265,7 +265,7 @@ class BasicBuildChooser(BuildChooserBase):
                 nextBreq = None            
         else:
             # otherwise just return the first build
-            brdict = yield self.bldr._chooseBuild(self.unclaimedBrdicts)
+            brdict = self.unclaimedBrdicts[0]
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
         defer.returnValue(nextBreq)
@@ -318,6 +318,30 @@ class KatanaBuildChooser(BasicBuildChooser):
 
     def __init__(self, bldr, master):
         BasicBuildChooser.__init__(self, bldr, master)
+
+    @defer.inlineCallbacks
+    def _getNextUnclaimedBuildRequest(self):
+        # ensure the cache is there
+        yield self._fetchUnclaimedBrdicts()
+        if not self.unclaimedBrdicts:
+            defer.returnValue(None)
+            return
+
+        if self.nextBuild:
+            # nextBuild expects BuildRequest objects
+            breqs = yield self._getUnclaimedBuildRequests()
+            try:
+                nextBreq = yield self.nextBuild(self.bldr, breqs)
+                if nextBreq not in breqs:
+                    nextBreq = None
+            except Exception:
+                nextBreq = None
+        else:
+            # otherwise just return the first build
+            brdict = yield self.bldr._chooseBuild(self.unclaimedBrdicts)
+            nextBreq = yield self._getBuildRequestForBrdict(brdict)
+
+        defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
@@ -394,7 +418,8 @@ class KatanaBuildChooser(BasicBuildChooser):
 
 
         # 3. try merge with compatible finished build in the same chain
-        if (breq and 'startbrid' in breq.brdict.keys() and breq.brdict['startbrid'] is not None):
+        brdict = self._getBrdictForBuildRequest(breq)
+        if (breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None):
                 # check if can be merged with finished build
                 finished_br = yield self.master.db.buildrequests\
                     .findCompatibleFinishedBuildRequest(self.bldr.name, breq.brdict['startbrid'])

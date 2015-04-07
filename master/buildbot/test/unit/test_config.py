@@ -1000,7 +1000,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             locks=[],
             env={},
             properties={},
-            mergeRequests=False,
+            mergeRequests=None,
             description=None)
 
     def test_args(self):
