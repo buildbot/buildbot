@@ -166,6 +166,9 @@ class BasicBuildChooser(BuildChooserBase):
     # fails the generic test.
 
     def __init__(self, bldr, master):
+        # By default katana  merges Requests
+        if bldr.config.mergeRequests is None:
+            bldr.config.mergeRequests = True
         BuildChooserBase.__init__(self, bldr, master)
 
         self.nextSlave = self.bldr.config.nextSlave
@@ -245,7 +248,6 @@ class BasicBuildChooser(BuildChooserBase):
 
         defer.returnValue(mergedRequests)
 
-
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
         # ensure the cache is there
@@ -319,6 +321,70 @@ class KatanaBuildChooser(BasicBuildChooser):
     def __init__(self, bldr, master):
         BasicBuildChooser.__init__(self, bldr, master)
 
+    def getSelectedSlaveFromBuildRequest(self, breq):
+        """
+        Grab the selected slave and return the slave object
+        if selected_slave property is not found then returns
+        None
+        """
+        if self.buildRequestHasSelectedSlave(breq):
+            for sb in self.bldr.slaves:
+                if sb.slave.slave_status.getName() == breq.properties.getProperty("selected_slave"):
+                    return sb
+        return None
+
+    def buildRequestHasSelectedSlave(self, breq):
+        """
+        Does the build request have a specified slave?
+        """
+        return breq.properties.hasProperty("selected_slave")
+
+
+    @defer.inlineCallbacks
+    def _chooseBuild(self, buildrequests):
+        """
+        Choose the next build from the given set of build requests (represented
+        as dictionaries).  Defaults to returning the first request (earliest
+        submitted).
+
+        @param buildrequests: sorted list of build request dictionaries
+        @returns: a build request dictionary or None via Deferred
+        """
+        sorted_requests = sorted(buildrequests, key=lambda br: (-br["priority"], br["submitted_at"]))
+        for b in sorted_requests:
+            breq = yield self._getBuildRequestForBrdict(b)
+            if self.buildRequestHasSelectedSlave(breq):
+                selected_slave = self.getSelectedSlaveFromBuildRequest(breq)
+                if selected_slave is not None and selected_slave.isAvailable():
+                    defer.returnValue(b)
+            else:
+                defer.returnValue(b)
+
+        defer.returnValue(None)
+
+    @defer.inlineCallbacks
+    def buildHasSelectedSlave(self, breq):
+        nextBuild = (None, None)
+        if self.buildRequestHasSelectedSlave(breq):
+            slavebuilder = self.getSelectedSlaveFromBuildRequest(breq)
+
+            if slavebuilder.isAvailable() is False:
+                defer.returnValue(nextBuild)
+                return
+
+            self.slavepool.remove(slavebuilder)
+
+            canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
+            if canStart:
+                defer.returnValue((slavebuilder, breq))
+                return
+
+            # save as a last resort, just in case we need them later
+            if self.rejectedSlaves is not None:
+                self.rejectedSlaves.append(slavebuilder)
+
+        defer.returnValue(nextBuild)
+
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
         # ensure the cache is there
@@ -338,7 +404,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                 nextBreq = None
         else:
             # otherwise just return the first build
-            brdict = yield self.bldr._chooseBuild(self.unclaimedBrdicts)
+            brdict = yield self._chooseBuild(self.unclaimedBrdicts)
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
         defer.returnValue(nextBreq)
@@ -364,29 +430,30 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         defer.returnValue((slave, breqs))
 
+    # notify the master that the buildrequests were removed from queue
+    def notifyRequestsRemoved(self, buildrequests):
+        for br in buildrequests:
+            self.master.buildRequestRemoved(br.bsid, br.id, self.name)
+
     @defer.inlineCallbacks
-    def buildHasSelectedSlave(self, breq):
-        nextBuild = (None, None)
-        if breq.properties.hasProperty("selected_slave"):
-            slavebuilder = self.bldr.getSelectedSlaveFromBuildRequest(breq.brdict)
+    def mergeBuildingRequests(self, brids, breqs):
+        # check only the first br others will be compatible to merge
+        for b in self.bldr.building:
+            if self.bldr._defaultMergeRequestFn(b.requests[0], breqs[0]):
+                building = b.requests
+                b.requests = b.requests + breqs
+                try:
+                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
+                                                                            brids, b.build_status.number)
+                except:
+                    b.requests = building
+                    raise
 
-            if slavebuilder.isAvailable() is False:
-                defer.returnValue(nextBuild)
+                log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
+                self.notifyRequestsRemoved(breqs)
+                defer.returnValue(True)
                 return
-
-            self.slavepool.remove(slavebuilder)
-
-            canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
-            if canStart:
-                defer.returnValue((slavebuilder, breq))
-                return
-
-            # save as a last resort, just in case we need them later
-            if self.rejectedSlaves is not None:
-                self.rejectedSlaves.append(slavebuilder)
-
-        defer.returnValue(nextBuild)
-
+        defer.returnValue(False)
 
     @defer.inlineCallbacks
     def popNextBuild(self):
@@ -404,7 +471,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             breqs = yield self.mergeRequests(breq)
             brids = [br.id for br in breqs]
             try:
-                if (yield self.bldr.mergeBuildingRequests(brids, breqs)):
+                if (yield self.mergeBuildingRequests(brids, breqs)):
                     for b in breqs:
                         self._removeBuildRequest(b)
                     defer.returnValue(nextBuild)
@@ -416,18 +483,17 @@ class KatanaBuildChooser(BasicBuildChooser):
                 defer.returnValue(nextBuild)
                 return
 
-
         # 3. try merge with compatible finished build in the same chain
         brdict = self._getBrdictForBuildRequest(breq)
         if (breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None):
                 # check if can be merged with finished build
                 finished_br = yield self.master.db.buildrequests\
-                    .findCompatibleFinishedBuildRequest(self.bldr.name, breq.brdict['startbrid'])
+                    .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
                 if finished_br:
                     breqs = yield self.mergeRequests(breq)
                     brids = [br.id for br in breqs]
                     merged_brids = yield self.master.db.buildrequests\
-                        .getRequestsCompatibleToMerge(self.bldr.name, breq.brdict['startbrid'], brids)
+                        .getRequestsCompatibleToMerge(self.bldr.name, brdict['startbrid'], brids)
                     merged_breqs = []
 
                     for br in breqs:
@@ -449,7 +515,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     return
 
         # run the build on a specific slave
-        if breq.properties.hasProperty("selected_slave"):
+        if  self.buildRequestHasSelectedSlave(breq):
             nextBuild = yield self.buildHasSelectedSlave(breq)
             defer.returnValue(nextBuild)
             return

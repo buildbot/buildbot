@@ -85,48 +85,8 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
                 for (sl, buildreqs) in self.builds_started ]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def setSlaveBuilders(self, slavebuilders):
-        """C{slaves} maps name : available"""
-        self.bldr.slaves = []
-        for name, avail in slavebuilders.iteritems():
-            sb = mock.Mock(spec=['isAvailable'], name=name)
-            sb.name = name
-            sb.slave = mock.Mock()
-            sb.slave.slave_status = mock.Mock(spec=['getName'])
-            sb.slave.slave_status.getName.return_value = name
-            sb.isAvailable.return_value = avail
-            sb.prepare = lambda x, y: True
-            sb.ping = lambda: True
-            sb.buildStarted = lambda: True
-            sb.buildFinished = lambda: False
-            sb.remote = mock.Mock()
-            self.bldr.slaves.append(sb)
 
     # services
-
-    def assertBuildingRequets(self, exp):
-        builds_started = [br.id for br in self.bldr.building[0].requests]
-        self.assertEqual(sorted(builds_started), sorted(exp))
-
-    def do_test_maybeStartBuild(self, rows=None, exp_claims=[], exp_builds=None, exp_brids=None,
-                exp_fail=None):
-        d = defer.succeed(True)
-        if rows:
-            d = self.db.insertTestData(rows)
-        d.addCallback(lambda _ :
-                self.bldr.maybeStartBuild())
-        def check(_):
-            self.failIf(exp_fail)
-            self.db.buildrequests.assertMyClaims(exp_claims)
-            if exp_builds:
-                self.assertBuildsStarted(exp_builds)
-            if exp_brids:
-                self.assertBuildingRequets(exp_brids)
-        d.addCallback(check)
-        def eb(f):
-            f.trap(exp_fail)
-        d.addErrback(eb)
-        return d
 
     def setupMethods(self, newBuild):
         self.bldr.config.factory.newBuild = newBuild
@@ -149,17 +109,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
     # maybeStartBuild
 
-    @defer.inlineCallbacks
-    def test_maybeStartBuild(self):
-        yield self.makeBuilder()
 
-        slave = mock.Mock()
-        slave.name = 'slave'
-        buildrequests = [mock.Mock(id=10)]
-
-        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
-        self.assertEqual(started, True)
-        self.assertBuildsStarted([('slave', [10])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_failsToStart(self):

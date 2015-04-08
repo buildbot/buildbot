@@ -493,49 +493,6 @@ class Builder(config.ReconfigurableServiceMixin,
         log.msg("new expectations: %s seconds" % \
                 self.expectations.expectedBuildTime())
 
-    # notify the master that the buildrequests were removed from queue
-    def notifyRequestsRemoved(self, buildrequests):
-        for br in buildrequests:
-            self.master.buildRequestRemoved(br.bsid, br.id, self.name)
-
-    @defer.inlineCallbacks
-    def mergeBuildingRequests(self, brids, breqs):
-        # check only the first br others will be compatible to merge
-        for b in self.building:
-            if self._defaultMergeRequestFn(b.requests[0], breqs[0]):
-                building = b.requests
-                b.requests = b.requests + breqs
-                try:
-                    yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
-                                                                            brids, b.build_status.number)
-                except:
-                    b.requests = building
-                    raise
-
-                log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
-                self.notifyRequestsRemoved(breqs)
-                defer.returnValue(True)
-                return
-        defer.returnValue(False)
-
-
-    def getSelectedSlaveFromBuildRequest(self, brdict):
-        """
-        Grab the selected slave and return the slave object
-        if selected_slave property is not found then returns
-        None
-        """
-        if self.buildRequestHasSelectedSlave(brdict):
-            for sb in self.slaves:
-                if sb.slave.slave_status.getName() == brdict['brobj'].properties.getProperty("selected_slave"):
-                    return sb
-        return None
-
-    def buildRequestHasSelectedSlave(self, brdict):
-        """
-        Does the build request have a specified slave?
-        """
-        return brdict['brobj'].properties.hasProperty("selected_slave")
 
     # Build Creation
     @defer.inlineCallbacks
@@ -557,30 +514,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
         build_started = yield self._startBuildFor(slavebuilder, breqs)
         defer.returnValue(build_started)
-
-
-    @defer.inlineCallbacks
-    def _chooseBuild(self, buildrequests):
-        """
-        Choose the next build from the given set of build requests (represented
-        as dictionaries).  Defaults to returning the first request (earliest
-        submitted).
-
-        @param buildrequests: sorted list of build request dictionaries
-        @returns: a build request dictionary or None via Deferred
-        """
-        sorted_requests = sorted(buildrequests, key=lambda br: (-br["priority"], br["submitted_at"]))
-        for b in sorted_requests:
-            d = yield defer.gatherResults([self._brdictToBuildRequest(b)])
-            brdict = d[0].brdict
-            if self.buildRequestHasSelectedSlave(brdict):
-                selected_slave = self.getSelectedSlaveFromBuildRequest(brdict)
-                if selected_slave is not None and selected_slave.isAvailable():
-                    defer.returnValue(brdict)
-            else:
-                defer.returnValue(brdict)
-
-        defer.returnValue(None)
 
 
     def getMergeRequestsFn(self):
@@ -623,31 +556,6 @@ class Builder(config.ReconfigurableServiceMixin,
         if self.propertiesMatch(req1, req2):
             return req1.canBeMergedWith(req2)
         return False
-
-
-    def _brdictToBuildRequest(self, brdict):
-        """
-        Convert a build request dictionary to a L{buildrequest.BuildRequest}
-        object, caching the result in the dictionary itself.  The resulting
-        buildrequest will have a C{brdict} attribute pointing back to this
-        dictionary.
-
-        Note that this does not perform any locking - be careful that it is
-        only called once at a time for each build request dictionary.
-
-        @param brdict: dictionary to convert
-
-        @returns: L{buildrequest.BuildRequest} via Deferred
-        """
-        if 'brobj' in brdict:
-            return defer.succeed(brdict['brobj'])
-        d = buildrequest.BuildRequest.fromBrdict(self.master, brdict)
-        def keep(buildrequest):
-            brdict['brobj'] = buildrequest
-            buildrequest.brdict = brdict
-            return buildrequest
-        d.addCallback(keep)
-        return d
 
 
 class BuilderControl:
