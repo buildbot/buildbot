@@ -1,5 +1,8 @@
 angular.module 'app', [
+    'ngAria',
+    'ngAnimate',
+    'ngMaterial',
 ]
 
-angular.module('app').config [
-]
+#angular.module('app').config [
+#]
