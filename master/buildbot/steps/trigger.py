@@ -89,11 +89,11 @@ class Trigger(BuildStep):
         BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
-        # FIXME: new style step cannot be interrupted anymore by just calling finished()
-        #        (which was a bad idea in the first place)
-        # we should claim the self.brids, and CANCELLED them
-        # if they were already claimed, stop the associated builds via data api
-        # then the big deferredlist will automatically be called
+        # we claim the self.brids, and CANCELLED them
+        # buildrequest cancel make sure that if they were already claimed, stop the associated builds via data api
+        # then the big deferredlist will automatically be called, via buildrequest complete mq event
+        for brid in self.brids:
+            yield self.master.data.control(("buildrequests", brid), "cancel", reason=reason)
         if self.running and not self.ended:
             self.ended = True
 

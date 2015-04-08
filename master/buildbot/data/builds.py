@@ -56,16 +56,10 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue((yield self.db2data(dbdict))
                           if dbdict else None)
 
-    def startConsuming(self, callback, options, kwargs):
-        builderid = kwargs.get('builderid')
-        number = kwargs.get('number')
-        buildid = kwargs.get('buildid')
-        if builderid is not None:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builders', str(builderid), 'builds', str(number), None))
-        else:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builds', str(buildid), None))
+    @defer.inlineCallbacks
+    def control(self, method, kwargs):
+        if method == 'stop':
+            self.master.mq.produce(("control", "build", kwargs['buildid'], 'stop'), dict(reason=kwargs.get('reason', 'no reason')))
 
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):

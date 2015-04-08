@@ -98,6 +98,24 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         return self.master.mq.startConsuming(callback,
                                              ('buildrequests', None, None, None, None))
 
+    @defer.inlineCallbacks
+    def control(self, method, kwargs):
+        # first, try to claim the request; if this fails, then it's too late to
+        # cancel the build anyway
+        try:
+            yield self.master.data.updates.claimBuildRequests([self.id])
+        except buildrequests.AlreadyClaimedError:
+            builds = yield self.master.data.get(("buildrequests", brid, "builds"))
+            for b in builds:
+                self.master.mq.produce(("control", "builds", b['buildid'], "stop"))
+            return
+
+        # then complete it with 'FAILURE'; this is the closest we can get to
+        # cancelling a request without running into trouble with dangling
+        # references.
+        yield self.master.data.updates.completeBuildRequests([self.id],
+                                                             FAILURE)
+
 
 class BuildRequest(base.ResourceType):
 
