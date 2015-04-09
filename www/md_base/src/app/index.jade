@@ -17,8 +17,7 @@ html(ng-app="app", ng-controller="appController")
         md-is-locked-open="$mdMedia('gt-md')"
       )
         md-toolbar(layout="row")
-          md-button.nav-button
-            md-icon(md-svg-icon="navicon")
+          md-icon.logo(md-svg-icon="navicon")
         md-content(flex, layout="column")
           md-button.nav-item
             md-icon(md-svg-icon="home-outline")
@@ -34,8 +33,10 @@ html(ng-app="app", ng-controller="appController")
             md-tooltip Info
 
       div(layout="column", role="main", flex)
-        md-toolbar
-          div.md-toolbar-tools(ng-bind="title")
+        md-toolbar.topbar
+          div.md-toolbar-tools
+            | Buildbot 
+            span.title(ng-bind="title")
         md-content.md-padding(flex)
           h1 Hello buildbot!
 
