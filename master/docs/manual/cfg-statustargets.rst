@@ -94,6 +94,10 @@ If your SMTP host requires authentication before it allows you to send emails, t
                              smtpUser="myuser@example.com",
                              smtpPassword="mypassword")
 
+.. note::
+
+   If for some reaons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :file:`contrib/check-smtp.py` to see if it works at all.
+
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
     mn = status.MailNotifier(fromaddr="myuser@example.com",
