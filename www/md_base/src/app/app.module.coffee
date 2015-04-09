@@ -3,6 +3,12 @@ angular.module 'app', [
     'ngAnimate',
     'ngMaterial',
 ]
+    .config ($mdThemingProvider) ->
+        $mdThemingProvider.theme('default')
+            .primaryPalette('deep-purple')
+            .accentPalette('blue')
+            .warnPalette('orange')
 
-#angular.module('app').config [
-#]
+    .config ($mdIconProvider) ->
+        $mdIconProvider.defaultIconSet('/icons/iconset.svg', 512)
+

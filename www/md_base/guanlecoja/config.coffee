@@ -5,7 +5,12 @@
 ### ###############################################################################################
 ANGULAR_TAG = "~1.3.15"
 ANGULAR_MATERIAL_TAG = "~0.8.3"
-module.exports =
+
+path = require 'path'
+gulp = require 'gulp'
+svgSymbols = require 'gulp-svg-symbols'
+
+config =
 
     ### ###########################################################################################
     #   Directories
@@ -45,3 +50,16 @@ module.exports =
             "angular-mocks":
                 version: "~1.3.15"
                 files: "angular-mocks.js"
+
+    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests']
+
+
+gulp.task 'icons', ->
+    gulp.src(['src/icons/*.svg', '!src/icons/iconset.svg'])
+        .pipe(svgSymbols(
+            title: false
+            templates: ['src/icons/iconset.svg']
+        ))
+        .pipe(gulp.dest(path.join(config.dir.build, 'icons')))
+
+module.exports = config

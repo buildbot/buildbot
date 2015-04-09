@@ -1,4 +1,47 @@
-extends layout
-block content
-    h1 Hello Material Design!
-    ui-view
+doctype html
+html(ng-app="app", ng-controller="appController")
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
+
+    | {% raw %}
+    title(ng-bind-template="Buildbot | {{ title }}")
+    | {% endraw %}
+
+    link(rel='stylesheet', href='styles.css')
+
+    body(ng-cloak, flex, layout="row")
+      md-sidenav.md-sidenav-left.md-whiteframe-z2(
+        md-component-id="left",
+        md-is-locked-open="$mdMedia('gt-md')"
+      )
+        md-toolbar
+          h1.md-toolbar-tools Buildbot
+        md-content(flex, layout="column")
+          md-list
+            md-list-item
+              md-icon.md-avatar(md-svg-icon="home-outline")
+              div.md-list-item-text
+                h3 Home
+            md-list-item
+              md-icon.md-avatar(md-svg-icon="gear-outline")
+              div.md-list-item-text
+                h3 Build
+            md-list-item
+              md-icon.md-avatar(md-svg-icon="toggle-outline")
+              div.md-list-item-text
+                h3 Settings
+            md-list-item
+              md-icon.md-avatar(md-svg-icon="info-outline")
+              div.md-list-item-text
+                h3 Info
+      div(layout="column", role="main", flex)
+        md-toolbar
+          div.md-toolbar-tools(ng-bind="subtitle")
+        md-content.md-padding(flex)
+          h1 Hello buildbot!
+
+      script(src="scripts.js?_#{(new Date()).getTime()}")
+      script
+        | angular.module("app").constant("config", {{configjson|safe}})
