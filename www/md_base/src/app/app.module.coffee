@@ -5,8 +5,7 @@ angular.module 'app', [
 ]
     .config ($mdThemingProvider) ->
         $mdThemingProvider.theme('default')
-            .primaryPalette('deep-purple')
-            .accentPalette('blue')
+            .primaryPalette('blue')
             .warnPalette('orange')
 
     .config ($mdIconProvider) ->

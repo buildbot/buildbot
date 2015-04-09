@@ -12,30 +12,27 @@ html(ng-app="app", ng-controller="appController")
     link(rel='stylesheet', href='styles.css')
 
     body(ng-cloak, flex, layout="row")
-      md-sidenav.md-sidenav-left.md-whiteframe-z2(
+      md-sidenav.md-whiteframe-z2(
         md-component-id="left",
         md-is-locked-open="$mdMedia('gt-md')"
       )
-        md-toolbar
-          h1.md-toolbar-tools Buildbot
+        md-toolbar(layout="row")
+          md-button.nav-button
+            md-icon(md-svg-icon="navicon")
         md-content(flex, layout="column")
-          md-list
-            md-list-item
-              md-icon.md-avatar(md-svg-icon="home-outline")
-              div.md-list-item-text
-                h3 Home
-            md-list-item
-              md-icon.md-avatar(md-svg-icon="gear-outline")
-              div.md-list-item-text
-                h3 Build
-            md-list-item
-              md-icon.md-avatar(md-svg-icon="toggle-outline")
-              div.md-list-item-text
-                h3 Settings
-            md-list-item
-              md-icon.md-avatar(md-svg-icon="info-outline")
-              div.md-list-item-text
-                h3 Info
+          md-button.nav-item
+            md-icon(md-svg-icon="home-outline")
+            md-tooltip Home
+          md-button.nav-item
+            md-icon(md-svg-icon="gear-outline")
+            md-tooltip Builds
+          md-button.nav-item
+            md-icon(md-svg-icon="toggle-outline")
+            md-tooltip Settings
+          md-button.nav-item
+            md-icon(md-svg-icon="info-outline")
+            md-tooltip Info
+
       div(layout="column", role="main", flex)
         md-toolbar
           div.md-toolbar-tools(ng-bind="title")
