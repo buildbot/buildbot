@@ -290,7 +290,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
             + 0,
-            Expect('stat', dict(file=r'wkdir\.svn',
+            Expect('stat', dict(file='wkdir\.svn',
                                 logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -308,7 +308,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir='wkdir',
                         command=['svn', 'info'])
             + ExpectShell.log('stdio',
-                stdout='100')
+                stdout=self.svn_info_stdout)
             + 0,
         )
         self.expectOutcome(result=SUCCESS, status_text=["update"])
