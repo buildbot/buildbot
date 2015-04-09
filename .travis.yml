@@ -85,7 +85,7 @@ install:
   # mock is preinstalled on Travis
   # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
   # latest Twisted to avoid unintended upgrades.
-  - "[ $IS_LATEST = false ] || pip install txgithub"
+  - "[ $IS_LATEST = true ] || pip install txgithub"
   # txrequests support only Python 2.6 and 2.7.
   - pip install txrequests
 
