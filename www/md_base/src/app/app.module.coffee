@@ -2,6 +2,7 @@ angular.module 'app', [
     'ngAria',
     'ngAnimate',
     'ngMaterial',
+    'ui.router',
 ]
     .config ($mdThemingProvider) ->
         $mdThemingProvider.theme('default')

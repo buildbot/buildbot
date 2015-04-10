@@ -46,6 +46,9 @@ config =
             "angular-material":
                 version: ANGULAR_MATERIAL_TAG
                 files: 'angular-material.js'
+            "angular-ui-router":
+                version: '0.2.13'
+                files: 'release/angular-ui-router.js'
         testdeps:
             "angular-mocks":
                 version: "~1.3.15"

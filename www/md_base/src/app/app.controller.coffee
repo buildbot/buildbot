@@ -1,4 +1,5 @@
 class App extends Controller
-
-    constructor: ($scope)->
-        $scope.title = 'Home'
+    title: ''
+    constructor: ($scope, $rootScope)->
+        $rootScope.$on '$stateChangeSuccess', (event, toState) =>
+            @title = toState.name
