@@ -54,9 +54,8 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         def maybeStartBuild(slave, builds):
             self.startedBuilds.append((slave.name, builds))
-            if len(self.bldr.building) < 1:
-                self.bldr.building = [ mock.Mock() ]
-                self.bldr.building[0].requests = []
+            self.bldr.building = [ mock.Mock()]
+            self.bldr.building[0].requests = []
             self.bldr.building[0].requests.extend(builds)
             return defer.succeed(True)
 
@@ -64,12 +63,6 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
         bldr.canStartWithSlavebuilder = lambda _: True
 
         bldr.slaves = []
-        '''
-        bldr.config = mock.Mock()
-        bldr.config.mergeRequests = True
-        bldr.config.nextSlave = None
-        bldr.config.nextBuild = None
-        '''
         self.factory = factory.BuildFactory()
 
         config_args = dict(name=name, slavename="slave-01", builddir="bdir",
@@ -151,17 +144,37 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
 
         self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
-        self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c', branch="az",
-                                                                repository="xz", revision="ww")])
+        self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
+                                                                       branch="az", repository="xz", revision="ww")])
         self.master.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
         self.master.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="A",
                                                                   submitted_at=130000)])
 
         yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[1, 2], exp_brids=[1, 2])
 
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_mergeBuildingCouldNotMerge(self):
+        self.addSlaves({'slave-01':1})
+
+        rows = [fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz",
+                                   revision="ww"),
+                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", submitted_at=130000)]
+
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[1], exp_brids=[1])
+
+        self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
+        self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
+                                                                       branch="az", repository="xz", revision="bb")])
+        self.master.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
+        self.master.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="A",
+                                                                  submitted_at=130000)])
+
+        yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[1, 2], exp_brids=[2])
+
+
     '''
-
-
 
 
 
