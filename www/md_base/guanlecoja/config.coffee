@@ -8,6 +8,7 @@ ANGULAR_MATERIAL_TAG = "~0.8.3"
 
 path = require 'path'
 gulp = require 'gulp'
+shell = require("gulp-shell")
 svgSymbols = require 'gulp-svg-symbols'
 
 config =
@@ -54,7 +55,11 @@ config =
                 version: "~1.3.15"
                 files: "angular-mocks.js"
 
-    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests']
+    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
+
+    generatedfixtures: ->
+        gulp.src ""
+            .pipe shell("buildbot dataspec -g window.dataspec -o " + path.join(config.dir.build,"generatedfixtures.js"))
 
 
 gulp.task 'icons', ->
