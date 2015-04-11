@@ -54,14 +54,6 @@ class BuilderMixin(object):
 
 class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
-    def setUp(self):
-        # a collection of rows that would otherwise clutter up every test
-        self.base_rows = [
-            fakedb.SourceStampSet(id=21),
-            fakedb.SourceStamp(id=21, sourcestampsetid=21),
-            fakedb.Buildset(id=11, reason='because', sourcestampsetid=21),
-        ]
-
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True,
                     patch_startbuildfor=True, **config_kwargs):
         d = BuilderMixin.makeBuilder(self, patch_random=patch_random, **config_kwargs)

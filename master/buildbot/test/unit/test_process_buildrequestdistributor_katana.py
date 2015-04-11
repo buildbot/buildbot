@@ -38,6 +38,13 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         self.bldr = self.createBuilder('A')
 
+        self.base_rows = [fakedb.SourceStampSet(id=1),
+                          fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c',
+                                             branch="az", repository="xz", revision="ww"),
+                          fakedb.Buildset(id=1, reason='because', sourcestampsetid=1,
+                                          submitted_at=1300305712, results=-1),
+                          fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", priority=15,
+                                              submitted_at=130000)]
 
     def tearDown(self):
         if self.brd.running:
@@ -47,8 +54,6 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         bldr = builder.Builder(name, _addServices=False)
 
-        #bldr = mock.Mock(name=name)
-        #bldr.name = name
         self.botmaster.builders[name] = bldr
         bldr.building = []
 
@@ -83,6 +88,9 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
+            sb.slave = mock.Mock()
+            sb.slave.slave_status = mock.Mock(spec=['getName'])
+            sb.slave.slave_status.getName.return_value = name
             self.bldr.slaves.append(sb)
 
     def assertBuildsStarted(self, exp):
@@ -114,20 +122,18 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         self.addSlaves({'slave-01': 1})
 
-        rows = [fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='az', revision='az', codebase='c', repository='z'),
-                fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='bw', revision='bz', codebase='f', repository='w'),
-                fakedb.SourceStampSet(id=2),
-                fakedb.SourceStamp(id=3, sourcestampsetid=2, branch='a', revision='az', codebase='c', repository='z'),
-                fakedb.SourceStamp(id=4, sourcestampsetid=2, branch='bw', revision='wz', codebase='f', repository='w'),
-                fakedb.Buildset(id=1, sourcestampsetid=1, reason='foo',
-                    submitted_at=1300305712, results=-1),
-                fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
-                    submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=1, buildsetid=1, buildername='A',
-                                    submitted_at=1300305712, priority=15, results=-1),
-                fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
-                                    submitted_at=1300305712, priority=75, results=-1)]
+        rows = self.base_rows + [fakedb.SourceStamp(id=2, sourcestampsetid=1,
+                                                    branch='bw', revision='bz',
+                                                    codebase='f', repository='w'),
+                                 fakedb.SourceStampSet(id=2),
+                                 fakedb.SourceStamp(id=3, sourcestampsetid=2,
+                                                    branch='a', revision='az', codebase='c', repository='z'),
+                                 fakedb.SourceStamp(id=4, sourcestampsetid=2, branch='bw',
+                                                    revision='wz', codebase='f', repository='w'),
+                                 fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
+                                                 submitted_at=1300305712, results=-1),
+                                 fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
+                                                     submitted_at=1300305712, priority=75, results=-1)]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[2], exp_builds=[('slave-01', [2])])
@@ -135,13 +141,8 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
     @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuilding(self):
         self.addSlaves({'slave-01':1})
-        rows = [fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz", revision="ww"),
-                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
-                fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", submitted_at=130000)]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[1], exp_brids=[1])
-
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_claims=[1], exp_brids=[1])
 
         self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
         self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
@@ -156,13 +157,7 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
     def test_maybeStartBuild_mergeBuildingCouldNotMerge(self):
         self.addSlaves({'slave-01':1})
 
-        rows = [fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz",
-                                   revision="ww"),
-                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
-                fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", submitted_at=130000)]
-
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_claims=[1], exp_brids=[1])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_claims=[1], exp_brids=[1])
 
         self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
         self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
@@ -173,51 +168,20 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[1, 2], exp_brids=[2])
 
+    @defer.inlineCallbacks
+    def test_maybeStartBuild_selectedSlave(self):
+        self.addSlaves({'slave-01': 1, 'slave-02': 1, 'slave-03': 1, 'slave-04': 1})
+
+        rows = self.base_rows + [fakedb.BuildsetProperty(buildsetid=1, property_name='selected_slave',
+                                        property_value='["slave-03", "Force Build Form"]')]
+
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1], exp_builds=[('slave-03', [1])])
+
+
 
     '''
 
-
-
-    @defer.inlineCallbacks
-    def test_maybeStartBuild_mergeBuildingCouldNotMerge(self):
-        yield self.makeBuilder(patch_startbuildfor=False)
-        def newBuild(buildrequests):
-            return fakebuild.FakeBuild(buildrequests)
-
-        self.setupMethods(newBuild)
-
-        self.setSlaveBuilders({'test-slave11':1})
-        rows = [fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, sourcestampsetid=1, codebase='c', branch="az", repository="xz", revision="ww"),
-                fakedb.Buildset(id=1, reason='because', sourcestampsetid=1),
-                fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr", submitted_at=130000)]
-
-        yield self.db.insertTestData(rows)
-        yield self.do_test_maybeStartBuild(exp_claims=[1], exp_brids=[1])
-
-        self.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
-        self.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c', branch="az",
-                                                                repository="xz", revision="bb")])
-        self.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
-        self.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr",
-                                                                  submitted_at=130000)])
-
-        yield self.do_test_maybeStartBuild(exp_claims=[1, 2], exp_brids=[1])
-
-    @defer.inlineCallbacks
-    def test_maybeStartBuild_selectedSlave(self):
-        yield self.makeBuilder()
-
-        self.setSlaveBuilders({'slave-01': 1, 'slave-02': 1, 'slave-03': 1, 'slave-04': 1})
-
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, buildername="bldr",
-                submitted_at=130000),
-            fakedb.BuildsetProperty(buildsetid=11, property_name='selected_slave',
-                                        property_value='["slave-03", "Force Build Form"]')
-        ]
-        yield self.do_test_maybeStartBuild(rows=rows,
-                exp_claims=[10], exp_builds=[('slave-03', [10])])
 
     def compatiblePendingBuildRequests(self):
         return [
