@@ -1,0 +1,14 @@
+md-sidenav.md-whiteframe-z1(
+  md-component-id="left",
+  md-is-locked-open="$mdMedia('gt-md')"
+)
+    md-toolbar(layout="row")
+      md-icon.logo(md-svg-icon="navicon")
+    md-content.nav-item-container(flex)
+      md-button.nav-item(
+        ui-sref="{{ item.name }}",
+        ng-repeat="item in sidenav.items",
+        ng-class="{highlighted: sidenav.isHighlighted(item.name)}",
+      )
+        md-icon(md-svg-icon="{{ item.icon }}")
+        span.nav-item-title {{ item.title }}

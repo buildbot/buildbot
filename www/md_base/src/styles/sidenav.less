@@ -9,7 +9,7 @@ md-sidenav {
   }
 
   .logo {
-    width: 80px;
+    width: 60px;
     height: 64px;
     padding: 10px;
   }
@@ -32,7 +32,21 @@ md-sidenav {
       font-size: 12px;
       color: #aaa;
       margin-top: 5px;
+      text-transform: capitalize;
     }
+    
+    &.highlighted {
+      background: #121212;
+      svg {
+        fill: #90CAF9;
+      }
+
+      .nav-item-title {
+        color: #fff;
+        font-weight: bold;
+      }
+    }
+
   }
 }
 

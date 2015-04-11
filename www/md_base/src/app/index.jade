@@ -6,37 +6,19 @@ html(ng-app="app", ng-controller="appController as app")
     meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
 
     | {% raw %}
-    title(ng-bind-template="Buildbot | {{ app.title }}")
+    title(ng-bind-template="Buildbot | {{ app.current }}")
     | {% endraw %}
 
     link(rel='stylesheet', href='styles.css')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic')
 
     body(ng-cloak, flex, layout="row")
-      md-sidenav.md-whiteframe-z1(
-        md-component-id="left",
-        md-is-locked-open="$mdMedia('gt-md')"
-      )
-        md-toolbar(layout="row")
-          md-icon.logo(md-svg-icon="navicon")
-        md-content.nav-item-container(flex)
-          md-button.nav-item(ui-sref="home")
-            md-icon(md-svg-icon="home")
-            span.nav-item-title home
-          md-button.nav-item(ui-sref="builds")
-            md-icon(md-svg-icon="gear")
-            span.nav-item-title builds
-          md-button.nav-item(ui-sref="settings")
-            md-icon(md-svg-icon="toggle")
-            span.nav-item-title settings
-          md-button.nav-item(ui-sref="about")
-            md-icon(md-svg-icon="info")
-            span.nav-item-title about
-
+      sidenav(items="app.navitems", current="app.current")
       div(layout="column", role="main", flex)
         md-toolbar.topbar
           div.md-toolbar-tools
-            | Buildbot 
-            span.title(ng-bind="app.title")
+            b Buildbot
+            span.title(ng-bind="app.current")
         md-content.md-padding(flex, ui-view)
           h1 Hello buildbot!
 
