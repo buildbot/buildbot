@@ -12,21 +12,25 @@ html(ng-app="app", ng-controller="appController as app")
     link(rel='stylesheet', href='styles.css')
 
     body(ng-cloak, flex, layout="row")
-      md-sidenav.md-whiteframe-z2(
+      md-sidenav.md-whiteframe-z1(
         md-component-id="left",
         md-is-locked-open="$mdMedia('gt-md')"
       )
         md-toolbar(layout="row")
           md-icon.logo(md-svg-icon="navicon")
-        md-content(flex, layout="column")
+        md-content.nav-item-container(flex)
           md-button.nav-item(ui-sref="home")
-            md-icon(md-svg-icon="home-outline")
+            md-icon(md-svg-icon="home")
+            span.nav-item-title home
           md-button.nav-item(ui-sref="builds")
-            md-icon(md-svg-icon="gear-outline")
+            md-icon(md-svg-icon="gear")
+            span.nav-item-title builds
           md-button.nav-item(ui-sref="settings")
-            md-icon(md-svg-icon="toggle-outline")
+            md-icon(md-svg-icon="toggle")
+            span.nav-item-title settings
           md-button.nav-item(ui-sref="about")
-            md-icon(md-svg-icon="info-outline")
+            md-icon(md-svg-icon="info")
+            span.nav-item-title about
 
       div(layout="column", role="main", flex)
         md-toolbar.topbar
