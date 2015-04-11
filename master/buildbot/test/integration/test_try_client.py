@@ -89,13 +89,16 @@ class FakeRemoteSlave(pb.Referenceable):
 class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     def setUp(self):
+        global BuildmasterConfig
+        BuildmasterConfig = {}
         self.basedir = os.path.abspath('basedir')
         self.setUpDirs(self.basedir)
 
         self.configfile = os.path.join(self.basedir, 'master.cfg')
         open(self.configfile, "w").write(
             'from buildbot.test.integration.test_try_client \\\n'
-            'import BuildmasterConfig\n')
+            'import masterConfig\n'
+            'BuildmasterConfig = masterConfig()\n')
 
         self.master = None
         self.sch = None
@@ -322,34 +325,38 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-
-c = BuildmasterConfig = {}
-from buildbot.buildslave import BuildSlave
-from buildbot.config import BuilderConfig
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.factory import BuildFactory
-from buildbot.status import results
+BuildmasterConfig = {}
 
 
-class MyBuildStep(BuildStep):
+def masterConfig():
+    c = {}
+    from buildbot.buildslave import BuildSlave
+    from buildbot.config import BuilderConfig
+    from buildbot.process.buildstep import BuildStep
+    from buildbot.process.factory import BuildFactory
+    from buildbot.status import results
 
-    def start(self):
-        self.finished(results.SUCCESS)
+    class MyBuildStep(BuildStep):
 
+        def start(self):
+            self.finished(results.SUCCESS)
 
-c['slaves'] = [BuildSlave("local1", "localpw")]
-c['slavePortnum'] = 0
-c['change_source'] = []
-c['schedulers'] = []  # filled in above
-f1 = BuildFactory()
-f1.addStep(MyBuildStep(name='one'))
-f1.addStep(MyBuildStep(name='two'))
-c['builders'] = [
-    BuilderConfig(name="a", slavenames=["local1"], factory=f1),
-]
-c['status'] = []
-c['title'] = "test"
-c['titleURL'] = "test"
-c['buildbotURL'] = "http://localhost:8010/"
-c['db'] = {'db_url': "sqlite:///state.sqlite"}
-c['mq'] = {'debug': True}
+    c['slaves'] = [BuildSlave("local1", "localpw")]
+    c['slavePortnum'] = 0
+    c['change_source'] = []
+    c['schedulers'] = []  # filled in above
+    f1 = BuildFactory()
+    f1.addStep(MyBuildStep(name='one'))
+    f1.addStep(MyBuildStep(name='two'))
+    c['builders'] = [
+        BuilderConfig(name="a", slavenames=["local1"], factory=f1),
+    ]
+    c['status'] = []
+    c['title'] = "test"
+    c['titleURL'] = "test"
+    c['buildbotURL'] = "http://localhost:8010/"
+    c['db'] = {'db_url': "sqlite:///state.sqlite"}
+    c['mq'] = {'debug': True}
+    # test wants to influence the config, but we still return a new config each time
+    c.update(BuildmasterConfig)
+    return c
