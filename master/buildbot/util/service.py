@@ -268,7 +268,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                 'kwargs': self._config_kwargs}
 
     def reconfigServiceWithSibling(self, sibling):
-        # only reconfigure if different as ComparableMixin says.
+        # only reconfigure if sibling is configured differently.
+        # sibling == self is using ComparableMixin's implementation
+        # only compare compare_attrs
         if self.configured and sibling == self:
             return defer.succeed(None)
         self.configured = True
