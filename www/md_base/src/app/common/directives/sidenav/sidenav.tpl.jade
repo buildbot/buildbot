@@ -7,8 +7,8 @@ md-sidenav.md-whiteframe-z1(
     md-content.nav-item-container(flex)
       md-button.nav-item(
         ui-sref="{{ item.name }}",
-        ng-repeat="item in sidenav.items",
+        ng-repeat="item in sidenav.items|orderBy:'order'",
         ng-class="{highlighted: sidenav.isHighlighted(item.name)}",
       )
         md-icon(md-svg-icon="{{ item.icon }}")
-        span.nav-item-title {{ item.title }}
+        span.nav-item-caption {{ item.caption}}
