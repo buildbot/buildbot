@@ -26,3 +26,9 @@ class GlMenu extends Provider
         # nested items will be supported no longer
         
         @menuServiceProvider.addItem group
+
+    $get: ->
+        # this method should never be used
+        # but we will return the same result of menuServiceProvider
+
+        return @menuServiceProvider.$get()

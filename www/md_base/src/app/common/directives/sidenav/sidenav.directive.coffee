@@ -13,10 +13,10 @@ class Sidenav extends Directive
 
 class _Sidenav extends Controller
 
-    items: []
-
-    constructor: (@$scope, @$attrs, @menuService) ->
-        @items = @menuService.getItems()
+    constructor: (@$scope, @menuService) ->
     
     isHighlighted: (name) ->
         return name == @menuService.getCurrent()
+
+    getItems: ->
+        return @menuService.getItems()

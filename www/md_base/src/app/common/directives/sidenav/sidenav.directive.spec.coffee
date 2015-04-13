@@ -1,7 +1,7 @@
 beforeEach module 'app'
 
 describe 'MD: Sidebar directive', ->
-    $rootScope = $compile = $httpBackend = null
+    $rootScope = $compile = $httpBackend = _menuServiceProvider = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
@@ -9,13 +9,17 @@ describe 'MD: Sidebar directive', ->
         $httpBackend = $injector.get('$httpBackend')
         decorateHttpBackend($httpBackend)
 
-    beforeEach(inject(injected))
+    beforeEach module (menuServiceProvider) ->
+        _menuServiceProvider = menuServiceProvider
+        return null
+    beforeEach inject injected
 
     afterEach ->
         $httpBackend.verifyNoOutstandingExpectation()
         $httpBackend.verifyNoOutstandingRequest()
 
     it 'should displays nav items', ->
+        _menuServiceProvider.items = []
         $httpBackend.expectGETSVGIcons()
         element = $compile('<div><sidenav items="items" current="current"></sidenav></div>')($rootScope)
         $rootScope.$digest()
@@ -31,12 +35,12 @@ describe 'MD: Sidebar directive', ->
         expect(content.children().length).toBe(0)
 
         # adding items
-        $rootScope.items = (
-            for n in [1..3]
+        for n in [1..3]
+            _menuServiceProvider.addItem
                 name: 'testitem' + n
-                title: 'test item ' + n
+                caption: 'test item ' + n
                 icon: 'test-icon-' + n
-        )
+                order: n
 
         $rootScope.$digest()
 
@@ -50,7 +54,7 @@ describe 'MD: Sidebar directive', ->
 
         # testing highlight
         for i in [i..3]
-            $rootScope.current = 'testitem' + i
+            _menuServiceProvider.current = 'testitem' + i
             $rootScope.$digest()
 
             for n in [1..3]
