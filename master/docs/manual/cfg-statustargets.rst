@@ -603,6 +603,7 @@ The GitHub hook has the following parameters:
     If the value is `True`, a secret must be provided, and payloads without signature will be ignored.
 ``codebase`` (default `None`)
     The codebase value to include with created changes.
+    If the value is a function (or any other callable), it will be called with the GitHub event payload as argument and the function must return the codebase value to use for the event.
 ``class`` (default `None`)
     A class to be used for processing incoming payloads.
     If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
