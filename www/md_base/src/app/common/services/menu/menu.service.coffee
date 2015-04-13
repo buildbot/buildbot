@@ -1,5 +1,4 @@
 class Menu extends Provider
-    title_icon: 'menu'
     items: []
     current: ''
 
@@ -15,3 +14,15 @@ class Menu extends Provider
             getItems: => @items
             getCurrent: => @current
         }
+
+
+class GlMenu extends Provider
+    # a proxy provider to provide compatibility to older plugins
+
+    constructor: (@menuServiceProvider) ->
+
+    addGroup: (group) ->
+        # proxy addGroup to addItem.
+        # nested items will be supported no longer
+        
+        @menuServiceProvider.addItem group
