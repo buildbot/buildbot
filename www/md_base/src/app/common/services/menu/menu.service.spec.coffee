@@ -7,7 +7,7 @@ describe 'menuService', ->
         _menuServiceProvider = menuServiceProvider
         return null
 
-    it 'menuService should work well', inject (menuService) ->
+    it 'should work well', inject (menuService) ->
         _menuServiceProvider.items = []
         expect(menuService.getItems().length).toBe(0)
 
