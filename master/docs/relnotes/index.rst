@@ -87,6 +87,8 @@ Features
 
 * :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
 
+* GitHub change hook now supports function as codebase argument.
+
 Fixes
 ~~~~~
 
