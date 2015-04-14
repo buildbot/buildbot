@@ -63,6 +63,9 @@ Changes for Developers
   to send a message back to the committer.
   See the linked documentation for details.
 
+* bb:sched:`ChoiceStringParameter` has a new method ``getChoices`` that can be used to generate
+  content dynamically for Force scheduler forms.
+
 Slave
 -----
 

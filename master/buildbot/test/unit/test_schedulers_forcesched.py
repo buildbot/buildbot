@@ -385,6 +385,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 klass=ChoiceStringParameter, choices=['t1','t2'],
                 debug=False)
 
+    def test_ChoiceParameterError_notStrict(self):
+        self.do_ParameterTest(value='t1', expect='t1',
+                strict=False,
+                klass=ChoiceStringParameter, choices=['t1','t2'])
+
 
     def test_ChoiceParameterMultiple(self):
         self.do_ParameterTest(value=['t1','t2'], expect=['t1','t2'],

@@ -196,6 +196,9 @@ else:
         # versions.
         'sqlalchemy-migrate ==0.7.2',
         'python-dateutil==1.5',
+        'autobahn',
+        'python-ldap',
+        'mysql-python'
     ]
     setup_args['tests_require'] = [
         'mock',

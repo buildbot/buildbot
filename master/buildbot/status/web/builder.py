@@ -28,7 +28,6 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder, path_to_json_past_builds, path_to_json_slaves, \
     path_to_json_builder_slaves
 from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.schedulers.forcesched import InheritBuildParameter, NestedParameter
 from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
@@ -187,23 +186,23 @@ def buildForceContextForField(req, default_props, sch, field, master, buildernam
     pname = "%s.%s"%(sch.name, field.fullName)
     
     default = field.default
-    if isinstance(field, InheritBuildParameter):
-        # yes, I know, its bad to overwrite the parameter attribute,
-        # but I dont have any other simple way of doing this atm.
-        field.choices = field.compatible_builds(master.status, buildername)
-        if field.choices:
-            default = field.choices[0]
+    
+    if "list" in field.type:
+        choices = field.getChoices(master, sch, buildername)
+        if choices:
+            default = choices[0]
+        default_props[pname+".choices"] = choices
             
     default = req.args.get(pname, [default])[0]
     if "bool" in field.type:
-        default_props[pname] = "checked" if default else ""
-    else:
+        default = "checked" if default else ""
+    elif isinstance(default, unicode):
         # filter out unicode chars, and html stuff
-        if isinstance(default, unicode):
-            default = html.escape(default.encode('utf-8','ignore'))
-        default_props[pname] = default
+        default = html.escape(default.encode('utf-8','ignore'))
+    
+    default_props[pname] = default
         
-    if isinstance(field, NestedParameter):
+    if "nested" in field.type:
         for subfield in field.fields:
             buildForceContextForField(req, default_props, sch, subfield, master, buildername)
 
