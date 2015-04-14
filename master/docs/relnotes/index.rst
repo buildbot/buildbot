@@ -89,6 +89,8 @@ Features
 
 * GitHub change hook now supports function as codebase argument.
 
+* GitHub change hook now supports pull_request events.
+
 Fixes
 ~~~~~
 
