@@ -18,7 +18,7 @@ import time
 from email.Message import Message
 from email.Utils import formatdate
 from zope.interface import implements
-from twisted.python import log, failure
+from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
 from twisted.spread import pb
@@ -942,11 +942,26 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         yield d
         self.insubstantiating = False
 
+    @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
-        if not self.build_wait_timeout < 0:
-            return AbstractBuildSlave.disconnect(self)
+        # a negative build_wait_timeout means the slave should never be shut
+        # down, so just disconnect.
+        if self.build_wait_timeout < 0:
+            yield AbstractBuildSlave.disconnect(self)
+            return
 
-        d = AbstractBuildSlave.disconnect(self)
+        if self.missing_timer:
+            self.missing_timer.cancel()
+            self.missing_timer = None
+
+        if self.substantiation_deferred is not None:
+            log.msg("Weird: Got request to stop before started. Allowing "
+                    "slave to start cleanly to avoid inconsistent state")
+            yield self.substantiation_deferred
+            self.substantiation_deferred = None
+            self.substantiation_build = None
+            log.msg("Substantiation complete, immediately terminating.")
+
         if self.slave is not None:
             # this could be called when the slave needs to shut down, such as
             # in BotMaster.removeSlave, *or* when a new slave requests a
@@ -959,22 +974,13 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # The best solution to the odd situation is removing it as a
             # possibilty: make the master in charge of connecting to the
             # slave, rather than vice versa. TODO.
-            d = defer.DeferredList([d, self.insubstantiate(fast)])
+            yield defer.DeferredList([
+                AbstractBuildSlave.disconnect(self),
+                self.insubstantiate(fast)
+                ], consumeErrors=True, fireOnOneErrback=True)
         else:
-            if self.substantiation_deferred is not None:
-                # unlike the previous block, we don't expect this situation when
-                # ``attached`` calls ``disconnect``, only when we get a simple
-                # request to "go away".
-                d = self.substantiation_deferred
-                self.substantiation_deferred = None
-                self.substantiation_build = None
-                d.errback(failure.Failure(
-                    RuntimeError("soft disconnect aborted substantiation")))
-                if self.missing_timer:
-                    self.missing_timer.cancel()
-                    self.missing_timer = None
-                self.stop_instance()
-        return d
+            yield AbstractBuildSlave.disconnect(self)
+            yield self.stop_instance(fast)
 
     def disconnect(self):
         # This returns a Deferred but we don't use it
