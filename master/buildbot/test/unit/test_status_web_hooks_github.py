@@ -38,6 +38,7 @@ gitJsonPayload = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "clone_url": "http://github.com/defunkt/github.git",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -85,6 +86,7 @@ gitJsonPayloadNonBranch = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "clone_url": "http://github.com/defunkt/github.git",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -120,6 +122,7 @@ gitJsonPayloadEmpty = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "clone_url": "http://github.com/defunkt/github.git",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -249,7 +252,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
             self.assertEquals(change['files'], ['filepath.rb'])
             self.assertEquals(change["repository"],
-                              "http://github.com/defunkt/github")
+                              "http://github.com/defunkt/github.git")
             self.assertEquals(timegm(change["when_timestamp"].utctimetuple()),
                               1203116237)
             self.assertEquals(change["author"],
@@ -266,7 +269,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             change = self.request.addedChanges[1]
             self.assertEquals(change['files'], ['modfile', 'removedFile'])
             self.assertEquals(change["repository"],
-                              "http://github.com/defunkt/github")
+                              "http://github.com/defunkt/github.git")
             self.assertEquals(timegm(change["when_timestamp"].utctimetuple()),
                               1203114994)
             self.assertEquals(change["author"],
@@ -310,7 +313,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.assertEqual(change['files'],
                              ['modfile', 'removedFile'])
             self.assertEqual(change["repository"],
-                             "http://github.com/defunkt/github")
+                             "http://github.com/defunkt/github.git")
             self.assertEqual(timegm(change["when_timestamp"].utctimetuple()),
                              1203114994)
             self.assertEqual(change["author"],
@@ -404,7 +407,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
 
             self.assertEquals(change['files'], ['filepath.rb'])
             self.assertEquals(change["repository"],
-                              "http://github.com/defunkt/github")
+                              "http://github.com/defunkt/github.git")
             self.assertEquals(timegm(change["when_timestamp"].utctimetuple()),
                               1203116237)
             self.assertEquals(change["author"],
@@ -421,7 +424,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
             change = self.request.addedChanges[1]
             self.assertEquals(change['files'], ['modfile', 'removedFile'])
             self.assertEquals(change["repository"],
-                              "http://github.com/defunkt/github")
+                              "http://github.com/defunkt/github.git")
             self.assertEquals(timegm(change["when_timestamp"].utctimetuple()),
                               1203114994)
             self.assertEquals(change["author"],

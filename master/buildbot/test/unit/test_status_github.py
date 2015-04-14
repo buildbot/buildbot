@@ -290,6 +290,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': 'pending',
             'description': 'Build started.',
             'builderName': 'builder-name',
+            'context': 'builder-name',
             'startDateTime': startDateTime,
             'endDateTime': 'In progress',
             'duration': 'In progress',
@@ -350,6 +351,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': 'success',
             'description': 'Build done.',
             'builderName': 'builder-name',
+            'context': 'builder-name',
             'startDateTime': startDateTime,
             'endDateTime': endDateTime,
             'duration': '2 seconds',
@@ -434,6 +436,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': u'sha-resum\xe9',
             'state': u'state-resum\xe9',
             'targetURL': u'targetURL-resum\xe9',
+            'context': u'name-resum\xe9',
             'description': u'description-resum\xe9',
         }
         self.status._github.repos.createStatus = Mock(
@@ -449,6 +452,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             sha='sha-resum\xc3\xa9',
             state='state-resum\xc3\xa9',
             target_url='targetURL-resum\xc3\xa9',
+            context='name-resum\xc3\xa9',
             description='description-resum\xc3\xa9',
         )
 
@@ -467,6 +471,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': u'sha',
             'state': u'state',
             'targetURL': u'targetURL',
+            'context': u'context',
             'description': u'description',
         }
         error = MarkerError('fail-send-status')
