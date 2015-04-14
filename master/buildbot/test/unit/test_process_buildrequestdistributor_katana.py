@@ -46,6 +46,25 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
                           fakedb.BuildRequest(id=1, buildsetid=1, buildername="A", priority=15,
                                               submitted_at=130000)]
 
+        self.pending_requests = [fakedb.SourceStampSet(id=1),
+                                 fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='az',
+                                                    revision='az', codebase='c', repository='z'),
+                                 fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='bw',
+                                                    revision='bz', codebase='f', repository='w'),
+                                 fakedb.SourceStampSet(id=2),
+                                 fakedb.SourceStamp(id=3, sourcestampsetid=2, branch='az',
+                                                    revision='az', codebase='c', repository='z'),
+                                 fakedb.SourceStamp(id=4, sourcestampsetid=2, branch='bw',
+                                                    revision='bz', codebase='f', repository='w'),
+                                 fakedb.Buildset(id=1, sourcestampsetid=1, reason='foo',
+                                                 submitted_at=1300305712, results=-1),
+                                 fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
+                                                 submitted_at=1300305712, results=-1),
+                                 fakedb.BuildRequest(id=1, buildsetid=1, buildername='A',
+                                                     priority=13, submitted_at=1300305712, results=-1),
+                                 fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
+                                                     priority=13, submitted_at=1300305712, results=-1)]
+
     def tearDown(self):
         if self.brd.running:
             return self.brd.stopService()
@@ -178,123 +197,55 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[1], exp_builds=[('slave-03', [1])])
 
-
-
-    '''
-
-
-    def compatiblePendingBuildRequests(self):
-        return [
-            fakedb.SourceStampSet(id=1),
-            fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='az', revision='az', codebase='c', repository='z'),
-            fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='bw', revision='bz', codebase='f', repository='w'),
-            fakedb.SourceStampSet(id=2),
-            fakedb.SourceStamp(id=3, sourcestampsetid=2, branch='az', revision='az', codebase='c', repository='z'),
-            fakedb.SourceStamp(id=4, sourcestampsetid=2, branch='bw', revision='bz', codebase='f', repository='w'),
-            fakedb.Buildset(id=1, sourcestampsetid=1, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=1, buildsetid=1, buildername='bldr',
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=2, buildsetid=2, buildername='bldr',
-                                priority=13, submitted_at=1300305712, results=-1)
-        ]
-
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchSelectedSlave(self):
-        yield self.makeBuilder()
+        self.addSlaves({'slave-01': 1, 'slave-02': 1})
 
-        yield self.db.insertTestData(self.compatiblePendingBuildRequests() +
-                                     [fakedb.BuildsetProperty(buildsetid = 1, property_name='selected_slave',
-                                        property_value='["build-slave-01", "Force Build Form"]')])
+        rows = self.pending_requests + [fakedb.BuildsetProperty(buildsetid=1,
+                                                                property_name='selected_slave',
+                                                                property_value='["slave-02", "Force Build Form"]')]
 
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
-
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0]])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1, 2], exp_builds=[('slave-01', [2]), ('slave-02', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchForceRebuild(self):
-        yield self.makeBuilder()
+        self.addSlaves({'slave-01': 1})
 
-        yield self.db.insertTestData(self.compatiblePendingBuildRequests() +
-                                     [fakedb.BuildsetProperty(buildsetid = 1, property_name='force_rebuild',
-                                        property_value='[true, "Force Build Form"]')])
+        rows = self.pending_requests + [fakedb.BuildsetProperty(buildsetid=1,
+                                                                property_name='force_rebuild',
+                                                                property_value='[true, "Force Build Form"]')]
 
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1], exp_builds=[('slave-01', [1])])
 
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0]])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchForceChainRebuild(self):
-        yield self.makeBuilder()
+        self.addSlaves({'slave-01': 1})
 
-        yield self.db.insertTestData(self.compatiblePendingBuildRequests() +
-                                     [fakedb.BuildsetProperty(buildsetid = 1, property_name='force_chain_rebuild',
-                                        property_value='[true, "Force Build Form"]')])
+        rows = self.pending_requests + [fakedb.BuildsetProperty(buildsetid=1,
+                                                                property_name='force_chain_rebuild',
+                                                                property_value='[true, "Force Build Form"]')]
 
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
-
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0]])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1], exp_builds=[('slave-01', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchBuildLatestRev(self):
-        yield self.makeBuilder()
+        self.addSlaves({'slave-01': 1})
 
-        yield self.db.insertTestData(self.compatiblePendingBuildRequests() +
-                                     [fakedb.BuildsetProperty(buildsetid = 1, property_name='buildLatestRev',
-                                        property_value='[true, "Force Build Form"]')])
+        rows = self.pending_requests + [fakedb.BuildsetProperty(buildsetid=1, property_name='buildLatestRev',
+                                        property_value='[true, "Force Build Form"]')]
 
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
-
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0]])
-
-    @defer.inlineCallbacks
-    def test_mergePending_CodebasesMatch(self):
-        yield self.makeBuilder()
-
-        yield self.db.insertTestData(self.compatiblePendingBuildRequests())
-
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
-
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0], brdicts[1]])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1], exp_builds=[('slave-01', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebaseDoesNotMatch(self):
-        yield self.makeBuilder()
+        self.addSlaves({'slave-01': 1})
 
-        yield self.db.insertTestData([
-                fakedb.SourceStampSet(id=1),
+        rows = [fakedb.SourceStampSet(id=1),
                 fakedb.SourceStamp(id=1, sourcestampsetid=1, branch='az', revision='az', codebase='c', repository='z'),
                 fakedb.SourceStamp(id=2, sourcestampsetid=1, branch='bw', revision='bz', codebase='f', repository='w'),
                 fakedb.SourceStampSet(id=2),
@@ -304,19 +255,10 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
                     submitted_at=1300305712, results=-1),
                 fakedb.Buildset(id=2, sourcestampsetid=2, reason='foo',
                     submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=1, buildsetid=1, buildername='bldr',
+                fakedb.BuildRequest(id=1, buildsetid=1, buildername='A',
                     priority=13, submitted_at=1300305712, results=-1),
-                fakedb.BuildRequest(id=2, buildsetid=2, buildername='bldr',
-                    priority=13, submitted_at=1300305712, results=-1)
-            ])
+                fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
+                    priority=13, submitted_at=1300305712, results=-1)]
 
-        brdicts = yield defer.gatherResults([
-                self.db.buildrequests.getBuildRequest(id)
-                for id in (1, 2)
-            ])
-
-        res = yield self.bldr._mergeRequests(brdicts[0],
-                                brdicts, builder.Builder._defaultMergeRequestFn)
-
-        self.assertEqual(res, [brdicts[0]])
-    '''
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
+                exp_claims=[1], exp_builds=[('slave-01', [1])])
