@@ -36,8 +36,14 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``split_file`` function for :bb:chsrc:`SVNPoller` may now return a dictionary instead of a tuple.
   This allows it to add extra information about a change (such as ``project`` or ``repository``).
-* The ``workdir`` property has been renamed to ``builddir``.
+
+* The ``workdir`` build property has been renamed to ``builddir``.
+  This change accurately reflects its content; the term "workdir" means something different.
+
 * The ``Blocker`` step has been removed.
+
+* Several polling ChangeSources are now documented to take a ``pollInterval`` argument, instead of ``pollinterval``.
+  The old name is still supported.
 
 * StatusReceivers' checkConfig method should no longer take an `errors` parameter.
   It should indicate errors by calling :py:func:`~buildbot.config.error`.

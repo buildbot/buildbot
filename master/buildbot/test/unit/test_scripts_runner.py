@@ -275,23 +275,23 @@ class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
                 lambda : self.parse('-m', 'mm'))
 
     def test_options_long(self):
-        opts = self.parse('--master', 'mm', '--passwd', 'pp')
-        exp = dict(master='mm', passwd='pp')
+        opts = self.parse('--master', 'mm:9989', '--passwd', 'pp')
+        exp = dict(master='mm:9989', passwd='pp')
         self.assertOptions(opts, exp)
 
     def test_positional_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('foo:9989', 'pass')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_positional_master(self):
-        opts = self.parse('-p', 'pass', 'foo')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('-p', 'pass', 'foo:9989')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_args_master_passwd(self):
-        opts = self.parse('foo', 'pass')
-        exp = dict(master='foo', passwd='pass')
+        opts = self.parse('foo:9989', 'pass')
+        exp = dict(master='foo:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_missing_both(self):
@@ -306,21 +306,25 @@ class TestDebugClientOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda :self.parse('-p', 'pass'))
 
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse,
+                          "-m", "foo", "-p", "pass")
+
     def test_options_extra_positional(self):
         self.assertRaises(usage.UsageError,
                 lambda : self.parse('mm', 'pp', '??'))
 
     def test_options_master(self):
-        self.options_file['master'] = 'opt'
+        self.options_file['master'] = 'opt:9989'
         opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
+        exp = dict(master='opt:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
     def test_options_debugMaster(self):
         self.options_file['master'] = 'not seen'
-        self.options_file['debugMaster'] = 'opt'
+        self.options_file['debugMaster'] = 'opt:9989'
         opts = self.parse('-p', 'pass')
-        exp = dict(master='opt', passwd='pass')
+        exp = dict(master='opt:9989', passwd='pass')
         self.assertOptions(opts, exp)
 
 
@@ -335,23 +339,24 @@ class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
         return self.opts
 
     def test_defaults(self):
-        opts = self.parse('--master', 'm')
-        exp = dict(master='m', username='statusClient', passwd='clientpw')
+        opts = self.parse('--master', 'm:20')
+        exp = dict(master='m:20', username='statusClient', passwd='clientpw')
         self.assertOptions(opts, exp)
 
     def test_short(self):
-        opts = self.parse('-m', 'm', '-u', 'u', '-p', 'p')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('-m', 'm:20', '-u', 'u', '-p', 'p')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_long(self):
-        opts = self.parse('--master', 'm', '--username', 'u', '--passwd', 'p')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('--master', 'm:20',
+                          '--username', 'u', '--passwd', 'p')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_positional_master(self):
-        opts = self.parse('--username', 'u', '--passwd', 'p', 'm')
-        exp = dict(master='m', username='u', passwd='p')
+        opts = self.parse('--username', 'u', '--passwd', 'p', 'm:20')
+        exp = dict(master='m:20', username='u', passwd='p')
         self.assertOptions(opts, exp)
 
     def test_positional_extra(self):
@@ -362,11 +367,14 @@ class TestBaseStatusClientOptions(OptionsMixin, unittest.TestCase):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('--username', 'u', '--passwd', 'p'))
 
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse, "-m foo")
+
     def test_options_masterstatus(self):
-        self.options_file['master'] = 'not seen'
-        self.options_file['masterstatus'] = 'opt'
+        self.options_file['master'] = 'not_seen:2'
+        self.options_file['masterstatus'] = 'opt:3'
         opts = self.parse('-p', 'pass', '-u', 'user')
-        exp = dict(master='opt', username='user', passwd='pass')
+        exp = dict(master='opt:3', username='user', passwd='pass')
         self.assertOptions(opts, exp)
 
 
@@ -447,23 +455,23 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_options_short(self):
         opts = self.parse(
-                *'-n -q -c pb -u me -m mstr -w you -C comm -p 2 -b bb'.split())
+                *'-n -q -c pb -u me -m mr:7 -w you -C comm -p 2 -b bb'.split())
         exp = self.defaults_and(dryrun=True, quiet=True, connect='pb',
-                username='me', master='mstr', who='you', comment='comm',
+                username='me', master='mr:7', who='you', comment='comm',
                 patchlevel=2, builders=['bb'])
         self.assertOptions(opts, exp)
 
     def test_options_long(self):
         opts = self.parse(
                 *"""--wait --dryrun --get-builder-names --quiet --connect=pb
-                --host=h --jobdir=j --username=u --master=m --passwd=p
+                --host=h --jobdir=j --username=u --master=m:1234 --passwd=p
                 --who=w --comment=comm --diff=d --patchlevel=7 --baserev=br
                 --vc=cvs --branch=br --repository=rep --builder=bl
                 --properties=a=b --topfile=Makefile --topdir=.
                 --buildbotbin=.virtualenvs/buildbot/bin/buildbot""".split())
         exp = self.defaults_and(wait=True, dryrun=True, get_builder_names=True,
                 quiet=True, connect='pb', host='h', jobdir='j', username='u',
-                master='m', passwd='p', who='w', comment='comm', diff='d',
+                master='m:1234', passwd='p', who='w', comment='comm', diff='d',
                 patchlevel=7, baserev='br', vc='cvs', branch='br',
                 repository='rep', builders=['bl'], properties=dict(a='b'),
                 topfile='Makefile', topdir='.',
@@ -505,21 +513,27 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         self.options_file.update(dict(try_connect='pb', try_vc='cvs',
             try_branch='br', try_repository='rep', try_topdir='.',
             try_topfile='Makefile', try_host='h', try_username='u',
-            try_jobdir='j', try_password='p', try_master='m', try_who='w',
+            try_jobdir='j', try_password='p', try_master='m:8', try_who='w',
             try_comment='comm', try_quiet='y', try_wait='y',
             try_buildbotbin='.virtualenvs/buildbot/bin/buildbot'))
         opts = self.parse()
         exp = self.defaults_and(wait=True, quiet=True, connect='pb', host='h',
-                jobdir='j', username='u', master='m', passwd='p', who='w',
+                jobdir='j', username='u', master='m:8', passwd='p', who='w',
                 comment='comm', vc='cvs', branch='br', repository='rep',
                 topfile='Makefile', topdir='.',
                 buildbotbin='.virtualenvs/buildbot/bin/buildbot')
         self.assertOptions(opts, exp)
 
+    def test_pb_no_master(self):
+        self.assertRaises(usage.UsageError, self.parse, '--connect=pb')
+
+    def test_master_inval(self):
+        self.assertRaises(usage.UsageError, self.parse,
+                          '--connect=pb', '--master=foo')
 
 class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
-    master_and_who = ['-m', 'm', '-W', 'w']
+    master_and_who = ['-m', 'm:1', '-W', 'w']
 
     def setUp(self):
         self.setUpOptions()
@@ -536,9 +550,9 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertIn('buildbot sendchange', opts.getSynopsis())
 
     def test_defaults(self):
-        opts = self.parse('-m', 'm', '-W', 'me')
-        exp = dict(master='m', auth=('change', 'changepw'), who='me', vc=None,
-                repository='', project='', branch=None, category=None,
+        opts = self.parse('-m', 'm:1', '-W', 'me')
+        exp = dict(master='m:1', auth=('change', 'changepw'), who='me',
+                vc=None, repository='', project='', branch=None, category=None,
                 revision=None, revision_file=None, property=None,
                 comments='', logfile=None, when=None, revlink='',
                 encoding='utf8', files=())
@@ -558,31 +572,31 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
         self.assertEquals(opts['properties'], dict(x='http://foo'))
 
     def test_config_file(self):
-        self.options_file['master'] = 'MMM'
+        self.options_file['master'] = 'MMM:123'
         self.options_file['who'] = 'WWW'
         self.options_file['branch'] = 'BBB'
         self.options_file['category'] = 'CCC'
         self.options_file['vc'] = 'svn'
         opts = self.parse()
-        exp = dict(master='MMM', who='WWW',
+        exp = dict(master='MMM:123', who='WWW',
                 branch='BBB', category='CCC', vc='svn')
         self.assertOptions(opts, exp)
 
     def test_short_args(self):
-        opts = self.parse(*('-m m -a a:b -W W -R r -P p -b b -s git ' +
+        opts = self.parse(*('-m m:1 -a a:b -W W -R r -P p -b b -s git ' +
             '-C c -r r -p pn:pv -c c -F f -w 123 -l l -e e').split())
-        exp = dict(master='m', auth=('a','b'), who='W', repository='r',
+        exp = dict(master='m:1', auth=('a','b'), who='W', repository='r',
                 project='p', branch='b', category='c', revision='r', vc='git',
                 properties=dict(pn='pv'), comments='c', logfile='f',
                 when=123.0, revlink='l', encoding='e')
         self.assertOptions(opts, exp)
 
     def test_long_args(self):
-        opts = self.parse(*('--master m --auth a:b --who w --repository r ' +
+        opts = self.parse(*('--master m:1 --auth a:b --who w --repository r ' +
             '--project p --branch b --category c --revision r --vc git ' +
             '--property pn:pv --comments c --logfile f ' +
             '--when 123 --revlink l --encoding e').split())
-        exp = dict(master='m', auth=('a', 'b'), who='w', repository='r',
+        exp = dict(master='m:1', auth=('a', 'b'), who='w', repository='r',
                 project='p', branch='b', category='c', revision='r', vc='git',
                 properties=dict(pn='pv'), comments='c', logfile='f',
                 when=123.0, revlink='l', encoding='e')
@@ -625,6 +639,11 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
     def test_invalid_vcs(self):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('--vc=foo', *self.master_and_who))
+
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--who=test", "-m foo")
 
 
 class TestTryServerOptions(OptionsMixin, unittest.TestCase):
@@ -765,6 +784,87 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
     def test_no_master(self):
         self.assertRaises(usage.UsageError,
             lambda : self.parse('-op=foo'))
+
+    def test_invalid_master(self):
+        self.assertRaises(usage.UsageError, self.parse,'-m', 'foo')
+
+    def test_no_operation(self):
+        self.assertRaises(usage.UsageError, self.parse, '-m', 'a:1')
+
+    def test_bad_operation(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '-m', 'a:1', '--op=mayhem')
+
+    def test_no_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '-m', 'a:1', '--op=add')
+
+    def test_no_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '-m', 'a:1', '-u', 'tdurden')
+
+    def test_invalid_bb_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--bb_username=tdurden',
+                          *self.extra_args)
+
+    def test_invalid_bb_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--bb_password=marla',
+                          *self.extra_args)
+
+    def test_update_no_bb_username(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--bb_password=marla',
+                          *self.extra_args)
+
+    def test_update_no_bb_password(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--bb_username=tdurden',
+                          *self.extra_args)
+
+    def test_no_ids_info(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', *self.extra_args)
+
+    def test_ids_with_add(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=add', '--ids=id1', *self.extra_args)
+
+    def test_ids_with_update(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=update', '--ids=id1', *self.extra_args)
+
+    def test_no_ids_found_update(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--op=update", "--info=svn=x", *self.extra_args)
+
+    def test_id_with_add(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          "--op=add", "--info=id:x", *self.extra_args)
+
+    def test_info_with_remove(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=remove', '--info=x=v', *self.extra_args)
+
+
+    def test_info_with_get(self):
+        self.assertRaises(usage.UsageError,
+                          self.parse,
+                          '--op=get', '--info=x=v', *self.extra_args)
 
 
 class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
