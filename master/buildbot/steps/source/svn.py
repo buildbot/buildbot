@@ -45,7 +45,7 @@ class SVN(Source):
         self.extra_args = extra_args
         self.keep_on_purge = keep_on_purge or []
         self.depth = depth
-        self.method=method
+        self.method = method
         self.mode = mode
         Source.__init__(self, **kwargs)
         errors = []
@@ -260,7 +260,7 @@ class SVN(Source):
         svnversion_dir = self.workdir
         if self.mode == 'full' and self.method == 'export':
             svnversion_dir = 'source'
-        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info'],
+        cmd = buildstep.RemoteShellCommand(svnversion_dir, ['svn', 'info', '--xml'],
                                            env=self.env,
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
@@ -269,17 +269,17 @@ class SVN(Source):
         d = self.runCommand(cmd)
         def _setrev(_):
             stdout = cmd.stdout
-            match = re.search('Revision:(.+?)\n', stdout)
             try:
-                revision = int(match.group(1))
-            except (AttributeError, ValueError):
-                msg =("SVN.parseGotRevision unable to parse output "
-                      "of svnversion: '%s'" % stdout)
-                log.msg(msg)
+                stdout_xml = xml.dom.minidom.parseString(stdout)
+                match = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
+            except xml.parsers.expat.ExpatError:
+                msg = "Corrupted xml, aborting step"
+                self.stdio_log.addHeader(msg)
                 raise buildstep.BuildStepFailed()
-
-            log.msg("Got SVN revision %s" % (revision, ))
-            self.updateSourceProperty('got_revision', str(revision))
+            revision = match
+            msg = "Got SVN revision %s" % (revision, )
+            self.stdio_log.addHeader(msg)
+            self.updateSourceProperty('got_revision', revision)
             return 0
         d.addCallback(lambda _: _setrev(cmd.rc))
         return d
