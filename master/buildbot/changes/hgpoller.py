@@ -36,8 +36,12 @@ class HgPoller(base.PollingChangeSource):
     def __init__(self, repourl, branch='default',
                  workdir=None, pollInterval=10*60,
                  hgbin='hg', usetimestamps=True,
-                 category=None, project='',
+                 category=None, project='', pollinterval=-2,
                  encoding='utf-8'):
+
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
 
         self.repourl = repourl
         self.branch = branch
