@@ -588,37 +588,37 @@ class BuildRequestDistributor(service.Service):
             return x
         d.addErrback(log.err, "while strting builds on %s" % (new_builders,))
 
-    @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            return
+            return defer.succeed(None)
 
-        # reset the list of pending builders; this is async, so begin
-        # by grabbing a lock
-        yield self.pending_builders_lock.acquire()
+        # reset the list of pending builders
+        @defer.inlineCallbacks
+        def resetPendingBuildersList(new_builders):
+            try:
+                # re-fetch existing_pending, in case it has changed 
+                # while acquiring the lock
+                existing_pending = set(self._pending_builders)
 
-        try:
-            # re-fetch existing_pending, in case it has changed while acquiring
-            # the lock
-            existing_pending = set(self._pending_builders)
+                # then sort the new, expanded set of builders
+                self._pending_builders = \
+                    yield self._sortBuilders(
+                            list(existing_pending | new_builders))
 
-            # then sort the new, expanded set of builders
-            self._pending_builders = \
-                yield self._sortBuilders(list(existing_pending | new_builders))
+                # start the activity loop, if we aren't already
+                # working on that.
+                if not self.active:
+                    self._activityLoop()
+            except Exception:
+                log.err(Failure(),
+                        "while attempting to start builds on %s" % self.name)
 
-            # start the activity loop, if we aren't already working on that.
-            if not self.active:
-                self._activityLoop()
-        except Exception:
-            log.err(Failure(),
-                    "while attempting to start builds on %s" % self.name)
-
-        # release the lock unconditionally
-        self.pending_builders_lock.release()
+        return self.pending_builders_lock.run(
+                resetPendingBuildersList, new_builders)
 
     @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):
