@@ -27,7 +27,7 @@ def isBuildmasterDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
         contents = open(buildbot_tac).read()
-    except IOError as exception:
+    except IOError, exception:
         print_error("error reading '%s': %s" % \
                        (buildbot_tac, exception.strerror))
         return False

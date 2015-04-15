@@ -48,6 +48,11 @@ Features
 * The new :bb:step:`LogRenderable` step logs Python objects, which can contain renderables, to the logfile.
   This is helpful for debugging property values during a build.
 
+* 'buildbot try' now has an additional :option:`--property` option to set properties.
+  Unlike the existing :option:`--properties` option, this new option supports setting
+  only a single property and therefore allows commas to be included in the property
+  name and value.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -402,6 +402,9 @@ class TryOptions(base.SubcommandOptions):
          "A set of properties made available in the build environment, "
          "format is --properties=prop1=value1,prop2=value2,.. "
          "option can be specified multiple times."],
+        ["property", None, None,
+         "A property made available in the build environment, "
+         "format:prop=value. Can be used multiple times."],
 
         ["topfile", None, None,
          "Name of a file at the top of the tree, used to find the top. "
@@ -462,6 +465,10 @@ class TryOptions(base.SubcommandOptions):
         for i in range(0,len(propertylist)):
             splitproperty = propertylist[i].split("=", 1)
             self['properties'][splitproperty[0]] = splitproperty[1]
+
+    def opt_property(self, option):
+        name, _, value = option.partition("=")
+        self['properties'][name] = value
 
     def opt_patchlevel(self, option):
         self['patchlevel'] = int(option)
