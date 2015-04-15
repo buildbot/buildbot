@@ -100,7 +100,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         return d
 
     if twisted.version <= versions.Version('twisted', 9, 0, 0):
-        test_start = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
+        test_start.skip = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
 
     # the remainder of this script does obscene things:
     #  - forks
