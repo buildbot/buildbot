@@ -43,6 +43,8 @@ Features
 
 * The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
 
+* A new :bb:step:`SetProperty` step has been added in ``buildbot.steps.master`` which can set a property directly without accessing the slave.
+
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,6 +68,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The web status no longer displays a potentially misleading message, indicating whether the build
   can be rebuilt exactly.
+
+* The ``SetProperty`` step in ``buildbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

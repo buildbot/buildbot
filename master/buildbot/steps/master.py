@@ -169,3 +169,22 @@ class MasterShellCommand(BuildStep):
         except error.ProcessExitedAlready:
             pass
         BuildStep.interrupt(self, reason)
+
+class SetProperty(BuildStep):
+    name='SetProperty'
+    description=['Setting']
+    descriptionDone=['Set']
+    renderables = [ 'value' ]
+
+    def __init__(self, property, value, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.property = property
+        self.value = value
+
+    def start(self):
+        properties = self.build.getProperties()
+        properties.setProperty(self.property, self.value, self.name, runtime=True)
+        self.step_status.setText(self.describe(done=True))
+        self.finished(SUCCESS)
+
+

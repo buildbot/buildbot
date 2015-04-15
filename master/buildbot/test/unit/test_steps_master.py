@@ -22,6 +22,7 @@ from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
+from buildbot.process.properties import Interpolate
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -192,4 +193,20 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                     ('rc', 0),
                 ])
         self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
+        return self.runStep()
+
+class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
+    
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_simple(self):
+        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
+        self.properties.setProperty('slavename', 'testSlave', source='SetPropery', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=["SetProperty"])
+        self.expectProperty('testProperty', 'sch=force, slave=testSlave', source='SetProperty')
         return self.runStep()

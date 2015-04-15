@@ -348,7 +348,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
                 status_text=["treesize", "unknown"])
         return self.runStep()
 
-class SetProperty(steps.BuildStepMixin, unittest.TestCase):
+class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -358,10 +358,10 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
 
     def test_constructor_conflict(self):
         self.assertRaises(config.ConfigErrors, lambda :
-                shell.SetProperty(property='foo', extract_fn=lambda : None))
+                shell.SetPropertyFromCommand(property='foo', extract_fn=lambda : None))
 
     def test_run_property(self):
-        self.setupStep(shell.SetProperty(property="res", command="cmd"))
+        self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
@@ -375,7 +375,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_property_no_strip(self):
-        self.setupStep(shell.SetProperty(property="res", command="cmd",
+        self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd",
                                          strip=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
@@ -390,7 +390,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_run_failure(self):
-        self.setupStep(shell.SetProperty(property="res", command="blarg"))
+        self.setupStep(shell.SetPropertyFromCommand(property="res", command="blarg"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="blarg")
@@ -406,7 +406,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (0, 'startend', 'STARTEND'))
             return dict(a=1, b=2)
-        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
@@ -426,7 +426,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return dict(a=1, b=2)
-        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
@@ -442,7 +442,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
         def extract_fn(rc, stdout, stderr):
             self.assertEqual((rc, stdout, stderr), (3, '', ''))
             return dict()
-        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")
@@ -457,7 +457,7 @@ class SetProperty(steps.BuildStepMixin, unittest.TestCase):
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
-        self.setupStep(shell.SetProperty(extract_fn=extract_fn, command="cmd"))
+        self.setupStep(shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
             ExpectShell(workdir='wkdir', usePTY='slave-config',
                         command="cmd")

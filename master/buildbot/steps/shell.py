@@ -302,8 +302,7 @@ class TreeSize(ShellCommand):
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
 
-
-class SetProperty(ShellCommand):
+class SetPropertyFromCommand(ShellCommand):
     name = "setproperty"
     renderables = [ 'property' ]
 
@@ -352,6 +351,15 @@ class SetProperty(ShellCommand):
         else:
             # let ShellCommand describe
             return ShellCommand.getText(self, cmd, results)
+
+class SetProperty(SetPropertyFromCommand):
+    "alias for SetPropertyFromCommand"
+    def __init__(self, *args, **kwargs):
+        log.msg("WARNING: the name 'SetProperty' has been renamed to SetPropertyFromCommand; use " +
+                "buildbot.steps.slave.SetPropertyFromCommand instead " +
+                "(note that this may require you to change your import " +
+                "statement)")
+        SetPropertyFromCommand.__init__(self, *args, **kwargs)
 
 class Configure(ShellCommand):
 
