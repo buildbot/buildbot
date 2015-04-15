@@ -18,8 +18,6 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 
 ``json_cache_seconds``
     The number of seconds into the future at which an HTTP API response should expire.
-    Any versions less than this value will not be available.
-    This can be used to ensure that no clients are depending on API versions that will soon be removed from Buildbot.
 
 ``rest_minimum_version``
     The minimum supported REST API version.
