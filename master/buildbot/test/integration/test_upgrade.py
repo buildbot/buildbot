@@ -597,6 +597,40 @@ class UpgradeTestV086p1(UpgradeTestMixin, unittest.TestCase):
         return d
 
 
+class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v087p1.tgz"
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        model = self.db.model
+
+        tbl = model.buildrequests
+        r = conn.execute(tbl.select(order_by=tbl.c.id))
+        buildreqs = [ (br.id, br.buildsetid,
+                       br.complete, br.results)
+                      for br in r.fetchall() ]
+        self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)]) # two successful builds
+
+        br_claims = model.buildrequest_claims
+        objects = model.objects
+        r = conn.execute(sa.select([ br_claims.outerjoin(objects,
+                    br_claims.c.objectid == objects.c.id)]))
+        buildreqs = [ (brc.brid, int(brc.claimed_at), brc.name, brc.class_name)
+                      for brc in r.fetchall() ]
+        self.assertEqual(buildreqs, [
+            (1, 1363642117, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master',
+             u'buildbot.master.BuildMaster'),
+            (2, 1363642156, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master',
+             u'buildbot.master.BuildMaster'),
+        ])
+
+    def test_upgrade(self):
+        # we no longer need a builder pickle since the builder can be
+        # re-created without one
+        return self.do_test_upgrade()
+
+
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
