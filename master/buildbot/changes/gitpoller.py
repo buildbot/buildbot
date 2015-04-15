@@ -234,8 +234,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
             if code != 0:
-                raise EnvironmentError('command failed with exit code %d: %s'
-                        % (code, stderr))
+                raise EnvironmentError('command on repourl %s failed with exit code %d: %s'
+                        % (self.repourl, code, stderr))
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure)
         return d

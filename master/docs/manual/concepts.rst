@@ -624,7 +624,7 @@ more complete view of users throughout Buildbot.
 
 One such use is being able to find email addresses based on a set of Builds
 to notify users through the ``MailNotifier``. This process is explained
-more clearly in :ref:``Email-Addresses``.
+more clearly in :ref:`Email-Addresses`.
 
 Another way to utilize `User Objects` is through `UsersAuth` for web authentication
 (see :bb:status:`WebStatus`). To use `UsersAuth`, you need to
