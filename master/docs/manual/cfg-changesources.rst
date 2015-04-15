@@ -37,7 +37,7 @@ CVS
    sendchange`` run in a loginfo script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
    :file:`contrib/viewcvspoll.py` polling process which examines the ViewCVS
-   database directly
+   database directly)
  * :bb:chsrc:`Change Hooks` in WebStatus
 
 SVN

@@ -818,7 +818,7 @@ Here is a fully-worked example::
     # on checkin, run tests
     checkin_factory = factory.BuildFactory()
     checkin_factory.addStep(shell.Test())
-    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly'])
+    checkin_factory.addStep(trigger.Trigger(schedulerNames=['nightly']))
 
     # and every night, package the latest successful build
     nightly_factory = factory.BuildFactory()
