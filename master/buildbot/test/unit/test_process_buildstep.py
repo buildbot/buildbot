@@ -345,3 +345,36 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
         return d
 
+
+class RemoteShellCommandTests(object):
+
+    def test_user_argument(self):
+        """
+        Test that the 'user' parameter is correctly threaded through
+        RemoteShellCommand to the 'args' member of the RemoteCommand
+        parent command, if and only if it is passed in as a non-None
+        value.
+        """
+
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"])
+        self.assertNotIn('user', rc.args)
+
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"], user=None)
+        self.assertNotIn('user', rc.args)
+
+        user = 'test'
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"], user=user)
+        self.assertIn('user', rc.args)
+        self.assertEqual(rc.args['user'], user)
+
+
+class TestRealRemoteShellCommand(unittest.TestCase, RemoteShellCommandTests):
+
+    def makeRemoteShellCommand(self, *args, **kwargs):
+        return buildstep.RemoteShellCommand(*args, **kwargs)
+
+
+class TestFakeRemoteShellCommand(unittest.TestCase, RemoteShellCommandTests):
+
+    def makeRemoteShellCommand(self, *args, **kwargs):
+        return remotecommand.FakeRemoteShellCommand(*args, **kwargs)

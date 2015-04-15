@@ -32,7 +32,7 @@ from buildslave import util
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.15"
+command_version = "2.16"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -64,6 +64,7 @@ command_version = "2.15"
 #  >= 2.13: SlaveFileUploadCommand supports option 'keepstamp'
 #  >= 2.14: RemoveDirectory can delete multiple directories
 #  >= 2.15: 'interruptSignal' option is added to SlaveShellCommand
+#  >= 2.16: 'user' option is added to SlaveShellCommand
 
 class Command:
     implements(ISlaveCommand)

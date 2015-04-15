@@ -112,6 +112,15 @@ admin*, who do not need to be quite as involved. Generally slaves are
 run by anyone who has an interest in seeing the project work well on
 their favorite platform.
 
+While not always the case, it is typically a good idea to run the
+buildslaves with reduced privileges (e.g. not as the 'root' user).
+This protects the system installed on the machine the buildslave
+is running on from the commands that are running on behalf of the
+buildmaster. There are some cases where running buildslaves with
+admin privileges is appropriate, one example of which is doing so
+on latent slaves that are reverted to a snapshot on each startup
+and contain no sensitive information.
+
 .. _BuildSlave-Connections:
 
 BuildSlave Connections

@@ -49,4 +49,33 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_user_parameter(self):
+        """
+        Test that the 'user' parameter is threaded through into the
+        underlying RunProcess object.
+        """
+
+        user = 'test'
+        self.make_command(shell.SlaveShellCommand, dict(
+            command=[ 'true' ],
+            workdir='workdir',
+            user=user,
+        ))
+
+        self.patch_runprocess(
+            Expect([ 'true', ], self.basedir_workdir, user=user)
+            + { 'hdr' : 'headers' } + { 'rc' : 0 }
+            + 0,
+        )
+
+        d = self.run_command()
+
+        # Verify that the 'user' parameter is correctly passed into the
+        # RunProcess object.
+        def check(_):
+            self.assertTrue(hasattr(self.cmd.command, 'user'))
+            self.assertEqual(self.cmd.command.user, user)
+        d.addCallback(check)
+        return d
+
     # TODO: test all functionality that SlaveShellCommand adds atop RunProcess

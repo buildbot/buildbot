@@ -1692,6 +1692,12 @@ The :bb:step:`ShellCommand` arguments are:
     The default is to treat just 0 as successful. (``{0:SUCCESS}``)
     any exit code not present in the dictionary will be treated as ``FAILURE``
 
+``user``
+    When this is not None, runs the command as the given user by wrapping the
+    command with 'sudo', which typically requires root permissions to run
+    (and as discussed in the :ref:`System Architecture <System-Architecture>`
+    section, is generally not a good idea).
+
 .. bb:step:: Configure
 
 Configure

@@ -53,8 +53,8 @@ Features
   only a single property and therefore allows commas to be included in the property
   name and value.
 
-* The ``Git`` step has a new ``config`` option, which accepts a dict of git configuration options to
-  pass to the low-level git commands.  See :bb:step:`Git` for details.
+* The ``Git`` step has a new ``config`` option, which accepts a dict of git configuration options to pass to the low-level git commands.
+  See :bb:step:`Git` for details.
 
 * The ``TryScheduler`` now accepts an additional ``properties`` argument to its
   ``getAvailableBuilderNames`` method, which 'buildbot try' uses to send the properties
@@ -63,6 +63,9 @@ Features
 * In :bb:step:`ShellCommand` ShellCommand now validates its arguments during config and will identify any invalid arguments before a build is started.
 
 * The list of force schedulers in the web UI is now sorted by name.
+
+* The :bb:step:`ShellCommand` step has a new parameter ``user``.
+  When this is set, the slave will use 'sudo' to run the command as the given user.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
