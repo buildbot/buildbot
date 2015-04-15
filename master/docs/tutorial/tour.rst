@@ -29,7 +29,7 @@ Let's start simple by looking at where you would customize the buildbot's projec
 
 We continue where we left off in the :ref:`first-run-label` tutorial.
 
-Open a new terminal, and first enter the same sandbox you created before (where $EDITOR is your editor of choice like vim, gedit, or emacs)::
+Open a new terminal, and first enter the same sandbox you created before (where ``$EDITOR`` is your editor of choice like vim, gedit, or emacs)::
 
   cd
   cd tmp/buildbot
@@ -135,7 +135,7 @@ Your First Build
 ----------------
 
 By now you're probably thinking: "All this time spent and still not done a
-single build ? What was the name of this project again ?"
+single build? What was the name of this project again?"
 
 On the `waterfall <http://localhost:8010/waterfall>`_. page, click on the
 runtests link.  You'll see a builder page, and in the upper-right corner is a
@@ -345,12 +345,12 @@ to make it trace the tree by default::
   $EDITOR checker.py
   # change "traceTree = False" on line 185 to "traceTree = True"
 
-Then run buildbot's try command as follows::
+Then run buildbot's ``try`` command as follows::
 
   source ~/tmp/buildbot/sandbox/bin/activate
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
-This will do "git diff" for you and send the resulting patch to
+This will do ``git diff`` for you and send the resulting patch to
 the server for build and test against the latest sources from Git.
 
 Now go back to the `waterfall <http://localhost:8010/waterfall>`_
@@ -359,11 +359,11 @@ another build has been started with your change (and stdout for the tests
 should be chock-full of parse trees as a result).  The "Reason" for the
 job will be listed as "'try' job", and the blamelist will be empty.
 
-To make yourself show up as the author of the change, use the --who=emailaddr
-option on 'buildbot try' to pass your email address.
+To make yourself show up as the author of the change, use the ``--who=emailaddr``
+option on ``buildbot try`` to pass your email address.
 
 To make a description of the change show up, use the
---properties=comment="this is a comment" option on 'buildbot try'.
+``--properties=comment="this is a comment"`` option on ``buildbot try``.
 
 To use ssh instead of a private username/password database, see
 :bb:sched:`Try_Jobdir`.
