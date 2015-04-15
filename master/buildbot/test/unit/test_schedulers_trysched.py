@@ -685,6 +685,14 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
         def check(buildernames):
             self.assertEqual(buildernames, ['a', 'b'])
         d.addCallback(check)
+
+        # Test that getAvailabelBuilderNames also accepts the properties
+        # argument.
+        d.addCallback(
+            lambda _: persp.perspective_getAvailableBuilderNames(
+                properties={'foo': 'bar'}))
+        d.addCallback(check)
+
         return d
 
 
