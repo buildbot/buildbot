@@ -36,11 +36,12 @@ for the full details.
 
 :class:`twisted.internet.task.LoopingCall`
     Calls an asynchronous function repeatedly at set intervals.
+    Note that this will stop looping if the function fails.
+    In general, you will want to wrap the function to capture and log errors.
 
 :class:`twisted.application.internet.TimerService`
-    Similar to ``t.i.t.LoopingCall``, but implemented as a service that will
-    automatically start and stop the function calls when the service starts and
-    stops.
+    Similar to ``t.i.t.LoopingCall``, but implemented as a service that will automatically start and stop the function calls when the service starts and stops.
+    See the warning about failing functions for ``t.i.t.LoopingCall``.
 
 Sequences of Operations
 ~~~~~~~~~~~~~~~~~~~~~~~

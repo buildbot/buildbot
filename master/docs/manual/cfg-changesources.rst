@@ -1074,10 +1074,10 @@ arguments:
     If this is a relative path, it will be interpreted relative to the master's basedir.
     Multiple Git pollers can share the same directory.
 
-An configuration for the Git poller might look like this::
+A configuration for the Git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
+    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
                                    branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
@@ -1161,7 +1161,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 A configuration for the Mercurial poller might look like this::
 
     from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
+    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
 
