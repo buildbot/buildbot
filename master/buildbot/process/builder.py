@@ -498,7 +498,7 @@ class Builder(config.ReconfigurableServiceMixin,
             # the first time we get a good build, create our Expectations
             # based upon its results
             self.expectations = Expectations(progress)
-        log.msg("new expectations: %s seconds" % \
+        log.msg("new expectations: %s seconds" %
                 self.expectations.expectedBuildTime())
 
 

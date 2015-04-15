@@ -175,7 +175,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
 
-        # call twice to make sure the suffix doesnt get double added
+        # call twice to make sure the suffix doesn't get double added
         self.assertEqual(self.step.describe(), ['x', 'z'])
         self.assertEqual(self.step.describe(), ['x', 'z'])
 
