@@ -235,7 +235,7 @@
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}, slaves=[], is_admin=0) %}
-  {% for name, sch in force_schedulers.items() %}
+  {% for name, sch in force_schedulers.items() | sort %}
     {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props, slaves=slaves, is_admin=is_admin) }}
   {% endfor %}
 

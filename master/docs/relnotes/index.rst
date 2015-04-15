@@ -62,6 +62,8 @@ Features
 
 * In :bb:step:`ShellCommand` ShellCommand now validates its arguments during config and will identify any invalid arguments before a build is started.
 
+* The list of force schedulers in the web UI is now sorted by name.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
