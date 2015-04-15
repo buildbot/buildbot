@@ -13,3 +13,4 @@ Buildbot Manual
    customization
    cmdline
    resources
+   optimization
