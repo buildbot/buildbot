@@ -67,6 +67,10 @@ Features
 * The :bb:step:`ShellCommand` step has a new parameter ``user``.
   When this is set, the slave will use 'sudo' to run the command as the given user.
 
+* OpenStack-based Latent Buildslave support was added.
+  See :bb:pull:`666`.
+
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
