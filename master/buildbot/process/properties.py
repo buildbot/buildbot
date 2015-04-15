@@ -29,14 +29,14 @@ class Properties(util.ComparableMixin):
     I represent a set of properties that can be interpolated into various
     strings in buildsteps.
 
-    @ivar properties: dictionary mapping property values to tuples 
+    @ivar properties: dictionary mapping property values to tuples
         (value, source), where source is a string identifing the source
         of the property.
 
     Objects of this class can be read like a dictionary -- in this case,
     only the property value is returned.
 
-    As a special case, a property value of None is returned as an empty 
+    As a special case, a property value of None is returned as an empty
     string when used as a mapping.
     """
 
@@ -391,23 +391,23 @@ class _Lazy(util.ComparableMixin, object):
 
     def __repr__(self):
         return '_Lazy(%r)' % self.value
- 
+
 
 class Interpolate(util.ComparableMixin, object):
-    """ 
-    This is a marker class, used fairly widely to indicate that we 
-    want to interpolate build properties. 
-    """ 
- 
-    implements(IRenderable) 
-    compare_attrs = ('fmtstring', 'args', 'kwargs') 
+    """
+    This is a marker class, used fairly widely to indicate that we
+    want to interpolate build properties.
+    """
+
+    implements(IRenderable)
+    compare_attrs = ('fmtstring', 'args', 'kwargs')
 
     identifier_re = re.compile('^[\w-]*$')
- 
-    def __init__(self, fmtstring, *args, **kwargs): 
-        self.fmtstring = fmtstring 
+
+    def __init__(self, fmtstring, *args, **kwargs):
+        self.fmtstring = fmtstring
         self.args = args
-        self.kwargs = kwargs 
+        self.kwargs = kwargs
         if self.args and self.kwargs:
             config.error("Interpolate takes either positional or keyword "
                          "substitutions, not both.")
@@ -418,8 +418,10 @@ class Interpolate(util.ComparableMixin, object):
     def __repr__(self):
         if self.args:
             return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
-        if self.kwargs:
+        elif self.kwargs:
             return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
+        else:
+            return 'Interpolate(%r)' % (self.fmtstring,)
 
     @staticmethod
     def _parse_prop(arg):
@@ -550,8 +552,8 @@ class Interpolate(util.ComparableMixin, object):
                 if not self.interpolations.has_key(key):
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 
-    def getRenderingFor(self, props): 
-        props = props.getProperties() 
+    def getRenderingFor(self, props):
+        props = props.getProperties()
         if self.args:
             d = props.render(self.args)
             d.addCallback(lambda args:

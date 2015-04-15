@@ -25,9 +25,11 @@ from buildbot import config, interfaces
 try:
     import novaclient.exceptions as nce
     from novaclient.v1_1 import client
+    _hush_pyflakes = [nce, client]
 except ImportError:
     nce = None
     client = None
+
 
 ACTIVE = 'ACTIVE'
 BUILD = 'BUILD'
