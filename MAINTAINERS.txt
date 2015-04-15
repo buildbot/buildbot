@@ -231,3 +231,4 @@ Committers
     M: Marc-Antoine Ruel <maruel@chromium.org>
     M: Marcus Lindblom <macke@yar.nu>
     M: Tom Prince <tom.prince@ualberta.net> (irc:tomprince)
+    M: Pierre Tardy <tardyp@gmail.com>

@@ -99,10 +99,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                     'Comment for rev 0',
                     ''])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                os.linesep.join(['--template={date|hgdate}',
-                                '{author}',
-                                '{files}',
-                                '{desc|strip}']))
+                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
                 .path('/some/dir').stdout(os.linesep.join([
                     '1273258100.0 -7200',
                     'Bob Test <bobtest@example.org>',
@@ -184,10 +181,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                             '--template={rev}:{node}\\n')
                 .path('/some/dir').stdout('5:784bd' + os.linesep),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                os.linesep.join(['--template={date|hgdate}',
-                                '{author}',
-                                '{files}',
-                                '{desc|strip}']))
+                '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + '{files}' + os.linesep + '{desc|strip}')
                 .path('/some/dir').stdout(os.linesep.join([
                         '1273258009.0 -7200',
                         'Joe Test <joetest@example.org>',
