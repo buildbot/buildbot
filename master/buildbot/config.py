@@ -181,7 +181,6 @@ class MasterConfig(object):
             error("Configuration file %r does not define 'BuildmasterConfig'"
                     % (filename,),
             )
-            raise errors
 
         config_dict = localDict['BuildmasterConfig']
 

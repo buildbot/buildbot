@@ -19,11 +19,12 @@ import re
 import os
 import textwrap
 import mock
+import __builtin__
 from zope.interface import implements
 from twisted.trial import unittest
 from twisted.application import service
 from twisted.internet import defer
-from buildbot import config, buildslave, interfaces, revlinks
+from buildbot import config, buildslave, interfaces, revlinks, locks
 from buildbot.process import properties, factory
 from buildbot.test.util import dirs, compat
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -120,6 +121,20 @@ class ConfigErrors(unittest.TestCase):
         config.error("message")
         self.assertEqual(e.errors, ["message"])
 
+    def test_str(self):
+        ex = config.ConfigErrors()
+        self.assertEqual(str(ex), "")
+
+        ex = config.ConfigErrors(["a"])
+        self.assertEqual(str(ex), "a")
+
+        ex = config.ConfigErrors(["a", "b"])
+        self.assertEqual(str(ex), "a\nb")
+
+        ex = config.ConfigErrors(["a"])
+        ex.addError('c')
+        self.assertEqual(str(ex), "a\nc")
+
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
@@ -209,6 +224,26 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             re.compile("basedir .* does not exist"),
             lambda : config.MasterConfig.loadConfig(
                 os.path.join(self.basedir, 'NO'), 'test.cfg'))
+
+    def test_loadConfig_open_error(self):
+        """
+        Check that loadConfig() raises correct ConfigError exception in cases
+        when configure file is found, but we fail to open it.
+        """
+
+        def raise_IOError(*args):
+            raise IOError("error_msg")
+
+        self.install_config_file('#dummy')
+
+        # override build-in open() function to always rise IOError
+        self.patch(__builtin__, "open", raise_IOError)
+
+        # check that we got the expected ConfigError exception
+        self.assertRaisesConfigError(
+            re.compile("unable to open configuration file .*: error_msg"),
+            lambda : config.MasterConfig.loadConfig(
+                self.basedir, self.filename))
 
     @compat.usesFlushLoggedErrors
     def test_loadConfig_parse_error(self):
@@ -388,6 +423,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                 dict(logCompressionMethod='foo'))
         self.assertConfigError(self.errors, "must be 'bz2' or 'gz'")
+
+    def test_load_global_codebaseGenerator(self):
+        func = lambda _: "dummy"
+        self.do_test_load_global(dict(codebaseGenerator=func),
+                                 codebaseGenerator=func)
+
+    def test_load_global_codebaseGenerator_invalid(self):
+        self.cfg.load_global(self.filename,
+                dict(codebaseGenerator='dummy'))
+        self.assertConfigError(self.errors,
+                "codebaseGenerator must be a callable "
+                "accepting a dict and returning a str")
 
     def test_load_global_logMaxSize(self):
         self.do_test_load_global(dict(logMaxSize=123), logMaxSize=123)
@@ -703,6 +750,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
 
+    def test_load_status_not_list(self):
+        self.cfg.load_status(self.filename, dict(status="not-list"))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_status_not_status_rec(self):
+        self.cfg.load_status(self.filename, dict(status=['fo']))
+        self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})
@@ -747,7 +801,24 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.builders = [ b1, b2 ]
         self.cfg.projects = {'default' : mock.Mock()}
 
-    def setup_builder_locks(self, builder_lock=None, dup_builder_lock=False):
+    def setup_builder_locks(self,
+                            builder_lock=None,
+                            dup_builder_lock=False,
+                            bare_builder_lock=False):
+        """Set-up two mocked builders with specified locks.
+
+        @type  builder_lock: string or None
+        @param builder_lock: Name of the lock to add to first builder.
+                             If None, no lock is added.
+
+        @type dup_builder_lock: boolean
+        @param dup_builder_lock: if True, add a lock with duplicate name
+                                 to the second builder
+
+        @type dup_builder_lock: boolean
+        @param bare_builder_lock: if True, add bare lock objects, don't wrap
+                                  them into locks.LockAccess object
+        """
         def bldr(name):
             b = mock.Mock()
             b.name = name
@@ -756,9 +827,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock()
+            l = mock.Mock(spec=locks.MasterLock)
             l.name = name
-            return l
+            if bare_builder_lock:
+                return l
+            return locks.LockAccess(l, "counting")
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]
@@ -821,6 +894,14 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     def test_check_locks_none(self):
         # no locks in the whole config, should be fine
         self.setup_builder_locks()
+        self.cfg.check_locks()
+        self.assertNoConfigErrors(self.errors)
+
+    def test_check_locks_bare(self):
+        # check_locks() should be able to handle bare lock object,
+        # lock objects that are not wrapped into LockAccess() object
+        self.setup_builder_locks(builder_lock='oldlock',
+                                 bare_builder_lock=True)
         self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
@@ -984,6 +1065,30 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             "category must be a string",
             lambda : config.BuilderConfig(category=13,
                 name='a', slavenames=['a'], factory=self.factory, project="default"))
+
+    def test_inv_nextSlave(self):
+        self.assertRaisesConfigError(
+            "nextSlave must be a callable",
+            lambda : config.BuilderConfig(nextSlave="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_nextBuild(self):
+        self.assertRaisesConfigError(
+            "nextBuild must be a callable",
+            lambda : config.BuilderConfig(nextBuild="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_canStartBuild(self):
+        self.assertRaisesConfigError(
+            "canStartBuild must be a callable",
+            lambda : config.BuilderConfig(canStartBuild="foo",
+                name="a", slavenames=['a'], factory=self.factory))
+
+    def test_inv_env(self):
+        self.assertRaisesConfigError(
+            "builder's env must be a dictionary",
+            lambda : config.BuilderConfig(env="foo",
+                name="a", slavenames=['a'], factory=self.factory))
 
     def test_defaults(self):
         cfg = config.BuilderConfig(

@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import xml.dom.minidom
 import xml.parsers.expat
 
