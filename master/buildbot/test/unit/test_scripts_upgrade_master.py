@@ -138,7 +138,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     def test_checkBasedir_no_dir(self):
         rv = upgrade_master.checkBasedir(mkconfig(basedir='doesntexist'))
         self.assertFalse(rv)
-        self.assertInStdout('is not a Buildbot basedir')
+        self.assertInStdout('invalid buildmaster directory')
 
     @compat.skipUnlessPlatformIs('posix')
     def test_checkBasedir_active_pidfile(self):

@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
 import mock
-import cStringIO
 from twisted.trial import unittest
-from buildslave.scripts import runner
+from buildslave.scripts import runner, base
 
 class TestUpgradeSlave(unittest.TestCase):
     """
@@ -28,14 +26,9 @@ class TestUpgradeSlave(unittest.TestCase):
         """
         test calling upgradeSlave() with bad base directory
         """
-
-        # capture output to stdout
-        mocked_stdout = cStringIO.StringIO()
-        self.patch(sys, 'stdout', mocked_stdout)
-
-        # override isBuildslaveDir
+        # override isBuildslaveDir() to always fail
         mocked_isBuildslaveDir = mock.Mock(return_value=False)
-        self.patch(runner, "isBuildslaveDir", mocked_isBuildslaveDir)
+        self.patch(base, "isBuildslaveDir", mocked_isBuildslaveDir)
 
         # call upgradeSlave() and check that SystemExit exception is raised
         config = {"basedir" : "dummy"}
@@ -46,8 +39,3 @@ class TestUpgradeSlave(unittest.TestCase):
 
         # check that isBuildslaveDir was called with correct argument
         mocked_isBuildslaveDir.assert_called_once_with("dummy")
-
-        # check that correct error message was printed to stdout
-        self.assertEqual(mocked_stdout.getvalue(),
-                         "not a buildslave directory\n",
-                         "unexpected error message on stdout")

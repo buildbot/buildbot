@@ -413,7 +413,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss.get('repository', None),
+                        repository=ss.get('repository', ''),
                         branch=ss.get('branch', None),
                         revision=revision,
                         project=ss.get('project', ''),

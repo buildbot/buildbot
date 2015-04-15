@@ -21,14 +21,22 @@ import stat
 from twisted.python import usage, runtime
 
 def isBuildmasterDir(dir):
+    def print_error(error_message):
+        print "%s\ninvalid buildmaster directory '%s'" % (error_message, dir)
+
     buildbot_tac = os.path.join(dir, "buildbot.tac")
-    if not os.path.isfile(buildbot_tac):
-        print "no buildbot.tac"
+    try:
+        contents = open(buildbot_tac).read()
+    except IOError as exception:
+        print_error("error reading '%s': %s" % \
+                       (buildbot_tac, exception.strerror))
         return False
 
-    with open(buildbot_tac, "r") as f:
-        contents = f.read()
-    return "Application('buildmaster')" in contents
+    if "Application('buildmaster')" not in contents:
+        print_error("unexpected content in '%s'" % buildbot_tac)
+        return False
+
+    return True
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
     configFile = os.path.abspath(os.path.join(basedir, defaultName))

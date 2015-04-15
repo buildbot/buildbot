@@ -63,7 +63,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def test_start_not_basedir(self):
         self.assertEqual(start.start(mkconfig(basedir='doesntexist')), 1)
-        self.assertInStdout('not a buildmaster directory')
+        self.assertInStdout('invalid buildmaster directory')
 
     def runStart(self, **config):
         args=[
