@@ -686,6 +686,85 @@ The step takes the following arguments:
         updated then copied to ``build`` for next steps.
 
 
+.. bb:step:: P4
+
+P4
+++
+
+.. py:class:: buildbot.steps.source.p4.P4
+
+The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_
+client specification and performs an update. ::
+
+   from buildbot.steps.source.p4 import P4
+   factory.addStep(P4(p4port=p4port,
+                      p4client=WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
+                      p4user=p4user,
+                      p4base='//depot/',
+                      p4viewspec=p4viewspec,
+                      mode='incremental',
+                      ))
+                      
+You can specify the client spec in two different ways. You can use the ``p4base``, 
+``p4branch``, and (optionally) ``p4extra_views`` to build up the viewspec, or you can utilize
+the ``p4viewspec`` to specify the whole viewspec as a set of tuples.  Using p4viewspec
+will allow you to add lines such as:
+``-//depot/branch/mybranch/notthisdir/... //<p4client>/notthisdir/...``
+
+If you specify ``p4viewspec`` then ``p4base``, ``p4branch``, and/or ``p4extra_views`` will
+be ignored.
+
+
+``p4base``
+    A view into the Perforce depot without branch name or trailing "...".
+    Typically ``//depot/proj/``.
+    
+``p4branch``
+    (optional): A single string, which is appended to the p4base as follows
+     ``<p4base><p4branch>/...`` to form the first line in the viewspec
+
+``p4extra_views``
+    (optional): a list of ``(depotpath, clientpath)`` tuples containing extra
+    views to be mapped into the client specification. Both will have
+    ``/...`` appended automatically. The client name and source directory
+    will be prepended to the client path.
+
+``p4viewspec``
+    This will override any p4branch, p4base, and/or p4extra_views specified.  
+    The viewspec will be an array of tuples as follows
+    ``[('//depot/main/','')]``
+    
+    yields a viewspec with just
+    
+    ``//depot/main/... //<p4client>/...``
+
+``p4port``
+    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot
+    (repository), used as the :option:`-p` argument for all p4 commands.
+    
+``p4user``
+    (optional): the Perforce user, used as the :option:`-u` argument to all p4
+    commands.
+
+``p4passwd``
+    (optional): the Perforce password, used as the :option:`-p` argument to all p4
+    commands.
+
+
+``p4client``
+    (optional): The name of the client to use. In ``mode='full'`` and
+    ``mode='incremental'``, it's particularly important that a unique name is used
+    for each checkout directory to avoid incorrect synchronization. For
+    this reason, Python percent substitution will be performed on this value
+    to replace %(slave)s with the slave name and %(builder)s with the
+    builder name. The default is `buildbot_%(slave)s_%(build)s`.
+
+``p4line_end``
+    (optional): The type of line ending handling P4 should use.  This is
+    added directly to the client spec's ``LineEnd`` property.  The default is
+    ``local``.
+
+
 .. bb:step:: Repo
 
 Repo
