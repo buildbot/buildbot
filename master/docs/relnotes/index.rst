@@ -9,6 +9,7 @@ Release Notes for Buildbot |version|
 The following are the release notes for Buildbot |version|.
 
 * The ``MasterShellCommand`` step now correctly handles environment variables passed as list.
+* The master now poll the database for pending tasks when running buildbot in multi-master mode.
 
 Master
 ------

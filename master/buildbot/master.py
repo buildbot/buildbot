@@ -82,10 +82,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # loop for polling the db
         self.db_loop = None
         # db configured values
-        self.configured_db_url = None
-        self.configured_poll_interval = None
+        self.configured_db_url = None       
+        self.configured_poll_interval = None        
+
         # running multimaster mode
-        self.configured_buildbotURL = None        
+        self.configured_buildbotURL = None 
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
