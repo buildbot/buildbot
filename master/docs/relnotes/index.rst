@@ -53,6 +53,8 @@ Features
   only a single property and therefore allows commas to be included in the property
   name and value.
 
+* The ``Git`` step has a new ``config`` option, which accepts a dict of git configuration options to
+  pass to the low-level git commands.  See :bb:step:`Git` for details.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

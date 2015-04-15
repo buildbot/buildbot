@@ -1423,3 +1423,39 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             codebase='baz'
         )
         return self.runStep()
+
+    def test_config_option(self):
+        name = 'url.http://github.com.insteadOf'
+        value = 'blahblah'
+        self.setupStep(
+                git.Git(repourl='%s/buildbot/buildbot.git' % (value,),
+                                    mode='full', method='clean',
+                                    config={name: value}))
+        prefix = ['git', '-c', '%s=%s' % (name, value)]
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=prefix + ['--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.git',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=prefix + ['clean', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=prefix + ['fetch', '-t',
+                                 '%s/buildbot/buildbot.git' % (value,),
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=prefix + ['reset', '--hard',
+                                 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=prefix + ['rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
