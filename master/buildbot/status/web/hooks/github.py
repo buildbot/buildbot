@@ -111,6 +111,43 @@ class GitHubEventHandler(object):
 
         return changes, 'git'
 
+    def handle_pull_request(self, payload):
+        changes = []
+        number = payload['number']
+        refname = 'refs/pull/%d/head' % (number,)
+        commits = payload['pull_request']['commits']
+
+        log.msg('Processing GitHub PR #%d' % number, logLevel=logging.DEBUG)
+
+        action = payload.get('action')
+        if action not in ('opened', 'reopened', 'synchronize'):
+            log.msg("GitHub PR #%d %s, ignoring" % (number, action))
+            return changes, 'git'
+
+        change = {
+            'revision': payload['pull_request']['head']['sha'],
+            'when_timestamp': dateparse(payload['pull_request']['created_at']),
+            'branch': refname,
+            'revlink': payload['pull_request']['_links']['html']['href'],
+            'repository': payload['repository']['clone_url'],
+            'category': 'pull',
+            # TODO: Get author name based on login id using txgithub module
+            'author': payload['sender']['login'],
+            'comments': 'GitHub Pull Request #%d (%d commit%s)' % (
+                number, commits, 's' if commits != 1 else ''),
+        }
+
+        if callable(self._codebase):
+            change['codebase'] = self._codebase(payload)
+        elif self._codebase is not None:
+            change['codebase'] = self._codebase
+
+        changes.append(change)
+
+        log.msg("Received %d changes from GitHub PR #%d" % (
+            len(changes), number))
+        return changes, 'git'
+
     def _process_change(self, payload, user, repo, repo_url, project):
         """
         Consumes the JSON as a python object and actually starts the build.
