@@ -44,6 +44,7 @@ def patch_testcase_assert_raises_regexp():
 
 def patch_all(for_tests=False):
     patch_bug4881()
+    patch_bug5079()
 
     if for_tests:
         patch_testcase_assert_raises_regexp()

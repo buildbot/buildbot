@@ -114,6 +114,10 @@ Slave
 Features
 ~~~~~~~~
 
+* The fix for Twisted bug #5079 is now applied on the slave side, too.
+  This fixes a perspective broker memory leak in older versions of Twisted.
+  This fix was added on the master in Buildbot-0.8.4 (see :bb:bug:`1958`).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

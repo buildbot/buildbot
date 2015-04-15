@@ -415,6 +415,7 @@ class Interpolate(util.ComparableMixin, object):
             self.interpolations = {}
             self._parse(fmtstring)
 
+    # TODO: add case below for when there's no args or kwargs..
     def __repr__(self):
         if self.args:
             return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
