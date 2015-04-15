@@ -296,7 +296,7 @@ class MasterConfig(object):
             error("codebaseGenerator must be a callable accepting a dict and returning a str")
         else:
             self.codebaseGenerator = codebaseGenerator
-            
+
         prioritizeBuilders = config_dict.get('prioritizeBuilders')
         if prioritizeBuilders is not None and not callable(prioritizeBuilders):
             error("prioritizeBuilders must be a callable")
