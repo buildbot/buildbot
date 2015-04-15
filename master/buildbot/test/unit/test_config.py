@@ -1069,25 +1069,25 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_inv_nextSlave(self):
         self.assertRaisesConfigError(
             "nextSlave must be a callable",
-            lambda : config.BuilderConfig(nextSlave="foo",
+            lambda : config.BuilderConfig(nextSlave="foo", project="default",
                 name="a", slavenames=['a'], factory=self.factory))
 
     def test_inv_nextBuild(self):
         self.assertRaisesConfigError(
             "nextBuild must be a callable",
-            lambda : config.BuilderConfig(nextBuild="foo",
+            lambda : config.BuilderConfig(nextBuild="foo", project="default",
                 name="a", slavenames=['a'], factory=self.factory))
 
     def test_inv_canStartBuild(self):
         self.assertRaisesConfigError(
             "canStartBuild must be a callable",
-            lambda : config.BuilderConfig(canStartBuild="foo",
+            lambda : config.BuilderConfig(canStartBuild="foo", project="default",
                 name="a", slavenames=['a'], factory=self.factory))
 
     def test_inv_env(self):
         self.assertRaisesConfigError(
             "builder's env must be a dictionary",
-            lambda : config.BuilderConfig(env="foo",
+            lambda : config.BuilderConfig(env="foo", project="default",
                 name="a", slavenames=['a'], factory=self.factory))
 
     def test_defaults(self):
