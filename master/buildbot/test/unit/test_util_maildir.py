@@ -45,7 +45,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         yield self.svc.stopService()
         self.svc.startService()
         yield self.svc.stopService()
-        self.assertLess(len(list(self.svc)), 2)
+        self.assertEqual(len(list(self.svc)), 0)
       
 
     def test_messageReceived(self):
