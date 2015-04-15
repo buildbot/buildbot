@@ -110,7 +110,7 @@ class TextLog(Resource, ContextMixin):
         self._setContentType(req)
         self.req = req
 
-        if (self.original.isFinished()):
+        if self.original.isFinished():
             req.setHeader("Cache-Control", "max-age=604800")
         else:
             req.setHeader("Cache-Control", "no-cache")
