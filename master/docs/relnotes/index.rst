@@ -36,8 +36,9 @@ Features
 
 * The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
 
-* The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches,
-  codebases, projects, and repositories.
+* The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches, codebases, projects, and repositories.
+
+* :bb:step:`SVN` has a new option `preferLastChangedRev=True` to use the last changed revision for ``got_revision``
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
