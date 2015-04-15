@@ -48,6 +48,9 @@ from buildbot.status.web.auth import AuthFailResource,AuthzFailResource, LoginRe
 from buildbot.status.web.root import RootPage
 from buildbot.status.web.users import UsersResource
 from buildbot.status.web.change_hook import ChangeHookResource
+from twisted.cred.portal import IRealm, Portal
+from twisted.web import resource, guard
+from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 
 class SafeGzipEncoderFactory(server.GzipEncoderFactory):
     """
@@ -177,7 +180,8 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None):
+                 change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None,
+                 change_hook_auth=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -342,6 +346,12 @@ class WebStatus(service.MultiService):
 
         self.authz = authz
 
+        # check for correctness of HTTP auth parameters
+        if change_hook_auth is not None:
+            if not isinstance(change_hook_auth, tuple) or len(change_hook_auth) != 2:
+                config.error("Invalid credentials for change_hook auth")
+        self.change_hook_auth = change_hook_auth
+
         self.orderConsoleByTime = order_console_by_time
 
         # If we were given a site object, go ahead and use it. (if not, we add one later)
@@ -373,7 +383,10 @@ class WebStatus(service.MultiService):
         self.change_hook_dialects = {}
         if change_hook_dialects:
             self.change_hook_dialects = change_hook_dialects
-            self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
+            resource_obj = ChangeHookResource(dialects=self.change_hook_dialects)
+            if self.change_hook_auth is not None:
+                resource_obj = self.setupProtectedResource(resource_obj)
+            self.putChild("change_hook", resource_obj)
 
         # Set default feeds
         if provide_feeds is None:
@@ -382,6 +395,27 @@ class WebStatus(service.MultiService):
             self.provide_feeds = provide_feeds
 
         self.jinja_loaders = jinja_loaders
+
+    def setupProtectedResource(self, resource_obj):
+        class SimpleRealm(object):
+            """
+            A realm which gives out L{ChangeHookResource} instances for authenticated
+            users.
+            """
+            implements(IRealm)
+
+            def requestAvatar(self, avatarId, mind, *interfaces):
+                if resource.IResource in interfaces:
+                    return (resource.IResource, resource_obj, lambda: None)
+                raise NotImplementedError()
+
+        login, password = self.change_hook_auth
+        checker = InMemoryUsernamePasswordDatabaseDontUse()
+        checker.addUser(login, password)
+        portal = Portal(SimpleRealm(), [checker])
+        credentialFactory = guard.BasicCredentialFactory('Protected area')
+        wrapper = guard.HTTPAuthSessionWrapper(portal, [credentialFactory])
+        return wrapper
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
