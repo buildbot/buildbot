@@ -23,6 +23,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import _Lazy, _SourceStampDict, _Lookup
 from buildbot.process.properties import Property, PropertiesMixin, renderer
 from buildbot.interfaces import IRenderable, IProperties
+from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
 from buildbot.test.util import compat
@@ -43,17 +44,6 @@ class FakeSource:
         ds['repository'] = self.repository
         ds['revision'] = self.revision
         return ds
-        
-class FakeBuild(PropertiesMixin):
-    def __init__(self, properties):
-        self.sources = {}
-        properties.build = self
-        self.properties = properties
-
-    def getSourceStamp(self, codebase):
-        if codebase in self.sources:
-            return self.sources[codebase]
-        return None
 
 class DeferredRenderable:
     implements (IRenderable)
@@ -63,11 +53,6 @@ class DeferredRenderable:
         return self.d
     def callback(self, value):
         self.d.callback(value)
-
-        
-components.registerAdapter(
-        lambda build : IProperties(build.properties),
-        FakeBuild, IProperties)
 
 class TestPropertyMap(unittest.TestCase):
     """

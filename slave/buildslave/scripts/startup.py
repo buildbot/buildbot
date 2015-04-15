@@ -83,7 +83,7 @@ def start(config):
         sys.exit(1)
 
     os.chdir(config['basedir'])
-    if config['quiet']:
+    if config['quiet'] or config['nodaemon']:
         return launch(config)
 
     # we probably can't do this os.fork under windows
