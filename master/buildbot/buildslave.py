@@ -972,7 +972,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # here, we just do what should be appropriate for the first case,
             # and put our heads in the sand for the second, at least for now.
             # The best solution to the odd situation is removing it as a
-            # possibilty: make the master in charge of connecting to the
+            # possibility: make the master in charge of connecting to the
             # slave, rather than vice versa. TODO.
             yield defer.DeferredList([
                 AbstractBuildSlave.disconnect(self),
