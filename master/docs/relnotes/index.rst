@@ -120,6 +120,8 @@ Features
   This fixes a perspective broker memory leak in older versions of Twisted.
   This fix was added on the master in Buildbot-0.8.4 (see :bb:bug:`1958`).
 
+* The ``--nodaemon`` option to ``buildslave start`` now correctly prevents the slave from forking before running.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

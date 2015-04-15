@@ -13,12 +13,168 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import time
 import mock
+import errno
+import signal
 from twisted.trial import unittest
 from twisted.python import usage
 from buildslave.scripts import runner, base
+from buildslave.scripts import startup
+from buildslave.test.util import misc
 
-class TestUpgradeSlave(unittest.TestCase):
+
+class IsBuildslaveDirMixin:
+    """
+    Mixin for setting up mocked base.isBuildslaveDir() function
+    """
+    def setupUpIsBuildslaveDir(self, return_value):
+        self.isBuildslaveDir = mock.Mock(return_value=return_value)
+        self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
+
+
+class TestStopSlave(misc.OpenFileMixin,
+                    misc.StdoutAssertionsMixin,
+                    unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.stopSlave()
+    """
+    PID = 9876
+    def setUp(self):
+        self.setUpStdoutAssertions()
+
+        # patch os.chdir() to do nothing
+        self.patch(os, "chdir", mock.Mock())
+
+    def test_no_pid_file(self):
+        """
+        test calling stopSlave() when no pid file is present
+        """
+
+        # patch open() to raise 'file not found' exception
+        self.setUpOpenError(2)
+
+        # check that stop() raises SlaveNotRunning exception
+        self.assertRaises(runner.SlaveNotRunning,
+                          runner.stopSlave, None, False)
+
+    def test_successful_stop(self):
+        """
+        test stopSlave() on a successful slave stop
+        """
+
+        def emulated_kill(pid, sig):
+            if sig == 0:
+                # when probed if a signal can be send to the process
+                # emulate that it is dead with 'No such process' error
+                raise OSError(errno.ESRCH, "dummy")
+
+        # patch open() to return a pid file
+        self.setUpOpen(str(self.PID))
+
+        # patch os.kill to emulate successful kill
+        mocked_kill = mock.Mock(side_effect=emulated_kill)
+        self.patch(os, "kill", mocked_kill)
+
+        # don't waste time
+        self.patch(time, "sleep", mock.Mock())
+
+        # check that stopSlave() sends expected signal to right PID
+        # and print correct message to stdout
+        runner.stopSlave(None, False)
+        mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
+                                      mock.call(self.PID, 0)])
+        self.assertStdoutEqual("buildslave process %s is dead\n" % self.PID)
+
+
+class TestStop(IsBuildslaveDirMixin,
+               misc.StdoutAssertionsMixin,
+               unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.stop()
+    """
+    config = {"basedir": "dummy", "quiet": False}
+
+    def setUp(self):
+        # patch basedir check to always succeed
+        self.setupUpIsBuildslaveDir(True)
+
+    def test_no_slave_running(self):
+        """
+        test calling stop() when no slave is running
+        """
+        self.setUpStdoutAssertions()
+
+        # patch stopSlave() to raise an exception
+        mock_stopSlave = mock.Mock(side_effect=runner.SlaveNotRunning())
+        self.patch(runner, "stopSlave", mock_stopSlave)
+
+        runner.stop(self.config)
+        self.assertStdoutEqual("buildslave not running\n")
+
+    def test_successful_stop(self):
+        """
+        test calling stop() when slave is running
+        """
+        # patch stopSlave() to do nothing
+        mock_stopSlave = mock.Mock()
+        self.patch(runner, "stopSlave", mock_stopSlave)
+
+        runner.stop(self.config)
+        mock_stopSlave.assert_called_once_with(self.config["basedir"],
+                                               self.config["quiet"],
+                                               "TERM")
+
+
+class TestRestart(IsBuildslaveDirMixin,
+                  misc.StdoutAssertionsMixin,
+                  unittest.TestCase):
+    """
+    Test buildslave.scripts.runner.restart()
+    """
+    config = {"basedir": "dummy", "quiet": False}
+
+    def setUp(self):
+        self.setUpStdoutAssertions()
+
+        # patch basedir check to always succeed
+        self.setupUpIsBuildslaveDir(True)
+
+        # patch startup.start() to do nothing
+        self.start = mock.Mock()
+        self.patch(startup, "start", self.start)
+
+    def test_no_slave_running(self):
+        """
+        test calling restart() when no slave is running
+        """
+        # patch stopSlave() to raise an exception
+        mock_stopSlave = mock.Mock(side_effect=runner.SlaveNotRunning())
+        self.patch(runner, "stopSlave", mock_stopSlave)
+
+        # check that restart() calls start() and prints correct messages
+        runner.restart(self.config)
+        self.start.assert_called_once_with(self.config)
+        self.assertStdoutEqual("no old buildslave process found to stop\n"
+                               "now restarting buildslave process..\n")
+
+
+    def test_restart(self):
+        """
+        test calling restart() when slave is running
+        """
+        # patch stopSlave() to do nothing
+        mock_stopSlave = mock.Mock()
+        self.patch(runner, "stopSlave", mock_stopSlave)
+
+        # check that restart() calls start() and prints correct messages
+        runner.restart(self.config)
+        self.assertStdoutEqual("now restarting buildslave process..\n")
+        self.start.assert_called_once_with(self.config)
+
+
+class TestUpgradeSlave(IsBuildslaveDirMixin, unittest.TestCase):
     """
     Test buildslave.scripts.runner.upgradeSlave()
     """
@@ -28,8 +184,7 @@ class TestUpgradeSlave(unittest.TestCase):
         test calling upgradeSlave() with bad base directory
         """
         # override isBuildslaveDir() to always fail
-        mocked_isBuildslaveDir = mock.Mock(return_value=False)
-        self.patch(base, "isBuildslaveDir", mocked_isBuildslaveDir)
+        self.setupUpIsBuildslaveDir(False)
 
         # call upgradeSlave() and check that SystemExit exception is raised
         config = {"basedir" : "dummy"}
@@ -39,7 +194,7 @@ class TestUpgradeSlave(unittest.TestCase):
         self.assertEqual(exception.code, 1, "unexpected exit code")
 
         # check that isBuildslaveDir was called with correct argument
-        mocked_isBuildslaveDir.assert_called_once_with("dummy")
+        self.isBuildslaveDir.assert_called_once_with("dummy")
 
 
 class OptionsMixin(object):
