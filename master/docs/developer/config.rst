@@ -165,10 +165,6 @@ described in :ref:`developer-Reconfiguration`.
         The list of :py:class:`IChangeSource` providers from
         :bb:cfg:`change_source`.
 
-    .. py:attribute:: status
-
-        The list of :py:class:`IStatusReceiver` providers from
-        :bb:cfg:`status`.
 
     .. py:attribute:: user_managers
 
@@ -178,6 +174,10 @@ described in :ref:`developer-Reconfiguration`.
 
         The web server configuration from :bb:cfg:`www`.  The keys ``port`` and
         ``url`` are always available.
+
+    .. py:attribute:: services
+
+        The list of additional plugin services
 
     Loading of the configuration file is generally triggered by the master,
     using the following methods:
@@ -512,5 +512,3 @@ Status Receivers
 ................
 
 At every reconfig, all status listeners are stopped and new versions started.
-
-

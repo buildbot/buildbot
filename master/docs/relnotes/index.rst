@@ -89,8 +89,6 @@ Individual features and improvements to the Data API are not described on this p
 
      While the components can be still directly imported as ``buildbot.kind.other.bits``, this might not be the case after Buildbot v1.0 is released.
 
-* :class:`~buildbot.status.status_gerrit.GerritStatusPush` supports specifying an SSH identity file explicitly.
-
 * OpenStack latent slaves now support block devices as a bootable volume.
 
 * Add new :bb:step:`Cppcheck` step.
@@ -107,9 +105,27 @@ Individual features and improvements to the Data API are not described on this p
 
 * :bb:chsrc:`GitPoller` now supports detecting new branches
 
+Reporters
+~~~~~~~~~
+
+Status plugins have been moved into the ``reporters`` namespace.
+Their API has slightly to changed in order to adapt to the new data API.
+
+* :class:`~buildbot.status.status_gerrit.GerritStatusPush` renamed to :class:`~buildbot.reporters.gerrit.Gerrit`
+
+* :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
+
+* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a `~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
+
+* :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
+
+* :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
+
+* :class:`~buildbot.reporters.gerrit.Gerrit` supports specifying an SSH identity file explicitly.
+
 * Added StashStatusPush status hook for Atlassian Stash
 
-* :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+* :bb:reporter:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
 
 Fixes
 ~~~~~
@@ -148,7 +164,7 @@ Fixes
   * there are some differences in behaviour: only those labels that were
     provided will be updated
   * Gerrit server must be able to provide a version, if it can't the
-    :bb:status:`GerritStatusPush` will not work
+    :bb:reporter:`GerritStatusPush` will not work
 
   .. note::
 
@@ -156,7 +172,7 @@ Fixes
      these will still work, however there could be more labels updated than
      anticipated.
 
-  More detailed information is available in :bb:status:`GerritStatusPush`
+  More detailed information is available in :bb:reporter:`GerritStatusPush`
   section.
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
@@ -295,7 +311,7 @@ Changes and Removals
 
 * Property values must be serializable in JSON.
 
-* :bb:status:`IRC` has the following changes:
+* :bb:reporter:`IRC` has the following changes:
 
   - categories parameter is deprecated and removed. It should be replaced with tags=[cat]
   - noticeOnChannel parameter is deprecated and removed.

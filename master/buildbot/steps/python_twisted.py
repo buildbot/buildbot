@@ -17,18 +17,12 @@
 from twisted.python import log
 
 from buildbot.process import logobserver
-from buildbot.status import testresult
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
-try:
-    import cStringIO
-    StringIO = cStringIO
-except ImportError:
-    import StringIO
 import re
 
 # BuildSteps that are specific to the Twisted source tree
@@ -508,13 +502,6 @@ class Trial(ShellCommand):
             return rtext.replace("reactor", "")
         return ""
 
-    def addTestResult(self, testname, results, text, tlog):
-        if self.reactor is not None:
-            testname = (self.reactor,) + testname
-        tr = testresult.TestResult(testname, results, text, logs={'log': tlog})
-        # self.step_status.build.addTestResult(tr)
-        self.build.build_status.addTestResult(tr)
-
     def logConsumer(self):
         while True:
             stream, line = yield
@@ -543,53 +530,6 @@ class Trial(ShellCommand):
 
         if problems:
             self.addCompleteLog("problems", problems)
-            # now parse the problems for per-test results
-            pio = StringIO.StringIO(problems)
-            pio.readline()  # eat the first separator line
-            testname = None
-            done = False
-            while not done:
-                while True:
-                    line = pio.readline()
-                    if line == "":
-                        done = True
-                        break
-                    if line.find("=" * 60) == 0:
-                        break
-                    if line.find("-" * 60) == 0:
-                        # the last case has --- as a separator before the
-                        # summary counts are printed
-                        done = True
-                        break
-                    if testname is None:
-                        # the first line after the === is like:
-                        # EXPECTED FAILURE: testLackOfTB (twisted.test.test_failure.FailureTestCase)
-                        # SKIPPED: testRETR (twisted.test.test_ftp.TestFTPServer)
-                        # FAILURE: testBatchFile (twisted.conch.test.test_sftp.TestOurServerBatchFile)
-                        r = re.search(r'^([^:]+): (\w+) \(([\w\.]+)\)', line)
-                        if not r:
-                            # TODO: cleanup, if there are no problems,
-                            # we hit here
-                            continue
-                        result, name, case = r.groups()
-                        testname = tuple(case.split(".") + [name])
-                        results = {'SKIPPED': SKIPPED,
-                                   'EXPECTED FAILURE': SUCCESS,
-                                   'UNEXPECTED SUCCESS': WARNINGS,
-                                   'FAILURE': FAILURE,
-                                   'ERROR': FAILURE,
-                                   'SUCCESS': SUCCESS,  # not reported
-                                   }.get(result, WARNINGS)
-                        text = result.lower().split()
-                        loog = line
-                        # the next line is all dashes
-                        loog += pio.readline()
-                    else:
-                        # the rest goes into the log
-                        loog += line
-                if testname:
-                    self.addTestResult(testname, results, text, loog)
-                    testname = None
 
         if warnings:
             lines = sorted(warnings.keys())

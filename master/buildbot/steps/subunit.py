@@ -17,9 +17,7 @@
 from StringIO import StringIO
 from buildbot.process import logobserver
 from buildbot.status.results import FAILURE
-from buildbot.status.results import SKIPPED
 from buildbot.status.results import SUCCESS
-from buildbot.status.testresult import TestResult as aTestResult
 from buildbot.steps.shell import ShellCommand
 from unittest import TestResult
 
@@ -65,14 +63,12 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
 
     def addSuccess(self, test):
         TestResult.addSuccess(self, test)
-        self.addAResult(test, SUCCESS, 'SUCCESS')
 
     def addSkip(self, test, detail):
         if hasattr(TestResult, 'addSkip'):
             TestResult.addSkip(self, test, detail)
         else:
             self.skips.append((test, detail))
-        self.addAResult(test, SKIPPED, 'SKIPPED', detail)
 
     def addError(self, test, err):
         TestResult.addError(self, test, err)
@@ -82,13 +78,8 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         TestResult.addFailure(self, test, err)
         self.issue(test, err)
 
-    def addAResult(self, test, result, text, log=""):
-        tr = aTestResult(tuple(test.id().split('.')), result, text, log)
-        self.step.build.build_status.addTestResult(tr)
-
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
-        self.addAResult(test, FAILURE, 'FAILURE', err)
         self.step.setProgress('tests failed', len(self.failures) +
                               len(self.errors))
 

@@ -149,9 +149,9 @@ Features
 
 * Build status can be sent to GitHub.
   Depends on txgithub package.
-  See :bb:status:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
+  See :bb:reporter:`GitHubStatus` and `GitHub Commit Status <https://github.com/blog/1227-commit-status-api>`_.
 
-* The IRC bot of :bb:status:`IRC` will, unless useRevisions is set, shorten
+* The IRC bot of :bb:reporter:`IRC` will, unless useRevisions is set, shorten
   long lists of revisions printed when a build starts; it will only show two,
   and the number of additional revisions included in the build.
 

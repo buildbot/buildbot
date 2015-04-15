@@ -58,7 +58,7 @@ It sends commands to be run on the build slaves, which simply execute the comman
 (certain steps involve more local decision making, where the overhead of sending a lot of commands back and forth would be inappropriate, but in general the buildmaster is responsible for everything).
 
 The buildmaster is usually fed :class:`Change`\s by some sort of version control system (:ref:`change-sources`), which may cause builds to be run.
-As the builds are performed, various status messages are produced, which are then sent to any registered :ref:`status-targets`.
+As the builds are performed, various status messages are produced, which are then sent to any registered :ref:`reporters`.
 
 .. image:: _images/overview.*
    :alt: Overview Diagram

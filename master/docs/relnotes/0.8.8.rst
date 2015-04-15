@@ -25,7 +25,7 @@ Features
 
 * ``buildbot stop`` and ``buildbot restart`` now accept ``--clean`` to stop or restart the master cleanly (allowing all running builds to complete first).
 
-* The :bb:status:`IRC` bot now supports clean shutdown and immediate shutdown by using the command 'shutdown'.
+* The :bb:reporter:`IRC` bot now supports clean shutdown and immediate shutdown by using the command 'shutdown'.
   To allow the command to function, you must provide `allowShutdown=True`.
 
 * :bb:step:`CopyDirectory` has been added.
@@ -116,7 +116,7 @@ Changes for Developers
 * Added an optional build start callback to ``buildbot.status.status_gerrit.GerritStatusPush``
   This release includes the fix for :bug:`2536`.
 
-* An optional ``startCB`` callback to :bb:status:`GerritStatusPush` can be used
+* An optional ``startCB`` callback to :bb:reporter:`GerritStatusPush` can be used
   to send a message back to the committer.
   See the linked documentation for details.
 

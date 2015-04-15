@@ -99,7 +99,7 @@ You can have the buildmaster send email to multiple recipients: just provide a l
                               missing_timeout=300) # notify after 5 minutes
     ]
 
-The email sent this way will use a :class:`MailNotifier` (see :bb:status:`MailNotifier`) status target, if one is configured.
+The email sent this way will use a :class:`MailNotifier` (see :bb:reporter:`MailNotifier`) status target, if one is configured.
 This provides a way for you to control the *from* address of the email, as well as the relayhost (aka *smarthost*) to use as an SMTP server.
 If no :class:`MailNotifier` is configured on this buildmaster, the buildslave-missing emails will be sent using a default configuration.
 

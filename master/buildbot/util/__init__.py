@@ -54,7 +54,7 @@ def flatten(l, types=list):
         rv = []
         for e in l:
             if isinstance(e, types):
-                rv.extend(flatten(e))
+                rv.extend(flatten(e, types))
             else:
                 rv.append(e)
         return rv

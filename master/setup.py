@@ -281,12 +281,8 @@ setup_args = {
                 'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
                 'MsBuild4', 'MsBuild', 'MsBuild12'])
         ]),
-        ('buildbot.status', [
-            ('buildbot.status.mail', ['MailNotifier']),
-            ('buildbot.status.irc', ['IRC']),
-            ('buildbot.status.status_push', ['StatusPush', 'HttpStatusPush']),
-            ('buildbot.status.status_gerrit', ['GerritStatusPush']),
-            ('buildbot.status.github', ['GitHubStatus'])
+        ('buildbot.reporters', [
+            ('buildbot.reporters.mail', ['MailNotifier']),
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though

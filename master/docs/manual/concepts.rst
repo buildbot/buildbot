@@ -422,7 +422,7 @@ The ``who`` fields in ``git`` Changes are used to create :ref:`User-Objects`, wh
 User Objects
 ~~~~~~~~~~~~
 
-User Objects allow Buildbot to better manage users throughout its various interactions with users (see :ref:`Change-Sources` and :ref:`Status-Targets`).
+User Objects allow Buildbot to better manage users throughout its various interactions with users (see :ref:`Change-Sources` and :ref:`Reporters`).
 The User Objects are stored in the Buildbot database and correlate the various attributes that a user might have: irc, Git, etc.
 
 Changes
@@ -488,7 +488,7 @@ If desired, the buildbot can notify the interested users until the problem is re
 Email Addresses
 ~~~~~~~~~~~~~~~
 
-The :bb:status:`MailNotifier` is a status target which can send email about the results of each build.
+The :bb:reporter:`MailNotifier` is a status target which can send email about the results of each build.
 It accepts a static list of email addresses to which each message should be delivered, but it can also be configured to send mail to the :class:`Build`\'s Interested Users.
 To do this, it needs a way to convert User names into email addresses.
 

@@ -833,10 +833,15 @@ class FakeChangesComponent(FakeDBComponent):
         return len(self.changes)
 
     def getChangesForBuild(self, buildid):
-        pass
+        # the algorithm is too complicated to be worth faked, better patch it ad-hoc
+        raise NotImplementedError("Please patch in tests to return appropriate results")
 
     def getChangeFromSSid(self, ssid):
-        pass
+        chdicts = [self._chdict(v) for v in self.changes.values() if v['sourcestampid'] == ssid]
+        if chdicts:
+            return defer.succeed(chdicts[0])
+        else:
+            return defer.succeed(None)
 
     def _chdict(self, row):
         chdict = row.copy()

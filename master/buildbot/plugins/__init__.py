@@ -17,12 +17,12 @@
 Buildbot plugin infrastructure
 """
 
-from buildbot.plugins.db import get_plugins
 from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
 from buildbot.interfaces import IStatusReceiver
+from buildbot.plugins.db import get_plugins
 
 
 __all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'status', 'util']
@@ -36,3 +36,4 @@ buildslave = get_plugins('buildslave', IBuildSlave)
 steps = get_plugins('steps', IBuildStep)
 status = get_plugins('status', IStatusReceiver)
 util = get_plugins('util', None)
+reporters = get_plugins('reporters', None)
