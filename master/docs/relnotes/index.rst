@@ -36,6 +36,9 @@ Features
 
 * The latent buildslave support is less buggy, thanks to :bb:pull:`646`.
 
+* The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches,
+  codebases, projects, and repositories.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
