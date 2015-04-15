@@ -20,12 +20,13 @@ from buildbot.steps import shell
 from buildbot.status.results import SKIPPED, SUCCESS, WARNINGS, FAILURE
 from buildbot.status.results import EXCEPTION
 from buildbot.test.util import steps, compat
+from buildbot.test.util import config as configmixin
 from buildbot.test.fake.remotecommand import ExpectShell, Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot import config
 from buildbot.process import properties
 
-class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
+class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -58,9 +59,17 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         # this is an ugly way to define an API, but for now check that
         # the RemoteCommand arguments are properly passed on
         step = shell.ShellCommand(workdir='build', command="echo hello",
-                abc=1, xyz=2)
-        self.assertEqual(step.remote_kwargs, dict(abc=1, xyz=2,
-                                workdir='build', usePTY='slave-config'))
+                want_stdout=0, logEnviron=False)
+        self.assertEqual(step.remote_kwargs, dict(want_stdout=0,
+                         logEnviron=False, workdir='build',
+                         usePTY='slave-config'))
+
+    def test_constructor_args_validity(self):
+        # this checks that an exception is raised for invalid arguments
+        self.assertRaisesConfigError(
+                    "Invalid argument(s) passed to RemoteShellCommand: ",
+                    lambda: shell.ShellCommand('build', "echo Hello World",
+                            wrongArg1=1, wrongArg2='two'))
 
     def test_describe_no_command(self):
         step = shell.ShellCommand(workdir='build')

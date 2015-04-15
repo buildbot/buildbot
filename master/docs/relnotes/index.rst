@@ -53,13 +53,14 @@ Features
   only a single property and therefore allows commas to be included in the property
   name and value.
 
-
 * The ``Git`` step has a new ``config`` option, which accepts a dict of git configuration options to
   pass to the low-level git commands.  See :bb:step:`Git` for details.
 
 * The ``TryScheduler`` now accepts an additional ``properties`` argument to its
   ``getAvailableBuilderNames`` method, which 'buildbot try' uses to send the properties
   it was passed (and are normally sent when starting a build).
+
+* In :bb:step:`ShellCommand` ShellCommand now validates its arguments during config and will identify any invalid arguments before a build is started.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -427,9 +427,9 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
                 state["slave_commands"] = commands
             def _commands_unavailable(why):
                 # probably an old slave
-                log.msg("BuildSlave._commands_unavailable")
                 if why.check(AttributeError):
                     return
+                log.msg("BuildSlave.getCommands is unavailable - ignoring")
                 log.err(why)
             d1.addCallbacks(_got_commands, _commands_unavailable)
             return d1
