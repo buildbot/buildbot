@@ -246,13 +246,17 @@ class SVN(Source):
             defer.returnValue(False)
             return
 
-        # then run 'svn info' to check that the URL matches our repourl
-        stdout = yield self._dovccmd(['info'], collectStdout=True)
+        # then run 'svn info --xml' to check that the URL matches our repourl
+        stdout = yield self._dovccmd(['info', '--xml'], collectStdout=True)
 
-        # extract the URL, handling whitespace carefully so that \r\n works
-        # is a line terminator
-        mo = re.search('^URL:\s*(.*?)\s*$', stdout, re.M)
-        defer.returnValue(mo and mo.group(1) == self.repourl)
+        try:
+            stdout_xml = xml.dom.minidom.parseString(stdout)
+            extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue
+        except xml.parsers.expat.ExpatError:
+            msg = "Corrupted xml, aborting step"
+            self.stdio_log.addHeader(msg)
+            raise buildstep.BuildStepFailed()
+        defer.returnValue(extractedurl == self.repourl)
         return
 
     @defer.inlineCallbacks
