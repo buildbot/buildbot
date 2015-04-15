@@ -31,7 +31,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.changes import base as changes_base
 from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
-from buildbot.scripts.base import getConfigFileWithFallback
 
 global_defaults = dict(
     title='Buildbot',
@@ -832,7 +831,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             l.name = name
             if bare_builder_lock:
                 return l
-            return locks.LockAccess(l, "counting")
+            return locks.LockAccess(l, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [ b1, b2 ]

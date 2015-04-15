@@ -101,15 +101,31 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
     # maybeStartBuild
 
+    # maybeStartBuild
 
+    def _makeMocks(self):
+        slave = mock.Mock()
+        slave.name = 'slave'
+        buildrequest = mock.Mock()
+        buildrequest.id = 10
+        buildrequests = [buildrequest]
+        return slave, buildrequests
+
+    @defer.inlineCallbacks
+    def test_maybeStartBuild(self):
+        yield self.makeBuilder()
+
+        slave, buildrequests = self._makeMocks()
+
+        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
+        self.assertEqual(started, True)
+        self.assertBuildsStarted([('slave', [10])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_failsToStart(self):
         yield self.makeBuilder(startBuildsForSucceeds=False)
 
-        slave = mock.Mock()
-        slave.name = 'slave'
-        buildrequests = [mock.Mock(id=10)]
+        slave, buildrequests = self._makeMocks()
 
         started = yield self.bldr.maybeStartBuild(slave, buildrequests)
         self.assertEqual(started, False)

@@ -96,7 +96,21 @@ class GridStatusMixin(object):
         # TODO: Maybe order sourcestamps in key by codebases names?
         return tuple([(ss.branch, ss.revision, ss.patch) for ss in sourcestamps])
 
+    def clearRecentBuildsCache(self):
+        self.__recentBuildsCache__ = {}
+
     def getRecentBuilds(self, builder, numBuilds, branch):
+        cache = getattr(self, '__recentBuildsCache__', {})
+        key = (builder.getName(), branch, numBuilds)
+        try:
+            return cache[key]
+        except KeyError:
+            # cache miss, get the value and store it in the cache
+            result = [b for b in self.__getRecentBuilds(builder, numBuilds, branch)]
+            cache[key] = result
+            return result
+
+    def __getRecentBuilds(self, builder, numBuilds, branch):
         """
         get a list of most recent builds on given builder
         """
@@ -143,10 +157,8 @@ class GridStatusMixin(object):
                     sourcestamps[key] = (ss, start)
 
         # now sort those and take the NUMBUILDS most recent
-        sourcestamps = sourcestamps.values()
-        sourcestamps.sort(lambda x, y: cmp(x[1], y[1]))
-        sourcestamps = map(lambda tup : tup[0], sourcestamps)
-        sourcestamps = sourcestamps[-numBuilds:]
+        sourcestamps = sorted(sourcestamps.itervalues(), key = lambda stamp: stamp[1])
+        sourcestamps = [stamp[0] for stamp in sourcestamps][-numBuilds:]
 
         return sourcestamps
 
@@ -179,8 +191,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                    })
         
-        sortedBuilderNames = status.getBuilderNames()[:]
-        sortedBuilderNames.sort()
+        sortedBuilderNames = sorted(status.getBuilderNames())
         
         cxt['builders'] = []
 
@@ -207,6 +218,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
             cxt['builders'].append(b)
 
+        self.clearRecentBuildsCache()
         template = request.site.buildbot_service.templates.get_template("grid.html")
         defer.returnValue(template.render(**cxt))
 
@@ -245,8 +257,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                     })
 
-        sortedBuilderNames = status.getBuilderNames()[:]
-        sortedBuilderNames.sort()
+        sortedBuilderNames = sorted(status.getBuilderNames())
         
         cxt['sorted_builder_names'] = sortedBuilderNames
         cxt['builder_builds'] = builder_builds = []
@@ -276,5 +287,6 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
+        self.clearRecentBuildsCache()
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
         defer.returnValue(template.render(**cxt))
