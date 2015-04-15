@@ -2608,6 +2608,16 @@ be substituted using :ref:`Interpolate`.
 
 ``interruptSignal``
    (optional) Signal to use to end the process, if the step is interrupted.
+   
+.. bb:step:: LogRenderable
+
+LogRenderable
++++++++++++++
+
+.. py:class:: buildbot.steps.master.LogRenderable
+
+This build step takes content which can be renderable and logs it in a pretty-printed format.
+It can be useful for debugging properties during a build.
 
 .. index:: Properties; from steps
 
