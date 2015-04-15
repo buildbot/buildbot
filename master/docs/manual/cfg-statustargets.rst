@@ -804,12 +804,13 @@ GitHubStatus
 
 ::
 
-    from buildbot.plugins import status, util
+    from buildbot.process.properties import Interpolate
+    from buildbot.status import github
 
     repoOwner = Interpolate("%(prop:github_repo_owner)s")
     repoName = Interpolate("%(prop:github_repo_name)s")
     sha = Interpolate("%(src::revision)s")
-    gs = status.GitHubStatus(token='githubAPIToken',
+    gs = github.GitHubStatus(token='githubAPIToken',
                              repoOwner=repoOwner,
                              repoName=repoName,
                              sha=sha,
