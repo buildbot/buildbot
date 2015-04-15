@@ -70,6 +70,8 @@ Features
 * OpenStack-based Latent Buildslave support was added.
   See :bb:pull:`666`.
 
+* Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
+  See :bb:pull:`596`.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
