@@ -40,6 +40,9 @@ Features
 
 * :bb:step:`SVN` has a new option `preferLastChangedRev=True` to use the last changed revision for ``got_revision``
 
+* The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
+
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
