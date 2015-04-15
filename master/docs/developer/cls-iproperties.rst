@@ -1,4 +1,4 @@
-.. index:: single; Properties; IProperties
+.. index:: single: Properties; IProperties
 
 IProperties
 ===========
