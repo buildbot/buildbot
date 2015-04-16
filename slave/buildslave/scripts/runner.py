@@ -15,248 +15,14 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, sys, re, time
-from buildslave.scripts import base
-from twisted.python import usage
+import os, sys, re
+from twisted.python import usage, reflect
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
 # fact, they are interchanged several times.  Caveat legator.
-
-class Maker:
-    def __init__(self, config):
-        self.config = config
-        self.basedir = config['basedir']
-        self.force = config.get('force', False)
-        self.quiet = config['quiet']
-
-    def mkdir(self):
-        if os.path.exists(self.basedir):
-            if not self.quiet:
-                print "updating existing installation"
-            return
-        if not self.quiet:
-            print "mkdir", self.basedir
-        os.mkdir(self.basedir)
-
-    def mkinfo(self):
-        path = os.path.join(self.basedir, "info")
-        if not os.path.exists(path):
-            if not self.quiet:
-                print "mkdir", path
-            os.mkdir(path)
-        created = False
-        admin = os.path.join(path, "admin")
-        if not os.path.exists(admin):
-            if not self.quiet:
-                print "Creating info/admin, you need to edit it appropriately"
-            f = open(admin, "wt")
-            f.write("Your Name Here <admin@youraddress.invalid>\n")
-            f.close()
-            created = True
-        host = os.path.join(path, "host")
-        if not os.path.exists(host):
-            if not self.quiet:
-                print "Creating info/host, you need to edit it appropriately"
-            f = open(host, "wt")
-            f.write("Please put a description of this build host here\n")
-            f.close()
-            created = True
-        access_uri = os.path.join(path, "access_uri")
-        if not os.path.exists(access_uri):
-            if not self.quiet:
-                print "Not creating info/access_uri - add it if you wish"
-        if created and not self.quiet:
-            print "Please edit the files in %s appropriately." % path
-
-    def chdir(self):
-        if not self.quiet:
-            print "chdir", self.basedir
-        os.chdir(self.basedir)
-
-    def makeTAC(self, contents, secret=False):
-        tacfile = "buildbot.tac"
-        if os.path.exists(tacfile):
-            oldcontents = open(tacfile, "rt").read()
-            if oldcontents == contents:
-                if not self.quiet:
-                    print "buildbot.tac already exists and is correct"
-                return
-            if not self.quiet:
-                print "not touching existing buildbot.tac"
-                print "creating buildbot.tac.new instead"
-            tacfile = "buildbot.tac.new"
-        f = open(tacfile, "wt")
-        f.write(contents)
-        f.close()
-        if secret:
-            os.chmod(tacfile, 0600)
-
-slaveTACTemplate = ["""
-import os
-
-from twisted.application import service
-from buildslave.bot import BuildSlave
-
-basedir = r'%(basedir)s'
-rotateLength = %(log-size)s
-maxRotatedFiles = %(log-count)s
-
-# if this is a relocatable tac file, get the directory containing the TAC
-if basedir == '.':
-    import os.path
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-# note: this line is matched against to check that this is a buildslave
-# directory; do not edit it.
-application = service.Application('buildslave')
-""",
-"""
-try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
-""",
-"""
-buildmaster_host = '%(host)s'
-port = %(port)d
-slavename = '%(name)s'
-passwd = '%(passwd)s'
-keepalive = %(keepalive)d
-usepty = %(usepty)d
-umask = %(umask)s
-maxdelay = %(maxdelay)d
-
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               allow_shutdown=%(allow-shutdown)s)
-s.setServiceParent(application)
-
-"""]
-
-def createSlave(config):
-    m = Maker(config)
-    m.mkdir()
-    m.chdir()
-    if config['relocatable']:
-        config['basedir'] = '.'
-    try:
-        master = config['master']
-        port = None
-        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
-        if port == None:
-            port = '9989'
-        config['host'] = host
-        config['port'] = int(port)
-    except:
-        print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007 or localhost"
-        raise
-
-    asd = config['allow-shutdown']
-    if asd:
-        config['allow-shutdown'] = "'%s'" % asd
-
-    if config['no-logrotate']:
-        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
-    else:
-        slaveTAC = "".join(slaveTACTemplate)
-    contents = slaveTAC % config
-
-    m.makeTAC(contents, secret=True)
-    m.mkinfo()
-
-    if not m.quiet:
-        print "buildslave configured in %s" % m.basedir
-
-
-class SlaveNotRunning(Exception):
-    """
-    raised when trying to stop slave process that is not running
-    """
-
-
-def stopSlave(basedir, quiet, signame="TERM"):
-    """
-    Stop slave process by sending it a signal.
-
-    Using the specified basedir path, read slave process's pid file and
-    try to terminate that process with specified signal.
-
-    @param basedir: buildslave basedir path
-    @param   quite: if False, don't print any messages to stdout
-    @param signame: signal to send to the slave process
-
-    @raise SlaveNotRunning: if slave pid file is not found
-    """
-    import signal
-
-    os.chdir(basedir)
-    try:
-        f = open("twistd.pid", "rt")
-    except:
-        raise SlaveNotRunning()
-
-    pid = int(f.read().strip())
-    signum = getattr(signal, "SIG"+signame)
-    timer = 0
-    try:
-        os.kill(pid, signum)
-    except OSError, e:
-        if e.errno != 3:
-            raise
-
-    time.sleep(0.1)
-    while timer < 10:
-        # poll once per second until twistd.pid goes away, up to 10 seconds
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            if not quiet:
-                print "buildslave process %d is dead" % pid
-            return
-        timer += 1
-        time.sleep(1)
-    if not quiet:
-        print "never saw process go away"
-
-
-def stop(config, signame="TERM"):
-    quiet = config['quiet']
-    basedir = config['basedir']
-
-    if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
-
-    try:
-        stopSlave(basedir, quiet, signame)
-    except SlaveNotRunning:
-        if not quiet:
-            print "buildslave not running"
-
-
-def restart(config):
-    quiet = config['quiet']
-
-    if not base.isBuildslaveDir(config['basedir']):
-        sys.exit(1)
-
-    from buildslave.scripts.startup import start
-    try:
-        stopSlave(config['basedir'], quiet)
-    except SlaveNotRunning:
-        if not quiet:
-            print "no old buildslave process found to stop"
-    if not quiet:
-        print "now restarting buildslave process.."
-    start(config)
 
 
 class MakerBase(usage.Options):
@@ -285,6 +51,7 @@ class MakerBase(usage.Options):
         self['basedir'] = os.path.abspath(self['basedir'])
 
 class StartOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.start.startCommand"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -293,10 +60,12 @@ class StartOptions(MakerBase):
         return "Usage:    buildslave start [<basedir>]"
 
 class StopOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.stop.stop"
     def getSynopsis(self):
         return "Usage:    buildslave stop [<basedir>]"
 
 class RestartOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -305,6 +74,7 @@ class RestartOptions(MakerBase):
         return "Usage:    buildslave restart [<basedir>]"
 
 class UpgradeSlaveOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.upgrade_slave.upgradeSlave"
     optFlags = [
         ]
     optParameters = [
@@ -318,26 +88,9 @@ class UpgradeSlaveOptions(MakerBase):
     upgrades it to the current version.
     """
 
-def upgradeSlave(config):
-    basedir = os.path.expanduser(config['basedir'])
-
-    if not base.isBuildslaveDir(basedir):
-        sys.exit(1)
-
-    buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
-    new_buildbot_tac = buildbot_tac.replace(
-        "from buildbot.slave.bot import BuildSlave",
-        "from buildslave.bot import BuildSlave")
-    if new_buildbot_tac != buildbot_tac:
-        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
-        print "buildbot.tac updated"
-    else:
-        print "No changes made"
-
-    return 0
-
 
 class CreateSlaveOptions(MakerBase):
+    subcommandFunction = "buildslave.scripts.create_slave.createSlave"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -446,19 +199,6 @@ def run():
         print str(c)
         sys.exit(1)
 
-    command = config.subCommand
-    so = config.subOptions
-
-    if command == "create-slave":
-        createSlave(so)
-    elif command == "upgrade-slave":
-        upgradeSlave(so)
-    elif command == "start":
-        from buildslave.scripts.startup import start
-        start(so)
-    elif command == "stop":
-        stop(so)
-    elif command == "restart":
-        restart(so)
-    sys.exit(0)
-
+    subconfig = config.subOptions
+    subcommandFunction = reflect.namedObject(subconfig.subcommandFunction)
+    sys.exit(subcommandFunction(subconfig))
