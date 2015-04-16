@@ -6,14 +6,17 @@ class Menu extends Provider
         item.order ?= 99
         @items.push item
 
-    $get: ($rootScope) ->
-        $rootScope.$on '$stateChangeSuccess', (event, toState) =>
-            @current = toState.name
+    $get: [
+        '$rootScope',
+        ($rootScope) ->
+            $rootScope.$on '$stateChangeSuccess', (event, toState) =>
+                @current = toState.name
 
-        return {
-            getItems: => @items
-            getCurrent: => @current
-        }
+            return {
+                getItems: => @items
+                getCurrent: => @current
+            }
+    ]
 
 
 class GlMenu extends Provider
