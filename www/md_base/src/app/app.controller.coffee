@@ -1,5 +1,9 @@
 class App extends Controller
     title: ''
-    constructor: ($scope, $rootScope)->
+
+    openMenu: ->
+        @$mdSidenav('left').open()
+
+    constructor: ($scope, $rootScope, @$mdSidenav)->
         $rootScope.$on '$stateChangeSuccess', (event, toState) =>
             @title = toState.name

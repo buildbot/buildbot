@@ -17,6 +17,8 @@ html(ng-app="app", ng-controller="appController as app")
       div(layout="column", role="main", flex)
         md-toolbar.topbar
           div.md-toolbar-tools
+            md-button.nav-button(hide-gt-sm, ng-click="app.openMenu()")
+              md-icon(md-svg-icon="navicon")
             b Buildbot
             span.title(ng-bind="app.title")
         md-content.md-padding(flex, ui-view)
