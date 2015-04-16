@@ -295,6 +295,17 @@ You can think of ``renderer`` as saying "call this function when the step starts
 
 .. _WithProperties:
 
+FlattenList
++++++++++++
+
+If nested list should be flatten for some renderables, FlattenList could be used. For example::
+
+   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]]))
+
+descriptionDone would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes. This is useful when list-returning Property is used in renderables.
+
+.. note:: ShellCommandby default would flatten nested list in command, no need to use FlattenList for it
+
 WithProperties
 ++++++++++++++
 
