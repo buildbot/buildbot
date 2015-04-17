@@ -1,0 +1,29 @@
+doctype html
+html(ng-app="app", ng-controller="appController as app")
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+    meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
+
+    | {% raw %}
+    title(ng-bind-template="Buildbot | {{ app.title }}")
+    | {% endraw %}
+
+    link(rel='stylesheet', href='styles.css')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic')
+
+    body(ng-cloak, flex, layout="row")
+      sidenav
+      div(layout="column", role="main", flex)
+        md-toolbar.topbar
+          div.md-toolbar-tools
+            md-button.nav-button(hide-gt-sm, ng-click="app.openMenu()")
+              md-icon(md-svg-icon="navicon")
+            b Buildbot
+            span.title(ng-bind="app.title")
+        md-content.md-padding(flex, ui-view)
+          h1 Hello buildbot!
+
+      script(src="scripts.js?_#{(new Date()).getTime()}")
+      script
+        | angular.module("app").constant("config", {{configjson|safe}})

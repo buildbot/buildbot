@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "devDependencies": {
+    "guanlecoja": "latest",
+    "gulp-shell": "^0.4.0",
+    "gulp-svg-symbols": "^0.3.1"
+  },
+  "name": "md-base",
+  "dependencies": {},
+  "description": "md_base"
+}

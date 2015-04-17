@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><% _.forEach( icons, function( icon ){ %>
+    <g id="<%= icon.id %>" viewBox="<%= icon.svg.viewBox %>"><% if (icon.title) {%>
+      <title><%= icon.title %></title><% }%>
+      <%= icon.svg.content %>
+    </g><%
+}); %></svg>
