@@ -833,8 +833,8 @@ class TestBuildBlameList(unittest.TestCase):
         r.sources.extend([self.patchSource])
         build = Build([r])
         blamelist = build.blamelist()
-        # If no patch is set, author will not be est 
-        self.assertEqual(blamelist, [])	
+        # If no patch is set, author will not be est
+        self.assertEqual(blamelist, [])
 
 
 class TestSetupProperties_MultipleSources(unittest.TestCase):
