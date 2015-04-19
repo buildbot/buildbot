@@ -69,6 +69,9 @@ class Trigger(LoggingBuildStep):
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
 
+        # Scheduler name cache
+        self._all_schedulers = None
+
     def interrupt(self, reason):
         if self.running and not self.ended:
             self.step_status.setText(["interrupted"])
@@ -89,9 +92,8 @@ class Trigger(LoggingBuildStep):
 
     def getSchedulerByName(self, name):
         # Use a quick cache to avoid generating this dict every time.
-        try:
-            all_schedulers = self._all_schedulers
-        except AttributeError:
+        all_schedulers = self._all_schedulers
+        if all_schedulers is None:
             all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
             all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
             self._all_schedulers = all_schedulers
