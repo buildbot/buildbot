@@ -139,7 +139,7 @@ The following example will add a Docker latent slave for docker running at the f
 
     from buildbot.plugins import buildslave
     c['slaves'] = [
-        buildslave.DockerLatentBuildSlave('minion1', 'sekrit',
+        buildslave.DockerLatentBuildSlave('docker', 'password',
                                           docker_host='tcp://localhost:2375',
                                           image='my_project_slave')
     ]
