@@ -641,7 +641,9 @@ The parameters are:
 
 :guilabel:`Secret`
     Any value.
-    If you provide a non-empty value (recommended), make sure that your hook is configured to use it::
+    If you provide a non-empty value (recommended), make sure that your hook is configured to use it:
+
+    .. code-block:: python
 
         c['status'].append(status.WebStatus(...,
                                             change_hook_dialects={
@@ -1530,6 +1532,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                           }
 
                       .. literalinclude:: /examples/git_gerrit.cfg
+                         :language: python
                          :pyobject: gerritSummaryCB
 
    :param string identity_file: (optional) Gerrit SSH identity file.

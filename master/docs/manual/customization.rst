@@ -1020,7 +1020,9 @@ Distribute a Buildbot Plug-In
 First of all, you must prepare a Python package (if you do not know what that is, please check :doc:`../developer/plugins-publish`, where you can find a couple of pointers to tutorials).
 
 When you have a package, you will have a special file called :file:`setup.py`.
-This file needs to be updated to include a pointer to your new step::
+This file needs to be updated to include a pointer to your new step:
+
+.. code-block:: python
 
     setup(
         ...
