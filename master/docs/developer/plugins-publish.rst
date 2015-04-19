@@ -37,7 +37,9 @@ Buildbot supports several kinds of pluggable components:
 
 which are described in :doc:`../manual/plugins`.
 
-Once you have your component packaged, it's quite straightforward: you just need to add a few lines to the ``entry_points`` parameter of your call of ``setup`` function in :file:`setup.py` file::
+Once you have your component packaged, it's quite straightforward: you just need to add a few lines to the ``entry_points`` parameter of your call of ``setup`` function in :file:`setup.py` file:
+
+.. code-block:: python
 
     setup(
         ...
@@ -53,7 +55,9 @@ Once you have your component packaged, it's quite straightforward: you just need
 (You might have seen different ways to specify the value for ``entry_points``, however they all do the same thing.
 Full description of possible ways is available in `setuptools documentation <http://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins>`_.)
 
-After the :file:`setup.py` file is updated, you can build and install it::
+After the :file:`setup.py` file is updated, you can build and install it:
+
+.. code-block:: bash
 
     $ python setup.py build
     $ sudo python setup.py install

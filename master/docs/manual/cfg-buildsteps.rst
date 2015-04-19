@@ -166,17 +166,21 @@ At the moment, Buildbot contains two implementations of most source steps:
    Both implementations perform the checkout on the slave side.
    The difference is where the parameters are processed and where the logic is implemented.
 
-   The old source steps are imported like this::
+   The old source steps are imported like this:
+
+   .. code-block:: python
 
        from buildbot.steps.source.oldsource import Git
 
-       ... Git ...
+       # ... Git ...
 
-    while new source steps are in separate Python modules for each version-control system and, using the plugin infrastructure are available as::
+    while new source steps are in separate Python modules for each version-control system and, using the plugin infrastructure are available as:
+
+   .. code-block:: python
 
        from buildbot.plugins import steps
 
-       ... steps.Git ...
+       # ... steps.Git ...
 
 
 New users should, where possible, use the new implementations.
@@ -846,7 +850,9 @@ This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automa
 
    You can use the two above Rendereable in conjuction by using the class ``buildbot.process.properties.FlattenList``
 
-for example::
+for example:
+
+.. code-block:: python
 
     ftom buildbot.plugins import steps, util
 
