@@ -2343,8 +2343,12 @@ For this purpose, Trigger step supports a method that you can customize in order
 
     :returns: list of tuples (schedulerName, propertiesDict) optionally via deferred
 
-    This method returns a list of tuples describing what scheduler to trigger, with which properties.
-    With this method, you can trigger several time the same scheduler with different set of properties.
+    This methods returns a list of tuples describing what scheduler to trigger, with which properties.
+    The properties should already be rendered (ie, concrete value, not objects wrapped by ``Interpolate`` or
+    ``Property``). Since this function happens at build-time, the property values are available from the
+    step and can be used to decide what schedulers or properties to use.
+
+    With this method, you can also trigger the same scheduler multiple times with different set of properties.
     The sourcestamp configuration is however the same for each triggered build request.
 
 
