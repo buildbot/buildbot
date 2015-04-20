@@ -69,6 +69,9 @@ class Trigger(LoggingBuildStep):
         self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
 
+        # Scheduler name cache
+        self._all_schedulers = None
+
     def interrupt(self, reason):
         if self.running and not self.ended:
             self.step_status.setText(["interrupted"])
@@ -80,33 +83,27 @@ class Trigger(LoggingBuildStep):
             return self.finished(result)
 
     # Create the properties that are used for the trigger
-    def createTriggerProperties(self):
+    def createTriggerProperties(self, properties):
         # make a new properties object from a dict rendered by the old
         # properties object
         trigger_properties = Properties()
-        trigger_properties.update(self.set_properties, "Trigger")
+        trigger_properties.update(properties, "Trigger")
         return trigger_properties
 
-    # Get all scheduler instances that were configured
-    # A tuple of (triggerables, invalidnames) is returned
-    def getSchedulers(self):
-        all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
-        all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
-        invalid_schedulers = []
-        triggered_schedulers = []
-        # don't fire any schedulers if we discover an unknown one
-        for scheduler in self.schedulerNames:
-            scheduler = scheduler
-            if scheduler in all_schedulers:
-                sch = all_schedulers[scheduler]
-                if ITriggerableScheduler.providedBy(sch):
-                    triggered_schedulers.append(sch)
-                else:
-                    invalid_schedulers.append(scheduler)
-            else:
-                invalid_schedulers.append(scheduler)
+    def getSchedulerByName(self, name):
+        # Use a quick cache to avoid generating this dict every time.
+        all_schedulers = self._all_schedulers
+        if all_schedulers is None:
+            all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
+            all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
+            self._all_schedulers = all_schedulers
 
-        return (triggered_schedulers, invalid_schedulers)
+        sch = all_schedulers.get(name)
+        if sch is not None:
+            if ITriggerableScheduler.providedBy(sch):
+                return sch
+
+        return None
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -135,10 +132,25 @@ class Trigger(LoggingBuildStep):
 
         return ss_for_trigger
 
+    def getSchedulersAndProperties(self):
+        return [(sched, self.set_properties) for sched in self.schedulerNames]
+
     @defer.inlineCallbacks
     def start(self):
+        schedulerNames_and_props = yield self.getSchedulersAndProperties()
+
         # Get all triggerable schedulers and check if there are invalid schedules
-        (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
+        invalid_schedulers = []
+        schedulers_and_props = []
+        for name, props_to_set in schedulerNames_and_props:
+            sch = self.getSchedulerByName(name)
+            if sch is None:
+                invalid_schedulers.append(name)
+                continue
+
+            props_to_set = self.createTriggerProperties(props_to_set)
+            schedulers_and_props.append((sch, props_to_set))
+
         if invalid_schedulers:
             self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
             self.end(FAILURE)
@@ -146,13 +158,11 @@ class Trigger(LoggingBuildStep):
 
         self.running = True
 
-        props_to_set = self.createTriggerProperties()
-
         ss_for_trigger = self.prepareSourcestampListForTrigger()
 
         dl = []
         triggered_names = []
-        for sch in triggered_schedulers:
+        for sch, props_to_set in schedulers_and_props:
             dl.append(sch.trigger(ss_for_trigger, set_props=props_to_set))
             triggered_names.append(sch.name)
         self.step_status.setText(['triggered'] + triggered_names)

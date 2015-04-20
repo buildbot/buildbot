@@ -91,6 +91,9 @@ Features
 
 * GitHub change hook now supports pull_request events.
 
+* :class:`~buildbot.process.buildstep.Trigger`: the ``getSchedulersAndProperties`` customization method has been backported from Nine.
+  This provides a way to dynamically specify which schedulers (and the properties for that scheduler) to trigger at runtime.
+
 Fixes
 ~~~~~
 
@@ -109,6 +112,10 @@ Deprecations, Removals, and Non-Compatible Changes
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
+
+* :class:`~buildbot.process.buildstep.Trigger`: ``createTriggerProperties`` now takes one argument (the properties to generate).
+
+* :class:`~buildbot.process.buildstep.Trigger`: ``getSchedulers`` method is no longer used and was removed.
 
 Slave
 -----
