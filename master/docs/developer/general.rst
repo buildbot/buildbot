@@ -15,7 +15,6 @@ This section gives some general information about Buildbot development.
     schedulers
     utils
     results
-    formats
     www
     auth
     master-slave
