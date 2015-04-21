@@ -1,4 +1,4 @@
-Release Notes for Buildbot 0.8.11
+Release Notes for Buildbot 0.8.12
 =================================
 
 ..
@@ -6,7 +6,7 @@ Release Notes for Buildbot 0.8.11
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot 0.8.11.
+The following are the release notes for Buildbot 0.8.12.
 This version was released on the 20th of April, 2015.
 
 Master
