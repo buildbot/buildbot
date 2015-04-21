@@ -53,7 +53,7 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
-    0.8.11
+    0.8.12
     0.8.10
     0.8.9
     0.8.8
