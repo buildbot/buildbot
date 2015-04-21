@@ -1,12 +1,13 @@
-Release Notes for Buildbot |version|
-====================================
+Release Notes for Buildbot 0.8.11
+=================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot |version|.
+The following are the release notes for Buildbot 0.8.11.
+This version was released on XXX.
 
 Master
 ------
@@ -136,7 +137,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.10..eight
+   git log v0.8.10..532cf49
 
 Older Versions
 --------------
