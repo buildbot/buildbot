@@ -626,17 +626,22 @@ class LogFile:
 
 
     # persistence stuff
+    def deleteKey(self, key, d):
+        if d.has_key(key):
+            del d[key]
+
+    def deleteKeys(self, d):
+        self.deleteKey('step', d)  # filled in upon unpickling
+        self.deleteKey('watchers', d)
+        self.deleteKey('finishedWatchers', d)
+        self.deleteKey('master', d)
+        d['entries'] = []  # let 0.6.4 tolerate the saved log. TODO: really?
+        self.deleteKey('finished', d)
+        self.deleteKey('openfile', d)
+
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['step'] # filled in upon unpickling
-        del d['watchers']
-        del d['finishedWatchers']
-        del d['master']
-        d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
-        if d.has_key('finished'):
-            del d['finished']
-        if d.has_key('openfile'):
-            del d['openfile']
+        self.deleteKeys(d)
         return d
 
     def __setstate__(self, d):
@@ -661,7 +666,8 @@ class HTMLLogFile(styles.Versioned, LogFile):
 
     def __getstate__(self):
         d = styles.Versioned.__getstate__(self)
-        return LogFile.__getstate__(self)
+        self.deleteKeys(d)
+        return d
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
