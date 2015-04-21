@@ -1,4 +1,8 @@
 class About extends Controller
 
-    constructor: () ->
-    
+    constructor: (config) ->
+        @projectInfo =
+            'Project Name': config.title
+            'Project URL': config.titleURL
+        @versions = config.versions
+        @config = config

@@ -1,13 +1,16 @@
 div.about(layout="column")
   section(layout-md="column", layout-gt-md="row")
     div.meta(flex-gt-md="33")
-      h2 Runing informations
+      h2 Runtime informations
       p
         | Informations, configrations and statuses about this running instance of buildbot.
-    div.content
-      | consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-      | pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
-      | laborum.
+    div.content(flex-gt-md="66")
+      h3 Project Info
+      inspect-data(data="about.projectInfo")
+      h3 Version Info
+      inspect-data(data="about.versions")
+      h3 Configrations
+      inspect-data(data="about.config")
 
   section(layout-md="column", layout-gt-md="row")
     div.meta(flex-gt-md="33")
