@@ -1,4 +1,13 @@
 div.inspect-data
   div.row(layout="row", ng-repeat="item in inspectdata.items")
     div.key(flex="33") {{ item.key }}
-    div.value(flex="66") {{ item.value }}
+    div.value(flex="66")
+      span(ng-if="item.value.type == 'string'") {{ item.value.value }}
+      a(ng-if="item.value.type == 'link'", ng-href="{{ item.value.value }}") {{ item.value.value }}
+      div.object-value(
+        ng-if="item.value.type == 'object'",
+        ng-init="collapsed = 1",
+        ng-click="collapsed = !collapsed",
+        )
+        pre(ng-show="collapsed") {{ item.value.value }}
+        pre(ng-show="!collapsed") {{ item.value.value_long }}
