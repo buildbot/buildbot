@@ -30,6 +30,7 @@ from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
+from twisted.internet import threads
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
@@ -415,6 +416,65 @@ class BuilderStatus(styles.Versioned):
         return set([ ss.branch
             for ss in build.getSourceStamps() ])
 
+    @defer.inlineCallbacks
+    def generateBuildNumbers(self, codebases, num_builds):
+        sourcestamps = []
+
+        if codebases:
+            for key, value in codebases.iteritems():
+                sourcestamps.append({'b_codebase': key, 'b_branch': value})
+
+        lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
+                                                                             sourcestamps=sourcestamps,
+                                                                             num_builds=num_builds)
+
+        defer.returnValue(lastBuildsNumbers)
+        return
+
+    def getLatestBuildChache(self, key):
+        cache = self.latestBuildCache[key]
+        max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
+        if datetime.datetime.now() - cache["date"] > max_cache:
+            del self.latestBuildCache[key]
+        elif cache["build"] is not None:
+            return self.getBuild(self.latestBuildCache[key]["build"])
+        return None
+
+    @defer.inlineCallbacks
+    def generateFinishedBuildsAsync(self, branches=[], codebases={},
+                               num_builds=None,
+                               results=None,
+                               useCache=False):
+
+        key = self.getLatestBuildKey(codebases)
+        if useCache and num_builds == 1:
+            build = self.getLatestBuildChache(key)
+
+            if build:
+                defer.returnValue([build])
+                return
+
+        buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
+
+        finishedBuilds = []
+
+        for bn in buildNumbers:
+
+            build = yield threads.deferToThread(self.getBuild, bn)
+            if build is None:
+                continue
+            if results is not None:
+                if build.getResults() not in results:
+                    continue
+            finishedBuilds.append(build)
+
+        if useCache and num_builds == 1:
+            self.saveLatestBuild(build, key)
+
+        defer.returnValue(finishedBuilds)
+        return
+
+
     def generateFinishedBuilds(self, branches=[], codebases={},
                                num_builds=None,
                                max_buildnum=None,
@@ -426,18 +486,11 @@ class BuilderStatus(styles.Versioned):
         key = self.getLatestBuildKey(codebases)
         if useCache and num_builds == 1:
             if key in self.latestBuildCache:
-                cache = self.latestBuildCache[key]
-                max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
-                if datetime.datetime.now() - cache["date"] > max_cache:
-                    del self.latestBuildCache[key]
-                elif cache["build"] is not None:
-                    b = self.getBuild(self.latestBuildCache[key]["build"])
-                    if b is not None:
-                        yield b
-                        return
-                else:
-                    # Warning: if there is a problem saving the build in the cache the build wont be loaded
-                    return
+                build = self.getLatestBuildChache(key)
+                if build:
+                    yield build
+                # Warning: if there is a problem saving the build in the cache the build wont be loaded
+                return
 
         got = 0
         branches = set(branches)
@@ -471,11 +524,9 @@ class BuilderStatus(styles.Versioned):
                     continue
             got += 1
             yield build
-            if num_builds is not None:
-                if got >= num_builds:
+            if num_builds and num_builds == 1 and useCache:
                     #Save our latest builds to the cache
-                    if useCache and num_builds == 1:
-                        self.saveLatestBuild(build, key)
+                    self.saveLatestBuild(build, key)
                     return
 
         if useCache and num_builds == 1:

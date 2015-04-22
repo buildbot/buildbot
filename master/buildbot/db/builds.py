@@ -105,6 +105,50 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db .model.buildsets
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            builds_tbl = self.db.model.builds
+
+            stmt = sa.select([buildrequests_tbl.c.id],
+                          from_obj=buildrequests_tbl
+                          .join(buildsets_tbl,
+                                (buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id) &
+                                (buildrequests_tbl.c.buildername == buildername)
+                                & (buildrequests_tbl.c.complete == 1))
+                          .join(sourcestampsets_tbl,
+                                (buildsets_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id)),
+                          order_by = [sa.desc(buildrequests_tbl.c.id)]).limit(num_builds)
+
+            if sourcestamps:
+                stmt.join(sourcestamps_tbl,
+                          (sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id)
+                          & (sourcestamps_tbl.c.codebase == sa.bindparam('b_codebase'))
+                          & (sourcestamps_tbl.c.branch == sa.bindparam('b_branch')))
+                res = conn.execute(stmt, sourcestamps)
+            else:
+                res = conn.execute(stmt)
+
+            rows = res.fetchall()
+
+            lastBuilds = []
+            if rows:
+                brids = [r.id for r in rows]
+                smt2 = sa.select(columns=[builds_tbl.c.number]).where(builds_tbl.c.brid.in_(brids))
+                res = conn.execute(smt2)
+                rows = res.fetchall()
+                if rows:
+                    lastBuilds = [row.number for row in rows]
+
+            res.close()
+
+            return lastBuilds
+
+        return self.db.pool.do(thd)
+
     def _bdictFromRow(self, row):
         def mkdt(epoch):
             if epoch:

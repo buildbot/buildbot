@@ -530,6 +530,7 @@ class PastBuildsJsonResource(JsonResource):
         self.number = number
         self.slave_status = slave_status
 
+    @defer.inlineCallbacks
     def asDict(self, request):
         #Get codebases
         if self.builder_status is not None:
@@ -539,12 +540,13 @@ class PastBuildsJsonResource(JsonResource):
             branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
             results = getResultsArg(request)
 
-            builds = list(self.builder_status.generateFinishedBuilds(branches=map_branches(branches),
+            builds = yield self.builder_status.generateFinishedBuildsAsync(branches=map_branches(branches),
                                                               codebases=codebases,
                                                               results=results,
-                                                              num_builds=self.number))
+                                                              num_builds=self.number)
 
-            return [b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds]
+            defer.returnValue([b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds])
+            return
 
         if self.slave_status is not None:
             n = 0
@@ -563,9 +565,11 @@ class PastBuildsJsonResource(JsonResource):
                     n += 1
                     recent_builds.append(rb.asDict(request=request))
                     if n > self.number:
-                        return recent_builds
+                        defer.returnValue(recent_builds)
+                        return
 
-            return recent_builds
+            defer.returnValue(recent_builds)
+            return
 
 
 class BuildsJsonResource(AllBuildsJsonResource):

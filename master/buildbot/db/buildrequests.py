@@ -129,8 +129,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-
-    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
         def thd(conn):
             sourcestampsets_tbl = self.db.model.sourcestampsets
             sourcestamps_tbl = self.db.model.sourcestamps
