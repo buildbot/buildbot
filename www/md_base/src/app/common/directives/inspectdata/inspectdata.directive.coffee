@@ -38,7 +38,7 @@ class _InspectData extends Controller
             key: k
             value: @processValue(v)
 
-    constructor: ($scope) ->
+    constructor: ->
         return if not @data
         
         @items = []
