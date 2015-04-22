@@ -6,6 +6,7 @@ class InspectData extends Directive
             templateUrl: 'views/inspectdata.html'
             controller: '_InspectDataController'
             controllerAs: 'inspectdata'
+            bindToController: true
             scope:
                 data: '='
         }
@@ -38,10 +39,9 @@ class _InspectData extends Controller
             value: @processValue(v)
 
     constructor: ($scope) ->
-        return if not $scope.data
+        return if not @data
         
         @items = []
-        @data = $scope.data
 
         if @data instanceof Array
             for item in @data
