@@ -20,9 +20,9 @@ from twisted.trial import unittest
 
 from buildslave.commands import fs
 from buildslave.commands import utils
+from buildslave.test.util import compat
 from buildslave.test.util.command import CommandTestMixin
 from twisted.internet import defer
-from twisted.python import runtime
 
 # python-2.4 doesn't have os.errno
 if hasattr(os, 'errno'):
@@ -53,10 +53,10 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
                       self.get_updates(),
                       self.builder.show())
 
+    # we only use rmdirRecursive on windows
+    @compat.skipUnlessPlatformIs("win32")
     @defer.inlineCallbacks
     def test_simple_exception(self):
-        if runtime.platformType == "posix":
-            return  # we only use rmdirRecursive on windows
 
         def fail(dir):
             raise RuntimeError("oh noes")
@@ -111,10 +111,10 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
                       self.get_updates(),
                       self.builder.show())
 
+    # we only use rmdirRecursive on windows
+    @compat.skipUnlessPlatformIs("win32")
     @defer.inlineCallbacks
     def test_simple_exception(self):
-        if runtime.platformType == "posix":
-            return  # we only use rmdirRecursive on windows
 
         def fail(src, dest):
             raise RuntimeError("oh noes")
