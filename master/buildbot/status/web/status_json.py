@@ -811,9 +811,9 @@ class SingleProjectBuilderJsonResource(JsonResource):
         d = yield builder.asDict_async(codebases, request, base_build_dict)
 
         #Get latest build
-        builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+        builds = yield builder.generateFinishedBuildsAsync(branches=map_branches(branches),
                                                      codebases=codebases,
-                                                     num_builds=1, max_search=200, useCache=True))
+                                                     num_builds=1, useCache=True)
 
         if len(builds) > 0:
             d['latestBuild'] = builds[0].asBaseDict(request, include_artifacts=True, include_failure_url=True)

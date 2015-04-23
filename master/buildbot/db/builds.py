@@ -115,7 +115,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             lastBuilds = []
 
-            q = sa.select(columns=[buildrequests_tbl.c.id])\
+            q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)))\
                 .where(buildrequests_tbl.c.complete == 1)\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
@@ -151,15 +153,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             rows = res.fetchall()
             if rows:
-                brids = [r.id for r in rows]
-                smt = sa.select(columns=[builds_tbl.c.number]).where(builds_tbl.c.brid.in_(brids))\
-                    .distinct(builds_tbl.c.number)\
-                    .order_by(sa.desc(builds_tbl.c.number))
-
-                res = conn.execute(smt)
-                rows = res.fetchall()
-                if rows:
-                    lastBuilds = [row.number for row in rows]
+                for row in rows:
+                    if row.number not in lastBuilds:
+                        lastBuilds.append(row.number)
 
             res.close()
 

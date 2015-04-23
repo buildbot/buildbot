@@ -61,7 +61,7 @@ class BuilderStatus(styles.Versioned):
 
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
-    persistenceVersion = 1
+    persistenceVersion = 2
     persistenceForgets = ( 'wasUpgraded', )
 
     category = None
@@ -126,7 +126,12 @@ class BuilderStatus(styles.Versioned):
         if 'pendingBuildCache' in d:
             del d['pendingBuildCache']
 
-        d['latestBuildCache'] = self.latestBuildCache
+        # Todo: temporary remove the latestBuildCache from pickle in that sense we can have a bigger cache
+        # Todo: remove this comment when merging to staging
+        # right now the size is > 10mb per builder
+        #d['latestBuildCache'] = self.latestBuildCache
+        # we will need to check what performs better having it loaded the first time from db vs pickle
+        del d['latestBuildCache']
         return d
 
     def __setstate__(self, d):
@@ -147,6 +152,11 @@ class BuilderStatus(styles.Versioned):
             del self.slavename
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber # determineNextBuildNumber chooses this
+        self.wasUpgraded = True
+
+    def upgradeToVersion2(self):
+        if hasattr(self, 'latestBuildCache'):
+            del self.latestBuildCache
         self.wasUpgraded = True
 
     def determineNextBuildNumber(self):
@@ -440,6 +450,9 @@ class BuilderStatus(styles.Versioned):
             return self.getBuild(self.latestBuildCache[key]["build"])
         return None
 
+    def shouldUseLatestBuildChache(self, useCache, num_builds, key):
+        return useCache and num_builds == 1 and key in self.latestBuildCache
+
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
                                num_builds=None,
@@ -447,17 +460,18 @@ class BuilderStatus(styles.Versioned):
                                useCache=False):
 
         build = None
+        finishedBuilds = []
+
         key = self.getLatestBuildKey(codebases)
-        if useCache and num_builds == 1:
+        if self.shouldUseLatestBuildChache(useCache, num_builds, key):
             build = self.getLatestBuildChache(key)
 
             if build:
-                defer.returnValue([build])
-                return
+                finishedBuilds.append(build)
+            defer.returnValue(finishedBuilds)
+            return
 
         buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
-
-        finishedBuilds = []
 
         for bn in buildNumbers:
 
@@ -485,13 +499,12 @@ class BuilderStatus(styles.Versioned):
                                useCache=False):
 
         key = self.getLatestBuildKey(codebases)
-        if useCache and num_builds == 1:
-            if key in self.latestBuildCache:
-                build = self.getLatestBuildChache(key)
-                if build:
-                    yield build
-                # Warning: if there is a problem saving the build in the cache the build wont be loaded
-                return
+        if self.shouldUseLatestBuildChache(useCache, num_builds, key):
+            build = self.getLatestBuildChache(key)
+            if build:
+                yield build
+            # Warning: if there is a problem saving the build in the cache the build wont be loaded
+            return
 
         got = 0
         branches = set(branches)
