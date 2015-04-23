@@ -14,6 +14,18 @@ class InspectData extends Directive
 
 class _InspectData extends Controller
 
+    constructor: ->
+        return if not @data
+        
+        @items = []
+
+        if @data instanceof Array
+            for item in @data
+                @addItem item[0], item[1]
+        else
+            for k, v of @data
+                @addItem(k, v)
+
     processValue: (value) ->
         if typeof(value) == 'string'
             type = 'string'
@@ -37,17 +49,3 @@ class _InspectData extends Controller
         @items.push
             key: k
             value: @processValue(v)
-
-    constructor: ->
-        return if not @data
-        
-        @items = []
-
-        if @data instanceof Array
-            for item in @data
-                @addItem item[0], item[1]
-        else
-            for k, v of @data
-                @addItem(k, v)
-
-
