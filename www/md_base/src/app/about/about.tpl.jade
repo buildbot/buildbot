@@ -1,38 +1,37 @@
-div.about(layout="column")
-  section(layout-md="column", layout-gt-md="row")
-    div.meta(flex-gt-md="33")
-      h2 Runtime informations
-      p
-        | Informations, configrations and statuses about this running instance of buildbot.
-    div.content(flex-gt-md="66")
-      h3 Project Info
-      inspect-data(data="about.projectInfo")
-      h3 Version Info
-      inspect-data(data="about.versions")
-      h3 Configrations
-      inspect-data(data="about.config")
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 Runtime informations
+    p
+      | Informations, configrations and statuses about this running instance of buildbot.
+  div.content(flex-gt-md="66")
+    h3 Project Info
+    inspect-data(data="about.projectInfo")
+    h3 Version Info
+    inspect-data(data="about.versions")
+    h3 Configrations
+    inspect-data(data="about.config")
 
-  section(layout-md="column", layout-gt-md="row")
-    div.meta(flex-gt-md="33")
-      h2 About buildbot
-      p
-        | Informations, useful links and where to find help.
-    div.content
-      p
-        | Buildbot is an open-source framework for automating software build, test, and release processes.
-        | It  supports distributed, parallel execution of jobs across multiple platforms, flexible integration with
-        | version-control systems, extensive status reporting, and more.
-      p Know more at:
-      ul
-        li
-          a(href="http://buildbot.net") Homepage
-        li
-          a(href="https://github.com/buildbot/buildbot") Github
-        li
-          a(href="http://docs.buildbot.net/latest/") Documentation
-        
-      p
-        | Buildbot is licenced under 
-        b GNU Public Licence(v2)
-        | .
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 About buildbot
+    p
+      | Informations, useful links and where to find help.
+  div.content
+    p
+      | Buildbot is an open-source framework for automating software build, test, and release processes.
+      | It  supports distributed, parallel execution of jobs across multiple platforms, flexible integration with
+      | version-control systems, extensive status reporting, and more.
+    p Know more at:
+    ul
+      li
+        a(href="http://buildbot.net") Homepage
+      li
+        a(href="https://github.com/buildbot/buildbot") Github
+      li
+        a(href="http://docs.buildbot.net/latest/") Documentation
+      
+    p
+      | Buildbot is licenced under 
+      b GNU Public Licence(v2)
+      | .
 
