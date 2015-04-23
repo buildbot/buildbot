@@ -218,6 +218,8 @@ class LogFile:
         self.master = parent.build.builder.master
         self.name = name
         self.filename = logfilename
+        self.prepend_timestamps = False
+
         fn = self.getFilename()
         if os.path.exists(fn):
             # the buildmaster was probably stopped abruptly, before the
@@ -233,6 +235,16 @@ class LogFile:
         self.watchers = []
         self.finishedWatchers = []
         self.tailBuffer = []
+
+    def setTimestampsMode(self, prepend_timestamps):
+        """
+        Allows to enable/disable prepending of timestamps for each new line
+        added to this log.
+
+        @param prepend_timestamps: if True, timestamps will be prepended,
+                                   if False, no timetamps will be prepended
+        """
+        self.prepend_timestamps = prepend_timestamps
 
     def getFilename(self):
         """
@@ -459,7 +471,7 @@ class LogFile:
         if isinstance(text, unicode):
             text = text.encode('utf-8')
 
-        if (self.filename.endswith("stdio")):
+        if self.prepend_timestamps:
             lines = text.strip().split('\n')
             timetext = ""
             for l in lines:

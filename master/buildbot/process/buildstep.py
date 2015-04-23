@@ -833,7 +833,7 @@ class LoggingBuildStep(BuildStep):
     renderables = [ 'logfiles', 'lazylogfiles' ]
 
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
-                 *args, **kwargs):
+                 timestamp_stdio=False, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
         if logfiles and not isinstance(logfiles, dict):
@@ -849,6 +849,7 @@ class LoggingBuildStep(BuildStep):
             config.error(
                 "the 'log_eval_func' paramater must be a callable")
         self.log_eval_func = log_eval_func
+        self.timestamp_stdio = timestamp_stdio
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
@@ -871,6 +872,9 @@ class LoggingBuildStep(BuildStep):
 
         # stdio is the first log
         self.stdio_log = stdio_log = self.addLog("stdio")
+        # enable timestamps if requested
+        self.stdio_log.setTimestampsMode(self.timestamp_stdio)
+
         cmd.useLog(stdio_log, True)
         for em in errorMessages:
             stdio_log.addHeader(em)

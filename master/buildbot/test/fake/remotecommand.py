@@ -135,6 +135,9 @@ class FakeLogFile(object):
                         for (ch, data) in self.chunks
                         if not channels or ch in channels ]
 
+    def setTimestampsMode(self, prepend_timestamps):
+        pass
+
     def finish(self):
         pass
 
