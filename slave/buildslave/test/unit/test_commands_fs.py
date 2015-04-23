@@ -16,6 +16,8 @@
 import os
 import shutil
 
+from os import errno
+
 from twisted.trial import unittest
 
 from buildslave.commands import fs
@@ -23,12 +25,6 @@ from buildslave.commands import utils
 from buildslave.test.util import compat
 from buildslave.test.util.command import CommandTestMixin
 from twisted.internet import defer
-
-# python-2.4 doesn't have os.errno
-if hasattr(os, 'errno'):
-    errno = os.errno
-else:
-    import errno
 
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
@@ -325,11 +321,6 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         open(os.path.join(workdir, 'file2'), "w")
 
         yield self.run_command()
-
-        def any(items):  # not a builtin on python-2.4
-            for i in items:
-                if i:
-                    return True
 
         self.assertIn({'rc': 0},
                       self.get_updates(),
