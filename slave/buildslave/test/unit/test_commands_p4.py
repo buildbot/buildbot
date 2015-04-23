@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import p4
@@ -29,6 +30,7 @@ class TestP4(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('p4', 'path/to/p4')
         self.clean_environ()
@@ -98,12 +100,13 @@ View:
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "['p4dserv:1666', 'buildbot_test_10', " +
-                      "'//mydepot/myproj/', 'mytrunk', [], None, %s, 'copy', 'workdir']"
-                      % repr(self.basedir))
-        return d
+        yield self.run_command()
+        self.assertSourceData(
+            "['p4dserv:1666', 'buildbot_test_10', " +
+            "'//mydepot/myproj/', 'mytrunk', [], None, %s, 'copy', 'workdir']"
+            % repr(self.basedir))
 
+    @defer.inlineCallbacks
     def test_simple_unicode_args(self):
         self.patch_getCommand('p4', 'path/to/p4')
         self.clean_environ()
@@ -175,12 +178,11 @@ View:
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata,
-                      "['p4dserv:1666\\xe2\\x98\\x83', "
-                      "'buildbot_test_10\\xe2\\x98\\x83', "
-                      "'//mydepot/myproj/\\xe2\\x98\\x83', "
-                      "'mytrunk\\xe2\\x98\\x83', [], None, %s, 'copy', "
-                      "'workdir']"
-                      % repr(self.basedir))
-        return d
+        yield self.run_command()
+        self.assertSourceData(
+            "['p4dserv:1666\\xe2\\x98\\x83', "
+            "'buildbot_test_10\\xe2\\x98\\x83', "
+            "'//mydepot/myproj/\\xe2\\x98\\x83', "
+            "'mytrunk\\xe2\\x98\\x83', [], None, %s, 'copy', "
+            "'workdir']"
+            % repr(self.basedir))

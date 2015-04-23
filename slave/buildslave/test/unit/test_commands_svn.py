@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import svn
@@ -28,6 +29,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('svn', 'path/to/svn')
         self.patch_getCommand('svnversion', 'path/to/svnversion')
@@ -64,9 +66,9 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://svn.local/app/trunk\n")
-        return d
+        yield self.run_command()
+
+        self.assertSourceData("http://svn.local/app/trunk\n")
 
 
 class TestGetUnversionedFiles(unittest.TestCase):

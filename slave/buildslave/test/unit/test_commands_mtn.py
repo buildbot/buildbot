@@ -37,6 +37,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
     def patch_sourcedirIsUpdateable(self, result):
         self.cmd.sourcedirIsUpdateable = lambda: result
 
+    @defer.inlineCallbacks
     def test_no_db(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
         self.patch_getCommand('mtn', 'path/to/mtn')
@@ -90,10 +91,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_db_needs_migrating(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
         self.patch_getCommand('mtn', 'path/to/mtn')
@@ -149,9 +151,9 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
+
+        self.assertSourceData(self.repourl + "?" + self.branch)
 
     def test_db_too_new(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
@@ -184,6 +186,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         d = self.run_command()
         return self.assertFailure(d, mtn.MonotoneError)
 
+    @defer.inlineCallbacks
     def test_run_mode_copy_fresh_sourcedir(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
         self.patch_getCommand('mtn', 'path/to/mtn')
@@ -233,10 +236,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_run_mode_copy_update_sourcedir(self):
         """test a copy where the sourcedata indicates that the source directory
         can be updated"""
@@ -286,10 +290,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_run_mode_update_fresh(self):
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
@@ -333,10 +338,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_run_mode_update_existing(self):
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
@@ -379,10 +385,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_run_mode_update_existing_known_rev(self):
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
@@ -425,10 +432,11 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(self.repourl + "?" + self.branch)
+
+    @defer.inlineCallbacks
     def test_run_mode_update_existing_unknown_rev(self):
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
@@ -486,11 +494,12 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, self.repourl + "?" + self.branch)
-        return d
+        yield self.run_command()
+
+        self.assertSourceData(self.repourl + "?" + self.branch)
 
 # Testing parseGotRevision
+    @defer.inlineCallbacks
     def do_test_parseGotRevision(self, stdout, exp):
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.make_command(mtn.Monotone, dict(
@@ -509,12 +518,9 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         self.cmd._dovccmd = _dovccmd
         self.cmd.srcdir = self.cmd.workdir
 
-        d = self.cmd.parseGotRevision()
+        res = yield self.cmd.parseGotRevision()
 
-        def check(res):
-            self.assertEqual(res, exp)
-        d.addCallback(check)
-        return d
+        self.assertEqual(res, exp)
 
     def test_parseGotRevision_bogus(self):
         return self.do_test_parseGotRevision("mtn: misuse: no match for selection '1234'\n", None)

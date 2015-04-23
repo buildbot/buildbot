@@ -37,6 +37,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
 
     # tests
 
+    @defer.inlineCallbacks
     def test_run_mode_copy_fresh_sourcedir(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"
         self.patch_getCommand('git', 'path/to/git')
@@ -88,10 +89,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_mode_copy_update_sourcedir(self):
         """test a copy where the sourcedata indicates that the source directory
         can be updated"""
@@ -138,10 +141,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_mode_copy_nonexistant_ref(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -172,9 +177,9 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        return d
+        yield self.run_command()
 
+    @defer.inlineCallbacks
     def test_run_mode_copy_gerrit_branch(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -221,9 +226,9 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        return d
+        yield self.run_command()
 
+    @defer.inlineCallbacks
     def test_run_mode_update_fresh(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -267,10 +272,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_mode_update_existing(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -307,10 +314,11 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
 
+    @defer.inlineCallbacks
     def test_run_mode_update_existing_known_rev(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -337,10 +345,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_mode_update_existing_unknown_rev(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -381,10 +391,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_with_reference(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -435,10 +447,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_with_shallow_and_rev(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -473,10 +487,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_with_shallow(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -523,10 +539,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_with_shallow_and_reference(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -581,10 +599,12 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
+
+    @defer.inlineCallbacks
     def test_run_with_submodules(self):
         self.patch_getCommand('git', 'path/to/git')
         self.clean_environ()
@@ -642,9 +662,10 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "git://github.com/djmitche/buildbot.git master\n")
-        return d
+        yield self.run_command()
+
+        self.assertSourceData(
+            "git://github.com/djmitche/buildbot.git master\n")
 
     def test_sourcedataMatches_no_file(self):
         self.make_command(git.Git, dict(
@@ -665,6 +686,7 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
         ), initial_sourcedata='xyz')
         self.assertTrue(self.cmd.sourcedataMatches())
 
+    @defer.inlineCallbacks
     def do_test_parseGotRevision(self, stdout, exp):
         self.make_command(git.Git, dict(
             workdir='workdir',
@@ -680,12 +702,9 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             return d
         self.cmd._dovccmd = _dovccmd
 
-        d = self.cmd.parseGotRevision()
+        res = yield self.cmd.parseGotRevision()
 
-        def check(res):
-            self.assertEqual(res, exp)
-        d.addCallback(check)
-        return d
+        self.assertEqual(res, exp)
 
     def test_parseGotRevision_bogus(self):
         return self.do_test_parseGotRevision("fatal: Couldn't find revision 1234\n", None)

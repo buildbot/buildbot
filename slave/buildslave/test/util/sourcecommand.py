@@ -76,10 +76,9 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             return r.start()
         cmd.setFileContents = setFileContents
 
-    def check_sourcedata(self, _, expected_sourcedata):
+    def assertSourceData(self, expected_sourcedata):
         """
         Assert that the sourcedata (from the patched functions - see
-        make_command) is correct.  Use this as a deferred callback.
+        make_command) is correct.
         """
         self.assertEqual(self.sourcedata, expected_sourcedata)
-        return _
