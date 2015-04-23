@@ -446,6 +446,7 @@ class BuilderStatus(styles.Versioned):
                                results=None,
                                useCache=False):
 
+        build = None
         key = self.getLatestBuildKey(codebases)
         if useCache and num_builds == 1:
             build = self.getLatestBuildChache(key)

@@ -113,32 +113,50 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             sourcestamps_tbl = self.db.model.sourcestamps
             builds_tbl = self.db.model.builds
 
-            stmt = sa.select([buildrequests_tbl.c.id],
-                          from_obj=buildrequests_tbl
-                          .join(buildsets_tbl,
-                                (buildrequests_tbl.c.buildsetid == buildsets_tbl.c.id) &
-                                (buildrequests_tbl.c.buildername == buildername)
-                                & (buildrequests_tbl.c.complete == 1))
-                          .join(sourcestampsets_tbl,
-                                (buildsets_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id)),
-                          order_by = [sa.desc(buildrequests_tbl.c.id)]).limit(num_builds)
+            lastBuilds = []
 
-            if sourcestamps:
-                stmt.join(sourcestamps_tbl,
-                          (sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id)
-                          & (sourcestamps_tbl.c.codebase == sa.bindparam('b_codebase'))
-                          & (sourcestamps_tbl.c.branch == sa.bindparam('b_branch')))
-                res = conn.execute(stmt, sourcestamps)
-            else:
-                res = conn.execute(stmt)
+            q = sa.select(columns=[buildrequests_tbl.c.id])\
+                .where(buildrequests_tbl.c.complete == 1)\
+                .where(buildrequests_tbl.c.buildername == buildername)
+
+            if sourcestamps and len(sourcestamps) > 0:
+                clauses = []
+                # check sourcestampset has same number of row in the sourcestamps table
+                stmt = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                    .where(sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id) \
+                    .group_by(sourcestamps_tbl.c.sourcestampsetid) \
+                    .having(sa.func.count(sourcestamps_tbl.c.id) == len(sourcestamps))
+
+                clauses.append(sourcestampsets_tbl.c.id == stmt)
+
+                # check that sourcestampset match all branches x codebases
+                for ss in sourcestamps:
+                    stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                        .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                        .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                        .where(sourcestamps_tbl.c.branch == ss['b_branch'])
+                    clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
+
+                stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+                    .where(sa.and_(*clauses))
+
+                stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+                q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(num_builds)
+
+            res = conn.execute(q)
 
             rows = res.fetchall()
-
-            lastBuilds = []
             if rows:
                 brids = [r.id for r in rows]
-                smt2 = sa.select(columns=[builds_tbl.c.number]).where(builds_tbl.c.brid.in_(brids))
-                res = conn.execute(smt2)
+                smt = sa.select(columns=[builds_tbl.c.number]).where(builds_tbl.c.brid.in_(brids))\
+                    .distinct(builds_tbl.c.number)\
+                    .order_by(sa.desc(builds_tbl.c.number))
+
+                res = conn.execute(smt)
                 rows = res.fetchall()
                 if rows:
                     lastBuilds = [row.number for row in rows]
