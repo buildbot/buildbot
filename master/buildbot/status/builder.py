@@ -733,6 +733,13 @@ class BuilderStatus(styles.Versioned):
 
         return output
 
+    def updateLatestBuildCache(self, cache, k):
+        if k in self.latestBuildCache and self.latestBuildCache[k] and \
+                        self.latestBuildCache[k]["build"] > cache["build"]:
+            return
+
+        self.latestBuildCache[k] = cache
+
     def saveLatestBuild(self, build, key=None):
         cache = {"build": None, "date": datetime.datetime.now()}
 
@@ -755,10 +762,9 @@ class BuilderStatus(styles.Versioned):
                         break
 
                 if found_all_keys:
-                    self.latestBuildCache[k] = cache
+                    self.updateLatestBuildCache(cache, k)
         else:
-            self.latestBuildCache[key] = cache
-        self.saveYourself(skipBuilds=True)
+            self.updateLatestBuildCache(cache, key)
 
 
     def asDict(self, codebases={}, request=None, base_build_dict=False):

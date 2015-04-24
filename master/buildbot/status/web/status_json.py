@@ -560,7 +560,8 @@ class PastBuildsJsonResource(JsonResource):
                     if bs.getName() == slavename:
                         my_builders.append(b)
 
-            builds = yield self.status.generateFinishedBuildsAsync(builders=[b.getName() for b in my_builders])
+            builds = yield self.status.generateFinishedBuildsAsync(builders=[b.getName() for b in my_builders],
+                                                                   num_builds=self.number)
 
             for rb in builds:
                 if rb.getSlavename() == slavename:
