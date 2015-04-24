@@ -12,7 +12,28 @@ describe 'inspectdata', ->
 
     beforeEach inject injected
 
-    it 'should inspect data correctly', ->
+    # prepare test data
+    testdata =
+        test_number: 123
+        test_string: 'a string to display'
+        test_link: 'http://a/link/to/display'
+        test_https_link: 'https://a/link/to/display'
+        test_object:
+            test_obj_value1: 1
+            test_obj_value2: 'a string'
+            test_obj_value3:
+                a_nested: 'object'
+
+    keys = (k for k, _ of testdata)
+    test_obj_json_short = JSON.stringify(testdata.test_object)
+    test_obj_json_long = JSON.stringify(testdata.test_object, null, 2)
+
+    list_data = []
+    for k, v of testdata
+        list_data.push [k, v]
+
+    # begin tests
+    it 'should inspect object data correctly', ->
         element = $compile('<inspect-data data="testdata"></inspect-data>')($rootScope)
         $rootScope.$digest()
 
@@ -20,22 +41,6 @@ describe 'inspectdata', ->
 
         # test empty data
         expect(rowsContainer.children().length).toBe(0)
-
-        # test object data
-        testdata =
-            test_number: 123
-            test_string: 'a string to display'
-            test_link: 'http://a/link/to/display'
-            test_https_link: 'https://a/link/to/display'
-            test_object:
-                test_obj_value1: 1
-                test_obj_value2: 'a string'
-                test_obj_value3:
-                    a_nested: 'object'
-
-        keys = (k for k, _ of testdata)
-        test_obj_json_short = JSON.stringify(testdata.test_object)
-        test_obj_json_long = JSON.stringify(testdata.test_object, null, 2)
 
         $httpBackend.expectGETSVGIcons()
         element = $compile('<inspect-data data="testdata"></inspect-data>')($rootScope)
@@ -58,15 +63,13 @@ describe 'inspectdata', ->
             else
                 expect(value.text()).toBe('' + testdata[key])
 
-        # test array data
-        list_data = []
-        for k, v of testdata
-            list_data.push [k, v]
-
+    it 'should inspect array data correctly', ->
+        $httpBackend.expectGETSVGIcons()
         element = $compile('<inspect-data data="testdata"></inspect-data>')($rootScope)
-        $rootScope.testdata = testdata
+        $rootScope.testdata = list_data
         $rootScope.$digest()
         rows = element.children().eq(0).children()
+        $rootScope.$digest()
 
         for i in [0...5]
             row = rows.eq(i)
@@ -81,7 +84,14 @@ describe 'inspectdata', ->
             else
                 expect(value.text()).toBe('' + testdata[key])
 
-        # test collapse and expand object field
+    it 'should collapse and expand field correctly', ->
+        $httpBackend.expectGETSVGIcons()
+        element = $compile('<inspect-data data="testdata"></inspect-data>')($rootScope)
+        $rootScope.testdata = testdata
+        $rootScope.$digest()
+
+        rows = element.children().eq(0).children()
+
         objectfield = rows.eq(4)
         objvalue = objectfield.children().eq(1).children().eq(0)
         expandarrow = objvalue.children().eq(0)
