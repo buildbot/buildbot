@@ -829,8 +829,7 @@ div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
 .dropdown-info:after{content:"▼"}
 @media (min-width:992px){h1.logo a{font-size:29px;padding:22px 0 0}
 h1.logo a span{font-size:27px}}
-.point-of-failure:after{font-family:katana_icons;content:"";display:inline-block;padding:0;font-weight:400;font-size:16px;position:relative}
-span.log-error{color:#FF1212}
+span.log-error{color:#EFCFCF}
 span.log-warning{color:#AD823A}
 .health-icon{display:inline-block;font-size:16px;font-weight:400;padding:0;text-shadow:0 1px 0 #FFF}
 .good-health-icon:after{font-family:katana_icons;content:"";color:#32912e}
@@ -1343,6 +1342,7 @@ button.toast-close-button{padding:0;cursor:pointer;background:0 0;border:0;-webk
 @media all and (min-width:480px) and (max-width:767px){#toast-container>div{padding:15px 15px 15px 50px;width:25em}}
 .pending-changes-icon{font-style:normal;margin-left:2px}
 .pending-changes-icon:after{color:#918d2e;font-family:katana_icons;content:"";display:inline-block;padding:0;font-weight:400;font-size:15px;position:relative;line-height:14px}
+.point-of-failure:after{font-family:katana_icons;content:"";display:inline-block;padding:0;font-weight:400;font-size:16px;position:relative;color:#C23430}
 .table-holder{display:none}
 .log-main .main-head{font-size:17px;margin:0 0 11px}
 .log-main .main-head.big{color:#FFF;float:left;font-size:18px;margin:3px 0 0 25px;padding:0;text-shadow:none}
