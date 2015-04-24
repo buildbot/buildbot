@@ -306,17 +306,36 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(make_status_objects)
         return d
 
-    def generateFinishedBuilds(self, builders=[], branches=[],
-                               num_builds=None, finished_before=None,
-                               max_search=200):
-
+    def getBuildersConfigured(self, builders):
         def want_builder(bn):
             if builders:
                 return bn in builders
             return True
+
         builder_names = [bn
                          for bn in self.getBuilderNames()
                          if want_builder(bn)]
+        return builder_names
+
+    @defer.inlineCallbacks
+    def generateFinishedBuildsAsync(self, builders=[]):
+
+        builder_names = self.getBuildersConfigured(builders)
+
+        sources = []
+        for bn in builder_names:
+            b = self.getBuilder(bn)
+            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=200)
+            sources.extend(finished_builds)
+
+        sorted_sources = sorted(sources, key=lambda build: build.started, reverse=True)
+        defer.returnValue(sorted_sources)
+
+    def generateFinishedBuilds(self, builders=[], branches=[],
+                               num_builds=None, finished_before=None,
+                               max_search=200):
+
+        builder_names = self.getBuildersConfigured(builders)
 
         # 'sources' is a list of generators, one for each Builder we're
         # using. When the generator is exhausted, it is replaced in this list
