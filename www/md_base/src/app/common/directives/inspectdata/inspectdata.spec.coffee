@@ -2,11 +2,13 @@ beforeEach module 'app'
 
 describe 'inspectdata', ->
 
-    $rootScope = $compile = null
+    $rootScope = $compile = $httpBackend = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
         $rootScope = $injector.get('$rootScope')
+        $httpBackend = $injector.get('$httpBackend')
+        decorateHttpBackend($httpBackend)
 
     beforeEach inject injected
 
@@ -35,6 +37,7 @@ describe 'inspectdata', ->
         test_obj_json_short = JSON.stringify(testdata.test_object)
         test_obj_json_long = JSON.stringify(testdata.test_object, null, 2)
 
+        $httpBackend.expectGETSVGIcons()
         element = $compile('<inspect-data data="testdata"></inspect-data>')($rootScope)
         $rootScope.testdata = testdata
         $rootScope.$digest()
@@ -49,9 +52,9 @@ describe 'inspectdata', ->
 
             if key == 'test_object'
                 objvalue = value.children().eq(0)
-                expect(objvalue.children().length).toBe(2)
-                expect(objvalue.children().eq(0).text()).toBe(test_obj_json_short)
-                expect(objvalue.children().eq(1).text()).toBe(test_obj_json_long)
+                expect(objvalue.children().length).toBe(3)
+                expect(objvalue.children().eq(1).text()).toBe(test_obj_json_short)
+                expect(objvalue.children().eq(2).text()).toBe(test_obj_json_long)
             else
                 expect(value.text()).toBe('' + testdata[key])
 
@@ -72,32 +75,34 @@ describe 'inspectdata', ->
             value = row.children().eq(1)
             if key == 'test_object'
                 objvalue = value.children().eq(0)
-                expect(objvalue.children().length).toBe(2)
-                expect(objvalue.children().eq(0).text()).toBe(test_obj_json_short)
-                expect(objvalue.children().eq(1).text()).toBe(test_obj_json_long)
+                expect(objvalue.children().length).toBe(3)
+                expect(objvalue.children().eq(1).text()).toBe(test_obj_json_short)
+                expect(objvalue.children().eq(2).text()).toBe(test_obj_json_long)
             else
                 expect(value.text()).toBe('' + testdata[key])
 
         # test collapse and expand object field
         objectfield = rows.eq(4)
         objvalue = objectfield.children().eq(1).children().eq(0)
+        expandarrow = objvalue.children().eq(0)
         
         # initial state: short showing, long hiding
-        expect(objvalue.children().eq(0).hasClass('ng-hide')).toBe(false)
-        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(true)
+        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(false)
+        expect(objvalue.children().eq(2).hasClass('ng-hide')).toBe(true)
 
         # click on the field
-        objvalue.triggerHandler('click')
+        expandarrow.triggerHandler('click')
         $rootScope.$digest()
 
         # expanded state: short hiding, long showing
-        expect(objvalue.children().eq(0).hasClass('ng-hide')).toBe(true)
-        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(false)
+        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(true)
+        expect(objvalue.children().eq(2).hasClass('ng-hide')).toBe(false)
 
         # click again to collapse
-        objvalue.triggerHandler('click')
+        expandarrow.triggerHandler('click')
         $rootScope.$digest()
 
         # back to collapsed
-        expect(objvalue.children().eq(0).hasClass('ng-hide')).toBe(false)
-        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(true)
+        expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(false)
+        expect(objvalue.children().eq(2).hasClass('ng-hide')).toBe(true)
+        $httpBackend.flush()
