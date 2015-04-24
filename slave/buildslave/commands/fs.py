@@ -210,7 +210,7 @@ def _list_tree(dirpath, file_filter_exp):
     re_filter = re.compile(file_filter_exp)
 
     # list contents of the dirpath, changing the directory paths to
-    # be relative to dirpath and filtering out filenames what does
+    # be relative to dirpath and filtering out filenames that does
     # not match the filter
     return [(_chomp_dirpath(dir), subdirs,
              [file for file in files if re_filter.match(file)])
