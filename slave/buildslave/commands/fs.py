@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import re
 import sys
 import shutil
 
@@ -196,3 +197,57 @@ class StatFile(base.Command):
             self.sendStatus({'rc': 0})
         except:
             self.sendStatus({'rc': 1})
+
+
+def _list_tree(dirpath, file_filter_exp):
+    def _chomp_dirpath(orig_path):
+        # remove the dirpath prefix from specified path
+        if len(orig_path) < chomp_len:
+            return ""
+        return orig_path[chomp_len:]
+
+    chomp_len = len(dirpath) + 1
+    re_filter = re.compile(file_filter_exp)
+
+    # list contents of the dirpath, changing the directory paths to
+    # be relative to dirpath and filtering out filenames what does
+    # not match the filter
+    return [(_chomp_dirpath(dir), subdirs,
+             [file for file in files if re_filter.match(file)])
+            for dir, subdirs, files in os.walk(dirpath)]
+
+
+class ListTree(base.Command):
+    #
+    # Lists contents of directory and all of it subdirectories.
+    #
+    # Returns the contents of the directory in same format as python's
+    # standard os.walk() function, except all the patch are relative to
+    # the work directory.
+    #
+    # Arguments are: 'workdir'     - work directory for the command
+    #                'dir'         - the directory to list
+    #                'file_filter' - optional regexp for filtering files,
+    #                                if specified only file names matching
+    #                                the filter expression will be included
+    #                                into the result
+    # The contents of the directory is returned in the 'nodes' update field.
+    #
+    header = "lstree"
+
+    @defer.inlineCallbacks
+    def start(self):
+        assert "dir" in self.args
+        assert "workdir" in self.args
+
+        dirpath = os.path.join(self.builder.basedir,
+                               self.args["workdir"],
+                               self.args["dir"])
+
+        # either use provided file filter regexp or
+        # if not provided use 'match anything' regexp
+        filter = self.args.get("file_filter", "")
+
+        nodes = yield threads.deferToThread(_list_tree, dirpath, filter)
+        self.sendStatus({"nodes": nodes})
+        self.sendStatus({"rc": 0})
