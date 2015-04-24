@@ -173,8 +173,7 @@ class WebStatus(service.MultiService):
     def __init__(self, http_port=None, distrib_port=None, allowForce=None,
                  public_html="public_html", site=None, numbuilds=20,
                  num_events=200, num_events_max=None, auth=None,
-                 order_console_by_time=False, changecommentlink=None,
-                 revlink=None, projects=None, repositories=None,
+                 order_console_by_time=False, changecommentlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
                  change_hook_dialects = {}, provide_feeds=None, jinja_loaders=None):
         """Run a web server that provides Buildbot status.
@@ -252,10 +251,6 @@ class WebStatus(service.MultiService):
         @type changecommentlink: callable, dict, tuple (2 or 3 strings) or C{None}
         @param changecommentlink: adds links to ticket/bug ids in change comments,
             see buildbot.status.web.base.changecommentlink for details
-
-        @type revlink: callable, dict, string or C{None}
-        @param revlink: decorations revision ids with links to a web-view,
-            see buildbot.status.web.base.revlink for details
 
         @type projects: callable, dict or c{None}
         @param projects: maps project identifiers to URLs, so that any project listed
@@ -355,7 +350,6 @@ class WebStatus(service.MultiService):
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
                              num_events_max=num_events_max)
 
-        self.revlink = revlink
         self.changecommentlink = changecommentlink
         self.repositories = repositories
         self.projects = projects
@@ -434,10 +428,8 @@ class WebStatus(service.MultiService):
         maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
 
         # Set up the jinja templating engine.
-        if self.revlink:
-            revlink = self.revlink
-        else:
-            revlink = self.master.config.revlink
+
+        revlink = self.master.config.revlink
         self.templates = createJinjaEnv(revlink, self.changecommentlink,
                                         self.repositories, self.projects, self.jinja_loaders)
 

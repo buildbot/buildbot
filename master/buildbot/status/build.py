@@ -596,7 +596,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         stamp_array = []
         for ss in sourcestamps:
-            d = ss.asDict()
+            d = ss.asDict(status)
             c = getCodebaseObj(d['repository'])
             if c is not None and c.has_key("display_repository"):
                 d['display_repository'] = c['display_repository']

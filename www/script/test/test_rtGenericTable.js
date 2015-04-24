@@ -24,7 +24,8 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/all-unity",
                 revision: "b841045fb3160b1c",
-                revision_short: "b841045fb316"
+                revision_short: "b841045fb316",
+                url: "http://rhodecode.hq.unity3d.com/all-unity/changeset/b841045fb3160b1c"
             },
             {
                 branch: "faked",
@@ -33,7 +34,8 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/fake",
                 revision: "c841045fb3160b1c0044b3b04f40482f685208cf",
-                revision_short: "b841045fb316"
+                revision_short: "b841045fb316",
+                url: "http://rhodecode.hq.unity3d.com/fake/fake/changeset/c841045fb3160b1c0044b3b04f40482f685208cf"
             }
         ],
         text: [
@@ -184,7 +186,7 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                     $links = $row.find("a"),
                     sourceStamps = builderData.latestBuild.sourceStamps,
                     displayURL = sourceStamps[i].display_repository,
-                    changesetURL = displayURL + "/changeset/" + sourceStamps[i].revision,
+                    changesetURL = sourceStamps[i].url,
                     text = $row.text(),
                     textParts = text.split("/");
 

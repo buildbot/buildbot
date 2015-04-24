@@ -835,7 +835,7 @@ def userfilter(value):
     else:
         return emailfilter(value) # filter for emails here for safety
 
-def _revlinkcfg(replace, templates):
+def _revlinkcfg(replace):
     '''Helper function that returns suitable macros and functions
        for building revision links depending on replacement mechanism
 '''
@@ -890,7 +890,7 @@ def shortrevfilter(replace, templates):
         @param templates: a jinja2 environment
     '''
 
-    url_f = _revlinkcfg(replace, templates)
+    url_f = _revlinkcfg(replace)
 
     def filter(rev, repo):
         if not rev:
@@ -932,7 +932,7 @@ def revlinkfilter(replace, templates):
         @param templates: a jinja2 environment
     '''
 
-    url_f = _revlinkcfg(replace, templates)
+    url_f = _revlinkcfg(replace)
 
     def filter(rev, repo):
         if not rev:
