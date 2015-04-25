@@ -122,16 +122,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 .where(buildrequests_tbl.c.buildername == buildername)
 
             if sourcestamps and len(sourcestamps) > 0:
-                clauses = []
-                # check sourcestampset has same number of row in the sourcestamps table
-                stmt = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                    .where(sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id) \
-                    .group_by(sourcestamps_tbl.c.sourcestampsetid) \
-                    .having(sa.func.count(sourcestamps_tbl.c.id) == len(sourcestamps))
-
-                clauses.append(sourcestampsets_tbl.c.id == stmt)
-
                 # check that sourcestampset match all branches x codebases
+                clauses = []
                 for ss in sourcestamps:
                     stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
                         .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
@@ -140,7 +132,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
 
                 stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
-                    .where(sa.and_(*clauses))
+                    .where(sa.or_(*clauses))
 
                 stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
                         .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
