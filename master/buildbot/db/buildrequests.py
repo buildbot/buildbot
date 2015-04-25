@@ -112,7 +112,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                           from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
                           .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
-                                       (reqs_tbl.c.complete == 0)))
+                                       (reqs_tbl.c.complete == 0))).limit(200)
 
             if sorted:
                 q = q.order_by(reqs_tbl.c.submitted_at)

@@ -159,7 +159,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             res.close()
 
-            return sorted(lastBuilds)
+            return sorted(lastBuilds, reverse=True)
 
         return self.db.pool.do(thd)
 

@@ -104,6 +104,10 @@ class BuilderStatus(styles.Versioned):
         if not hasattr(self, 'latestBuildCache'):
             self.latestBuildCache = {}
 
+    def deleteKey(self, key, d):
+        if d.has_key(key):
+            del d[key]
+
     def __getstate__(self):
         # when saving, don't record transient stuff like what builds are
         # currently running, because they won't be there when we start back
@@ -117,21 +121,16 @@ class BuilderStatus(styles.Versioned):
             # TODO: push a 'hey, build was interrupted' event
         del d['currentBuilds']
         d.pop('pendingBuilds', None)
-        del d['currentBigState']
+        self.deleteKey('currentBigState', d)
         del d['basedir']
-        del d['status']
-        del d['nextBuildNumber']
+        self.deleteKey('status', d)
+        self.deleteKey('nextBuildNumber', d)
         del d['master']
 
         if 'pendingBuildCache' in d:
             del d['pendingBuildCache']
 
-        # Todo: temporary remove the latestBuildCache from pickle in that sense we can have a bigger cache
-        # Todo: remove this comment when merging to staging
-        # right now the size is > 10mb per builder
-        #d['latestBuildCache'] = self.latestBuildCache
-        # we will need to check what performs better having it loaded the first time from db vs pickle
-        del d['latestBuildCache']
+        self.deleteKey('latestBuildCache', d)
         return d
 
     def __setstate__(self, d):
@@ -734,6 +733,8 @@ class BuilderStatus(styles.Versioned):
         return output
 
     def updateLatestBuildCache(self, cache, k):
+        if self.latestBuildCache and k in self.latestBuildCache["build"] and cache["build"] is None:
+            return
         if k in self.latestBuildCache and self.latestBuildCache[k] and \
                         self.latestBuildCache[k]["build"] > cache["build"]:
             return

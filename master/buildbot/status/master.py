@@ -415,6 +415,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             with open(filename, "rb") as f:
                 builder_status = load(f)
             builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, basedir)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of
