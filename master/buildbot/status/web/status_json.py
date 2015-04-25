@@ -846,7 +846,7 @@ class QueueJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
+        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True, limit=200)
 
         #Convert to dictionary
         output = []
