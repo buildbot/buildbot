@@ -25,7 +25,7 @@ Related repositories:
 * https://github.com/buildbot/buildbot-media - Buildbot-related media
 * https://github.com/buildbot/buildbot-website - Source for http://buildbot.net
 
-.. |travis-badge| image:: https://travis-ci.org/buildbot/buildbot.png?branch=master
+.. |travis-badge| image:: https://travis-ci.org/buildbot/buildbot.svg?branch=master
 .. _travis-badge: https://travis-ci.org/buildbot/buildbot
 .. |coveralls-badge| image:: https://img.shields.io/coveralls/buildbot/buildbot.svg
 .. _coveralls-badge: https://coveralls.io/r/buildbot/buildbot?branch=master
