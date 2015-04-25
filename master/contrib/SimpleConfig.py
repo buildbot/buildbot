@@ -94,12 +94,12 @@ from buildbot.changes import filter
 from buildbot.changes.gitpoller import GitPoller
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
+from buildbot.reporter.mail import MailNotifier
 from buildbot.schedulers import triggerable
 from buildbot.schedulers.basic import SingleBranchScheduler
 from buildbot.schedulers.forcesched import FixedParameter
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.status import html
-from buildbot.status.mail import MailNotifier
 from buildbot.status.web import auth
 from buildbot.status.web import authz
 from buildbot.steps import trigger

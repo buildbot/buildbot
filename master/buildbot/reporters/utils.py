@@ -54,52 +54,59 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
     builds = yield defer.gatherResults(dl)
     builds = flatten(builds, types=(list, UserList))
     if builds:
-        builderids = set([build['builderid'] for build in builds])
-
-        builders = yield defer.gatherResults([master.data.get(("builders", _id))
-                                              for _id in builderids])
-
-        buildersbyid = dict([(builder['builderid'], builder) for builder in builders])
-
-        if wantProperties:
-            buildproperties = yield defer.gatherResults(
-                [master.data.get(("builds", build['buildid'], 'properties'))
-                 for build in builds])
-        else:
-            buildproperties = range(len(builds))
-
-        if wantPreviousBuild:
-            prev_builds = yield defer.gatherResults(
-                [getPreviousBuild(master, build) for build in builds])
-        else:
-            prev_builds = range(len(builds))
-
-        if wantSteps:
-            buildsteps = yield defer.gatherResults(
-                [master.data.get(("builds", build['buildid'], 'steps'))
-                 for build in builds])
-            if wantLogs:
-                for s in flatten(buildsteps, types=(list, UserList)):
-                    s['logs'] = yield master.data.get(("steps", s['stepid'], 'logs'))
-                    for l in s['logs']:
-                        l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
-
-        else:
-            buildsteps = range(len(builds))
-
-        for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
-            build['builder'] = buildersbyid[build['builderid']]
-            build['buildset'] = buildset
-            if wantProperties:
-                build['properties'] = properties
-
-            if wantSteps:
-                build['steps'] = steps
-
-            if wantPreviousBuild:
-                build['prev_build'] = prev
+        yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
+                                  wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
 
     defer.returnValue(dict(buildset=buildset, builds=builds))
+
+
+@defer.inlineCallbacks
+def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
+                        wantPreviousBuild=False, wantLogs=False):
+    builderids = set([build['builderid'] for build in builds])
+
+    builders = yield defer.gatherResults([master.data.get(("builders", _id))
+                                          for _id in builderids])
+
+    buildersbyid = dict([(builder['builderid'], builder) for builder in builders])
+
+    if wantProperties:
+        buildproperties = yield defer.gatherResults(
+            [master.data.get(("builds", build['buildid'], 'properties'))
+             for build in builds])
+    else:
+        buildproperties = range(len(builds))
+
+    if wantPreviousBuild:
+        prev_builds = yield defer.gatherResults(
+            [getPreviousBuild(master, build) for build in builds])
+    else:
+        prev_builds = range(len(builds))
+
+    if wantSteps:
+        buildsteps = yield defer.gatherResults(
+            [master.data.get(("builds", build['buildid'], 'steps'))
+             for build in builds])
+        if wantLogs:
+            for s in flatten(buildsteps, types=(list, UserList)):
+                s['logs'] = yield master.data.get(("steps", s['stepid'], 'logs'))
+                for l in s['logs']:
+                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+
+    else:
+        buildsteps = range(len(builds))
+
+    for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
+        build['builder'] = buildersbyid[build['builderid']]
+        build['buildset'] = buildset
+        if wantProperties:
+            build['properties'] = properties
+
+        if wantSteps:
+            build['steps'] = steps
+
+        if wantPreviousBuild:
+            build['prev_build'] = prev
 
 
 # perhaps we need data api for users with sourcestamps/:id/users

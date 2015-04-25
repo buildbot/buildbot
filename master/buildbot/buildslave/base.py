@@ -30,7 +30,7 @@ from buildbot.interfaces import ILatentBuildSlave
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
-from buildbot.status.mail import MailNotifier
+from buildbot.reporters.mail import MailNotifier
 from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
@@ -55,9 +55,9 @@ class AbstractBuildSlave(service.BuildbotService, object):
     reconfig_priority = 64
 
     def checkConfig(self, name, password, max_builds=None,
-                 notify_on_missing=None,
-                 missing_timeout=10 * 60,   # Ten minutes
-                 properties=None, locks=None, keepalive_interval=3600):
+                    notify_on_missing=None,
+                    missing_timeout=10 * 60,   # Ten minutes
+                    properties=None, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -508,10 +508,13 @@ class AbstractBuildSlave(service.BuildbotService, object):
         return True
 
     def _mail_missing_message(self, subject, text):
+        # FIXME: This should be handled properly via the event api
+        # we should send a missing message on the mq, and let any reporter handle that
+
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
         buildmaster = self.botmaster.master
-        for st in buildmaster.status:
+        for st in buildmaster.services:
             if isinstance(st, MailNotifier):
                 break
         else:

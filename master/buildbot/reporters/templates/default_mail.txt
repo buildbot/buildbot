@@ -1,0 +1,15 @@
+The Buildbot has detected a {{ status_detected }} on builder {{ buildername }} while building {{ projects }}.
+Full details are available at:
+    {{ build_url }}
+
+Buildbot URL: {{ buildbot_url }}
+
+Buildslave for this Build: {{ slavename }}
+
+Build Reason: {{ build['properties'].get('reason', ["<unknown>"])[0] }}
+Blamelist: {{ ", ".join(blamelist) }}
+
+{{ summary }}
+
+Sincerely,
+ -The Buildbot
