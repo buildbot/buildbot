@@ -50,8 +50,9 @@ class GitCommand(Git):
         self.changeCount = len(revList)
 
         changelist = []
+        lastChanges = revList[:200]
 
-        for rev in revList:
+        for rev in lastChanges:
             args = ['log','--no-walk', self.escapeParameter(r'--format=%ct'), rev, '--']
             timestamp = yield self._dovccmd(args, collectStdout=True)
             try:

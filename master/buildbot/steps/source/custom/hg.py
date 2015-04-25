@@ -56,7 +56,9 @@ class Hg(Mercurial):
         revNodeList = [rn.split(':', 1) for rn in stdout.strip().split()]
 
         changelist = []
-        for rev, node in reversed(revNodeList):
+        lastChanges = sorted(revNodeList, reverse=True)[:200]
+
+        for rev, node in reversed(lastChanges):
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
