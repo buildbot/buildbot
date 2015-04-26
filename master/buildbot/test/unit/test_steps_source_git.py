@@ -950,6 +950,56 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
+    def test_mode_full_fresh_submodule_v1_7_8(self):
+        """This tests the same as test_mode_full_fresh_submodule, but the
+        "submodule update" command should be different for Git v1.7.8+."""
+        self.setupStep(
+            git.Git(repourl='http://github.com/buildbot/buildbot.git',
+                    mode='full', method='fresh', submodules=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.8')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d', '-x'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'sync'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'update', '--init', '--recursive', '--force', '--checkout'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
+                                 '-f', '-f', '-d', '-x'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
+        return self.runStep()
+
     def test_mode_full_clobber_shallow(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
