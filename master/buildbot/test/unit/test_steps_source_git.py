@@ -937,7 +937,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'submodule', 'update', '--init', '--recursive', '--force'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'foreach', 'git', 'clean',
+                        command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
                                  '-f', '-f', '-d', '-x'])
             + 0,
             ExpectShell(workdir='wkdir',

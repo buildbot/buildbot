@@ -541,7 +541,7 @@ class Git(Source):
 
     def _cleanSubmodule(self, _=None):
         if self.submodules:
-            command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
+            command = ['submodule', 'foreach', '--recursive', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             return self._dovccmd(command)
