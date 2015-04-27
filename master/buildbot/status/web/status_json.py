@@ -532,13 +532,14 @@ class PastBuildsJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        #Get codebases
+        results = getResultsArg(request)
+
         if self.builder_status is not None:
             codebases = {}
             getCodebasesArg(request=request, codebases=codebases)
             encoding = getRequestCharset(request)
             branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
-            results = getResultsArg(request)
+
 
             builds = yield self.builder_status.generateFinishedBuildsAsync(branches=map_branches(branches),
                                                               codebases=codebases,
@@ -561,13 +562,13 @@ class PastBuildsJsonResource(JsonResource):
                         my_builders.append(b)
 
             builds = yield self.status.generateFinishedBuildsAsync(builders=[b.getName() for b in my_builders],
-                                                                   num_builds=self.number)
+                                                                   num_builds=self.number, results=results)
 
             for rb in builds:
                 if rb.getSlavename() == slavename:
                     n += 1
                     recent_builds.append(rb.asDict(request=request))
-                    if n > self.number:
+                    if n >= self.number:
                         defer.returnValue(recent_builds)
                         return
 

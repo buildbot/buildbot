@@ -318,14 +318,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         return builder_names
 
     @defer.inlineCallbacks
-    def generateFinishedBuildsAsync(self, builders=[], num_builds=15):
+    def generateFinishedBuildsAsync(self, builders=[], num_builds=15, results=None):
 
         builder_names = self.getBuildersConfigured(builders)
 
         sources = []
         for bn in builder_names:
             b = self.getBuilder(bn)
-            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds)
+            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds, results=results)
             sources.extend(finished_builds)
 
         sorted_sources = sorted(sources, key=lambda build: build.started, reverse=True)

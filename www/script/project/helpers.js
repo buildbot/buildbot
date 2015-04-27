@@ -5,7 +5,8 @@ define(function (require) {
     var $ = require('jquery'),
         screenSize = require('screensize'),
         timeElements = require('timeElements'),
-        queryString = require("libs/query-string");
+        queryString = require("libs/query-string"),
+        URI = require('libs/uri/URI');
 
     require('project/moment-extend');
 
@@ -512,6 +513,49 @@ define(function (require) {
             }
 
             return result;
+        },
+        initRecentBuildsFilters: function initRecentBuildsFilters () {
+            var args = URI.parseQuery(window.location.search);
+
+            var tags = {
+                results: [
+                    {id: "0", text: "Success"},
+                    {id: "1", text: "Warnings"},
+                    {id: "2", text: "Failure"},
+                    {id: "3", text: "Skipped"},
+                    {id: "4", text: "Exception"},
+                    {id: "5", text: "Retry"},
+                    {id: "6", text: "Canceled"},
+                    {id: "7", text: "Not Rebuilt"},
+                    {id: "8", text: "Dependency Failure"}
+                ]
+            };
+
+            var $buildResultSelector = $("#buildResultSelector"),
+                $numBuildsSelector = $("#numBuildsSelector");
+
+            $buildResultSelector.val(args.results).select2({"multiple": true,
+                                                            "data": tags});
+
+            // Set the value of the numBuildsSelector defaulting to 15 for when not found,
+            // change location on change of the value and initialize select2
+            $numBuildsSelector.val(args.numbuilds || 15).select2({minimumResultsForSearch: -1});
+
+            $("#btnFilter").bind("click.katana", function changeNumBuilds() {
+                var numBuilds = $numBuildsSelector.val();
+
+
+                var url = URI(window.location.href).setQuery({numbuilds: numBuilds});
+
+                var results_tags = $buildResultSelector.val();
+                if (results_tags.length > 0) {
+                    url.setQuery("results", results_tags.split(","));
+                } else {
+                    url.removeQuery("results");
+                }
+
+                window.location = url;
+            });
         },
         /**
          * Clear all events and binding on the child elements,
