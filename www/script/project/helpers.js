@@ -93,52 +93,56 @@ define(function (require) {
             $.each(elements, function (i, el) {
                 var $elem = $(el),
                     $toolTipCont = $("<div/>").addClass("tooltip-cont"),
-                    clickEvent;
+                    clickEvent,
+                    events = $._data($elem.get(0), 'events');
 
-                $elem.hover(function (e) {
-                    var title,
-                        cursorPosTop = e.pageY + 20,
-                        cursorPosLeft = e.pageX + 5,
-                        clickHandler = function (event) {
-                            clickEvent = event;
-                            $toolTipCont.remove();
-                            $(e.target).unbind(event);
-                        };
+                if (events === undefined || events.mouseover === undefined) {
+                    $elem.hover(function (e) {
+                        var title,
+                            cursorPosTop = e.pageY + 20,
+                            cursorPosLeft = e.pageX + 5,
+                            clickHandler = function (event) {
+                                clickEvent = event;
+                                $toolTipCont.remove();
+                                $(e.target).unbind(event);
+                            };
 
-                    if ($elem.attr("title") !== undefined) {
-                        $elem.attr("data-title", $elem.attr("title"));
-                        $elem.removeAttr("title");
-                    }
-                    title = $elem.attr("data-title");
+                        if ($elem.attr("title") !== undefined) {
+                            $elem.attr("data-title", $elem.attr("title"));
+                            $elem.removeAttr("title");
+                        }
+                        title = $elem.attr("data-title");
 
-                    $elem.bind("click.katana", clickHandler);
+                        $elem.bind("click.katana", clickHandler);
 
-                    if (screenSize.isMediumScreen() || !$elem.hasClass('responsive-tooltip')) {
-                        $toolTipCont.html(title)
-                            .appendTo('body')
-                            .css({'top': cursorPosTop, 'left': cursorPosLeft})
-                            .fadeIn('fast');
-                    } else if ($elem.hasClass('responsive-tooltip')) {
+                        if (screenSize.isMediumScreen() || !$elem.hasClass('responsive-tooltip')) {
+                            $toolTipCont.html(title)
+                                .appendTo('body')
+                                .css({'top': cursorPosTop, 'left': cursorPosLeft})
+                                .fadeIn('fast');
+                        } else if ($elem.hasClass('responsive-tooltip')) {
 
-                        $toolTipCont.html(title)
-                            .appendTo('body')
-                            .css({'top': cursorPosTop, 'right': 28 })
-                            .fadeIn('fast');
-                    }
+                            $toolTipCont.html(title)
+                                .appendTo('body')
+                                .css({'top': cursorPosTop, 'right': 28})
+                                .fadeIn('fast');
+                        }
 
-                }, function () {
-                    if (clickEvent !== undefined) {
-                        $elem.unbind(clickEvent);
-                        clickEvent = undefined;
-                    }
+                    }, function () {
+                        if (clickEvent !== undefined) {
+                            $elem.unbind(clickEvent);
+                            clickEvent = undefined;
+                        }
 
-                    var toolTipCont = $('.tooltip-cont');
-                    toolTipCont.fadeOut('fast', function () {
-                        $(this).unbind();
-                        $(this).remove();
+                        var toolTipCont = $('.tooltip-cont');
+                        toolTipCont.fadeOut('fast', function () {
+                            $(this).unbind();
+                            $(this).remove();
+                        });
                     });
-                });
+                }
             });
+
         },
         setCurrentItem: function () {
 
