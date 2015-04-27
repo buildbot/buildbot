@@ -1,5 +1,4 @@
 beforeEach ->
-    module 'waterfall_view'
     # Mock modalService
     module ($provide) ->
         $provide.service '$modalInstance', -> close: ->

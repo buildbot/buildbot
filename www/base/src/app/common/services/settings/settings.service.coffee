@@ -1,4 +1,4 @@
-class bbSettings extends Provider
+class bbSettings extends Provider('common')
     constructor: ->
         @groups = {}
 
