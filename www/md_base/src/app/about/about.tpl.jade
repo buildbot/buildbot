@@ -45,7 +45,7 @@ section.card(layout-md="column", layout-gt-md="row")
     div.api(ng-if="about.specs.length")
       dl(ng-repeat="spec in about.specs|orderBy:'path'", ng-init="collapsed = 1")
         dt
-          a(ng-click="collapsed = !collapsed", href="") /{{ spec.path }}
+          a.no-select(ng-click="collapsed = !collapsed", href="") /{{ spec.path }}
           | &nbsp;
           small ({{spec.fields.length}} fields)
         dd(ng-if="!collapsed")
