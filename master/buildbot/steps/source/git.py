@@ -125,6 +125,7 @@ class Git(Source):
         self.getDescription = getDescription
         self.config = config
         self.supportsBranch = True
+        self.supportsSubmoduleCheckout = True
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
 
@@ -534,14 +535,16 @@ class Git(Source):
 
     def _updateSubmodule(self, _=None):
         if self.submodules:
-            return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive', '--force'])
+            vccmd = ['submodule', 'update', '--init', '--recursive', '--force']
+            if self.supportsSubmoduleCheckout:
+                vccmd.extend(['--checkout'])
+            return self._dovccmd(vccmd)
         else:
             return defer.succeed(0)
 
     def _cleanSubmodule(self, _=None):
         if self.submodules:
-            command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
+            command = ['submodule', 'foreach', '--recursive', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             return self._dovccmd(command)
@@ -567,6 +570,8 @@ class Git(Source):
             version = stdout.strip().split(' ')[2]
             if LooseVersion(version) < LooseVersion("1.6.5"):
                 self.supportsBranch = False
+            if LooseVersion(version) < LooseVersion("1.7.8"):
+                self.supportsSubmoduleCheckout = False
             return gitInstalled
         return d
 
