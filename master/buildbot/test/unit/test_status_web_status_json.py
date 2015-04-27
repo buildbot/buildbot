@@ -489,7 +489,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                                'changes': [],
                                'codebase': '',
                                'hasPatch': False,
-                               'limitedChanges': False,
+                               'totalChanges': 0,
                                'project': '',
                                'repository': 'z',
                                'revision': None,

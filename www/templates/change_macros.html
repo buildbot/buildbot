@@ -1,76 +1,76 @@
 {% macro change(c) %}
 
+{% set row_class=cycler('alt','') %}
 
-  {% set row_class=cycler('alt','') %}
-   
-
-    
-  <tr >
-    
+<tr>
     {% if c.category %}
-      <td>{{ c.category }}</td>
+    <td>{{ c.category }}</td>
     {% endif %}
     <td>{{ c.who|email }}</td>
     <td>{{ c.at }}</td>
-  
+
     {% if c.repository %}
-  
     <td>
-      <div class="ellipsis ellipsis-js" data-txt="{{ c.repository|repolink }}">
-        {{ c.repository|repolink }}
-      </div>
+        <div class="ellipsis ellipsis-js" data-txt="{{ c.repository|repolink }}">
+            {{ c.repository|repolink }}
+        </div>
     </td>
-  
-  {% endif %} {% if c.project %}
-  
+    {% endif %} {% if c.project %}
+
     <td>
-      
         {{ c.project|projectlink }}
-      
     </td>
 
-  
-  {% endif %} {% if c.branch %}
-  
+    {% endif %} {% if c.branch %}
+
     <td>{{ c.branch|e }}</td>
-  {% endif %} 
+    {% endif %}
 
-  {% if c.rev %}
-    
+    {% if c.rev %}
     <td>
-      {%- if c.revlink -%}<a href="{{ c.revlink }}">#{{ c.rev|e }}</a>
-      {%- else -%}
-        
-          {{ c.rev|shortrev(c.repository) }} 
-        
-      {%- endif -%}
+        {%- if c.revlink -%}
+            <a href="{{ c.revlink }}">#{{ c.rev|e }}</a>
+        {%- else -%}
+            {{ c.rev|shortrev(c.repository) }}
+        {%- endif -%}
     </td>
-  
-  {% endif %}
-  
-  {% if c.comments %}
+    {% endif %}
+
+    {% if c.comments %}
     <td>
-      <div class="ellipsis ellipsis-js" data-txt="{{ c.comments|changecomment(c.project) }}">
-        {{ c.comments|changecomment(c.project) }}
-      </div>
+        <div class="ellipsis ellipsis-js" data-txt="{{ c.comments|changecomment(c.project) }}">
+            {{ c.comments|changecomment(c.project) }}
+        </div>
     </td>
-  {% endif %}
-  
-  {% if c.properties %}
-    <div class="ellipsis ellipsis-js" data-txt="{% for p in c.properties %}{{ p[0]|capitalize|e }}{{ p[1]|e }}{% endfor %}">
-      {% for p in c.properties %}
-        
-        {{ p[0]|capitalize|e }}
-        {{ p[1]|e }}
-     
-      {% endfor %}
+    {% endif %}
+
+    {% if c.properties %}
+    <div class="ellipsis ellipsis-js"
+         data-txt="{% for p in c.properties %}{{ p[0]|capitalize|e }}{{ p[1]|e }}{% endfor %}">
+        {% for p in c.properties %}
+            {{ p[0]|capitalize|e }}
+            {{ p[1]|e }}
+        {% endfor %}
     </div>
-  {% endif %} 
+    {% endif %}
 
-  </tr>  
+</tr>
+{%- endmacro %}
 
 
-{%- endmacro %} 
+{% macro changeth(c) %}
+<tr>
+    {% if c.category %}<th>Category</th>{% endif %}
+    <th>Changed by</th>
+    <th>Time & date</th>
+    {% if c.repository %} <th>Repository</th> {% endif %}
+    {% if c.project %} <th>Project</th> {% endif %}
+    {% if c.branch %} <th>Branch</th> {% endif %}
+    <th>Revision</th>
+    {% if c.comments %} <th>Comments</th> {% endif %}
+    {% if c.properties %} <th>Properties</th> {% endif %}
+</tr>
+{%- endmacro %}
 
 {% macro box_contents(who, url, pageTitle) -%}
 <a href="{{ url }}" title="{{ pageTitle|e }}">{{ who|user }}</a>

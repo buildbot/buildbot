@@ -72,7 +72,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     codebase = ''
     sourcestampsetid = None
     ssid = None
-    limitedChanges = False
+    totalChanges = 0
 
     compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
 
@@ -272,12 +272,12 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['project'] = self.project
         result['repository'] = self.repository
         result['codebase'] = self.codebase
-        result['limitedChanges'] = self.limitedChanges
+        result['totalChanges'] = self.totalChanges
         return result
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        self._addSourceStampToDatabase_lock = defer.DeferredLock();
+        self._addSourceStampToDatabase_lock = defer.DeferredLock()
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
