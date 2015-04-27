@@ -23,7 +23,7 @@ from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
 from buildbot import config, interfaces, util
-from buildbot.status.web.base import getCodebasesArg
+from buildbot.status.web.base import getCodebasesArg, _revlinkcfg
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -44,6 +44,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._builder_observers = bbcollections.KeyedSets()
         self._buildreq_observers = bbcollections.KeyedSets()
         self._buildset_finished_waiters = bbcollections.KeyedSets()
+        self.rev_url_func = None
 
     # service management
 
@@ -537,3 +538,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestCancelled'):
                     eventually(observer.requestSubmitted, brs)
+
+    def get_rev_url(self, rev, repo):
+        # Lazy load this so that the config is ready for us
+        if self.rev_url_func is None:
+            self.rev_url_func = _revlinkcfg(self.master.config.revlink)
+
+        if not rev:
+            return u''
+
+        rev = unicode(rev)
+        return self.rev_url_func(rev, repo)
