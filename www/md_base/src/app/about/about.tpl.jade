@@ -42,7 +42,7 @@ section.card(layout-md="column", layout-gt-md="row")
       | References and description of the API endpoints that provided by this application.
   div.content
     div(ng-if="!about.specs.length") Please wait...
-    div(ng-if="about.specs.length")
+    div.api(ng-if="about.specs.length")
       dl(ng-repeat="spec in about.specs|orderBy:'path'", ng-init="collapsed = 1")
         dt
           a(ng-click="collapsed = !collapsed", href="") /{{ spec.path }}
