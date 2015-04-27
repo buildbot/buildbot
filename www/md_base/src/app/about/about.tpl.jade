@@ -35,3 +35,19 @@ section.card(layout-md="column", layout-gt-md="row")
       b GNU Public Licence(v2)
       | .
 
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 API references
+    p
+      | References and description of the API endpoints that provided by this application.
+  div.content
+    div(ng-if="!about.specs.length") Please wait...
+    div(ng-if="about.specs.length")
+      dl(ng-repeat="spec in about.specs|orderBy:'path'", ng-init="collapsed = 1")
+        dt
+          a(ng-click="collapsed = !collapsed", href="") /{{ spec.path }}
+          | &nbsp;
+          small ({{spec.fields.length}} fields)
+        dd(ng-if="!collapsed")
+          inspect-data(data="spec.fields")
+
