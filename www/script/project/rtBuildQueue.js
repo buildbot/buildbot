@@ -53,9 +53,9 @@ define(function (require) {
                 {
                     "aTargets": [ 1 ],
                     "sClass": "txt-align-left",
-                    "mRender": function (data, full, type) {
-                        var sourcesLength = type.sources.length;
-                        return hbBuildQueue({showsources: true, sources: type.sources, codebase: type.codebase, sourcesLength: sourcesLength});
+                    "mRender": function (data, type, full) {
+                        var sourcesLength = full.sources !== undefined ? full.sources.length : 0;
+                        return hbBuildQueue({showsources: true, sources: full.sources, codebase: full.codebase, sourcesLength: sourcesLength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
@@ -65,9 +65,9 @@ define(function (require) {
                 {
                     "aTargets": [ 2 ],
                     "sClass": "txt-align-left",
-                    "mRender": function (data, full, type) {
-                        var requested = moment.unix(type.submittedAt).format('MMMM Do YYYY, H:mm:ss');
-                        return hbBuildQueue({reason: type.reason, requested: requested, submittedAt: type.submittedAt});
+                    "mRender": function (data, type, full) {
+                        var requested = moment.unix(full.submittedAt).format('MMMM Do YYYY, H:mm:ss');
+                        return hbBuildQueue({reason: full.reason, requested: requested, submittedAt: full.submittedAt});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         timeElements.addElapsedElem($(nTd).find('.waiting-time'), oData.submittedAt);
@@ -76,8 +76,8 @@ define(function (require) {
                 {
                     "aTargets": [ 3 ],
                     "sClass": "txt-align-right",
-                    "mRender": function (data, full, type) {
-                        var slavelength = type.slaves.length;
+                    "mRender": function (data, type, full) {
+                        var slavelength = full.slaves !== undefined ? full.slaves.length : 0;
                         return hbBuildQueue({showslaves: true, slaves: data, slavelength: slavelength});
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
@@ -88,8 +88,8 @@ define(function (require) {
                 {
                     "aTargets": [ 4 ],
                     "sClass": "select-input",
-                    "mRender": function (data, full, type) {
-                        return hbBuildQueue({input: 'true', brid: type.brid});
+                    "mRender": function (data, type, full) {
+                        return hbBuildQueue({input: 'true', brid: full.brid});
                     }
 
                 }

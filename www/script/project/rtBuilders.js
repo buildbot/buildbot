@@ -129,9 +129,9 @@ define(function (require) {
             return selectedTags;
         },
         filterByTags: function filterByTags(col) {
-            return function (settings, data) {
+            return function (settings, filterData, row, data) {
                 var selectedTags = rtBuilders.getSelectedTags(),
-                    builderTags = data[col],
+                    builderTags = data.tags,
                     branch_type = rtBuilders.getBranchType(),
                     hasBranch = function (b) {
                         return b.toLowerCase() === branch_type.toLowerCase();
