@@ -50,7 +50,8 @@ class GitCommand(Git):
         self.changeCount = len(revList)
 
         changelist = []
-        lastChanges = revList[:200]
+        lastChanges = revList[:50]
+        limitedChanges = len(lastChanges) > 50
 
         for rev in lastChanges:
             args = ['log','--no-walk', self.escapeParameter(r'--format=%ct'), rev, '--']
@@ -67,6 +68,6 @@ class GitCommand(Git):
 
             changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, branch= self.branch,revision=rev, codebase= self.codebase))
 
-        self.updateBuildSourceStamps(sourcestamps_updated, changelist)
+        self.updateBuildSourceStamps(sourcestamps_updated, changelist, limitedChanges)
 
         defer.returnValue(0)

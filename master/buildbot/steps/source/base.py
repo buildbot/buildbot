@@ -157,13 +157,14 @@ class Source(LoggingBuildStep):
             LoggingBuildStep.setProperty(self, name, value, source)
 
     @defer.inlineCallbacks
-    def updateBuildSourceStamps(self, sourcestamps_updated, changes=[]):
+    def updateBuildSourceStamps(self, sourcestamps_updated, changes=[], limitedChanges=False):
         sourcestamps = self.build.build_status.getSourceStamps()
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:
                 ss.changes = changes
                 ss.revision = sourcestamps_updated[self.codebase]
+                ss.limitedChanges = limitedChanges
                 break
 
         # update buildrequest revision, only if the revision is empty

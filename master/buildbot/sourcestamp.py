@@ -72,6 +72,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     codebase = ''
     sourcestampsetid = None
     ssid = None
+    limitedChanges = False
 
     compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
 
@@ -271,6 +272,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['project'] = self.project
         result['repository'] = self.repository
         result['codebase'] = self.codebase
+        result['limitedChanges'] = self.limitedChanges
         return result
 
     def __setstate__(self, d):
