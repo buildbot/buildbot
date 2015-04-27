@@ -86,6 +86,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                  description=None, descriptionDone=None, descriptionSuffix=None,
                  command=None,
                  usePTY="slave-config",
+                 timestamp_stdio=True,
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -115,7 +116,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-        buildstep.LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        buildstep.LoggingBuildStep.__init__(self,
+                                            timestamp_stdio=timestamp_stdio,
+                                            **buildstep_kwargs)
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
@@ -316,7 +319,7 @@ class SetProperty(ShellCommand):
             config.error(
                 "Exactly one of property and extract_fn must be set")
 
-        ShellCommand.__init__(self, **kwargs)
+        ShellCommand.__init__(self, timestamp_stdio=False, **kwargs)
 
         self.property_changes = {}
 
