@@ -42,8 +42,8 @@ class PastBuildsJsonResource(unittest.TestCase):
         build.asDict = mock.Mock(return_value="dummy")
 
         self.builder_status = mock.Mock()
-        self.builder_status.generateFinishedBuilds = \
-            mock.Mock(return_value=[build])
+        self.builder_status.generateFinishedBuildsAsync = \
+            lambda branches=[], codebases={}, num_builds=None, results=None: defer.succeed([build])
 
         # set-up the resource object that will be used
         # by the tests with our mocked objects
@@ -51,30 +51,20 @@ class PastBuildsJsonResource(unittest.TestCase):
             status_json.PastBuildsJsonResource(
                 None, 1, builder_status=self.builder_status)
 
+    @defer.inlineCallbacks
     def test_no_args_request(self):
 
-        self.assertEqual(self.resource.asDict(self.request),
+        result = yield self.resource.asDict(self.request)
+        self.assertEqual(result,
                          ["dummy"])
 
-        self.builder_status.generateFinishedBuilds.assert_called_once_with(
-            codebases={},
-            branches=[],
-            num_builds=1,
-            results=None
-        )
-
+    @defer.inlineCallbacks
     def test_resources_arg_request(self):
         # test making a request with results=3 filter argument
         self.request.args = {"results": ["3"]}
-        self.assertEqual(self.resource.asDict(self.request),
+        result = yield self.resource.asDict(self.request)
+        self.assertEqual(result,
                          ["dummy"])
-
-        self.builder_status.generateFinishedBuilds.assert_called_once_with(
-            codebases={},
-            branches=[],
-            num_builds=1,
-            results=[3]
-        )
 
 
 def setUpProject():
@@ -253,9 +243,9 @@ class TestPastBuildsJsonResource(unittest.TestCase):
             finished_builds = []
             for n in range(15):
                 finished_builds.append(fakeBuildStatus(self.master, builder, n))
-            return finished_builds
+            return defer.succeed(finished_builds)
 
-        builder.builder_status.generateFinishedBuilds = mockFinishedBuilds
+        builder.builder_status.generateFinishedBuildsAsync = mockFinishedBuilds
 
         builds_json = status_json.PastBuildsJsonResource(self.master_status, 15,  builder_status=builder.builder_status)
         builds_dict = yield builds_json.asDict(self.request)
@@ -360,7 +350,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
         self.master.botmaster.builders = {'builder-01': builder}
 
-        def mockFinishedBuilds(branches=[], codebases={},
+        def mockFinishedBuildsAsync(branches=[], codebases={},
                                num_builds=None,
                                max_buildnum=None,
                                finished_before=None,
@@ -368,9 +358,9 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                                max_search=2000,
                                useCache=False):
 
-            return [fakeBuildStatus(self.master, builder, 1)]
+            return defer.succeed([fakeBuildStatus(self.master, builder, 1)])
 
-        builder.builder_status.generateFinishedBuilds = mockFinishedBuilds
+        builder.builder_status.generateFinishedBuildsAsync = mockFinishedBuildsAsync
 
         project_json = status_json.SingleProjectJsonResource(self.master_status, self.project)
 
@@ -499,6 +489,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                                'changes': [],
                                'codebase': '',
                                'hasPatch': False,
+                               'limitedChanges': False,
                                'project': '',
                                'repository': 'z',
                                'revision': None,
