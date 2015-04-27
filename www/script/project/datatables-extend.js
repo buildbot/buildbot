@@ -123,14 +123,8 @@ define(function (require) {
             //initialize datatable with options
             var oTable = $tableElem.dataTable(options);
 
-            // Set the marquee in the input field on load and listen for key event
-
-            var filterTableInput = $('.dataTables_filter input').attr('placeholder', 'Filter results');
-            $('body').keyup(function (event) {
-                if (event.which === 70) {
-                    filterTableInput.focus();
-                }
-            });
+            // Set the marquee in the input field on load
+            $('.dataTables_filter input').attr('placeholder', 'Filter results');
 
             if (options.iFilterCol !== undefined) {
                 dataTables.initSingleColumnFilter(options.iFilterCol);
