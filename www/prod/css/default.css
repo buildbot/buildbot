@@ -747,6 +747,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .offline,td.offline{background-color:#E7E7E7;text-shadow:0 1px 0 #fff}
 .idle,td.idle{text-shadow:0 1px 0 #fff}
 .notimpl{color:#838383!important}
+tr.old-build,tr.old-build a:not(.custom-build):not(.run-build):not(.artifacts-js){color:#838383}
 .fl-left{float:left}
 .fl-right{float:right}
 .m-bottom15{margin-bottom:15px}
@@ -791,7 +792,7 @@ div.last{margin-right:0}
 .user-settings input[type=checkbox]{float:left;display:block}
 .user-settings label{display:block;float:left;margin-right:10px;margin-top:-1px}
 .user-settings .question-icon:after{font-size:14px;margin-top:0}
-.user-settings .question-icon{float:left;margin-left:8px}
+.user-settings .question-icon{margin-left:8px}
 .user-settings:after{color:rgba(244,249,255,.84);content:"";display:inline-block;float:right;font-family:katana_icons;font-size:15px;font-weight:400;margin-left:15px;margin-top:-1px;opacity:.8;padding:0;position:relative;-webkit-transition:opacity .2s ease-in-out 0s;transition:opacity .2s ease-in-out 0s}
 .user-settings:hover:after{opacity:.5}
 .question-icon:after{color:#718396;content:"";display:inline-block;font-family:katana_icons;font-size:16px;font-weight:400;margin-top:5px;padding:0;position:absolute;text-shadow:0 1px 0 #FFF}

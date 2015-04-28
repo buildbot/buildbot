@@ -44,7 +44,7 @@ define(function (require) {
                 helpers.tableHeader($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
 
                 var $unstableButton = $("#btn-unstable");
-                $unstableButton.click(function() {
+                $unstableButton.click(function () {
                     hideUnstable = !hideUnstable;
                     rtBuilders.updateUnstableButton();
                     $tbSorter.fnDraw();
@@ -137,7 +137,7 @@ define(function (require) {
                         return b.toLowerCase() === branch_type.toLowerCase();
                     };
 
-                if (hideUnstable === true && ($.inArray(UNSTABLE_TAG, builderTags) > -1 || $.inArray(WIP_TAG, builderTags) > -1))  {
+                if (hideUnstable === true && ($.inArray(UNSTABLE_TAG, builderTags) > -1 || $.inArray(WIP_TAG, builderTags) > -1)) {
                     return false;
                 }
 
@@ -245,12 +245,12 @@ define(function (require) {
             return !tagAsBranchRegex.exec(tag);
         },
         setHideUnstable: function setHideUnstable(hidden) {
-          hideUnstable = hidden;
+            hideUnstable = hidden;
         },
         isUnstableHidden: function isUnstableHidden() {
             return hideUnstable;
         },
-        updateUnstableButton: function() {
+        updateUnstableButton: function () {
             var $unstableButton = $("#btn-unstable");
             $unstableButton.removeClass("btn-danger btn-success");
             if (hideUnstable) {
@@ -316,6 +316,17 @@ define(function (require) {
                 }
 
             ];
+
+
+            options.fnCreatedRow = function createRow(row, data, index) {
+                // Add old-builds class to the row if the build is deemed old
+                if (data.latestBuild !== undefined) {
+                    if (helpers.isBuildOld(data.latestBuild)) {
+                        $(row).addClass('old-build');
+                    }
+                }
+
+            };
 
             return dt.initTable($tableElem, options);
         },

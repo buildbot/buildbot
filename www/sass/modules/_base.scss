@@ -59,3 +59,13 @@ retry #DDD7DD $color-white "Retry";
 
 // for not implemented content
 .notimpl {color:#838383 !important;}
+
+tr.old-build {
+  color: #838383;
+
+  a:not(.custom-build):not(.run-build):not(.artifacts-js) {
+      color: #838383;
+
+
+  }
+}

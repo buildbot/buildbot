@@ -537,6 +537,7 @@ class HtmlResource(resource.Resource, ContextMixin):
             else:
                 ctx['instant_json'] = yield self.getInstantJSON(request)
                 ctx['user_settings'] = yield authz.getAllUserAttr(request)
+                ctx['user_settings_json'] = json.dumps(ctx['user_settings'])
                 result = yield self.content(request, ctx)
                 defer.returnValue(result)
 

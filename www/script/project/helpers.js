@@ -24,7 +24,8 @@ define(function (require) {
             RUNNING: [9, "running"],
             NOT_STARTED: [10, "not_started"],
             None: ""
-        };
+        },
+        settings = {};
 
     $.each(css_classes, function (key, val) {
         css_class_enum[key] = val[0];
@@ -83,6 +84,8 @@ define(function (require) {
 
             helpers.tooltip($('.tooltip'));
 
+            helpers.initSettings();
+
         },
         randomImage: function (el) {
             var images = ['48273828.jpg'];
@@ -122,7 +125,7 @@ define(function (require) {
 
                         $toolTipCont.html(title)
                             .appendTo('body')
-                            .css({'top': cursorPosTop, 'right': 28 })
+                            .css({'top': cursorPosTop, 'right': 28})
                             .fadeIn('fast');
                     }
 
@@ -513,6 +516,19 @@ define(function (require) {
 
             return result;
         },
+        initSettings: function () {
+            var script = $('#user-settings-json');
+            if (script.length && window.userSettings !== undefined) {
+                script.remove();
+                settings = window.userSettings;
+            }
+            return undefined;
+        },
+        isBuildOld: function isBuildOld(build) {
+            var old_build_date = new Date();
+            old_build_date.setDate(old_build_date.getDate() - helpers.settings().oldBuildDays);
+            return (old_build_date.getTime() / 1000.0) > build.times[0];
+        },
         /**
          * Clear all events and binding on the child elements,
          * this is super useful to make sure we don't have memory leaks
@@ -522,7 +538,10 @@ define(function (require) {
         clearChildEvents: function ($elem) {
             $elem.find("*").addBack().off(".katana");
         },
-        cssClassesEnum: css_class_enum
+        cssClassesEnum: css_class_enum,
+        settings: function getSettings() {
+            return settings;
+        }
     };
 
     return helpers;
