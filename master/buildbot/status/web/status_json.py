@@ -750,7 +750,7 @@ For help on any sub directory, use url /child/help
                 break
         if not builder:
             return
-        EXAMPLES = EXAMPLES.replace('<A_BUILDER>', builder.getName())
+        EXAMPLES = EXAMPLES.replace('<A_BUILDER>', urllib.quote(builder.getName(), ''))
         build = builder.getBuild(-1)
         if build:
             EXAMPLES = EXAMPLES.replace('<A_BUILD>', str(build.getNumber()))
