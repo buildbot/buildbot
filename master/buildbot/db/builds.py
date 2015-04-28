@@ -114,6 +114,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             builds_tbl = self.db.model.builds
 
             lastBuilds = []
+            maxSearch = num_builds if num_builds < 200 else 200
 
             q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
@@ -139,7 +140,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                 q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
 
-            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(num_builds)
+            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
             res = conn.execute(q)
 

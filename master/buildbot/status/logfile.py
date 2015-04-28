@@ -679,10 +679,11 @@ class HTMLLogFile(styles.Versioned, LogFile):
     def upgradeToVersion1(self):
         # buildbot <= 0.8.8 stored all html logs in the html property
         if 'html' in self.__dict__:
-            htmllog = HTMLLogFile(self.step, self.name, self.filename, self.html)
-            self.newInstance = htmllog
-            del self.__dict__['html']
-            self.wasUpgraded = True
+            if 'step' in self.__dict__ and self.step and self.name and self.filename:
+                htmllog = HTMLLogFile(self.step, self.name, self.filename, self.html)
+                self.newInstance = htmllog
+                del self.__dict__['html']
+                self.wasUpgraded = True
 
 
 def _tryremove(filename, timeout, retries):
