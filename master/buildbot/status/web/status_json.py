@@ -353,7 +353,7 @@ class HelpResource(HtmlResource):
     def content(self, request, cxt):
         cxt['level'] = self.parent_level
         cxt['text'] = ToHtml(self.text)
-        cxt['children'] = [n for n in self.parent_children if n != 'help']
+        cxt['children'] = [(urllib.quote(n, ''), n) for n in self.parent_children if n != 'help']
         cxt['flags'] = ToHtml(FLAGS)
         cxt['examples'] = ToHtml(EXAMPLES).replace(
             'href="/json',

@@ -11,9 +11,9 @@
 {% if children %}
 <p>Child Nodes</p>
 <ul>
-{% for child in children %}
-    <li><a href="{{ child|e }}">{{ child|e }}</a>
-        (<a href="{{ child|e }}/help">{{ child|e }}/help</a>)
+{% for child_quoted, child in children %}
+    <li><a href="{{ child_quoted|e }}">{{ child|e }}</a>
+        (<a href="{{ child_quoted|e }}/help">{{ child|e }}/help</a>)
     </li>
 {% endfor %}
 </ul>
