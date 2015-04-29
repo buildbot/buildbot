@@ -433,9 +433,15 @@ class BuilderStatus(styles.Versioned):
             for key, value in codebases.iteritems():
                 sourcestamps.append({'b_codebase': key, 'b_branch': value})
 
+        # Handles the condition where the last build status couldn't be saved into pickles,
+        # in that case we need to search more builds and use the previous one 
+        retries = num_builds
+        if num_builds == 1:
+            retries = num_builds + 9
+
         lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
                                                                              sourcestamps=sourcestamps,
-                                                                             num_builds=num_builds)
+                                                                             num_builds=retries)
 
         defer.returnValue(lastBuildsNumbers)
         return
@@ -473,14 +479,19 @@ class BuilderStatus(styles.Versioned):
         buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
 
         for bn in buildNumbers:
-
             build = yield threads.deferToThread(self.getBuild, bn)
+
             if build is None:
                 continue
+
             if results is not None:
                 if build.getResults() not in results:
                     continue
+
             finishedBuilds.append(build)
+
+            if num_builds == 1:
+                break
 
         if useCache and num_builds == 1:
             self.saveLatestBuild(build, key)
