@@ -461,11 +461,15 @@ class BuilderStatus(styles.Versioned):
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
                                num_builds=None,
+                               max_search=None,
                                results=None,
+                               slavename=None,
                                useCache=False):
 
         build = None
         finishedBuilds = []
+        max_search = max_search if max_search is not None else num_builds
+        branches = set(branches)
 
         key = self.getLatestBuildKey(codebases)
         if self.shouldUseLatestBuildChache(useCache, num_builds, key):
@@ -476,7 +480,7 @@ class BuilderStatus(styles.Versioned):
             defer.returnValue(finishedBuilds)
             return
 
-        buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
+        buildNumbers = yield self.generateBuildNumbers(codebases, max_search)
 
         for bn in buildNumbers:
             build = yield threads.deferToThread(self.getBuild, bn)
@@ -488,9 +492,15 @@ class BuilderStatus(styles.Versioned):
                 if build.getResults() not in results:
                     continue
 
+            if branches and not branches & self._getBuildBranches(build):
+                continue
+
+            if slavename and build.getSlavename() != slavename:
+                continue
+
             finishedBuilds.append(build)
 
-            if num_builds == 1:
+            if num_builds == 1 or (max_search > num_builds and len(finishedBuilds) == num_builds):
                 break
 
         if useCache and num_builds == 1:
