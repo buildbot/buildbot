@@ -1,1 +1,53 @@
-h1 About
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 Runtime informations
+    p
+      | Informations, configrations and statuses about this running instance of buildbot.
+  div.content(flex-gt-md="66")
+    h3 Project Info
+    inspect-data(data="about.projectInfo")
+    h3 Version Info
+    inspect-data(data="about.versions")
+    h3 Configurations
+    inspect-data(data="about.config")
+
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 About buildbot
+    p
+      | Information, useful links and where to find help.
+  div.content
+    p
+      | Buildbot is an open-source framework for automating software build, test, and release processes.
+      | It  supports distributed, parallel execution of jobs across multiple platforms, flexible integration with
+      | version-control systems, extensive status reporting, and more.
+    p Know more at:
+    ul
+      li
+        a(href="http://buildbot.net") Homepage
+      li
+        a(href="https://github.com/buildbot/buildbot") Github
+      li
+        a(href="http://docs.buildbot.net/latest/") Documentation
+      
+    p
+      | Buildbot is licenced under 
+      b GNU Public Licence(v2)
+      | .
+
+section.card(layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 API references
+    p
+      | References and description of the API endpoints that provided by this application.
+  div.content
+    div(ng-if="!about.specs.length") Please wait...
+    div.api(ng-if="about.specs.length")
+      dl(ng-repeat="spec in about.specs|orderBy:'path'", ng-init="collapsed = 1")
+        dt
+          a.no-select(ng-click="collapsed = !collapsed", href="") /{{ spec.path }}
+          | &nbsp;
+          small ({{spec.fields.length}} fields)
+        dd(ng-if="!collapsed")
+          inspect-data(data="spec.fields")
+

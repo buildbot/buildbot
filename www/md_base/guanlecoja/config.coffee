@@ -50,6 +50,24 @@ config =
             "angular-ui-router":
                 version: '0.2.13'
                 files: 'release/angular-ui-router.js'
+            lodash:
+                version: "~2.4.1"
+                files: 'dist/lodash.js'
+            'underscore.string':
+                version: "~2.3.3"
+                files: 'lib/underscore.string.js'
+            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
+            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
+            # reimplement reconnecting ourselves
+            "reconnectingWebsocket":
+                version: "master"
+                files: ["reconnecting-websocket.js"]
+            # TODO: Remove the dependency of restangular once the new
+            # buildbotService is ready and restangular is deprecated
+            restangular:
+                version: "~1.4.0"
+                files: 'dist/restangular.js'
+                
         testdeps:
             "angular-mocks":
                 version: "~1.3.15"
