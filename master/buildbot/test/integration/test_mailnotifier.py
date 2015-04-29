@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
+
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
@@ -47,7 +49,13 @@ class MailMaster(RunMasterBase):
         self.assertEqual(recipients, ["author@foo.com"])
         self.assertIn("From: bot@foo.com", mail)
         self.assertIn("Subject: buildbot success in Buildbot", mail)
-        self.assertIn("The Buildbot has detected a passing build", mail)
+        self.assertEncodedIn("The Buildbot has detected a passing build", mail)
+
+    def assertEncodedIn(self, text, mail):
+        if "base64" not in mail:  # python 2.6 default transfer in base64 for utf-8
+            self.assertIn(text, mail)
+        else:  # b64encode and remove '=' padding (hence [:-1])
+            self.assertIn(base64.b64encode(text).rstrip("="), mail)
 
     def test_notifiy_for_build(self):
         return self.doTest()

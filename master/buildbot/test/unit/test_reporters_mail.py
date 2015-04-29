@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import base64
 import copy
 import sys
 
@@ -177,7 +178,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         try:
             s = m.as_string()
-            self.assertIn("Unicode log", s)
+            if "base64" not in s:  # python 2.6 default transfer in base64 for utf-8
+                self.assertIn("Unicode log", s)
+            else:  # b64encode and remove '=' padding (hence [:-1])
+                self.assertIn(base64.b64encode("Unicode log")[:-1], s)
+
             self.assertIn('Content-Disposition: attachment; filename="fakestep.stdio"', s)
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')

@@ -326,7 +326,8 @@ class MailNotifier(service.BuildbotService):
 
         if patches or logs:
             m = MIMEMultipart()
-            m.attach(MIMEText(text, type, ENCODING))
+            txt = MIMEText(text, type, ENCODING)
+            m.attach(txt)
         else:
             m = Message()
             m.set_payload(text, ENCODING)
