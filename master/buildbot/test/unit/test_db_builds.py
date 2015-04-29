@@ -230,4 +230,4 @@ class TestBuildsConnectorComponent(
         lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
                                                                     sourcestamps=sourcestamps_filter, num_builds=4)
 
-        self.assertEqual(lastBuildNumber, [4, 3])
+        self.assertEqual(lastBuildNumber, [3])

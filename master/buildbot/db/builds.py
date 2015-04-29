@@ -125,12 +125,20 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             if sourcestamps and len(sourcestamps) > 0:
                 # check that sourcestampset match all branches x codebases
                 clauses = []
+                exclude_clauses = []
                 for ss in sourcestamps:
-                    stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                    stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
                         .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
                         .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
                         .where(sourcestamps_tbl.c.branch == ss['b_branch'])
-                    clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
+                    clauses.append(sourcestampsets_tbl.c.id == stmt_include)
+
+                    if len(sourcestamps) > 1:
+                        stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                            .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
+                            .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                            .where(sourcestamps_tbl.c.branch != ss['b_branch'])
+                        exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
 
                 stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
                     .where(sa.or_(*clauses))
@@ -139,6 +147,15 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                         .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
 
                 q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+                if len(sourcestamps) > 1:
+                    stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
+                        .where(sa.or_(*exclude_clauses))
+
+                    stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
+
+                    q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
 
             q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
