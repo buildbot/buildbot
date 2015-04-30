@@ -30,7 +30,7 @@ pep8:
 frontend:
 	$(PIP) install -e pkg
 	$(PIP) install mock
-	for i in www/{base,codeparameter,console_view,waterfall_view}/; do $(PIP) install -e $$i ; done
+	for i in base codeparameter console_view waterfall_view; do $(PIP) install -e www/$$i ; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests:
