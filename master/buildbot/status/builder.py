@@ -738,18 +738,25 @@ class BuilderStatus(styles.Versioned):
         self.saveLatestBuild(s)
         self.prune() # conserve disk
 
-    def getLatestBuildKey(self, codebases):
-        project = self.master.getProject(self.getProject())
-        project_codebases = project.codebases
-        cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+    def getCodebaseBranch(self, branch, codebases, key):
+        if key in codebases:
+            return codebases[key]
 
+        return branch if isinstance(branch, str) else branch[0] \
+            if (isinstance(branch, list) and len(branch) > 0) else None
+
+    def getLatestBuildKey(self, codebases):
         output = ""
-        for cb in cb_keys:
-            key = cb.keys()[0]
-            branch = cb[key]["branch"]
-            if key in codebases:
-                branch = codebases[key]
-            output += LATEST_BUILD_FORMAT.format(key, branch)
+        project = self.master.getProject(self.getProject())
+        if project and project.codebases:
+            project_codebases = project.codebases
+            cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+
+            for cb in cb_keys:
+                key = cb.keys()[0]
+                branch = cb[key]["branch"]
+                branch = self.getCodebaseBranch(branch, codebases, key)
+                output += LATEST_BUILD_FORMAT.format(key, branch)
 
         return output
 
@@ -770,25 +777,17 @@ class BuilderStatus(styles.Versioned):
         if build is not None:
             cache["build"] = build.number
 
-        if key is None:
-            #Save the latest build to all matching keys
+            # Save the latest build using the build's codebases
             ss = build.getSourceStamps()
-            build_keys = []
+            codebases = {}
             for s in ss:
                 if s.codebase and s.branch:
-                    build_keys.append(LATEST_BUILD_FORMAT.format(s.codebase, s.branch))
+                    codebases[s.codebase] = s.branch
 
-            for k in self.latestBuildCache.keys():
-                found_all_keys = True
-                for bk in build_keys:
-                    if bk not in k:
-                        found_all_keys = False
-                        break
+            # We save it in the same way as we access it
+            key = self.getLatestBuildKey(codebases)
 
-                if found_all_keys:
-                    self.updateLatestBuildCache(cache, k)
-        else:
-            self.updateLatestBuildCache(cache, key)
+        self.updateLatestBuildCache(cache, key)
 
 
     def asDict(self, codebases={}, request=None, base_build_dict=False):

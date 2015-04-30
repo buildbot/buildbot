@@ -20,6 +20,7 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import pbmanager
 from buildbot import config
 from buildbot.process import properties
+from buildbot.config import ProjectConfig
 import mock
 
 class FakeCache(object):
@@ -131,6 +132,10 @@ class FakeMaster(object):
 
     def buildRequestRemoved(self, bsid, brid, buildername):
         pass
+
+    def getProject(self, name):
+        pass
+
 
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantDb=False, testcase=None, **kwargs):

@@ -18,7 +18,7 @@ class TestBuilderStatus(unittest.TestCase):
                        'defaultbranch': 'katana',
                        'repository': 'https://github.com/Unity-Technologies/buildbot.git',
                        'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
-                       'branch': ['master', 'staging', 'katana']}}
+                       'branch': ['katana', 'master', 'staging']}}
 
         self.project = ProjectConfig(name="Katana", codebases=[katana])
 
@@ -55,7 +55,7 @@ class TestBuilderStatus(unittest.TestCase):
 
         self.assertTrue(len(builds) > 0)
         self.assertTrue(isinstance(builds[0], BuildStatus))
-        self.assertTrue(builds[0].number, 38)
+        self.assertEqual(builds[0].number, 38)
 
 
     def test_generateFinishedBuildsUseBuildCache(self):
@@ -71,7 +71,7 @@ class TestBuilderStatus(unittest.TestCase):
                                                      num_builds=1, max_search=200, useCache=True))
 
         self.assertTrue('katana-buildbot=katana;' in self.builder_status.latestBuildCache.keys())
-        self.assertTrue(self.builder_status.latestBuildCache['katana-buildbot=katana;']['build'], 38)
+        self.assertEqual(self.builder_status.latestBuildCache['katana-buildbot=katana;']['build'], 38)
         self.assertTrue(len(builds) > 0)
         self.assertTrue(isinstance(builds[0], BuildStatus))
-        self.assertTrue(builds[0].number, 38)
+        self.assertEqual(builds[0].number, 38)
