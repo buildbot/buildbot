@@ -739,9 +739,18 @@ class BuilderStatus(styles.Versioned):
         self.prune() # conserve disk
 
     def getLatestBuildKey(self, codebases):
+        project = self.master.getProject(self.getProject())
+        project_codebases = project.codebases
+        cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+
         output = ""
-        for key, branch in codebases.iteritems():
+        for cb in cb_keys:
+            key = cb.keys()[0]
+            branch = cb[key]["branch"]
+            if key in codebases:
+                branch = codebases[key]
             output += LATEST_BUILD_FORMAT.format(key, branch)
+
         return output
 
     def updateLatestBuildCache(self, cache, k):
