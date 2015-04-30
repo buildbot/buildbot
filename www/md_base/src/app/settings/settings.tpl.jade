@@ -1,1 +1,36 @@
-h1 Settings
+section.card(ng-repeat="group in settings.groups", layout-md="column", layout-gt-md="row")
+  div.meta(flex-gt-md="33")
+    h2 {{ group.caption }}
+    p {{ group.description }}
+
+  div.content(flex-gt-md="66")
+    div.setting-item(ng-repeat="item in group.items", ng-switch="", on="item.type", layout="row")
+      label(flex) {{ item.caption }}
+      div.setting-control.bool(ng-switch-when="bool")
+        md-checkbox(ng-model="item.value", aria-label="{{ item.caption }}")
+      div.setting-control.integer(flex="75", ng-switch-when="integer", layout="row")
+        md-slider(
+          flex,
+          ng-model="item.value",
+          max="{{ item.max_value }}",
+          min="{{ item.min_value }}",
+          aria-label="{{ item.caption }}",
+        )
+        input(disabled, ng-model="item.value")
+      div.setting-control.text(flex="75", ng-switch-when="text", layout="row")
+        input(
+          flex,
+          ng-model="item.value",
+          aria-label="{{ item.caption }}",
+        )
+      div.setting-control.choices(ng-switch-when="choices")
+        md-select(
+          flex="66",
+          ng-model="item.value",
+          placeholder="Pick one"
+        )
+          md-option(
+            ng-repeat="option in item.options",
+            value="{{ option.value }}",
+          ) {{ option.caption }}
+
