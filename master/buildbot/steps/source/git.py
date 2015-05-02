@@ -608,7 +608,7 @@ class Git(Source):
         files = cmd.updates['files'][0]
         if '.git' in files:
             defer.returnValue("update")
-        elif len(files) > 0:
+        elif files:
             defer.returnValue("clobber")
         else:
             defer.returnValue("clone")
