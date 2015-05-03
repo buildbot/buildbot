@@ -22,6 +22,9 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
+def defaultProjectNameTranslator(gerritProjectName):
+    """Just return the last part of the project if it contains slashes"""
+    return gerritProjectName.rpartition('/')[-1]
 
 class GerritChangeFilter(ChangeFilter):
 
@@ -81,7 +84,8 @@ class GerritChangeSource(base.ChangeSource):
                  username,
                  gerritport=29418,
                  identity_file=None,
-                 handled_events=("patchset-created", "ref-updated")):
+                 handled_events=("patchset-created", "ref-updated"),
+                 projectNameTranslator=defaultProjectNameTranslator):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -97,6 +101,9 @@ class GerritChangeSource(base.ChangeSource):
 
         @type  handled_events: list
         @param handled_events: event to be handled (optional).
+
+        @type  projectNameTranslator: func
+        @param projectNameTranslator: Function translating a Gerrit project name to the Buildbot project name
         """
         # TODO: delete API comment when documented
 
@@ -108,6 +115,7 @@ class GerritChangeSource(base.ChangeSource):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+        self.projectNameTranslator = projectNameTranslator
 
     class LocalPP(ProcessProtocol):
 
@@ -198,7 +206,7 @@ class GerritChangeSource(base.ChangeSource):
             event_change = event["change"]
             return self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
-                'project': util.ascii2unicode(event_change["project"]),
+                'project': self.projectNameTranslator(util.ascii2unicode(event_change["project"])),
                 'repository': u"ssh://%s@%s:%s/%s" % (
                     self.username, self.gerritserver,
                     self.gerritport, event_change["project"]),
@@ -219,7 +227,7 @@ class GerritChangeSource(base.ChangeSource):
 
         return self.addChange(dict(
             author=author,
-            project=ref["project"],
+            project=self.projectNameTranslator(ref["project"]),
             repository="ssh://%s@%s:%s/%s" % (
                 self.username, self.gerritserver,
                 self.gerritport, ref["project"]),

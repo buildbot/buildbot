@@ -116,7 +116,8 @@ class TestGerritStatusPush(unittest.TestCase):
         'project': TEST_PROJECT,
         'got_revision': TEST_REVISION,
         'revision': TEST_REVISION,
-        'event.change.id': TEST_CHANGE_ID
+        'event.change.id': TEST_CHANGE_ID,
+        'event.change.project': TEST_PROJECT
     }
     THING_URL = 'http://thing.example.com'
 
