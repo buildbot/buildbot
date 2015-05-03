@@ -122,7 +122,6 @@ class Git(Source):
         self.retryFetch = retryFetch
         self.submodules = submodules
         self.shallow = shallow
-        self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.getDescription = getDescription
@@ -419,6 +418,7 @@ class Git(Source):
         else:
             raise buildstep.BuildStepFailed()
 
+    @defer.inlineCallbacks
     def _clone(self, shallowClone):
         """Retry if clone failed"""
 
@@ -445,29 +445,26 @@ class Git(Source):
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step
-        d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
         if switchToBranch:
-            d.addCallback(lambda _: self._fetch(None))
+            res = yield self._fetch(None)
 
-        def _retry(res):
-            if self.stopped or res == RC_SUCCESS:  # or shallow clone??
-                return res
+        done = self.stopped or res == RC_SUCCESS  # or shallow clone??
+        if self.retry and not done:
             delay, repeats = self.retry
             if repeats > 0:
                 log.msg("Checkout failed, trying %d more times after %d seconds"
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
+
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._doClobber())
                 df.addCallback(lambda _: self._clone(shallowClone))
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+                res = yield df
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
@@ -587,34 +584,31 @@ class Git(Source):
             return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         if self.slaveVersionIsOlderThan('listdir', '2.16'):
-            d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+            git_path = self.build.path_module.join(self.workdir, '.git')
+            exists = yield self.pathExists(git_path)
 
-            @d.addCallback
-            def checkWithPathExists(exists):
-                if(exists):
-                    return "update"
-                else:
-                    return "clone"
+            if exists:
+                defer.returnValue("update")
+
+            defer.returnValue("clone")
+
+        cmd = buildstep.RemoteCommand('listdir',
+                                      {'dir': self.workdir,
+                                       'logEnviron': self.logEnviron,
+                                       'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if 'files' not in cmd.updates:
+            # no files - directory doesn't exist
+            defer.returnValue("clone")
+        files = cmd.updates['files'][0]
+        if '.git' in files:
+            defer.returnValue("update")
+        elif files:
+            defer.returnValue("clobber")
         else:
-            cmd = buildstep.RemoteCommand('listdir',
-                                          {'dir': self.workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def checkWithListdir(_):
-                if 'files' not in cmd.updates:
-                    # no files - directory doesn't exist
-                    return "clone"
-                files = cmd.updates['files'][0]
-                if '.git' in files:
-                    return "update"
-                elif len(files) > 0:
-                    return "clobber"
-                else:
-                    return "clone"
-        return d
+            defer.returnValue("clone")
