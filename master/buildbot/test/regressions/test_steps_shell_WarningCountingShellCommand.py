@@ -27,8 +27,7 @@ class TestWarningCountingShellCommand(unittest.TestCase):
     def testSuppressingLinelessWarningsPossible(self):
         # Use a warningExtractor that does not provide line
         # information
-        w = WarningCountingShellCommand(
-            warningExtractor=WarningCountingShellCommand.warnExtractWholeLine)
+        w = WarningCountingShellCommand()
 
         # Add suppression manually instead of using suppressionFile
         fileRe = None
@@ -39,12 +38,7 @@ class TestWarningCountingShellCommand(unittest.TestCase):
         w.addSuppression([suppression])
 
         # Now call maybeAddWarning
-        warnings = []
         line = "this warning should be SUPPRESSed"
         match = re.match(".*warning.*", line)
-        w.maybeAddWarning(warnings, line, match)
-
-        # Finally make the suppressed warning was *not* added to the
-        # list of warnings
-        expectedWarnings = 0
-        self.assertEquals(len(warnings), expectedWarnings)
+        # Make sure the suppressed warning was *not* added to the list of warnings
+        self.assertEquals(w.parseLine(line, match, w.warningExtractor), None)

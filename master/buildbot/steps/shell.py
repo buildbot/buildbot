@@ -396,6 +396,10 @@ class WarningCountingShellCommand(ShellCommand):
 
     warnCount = 0
     warningPattern = '.*warning[: ].*'
+
+    errorCount = 0
+    errorPattern = '.*error[: ].*'
+
     # The defaults work for GNU Make.
     directoryEnterPattern = (u"make.*: Entering directory "
                              u"[\u2019\"`'](.*)[\u2019'`\"]")
@@ -407,6 +411,7 @@ class WarningCountingShellCommand(ShellCommand):
 
     def __init__(self,
                  warningPattern=None, warningExtractor=None, maxWarnCount=None,
+                 errorPattern=None, errorExtractor=None, maxErrorCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
                  suppressionFile=None, **kwargs):
         # See if we've been given a regular expression to use to match
@@ -414,17 +419,25 @@ class WarningCountingShellCommand(ShellCommand):
         # present is a warning. This may lead to false positives in some cases.
         if warningPattern:
             self.warningPattern = warningPattern
+        if warningExtractor:
+            self.warningExtractor = warningExtractor
+        else:
+            self.warningExtractor = WarningCountingShellCommand.extractWholeLine
+        self.maxWarnCount = maxWarnCount
+
+        if errorPattern:
+            self.errorPattern = errorPattern
+        if errorExtractor:
+            self.errorExtractor = errorExtractor
+        else:
+            self.errorExtractor = WarningCountingShellCommand.extractWholeLine
+
         if directoryEnterPattern:
             self.directoryEnterPattern = directoryEnterPattern
         if directoryLeavePattern:
             self.directoryLeavePattern = directoryLeavePattern
         if suppressionFile:
             self.suppressionFile = suppressionFile
-        if warningExtractor:
-            self.warningExtractor = warningExtractor
-        else:
-            self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
-        self.maxWarnCount = maxWarnCount
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
@@ -460,7 +473,7 @@ class WarningCountingShellCommand(ShellCommand):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
-    def warnExtractWholeLine(self, line, match):
+    def extractWholeLine(self, line, match):
         """
         Extract warning text as the whole line.
         No file names or line numbers."""
@@ -477,9 +490,12 @@ class WarningCountingShellCommand(ShellCommand):
         text = match.group(3)
         return (file, lineNo, text)
 
-    def maybeAddWarning(self, warnings, line, match):
+    def parseLine(self, line, match, extractorFunction):
+        if not match:
+            return None
+
         if self.suppressions:
-            (file, lineNo, text) = self.warningExtractor(self, line, match)
+            (file, lineNo, text) = extractorFunction(self, line, match)
             lineNo = lineNo and int(lineNo)
 
             if file is not None and file != "" and self.directoryStack:
@@ -496,10 +512,9 @@ class WarningCountingShellCommand(ShellCommand):
                 if not ((start is None and end is None) or
                         (lineNo is not None and start <= lineNo and end >= lineNo)):
                     continue
-                return
+                return None
 
-        warnings.append(line)
-        self.warnCount += 1
+        return line
 
     def start(self):
         if self.suppressionFile is None:
@@ -548,13 +563,15 @@ class WarningCountingShellCommand(ShellCommand):
         Warnings are collected into another log for this step, and the
         build-wide 'warnings-count' is updated."""
 
-        self.warnCount = 0
-
         # Now compile a regular expression from whichever warning pattern we're
         # using
-        wre = self.warningPattern
-        if isinstance(wre, str):
-            wre = re.compile(wre)
+        warningRe = self.warningPattern
+        if isinstance(warningRe, str):
+            warningRe = re.compile(warningRe)
+
+        errorRe = self.errorPattern
+        if isinstance(errorRe, str):
+            errorRe = re.compile(errorRe)
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None
@@ -570,6 +587,7 @@ class WarningCountingShellCommand(ShellCommand):
         # warnings regular expressions. If did, bump the warnings count and
         # add the line to the collection of lines with warnings
         warnings = []
+        errors = []
         # TODO: use log.readlines(), except we need to decide about stdout vs
         # stderr
         for line in log.getText().split("\n"):
@@ -584,27 +602,47 @@ class WarningCountingShellCommand(ShellCommand):
                 self.directoryStack.pop()
                 continue
 
-            match = wre.match(line)
-            if match:
-                self.maybeAddWarning(warnings, line, match)
+            match = warningRe.match(line)
+            warning = self.parseLine(line, match, self.warningExtractor)
+            if warning:
+                warnings.append(warning)
+
+            match = errorRe.match(line)
+            error = self.parseLine(line, match, self.errorExtractor)
+            if error:
+                errors.append(error)
+
+        self.warnCount = len(warnings)
+        self.errorCount = len(errors)
 
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
             self.addCompleteLog("warnings (%d)" % self.warnCount,
                                 "\n".join(warnings) + "\n")
+        if self.errorCount:
+            self.addCompleteLog("errors (%d)" % self.errorCount,
+                                "\n".join(errors) + "\n")
 
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
 
+        errors_stat = self.step_status.getStatistic('errors', 0)
+        self.step_status.setStatistic('errors', errors_stat + self.errorCount)
+
         old_count = self.getProperty("warnings-count", 0)
         self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
+
+        old_count = self.getProperty("error-count", 0)
+        self.setProperty("error-count", old_count + self.errorCount, "WarningCountingShellCommand")
 
     def evaluateCommand(self, cmd):
         if (cmd.didFail() or
                 (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount)):
             return FAILURE
-        if self.warnCount:
+        # don't cause a FAILURE in case we see error messages, just warn
+        # (it's not necessarily a critical issue)
+        if self.warnCount or self.errorCount:
             return WARNINGS
         return SUCCESS
 
