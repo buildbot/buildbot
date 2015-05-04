@@ -527,11 +527,8 @@ class HtmlResource(resource.Resource, ContextMixin):
             requireLogin = master.config.requireLogin
             allowed_urls = ["/login"]
             if requireLogin is True and not authz.authenticated(request) and request.path not in allowed_urls:
-                url = str(request.URLPath())
-                parsed_url = urlparse.urlparse(url)
-                url = url.replace("{0}://{1}/".format(parsed_url.scheme, parsed_url.netloc), master.status.getBuildbotURL())
-                
-                request.redirect(path_to_login(request, url))
+                redirect_url = urlparse.urljoin(master.status.getBuildbotURL(), request.uri)
+                request.redirect(path_to_login(request, redirect_url))
                 return
             # User can view this page
             else:
