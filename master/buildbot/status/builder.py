@@ -456,7 +456,7 @@ class BuilderStatus(styles.Versioned):
         return None
 
     def shouldUseLatestBuildChache(self, useCache, num_builds, key):
-        return useCache and num_builds == 1 and key in self.latestBuildCache
+        return key and useCache and num_builds == 1 and key in self.latestBuildCache
 
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
@@ -503,7 +503,7 @@ class BuilderStatus(styles.Versioned):
             if num_builds == 1 or (max_search > num_builds and len(finishedBuilds) == num_builds):
                 break
 
-        if useCache and num_builds == 1:
+        if key and useCache and num_builds == 1:
             self.saveLatestBuild(build, key)
 
         defer.returnValue(finishedBuilds)
@@ -747,6 +747,10 @@ class BuilderStatus(styles.Versioned):
 
     def getLatestBuildKey(self, codebases):
         output = ""
+
+        if not codebases:
+            return output
+
         project = self.master.getProject(self.getProject())
         if project and project.codebases:
             project_codebases = project.codebases
@@ -767,6 +771,13 @@ class BuilderStatus(styles.Versioned):
 
         if self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and \
                         self.latestBuildCache[k]["build"] > cache["build"]:
+            return
+
+        def multipleCosebaseKey(key):
+            codebases = [k for k in key.split(';') if k]
+            return len(codebases) > 1
+
+        if not cache["build"] and multipleCosebaseKey(k):
             return
 
         self.latestBuildCache[k] = cache

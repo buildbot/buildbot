@@ -5,6 +5,8 @@ from buildbot.config import ProjectConfig
 from mock import Mock
 from buildbot.status.build import BuildStatus
 from buildbot.status.results import SUCCESS
+from buildbot.sourcestamp import SourceStamp
+
 import datetime
 
 class TestBuilderStatus(unittest.TestCase):
@@ -38,6 +40,9 @@ class TestBuilderStatus(unittest.TestCase):
             build_status.reason ='A build was forced by user@localhost'
             build_status.slavename = 'build-slave-01'
             build_status.results = SUCCESS
+            build_status.sources = [SourceStamp(branch='katana',
+                                                codebase='katana-buildbot',
+                                                revision='804d540eac7b90022130d34616a8f8336fe5691a')]
             return build_status
 
         self.builder_status.buildCache.get = getCachedBuild
