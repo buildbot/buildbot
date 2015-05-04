@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from operator import attrgetter
 import urllib
 from urlparse import urlunparse, urlparse
 from twisted.internet import defer
@@ -60,6 +61,7 @@ class ForceBuildDialogPage(HtmlResource):
             bm = self.getBuildmaster(request)
 
             cxt['slaves'] = [s for s in builder_status.getSlaves() if s.isConnected()]
+            cxt['slaves'] = sorted(cxt['slaves'], key=attrgetter('friendly_name'))
 
             #Get branches
             encoding = getRequestCharset(request)
