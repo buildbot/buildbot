@@ -40,6 +40,8 @@ define(function (require) {
             $.extend($.fn.dataTable.defaults.oLanguage, {
                 "sEmptyTable": "No data has been found"
             });
+
+            $.fn.dataTable.ext.errMode = "throw";
         },
         initTable: function ($tableElem, options) {
 
@@ -325,7 +327,7 @@ define(function (require) {
                 function filter(oSettings, aData, iDataIndex) {
                     var f = oSettings.oPreviousSearch.sSearch;
                     if (f !== undefined && f.length > 0) {
-                        var regex = new RegExp(f, "i"),
+                        var regex = new RegExp($.fn.dataTable.util.escapeRegex(f), "i"),
                             text = $(aData[index]).text();
 
                         // Attempt converting the HTML before using the plain string

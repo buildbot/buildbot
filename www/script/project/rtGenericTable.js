@@ -414,10 +414,10 @@ define(function (require) {
             $table.find("tbody tr :not([class=dataTables_empty])").remove();
             $table.fnClearTable(true);
 
-            try {
+
+            if (data.length) {
                 $table.fnAddData(data);
                 timeElements.updateTimeObjects();
-            } catch (ignore) {
             }
         }
 

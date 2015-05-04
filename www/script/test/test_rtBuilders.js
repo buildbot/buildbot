@@ -90,7 +90,7 @@ define(function (require) {
             }
 
             var result = $.grep(builders, function (a) {
-                return filter(undefined, a);
+                return filter(undefined, undefined, undefined, {tags: a[0]});
             });
 
             expect(result).toEqual(test.result);
