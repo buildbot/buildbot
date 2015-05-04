@@ -743,7 +743,11 @@ class BuilderStatus(styles.Versioned):
             return codebases[key]
 
         return branch if isinstance(branch, str) else branch[0] \
-            if (isinstance(branch, list) and len(branch) > 0) else None
+            if (isinstance(branch, list) and len(branch) > 0) else ''
+
+    def getCodebaseConfiguredBranch(self, cb, key):
+        return cb[key]['defaultbranch'] if 'defaultbranch' in cb[key] \
+            else cb[key]['branch'] if 'branch' in cb[key] else ''
 
     def getLatestBuildKey(self, codebases):
         output = ""
@@ -758,7 +762,7 @@ class BuilderStatus(styles.Versioned):
 
             for cb in cb_keys:
                 key = cb.keys()[0]
-                branch = cb[key]["branch"]
+                branch = self.getCodebaseConfiguredBranch(cb, key)
                 branch = self.getCodebaseBranch(branch, codebases, key)
                 output += LATEST_BUILD_FORMAT.format(key, branch)
 
