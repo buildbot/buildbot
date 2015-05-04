@@ -249,7 +249,7 @@
 
 {% macro rebuild_build(rebuild_url, authz, exactly, ss, builderName, url) %}
 <div class="forms-inline">
- <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
+ <form id="buildForm" method="post" action="{{ rebuild_url }}&property1name=force_rebuild&property1value=True" class="command rebuild">
 
     {% if exactly %}
       <p>This build was built from a specific set of
