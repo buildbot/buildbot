@@ -742,8 +742,12 @@ class BuilderStatus(styles.Versioned):
         if key in codebases:
             return codebases[key]
 
-        return branch if isinstance(branch, str) else branch[0] \
-            if (isinstance(branch, list) and len(branch) > 0) else ''
+        branch = branch if isinstance(branch, str) \
+            else branch[0] if (isinstance(branch, list) and len(branch) > 0) else ''
+
+        codebases[key] = branch
+
+        return branch
 
     def getCodebaseConfiguredBranch(self, cb, key):
         return cb[key]['defaultbranch'] if 'defaultbranch' in cb[key] \
@@ -769,19 +773,25 @@ class BuilderStatus(styles.Versioned):
         return output
 
     def updateLatestBuildCache(self, cache, k):
-        if self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k]["build"]\
-                and cache["build"] is None:
+        def nonEmptyCacheUpdateToEmptyBuild():
+            return self.latestBuildCache and k in self.latestBuildCache and 'build' in self.latestBuildCache[k] and \
+                self.latestBuildCache[k]["build"] and cache["build"] is None
+
+        def buildCacheAlreadyHasLastBuild():
+            return self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and\
+                self.latestBuildCache[k]["build"] and self.latestBuildCache[k]["build"] > cache["build"]
+
+        def keyHasMultipleCodebasesAndEmptyBuild():
+            codebases = [key for key in k.split(';') if key]
+            return not cache["build"] and len(codebases) > 1
+
+        if nonEmptyCacheUpdateToEmptyBuild():
             return
 
-        if self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and \
-                        self.latestBuildCache[k]["build"] > cache["build"]:
+        if buildCacheAlreadyHasLastBuild():
             return
 
-        def multipleCosebaseKey(key):
-            codebases = [k for k in key.split(';') if k]
-            return len(codebases) > 1
-
-        if not cache["build"] and multipleCosebaseKey(k):
+        if keyHasMultipleCodebasesAndEmptyBuild():
             return
 
         self.latestBuildCache[k] = cache
