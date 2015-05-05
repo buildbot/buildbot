@@ -5,7 +5,6 @@
 ### ###############################################################################################
 ANGULAR_TAG = "~1.3.1"
 gulp = require("gulp")
-shell = require("gulp-shell")
 path = require("path")
 
 
@@ -59,10 +58,6 @@ config =
                 files: "angular-mocks.js"
 
     buildtasks: ['scripts', 'styles', 'fonts', 'imgs',
-        'index', 'tests', 'generatedfixtures', 'fixtures', 'copyd3']
-
-    generatedfixtures: ->
-        gulp.src ""
-            .pipe shell("buildbot dataspec -g window.dataspec -o " + path.join(config.dir.build,"generatedfixtures.js"))
+        'index', 'tests', 'fixtures', 'copyd3']
 
 module.exports = config

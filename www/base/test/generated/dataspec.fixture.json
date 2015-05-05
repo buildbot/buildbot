@@ -1,0 +1,5988 @@
+[
+  {
+    "type": "rootlink", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }
+      ], 
+      "type": "rootlink"
+    }, 
+    "plural": "rootlinks", 
+    "path": ""
+  }, 
+  {
+    "type": "spec", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "path"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "type_spec"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "plural"
+        }
+      ], 
+      "type": "spec"
+    }, 
+    "plural": "specs", 
+    "path": "application.spec"
+  }, 
+  {
+    "type": "builder", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "description"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "tags"
+        }
+      ], 
+      "type": "builder"
+    }, 
+    "plural": "builders", 
+    "path": "builders"
+  }, 
+  {
+    "type": "forcescheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "jsonobject"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "all_fields"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "identifier"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "builder_names"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "label"
+        }
+      ], 
+      "type": "forcescheduler"
+    }, 
+    "plural": "forceschedulers", 
+    "path": "builders/:builderid/forceschedulers"
+  }, 
+  {
+    "type": "builder", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "description"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "tags"
+        }
+      ], 
+      "type": "builder"
+    }, 
+    "plural": "builders", 
+    "path": "builders/n:builderid"
+  }, 
+  {
+    "type": "buildrequest", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildsetid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "claimed_by_masterid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "claimed_at"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "priority"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "submitted_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "claimed"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "waited_for"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "buildrequest"
+    }, 
+    "plural": "buildrequests", 
+    "path": "builders/n:builderid/buildrequests"
+  }, 
+  {
+    "type": "build", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "started_at"
+        }
+      ], 
+      "type": "build"
+    }, 
+    "plural": "builds", 
+    "path": "builders/n:builderid/builds"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builders/n:builderid/builds/n:build_number/steps"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/i:step_name"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/i:step_name/logs"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/i:step_name/logs/i:log_slug/raw"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/n:step_number"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/n:step_number/logs"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builders/n:builderid/builds/n:build_number/steps/n:step_number/logs/i:log_slug/raw"
+  }, 
+  {
+    "type": "build", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "started_at"
+        }
+      ], 
+      "type": "build"
+    }, 
+    "plural": "builds", 
+    "path": "builders/n:builderid/builds/n:number"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "builders/n:builderid/buildslaves"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "builders/n:builderid/buildslaves/i:name"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "builders/n:builderid/buildslaves/n:buildslaveid"
+  }, 
+  {
+    "type": "master", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "active"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "last_active"
+        }
+      ], 
+      "type": "master"
+    }, 
+    "plural": "masters", 
+    "path": "builders/n:builderid/masters"
+  }, 
+  {
+    "type": "master", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "active"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "last_active"
+        }
+      ], 
+      "type": "master"
+    }, 
+    "plural": "masters", 
+    "path": "builders/n:builderid/masters/n:masterid"
+  }, 
+  {
+    "type": "buildrequest", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildsetid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "claimed_by_masterid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "claimed_at"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "priority"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "submitted_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "claimed"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "waited_for"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "buildrequest"
+    }, 
+    "plural": "buildrequests", 
+    "path": "buildrequests"
+  }, 
+  {
+    "type": "buildrequest", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildsetid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "claimed_by_masterid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "claimed_at"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "priority"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "submitted_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "claimed"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "waited_for"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "buildrequest"
+    }, 
+    "plural": "buildrequests", 
+    "path": "buildrequests/n:buildrequestid"
+  }, 
+  {
+    "type": "build", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "started_at"
+        }
+      ], 
+      "type": "build"
+    }, 
+    "plural": "builds", 
+    "path": "buildrequests/n:buildrequestid/builds"
+  }, 
+  {
+    "type": "build", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "started_at"
+        }
+      ], 
+      "type": "build"
+    }, 
+    "plural": "builds", 
+    "path": "builds"
+  }, 
+  {
+    "type": "build", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildrequestid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "started_at"
+        }
+      ], 
+      "type": "build"
+    }, 
+    "plural": "builds", 
+    "path": "builds/n:buildid"
+  }, 
+  {
+    "type": "change", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "files"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "category"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "integer"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "parent_changeids"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "author"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "comments"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changeid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "codebase"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "ssid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "repository"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "created_at"
+              }, 
+              {
+                "type_spec": {
+                  "fields": [
+                    {
+                      "type_spec": {
+                        "name": "binary"
+                      }, 
+                      "type": "binary", 
+                      "name": "body"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "comment"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "patchid"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "level"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "author"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "subdir"
+                    }
+                  ], 
+                  "type": "patch", 
+                  "can_be_null": true
+                }, 
+                "type": "patch or None", 
+                "name": "patch"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "project"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "branch"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "revision"
+              }
+            ], 
+            "type": "sourcestamp"
+          }, 
+          "type": "sourcestamp", 
+          "name": "sourcestamp"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revlink"
+        }, 
+        {
+          "type_spec": {
+            "name": "sourced-properties"
+          }, 
+          "type": "sourced-properties", 
+          "name": "properties"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "when_timestamp"
+        }
+      ], 
+      "type": "change"
+    }, 
+    "plural": "changes", 
+    "path": "builds/n:buildid/changes"
+  }, 
+  {
+    "type": "sourced-properties", 
+    "type_spec": {
+      "name": "sourced-properties"
+    }, 
+    "plural": "properties", 
+    "path": "builds/n:buildid/properties"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builds/n:buildid/steps"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builds/n:buildid/steps/i:step_name"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builds/n:buildid/steps/i:step_name/logs"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builds/n:buildid/steps/i:step_name/logs/i:log_slug"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builds/n:buildid/steps/i:step_name/logs/i:log_slug/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builds/n:buildid/steps/i:step_name/logs/i:log_slug/raw"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "builds/n:buildid/steps/n:step_number"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builds/n:buildid/steps/n:step_number/logs"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "builds/n:buildid/steps/n:step_number/logs/i:log_slug"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builds/n:buildid/steps/n:step_number/logs/i:log_slug/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "builds/n:buildid/steps/n:step_number/logs/i:log_slug/raw"
+  }, 
+  {
+    "type": "buildset", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "bsid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "codebase"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "ssid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "repository"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "datetime"
+                  }, 
+                  "type": "datetime", 
+                  "name": "created_at"
+                }, 
+                {
+                  "type_spec": {
+                    "fields": [
+                      {
+                        "type_spec": {
+                          "name": "binary"
+                        }, 
+                        "type": "binary", 
+                        "name": "body"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "comment"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "integer"
+                        }, 
+                        "type": "integer", 
+                        "name": "patchid"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "integer"
+                        }, 
+                        "type": "integer", 
+                        "name": "level"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "author"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "subdir"
+                      }
+                    ], 
+                    "type": "patch", 
+                    "can_be_null": true
+                  }, 
+                  "type": "patch or None", 
+                  "name": "patch"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "project"
+                }, 
+                {
+                  "type_spec": {
+                    "can_be_null": true, 
+                    "name": "string"
+                  }, 
+                  "type": "string or None", 
+                  "name": "branch"
+                }, 
+                {
+                  "type_spec": {
+                    "can_be_null": true, 
+                    "name": "string"
+                  }, 
+                  "type": "string or None", 
+                  "name": "revision"
+                }
+              ], 
+              "type": "sourcestamp"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "sourcestamps"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "parent_buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "reason"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "external_idstring"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "parent_relationship"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "submitted_at"
+        }
+      ], 
+      "type": "buildset"
+    }, 
+    "plural": "buildsets", 
+    "path": "buildsets"
+  }, 
+  {
+    "type": "buildset", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "bsid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "codebase"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "ssid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "repository"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "datetime"
+                  }, 
+                  "type": "datetime", 
+                  "name": "created_at"
+                }, 
+                {
+                  "type_spec": {
+                    "fields": [
+                      {
+                        "type_spec": {
+                          "name": "binary"
+                        }, 
+                        "type": "binary", 
+                        "name": "body"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "comment"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "integer"
+                        }, 
+                        "type": "integer", 
+                        "name": "patchid"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "integer"
+                        }, 
+                        "type": "integer", 
+                        "name": "level"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "author"
+                      }, 
+                      {
+                        "type_spec": {
+                          "name": "string"
+                        }, 
+                        "type": "string", 
+                        "name": "subdir"
+                      }
+                    ], 
+                    "type": "patch", 
+                    "can_be_null": true
+                  }, 
+                  "type": "patch or None", 
+                  "name": "patch"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "project"
+                }, 
+                {
+                  "type_spec": {
+                    "can_be_null": true, 
+                    "name": "string"
+                  }, 
+                  "type": "string or None", 
+                  "name": "branch"
+                }, 
+                {
+                  "type_spec": {
+                    "can_be_null": true, 
+                    "name": "string"
+                  }, 
+                  "type": "string or None", 
+                  "name": "revision"
+                }
+              ], 
+              "type": "sourcestamp"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "sourcestamps"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "parent_buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "reason"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "external_idstring"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "parent_relationship"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "submitted_at"
+        }
+      ], 
+      "type": "buildset"
+    }, 
+    "plural": "buildsets", 
+    "path": "buildsets/n:bsid"
+  }, 
+  {
+    "type": "sourced-properties", 
+    "type_spec": {
+      "name": "sourced-properties"
+    }, 
+    "plural": "properties", 
+    "path": "buildsets/n:bsid/properties"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "buildslaves"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "buildslaves/i:name"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "buildslaves/n:buildslaveid"
+  }, 
+  {
+    "type": "change", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "files"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "category"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "integer"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "parent_changeids"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "author"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "comments"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changeid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "codebase"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "ssid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "repository"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "created_at"
+              }, 
+              {
+                "type_spec": {
+                  "fields": [
+                    {
+                      "type_spec": {
+                        "name": "binary"
+                      }, 
+                      "type": "binary", 
+                      "name": "body"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "comment"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "patchid"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "level"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "author"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "subdir"
+                    }
+                  ], 
+                  "type": "patch", 
+                  "can_be_null": true
+                }, 
+                "type": "patch or None", 
+                "name": "patch"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "project"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "branch"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "revision"
+              }
+            ], 
+            "type": "sourcestamp"
+          }, 
+          "type": "sourcestamp", 
+          "name": "sourcestamp"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revlink"
+        }, 
+        {
+          "type_spec": {
+            "name": "sourced-properties"
+          }, 
+          "type": "sourced-properties", 
+          "name": "properties"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "when_timestamp"
+        }
+      ], 
+      "type": "change"
+    }, 
+    "plural": "changes", 
+    "path": "changes"
+  }, 
+  {
+    "type": "change", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "files"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "category"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "integer"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "parent_changeids"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "author"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "comments"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changeid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "codebase"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "ssid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "repository"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "created_at"
+              }, 
+              {
+                "type_spec": {
+                  "fields": [
+                    {
+                      "type_spec": {
+                        "name": "binary"
+                      }, 
+                      "type": "binary", 
+                      "name": "body"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "comment"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "patchid"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "level"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "author"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "subdir"
+                    }
+                  ], 
+                  "type": "patch", 
+                  "can_be_null": true
+                }, 
+                "type": "patch or None", 
+                "name": "patch"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "project"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "branch"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "revision"
+              }
+            ], 
+            "type": "sourcestamp"
+          }, 
+          "type": "sourcestamp", 
+          "name": "sourcestamp"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revlink"
+        }, 
+        {
+          "type_spec": {
+            "name": "sourced-properties"
+          }, 
+          "type": "sourced-properties", 
+          "name": "properties"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "when_timestamp"
+        }
+      ], 
+      "type": "change"
+    }, 
+    "plural": "changes", 
+    "path": "changes/n:changeid"
+  }, 
+  {
+    "type": "changesource", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changesourceid"
+        }
+      ], 
+      "type": "changesource"
+    }, 
+    "plural": "changesources", 
+    "path": "changesources"
+  }, 
+  {
+    "type": "changesource", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changesourceid"
+        }
+      ], 
+      "type": "changesource"
+    }, 
+    "plural": "changesources", 
+    "path": "changesources/n:changesourceid"
+  }, 
+  {
+    "type": "forcescheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "jsonobject"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "all_fields"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "identifier"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "builder_names"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "label"
+        }
+      ], 
+      "type": "forcescheduler"
+    }, 
+    "plural": "forceschedulers", 
+    "path": "forceschedulers"
+  }, 
+  {
+    "type": "forcescheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "jsonobject"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "all_fields"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "identifier"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "builder_names"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "label"
+        }
+      ], 
+      "type": "forcescheduler"
+    }, 
+    "plural": "forceschedulers", 
+    "path": "forceschedulers/i:schedulername"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "logs/n:logid"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "logs/n:logid/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "logs/n:logid/raw"
+  }, 
+  {
+    "type": "master", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "active"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "last_active"
+        }
+      ], 
+      "type": "master"
+    }, 
+    "plural": "masters", 
+    "path": "masters"
+  }, 
+  {
+    "type": "master", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "active"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "masterid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "last_active"
+        }
+      ], 
+      "type": "master"
+    }, 
+    "plural": "masters", 
+    "path": "masters/n:masterid"
+  }, 
+  {
+    "type": "builder", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "description"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "tags"
+        }
+      ], 
+      "type": "builder"
+    }, 
+    "plural": "builders", 
+    "path": "masters/n:masterid/builders"
+  }, 
+  {
+    "type": "builder", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "builderid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "description"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "tags"
+        }
+      ], 
+      "type": "builder"
+    }, 
+    "plural": "builders", 
+    "path": "masters/n:masterid/builders/n:builderid"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/builders/n:builderid/buildslaves"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/builders/n:builderid/buildslaves/i:name"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/buildslaves"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/buildslaves/i:name"
+  }, 
+  {
+    "type": "buildslave", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "builderid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "configured_on"
+        }, 
+        {
+          "type_spec": {
+            "name": "jsonobject"
+          }, 
+          "type": "jsonobject", 
+          "name": "slaveinfo"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildslaveid"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "integer"
+                  }, 
+                  "type": "integer", 
+                  "name": "masterid"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "connected_to"
+        }
+      ], 
+      "type": "buildslave"
+    }, 
+    "plural": "buildslaves", 
+    "path": "masters/n:masterid/buildslaves/n:buildslaveid"
+  }, 
+  {
+    "type": "changesource", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changesourceid"
+        }
+      ], 
+      "type": "changesource"
+    }, 
+    "plural": "changesources", 
+    "path": "masters/n:masterid/changesources"
+  }, 
+  {
+    "type": "changesource", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changesourceid"
+        }
+      ], 
+      "type": "changesource"
+    }, 
+    "plural": "changesources", 
+    "path": "masters/n:masterid/changesources/n:changesourceid"
+  }, 
+  {
+    "type": "scheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "schedulerid"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }
+      ], 
+      "type": "scheduler"
+    }, 
+    "plural": "schedulers", 
+    "path": "masters/n:masterid/schedulers"
+  }, 
+  {
+    "type": "scheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "schedulerid"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }
+      ], 
+      "type": "scheduler"
+    }, 
+    "plural": "schedulers", 
+    "path": "masters/n:masterid/schedulers/n:schedulerid"
+  }, 
+  {
+    "type": "scheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "schedulerid"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }
+      ], 
+      "type": "scheduler"
+    }, 
+    "plural": "schedulers", 
+    "path": "schedulers"
+  }, 
+  {
+    "type": "scheduler", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "schedulerid"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "boolean"
+                }, 
+                "type": "boolean", 
+                "name": "active"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "masterid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "name"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "last_active"
+              }
+            ], 
+            "type": "master", 
+            "can_be_null": true
+          }, 
+          "type": "master or None", 
+          "name": "master"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }
+      ], 
+      "type": "scheduler"
+    }, 
+    "plural": "schedulers", 
+    "path": "schedulers/n:schedulerid"
+  }, 
+  {
+    "type": "sourcestamp", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "ssid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "created_at"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "binary"
+                }, 
+                "type": "binary", 
+                "name": "body"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "comment"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "patchid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "level"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "author"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "subdir"
+              }
+            ], 
+            "type": "patch", 
+            "can_be_null": true
+          }, 
+          "type": "patch or None", 
+          "name": "patch"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }
+      ], 
+      "type": "sourcestamp"
+    }, 
+    "plural": "sourcestamps", 
+    "path": "sourcestamps"
+  }, 
+  {
+    "type": "sourcestamp", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "ssid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "datetime"
+          }, 
+          "type": "datetime", 
+          "name": "created_at"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "binary"
+                }, 
+                "type": "binary", 
+                "name": "body"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "comment"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "patchid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "level"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "author"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "subdir"
+              }
+            ], 
+            "type": "patch", 
+            "can_be_null": true
+          }, 
+          "type": "patch or None", 
+          "name": "patch"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }
+      ], 
+      "type": "sourcestamp"
+    }, 
+    "plural": "sourcestamps", 
+    "path": "sourcestamps/n:ssid"
+  }, 
+  {
+    "type": "change", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "of": {
+              "name": "string"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "files"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "category"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "name": "integer"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "parent_changeids"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "repository"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "author"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "project"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "comments"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "changeid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "codebase"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "branch"
+        }, 
+        {
+          "type_spec": {
+            "fields": [
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "codebase"
+              }, 
+              {
+                "type_spec": {
+                  "name": "integer"
+                }, 
+                "type": "integer", 
+                "name": "ssid"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "repository"
+              }, 
+              {
+                "type_spec": {
+                  "name": "datetime"
+                }, 
+                "type": "datetime", 
+                "name": "created_at"
+              }, 
+              {
+                "type_spec": {
+                  "fields": [
+                    {
+                      "type_spec": {
+                        "name": "binary"
+                      }, 
+                      "type": "binary", 
+                      "name": "body"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "comment"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "patchid"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "integer"
+                      }, 
+                      "type": "integer", 
+                      "name": "level"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "author"
+                    }, 
+                    {
+                      "type_spec": {
+                        "name": "string"
+                      }, 
+                      "type": "string", 
+                      "name": "subdir"
+                    }
+                  ], 
+                  "type": "patch", 
+                  "can_be_null": true
+                }, 
+                "type": "patch or None", 
+                "name": "patch"
+              }, 
+              {
+                "type_spec": {
+                  "name": "string"
+                }, 
+                "type": "string", 
+                "name": "project"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "branch"
+              }, 
+              {
+                "type_spec": {
+                  "can_be_null": true, 
+                  "name": "string"
+                }, 
+                "type": "string or None", 
+                "name": "revision"
+              }
+            ], 
+            "type": "sourcestamp"
+          }, 
+          "type": "sourcestamp", 
+          "name": "sourcestamp"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revision"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "string"
+          }, 
+          "type": "string or None", 
+          "name": "revlink"
+        }, 
+        {
+          "type_spec": {
+            "name": "sourced-properties"
+          }, 
+          "type": "sourced-properties", 
+          "name": "properties"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "when_timestamp"
+        }
+      ], 
+      "type": "change"
+    }, 
+    "plural": "changes", 
+    "path": "sourcestamps/n:ssid/changes"
+  }, 
+  {
+    "type": "step", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "complete_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "buildid"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "integer"
+          }, 
+          "type": "integer or None", 
+          "name": "results"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "number"
+        }, 
+        {
+          "type_spec": {
+            "of": {
+              "fields": [
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "url"
+                }, 
+                {
+                  "type_spec": {
+                    "name": "string"
+                  }, 
+                  "type": "string", 
+                  "name": "name"
+                }
+              ], 
+              "type": "dict"
+            }, 
+            "type": "list"
+          }, 
+          "type": "list", 
+          "name": "urls"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "state_string"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "hidden"
+        }, 
+        {
+          "type_spec": {
+            "can_be_null": true, 
+            "name": "datetime"
+          }, 
+          "type": "datetime or None", 
+          "name": "started_at"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "step"
+    }, 
+    "plural": "steps", 
+    "path": "steps/n:stepid"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "steps/n:stepid/logs"
+  }, 
+  {
+    "type": "log", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "stepid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "name"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "num_lines"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "type"
+        }, 
+        {
+          "type_spec": {
+            "name": "identifier"
+          }, 
+          "type": "identifier", 
+          "name": "slug"
+        }, 
+        {
+          "type_spec": {
+            "name": "boolean"
+          }, 
+          "type": "boolean", 
+          "name": "complete"
+        }
+      ], 
+      "type": "log"
+    }, 
+    "plural": "logs", 
+    "path": "steps/n:stepid/logs/i:log_slug"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "steps/n:stepid/logs/i:log_slug/contents"
+  }, 
+  {
+    "type": "logchunk", 
+    "type_spec": {
+      "fields": [
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "logid"
+        }, 
+        {
+          "type_spec": {
+            "name": "string"
+          }, 
+          "type": "string", 
+          "name": "content"
+        }, 
+        {
+          "type_spec": {
+            "name": "integer"
+          }, 
+          "type": "integer", 
+          "name": "firstline"
+        }
+      ], 
+      "type": "logchunk"
+    }, 
+    "plural": "logchunks", 
+    "path": "steps/n:stepid/logs/i:log_slug/raw"
+  }
+]
