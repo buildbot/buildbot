@@ -38,7 +38,8 @@ class Authz(object):
     ]
 
     defaultUserSettings = {
-        "colorBlind": 0
+        "colorBlind": 0,
+        "oldBuildDays": 7,
     }
 
     def __init__(self,

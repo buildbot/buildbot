@@ -24,7 +24,8 @@ define(function (require) {
             RUNNING: [9, "running"],
             NOT_STARTED: [10, "not_started"],
             None: ""
-        };
+        },
+        settings = {};
 
     $.each(css_classes, function (key, val) {
         css_class_enum[key] = val[0];
@@ -82,6 +83,8 @@ define(function (require) {
             helpers.parseReasonString();
 
             helpers.tooltip($('.tooltip'));
+
+            helpers.initSettings();
 
         },
         randomImage: function (el) {
@@ -525,7 +528,20 @@ define(function (require) {
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
                 if (callNow) func.apply(context, args);
-            };
+            }
+        },
+        initSettings: function () {
+            var script = $('#user-settings-json');
+            if (script.length && window.userSettings !== undefined) {
+                script.remove();
+                settings = window.userSettings;
+            }
+            return undefined;
+        },
+        isBuildOld: function isBuildOld(build) {
+            var old_build_date = new Date();
+            old_build_date.setDate(old_build_date.getDate() - helpers.settings().oldBuildDays);
+            return (old_build_date.getTime() / 1000.0) > build.times[0];
         },
         /**
          * Clear all events and binding on the child elements,
@@ -536,7 +552,10 @@ define(function (require) {
         clearChildEvents: function ($elem) {
             $elem.find("*").addBack().off(".katana");
         },
-        cssClassesEnum: css_class_enum
+        cssClassesEnum: css_class_enum,
+        settings: function getSettings() {
+            return settings;
+        }
     };
 
     return helpers;

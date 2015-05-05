@@ -334,6 +334,17 @@ define(function (require) {
 
             ];
 
+
+            options.fnCreatedRow = function createRow(row, data, index) {
+                // Add old-builds class to the row if the build is deemed old
+                if (data.latestBuild !== undefined) {
+                    if (helpers.isBuildOld(data.latestBuild)) {
+                        $(row).addClass('old-build');
+                    }
+                }
+
+            };
+
             return dt.initTable($tableElem, options);
         },
         noTag: NO_TAG,

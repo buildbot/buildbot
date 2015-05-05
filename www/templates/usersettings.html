@@ -6,38 +6,49 @@
 {% set bodyId = 'id="usersettings_page"' %}
 
 {% macro isUserSettingChecked(option) %}
-    {% if user_settings[option] == "1" %}
-        checked
-    {% endif %}
+{% if user_settings[option] == "1" %}
+checked
+{% endif %}
 {% endmacro %}
 
 {% block submenu %}
-  {{submenu.buildsubmenu_usersettings(active_page="usersettings", pathNum=2)}}
+{{submenu.buildsubmenu_usersettings(active_page="usersettings", pathNum=2)}}
 {% endblock %}
 
 {% block content %}
-
+{{user_settings}}
 <div class="row vertical-line">
-  <div class="rounded-container">
-	<div class="col-md-6">
-		<h1 class="head-2">
-		  Settings for {{ authz.getUsernameFull(request) }}
-		</h1>
+    <div class="rounded-container">
+        <div class="col-md-6">
+            <h1 class="head-2">
+                Settings for {{ authz.getUsernameFull(request) }}
+            </h1>
 
-		<form id="userSettingsForm" action="/users/settings/submit" method="POST" class="user-settings">
-			<label for="colorBlindMode">Color blind mode</label>
-			<input id="colorBlindMode" type="checkbox" {{ isUserSettingChecked("colorBlind") }}/>
-            <input id="colorBlind_setting" name="colorBlind_setting" hidden="hidden" value="0"/>
-			<span class="question-icon tooltip" title="Turns up the contrast on certain colors, to support people with colorblindness">
+            <form id="userSettingsForm" action="/users/settings/submit" method="POST" class="user-settings">
+                <div class="col-md-12">
+                    <label for="colorBlindMode">Color blind mode</label>
+                    <input id="colorBlindMode" type="checkbox" {{ isUserSettingChecked("colorBlind") }}/>
+                    <input id="colorBlind_setting" name="colorBlind_setting" hidden="hidden" value="0"/>
+			<span class="question-icon tooltip"
+                  title="Turns up the contrast on certain colors, to support people with colorblindness">
           	</span>
-          	
-			<input type="submit" class="blue-btn var-2 fl-right" value="Submit">
-			<div class="clearfix"></div>
-		</form>		
-	</div>
-	<div class="col-md-6">
-		
-	</div>
-</div>
+                </div>
+                <div class="col-md-12">
+                    <label for="oldBuildDays_setting">Old build days</label>
+                    <input id="oldBuildDays_setting" name="oldBuildDays_setting" type="number" value="{{ user_settings.get("oldBuildDays")}}"/>
+			<span class="question-icon tooltip"
+                  title="The number of days before builds are greyed out on build and builder tables">
+          	</span>
+                </div>
+
+                <input type="submit" class="blue-btn var-2 fl-right" value="Submit">
+
+                <div class="clearfix"></div>
+            </form>
+        </div>
+        <div class="col-md-6">
+
+        </div>
+    </div>
 </div>
 {% endblock %}

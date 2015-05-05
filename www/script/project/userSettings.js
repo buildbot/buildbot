@@ -1,5 +1,5 @@
 /*global define*/
-define(['jquery', 'libs/jquery.form'], function ($, form) {
+define(['jquery', 'libs/jquery.form', 'libs/jquery.numeric'], function ($) {
     "use strict";
 
     var COLOR_BLIND_CSS = "color-blind-mode";
@@ -33,6 +33,8 @@ define(['jquery', 'libs/jquery.form'], function ($, form) {
     return {
         init : function () {
             privFunc.initColorBlindBtn();
+
+            $('input[type=number]').numeric({ decimal: false, negative : false });
         }
     };
 });
