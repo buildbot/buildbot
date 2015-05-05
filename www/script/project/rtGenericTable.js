@@ -242,13 +242,19 @@ define(function (require) {
             return {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
-                "mRender": function (data, full, type) {
+                "mRender": function (data, type, full) {
+                    if (type === "sort") {
+                        if (full.currentBuilds.length) { return -2; }
+                        if (full.pendingBuilds) { return -1; }
+                        return 0;
+                    }
+
                     return rtCells({
                         buildProgress: true,
                         showPending: !singleBuild,
-                        pendingBuilds: singleBuild ? undefined : type.pendingBuilds,
-                        currentBuilds: singleBuild ? [type] : type.currentBuilds,
-                        builderName: type.name
+                        pendingBuilds: singleBuild ? undefined : full.pendingBuilds,
+                        currentBuilds: singleBuild ? [full] : full.currentBuilds,
+                        builderName: full.name
                     });
                 },
                 "fnCreatedCell": function (nTd) {

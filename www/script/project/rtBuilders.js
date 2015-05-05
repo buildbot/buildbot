@@ -269,7 +269,7 @@ define(function (require) {
             options.aoColumns = [
                 {"mData": null, "sWidth": "7%", "sType": "string-ignore-empty"},
                 {"mData": null, "sWidth": "13%", "sType": "builder-name"},
-                {"mData": null, "sWidth": "10%"},
+                {"mData": null, "sWidth": "10%", "sType": "numeric"},
                 {"mData": null, "sWidth": "15%", "sType": "number-ignore-zero"},
                 {"mData": null, "sWidth": "15%", "sType": "builder-status"},
                 {"mData": null, "sWidth": "5%", "bSortable": false},
