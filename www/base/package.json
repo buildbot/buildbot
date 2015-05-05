@@ -6,6 +6,6 @@
     },
     "devDependencies": {
         "guanlecoja": "~0.3.5",
-        "gulp": "3.8.6",
+        "gulp": "3.8.6"
     }
 }
