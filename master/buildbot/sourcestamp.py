@@ -72,6 +72,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     codebase = ''
     sourcestampsetid = None
     ssid = None
+    totalChanges = 0
 
     compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
 
@@ -275,6 +276,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         from buildbot.status.master import Status
         if isinstance(status, Status):
             result['url'] = status.get_rev_url(self.revision, self.repository)
+
+        result['totalChanges'] = self.totalChanges
         return result
 
     def __setstate__(self, d):

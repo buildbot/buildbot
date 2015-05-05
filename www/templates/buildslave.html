@@ -6,33 +6,53 @@
 {% set bodyId = 'id="buildslavedetail_page"' %}
 
 {% block submenu %}
-    {{ submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename) }}
+{{ submenu.buildsubmenu_slaves(active_page=slavename, pathNum=2, buildSlaveName=slavename) }}
 {% endblock %}
 
 {% block content %}
-    <div class="initjson">
-        <div class="row">
-            <div class="rounded-container">
-                <div id="slaveInfo" class="col-md-12" data-shutdown-url="{% if authz.advertiseAction('gracefulShutdown', request) %}{{ shutdown_url }}{% endif %}" data-graceful="{{  slave.getGraceful() }}">
+<div class="initjson">
+    <div class="row">
+        <div class="rounded-container">
+            <div id="slaveInfo" class="col-md-12"
+                 data-shutdown-url="{% if authz.advertiseAction('gracefulShutdown', request) %}{{ shutdown_url }}{% endif %}"
+                 data-graceful="{{  slave.getGraceful() }}">
+            </div>
+
+            <div class="col-md-6">
+                <h2 class="head-2 fl-left"> Current builds </h2>
+                <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
+                <table id="rtCurrentBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
+                </table>
+            </div>
+            <div class="col-md-6">
+
+
+                <h2 class="head-2">
+                    Recent builds
+                </h2>
+
+                <div class="pull-left builder-filters">
+                    <label for="buildResultSelector">Filter Results</label>
+                    <input type="hidden" id="buildResultSelector" style="width: 250px">
                 </div>
 
-                <div class="col-md-6">
-                    <h2 class="head-2 fl-left"> Current builds </h2>
-                    <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
-                    <table id="rtCurrentBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
-                    </table>
-                </div>
-                <div class="col-md-6">
-                    <h2 class="head-2">
-                        Recent builds
-                    </h2>
+                <div class="pull-right builder-filters">
+                    <label for="numBuildsSelector">Max Builds</label>
+                    <select id="numBuildsSelector">
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
 
-                    <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
-                    </table>
+                    <button id="btnFilter" class="blue-btn">Apply</button>
                 </div>
+
+                <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
+                </table>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 

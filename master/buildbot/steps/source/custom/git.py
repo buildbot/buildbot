@@ -50,8 +50,10 @@ class GitCommand(Git):
         self.changeCount = len(revList)
 
         changelist = []
+        lastChanges = revList[:50]
+        totalChanges = len(revList)
 
-        for rev in revList:
+        for rev in lastChanges:
             args = ['log','--no-walk', self.escapeParameter(r'--format=%ct'), rev, '--']
             timestamp = yield self._dovccmd(args, collectStdout=True)
             try:
@@ -66,6 +68,6 @@ class GitCommand(Git):
 
             changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, branch= self.branch,revision=rev, codebase= self.codebase))
 
-        self.updateBuildSourceStamps(sourcestamps_updated, changelist)
+        self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
 
         defer.returnValue(0)

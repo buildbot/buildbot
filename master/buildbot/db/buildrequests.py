@@ -102,7 +102,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getUnclaimedBuildRequest(self, sorted=False):
+    def getUnclaimedBuildRequest(self, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -113,6 +113,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                           .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
                                        (reqs_tbl.c.complete == 0)))
+            if limit:
+                q = q.limit(200)
 
             if sorted:
                 q = q.order_by(reqs_tbl.c.submitted_at)
@@ -129,8 +131,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-
-    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps = None):
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
         def thd(conn):
             sourcestampsets_tbl = self.db.model.sourcestampsets
             sourcestamps_tbl = self.db.model.sourcestamps

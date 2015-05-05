@@ -30,6 +30,7 @@ from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
+from twisted.internet import threads
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
@@ -60,7 +61,7 @@ class BuilderStatus(styles.Versioned):
 
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
-    persistenceVersion = 1
+    persistenceVersion = 2
     persistenceForgets = ( 'wasUpgraded', )
 
     category = None
@@ -103,6 +104,10 @@ class BuilderStatus(styles.Versioned):
         if not hasattr(self, 'latestBuildCache'):
             self.latestBuildCache = {}
 
+    def deleteKey(self, key, d):
+        if d.has_key(key):
+            del d[key]
+
     def __getstate__(self):
         # when saving, don't record transient stuff like what builds are
         # currently running, because they won't be there when we start back
@@ -116,16 +121,16 @@ class BuilderStatus(styles.Versioned):
             # TODO: push a 'hey, build was interrupted' event
         del d['currentBuilds']
         d.pop('pendingBuilds', None)
-        del d['currentBigState']
+        self.deleteKey('currentBigState', d)
         del d['basedir']
-        del d['status']
-        del d['nextBuildNumber']
+        self.deleteKey('status', d)
+        self.deleteKey('nextBuildNumber', d)
         del d['master']
 
         if 'pendingBuildCache' in d:
             del d['pendingBuildCache']
 
-        d['latestBuildCache'] = self.latestBuildCache
+        self.deleteKey('latestBuildCache', d)
         return d
 
     def __setstate__(self, d):
@@ -146,6 +151,11 @@ class BuilderStatus(styles.Versioned):
             del self.slavename
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber # determineNextBuildNumber chooses this
+        self.wasUpgraded = True
+
+    def upgradeToVersion2(self):
+        if hasattr(self, 'latestBuildCache'):
+            del self.latestBuildCache
         self.wasUpgraded = True
 
     def determineNextBuildNumber(self):
@@ -415,6 +425,91 @@ class BuilderStatus(styles.Versioned):
         return set([ ss.branch
             for ss in build.getSourceStamps() ])
 
+    @defer.inlineCallbacks
+    def generateBuildNumbers(self, codebases, num_builds):
+        sourcestamps = []
+
+        if codebases:
+            for key, value in codebases.iteritems():
+                sourcestamps.append({'b_codebase': key, 'b_branch': value})
+
+        # Handles the condition where the last build status couldn't be saved into pickles,
+        # in that case we need to search more builds and use the previous one 
+        retries = num_builds
+        if num_builds == 1:
+            retries = num_builds + 9
+
+        lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
+                                                                             sourcestamps=sourcestamps,
+                                                                             num_builds=retries)
+
+        defer.returnValue(lastBuildsNumbers)
+        return
+
+    def getLatestBuildCache(self, key):
+        cache = self.latestBuildCache[key]
+        max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
+        if datetime.datetime.now() - cache["date"] > max_cache:
+            del self.latestBuildCache[key]
+        elif cache["build"] is not None:
+            return self.getBuild(self.latestBuildCache[key]["build"])
+        return None
+
+    def shouldUseLatestBuildCache(self, useCache, num_builds, key):
+        return key and useCache and num_builds == 1 and key in self.latestBuildCache
+
+    @defer.inlineCallbacks
+    def generateFinishedBuildsAsync(self, branches=[], codebases={},
+                               num_builds=None,
+                               max_search=None,
+                               results=None,
+                               slavename=None,
+                               useCache=False):
+
+        build = None
+        finishedBuilds = []
+        max_search = max_search if max_search is not None else num_builds
+        branches = set(branches)
+
+        key = self.getLatestBuildKey(codebases)
+        if self.shouldUseLatestBuildCache(useCache, num_builds, key):
+            build = self.getLatestBuildCache(key)
+
+            if build:
+                finishedBuilds.append(build)
+            defer.returnValue(finishedBuilds)
+            return
+
+        buildNumbers = yield self.generateBuildNumbers(codebases, max_search)
+
+        for bn in buildNumbers:
+            build = yield threads.deferToThread(self.getBuild, bn)
+
+            if build is None:
+                continue
+
+            if results is not None:
+                if build.getResults() not in results:
+                    continue
+
+            if branches and not branches & self._getBuildBranches(build):
+                continue
+
+            if slavename and build.getSlavename() != slavename:
+                continue
+
+            finishedBuilds.append(build)
+
+            if num_builds == 1 or (max_search > num_builds and len(finishedBuilds) == num_builds):
+                break
+
+        if key and useCache and num_builds == 1:
+            self.saveLatestBuild(build, key)
+
+        defer.returnValue(finishedBuilds)
+        return
+
+
     def generateFinishedBuilds(self, branches=[], codebases={},
                                num_builds=None,
                                max_buildnum=None,
@@ -424,20 +519,12 @@ class BuilderStatus(styles.Versioned):
                                useCache=False):
 
         key = self.getLatestBuildKey(codebases)
-        if useCache and num_builds == 1:
-            if key in self.latestBuildCache:
-                cache = self.latestBuildCache[key]
-                max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
-                if datetime.datetime.now() - cache["date"] > max_cache:
-                    del self.latestBuildCache[key]
-                elif cache["build"] is not None:
-                    b = self.getBuild(self.latestBuildCache[key]["build"])
-                    if b is not None:
-                        yield b
-                        return
-                else:
-                    # Warning: if there is a problem saving the build in the cache the build wont be loaded
-                    return
+        if self.shouldUseLatestBuildCache(useCache, num_builds, key):
+            build = self.getLatestBuildCache(key)
+            if build:
+                yield build
+            # Warning: if there is a problem saving the build in the cache the build wont be loaded
+            return
 
         got = 0
         branches = set(branches)
@@ -471,11 +558,9 @@ class BuilderStatus(styles.Versioned):
                     continue
             got += 1
             yield build
-            if num_builds is not None:
-                if got >= num_builds:
+            if num_builds and num_builds == 1 and useCache:
                     #Save our latest builds to the cache
-                    if useCache and num_builds == 1:
-                        self.saveLatestBuild(build, key)
+                    self.saveLatestBuild(build, key)
                     return
 
         if useCache and num_builds == 1:
@@ -653,20 +738,63 @@ class BuilderStatus(styles.Versioned):
         self.saveLatestBuild(s)
         self.prune() # conserve disk
 
-    def getLatestBuildKey(self, codebases):
-        project = self.master.getProject(self.getProject())
-        project_codebases = project.codebases
-        cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+    def getCodebaseBranch(self, branch, codebases, key):
+        if key in codebases:
+            return codebases[key]
 
+        branch = branch if isinstance(branch, str) \
+            else branch[0] if (isinstance(branch, list) and len(branch) > 0) else ''
+
+        codebases[key] = branch
+
+        return branch
+
+    def getCodebaseConfiguredBranch(self, cb, key):
+        return cb[key]['defaultbranch'] if 'defaultbranch' in cb[key] \
+            else cb[key]['branch'] if 'branch' in cb[key] else ''
+
+    def getLatestBuildKey(self, codebases):
         output = ""
-        for cb in cb_keys:
-            key = cb.keys()[0]
-            branch = cb[key]["branch"]
-            if key in codebases:
-                branch = codebases[key]
-            output += LATEST_BUILD_FORMAT.format(key, branch)
+
+        if not codebases:
+            return output
+
+        project = self.master.getProject(self.getProject())
+        if project and project.codebases:
+            project_codebases = project.codebases
+            cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+
+            for cb in cb_keys:
+                key = cb.keys()[0]
+                branch = self.getCodebaseConfiguredBranch(cb, key)
+                branch = self.getCodebaseBranch(branch, codebases, key)
+                output += LATEST_BUILD_FORMAT.format(key, branch)
 
         return output
+
+    def updateLatestBuildCache(self, cache, k):
+        def nonEmptyCacheUpdateToEmptyBuild():
+            return self.latestBuildCache and k in self.latestBuildCache and 'build' in self.latestBuildCache[k] and \
+                self.latestBuildCache[k]["build"] and cache["build"] is None
+
+        def buildCacheAlreadyHasLastBuild():
+            return self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and\
+                self.latestBuildCache[k]["build"] and self.latestBuildCache[k]["build"] > cache["build"]
+
+        def keyHasMultipleCodebasesAndEmptyBuild():
+            codebases = [key for key in k.split(';') if key]
+            return not cache["build"] and len(codebases) > 1
+
+        if nonEmptyCacheUpdateToEmptyBuild():
+            return
+
+        if buildCacheAlreadyHasLastBuild():
+            return
+
+        if keyHasMultipleCodebasesAndEmptyBuild():
+            return
+
+        self.latestBuildCache[k] = cache
 
     def saveLatestBuild(self, build, key=None):
         cache = {"build": None, "date": datetime.datetime.now()}
@@ -674,26 +802,17 @@ class BuilderStatus(styles.Versioned):
         if build is not None:
             cache["build"] = build.number
 
-        if key is None:
-            #Save the latest build to all matching keys
+            # Save the latest build using the build's codebases
             ss = build.getSourceStamps()
-            build_keys = []
+            codebases = {}
             for s in ss:
                 if s.codebase and s.branch:
-                    build_keys.append(LATEST_BUILD_FORMAT.format(s.codebase, s.branch))
+                    codebases[s.codebase] = s.branch
 
-            for k in self.latestBuildCache.keys():
-                found_all_keys = True
-                for bk in build_keys:
-                    if bk not in k:
-                        found_all_keys = False
-                        break
+            # We save it in the same way as we access it
+            key = self.getLatestBuildKey(codebases)
 
-                if found_all_keys:
-                    self.latestBuildCache[k] = cache
-        else:
-            self.latestBuildCache[key] = cache
-        self.saveYourself(skipBuilds=True)
+        self.updateLatestBuildCache(cache, key)
 
 
     def asDict(self, codebases={}, request=None, base_build_dict=False):

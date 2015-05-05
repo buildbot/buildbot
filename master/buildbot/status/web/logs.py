@@ -187,12 +187,12 @@ class HTMLLog(Resource):
         self.original = original
 
     def render(self, request):
-        if 'xml-stylesheet' in self.original.html:
+        if 'xml-stylesheet' in self.original.getText():
             request.setHeader("content-type", "text/xml; charset=utf-8")
         else:
             request.setHeader("content-type", "text/html")
 
-        return self.original.html
+        return self.original.getText()
 
 components.registerAdapter(HTMLLog, logfile.HTMLLogFile, IHTMLLog)
 
@@ -208,7 +208,8 @@ class LogsResource(HtmlResource):
         for log in self.step_status.getLogs():
             if path == log.getName():
                 if log.hasContents():
-                    if hasattr(log, 'html') and ('xml-stylesheet' in log.html or 'nosetests' in log.html):
+                    content = log.getText()
+                    if  ('xml-stylesheet' in content or 'nosetests' in content):
                         return XMLTestResource(log, self.step_status)
                     else:
                         return IHTMLLog(interfaces.IStatusLog(log))

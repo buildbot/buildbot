@@ -307,17 +307,39 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(make_status_objects)
         return d
 
-    def generateFinishedBuilds(self, builders=[], branches=[],
-                               num_builds=None, finished_before=None,
-                               max_search=200):
-
+    def getBuildersConfigured(self, builders):
         def want_builder(bn):
             if builders:
                 return bn in builders
             return True
+
         builder_names = [bn
                          for bn in self.getBuilderNames()
                          if want_builder(bn)]
+        return builder_names
+
+    @defer.inlineCallbacks
+    def generateFinishedBuildsAsync(self, builders=[], num_builds=15, results=None, slavename=None):
+
+        builder_names = []
+        if builders:
+            builder_names = self.getBuildersConfigured(builders)
+
+        all_builds = []
+        for bn in builder_names:
+            b = self.getBuilder(bn)
+            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds, max_search=200,
+                                                                  results=results, slavename=slavename)
+            all_builds.extend(finished_builds)
+
+        sorted_builds = sorted(all_builds, key=lambda build: build.started, reverse=True)
+        defer.returnValue(sorted_builds[:num_builds])
+
+    def generateFinishedBuilds(self, builders=[], branches=[],
+                               num_builds=None, finished_before=None,
+                               max_search=200):
+
+        builder_names = self.getBuildersConfigured(builders)
 
         # 'sources' is a list of generators, one for each Builder we're
         # using. When the generator is exhausted, it is replaced in this list
@@ -397,6 +419,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             with open(filename, "rb") as f:
                 builder_status = load(f)
             builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, basedir)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of

@@ -56,7 +56,10 @@ class Hg(Mercurial):
         revNodeList = [rn.split(':', 1) for rn in stdout.strip().split()]
 
         changelist = []
-        for rev, node in reversed(revNodeList):
+        lastChanges = sorted(revNodeList, reverse=True)[:50]
+        totalChanges = len(revNodeList)
+
+        for rev, node in lastChanges:
             timestamp, author, comments = yield self._getRevDetails(
                 node)
 
@@ -64,7 +67,7 @@ class Hg(Mercurial):
                                      repository=self.repourl, branch=self.update_branch, revision=node,
                                      codebase= self.codebase))
 
-        self.updateBuildSourceStamps(sourcestamps_updated, changelist)
+        self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
 
         defer.returnValue(0)
 

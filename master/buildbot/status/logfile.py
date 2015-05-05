@@ -24,6 +24,7 @@ from twisted.internet import defer, threads, reactor
 from buildbot.util import netstrings
 from buildbot.util.eventual import eventually
 from buildbot import interfaces
+from twisted.persisted import styles
 import time
 
 STDOUT = interfaces.LOG_CHANNEL_STDOUT
@@ -637,17 +638,22 @@ class LogFile:
 
 
     # persistence stuff
+    def deleteKey(self, key, d):
+        if d.has_key(key):
+            del d[key]
+
+    def deleteKeys(self, d):
+        self.deleteKey('step', d)  # filled in upon unpickling
+        self.deleteKey('watchers', d)
+        self.deleteKey('finishedWatchers', d)
+        self.deleteKey('master', d)
+        d['entries'] = []  # let 0.6.4 tolerate the saved log. TODO: really?
+        self.deleteKey('finished', d)
+        self.deleteKey('openfile', d)
+
     def __getstate__(self):
         d = self.__dict__.copy()
-        del d['step'] # filled in upon unpickling
-        del d['watchers']
-        del d['finishedWatchers']
-        del d['master']
-        d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
-        if d.has_key('finished'):
-            del d['finished']
-        if d.has_key('openfile'):
-            del d['openfile']
+        self.deleteKeys(d)
         return d
 
     def __setstate__(self, d):
@@ -657,50 +663,39 @@ class LogFile:
         # self.step must be filled in by our parent
         self.finished = True
 
-class HTMLLogFile:
-    implements(interfaces.IStatusLog)
+class HTMLLogFile(styles.Versioned, LogFile):
 
-    filename = None
+    persistenceVersion = 1
+    persistenceForgets = ('wasUpgraded', )
 
     def __init__(self, parent, name, logfilename, html):
-        self.step = parent
-        self.name = name
-        self.filename = logfilename
-        self.html = html
-
-    def getName(self):
-        return self.name # set in BuildStepStatus.addLog
-    def getStep(self):
-        return self.step
-
-    def isFinished(self):
-        return True
-    def waitUntilFinished(self):
-        return defer.succeed(self)
+        LogFile.__init__(self, parent, name, logfilename)
+        self.addStderr(html)
+        self.finish()
 
     def hasContents(self):
         return True
-    def getText(self):
-        return self.html # looks kinda like text
-    def getTextWithHeaders(self):
-        return self.html
-    def getChunks(self):
-        return [(STDERR, self.html)]
-
-    def subscribe(self, receiver, catchup):
-        pass
-    def unsubscribe(self, receiver):
-        pass
-
-    def finish(self):
-        pass
 
     def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['step']
-        if d.has_key('master'):
-            del d['master']
+        d = styles.Versioned.__getstate__(self)
+        self.deleteKeys(d)
         return d
+
+    def __setstate__(self, d):
+        styles.Versioned.__setstate__(self, d)
+        self.__dict__ = d
+        self.watchers = []
+        self.finishedWatchers = []
+        self.finished = True
+
+    def upgradeToVersion1(self):
+        # buildbot <= 0.8.8 stored all html logs in the html property
+        if 'html' in self.__dict__:
+            if 'step' in self.__dict__ and self.step and self.name and self.filename:
+                htmllog = HTMLLogFile(self.step, self.name, self.filename, self.html)
+                self.newInstance = htmllog
+                del self.__dict__['html']
+                self.wasUpgraded = True
 
 
 def _tryremove(filename, timeout, retries):

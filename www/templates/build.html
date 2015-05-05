@@ -3,7 +3,7 @@
 {% import 'forms.html' as forms %}
 {% from "box_macros.html" import box %}
 {% from "change_macros.html" import change with context %}
-{% from "change_macros2.html" import changeth with context %}
+{% from "change_macros.html" import changeth with context %}
 
 {% set bodyId = 'id="builddetail_page"' %}
 
@@ -290,15 +290,6 @@ SourceStamps
   Steps and Logfiles
 </h2>
 
-{#
- # TODO:
- #       urls = self.original.getURLs()
- #       ex_url_class = "BuildStep external"
- #       for name, target in urls.items():
- #           text.append('[<a href="%s" class="%s">%s</a>]' %
- #                       (target, ex_url_class, html.escape(name)))
- #}
-
 <ol id="stepList" class="step-list">
 
 </ol>
@@ -329,6 +320,12 @@ SourceStamps
                     {% endif %}
 
                   {{ change(c.asDict()) }}
+                  {% if ss.totalChanges > ss.changes.count %}
+                  {% set further_changes = ss.totalChanges - ss.changes|length %}
+                  <tr>
+                      <td colspan="6" style="text-align: center">There are {{ further_changes }} further changes in this build.</td>
+                  </tr>
+                  {% endif %}
                 {% endfor %}
               </table>
             </div>

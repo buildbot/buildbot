@@ -24,6 +24,9 @@ class TestBuildsConnectorComponent(
             connector_component.ConnectorComponentMixin,
             unittest.TestCase):
 
+    SUBMITTED_AT_EPOCH = 298297875
+    COMPLETE_AT_EPOCH = 329920275
+
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['builds', 'buildrequests', 'buildsets',
@@ -48,6 +51,19 @@ class TestBuildsConnectorComponent(
         fakedb.BuildRequest(id=41, buildsetid=20, buildername='b1'),
         fakedb.BuildRequest(id=42, buildsetid=30, buildername='b1'),
     ]
+
+    last_builds = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder",
+                                    complete=1, results=0,
+                                    submitted_at=SUBMITTED_AT_EPOCH,
+                                    complete_at=COMPLETE_AT_EPOCH),
+                fakedb.Buildset(id=1, sourcestampsetid=1),
+                fakedb.SourceStampSet(id=1),
+                fakedb.SourceStamp(id=1, revision='a', codebase='1',
+                                   sourcestampsetid=1, branch='master', repository='z'),
+                fakedb.SourceStamp(id=2, revision='b', codebase='2', sourcestampsetid=1,
+                                   branch='staging', repository='w'),
+                fakedb.Build(id=1, number=4, brid=1, start_time=SUBMITTED_AT_EPOCH,
+                             finish_time=COMPLETE_AT_EPOCH)]
 
     # tests
 
@@ -157,3 +173,61 @@ class TestBuildsConnectorComponent(
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersCodeBasesFound(self):
+        yield  self.insertTestData(self.last_builds)
+
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'},
+                          {'b_codebase': '2', 'b_branch': 'staging'}]
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter, num_builds=1)
+
+        self.assertEqual(lastBuildNumber, [4])
+
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersCodeBasesNotFound(self):
+        yield  self.insertTestData(self.last_builds)
+
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'development'},
+                          {'b_codebase': '2', 'b_branch': 'qa'}]
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter, num_builds=1)
+
+        self.assertEqual(lastBuildNumber, [])
+
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersOneFilter(self):
+        yield  self.insertTestData(self.last_builds)
+
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'}]
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter, num_builds=1)
+
+        self.assertEqual(lastBuildNumber, [4])
+
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersMultipleBuilds(self):
+        builds = [fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder",
+                                       complete=1, results=0,
+                                       submitted_at=self.SUBMITTED_AT_EPOCH,
+                                       complete_at=self.COMPLETE_AT_EPOCH),
+                   fakedb.Buildset(id=2, sourcestampsetid=2),
+                   fakedb.SourceStampSet(id=2),
+                   fakedb.SourceStamp(id=3, revision='a', codebase='1',
+                                      sourcestampsetid=2, branch='master', repository='z'),
+                   fakedb.SourceStamp(id=4, revision='b', codebase='4', sourcestampsetid=2,
+                                      branch='development', repository='w'),
+                   fakedb.Build(id=2, number=3, brid=2, start_time=self.SUBMITTED_AT_EPOCH,
+                                finish_time=self.COMPLETE_AT_EPOCH)]
+        yield  self.insertTestData(self.last_builds + builds)
+
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'},
+                          {'b_codebase': '2', 'b_branch': 'qa'}]
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter, num_builds=4)
+
+        self.assertEqual(lastBuildNumber, [3])

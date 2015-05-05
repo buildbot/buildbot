@@ -64,6 +64,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             return ShutdownActionResource(slave)
         return Redirect(path_to_slave(req, slave))
 
+    @defer.inlineCallbacks
     def content(self, request, ctx):
         s = self.getStatus(request)
         slave_status = s.getSlave(self.slavename)
@@ -94,7 +95,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
 
 
         recent_builds_json = PastBuildsJsonResource(s, max_builds, slave_status=slave_status)
-        recent_builds_dict = recent_builds_json.asDict(request)
+        recent_builds_dict = yield recent_builds_json.asDict(request)
         recent_builds_url = bbURL + path_to_json_past_slave_builds(request, self.slavename, max_builds)
         ctx['instant_json']['recent_builds'] = {"url": recent_builds_url,
                                                 "data": json.dumps(recent_builds_dict, separators=(',', ':')),
@@ -121,7 +122,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                    connect_count=connect_count)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
-        return data
+        defer.returnValue(data)
 
 
 # /buildslaves

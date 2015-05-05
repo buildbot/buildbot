@@ -530,26 +530,27 @@ class PastBuildsJsonResource(JsonResource):
         self.number = number
         self.slave_status = slave_status
 
+    @defer.inlineCallbacks
     def asDict(self, request):
-        #Get codebases
+        results = getResultsArg(request)
+
         if self.builder_status is not None:
             codebases = {}
             getCodebasesArg(request=request, codebases=codebases)
             encoding = getRequestCharset(request)
             branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
-            results = getResultsArg(request)
 
-            builds = list(self.builder_status.generateFinishedBuilds(branches=map_branches(branches),
+
+            builds = yield self.builder_status.generateFinishedBuildsAsync(branches=map_branches(branches),
                                                               codebases=codebases,
                                                               results=results,
-                                                              num_builds=self.number))
+                                                              num_builds=self.number)
 
-            return [b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds]
+            defer.returnValue([b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds])
+            return
 
         if self.slave_status is not None:
-            n = 0
             slavename = self.slave_status.getName()
-            recent_builds = []
 
             my_builders = []
             for bname in self.status.getBuilderNames():
@@ -558,14 +559,12 @@ class PastBuildsJsonResource(JsonResource):
                     if bs.getName() == slavename:
                         my_builders.append(b)
 
-            for rb in self.status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-                if rb.getSlavename() == slavename:
-                    n += 1
-                    recent_builds.append(rb.asDict(request=request))
-                    if n > self.number:
-                        return recent_builds
+            builds = yield self.status.generateFinishedBuildsAsync(builders=[b.getName() for b in my_builders],
+                                                                   num_builds=self.number, results=results,
+                                                                   slavename=slavename)
 
-            return recent_builds
+            defer.returnValue([rb.asDict(request=request) for rb in builds])
+            return
 
 
 class BuildsJsonResource(AllBuildsJsonResource):
@@ -807,9 +806,9 @@ class SingleProjectBuilderJsonResource(JsonResource):
         d = yield builder.asDict_async(codebases, request, base_build_dict)
 
         #Get latest build
-        builds = list(builder.generateFinishedBuilds(branches=map_branches(branches),
+        builds = yield builder.generateFinishedBuildsAsync(branches=map_branches(branches),
                                                      codebases=codebases,
-                                                     num_builds=1, max_search=200, useCache=True))
+                                                     num_builds=1, useCache=True)
 
         if len(builds) > 0:
             d['latestBuild'] = builds[0].asBaseDict(request, include_artifacts=True, include_failure_url=True)
@@ -839,7 +838,7 @@ class QueueJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
+        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True, limit=200)
 
         #Convert to dictionary
         output = []

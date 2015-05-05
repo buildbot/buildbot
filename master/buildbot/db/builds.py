@@ -105,6 +105,74 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db .model.buildsets
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            builds_tbl = self.db.model.builds
+
+            lastBuilds = []
+            maxSearch = num_builds if num_builds < 200 else 200
+
+            q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)))\
+                .where(buildrequests_tbl.c.complete == 1)\
+                .where(buildrequests_tbl.c.buildername == buildername)
+
+            if sourcestamps and len(sourcestamps) > 0:
+                # check that sourcestampset match all branches x codebases
+                clauses = []
+                exclude_clauses = []
+                for ss in sourcestamps:
+                    stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                        .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                        .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                        .where(sourcestamps_tbl.c.branch == ss['b_branch'])
+                    clauses.append(sourcestampsets_tbl.c.id == stmt_include)
+
+                    if len(sourcestamps) > 1:
+                        stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                            .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
+                            .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                            .where(sourcestamps_tbl.c.branch != ss['b_branch'])
+                        exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
+
+                stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+                    .where(sa.or_(*clauses))
+
+                stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+                q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+                if len(sourcestamps) > 1:
+                    stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
+                        .where(sa.or_(*exclude_clauses))
+
+                    stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
+
+                    q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
+
+            q = q.order_by(sa.desc(builds_tbl.c.number)).limit(maxSearch)
+
+            res = conn.execute(q)
+
+            rows = res.fetchall()
+            if rows:
+                for row in rows:
+                    if row.number not in lastBuilds:
+                        lastBuilds.append(row.number)
+
+            res.close()
+
+            return sorted(lastBuilds, reverse=True)
+
+        return self.db.pool.do(thd)
+
     def _bdictFromRow(self, row):
         def mkdt(epoch):
             if epoch:
