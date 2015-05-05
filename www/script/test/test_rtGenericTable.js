@@ -20,7 +20,7 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
             {
                 branch: "trunk",
                 codebase: "unity",
-                display_repository: "http://rhodecode.hq.unity3d.com/unity/unity",
+                display_repository: "http://rhodecode.hq.unity3d.com/all-unity",
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/all-unity",
                 revision: "b841045fb3160b1c",
