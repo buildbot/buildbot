@@ -446,7 +446,7 @@ class BuilderStatus(styles.Versioned):
         defer.returnValue(lastBuildsNumbers)
         return
 
-    def getLatestBuildChache(self, key):
+    def getLatestBuildCache(self, key):
         cache = self.latestBuildCache[key]
         max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
         if datetime.datetime.now() - cache["date"] > max_cache:
@@ -455,7 +455,7 @@ class BuilderStatus(styles.Versioned):
             return self.getBuild(self.latestBuildCache[key]["build"])
         return None
 
-    def shouldUseLatestBuildChache(self, useCache, num_builds, key):
+    def shouldUseLatestBuildCache(self, useCache, num_builds, key):
         return key and useCache and num_builds == 1 and key in self.latestBuildCache
 
     @defer.inlineCallbacks
@@ -472,8 +472,8 @@ class BuilderStatus(styles.Versioned):
         branches = set(branches)
 
         key = self.getLatestBuildKey(codebases)
-        if self.shouldUseLatestBuildChache(useCache, num_builds, key):
-            build = self.getLatestBuildChache(key)
+        if self.shouldUseLatestBuildCache(useCache, num_builds, key):
+            build = self.getLatestBuildCache(key)
 
             if build:
                 finishedBuilds.append(build)
@@ -519,8 +519,8 @@ class BuilderStatus(styles.Versioned):
                                useCache=False):
 
         key = self.getLatestBuildKey(codebases)
-        if self.shouldUseLatestBuildChache(useCache, num_builds, key):
-            build = self.getLatestBuildChache(key)
+        if self.shouldUseLatestBuildCache(useCache, num_builds, key):
+            build = self.getLatestBuildCache(key)
             if build:
                 yield build
             # Warning: if there is a problem saving the build in the cache the build wont be loaded
