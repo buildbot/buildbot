@@ -104,7 +104,8 @@ define(function (require) {
         },
         saveState: function saveState(oSettings, oData) {
             if (history.pushState) {
-                rtBuilders.saveStateToURL(oData.oSearch.sSearch);
+                var search = oData.oSearch !== undefined ? oData.oSearch.sSearch : "";
+                rtBuilders.saveStateToURL(search);
 
                 // Remove search as it's found in the URI
                 oData.oSearch = undefined;
