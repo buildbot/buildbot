@@ -10,6 +10,7 @@ define(function (require) {
         popup = require('ui.popup'),
         hb = require('project/handlebars-extend'),
         MiniSet = require('project/sets'),
+        URI = require('libs/uri/URI'),
         $tbSorter,
         initializedCodebaseOverview = false,
         latestRevDict = {},
@@ -23,7 +24,8 @@ define(function (require) {
         WIP_TAG = "WIP",
         extra_tags = [NO_TAG],
         MAIN_REPO = "unity_branch",
-        hideUnstable = false;
+        hideUnstable = false,
+        $searchField;
 
     require('libs/jquery.form');
 
@@ -34,6 +36,13 @@ define(function (require) {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.builders = rtBuilders.realtimeFunctionsProcessBuilders;
             realtimePages.initRealtime(realtimeFunctions);
+
+            $searchField = $(".dataTables_filter>label input");
+
+            // Listen for history changes
+            window.addEventListener('popstate', function (event) {
+                rtBuilders.loadStateFromURL();
+            });
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -44,28 +53,15 @@ define(function (require) {
                 helpers.tableHeader($('.dataTables_wrapper .top'), data.comparisonURL, tags.keys().sort());
 
                 var $unstableButton = $("#btn-unstable");
-                $unstableButton.click(function() {
+                $unstableButton.click(function () {
                     hideUnstable = !hideUnstable;
                     rtBuilders.updateUnstableButton();
                     $tbSorter.fnDraw();
                 });
                 rtBuilders.updateUnstableButton();
 
-                $tagsSelect = $("#tags-select");
-                $tagsSelect.on("change", function change() {
-                    $tbSorter.fnDraw();
-                });
 
-                if (savedTags !== undefined && savedTags.length) {
-                    var str = "";
-                    $.each(savedTags, function (i, tag) {
-                        str += tag + ",";
-                    });
-                    $tagsSelect.val(str);
-                    rtBuilders.setupTagsSelector();
-                } else {
-                    rtBuilders.setupTagsSelector();
-                }
+                rtBuilders.updateTagsForSelect2(true);
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
@@ -74,10 +70,30 @@ define(function (require) {
             helpers.tooltip($("[data-title]"));
         },
         setupTagsSelector: function setupTagsSelector() {
-            $tagsSelect.select2({
-                multiple: true,
-                data: rtBuilders.parseTags()
-            });
+
+        },
+        updateTagsForSelect2: function updateTagsForSelect2(allowInit) {
+            if ($tagsSelect === undefined && allowInit) {
+                $tagsSelect = $("#tags-select");
+
+                $tagsSelect.on("change", function change() {
+                    $tbSorter.fnDraw();
+                });
+            }
+
+            if ($tagsSelect !== undefined) {
+                var str = "";
+                $.each(savedTags, function (i, tag) {
+                    str += tag + ",";
+                });
+                $tagsSelect.val(str);
+
+                $tagsSelect.select2({
+                    multiple: true,
+                    data: rtBuilders.parseTags()
+                });
+                $tbSorter.fnDraw();
+            }
         },
         parseTags: function parseTags() {
             var results = [];
@@ -87,16 +103,17 @@ define(function (require) {
             return {results: results};
         },
         saveState: function saveState(oSettings, oData) {
-            oData.tags = rtBuilders.getSelectedTags();
-            oData.hide_unstable = hideUnstable;
+            if (history.pushState) {
+                rtBuilders.saveStateToURL(oData.oSearch.sSearch);
+
+                // Remove search as it's found in the URI
+                oData.oSearch = undefined;
+            }
+
             return true;
         },
         loadState: function loadState(oSettings, oData) {
-            if (oData.tags !== undefined) {
-                savedTags = oData.tags;
-                hideUnstable = oData.hide_unstable;
-                rtBuilders.updateUnstableButton();
-            }
+            rtBuilders.loadStateFromURL(oData);
             return true;
         },
         findAllTags: function findAllTags(data) {
@@ -118,7 +135,7 @@ define(function (require) {
         },
         getSelectedTags: function getSelectedTags() {
             var selectedTags = [];
-            if ($tagsSelect !== undefined) {
+            if ($tagsSelect !== undefined && $tagsSelect.val() !== undefined) {
                 $.each($tagsSelect.val().split(","), function (i, tag) {
                     if (tag.length) {
                         selectedTags.push(tag.trim());
@@ -137,7 +154,7 @@ define(function (require) {
                         return b.toLowerCase() === branch_type.toLowerCase();
                     };
 
-                if (hideUnstable === true && ($.inArray(UNSTABLE_TAG, builderTags) > -1 || $.inArray(WIP_TAG, builderTags) > -1))  {
+                if (hideUnstable === true && ($.inArray(UNSTABLE_TAG, builderTags) > -1 || $.inArray(WIP_TAG, builderTags) > -1)) {
                     return false;
                 }
 
@@ -245,12 +262,12 @@ define(function (require) {
             return !tagAsBranchRegex.exec(tag);
         },
         setHideUnstable: function setHideUnstable(hidden) {
-          hideUnstable = hidden;
+            hideUnstable = hidden;
         },
         isUnstableHidden: function isUnstableHidden() {
             return hideUnstable;
         },
-        updateUnstableButton: function() {
+        updateUnstableButton: function () {
             var $unstableButton = $("#btn-unstable");
             $unstableButton.removeClass("btn-danger btn-success");
             if (hideUnstable) {
@@ -319,7 +336,43 @@ define(function (require) {
 
             return dt.initTable($tableElem, options);
         },
-        noTag: NO_TAG
+        noTag: NO_TAG,
+        loadStateFromURL: function loadStateFromURL(oData) {
+            var search = URI().search(true);
+
+            if (search.tag) {
+                savedTags = Array.isArray(search.tag) ? search.tag : [search.tag];
+            } else {
+                savedTags = [];
+            }
+
+            hideUnstable = search.hide_unstable === "true";
+            rtBuilders.updateUnstableButton();
+            rtBuilders.updateTagsForSelect2(false);
+
+            if (oData && search.search) {
+                oData.oSearch = {sSearch: search.search};
+            } else if ($tbSorter && search.search) {
+                $tbSorter.fnFilter(search.search);
+                $searchField.val(search.search);
+            }
+        },
+        saveStateToURL: helpers.debounce(function (search) {
+            var url = URI(),
+                tags = rtBuilders.getSelectedTags();
+
+            url.setSearch({search: search, tag: tags, hide_unstable: hideUnstable});
+
+            if (search.length === 0 || search === undefined) {
+                url.removeSearch("search");
+            }
+            if (tags == undefined) {
+                url.removeSearch("tag");
+            }
+            if (URI().search() !== url.search()) {
+                window.history.pushState({path: url}, '', url);
+            }
+        }, 1000)
     };
 
     return rtBuilders;

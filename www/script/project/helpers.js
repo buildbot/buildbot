@@ -122,7 +122,7 @@ define(function (require) {
 
                         $toolTipCont.html(title)
                             .appendTo('body')
-                            .css({'top': cursorPosTop, 'right': 28 })
+                            .css({'top': cursorPosTop, 'right': 28})
                             .fadeIn('fast');
                     }
 
@@ -512,6 +512,20 @@ define(function (require) {
             }
 
             return result;
+        },
+        debounce: function debounce(func, wait, immediate) {
+            var timeout;
+            return function () {
+                var context = this, args = arguments;
+                var later = function () {
+                    timeout = null;
+                    if (!immediate) func.apply(context, args);
+                };
+                var callNow = immediate && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+                if (callNow) func.apply(context, args);
+            };
         },
         /**
          * Clear all events and binding on the child elements,
