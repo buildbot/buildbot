@@ -146,6 +146,7 @@ class State extends Config
         bbSettingsServiceProvider.addSettingsGroup
             name:'Websockets'
             caption: 'Websocket'
+            description: 'Websocket related settings'
             items:[
                 type:'bool'
                 name:'debug_websockets'
