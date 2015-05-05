@@ -818,7 +818,17 @@ div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
 .small-txt{color:#838383}
 .pr-small-head{margin:0 0 2px}
 .spin-cont{display:block;margin-top:0}
-.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1429523784);background-position:0 0;height:13px;width:13px;display:inline-block}
+@keyframes animatedSpinner{0%{background-position:0 0}
+100%{background-position:-130px 0}}
+@-moz-keyframes animatedSpinner{0%{background-position:0 0}
+100%{background-position:-130px 0}}
+@-webkit-keyframes animatedSpinner{0%{background-position:0 0}
+100%{background-position:-130px 0}}
+@-ms-keyframes animatedSpinner{0%{background-position:0 0}
+100%{background-position:-130px 0}}
+@-o-keyframes animatedSpinner{0%{background-position:0 0}
+100%{background-position:-130px 0}}
+.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1429523784);background-position:0 0;height:13px;width:13px;display:inline-block;animation:animatedSpinner 1s steps(10,end) infinite;-moz-animation:animatedSpinner 1s steps(10,end) infinite;-webkit-animation:animatedSpinner 1s steps(10,end) infinite;-ms-animation:animatedSpinner 1s steps(10,end) infinite;-o-animation:animatedSpinner 1s steps(10,end) infinite}
 .spin-icon.pull-bottom{margin-bottom:-2px}
 .building .spin-icon{margin-left:5px}
 .bubble{background-color:#80000D;-moz-border-radius:9px;-webkit-border-radius:9px;border-radius:9px;-webkit-box-shadow:1px 1px 1px #FFF;box-shadow:1px 1px 1px #FFF;color:#FFF;padding:2px 6px;margin-left:5px;font-size:11px}
