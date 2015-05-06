@@ -95,8 +95,15 @@ define(function (require) {
         },
         tooltip: function (elements) {
             $.each(elements, function (i, el) {
-                var $elem = $(el),
-                    $toolTipCont = $("<div/>").addClass("tooltip-cont"),
+                var $elem = $(el);
+
+                if ($elem.hasClass('tipped')) {
+                    return true;
+                } else {
+                    $elem.addClass('tipped');
+                }
+
+                var $toolTipCont = $("<div/>").addClass("tooltip-cont"),
                     clickEvent;
 
                 $elem.hover(function (e) {
