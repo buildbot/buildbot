@@ -4,7 +4,8 @@
     "guanlecoja": "latest",
     "gulp-shell": "^0.4.0",
     "gulp-svg-symbols": "^0.3.1",
-    "http-proxy": "^1.11.1"
+    "http-proxy": "^1.11.1",
+    "minimist": "^1.1.1"
   },
   "name": "md-base",
   "dependencies": {},

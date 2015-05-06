@@ -90,8 +90,11 @@ gulp.task 'icons', ->
 
 gulp.task 'apiproxy', ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
+    argv = require('minimist')(process.argv.slice(2))
+    argv.apiserver ?= 'http://nine.buildbot.net'
+
     httpProxy = require 'http-proxy'
-    proxy = httpProxy.createProxyServer({target: 'http://nine.buildbot.net'}).listen(8021)
+    proxy = httpProxy.createProxyServer({target: argv.apiserver}).listen(8021)
     proxy.on 'proxyReq', (proxyReq, req, res, options) ->
         delete proxyReq.removeHeader('Origin')
         delete proxyReq.removeHeader('Referer')
