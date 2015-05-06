@@ -73,7 +73,7 @@ config =
                 version: "~1.3.15"
                 files: "angular-mocks.js"
 
-    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
+    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures', 'apiproxy']
 
     generatedfixtures: ->
         gulp.src ""
@@ -87,5 +87,17 @@ gulp.task 'icons', ->
             templates: ['src/icons/iconset.svg']
         ))
         .pipe(gulp.dest(path.join(config.dir.build, 'icons')))
+
+gulp.task 'apiproxy', ->
+    # this is a task for developing, it proxy api request to http://nine.buildbot.net
+    httpProxy = require 'http-proxy'
+    proxy = httpProxy.createProxyServer({target: 'http://nine.buildbot.net'}).listen(8021)
+    proxy.on 'proxyReq', (proxyReq, req, res, options) ->
+        delete proxyReq.removeHeader('Origin')
+        delete proxyReq.removeHeader('Referer')
+    proxy.on 'proxyRes', (proxyRes, req, res) ->
+        proxyRes.headers['Access-Control-Allow-Origin'] = '*'
+        console.log "[Proxy] #{req.method} #{req.url}"
+    console.log '[Proxy] server listening on port 8021'
 
 module.exports = config
