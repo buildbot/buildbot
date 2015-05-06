@@ -160,7 +160,9 @@ class GitHubEventHandler(object):
                 'project': project
             }
 
-            if self._codebase is not None:
+            if callable(self._codebase):
+                change['codebase'] = self._codebase(payload)
+            elif self._codebase is not None:
                 change['codebase'] = self._codebase
 
             changes.append(change)
