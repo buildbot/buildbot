@@ -328,12 +328,18 @@ define(function (require) {
                     var f = oSettings.oPreviousSearch.sSearch;
                     if (f !== undefined && f.length > 0) {
                         var regex = new RegExp($.fn.dataTable.util.escapeRegex(f), "i"),
-                            text = $(aData[index]).text();
-
-                        // Attempt converting the HTML before using the plain string
-                        if (text.length === 0) {
                             text = aData[index];
-                        }
+
+                        try {
+                            var parse = $(aData[index]).text();
+
+                            // Make sure we got a return
+                            if (parse.length) {
+                                text = parse;
+                            }
+
+                        } catch (ignore) {}
+
                         return text.search(regex) > -1;
                     }
                     return true;
