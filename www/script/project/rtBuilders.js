@@ -104,7 +104,7 @@ define(function (require) {
         },
         saveState: function saveState(oSettings, oData) {
             if (history.pushState) {
-                var search = oData.oSearch !== undefined ? oData.oSearch.sSearch : "";
+                var search = oData.search !== undefined ? oData.search.search : "";
                 rtBuilders.saveStateToURL(search);
 
                 // Remove search as it's found in the URI
@@ -363,7 +363,7 @@ define(function (require) {
             rtBuilders.updateTagsForSelect2(false);
 
             if (oData && search.search) {
-                oData.oSearch = {sSearch: search.search};
+                oData.search = {search: search.search};
             } else if ($tbSorter && search.search) {
                 $tbSorter.fnFilter(search.search);
                 $searchField.val(search.search);
