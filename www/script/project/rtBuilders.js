@@ -108,7 +108,7 @@ define(function (require) {
                 rtBuilders.saveStateToURL(search);
 
                 // Remove search as it's found in the URI
-                oData.oSearch = undefined;
+                oData.search = undefined;
             }
 
             return true;
@@ -367,6 +367,9 @@ define(function (require) {
             } else if ($tbSorter && search.search) {
                 $tbSorter.fnFilter(search.search);
                 $searchField.val(search.search);
+            } else if ($tbSorter) {
+                $tbSorter.fnFilter("");
+                $searchField.val("");
             }
         },
         saveStateToURL: helpers.debounce(function (search) {
