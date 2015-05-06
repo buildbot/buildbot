@@ -828,7 +828,7 @@ div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
 100%{background-position:-130px 0}}
 @-o-keyframes animatedSpinner{0%{background-position:0 0}
 100%{background-position:-130px 0}}
-.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1429523784);background-position:0 0;height:13px;width:13px;display:inline-block;animation:animatedSpinner 1s steps(10,end) infinite;-moz-animation:animatedSpinner 1s steps(10,end) infinite;-webkit-animation:animatedSpinner 1s steps(10,end) infinite;-ms-animation:animatedSpinner 1s steps(10,end) infinite;-o-animation:animatedSpinner 1s steps(10,end) infinite}
+.spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1417772545);background-position:0 0;height:13px;width:13px;display:inline-block;animation:animatedSpinner 1s steps(10,end) infinite;-moz-animation:animatedSpinner 1s steps(10,end) infinite;-webkit-animation:animatedSpinner 1s steps(10,end) infinite;-ms-animation:animatedSpinner 1s steps(10,end) infinite;-o-animation:animatedSpinner 1s steps(10,end) infinite}
 .spin-icon.pull-bottom{margin-bottom:-2px}
 .building .spin-icon{margin-left:5px}
 .bubble{background-color:#80000D;-moz-border-radius:9px;-webkit-border-radius:9px;border-radius:9px;-webkit-box-shadow:1px 1px 1px #FFF;box-shadow:1px 1px 1px #FFF;color:#FFF;padding:2px 6px;margin-left:5px;font-size:11px}
@@ -1147,7 +1147,7 @@ html[dir=rtl] .select2-container-multi .select2-choices{padding:0 0 0 5px}
 html[dir=rtl] .select2-container-multi .select2-choices li{float:right}
 .select2-container-multi .select2-choices .select2-search-field{margin:0;padding:0;white-space:nowrap}
 .select2-container-multi .select2-choices .select2-search-field input{padding:5px;margin:1px 0;font-family:sans-serif;font-size:100%;color:#666;outline:0;border:0;-webkit-box-shadow:none;box-shadow:none;background:0 0!important}
-.select2-container-multi .select2-choices .select2-search-field input.select2-active{background:url(select2-spinner.gif) 100% no-repeat #fff!important}
+.select2-container-multi .select2-choices .select2-search-field input.select2-active{background:url(select2-spinner.gif) no-repeat 100% #fff!important}
 .select2-default{color:#999!important}
 .select2-container-multi .select2-choices .select2-search-choice{padding:3px 5px 3px 18px;margin:3px 0 3px 5px;position:relative;line-height:13px;color:#333;cursor:default;border:1px solid #aaa;border-radius:3px;-webkit-box-shadow:0 0 2px #fff inset,0 1px 0 rgba(0,0,0,.05);box-shadow:0 0 2px #fff inset,0 1px 0 rgba(0,0,0,.05);background-clip:padding-box;-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;background-color:#e4e4e4;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#f4f4f4', GradientType=0);background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(20%,#f4f4f4),color-stop(50%,#f0f0f0),color-stop(52%,#e8e8e8),color-stop(100%,#eee));background-image:-webkit-linear-gradient(top,#f4f4f4 20%,#f0f0f0 50%,#e8e8e8 52%,#eee 100%);background-image:-moz-linear-gradient(top,#f4f4f4 20%,#f0f0f0 50%,#e8e8e8 52%,#eee 100%);background-image:linear-gradient(to top,#f4f4f4 20%,#f0f0f0 50%,#e8e8e8 52%,#eee 100%)}
 html[dir=rtl] .select2-container-multi .select2-choices .select2-search-choice{margin:3px 5px 3px 0;padding:3px 18px 3px 5px}
