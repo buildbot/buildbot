@@ -530,3 +530,28 @@ class TestChangeHookConfiguredWithCodebaseValue(unittest.TestCase):
 
     def test_git_with_change_json(self):
         return self._check_git_with_change(gitJsonPayload)
+
+
+def _codebase_function(payload):
+    return 'foobar-' + payload['repository']['name']
+
+
+class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase):
+
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(
+            codebase=_codebase_function)
+
+    @defer.inlineCallbacks
+    def _check_git_with_change(self, payload):
+        self.request = _prepare_request('push', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEquals(len(self.request.addedChanges), 2)
+        change = self.request.addedChanges[0]
+        self.assertEquals(change['codebase'], 'foobar-github')
+
+    def test_git_with_change_encoded(self):
+        return self._check_git_with_change([gitJsonPayload])
+
+    def test_git_with_change_json(self):
+        return self._check_git_with_change(gitJsonPayload)
