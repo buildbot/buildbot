@@ -320,13 +320,13 @@ SourceStamps
                     {% endif %}
 
                   {{ change(c.asDict()) }}
-                  {% if ss.totalChanges > ss.changes.count %}
-                  {% set further_changes = ss.totalChanges - ss.changes|length %}
-                  <tr>
-                      <td colspan="6" style="text-align: center">There are {{ further_changes }} further changes in this build.</td>
-                  </tr>
-                  {% endif %}
                 {% endfor %}
+                {% if ss.totalChanges > ss.changes|length %}
+                {% set further_changes = ss.totalChanges - ss.changes|length %}
+                <tr>
+                  <td colspan="6" style="text-align: center">There are {{ further_changes }} further changes in this build.</td>
+                </tr>
+                {% endif %}
               </table>
             </div>
               {% endif %}
