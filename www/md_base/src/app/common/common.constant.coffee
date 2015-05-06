@@ -5,27 +5,17 @@ invert_constant = (constant_name, inverted_constant_name) ->
 
 class Baseurlapi extends Constant('common')
     constructor: ->
-        # Using localhost:8021 as a proxy entry to access api on nine.buildbot.net
-        # This works only when `gulp dev` is running
-        # 
-        # TODO: remove this after the development is finished
-        return 'http://localhost:8021/api/v2/'
-        # return 'api/v2'
+        return 'api/v2/'
 
 class Baseurlws extends Constant('common')
     constructor: ->
-        # Using localhost:8021 as a proxy entry to access websocket on nine.buildbot.net
-        # This works only when `gulp dev` is running
-        # 
-        # TODO: remove this after the development is finished
-        return 'ws://localhost:8021/ws'
-        # href = location.href.toString()
-        # if location.hash != ""
-        #     href = href.replace(location.hash, "")
-        # if href[href.length - 1] != "/"
-        #     href = href + "/"
+        href = location.href.toString()
+        if location.hash != ""
+            href = href.replace(location.hash, "")
+        if href[href.length - 1] != "/"
+            href = href + "/"
 
-        # return href.replace(/^http/, "ws") + "ws"
+        return href.replace(/^http/, "ws") + "ws"
 
 class Plurals extends Constant('common')
     constructor: ->

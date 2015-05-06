@@ -90,17 +90,31 @@ gulp.task 'icons', ->
 
 gulp.task 'apiproxy', ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
-    argv = require('minimist')(process.argv.slice(2))
-    argv.apiserver ?= 'http://nine.buildbot.net'
+    argv = require('minimist')(process.argv)
+    argv.apiserver ?= 'nine.buildbot.net'
+    argv.apiport ?= 8021
+    argv.server ?= 'http://localhost:8020'
 
+    fs = require 'fs'
+    path = require 'path'
+    http = require 'http'
     httpProxy = require 'http-proxy'
-    proxy = httpProxy.createProxyServer({target: argv.apiserver}).listen(8021)
+    proxy = httpProxy.createProxyServer({})
     proxy.on 'proxyReq', (proxyReq, req, res, options) ->
         delete proxyReq.removeHeader('Origin')
         delete proxyReq.removeHeader('Referer')
     proxy.on 'proxyRes', (proxyRes, req, res) ->
         proxyRes.headers['Access-Control-Allow-Origin'] = '*'
         console.log "[Proxy] #{req.method} #{req.url}"
-    console.log '[Proxy] server listening on port 8021'
+
+    server = http.createServer (req, res) ->
+        if req.url.match /^\/api/
+            proxy.web req, res, {target: 'http://' + argv.apiserver}
+        else if req.url.match /^\/ws/
+            proxy.ws req, res, {target: 'ws://' + argv.apiserver}
+        else
+            proxy.web req, res, {target: argv.server}
+    server.listen parseInt(argv.apiport)
+    console.log "[Proxy] server listening on port #{argv.apiport}"
 
 module.exports = config
