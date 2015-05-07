@@ -73,7 +73,7 @@ config =
                 version: "~1.3.15"
                 files: "angular-mocks.js"
 
-    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures', 'apiproxy']
+    buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
 
     generatedfixtures: ->
         gulp.src ""
@@ -88,12 +88,11 @@ gulp.task 'icons', ->
         ))
         .pipe(gulp.dest(path.join(config.dir.build, 'icons')))
 
-gulp.task 'apiproxy', ->
+gulp.task 'proxy', ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
     argv = require('minimist')(process.argv)
-    argv.apiserver ?= 'nine.buildbot.net'
-    argv.apiport ?= 8021
-    argv.server ?= 'http://localhost:8020'
+    argv.host?= 'nine.buildbot.net'
+    argv.port?= 8020
 
     fs = require 'fs'
     path = require 'path'
@@ -109,12 +108,10 @@ gulp.task 'apiproxy', ->
 
     server = http.createServer (req, res) ->
         if req.url.match /^\/api/
-            proxy.web req, res, {target: 'http://' + argv.apiserver}
+            proxy.web req, res, {target: 'http://' + argv.host}
         else if req.url.match /^\/ws/
-            proxy.ws req, res, {target: 'ws://' + argv.apiserver}
-        else
-            proxy.web req, res, {target: argv.server}
-    server.listen parseInt(argv.apiport)
-    console.log "[Proxy] server listening on port #{argv.apiport}"
+            proxy.ws req, res, {target: 'ws://' + argv.host}
+    server.listen parseInt(argv.port)
+    console.log "[Proxy] server listening on port #{argv.port}"
 
 module.exports = config
