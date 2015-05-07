@@ -235,6 +235,7 @@ class Build(properties.PropertiesMixin):
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
+        self.stopBuildConsumer = self.master.mq.startConsuming(("control", "build", self.buildid, "stop"), self.stopBuild)
         self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the bulid to the first buildrequest
@@ -478,6 +479,9 @@ class Build(properties.PropertiesMixin):
                 lock.stopWaitingUntilAvailable(self, access, d)
                 d.callback(None)
 
+    def stopBuildMessage(self, msg):
+        self.stopBuild(msg['reason'])
+
     def stopBuild(self, reason="<no reason given>"):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
@@ -538,7 +542,7 @@ class Build(properties.PropertiesMixin):
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
         abandoned."""
-
+        self.stopBuildConsumer.stopConsuming()
         self.finished = True
         if self.conn:
             self.subs.unsubscribe()
