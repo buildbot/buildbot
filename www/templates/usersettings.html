@@ -16,7 +16,6 @@ checked
 {% endblock %}
 
 {% block content %}
-{{user_settings}}
 <div class="row vertical-line">
     <div class="rounded-container">
         <div class="col-md-6">
@@ -26,7 +25,7 @@ checked
 
             <form id="userSettingsForm" action="/users/settings/submit" method="POST" class="user-settings">
                 <div class="col-md-12">
-                    <label for="colorBlindMode">Color blind mode</label>
+                    <label class="col-md-3" for="colorBlindMode">Color blind mode</label>
                     <input id="colorBlindMode" type="checkbox" {{ isUserSettingChecked("colorBlind") }}/>
                     <input id="colorBlind_setting" name="colorBlind_setting" hidden="hidden" value="0"/>
 			<span class="question-icon tooltip"
@@ -34,8 +33,9 @@ checked
           	</span>
                 </div>
                 <div class="col-md-12">
-                    <label for="oldBuildDays_setting">Old build days</label>
-                    <input id="oldBuildDays_setting" name="oldBuildDays_setting" type="number" value="{{ user_settings.get("oldBuildDays")}}"/>
+                    <label class="col-md-3" for="oldBuildDays_setting">Old build days</label>
+                    <input id="oldBuildDays_setting" name="oldBuildDays_setting" type="number"
+                           value="{{ user_settings.oldBuildDays}}"/>
 			<span class="question-icon tooltip"
                   title="The number of days before builds are greyed out on build and builder tables">
           	</span>
