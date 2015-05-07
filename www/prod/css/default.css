@@ -628,7 +628,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .well{background-image:-webkit-linear-gradient(top,#e8e8e8 0,#f5f5f5 100%);background-image:linear-gradient(to bottom,#e8e8e8 0,#f5f5f5 100%);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffe8e8e8', endColorstr='#fff5f5f5', GradientType=0);border-color:#dcdcdc;-webkit-box-shadow:inset 0 1px 3px rgba(0,0,0,.05),0 1px 0 rgba(255,255,255,.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.05),0 1px 0 rgba(255,255,255,.1)}
 .success{background-color:#DDE6D6}
 .color-blind-mode .success{background-color:#5bc20a!important;color:#fff}
-.color-blind-mode .success a{color:#fff}
+.color-blind-mode .success a{color:#fff!important}
 .color-blind-mode .dependency-list .success:before{content:"Success"}
 .color-blind-mode .log-list-success>a:before{background-color:#5bc20a}
 .state-text.success:before{content:"Success"}
@@ -636,7 +636,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-success>a:before{background-color:#DDE6D6}
 .failure{background-color:#EFCFCF}
 .color-blind-mode .failure{background-color:#c20a0a!important;color:#fff}
-.color-blind-mode .failure a{color:#fff}
+.color-blind-mode .failure a{color:#fff!important}
 .color-blind-mode .dependency-list .failure:before{content:"Failure"}
 .color-blind-mode .log-list-failure>a:before{background-color:#c20a0a}
 .state-text.failure:before{content:"Failure"}
@@ -644,7 +644,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-failure>a:before{background-color:#EFCFCF}
 .exception{background-color:#DDD7DD}
 .color-blind-mode .exception{background-color:#c20ac2!important;color:#fff}
-.color-blind-mode .exception a{color:#fff}
+.color-blind-mode .exception a{color:#fff!important}
 .color-blind-mode .dependency-list .exception:before{content:"Exception"}
 .color-blind-mode .log-list-exception>a:before{background-color:#c20ac2}
 .state-text.exception:before{content:"Exception"}
@@ -652,7 +652,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-exception>a:before{background-color:#DDD7DD}
 .warnings{background-color:#fa3}
 .color-blind-mode .warnings{background-color:#c2750a!important;color:#fff}
-.color-blind-mode .warnings a{color:#fff}
+.color-blind-mode .warnings a{color:#fff!important}
 .color-blind-mode .dependency-list .warnings:before{content:"Warnings"}
 .color-blind-mode .log-list-warnings>a:before{background-color:#c2750a}
 .state-text.warnings:before{content:"Warnings"}
@@ -660,7 +660,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-warnings>a:before{background-color:#fa3}
 .skipped{background-color:#CBDCE6}
 .color-blind-mode .skipped{background-color:#0a7ec2!important;color:#fff}
-.color-blind-mode .skipped a{color:#fff}
+.color-blind-mode .skipped a{color:#fff!important}
 .color-blind-mode .dependency-list .skipped:before{content:"Skipped"}
 .color-blind-mode .log-list-skipped>a:before{background-color:#0a7ec2}
 .state-text.skipped:before{content:"Skipped"}
@@ -680,7 +680,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-ignored>a:before{background-color:#CBDCE6}
 .dependency_failure{background-color:#FCF2F2}
 .color-blind-mode .dependency_failure{background-color:#c20a0a!important;color:#fff}
-.color-blind-mode .dependency_failure a{color:#fff}
+.color-blind-mode .dependency_failure a{color:#fff!important}
 .color-blind-mode .dependency-list .dependency_failure:before{content:"Dependency failure"}
 .color-blind-mode .log-list-dependency_failure>a:before{background-color:#c20a0a}
 .state-text.dependency_failure:before{content:"Dependency failure"}
@@ -688,7 +688,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-dependency_failure>a:before{background-color:#FCF2F2}
 .not_rebuilt{background-color:#F8FCF2}
 .color-blind-mode .not_rebuilt{background-color:#78c20a!important;color:#fff}
-.color-blind-mode .not_rebuilt a{color:#fff}
+.color-blind-mode .not_rebuilt a{color:#fff!important}
 .color-blind-mode .dependency-list .not_rebuilt:before{content:"Not rebuilt"}
 .color-blind-mode .log-list-not_rebuilt>a:before{background-color:#78c20a}
 .state-text.not_rebuilt:before{content:"Not rebuilt"}
@@ -736,7 +736,7 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .log-list-waiting>a:before{background-color:#E7E7E7}
 .retry{background-color:#DDD7DD}
 .color-blind-mode .retry{background-color:#c20ac2!important;color:#fff}
-.color-blind-mode .retry a{color:#fff}
+.color-blind-mode .retry a{color:#fff!important}
 .color-blind-mode .dependency-list .retry:before{content:"Retry"}
 .color-blind-mode .log-list-retry>a:before{background-color:#c20ac2}
 .state-text.retry:before{content:"Retry"}
