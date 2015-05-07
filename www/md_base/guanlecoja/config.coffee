@@ -88,7 +88,12 @@ gulp.task 'icons', ->
         ))
         .pipe(gulp.dest(path.join(config.dir.build, 'icons')))
 
-gulp.task 'proxy', ->
+gulp.task 'processindex', ['index'], ->
+    indexpath = path.join(config.dir.build, 'index.html')
+    gulp.src ""
+        .pipe shell("buildbot processwwwindex -i '#{indexpath}'")
+
+gulp.task 'proxy', ['processindex'], ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
     argv = require('minimist')(process.argv)
     argv.host?= 'nine.buildbot.net'
@@ -107,10 +112,22 @@ gulp.task 'proxy', ->
         console.log "[Proxy] #{req.method} #{req.url}"
 
     server = http.createServer (req, res) ->
-        if req.url.match /^\/api/
+        if req.url.match /^\/(api|sse)/
             proxy.web req, res, {target: 'http://' + argv.host}
         else if req.url.match /^\/ws/
             proxy.ws req, res, {target: 'ws://' + argv.host}
+        else
+            filepath = config.dir.build + req.url.split('?')[0]
+            if fs.existsSync(filepath) and fs.lstatSync(filepath).isDirectory()
+                filepath = path.join(filepath, 'index.html')
+            fs.readFile filepath, (err, data) ->
+                if err
+                    res.writeHead(404)
+                    res.end(JSON.stringify(err))
+                else
+                    res.writeHead(200)
+                    res.end(data)
+
     server.listen parseInt(argv.port)
     console.log "[Proxy] server listening on port #{argv.port}"
 
