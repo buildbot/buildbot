@@ -642,6 +642,16 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
         return "Usage:   buildbot dataspec [options]"
 
 
+class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
+    """This command is used with the front end's proxy task. It enables to run the front end
+    without the backend server runing in the background"""
+
+    subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
+    optParameters = [
+        ['index-file', 'i', None, "Path to the index.html file to be processed"],
+    ]
+
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -671,7 +681,11 @@ class Options(usage.Options):
         ['user', None, UserOptions,
          "Manage users in buildbot's database"],
         ['dataspec', None, DataSpecOption,
-         "Output data api spec"]
+         "Output data api spec"],
+        ['processwwwindex', None, ProcessWWWIndexOption,
+         "Process the index.html to enable the front end package working without backend. "
+         "This is a command to work with the frontend's proxy task."
+         ]
     ]
 
     def opt_version(self):
