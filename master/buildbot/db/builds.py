@@ -118,7 +118,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
-                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)))\
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.finish_time != None)))\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
             if sourcestamps and len(sourcestamps) > 0:
