@@ -35,11 +35,8 @@
             {% endif %}
 
             {% if authz.advertiseAction('stopAllBuilds', request) %}
-            <h2 class="head-2">
-                Stop Entire Build Chain
-            </h2>
-            {{ forms.stop_build(build_url+"/stopchain"+codebases_arg, authz, on_all=True, short=False, label='Entire
-            Build Chain') }}
+            <h2 class="head-2">Stop Entire Build Chain</h2>
+            {{ forms.stop_build(build_url+"/stopchain"+codebases_arg, authz, on_all=True, label='Entire Build Chain', short=False) }}
             <div class="divider"></div>
             {% endif %}
             {% else %}
