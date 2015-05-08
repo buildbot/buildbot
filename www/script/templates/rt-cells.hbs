@@ -2,7 +2,11 @@
     <ul class="revision list-unstyled reset">
     {{#each sourceStamps}}
         {{#if ../history_build}}
-            <li class="recent-build-icon-spacer">
+            {{#if pending_changes}}
+                <li class="recent-build-icon-spacer">
+            {{else}}
+                <li>
+            {{/if}}
         {{else}}
             <li>
         {{/if}}
@@ -16,13 +20,17 @@
             N/A
         {{/if}}
         {{#if ../history_build}}
-            <span class="recent-build-icon tooltip" title="Built from specific revision -- may not be the latest on the branch">
-            </span>
+            {{#if pending_changes}}
+                <span class="recent-build-icon tooltip" title="Built from specific revision -- may not be the latest on the branch">
+                </span>
+            {{/if}}
         {{/if}}
-        {{#if pending_changes}}
-            <span class="pending-changes-icon tooltip" title="The build shown here for branch {{branch}} is built with revision {{revision_short}}, which is not the latest revision on the branch (the latest revision on the branch is {{pending_changes}}).">
-            </span>
-        {{/if}}
+        {{#unless ../history_build}}
+            {{#if pending_changes}}
+                <span class="pending-changes-icon tooltip" title="The build shown here for branch {{branch}} is built with revision {{revision_short}}, which is not the latest revision on the branch (the latest revision on the branch is {{pending_changes}}).">
+                </span>
+            {{/if}}
+        {{/unless}}
         </li>
     {{/each}}
     </ul>

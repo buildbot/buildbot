@@ -718,39 +718,20 @@ class ProjectsJsonResource(JsonResource):
             self.putChild(project_name, SingleProjectJsonResource(status, project_status))
 
 
-class SingleProjectJsonResource(JsonResource):
-    help = """Describe a project in katana"""
-    pageTitle = 'Project'
+class LatestRevisionResource(JsonResource):
 
     def __init__(self, status, project_status):
         JsonResource.__init__(self, status)
         self.status = status
         self.project_status = project_status
-        self.name = self.project_status.name
-        self.setup_children(status, project_status)
-
-    def setup_children(self, status, project):
-        builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
-        for b in builder_names:
-            builder = self.status.getBuilder(b)
-            self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
-
-    # cleanup the revision information saved by the poller
-    def formatRevisionOutput(self, latestRevisions):
-        for key, value in latestRevisions.iteritems():
-            formated = value['revision'].split(":")
-            if len(formated) > 1:
-                value['revision'] = formated[1]
-
-        return latestRevisions
 
     @defer.inlineCallbacks
     def getLatestRevision(self, codebases):
-        latestRevisions = {}
+        latest_revs = {}
         if codebases:
             selection = {}
             for cb in self.project_status.codebases:
-                for key,value in cb.iteritems():
+                for key, value in cb.iteritems():
                     if key in codebases.keys():
                         selection[value['repository']] = {
                             'codebase': key,
@@ -759,9 +740,34 @@ class SingleProjectJsonResource(JsonResource):
                             'display_repository': value['display_repository']
                             }
 
-            latestRevisions = yield self.status.master.db.state.getObjectStateByKey(selection, 'branch', 'revision')
+            latest_revs = yield self.status.master.db.state.getObjectStateByKey(selection, 'branch', 'revision')
 
-        defer.returnValue(self.formatRevisionOutput(latestRevisions))
+        # cleanup the revision information saved by the poller
+        def format_rev_output(revs):
+            for rev_key, rev_value in revs.iteritems():
+                formatted = rev_value['revision'].split(":")
+                if len(formatted) > 1:
+                    rev_value['revision'] = formatted[1]
+
+            return revs
+
+        defer.returnValue(format_rev_output(latest_revs))
+
+
+class SingleProjectJsonResource(LatestRevisionResource):
+    help = """Describe a project in katana"""
+    pageTitle = 'Project'
+
+    def __init__(self, status, project_status):
+        LatestRevisionResource.__init__(self, status, project_status)
+        self.name = self.project_status.name
+        self.setup_children(status, project_status)
+
+    def setup_children(self, status, project):
+        builder_names = self.status.getBuilderNamesByProject(self.project_status.name)
+        for b in builder_names:
+            builder = self.status.getBuilder(b)
+            self.putChild(b, SingleProjectBuilderJsonResource(status, builder))
 
     @defer.inlineCallbacks
     def asDict(self, request):
@@ -791,15 +797,20 @@ class SingleProjectJsonResource(JsonResource):
         defer.returnValue(result)
 
 
-class SingleProjectBuilderJsonResource(JsonResource):
+class SingleProjectBuilderJsonResource(LatestRevisionResource):
     """
     Returns  a single builder for a project JSON with
     latestBuild info
     """
 
-    def __init__(self, status, builder):
-        JsonResource.__init__(self, status)
+    def __init__(self, status, builder, latest_rev=False):
+        projects = status.getProjects()
+        project = projects[builder.project]
+
+        LatestRevisionResource.__init__(self, status, project)
         self.builder = builder
+        self.latest_rev = latest_rev
+
 
     @defer.inlineCallbacks
     def builder_dict(self, builder, codebases, request, branches, base_build_dict):
@@ -824,7 +835,12 @@ class SingleProjectBuilderJsonResource(JsonResource):
             encoding = getRequestCharset(request)
             branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
+
         builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict)
+
+        if self.latest_rev:
+            builder_dict['latestRevisions'] = yield self.getLatestRevision(codebases)
+
         defer.returnValue(builder_dict)
 
 
