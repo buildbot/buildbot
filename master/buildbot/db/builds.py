@@ -157,7 +157,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                     q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
 
-            q = q.order_by(sa.desc(builds_tbl.c.number)).limit(maxSearch)
+            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
             res = conn.execute(q)
 
