@@ -1046,9 +1046,9 @@ class GlobalJsonResource(JsonResource):
         slave_busy = []
         for s in self.slaves:
             ss = self.status.getSlave(s)
-            if ss.isConnected:
+            if ss and ss.isConnected:
                 connected_slaves.append(s)
-            if len(ss.getRunningBuilds()) > 0:
+            if ss and len(ss.getRunningBuilds()) > 0:
                 slave_busy.append(s)
 
         current_builds = set()
