@@ -433,6 +433,25 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'project': 'Katana',
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
+    @defer.inlineCallbacks
+    def test_getSingleProjectBuilderWithLatestRev(self):
+        builder = mockBuilder(self.master, self.master_status, "builder-01", "Katana")
+
+        project_builder_json = status_json.SingleProjectBuilderJsonResource(self.master_status, builder.builder_status,
+                                                                            True)
+
+        project_builder_dict = yield project_builder_json.asDict(self.request)
+
+        self.assertEqual(project_builder_dict,
+                         {'name': 'builder-01',
+                          'tags': ['tag1', 'tag2'],
+                          'latestRevisions': {},
+                          'url': 'http://localhost:8080/projects/Katana/builders/' +
+                                 'builder-01?katana-buildbot_branch=katana',
+                          'friendly_name': 'builder-01',
+                          'project': 'Katana',
+                          'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
+
 
 class TestSinglePendingBuildsJsonResource(unittest.TestCase):
     def setUp(self):

@@ -26,20 +26,27 @@ define(function (require) {
 
             return property(data);
         },
-        buildIsHistoric: function (properties) {
-            var hasRevision = false;
-            var isDependency = false;
+        buildIsHistoric: function (properties, sourceStamps) {
+            var hasRevision = false,
+                isDependency = false,
+                hasPendingChanges = false;
+
             $.each(properties, function (i, obj) {
-                if (obj.length > 0) {
-                    if (obj.length === 2 && obj[0] === "revision" && obj[1].length !== 0) {
-                        hasRevision = true;
-                    } else if (obj.length === 3 && obj[0] === "buildLatestRev" && obj[2] === "Trigger") {
-                        isDependency = true;
-                    }
+                if (obj.length >= 3 && obj[0] === "buildLatestRev" && obj[1] === false) {
+                    hasRevision = true;
+                } else if (obj.length >= 3 && obj[0] === "buildLatestRev" && obj[2] === "Trigger") {
+                    isDependency = true;
                 }
             });
 
-            return hasRevision === true && isDependency === false;
+            $.each(sourceStamps, function (i, obj) {
+                if (obj.pending_changes !== undefined) {
+                    hasPendingChanges = true;
+                    return false;
+                }
+            });
+
+            return hasRevision === true && isDependency === false && hasPendingChanges == true;
         }
     };
 
@@ -49,13 +56,11 @@ define(function (require) {
                 "aTargets": [index],
                 "sClass": "txt-align-left",
                 "mRender": function (data, type, full) {
-                    var sourceStamps = privFunc.getPropertyOnData(full, property);
-                    var history_build = false;
-                    if (full.properties !== undefined) {
-                        history_build = privFunc.buildIsHistoric(full.properties);
-                    }
+                    var sourceStamps = privFunc.getPropertyOnData(full, property),
+                        history_build = false,
+                        latestRevDict;
 
-                    var latestRevDict;
+
 
                     if (latestRevDictFunc !== undefined) {
                         if (Object.prototype.toString.call(latestRevDictFunc) === '[object Function]') {
@@ -74,6 +79,10 @@ define(function (require) {
                                 }
                             });
                         }
+                    }
+
+                    if (full.properties !== undefined) {
+                        history_build = privFunc.buildIsHistoric(full.properties, sourceStamps);
                     }
                     return rtCells({
                         revisionCell: true,
@@ -360,7 +369,7 @@ define(function (require) {
     };
 
     var tableFunc = {
-        buildTableInit: function ($tableElem, showBuilderName, hideBranches) {
+        buildTableInit: function ($tableElem, showBuilderName, hideBranches, latestRevDictFunc) {
             var options = {};
 
             options.aoColumns = [
@@ -374,7 +383,7 @@ define(function (require) {
             ];
 
             options.fnRowCallback = function (nRow, aData) {
-                if (aData.properties !== undefined && privFunc.buildIsHistoric(aData.properties)) {
+                if (aData.properties !== undefined && privFunc.buildIsHistoric(aData.properties, aData.sourceStamps)) {
                     $(nRow).addClass("italic");
                 }
             };
@@ -384,7 +393,7 @@ define(function (require) {
                 cellFunc.shortTime(1, function (data) {
                     return data.times[0];
                 }),
-                cellFunc.revision(2, "sourceStamps", hideBranches),
+                cellFunc.revision(2, "sourceStamps", hideBranches,latestRevDictFunc),
                 cellFunc.buildStatus(3),
                 cellFunc.buildLength(4, "times"),
                 cellFunc.buildShortcuts(5),

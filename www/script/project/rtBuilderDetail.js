@@ -10,7 +10,8 @@ define(function (require) {
         extendMoment = require('project/moment-extend'),
         timeElements = require('timeElements'),
         rtTable = require('rtGenericTable'),
-        popup = require('ui.popup');
+        popup = require('ui.popup'),
+        latestRevDict;
 
     require('libs/jquery.form');
 
@@ -25,7 +26,9 @@ define(function (require) {
         init: function () {
             $tbCurrentBuildsTable = rtBuilderDetail.currentBuildsTableInit($('#rtCurrentBuildsTable'));
             $tbPendingBuildsTable = rtBuilderDetail.pendingBuildsTableInit($('#rtPendingBuildsTable'));
-            $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'), false, helpers.urlHasCodebases());
+            $tbBuildsTable = rtTable.table.buildTableInit($('#rtBuildsTable'), false, helpers.urlHasCodebases(), function getLatestRevDict() {
+                return latestRevDict;
+            });
             $tbSlavesTable = rtBuilderDetail.slavesTableInit($('#rtSlavesTable'));
 
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
@@ -51,6 +54,8 @@ define(function (require) {
             if (data.currentBuilds !== undefined) {
                 rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data.currentBuilds);
             }
+
+            latestRevDict = data.latestRevisions;
         },
         rtfProcessPendingBuilds: function (data) {
             rtTable.table.rtfGenericTableProcess($tbPendingBuildsTable, data);
@@ -70,10 +75,10 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                { "mData": null, "sTitle": "#", "sWidth": "10%"  },
-                { "mData": null, "sTitle": "Current build", "sWidth": "30%" },
-                { "mData": null, "sTitle": "Revision", "sWidth": "35%" },
-                { "mData": null, "sTitle": "Author", "sWidth": "25%", "sClass": "txt-align-right"}
+                {"mData": null, "sTitle": "#", "sWidth": "10%"},
+                {"mData": null, "sTitle": "Current build", "sWidth": "30%"},
+                {"mData": null, "sTitle": "Revision", "sWidth": "35%"},
+                {"mData": null, "sTitle": "Author", "sWidth": "25%", "sClass": "txt-align-right"}
             ];
 
             options.aoColumnDefs = [
@@ -81,7 +86,7 @@ define(function (require) {
                 rtTable.cell.buildProgress(1, true),
                 rtTable.cell.revision(2, "sourceStamps", helpers.urlHasCodebases()),
                 {
-                    "aTargets": [ 3 ],
+                    "aTargets": [3],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         var author = 'N/A';
@@ -107,22 +112,22 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                { "mData": null, "sWidth": "28%" },
-                { "mData": null, "sWidth": "28%" },
-                { "mData": null, "sWidth": "28%" },
-                { "mData": null, "sWidth": "16%" }
+                {"mData": null, "sWidth": "28%"},
+                {"mData": null, "sWidth": "28%"},
+                {"mData": null, "sWidth": "28%"},
+                {"mData": null, "sWidth": "16%"}
             ];
 
             options.aoColumnDefs = [
                 {
-                    "aTargets": [ 0 ],
+                    "aTargets": [0],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         return extendMoment.getDateFormatted(full.submittedAt);
                     }
                 },
                 {
-                    "aTargets": [ 1 ],
+                    "aTargets": [1],
                     "sClass": "txt-align-left",
                     "mRender": function () {
                         return hbBuilderDetail({pendingBuildWait: true});
@@ -133,7 +138,7 @@ define(function (require) {
                 },
                 rtTable.cell.revision(2, "sources", helpers.urlHasCodebases()),
                 {
-                    "aTargets": [ 3 ],
+                    "aTargets": [3],
                     "sClass": "txt-align-right",
                     "mRender": function (data, type, full) {
                         return hbBuilderDetail({removeBuildSelector: true, data: full});
@@ -151,8 +156,8 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                { "mData": null, "sWidth": "50%", "sTitle": "Slave" },
-                { "mData": null, "sWidth": "50%", "sTitle": "Status" }
+                {"mData": null, "sWidth": "50%", "sTitle": "Slave"},
+                {"mData": null, "sWidth": "50%", "sTitle": "Status"}
             ];
 
             options.aoColumnDefs = [

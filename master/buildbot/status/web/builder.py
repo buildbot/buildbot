@@ -283,7 +283,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             "sources": codebases
         }
 
-        project_json = SingleProjectBuilderJsonResource(self.status, self.builder_status)
+        project_json = SingleProjectBuilderJsonResource(self.status, self.builder_status, latest_rev=True)
         project_dict = yield project_json.asDict(req)
         url = self.status.getBuildbotURL() + path_to_json_project_builder(req, project, self.builder_status.name)
         cxt['instant_json']['project'] = {"url": url,
