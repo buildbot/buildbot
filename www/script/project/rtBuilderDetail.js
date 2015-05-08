@@ -55,7 +55,9 @@ define(function (require) {
                 rtTable.table.rtfGenericTableProcess($tbCurrentBuildsTable, data.currentBuilds);
             }
 
-            latestRevDict = data.latestRevisions;
+            if (data.latestRevisions !== undefined) {
+                latestRevDict = data.latestRevisions;
+            }
         },
         rtfProcessPendingBuilds: function (data) {
             rtTable.table.rtfGenericTableProcess($tbPendingBuildsTable, data);
