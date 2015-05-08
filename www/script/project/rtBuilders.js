@@ -376,13 +376,16 @@ define(function (require) {
             var url = URI(),
                 tags = rtBuilders.getSelectedTags();
 
-            url.setSearch({search: search, tag: tags, hide_unstable: hideUnstable});
+            url.setSearch({search: search, tag: tags});
 
             if (search.length === 0 || search === undefined) {
                 url.removeSearch("search");
             }
             if (tags == undefined) {
                 url.removeSearch("tag");
+            }
+            if ((search !== undefined && search.length > 0) || tags.length > 0) {
+                url.addSearch({hide_unstable: hideUnstable})
             }
             if (URI().search() !== url.search()) {
                 window.history.pushState({path: url}, '', url);
