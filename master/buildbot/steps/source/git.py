@@ -581,7 +581,7 @@ class Git(Source):
         cmd = buildstep.RemoteCommand('listdir',
                                       {'dir': self.workdir,
                                        'logEnviron': self.logEnviron,
-                                       'timeout': self.timeout, })
+                                       'timeout': self.timeout})
         cmd.useLog(self.stdio_log, False)
         yield self.runCommand(cmd)
 
