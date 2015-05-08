@@ -15,7 +15,6 @@
 
 
 import os
-import sys
 import jinja2
 
 from buildbot.test.fake import fakemaster
@@ -23,13 +22,15 @@ from buildbot.util import in_reactor
 from buildbot.util import json
 from twisted.internet import defer
 from buildbot.www.config import IndexResource
-from buildbot.plugins.db import get_plugins
+from buildbot.www.service import WWWService
 
 
 @in_reactor
 @defer.inlineCallbacks
 def processwwwindex(config):
     master = yield fakemaster.make_master()
+    master_service = WWWService(master)
+
     if not config.get('index-file'):
         print "Path to the index.html file is required with option --index-file or -i"
         defer.returnValue(1)
@@ -37,8 +38,18 @@ def processwwwindex(config):
     if not os.path.isfile(path):
         print "Invalid path to index.html"
         defer.returnValue(2)
-    plugins = get_plugins('www', None, load_now=False)
-    plugins = dict((k, {}) for k in plugins.names if k != "base")
+
+    main_dir = os.path.dirname(path)
+
+    for name in master_service.apps.names:
+        if name != 'base':
+            pluginapp = master_service.apps.get(name)
+            try:
+                os.symlink(pluginapp.static_dir, os.path.join(main_dir, name))
+            except OSError:
+                pass
+
+    plugins = dict((k, {}) for k in master_service.apps.names if k != "base")
 
     fakeconfig = {"user": {"anonymous": True}}
     fakeconfig['buildbotURL'] = master.config.buildbotURL
@@ -50,7 +61,7 @@ def processwwwindex(config):
     outputstr = ''
     with open(path) as indexfile:
         template = jinja2.Template(indexfile.read())
-        outputstr = template.render(configjson=json.dumps(fakeconfig))
+        outputstr = template.render(configjson=json.dumps(fakeconfig), config=fakeconfig)
     with open(path, 'w') as indexfile:
         indexfile.write(outputstr)
     defer.returnValue(0)
