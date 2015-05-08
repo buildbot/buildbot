@@ -840,7 +840,7 @@ div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
 .dropdown-info:after{content:"▼"}
 @media (min-width:992px){h1.logo a{font-size:29px;padding:22px 0 0}
 h1.logo a span{font-size:27px}}
-span.log-error{color:#EFCFCF}
+span.log-error{color:#FF1212}
 span.log-warning{color:#AD823A}
 .health-icon{display:inline-block;font-size:16px;font-weight:400;padding:0;text-shadow:0 1px 0 #FFF}
 .good-health-icon:after{font-family:katana_icons;content:"";color:#32912e}
