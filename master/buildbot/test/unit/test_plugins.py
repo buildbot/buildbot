@@ -71,7 +71,7 @@ class ITestInterface(IPlugin):
     """
     test interface
     """
-    def hello(name):
+    def hello(self, name):
         "Greets by :param:`name`"
 
 
