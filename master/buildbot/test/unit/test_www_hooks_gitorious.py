@@ -15,7 +15,7 @@
 
 import calendar
 
-import buildbot.status.web.change_hook as change_hook
+import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
 

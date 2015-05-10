@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.web.hooks.github import process_change
 from buildbot.util import json
+from buildbot.www.hooks.github import process_change
 from twisted.python import log
 
 

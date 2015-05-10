@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import buildbot.status.web.change_hook as change_hook
+import buildbot.www.change_hook as change_hook
 import calendar
 import mock
 

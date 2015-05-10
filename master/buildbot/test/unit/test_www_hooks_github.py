@@ -15,7 +15,7 @@
 
 import calendar
 
-import buildbot.status.web.change_hook as change_hook
+import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
 
@@ -196,8 +196,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def testGitWithDistinctFalse(self):
         changeDict = {"payload": [gitJsonPayload.replace(
-            '"distinct": true,', '"distinct": false,')]
-        }
+            '"distinct": true,', '"distinct": false,')]}
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
