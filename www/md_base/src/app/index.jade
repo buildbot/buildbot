@@ -25,5 +25,11 @@ html(ng-app="app", ng-controller="appController as app")
           h1 Hello buildbot!
 
       script(src="scripts.js?_#{(new Date()).getTime()}")
+      | {% for app in config.plugins %}
+      script(src="{{app}}/scripts.js")
+      link(rel='stylesheet', href='{{app}}/styles.css')
+      script
+        | angular.module('app').requires.push('{{app}}')
+      | {% endfor %}
       script
         | angular.module("app").constant("config", {{configjson|safe}})
