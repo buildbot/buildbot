@@ -381,11 +381,14 @@ define(function (require) {
             if (search.length === 0 || search === undefined) {
                 url.removeSearch("search");
             }
-            if (tags == undefined) {
+            if (tags.length === 0) {
                 url.removeSearch("tag");
             }
-            if ((search !== undefined && search.length > 0) || tags.length > 0) {
-                url.addSearch({hide_unstable: hideUnstable})
+            if (((search !== undefined && search.length > 0) || tags.length > 0) || hideUnstable === true) {
+                url.setSearch({hide_unstable: hideUnstable});
+            }
+            if ((search === undefined || search.length === 0) && tags.length === 0 && hideUnstable === false) {
+                url.removeSearch("hide_unstable");
             }
             if (URI().search() !== url.search()) {
                 window.history.pushState({path: url}, '', url);
