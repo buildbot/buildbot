@@ -28,6 +28,7 @@ from buildbot.www.service import WWWService
 class TestUsersClient(unittest.TestCase):
 
     def setUp(self):
+        # un-do the effects of @in_reactor
         self.patch(processwwwindex, 'processwwwindex', processwwwindex.processwwwindex._orig)
 
     def test_no_input_file(self):
