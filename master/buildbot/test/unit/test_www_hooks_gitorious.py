@@ -18,6 +18,7 @@ import calendar
 import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 
 from twisted.trial import unittest
 
@@ -65,7 +66,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
         dialects = {'gitorious': True}
-        self.changeHook = change_hook.ChangeHookResource(dialects=dialects)
+        self.changeHook = change_hook.ChangeHookResource(dialects=dialects, master=fakeMasterForHooks())
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
@@ -77,8 +78,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEquals(len(self.request.addedChanges), 1)
-            change = self.request.addedChanges[0]
+            self.assertEquals(len(self.changeHook.master.addedChanges), 1)
+            change = self.changeHook.master.addedChanges[0]
 
             # Gitorious doesn't send changed files
             self.assertEquals(change['files'], [])
@@ -109,7 +110,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             expected = "Error processing changes."
-            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
             self.request.setResponseCode.assert_called_with(500, expected)
             self.assertEqual(len(self.flushLoggedErrors()), 1)

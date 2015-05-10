@@ -20,6 +20,7 @@ import StringIO
 import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 
 from twisted.trial import unittest
 
@@ -66,7 +67,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
                 'secret_key': 'FSP3p-Ghdn4T0oqX',
                 'branch': 'test'
             }
-        })
+        }, master=fakeMasterForHooks())
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
@@ -77,10 +78,10 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
 
         def check_changes(r):
             # Only one changeset has been submitted.
-            self.assertEquals(len(self.request.addedChanges), 1)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 1)
 
             # First changeset.
-            change = self.request.addedChanges[0]
+            change = self.changeHook.master.addedChanges[0]
             self.assertEquals(change['files'], ['/CMakeLists.txt'])
             self.assertEquals(change["repository"], "https://code.google.com/p/webhook-test/")
             self.assertEquals(change["when"], 1324082130)

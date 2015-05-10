@@ -20,6 +20,17 @@ from twisted.internet import defer
 from twisted.web import server
 
 
+def fakeMasterForHooks():
+    master = Mock()
+    master.addedChanges = []
+
+    def addChange(**kwargs):
+        master.addedChanges.append(kwargs)
+        return defer.succeed(Mock())
+    master.addChange = addChange
+    return master
+
+
 class FakeRequest(Mock):
 
     """
@@ -42,18 +53,10 @@ class FakeRequest(Mock):
         self.content = StringIO(content)
         self.site = Mock()
         self.site.buildbot_service = Mock()
-        master = self.site.buildbot_service.master = Mock()
         self.uri = '/'
         self.prepath = []
         self.method = 'GET'
         self.received_headers = {}
-
-        self.addedChanges = []
-
-        def addChange(**kwargs):
-            self.addedChanges.append(kwargs)
-            return defer.succeed(Mock())
-        master.addChange = addChange
 
         self.deferred = defer.Deferred()
 

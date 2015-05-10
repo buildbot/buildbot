@@ -20,7 +20,7 @@ from buildbot.changes.base import PollingChangeSource
 
 
 def getChanges(req, options=None):
-    change_svc = req.site.buildbot_service.master.change_svc
+    change_svc = req.site.master.change_svc
     poll_all = "poller" not in req.args
 
     allow_all = True

@@ -22,6 +22,7 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 
 
 gitJsonPayload = """{
@@ -142,7 +143,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     def setUp(self):
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucket': True})
+            dialects={'bitbucket': True}, master=fakeMasterForHooks())
 
     @inlineCallbacks
     def testGitWithChange(self):
@@ -154,8 +155,8 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(request.addedChanges), 1)
-        commit = request.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        commit = self.change_hook.master.addedChanges[0]
 
         self.assertEqual(commit['files'], ['somefile.py'])
         self.assertEqual(
@@ -187,7 +188,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(request.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written, 'no changes found')
 
     @inlineCallbacks
@@ -200,8 +201,8 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(request.addedChanges), 1)
-        commit = request.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        commit = self.change_hook.master.addedChanges[0]
 
         self.assertEqual(commit['files'], ['somefile.py'])
         self.assertEqual(
@@ -233,7 +234,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(request.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written, 'no changes found')
 
     @inlineCallbacks
@@ -243,7 +244,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         request.method = 'POST'
 
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(request.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written, 'Error processing changes.')
         request.setResponseCode.assert_called_with(
             500, 'Error processing changes.')
@@ -261,7 +262,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
 
-        self.assertEqual(len(request.addedChanges), 1)
-        commit = request.addedChanges[0]
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        commit = self.change_hook.master.addedChanges[0]
 
         self.assertEqual(commit['project'], 'project-name')

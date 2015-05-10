@@ -143,7 +143,6 @@ class ChangeHookResource(resource.Resource):
 
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
-        master = request.site.buildbot_service.master
         for chdict in changes:
-            change = yield master.addChange(src=src, **chdict)
+            change = yield self.master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)
