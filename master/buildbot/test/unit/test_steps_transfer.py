@@ -65,6 +65,7 @@ def downloadString(memoizer, timestamp=None):
         return read
     return behavior
 
+
 def uploadTarFile(filename, **members):
     def behavior(command):
         f = StringIO()
@@ -589,6 +590,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(result=SUCCESS, status_text=["downloading", "to", "hello.txt"])
         d = self.runStep()
+
         @d.addCallback
         def checkCalls(res):
             self.assertEquals(''.join(read), "Hello World")
@@ -606,7 +608,6 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(result=FAILURE, status_text=["downloading", "to", "hello.txt"])
         return self.runStep()
-
 
 
 class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -633,6 +634,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(result=SUCCESS, status_text=["downloading", "to", "hello.json"])
         d = self.runStep()
+
         @d.addCallback
         def checkCalls(res):
             self.assertEquals(''.join(read), '{"message": "Hello World"}')
