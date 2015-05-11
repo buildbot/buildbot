@@ -366,7 +366,7 @@ class Builder(config.ReconfigurableServiceMixin,
         try:
             bids = []
             for req in build.requests:
-                bid = yield self.master.db.builds.addBuild(req.id, bs.number)
+                bid = yield self.master.db.builds.addBuild(req.id, bs.number, slavebuilder.slave.slavename)
                 bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
@@ -646,7 +646,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 break
 
             try:
-                yield self.master.db.buildrequests.mergePendingBuildRequests(brids, slavebuilder.slave.slavename)
+                yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
                 if len (brids) > 1:
                     log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 

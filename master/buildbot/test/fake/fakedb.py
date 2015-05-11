@@ -92,8 +92,7 @@ class BuildRequest(Row):
         artifactbrid = None,
         triggeredbybrid = None,
         mergebrid = None,
-        startbrid = None,
-        slavename = None
+        startbrid = None
     )
 
     id_column = 'id'
@@ -324,6 +323,7 @@ class Build(Row):
     defaults = dict(
         id = None,
         number = 29,
+        slavename = None,
         brid = 39,
         start_time = 1304262222,
         finish_time = None)
@@ -1009,7 +1009,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def reusePreviousBuild(self, requests, artifactbrid):
         return defer.succeed(None)
 
-    def mergePendingBuildRequests(self, brids, slavename, claimed_at=None):
+    def mergePendingBuildRequests(self, brids, claimed_at=None):
         for brid in brids:
             if brid not in self.reqs or brid in self.claims:
                 return defer.fail(
@@ -1147,9 +1147,9 @@ class FakeBuildsComponent(FakeDBComponent):
 
         return defer.succeed(ret)
 
-    def addBuild(self, brid, number, _reactor=reactor):
+    def addBuild(self, brid, number, slavename,_reactor=reactor):
         bid = self._newId()
-        self.builds[bid] = Build(id=bid, number=number, brid=brid,
+        self.builds[bid] = Build(id=bid, number=number, brid=brid, slavename=slavename,
                 start_time=_reactor.seconds, finish_time=None)
         return bid
 
