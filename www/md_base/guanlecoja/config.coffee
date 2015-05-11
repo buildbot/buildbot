@@ -56,6 +56,9 @@ config =
             'underscore.string':
                 version: "~2.3.3"
                 files: 'lib/underscore.string.js'
+            'sortable.js':
+                version: "~1.2.0"
+                files: ['Sortable.js', 'ng-sortable.js']
             # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
             # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
             # reimplement reconnecting ourselves

@@ -3,6 +3,7 @@ angular.module 'app', [
     'ngAnimate',
     'ngMaterial',
     'ui.router',
+    'ng-sortable',
 ]
     .config ($mdThemingProvider) ->
         $mdThemingProvider.theme('default')
