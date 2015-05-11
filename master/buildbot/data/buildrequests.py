@@ -18,6 +18,8 @@ from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 
 from buildbot.db.buildrequests import NotClaimedError
+from buildbot.status import results
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -61,6 +63,39 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         buildrequestid = kwargs.get('buildrequestid')
         return self.master.mq.startConsuming(callback,
                                              ('buildrequests', buildrequestid, None))
+
+    @defer.inlineCallbacks
+    def control(self, action, args, kwargs):
+        if action != "cancel":
+            raise ValueError("action: {} is not supported".format(action))
+        brid = kwargs['buildrequestid']
+        # first, try to claim the request; if this fails, then it's too late to
+        # cancel the build anyway
+        try:
+            b = yield self.master.db.buildrequests.claimBuildRequests(brids=[brid])
+        except AlreadyClaimedError:
+            # XXX race condition
+            # - After a buildrequest was claimed, and
+            # - Before creating a build,
+            # the claiming master still
+            # needs to do some processing, (send a message to the message queue,
+            # call maybeStartBuild on the related builder).
+            # In that case we won't have the related builds here. We don't have
+            # an alternative to letting them run without stopping them for now.
+            builds = yield self.master.data.get(("buildrequests", brid, "builds"))
+
+            # Don't call the data API here, as the buildrequests might have been
+            # taken by another master. We just send the stop message and forget about those.
+            for b in builds:
+                self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
+                                       dict(reason=kwargs.get('reason')))
+            defer.returnValue(None)
+
+        # then complete it with 'CANCELLED'; this is the closest we can get to
+        # cancelling a request without running into trouble with dangling
+        # references.
+        yield self.master.data.updates.completeBuildRequests([brid],
+                                                             results.CANCELLED)
 
 
 class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):

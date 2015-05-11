@@ -237,6 +237,7 @@ class Build(properties.PropertiesMixin):
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
+
         self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the bulid to the first buildrequest
@@ -247,7 +248,12 @@ class Build(properties.PropertiesMixin):
                 buildrequestid=brid,
                 buildslaveid=slave.buildslaveid)
 
+        self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
+                                                                     ("control", "builds",
+                                                                      str(self.buildid),
+                                                                      "stop"))
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
+
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
@@ -477,7 +483,7 @@ class Build(properties.PropertiesMixin):
                 lock.stopWaitingUntilAvailable(self, access, d)
                 d.callback(None)
 
-    def stopBuild(self, reason="<no reason given>"):
+    def stopBuild(self, reason="<no reason given>", cbParams=None):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
@@ -485,13 +491,14 @@ class Build(properties.PropertiesMixin):
         # build as failed quickly rather than waiting for the slave's
         # timeout to kill it on its own.
 
-        log.msg(" %s: stopping build: %s" % (self, reason))
+        log.msg(" %s: stopping build: %s %s" % (self, reason, cbParams))
         if self.finished:
             return
         # TODO: include 'reason' in this point event
         self.stopped = True
         if self.currentStep:
             self.currentStep.interrupt(reason)
+
         self.results = CANCELLED
 
         if self._acquiringLock:
@@ -536,7 +543,7 @@ class Build(properties.PropertiesMixin):
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
         abandoned."""
-
+        self.stopBuildConsumer.stopConsuming()
         self.finished = True
         if self.conn:
             self.subs.unsubscribe()

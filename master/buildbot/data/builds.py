@@ -67,6 +67,14 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             return self.master.mq.startConsuming(callback,
                                                  ('builds', str(buildid), None))
 
+    def control(self, action, args, kwargs):
+        if action != "stop":
+            raise ValueError("action: {} is not supported".format(action))
+        self.master.mq.produce(("control", "builds",
+                                str(kwargs['buildid']), 'stop'),
+                               dict(reason=kwargs.get('reason', 'no reason')))
+        return defer.succeed(None)
+
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -151,6 +159,7 @@ class Build(base.ResourceType):
     @base.updateMethod
     def generateNewBuildEvent(self, buildid):
         return self.generateEvent(buildid, "new")
+
     @base.updateMethod
     @defer.inlineCallbacks
     def setBuildStateString(self, buildid, state_string):
