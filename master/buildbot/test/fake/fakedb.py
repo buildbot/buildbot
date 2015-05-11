@@ -92,7 +92,8 @@ class BuildRequest(Row):
         artifactbrid = None,
         triggeredbybrid = None,
         mergebrid = None,
-        startbrid = None
+        startbrid = None,
+        slavename = None
     )
 
     id_column = 'id'
@@ -1008,7 +1009,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def reusePreviousBuild(self, requests, artifactbrid):
         return defer.succeed(None)
 
-    def mergePendingBuildRequests(self, brids, claimed_at=None):
+    def mergePendingBuildRequests(self, brids, slavename, claimed_at=None):
         for brid in brids:
             if brid not in self.reqs or brid in self.claims:
                 return defer.fail(

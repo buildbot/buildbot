@@ -75,7 +75,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('artifactbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('mergebrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
-        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
+        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
+        sa.Column('slavename', sa.String(255), nullable=True)
     )
 
     # Each row in this table represents a claimed build request, where the
@@ -422,6 +423,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildrequests_triggeredbybrid', buildrequests.c.triggeredbybrid, unique=False)
     sa.Index('buildrequests_mergebrid', buildrequests.c.mergebrid, unique=False)
     sa.Index('buildrequests_startbrid', buildrequests.c.startbrid, unique=False)
+    sa.Index('buildrequests_slavename', buildrequests.c.slavename, unique=False)
     sa.Index('user_properties_uid', user_props.c.uid, unique=False)
     sa.Index('user_props_attrs', user_props.c.prop_type, user_props.c.prop_data)
 

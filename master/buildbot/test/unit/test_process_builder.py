@@ -87,6 +87,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
             sb.slave = mock.Mock()
             sb.slave.slave_status = mock.Mock(spec=['getName'])
             sb.slave.slave_status.getName.return_value = name
+            sb.slave.slavename = name
             sb.isAvailable.return_value = avail
             sb.prepare = lambda x, y: True
             sb.ping = lambda: True
