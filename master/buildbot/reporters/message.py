@@ -10,7 +10,7 @@ from buildbot.status.results import WARNINGS
 from buildbot.status.results import statusToString
 
 
-class MessageFormatter():
+class MessageFormatter(object):
     template_name = 'default_mail.txt'
     template_type = 'plain'
     wantProperties = True

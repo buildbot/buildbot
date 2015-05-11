@@ -74,13 +74,13 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
         buildproperties = yield defer.gatherResults(
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
-    else:
+    else:  # we still need a list for the big zip
         buildproperties = range(len(builds))
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
-    else:
+    else:  # we still need a list for the big zip
         prev_builds = range(len(builds))
 
     if wantSteps:
@@ -93,9 +93,10 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
                 for l in s['logs']:
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
-    else:
+    else:  # we still need a list for the big zip
         buildsteps = range(len(builds))
 
+    # a big zip to connect everything together
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
         build['builder'] = buildersbyid[build['builderid']]
         build['buildset'] = buildset
