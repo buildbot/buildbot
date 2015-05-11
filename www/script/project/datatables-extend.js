@@ -16,7 +16,6 @@ define(function (require) {
             dataTables.initSortNatural();
             dataTables.initBuilderStatusSort();
             dataTables.initNumberIgnoreZeroSort();
-            dataTables.initBuilderNameSort();
             dataTables.initStringIgnoreEmptySort();
 
             //Datatable Defaults
@@ -147,8 +146,11 @@ define(function (require) {
                         return a;
                     }
                     try {
-                        a = $(a).text().trim();
-                        return a;
+                        var isHTML = new RegExp("<[a-z].*>", "i");
+                        if (isHTML.test(a)) {
+                            a = $(a).text();
+                        }
+                        return a.trim();
                     } catch (err) {
                         return a;
                     }
@@ -161,65 +163,6 @@ define(function (require) {
                     return naturalSort.sort(a, b) * -1;
                 }
             });
-        },
-        initBuilderNameSort: function initBuilderNameSort() {
-            var abv = "[ABV]";
-
-            function sortABV(a, b) {
-                var aHasABV = a.indexOf(abv) !== -1;
-                var bHasABV = b.indexOf(abv) !== -1;
-
-                if (aHasABV === bHasABV) {
-                    return 0;
-                }
-                if (aHasABV) {
-                    return -1;
-                }
-                if (bHasABV) {
-                    return 1;
-                }
-
-                return 0;
-            }
-
-            var sort = function sortBuilderName(a, b, reverse) {
-                reverse = reverse ? -1 : 1;
-
-                var result = sortABV(a, b);
-                if (result !== 0) {
-                    return result * reverse;
-                }
-
-                // Remove abv tag before natural sort
-                var aMinusABV = a.replace(abv, "");
-                var bMinusABV = b.replace(abv, "");
-
-
-                return naturalSort.sort(aMinusABV, bMinusABV) * reverse;
-            };
-
-            $.extend($.fn.dataTableExt.oSort, {
-                "builder-name-pre": function (a) {
-                    if (typeof a === 'number') {
-                        return a;
-                    }
-                    try {
-                        a = $(a).text().trim();
-                        return a;
-                    } catch (err) {
-                        return a;
-                    }
-                },
-                "builder-name-asc": function (a, b) {
-                    return sort(a, b, false);
-                },
-
-                "builder-name-desc": function (a, b) {
-                    return sort(a, b, true);
-                }
-            });
-
-            return sort;
         },
         initBuilderStatusSort: function () {
             var r = helpers.cssClassesEnum,
