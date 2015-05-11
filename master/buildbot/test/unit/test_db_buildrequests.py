@@ -858,7 +858,7 @@ class TestBuildsetsConnectorComponent(
             self.assertTrue(all([br['mergebrid'] == mergebrid for br in brlist[1:]]))
 
         d.addCallback(lambda _:
-                      self.db.buildrequests.mergePendingBuildRequests([1,2,3,4], slavename="slave-01"))
+                      self.db.buildrequests.mergePendingBuildRequests([1, 2, 3, 4]))
 
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(brids=[1, 2, 3, 4]))

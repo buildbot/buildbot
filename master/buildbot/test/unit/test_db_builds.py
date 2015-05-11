@@ -113,7 +113,7 @@ class TestBuildsConnectorComponent(
         clock.advance(1302222222)
         d = self.insertTestData(self.background_data)
         d.addCallback(lambda _ :
-                self.db.builds.addBuild(brid=41, number=119, _reactor=clock))
+                self.db.builds.addBuild(brid=41, number=119, slavename="slave-01", _reactor=clock))
         def check(_):
             def thd(conn):
                 r = conn.execute(self.db.model.builds.select())

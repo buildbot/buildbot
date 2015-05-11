@@ -56,11 +56,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._bdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def addBuild(self, brid, number, _reactor=reactor):
+    def addBuild(self, brid, number, slavename, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()
             r = conn.execute(self.db.model.builds.insert(),
-                    dict(number=number, brid=brid, start_time=start_time,
+                    dict(number=number, brid=brid, slavename=slavename, start_time=start_time,
                         finish_time=None))
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
