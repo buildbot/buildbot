@@ -53,6 +53,19 @@ def uploadString(string, timestamp=None):
     return behavior
 
 
+def downloadString(memoizer, timestamp=None):
+    def behavior(command):
+        reader = command.args['reader']
+        read = reader.remote_read(1000)
+        # save what we read so we can check it
+        memoizer(read)
+        reader.remote_close()
+        if timestamp:
+            reader.remote_utime(timestamp)
+        return read
+    return behavior
+
+
 def uploadTarFile(filename, **members):
     def behavior(command):
         f = StringIO()
@@ -544,7 +557,13 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         return d
 
 
-class TestStringDownload(unittest.TestCase):
+class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
 
     # check that ConfigErrors is raised on invalid 'mode' argument
     def testModeConfError(self):
@@ -556,58 +575,84 @@ class TestStringDownload(unittest.TestCase):
             "string", "file", mode="not-a-number")
 
     def testBasic(self):
-        s = transfer.StringDownload("Hello World", "hello.txt")
-        s.build = Mock()
-        s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
 
-        s._step_status = Mock()
-        s.buildslave = Mock()
-        s.remote = Mock()
+        # A place to store what gets read
+        read = []
 
-        s.start()
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                slavedest="hello.txt", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(transfer._FileReader)))
+            + Expect.behavior(downloadString(read.append))
+            + 0)
 
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'hello.txt')
-                reader = kwargs['reader']
-                data = reader.remote_read(100)
-                self.assertEquals(data, "Hello World")
-                break
-        else:
-            self.assert_(False, "No downloadFile command found")
+        self.expectOutcome(result=SUCCESS, status_text=["downloading", "to", "hello.txt"])
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+            self.assertEquals(''.join(read), "Hello World")
+        return d
+
+    def testFailure(self):
+        self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
+
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                slavedest="hello.txt", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(transfer._FileReader)))
+            + 1)
+
+        self.expectOutcome(result=FAILURE, status_text=["downloading", "to", "hello.txt"])
+        return self.runStep()
 
 
-class TestJSONStringDownload(unittest.TestCase):
+class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
 
     def testBasic(self):
         msg = dict(message="Hello World")
-        s = transfer.JSONStringDownload(msg, "hello.json")
-        s.build = Mock()
-        s.build.getProperties.return_value = Properties()
-        s.build.getSlaveCommandVersion.return_value = 1
+        self.setupStep(transfer.JSONStringDownload(msg, "hello.json"))
 
-        s._step_status = Mock()
-        s.buildslave = Mock()
-        s.remote = Mock()
+        # A place to store what gets read
+        read = []
 
-        s.start()
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                slavedest="hello.json", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(transfer._FileReader)))
+            + Expect.behavior(downloadString(read.append))
+            + 0)
 
-        for c in s.remote.method_calls:
-            name, command, args = c
-            commandName = command[3]
-            kwargs = command[-1]
-            if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'hello.json')
-                reader = kwargs['reader']
-                data = reader.remote_read(100)
-                self.assertEquals(data, json.dumps(msg))
-                break
-        else:
-            self.assert_(False, "No downloadFile command found")
+        self.expectOutcome(result=SUCCESS, status_text=["downloading", "to", "hello.json"])
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+            self.assertEquals(''.join(read), '{"message": "Hello World"}')
+        return d
+
+    def testFailure(self):
+        msg = dict(message="Hello World")
+        self.setupStep(transfer.JSONStringDownload(msg, "hello.json"))
+
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                slavedest="hello.json", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(transfer._FileReader)))
+            + 1)
+
+        self.expectOutcome(result=FAILURE, status_text=["downloading", "to", "hello.json"])
+        return self.runStep()
 
 
 class TestJSONPropertiesDownload(unittest.TestCase):
