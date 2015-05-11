@@ -286,6 +286,10 @@ class FakeUpdates(object):
                               validation.IntValidator())
         return defer.succeed((10, 1))
 
+    def generateNewBuildEvent(self, buildid):
+        validation.verifyType(self.testcase, 'buildid', buildid,
+                              validation.IntValidator())
+        return defer.succeed(None)
     def setBuildStateString(self, buildid, state_string):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())

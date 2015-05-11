@@ -247,6 +247,7 @@ class Build(properties.PropertiesMixin):
                 buildrequestid=brid,
                 buildslaveid=slave.buildslaveid)
 
+        yield self.master.data.updates.generateNewBuildEvent(self.buildid)
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)

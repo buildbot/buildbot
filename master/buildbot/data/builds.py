@@ -146,11 +146,11 @@ class Build(base.ResourceType):
             buildslaveid=buildslaveid,
             masterid=self.master.masterid,
             state_string=u'created')
-        if res is not None:
-            _id, number = res
-            yield self.generateEvent(_id, "new")
         defer.returnValue(res)
 
+    @base.updateMethod
+    def generateNewBuildEvent(self, buildid):
+        return self.generateEvent(buildid, "new")
     @base.updateMethod
     @defer.inlineCallbacks
     def setBuildStateString(self, buildid, state_string):
