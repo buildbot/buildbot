@@ -361,7 +361,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             try:
                 buildrequests_tbl = self.db.model.buildrequests
-                builds_tbl = self.db.model.builds
                 claimed_at = self.getClaimedAtValue(_reactor)
                 self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
