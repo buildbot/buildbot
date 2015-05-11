@@ -1126,8 +1126,12 @@ class ShellMixin(object):
         kwargs['env'].update(self.env)
         kwargs['stdioLogName'] = stdioLogName
 
-        if not kwargs.get('workdir'):
-            kwargs['workdir'] = self.workdir
+        # default the workdir appropriately
+        if not kwargs.get('workdir') and not self.workdir:
+            if callable(self.build.workdir):
+                kwargs['workdir'] = self.build.workdir(self.build.sources)
+            else:
+                kwargs['workdir'] = self.build.workdir
 
         # the rest of the args go to RemoteShellCommand
         cmd = remotecommand.RemoteShellCommand(

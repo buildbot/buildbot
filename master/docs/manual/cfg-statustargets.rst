@@ -194,8 +194,18 @@ Another example of a function delivering a customized html email containing the 
                             text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
                         text.append(u'</table>')
             text.append(u'<br>')
-            # get log for last step
-            logs = build.getLogs()
+            # get all the steps in build in reversed order
+            rev_steps = reversed(build.getSteps())
+            # find the last step that finished
+            for step in rev_steps:
+                if step.isFinished():
+                    break
+            # get logs for the last finished step
+            if step.isFinished():
+                logs = step.getLogs()
+            # No step finished, loop just exhausted itself; so as a special case we fetch all logs
+            else:
+                logs = build.getLogs()
             # logs within a step are in reverse order. Search back until we find stdio
             for log in reversed(logs):
                 if log.getName() == 'stdio':
@@ -845,6 +855,10 @@ In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty
 
 You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
 
+Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional parameter -- ``baseURL`` -- that allows to specify a different API base endpoint.
+This is required if you work with GitHub Enterprise installation.
+This feature requires ``txgithub`` of version 0.2.0 or better.
+
 StashStatusPush
 ~~~~~~~~~~~~~~~
 
@@ -912,39 +926,94 @@ The ``base`` dialect must be enabled for this to work.
 GitHub hook
 +++++++++++
 
-The GitHub hook is simple and takes no options.
+.. note::
 
-::
+   There is a standalone HTTP server available for receiving GitHub notifications as well: :file:`contrib/github_buildbot.py`.
+   This script may be useful in cases where you cannot expose the WebStatus for public consumption.
+
+The GitHub hook has the following parameters:
+
+``secret`` (default `None`)
+    Secret token to use to validate payloads
+``strict`` (default `False`)
+    If the hook must be strict regarding valid payloads.
+    If the value is `False` (default), the signature will only be checked if a secret is specified and a signature was supplied with the payload.
+    If the value is `True`, a secret must be provided, and payloads without signature will be ignored.
+``codebase`` (default `None`)
+    The codebase value to include with created changes.
+    If the value is a function (or any other callable), it will be called with the GitHub event payload as argument and the function must return the codebase value to use for the event.
+``class`` (default `None`)
+    A class to be used for processing incoming payloads.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
+    The default class handles `ping`, `push` and `pull_request` events only.
+    If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass `GitHubEventHandler` and add handler methods for the corresponding events.
+    For example, if you'd like to handle `blah` events, your code should look something like this::
+
+        from buildbot.status.web.hooks.github import GitHubEventHandler
+
+        class MyBlahHandler(GitHubEventHandler):
+
+            def handle_blah(self, payload):
+                # Do some magic here
+                return [], 'git'
+
+The simples way to use GitHub hook is as follows:
+
+.. code-block:: python
 
     c['status'].append(html.WebStatus(...,
-                       change_hook_dialects={ 'github' : True }))
+                                      change_hook_dialects={'github': {}},
+                                      ...))
 
-With this set up, add a Post-Receive URL for the project in the GitHub administrative interface, pointing to ``/change_hook/github`` relative to the root of the web status.
-For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
-To specify a project associated to the repository, append ``?project=name`` to the URL.
+Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
+The parameters are:
 
-Note that there is a standalone HTTP server available for receiving GitHub notifications, as well: :file:`contrib/github_buildbot.py`.
-This script may be useful in cases where you cannot expose the WebStatus for public consumption.
+:guilabel:`Payload URL`
+    This URL should point to ``/change_hook/github`` relative to the root of the web status.
+    For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
+    To specify a project associated to the repository, append ``?project=name`` to the URL.
+
+:guilabel:`Content Type`
+    Specify ``application/x-www-form-urlencoded``.  JSON is not currently not supported.
+
+:guilabel:`Secret`
+    Any value.
+    If you provide a non-empty value (recommended), make sure that your hook is configured to use it::
+
+        c['status'].append(status.WebStatus(...,
+                                            change_hook_dialects={
+                                                'github': {
+                                                    'secret': 'MY-SECRET',
+                                                    'strict': True
+                                                }
+                                            },
+                                            ...))
+
+:guilabel:`Which events would you like to trigger this webhook?`
+    Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
+
+And then press the ``Add Webhook`` button.
 
 .. warning::
 
-    The incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
+   The incoming HTTP requests for this hook are not authenticated by default.
+   If you do not specify a secret, anyone who can access the web status can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option::
+To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option::
 
     c['status'].append(html.WebStatus(...,
-                                      change_hook_auth=["file:changehook.passwd"]))
+                                      change_hook_auth=["file:changehook.passwd"],
+                                      ...))
 
-And create a file ``changehook.passwd``
+create a file ``changehook.passwd``:
 
 .. code-block:: none
 
     user:password
 
-Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/github``.
+and change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
 
-See the `documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for twisted cred for more option to pass to ``change_hook_auth``.
+See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
 
 Note that not using ``change_hook_auth`` can expose you to security risks.
 

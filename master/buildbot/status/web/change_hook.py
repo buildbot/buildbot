@@ -92,7 +92,9 @@ class ChangeHookResource(resource.Resource):
             log.err(why, "adding changes from web hook")
             request.setResponseCode(500)
             request.finish()
+
         d.addCallbacks(ok, err)
+
         return server.NOT_DONE_YET
 
     def getChanges(self, request):
@@ -123,7 +125,7 @@ class ChangeHookResource(resource.Resource):
         else:
             dialect = 'base'
 
-        if dialect in self.dialects.keys():
+        if dialect in self.dialects:
             log.msg("Attempting to load module buildbot.status.web.hooks." + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes, src = tempModule.getChanges(request, self.dialects[dialect])

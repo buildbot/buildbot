@@ -13,9 +13,69 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.web.hooks.github import process_change
+import re
+
 from buildbot.util import json
+from dateutil.parser import parse as dateparse
 from twisted.python import log
+
+
+def _process_change(payload, user, repo, repo_url, project, codebase=None):
+    """
+    Consumes the JSON as a python object and actually starts the build.
+
+    :arguments:
+        payload
+            Python Object that represents the JSON sent by GitHub Service
+            Hook.
+    """
+    changes = []
+    refname = payload['ref']
+
+    # We only care about regular heads, i.e. branches
+    match = re.match(r"^refs\/heads\/(.+)$", refname)
+    if not match:
+        log.msg("Ignoring refname `%s': Not a branch" % refname)
+        return changes
+
+    branch = match.group(1)
+    if payload.get('deleted'):
+        log.msg("Branch `%s' deleted, ignoring" % branch)
+        return changes
+
+    for commit in payload['commits']:
+        if not commit.get('distinct', True):
+            log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
+                    (commit['id'],))
+            continue
+
+        files = []
+        for kind in ('added', 'modified', 'removed'):
+            files.extend(commit.get(kind, []))
+
+        when_timestamp = dateparse(commit['timestamp'])
+
+        log.msg("New revision: %s" % commit['id'][:8])
+
+        change = {
+            'author': '%s <%s>' % (commit['author']['name'],
+                                   commit['author']['email']),
+            'files': files,
+            'comments': commit['message'],
+            'revision': commit['id'],
+            'when_timestamp': when_timestamp,
+            'branch': branch,
+            'revlink': commit['url'],
+            'repository': repo_url,
+            'project': project
+        }
+
+        if codebase is not None:
+            change['codebase'] = codebase
+
+        changes.append(change)
+
+    return changes
 
 
 def getChanges(request, options=None):
@@ -39,6 +99,6 @@ def getChanges(request, options=None):
         codebase = codebase[0]
     # This field is unused:
     # private = payload['repository']['private']
-    changes = process_change(payload, user, repo, repo_url, project, codebase=codebase)
+    changes = _process_change(payload, user, repo, repo_url, project, codebase=codebase)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')

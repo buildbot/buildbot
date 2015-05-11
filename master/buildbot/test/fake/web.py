@@ -38,6 +38,7 @@ class FakeRequest(Mock):
 
         if args is None:
             args = {}
+
         self.args = args
         self.content = StringIO(content)
         self.site = Mock()

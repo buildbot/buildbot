@@ -335,7 +335,8 @@ class BuilderStatus(styles.Versioned):
         self.tags = tags
 
     def matchesAnyTag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
+        # Need to guard against None with the "or []".
+        return bool(set(self.tags or []) & set(tags))
 
     def getBuildByRevision(self, rev):
         number = self.nextBuildNumber - 1

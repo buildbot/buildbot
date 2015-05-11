@@ -111,6 +111,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
 
+* :bb:status:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+
 Fixes
 ~~~~~
 
