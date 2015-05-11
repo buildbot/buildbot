@@ -122,15 +122,20 @@ define(function (require) {
                 options.sDom = sDom;
             }
 
+            if (options.iFilterCol !== undefined) {
+                $.each(options.aoColumns, function (i, col) {
+                    if (i !== options.iFilterCol) {
+                        col.searchable = false;
+                    }
+                })
+
+            }
+
             //initialize datatable with options
             var oTable = $tableElem.dataTable(options);
 
             // Set the marquee in the input field on load
             $('.dataTables_filter input').attr('placeholder', 'Filter results');
-
-            if (options.iFilterCol !== undefined) {
-                dataTables.initSingleColumnFilter(options.iFilterCol);
-            }
 
             return oTable;
         },
@@ -321,30 +326,6 @@ define(function (require) {
             };
 
             $.extend($.fn.dataTableExt.oSort, sortDict);
-        },
-        initSingleColumnFilter: function initSingleColumnFilter(index) {
-            $.fn.dataTableExt.afnFiltering.push(
-                function filter(oSettings, aData, iDataIndex) {
-                    var f = oSettings.oPreviousSearch.sSearch;
-                    if (f !== undefined && f.length > 0) {
-                        var regex = new RegExp($.fn.dataTable.util.escapeRegex(f), "i"),
-                            text = aData[index];
-
-                        try {
-                            var parse = $(aData[index]).text();
-
-                            // Make sure we got a return
-                            if (parse.length) {
-                                text = parse;
-                            }
-
-                        } catch (ignore) {}
-
-                        return text.search(regex) > -1;
-                    }
-                    return true;
-                }
-            );
         }
     };
 
