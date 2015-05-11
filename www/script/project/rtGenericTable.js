@@ -139,6 +139,9 @@ define(function (require) {
                         full = $.extend({}, full, {url: full.builder_url});
                         full.friendly_name = full.builderFriendlyName;
                     }
+                    if (type === "sort" || type === "filter") {
+                        return full.friendly_name;
+                    }
                     return hb.partials.cells["cells:builderName"](full);
                 }
             };
