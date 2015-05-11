@@ -22,6 +22,7 @@ from twisted.web.resource import Resource, NoResource
 
 from buildbot import interfaces, version
 from buildbot.status import logfile
+from buildbot.status.logfile import HTMLLogFile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, ContextMixin, \
     path_to_codebases, path_to_build, path_to_builder, path_to_builders
 from buildbot.status.web.xmltestresults import XMLTestResource
@@ -209,7 +210,7 @@ class LogsResource(HtmlResource):
             if path == log.getName():
                 if log.hasContents():
                     content = log.getText()
-                    if  ('xml-stylesheet' in content or 'nosetests' in content):
+                    if isinstance(log, HTMLLogFile) and ('xml-stylesheet' in content or 'nosetests' in content):
                         return XMLTestResource(log, self.step_status)
                     else:
                         return IHTMLLog(interfaces.IStatusLog(log))
