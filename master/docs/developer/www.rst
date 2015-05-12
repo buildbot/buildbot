@@ -773,9 +773,9 @@ Testing with real data
 ~~~~~~~~~~~~~~~~~~~~~~
 Front-end only hackers might want to just skip the master and slave setup, and just focus on the UI.
 It can also be very useful to just try the UI with real data from your production.
-For those use-cases, api_proxy.py can be used.
+For those use-cases, ``gulp dev proxy`` can be used.
 
-This tools is a small flask app that can proxy the data and sse api from a production server to your development environment.
+This tool is a small nodejs app integrated in the gulp build that can proxy the data and websocket api from a production server to your development environment.
 Having a proxy is slightly slower, but this can be very useful for testing with real complex data.
 
 You still need to have python virtualenv configured with master package installed, like we described in previous paragraph.
@@ -784,15 +784,10 @@ Provided you run it in a buildbot master virtualenv, the following command will 
 
 .. code-block:: none
 
-    python buildbot/master/contrib/api_proxy.py --dest_buildbot http://nine.buildbot.net
+    gulp dev proxy --host nine.buildbot.net
 
 You can then just point your browser to localhost:8010, and you will access nine.buildbot.net, with your own version of the UI.
 
-Please use following command for a list of options:
-
-.. code-block:: none
-
-    python buildbot/master/contrib/api_proxy.py --help
 
 Guanlecoja
 ----------
