@@ -1400,7 +1400,7 @@ Here is an example on how to drive compilation with Visual Studio 2013::
     f.addStep(
         steps.VS2013(projectfile="project.sln", config="release",
             arch="x64", mode="build",
-               INCLUDE=[r'C:\3rd-pary\libmagic\include'],
+               INCLUDE=[r'C:\3rd-party\libmagic\include'],
                LIB=[r'C:\3rd-party\libmagic\lib-x64']))
 
 Here is a similar example using "MsBuild12"::
