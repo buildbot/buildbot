@@ -19,11 +19,14 @@ import os
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import www
 from buildbot.www import auth
+from buildbot.www import change_hook
 from buildbot.www import resource
 from buildbot.www import rest
 from buildbot.www import service
+from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
+from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 
 
 class NeedsReconfigResource(resource.Resource):
@@ -127,3 +130,42 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         req = mock.Mock()
         self.assertIsInstance(root.getChildWithDefault('api', req),
                               rest.RestRootResource)
+
+    def test_setupSiteWithProtectedHook(self):
+        checker = InMemoryUsernamePasswordDatabaseDontUse()
+        checker.addUser("guest", "password")
+
+        self.svc.setupSite(self.makeConfig(
+            change_hook_dialects={'base': True},
+            change_hook_auth=[checker]))
+        site = self.svc.site
+
+        # check that it has the right kind of resources attached to its
+        # root
+        root = site.resource
+        req = mock.Mock()
+        self.assertIsInstance(root.getChildWithDefault('change_hook', req),
+                              HTTPAuthSessionWrapper)
+
+    @defer.inlineCallbacks
+    def test_setupSiteWithHook(self):
+        new_config = self.makeConfig(
+            change_hook_dialects={'base': True})
+        self.svc.setupSite(new_config)
+        site = self.svc.site
+
+        # check that it has the right kind of resources attached to its
+        # root
+        root = site.resource
+        req = mock.Mock()
+        ep = root.getChildWithDefault('change_hook', req)
+        self.assertIsInstance(ep,
+                              change_hook.ChangeHookResource)
+
+        # not yet configured
+        self.assertEqual(ep.dialects, {})
+
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+
+        # now configured
+        self.assertEqual(ep.dialects, {'base': True})

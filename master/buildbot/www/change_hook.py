@@ -20,10 +20,10 @@
 
 import re
 
+from buildbot.www import resource
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
-from twisted.web import resource
 from twisted.web import server
 
 
@@ -31,20 +31,24 @@ class ChangeHookResource(resource.Resource):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
     children = {}
+    needsReconfig = True
 
-    def __init__(self, dialects=None):
+    def __init__(self, dialects=None, master=None):
         """
         The keys of 'dialects' select a modules to load under
-        master/buildbot/status/web/hooks/
+        master/buildbot/www/hooks/
         The value is passed to the module's getChanges function, providing
         configuration options to the dialect.
         """
-        resource.Resource.__init__(self)
+        resource.Resource.__init__(self, master)
 
         if dialects is None:
             dialects = {}
         self.dialects = dialects
         self.request_dialect = None
+
+    def reconfigResource(self, new_config):
+        self.dialects = new_config.www.get('change_hook_dialects', {})
 
     def getChild(self, name, request):
         return self
@@ -100,7 +104,7 @@ class ChangeHookResource(resource.Resource):
         Take the logic from the change hook, and then delegate it
         to the proper handler
         http://localhost/change_hook/DIALECT will load up
-        buildmaster/status/web/hooks/DIALECT.py
+        buildmaster/hooks/DIALECT.py
 
         and call getChanges()
 
@@ -124,8 +128,8 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
 
         if dialect in self.dialects.keys():
-            log.msg("Attempting to load module buildbot.status.web.hooks." + dialect)
-            tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
+            log.msg("Attempting to load module buildbot.www.hooks." + dialect)
+            tempModule = namedModule('buildbot.www.hooks.' + dialect)
             changes, src = tempModule.getChanges(request, self.dialects[dialect])
             log.msg("Got the following changes %s" % changes)
             self.request_dialect = dialect
@@ -139,7 +143,6 @@ class ChangeHookResource(resource.Resource):
 
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
-        master = request.site.buildbot_service.master
         for chdict in changes:
-            change = yield master.addChange(src=src, **chdict)
+            change = yield self.master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

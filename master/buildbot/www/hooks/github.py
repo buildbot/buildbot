@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 import logging
+import re
 
 from dateutil.parser import parse as dateparse
 from twisted.python import log

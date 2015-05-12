@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.web.hooks.github import process_change
 from buildbot.util import json
+from buildbot.www.hooks.github import process_change
 from twisted.python import log
 
 
@@ -39,6 +39,7 @@ def getChanges(request, options=None):
         codebase = codebase[0]
     # This field is unused:
     # private = payload['repository']['private']
-    changes = process_change(payload, user, repo, repo_url, project, codebase=codebase)
+    changes = process_change(
+        payload, user, repo, repo_url, project, codebase=codebase)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')

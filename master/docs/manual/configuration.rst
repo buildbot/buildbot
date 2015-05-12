@@ -24,5 +24,6 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-interlocks
     cfg-statustargets
     cfg-www
+    cfg-wwwhooks
     cfg-services
     cfg-dbconfig

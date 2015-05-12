@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import buildbot.status.web.change_hook as change_hook
+import buildbot.www.change_hook as change_hook
 import calendar
 import mock
 
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -68,11 +69,11 @@ gitJsonPayload = """
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'gitlab': True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'gitlab': True}, master=fakeMasterForHooks())
 
     def check_changes(self, r, project='', codebase=None):
-        self.assertEquals(len(self.request.addedChanges), 2)
-        change = self.request.addedChanges[0]
+        self.assertEquals(len(self.changeHook.master.addedChanges), 2)
+        change = self.changeHook.master.addedChanges[0]
 
         self.assertEquals(change["repository"], "git@localhost:diaspora.git")
         self.assertEquals(
@@ -85,7 +86,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEquals(change["branch"], "master")
         self.assertEquals(change["revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
-        change = self.request.addedChanges[1]
+        change = self.changeHook.master.addedChanges[1]
         self.assertEquals(change["repository"], "git@localhost:diaspora.git")
         self.assertEquals(
             calendar.timegm(change["when_timestamp"].utctimetuple()),
@@ -136,7 +137,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
             self.assertIn("Error loading JSON:", self.request.written)
             self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
