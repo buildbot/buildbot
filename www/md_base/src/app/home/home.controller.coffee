@@ -1,4 +1,6 @@
 class Home extends Controller
-
-    constructor: () ->
-    
+    title: ''
+    titleURL: ''
+    constructor: (config) ->
+        @title = config.title
+        @titleURL = config.titleURL
