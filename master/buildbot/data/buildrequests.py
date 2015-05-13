@@ -86,9 +86,10 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
 
             # Don't call the data API here, as the buildrequests might have been
             # taken by another master. We just send the stop message and forget about those.
+            mqKwargs = {'reason': kwargs.get('reason', 'no reason')}
             for b in builds:
                 self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
-                                       dict(reason=kwargs.get('reason')))
+                                       mqKwargs)
             defer.returnValue(None)
 
         # then complete it with 'CANCELLED'; this is the closest we can get to
