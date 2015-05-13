@@ -1118,7 +1118,7 @@ class FakeBuildsComponent(FakeDBComponent):
             start_time=epoch2datetime(row.start_time),
             finish_time=epoch2datetime(row.finish_time)))
 
-    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
+    def getLastBuildsNumbers(self, buildername=None, slavename=None, sourcestamps=None, num_builds=1):
         return defer.succeed([])
     
     def getBuildsForRequest(self, brid):

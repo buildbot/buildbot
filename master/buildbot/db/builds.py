@@ -105,7 +105,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
+    def getLastBuildsNumbers(self, buildername=None, slavename=None, sourcestamps=None, num_builds=1):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
@@ -116,13 +116,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             lastBuilds = []
             maxSearch = num_builds if num_builds < 200 else 200
 
-            q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
+            q = sa.select(columns=[builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
-                                                          & (builds_tbl.c.finish_time != None)))\
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
-            if sourcestamps and len(sourcestamps) > 0:
+            if slavename:
+                q = q.where(builds_tbl.c.slavename == slavename)
+
+            if not slavename and sourcestamps and len(sourcestamps) > 0:
                 # check that sourcestampset match all branches x codebases
                 clauses = []
                 exclude_clauses = []
@@ -157,7 +161,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                     q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
 
-            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+            q = q.distinct(builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
             res = conn.execute(q)
 

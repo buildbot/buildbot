@@ -426,7 +426,7 @@ class BuilderStatus(styles.Versioned):
             for ss in build.getSourceStamps() ])
 
     @defer.inlineCallbacks
-    def generateBuildNumbers(self, codebases, num_builds):
+    def generateBuildNumbers(self, codebases, slavename, num_builds):
         sourcestamps = []
 
         if codebases:
@@ -440,6 +440,7 @@ class BuilderStatus(styles.Versioned):
             retries = num_builds + 9
 
         lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
+                                                                             slavename=slavename,
                                                                              sourcestamps=sourcestamps,
                                                                              num_builds=retries)
 
@@ -461,14 +462,12 @@ class BuilderStatus(styles.Versioned):
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
                                num_builds=None,
-                               max_search=None,
                                results=None,
                                slavename=None,
                                useCache=False):
 
         build = None
         finishedBuilds = []
-        max_search = max_search if max_search is not None else num_builds
         branches = set(branches)
 
         key = self.getLatestBuildKey(codebases)
@@ -480,7 +479,7 @@ class BuilderStatus(styles.Versioned):
             defer.returnValue(finishedBuilds)
             return
 
-        buildNumbers = yield self.generateBuildNumbers(codebases, max_search)
+        buildNumbers = yield self.generateBuildNumbers(codebases, slavename, num_builds)
 
         for bn in buildNumbers:
             build = yield threads.deferToThread(self.getBuild, bn)
@@ -500,7 +499,7 @@ class BuilderStatus(styles.Versioned):
 
             finishedBuilds.append(build)
 
-            if num_builds == 1 or (max_search > num_builds and len(finishedBuilds) == num_builds):
+            if num_builds == 1:
                 break
 
         if key and useCache and num_builds == 1:

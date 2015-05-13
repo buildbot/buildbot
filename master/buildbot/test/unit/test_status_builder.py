@@ -28,7 +28,8 @@ class TestBuilderStatus(unittest.TestCase):
         self.master.getProject = lambda x: self.project
         self.getProjects = lambda: {'Katana': self.project}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: defer.succeed([38])
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+            defer.succeed([38])
 
         self.builder_status = builder.BuilderStatus(buildername="builder-01", category=None,
                                     master=self.master)
@@ -63,7 +64,7 @@ class TestBuilderStatus(unittest.TestCase):
 
         builds = yield self.builder_status.generateFinishedBuildsAsync(branches=[],
                                                                        codebases=codebases,
-                                                                       num_builds=1, max_search=200,
+                                                                       num_builds=1,
                                                                        useCache=True)
 
         self.assertTrue(len(builds) > 0)
@@ -80,7 +81,6 @@ class TestBuilderStatus(unittest.TestCase):
         builds = yield self.builder_status.generateFinishedBuildsAsync(branches=[],
                                                                        codebases=codebases,
                                                                        num_builds=1,
-                                                                       max_search=200,
                                                                        useCache=True)
 
         self.assertTrue('katana-buildbot=katana;' in self.builder_status.latestBuildCache.keys())
@@ -110,7 +110,8 @@ class TestBuilderStatus(unittest.TestCase):
 
         codebases = {'codebase1': 'branch1', 'codebase2': 'branch2'}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: defer.succeed([])
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+            defer.succeed([])
 
         self.assertEqual(self.builder_status.latestBuildCache, {})
 
@@ -137,7 +138,8 @@ class TestBuilderStatus(unittest.TestCase):
         self.multipleCodebasesProject()
         codebases = {'codebase1': 'branch1', 'codebase2': 'branch2'}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: defer.succeed([])
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+            defer.succeed([])
 
         self.assertEqual(self.builder_status.latestBuildCache, {})
 

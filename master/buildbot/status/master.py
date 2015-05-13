@@ -328,7 +328,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         all_builds = []
         for bn in builder_names:
             b = self.getBuilder(bn)
-            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds, max_search=200,
+            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds,
                                                                   results=results, slavename=slavename)
             all_builds.extend(finished_builds)
 
