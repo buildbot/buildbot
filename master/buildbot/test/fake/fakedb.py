@@ -1147,7 +1147,7 @@ class FakeBuildsComponent(FakeDBComponent):
 
         return defer.succeed(ret)
 
-    def addBuild(self, brid, number, slavename,_reactor=reactor):
+    def addBuild(self, brid, number, slavename=None,_reactor=reactor):
         bid = self._newId()
         self.builds[bid] = Build(id=bid, number=number, brid=brid, slavename=slavename,
                 start_time=_reactor.seconds, finish_time=None)
