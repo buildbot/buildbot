@@ -189,7 +189,14 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                                         state_string=u'created'))
 
     def test_newBuildEvent(self):
-        return self.do_test_event(self.rtype.addBuild,
+
+        @defer.inlineCallbacks
+        def addBuild(*args, **kwargs):
+            buildid, _ = yield self.rtype.addBuild(*args, **kwargs)
+            yield self.rtype.generateNewBuildEvent(buildid)
+            defer.returnValue(None)
+
+        return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event)])

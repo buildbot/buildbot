@@ -319,7 +319,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.statistics = {}
         self.logs = {}
         self._running = False
-
+        self.stepid = None
         self._start_unhandled_deferreds = None
 
     def __new__(klass, *args, **kwargs):
@@ -415,8 +415,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not isinstance(stepResult, unicode):
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
-        yield self.master.data.updates.setStepStateString(self.stepid,
-                                                          stepResult)
+        if self.stepid is not None:
+            yield self.master.data.updates.setStepStateString(self.stepid,
+                                                              stepResult)
 
         if not self._running:
             buildResult = summary.get('build', None)
