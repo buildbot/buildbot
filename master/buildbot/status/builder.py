@@ -186,6 +186,9 @@ class BuilderStatus(styles.Versioned):
 
         filename = os.path.join(self.basedir, "builder")
         tmpfilename = filename + ".tmp"
+
+        if os.path.exists(tmpfilename):
+            return
         try:
             with open(tmpfilename, "wb") as f:
                 dump(self, f, -1)
@@ -193,7 +196,9 @@ class BuilderStatus(styles.Versioned):
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)
-            os.rename(tmpfilename, filename)
+
+            if os.path.exists(tmpfilename):
+                os.rename(tmpfilename, filename)
         except:
             log.msg("unable to save builder %s" % self.name)
             log.err()

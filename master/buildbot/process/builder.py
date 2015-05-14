@@ -381,7 +381,7 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs)
+        self.master.status.build_started(main_br.id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world
