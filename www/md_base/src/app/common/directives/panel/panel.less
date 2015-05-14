@@ -1,0 +1,33 @@
+panel {
+  display: block;
+  width: 100%;
+  padding: 5px;
+
+  .inner-container {
+    background: #fff;
+    border-radius: 3px;
+    padding: 10px;
+  }
+
+  .title {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 16px;
+    color: #999;
+    cursor: move;
+    line-height: 36px;
+  }
+
+  .content {
+    min-height: 100px;
+    overflow-y: scroll;
+  }
+
+  &.collapsed {
+    width: 50%;
+
+    .content {
+      height: 300px;
+    }
+  }
+}

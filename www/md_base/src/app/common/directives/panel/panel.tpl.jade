@@ -1,0 +1,9 @@
+div.inner-container
+  div.title-bar(layout="row")
+    div.title(flex) {{ panel.title }}
+    div.buttons
+      md-button(ng-click="panel.toggleCollapse()")
+        md-icon(md-svg-icon="expand-panel", ng-show="panel.isCollapsed")
+        md-icon(md-svg-icon="collapse-panel", ng-show="!panel.isCollapsed")
+  div.content(ng-transclude="ng-transclude")
+

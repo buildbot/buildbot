@@ -1,10 +1,7 @@
 div.project-info(layout="row")
   h1(flex) {{ home.title }}
   md-button.md-raised.md-primary(ng-href="{{ home.titleURL }}") Homepage
-div.dashboard(ng-sortable="{animation: 150}")
-  section.card
-    h1 card 1
-  section.card
-    h1 card 2
-  section.card
-    h1 card 3
+div.dashboard(ng-sortable="{animation: 150, handle:'.title'}")
+  panel(title="overview")
+  panel(title="current")
+  panel(title="recently")
