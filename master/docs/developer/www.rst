@@ -700,21 +700,21 @@ Prerequisites
 
 * Install latest release of node.js.
 
-    http://nodejs.org/ is a good start for windows and osx.
+  http://nodejs.org/ is a good start for windows and osx.
 
-    For linux, as node.js is evolving very fast, distros versions are often too old. For ubuntu, for example, you want to use following ppa:
+  For linux, as node.js is evolving very fast, distros versions are often too old. For ubuntu, for example, you want to use following ppa:
 
-    .. code-block:: none
+  .. code-block:: none
 
-        sudo add-apt-repository -y ppa:chris-lea/node.js
+    sudo add-apt-repository -y ppa:chris-lea/node.js
 
-    Please feel free to update this documentation for other distros.
+  Please feel free to update this documentation for other distros.
 
 * Install gulp globally. Gulp is the build system used for coffeescript development.
 
-    .. code-block:: none
+  .. code-block:: none
 
-        sudo npm install -g gulp
+    sudo npm install -g gulp
 
 Hacking the Buildbot JavaScript
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
