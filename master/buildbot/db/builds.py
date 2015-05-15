@@ -105,7 +105,42 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getLastBuildsNumbers(self, buildername=None, slavename=None, sourcestamps=None, num_builds=1):
+    def getLastsBuildsNumbersBySlave(self, slavename, num_builds=1):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            lastBuilds = {}
+            maxSearch = num_builds if num_builds < 200 else 200
+
+            q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
+                .where(builds_tbl.c.slavename == slavename)
+            q = q.distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+
+            res = conn.execute(q)
+
+            rows = res.fetchall()
+            if rows:
+                for row in rows:
+                    if row.buildername not in lastBuilds.keys():
+                        lastBuilds[row.buildername] = [row.number]
+                    else:
+                        lastBuilds[row.buildername].append(row.number)
+
+            res.close()
+
+            return lastBuilds
+
+        return self.db.pool.do(thd)
+
+
+
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
@@ -123,10 +158,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 where(buildrequests_tbl.c.mergebrid == None)\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
-            if slavename:
-                q = q.where(builds_tbl.c.slavename == slavename)
-
-            if not slavename and sourcestamps and len(sourcestamps) > 0:
+            if sourcestamps and len(sourcestamps) > 0:
                 # check that sourcestampset match all branches x codebases
                 clauses = []
                 exclude_clauses = []

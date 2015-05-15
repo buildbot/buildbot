@@ -28,7 +28,7 @@ class TestBuilderStatus(unittest.TestCase):
         self.master.getProject = lambda x: self.project
         self.getProjects = lambda: {'Katana': self.project}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: \
             defer.succeed([38])
 
         self.builder_status = builder.BuilderStatus(buildername="builder-01", category=None,
@@ -110,7 +110,7 @@ class TestBuilderStatus(unittest.TestCase):
 
         codebases = {'codebase1': 'branch1', 'codebase2': 'branch2'}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: \
             defer.succeed([])
 
         self.assertEqual(self.builder_status.latestBuildCache, {})
@@ -138,7 +138,7 @@ class TestBuilderStatus(unittest.TestCase):
         self.multipleCodebasesProject()
         codebases = {'codebase1': 'branch1', 'codebase2': 'branch2'}
 
-        self.master.db.builds.getLastBuildsNumbers = lambda buildername, slavename, sourcestamps, num_builds: \
+        self.master.db.builds.getLastBuildsNumbers = lambda buildername, sourcestamps, num_builds: \
             defer.succeed([])
 
         self.assertEqual(self.builder_status.latestBuildCache, {})

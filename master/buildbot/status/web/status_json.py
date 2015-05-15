@@ -552,15 +552,7 @@ class PastBuildsJsonResource(JsonResource):
         if self.slave_status is not None:
             slavename = self.slave_status.getName()
 
-            my_builders = []
-            for bname in self.status.getBuilderNames():
-                b = self.status.getBuilder(bname)
-                for bs in b.getSlaves():
-                    if bs.getName() == slavename:
-                        my_builders.append(b)
-
-            builds = yield self.status.generateFinishedBuildsAsync(builders=[b.getName() for b in my_builders],
-                                                                   num_builds=self.number, results=results,
+            builds = yield self.status.generateFinishedBuildsAsync(num_builds=self.number, results=results,
                                                                    slavename=slavename)
 
             defer.returnValue([rb.asDict(request=request) for rb in builds])

@@ -319,7 +319,10 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         return builder_names
 
     @defer.inlineCallbacks
-    def generateFinishedBuildsAsync(self, builders=[], num_builds=15, results=None, slavename=None):
+    def generateFinishedBuildsAsync(self, num_builds=15, results=None, slavename=None):
+
+        lastBuilds = yield self.master.db.builds.getLastsBuildsNumbersBySlave(slavename, num_builds)
+        builders = lastBuilds.keys()
 
         builder_names = []
         if builders:
@@ -328,12 +331,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         all_builds = []
         for bn in builder_names:
             b = self.getBuilder(bn)
-            finished_builds = yield b.generateFinishedBuildsAsync(num_builds=num_builds,
-                                                                  results=results, slavename=slavename)
+            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=sorted(lastBuilds[bn], reverse=True),
+                                                                  results=results)
             all_builds.extend(finished_builds)
 
         sorted_builds = sorted(all_builds, key=lambda build: build.started, reverse=True)
-        defer.returnValue(sorted_builds[:num_builds])
+        defer.returnValue(sorted_builds)
 
     def generateFinishedBuilds(self, builders=[], branches=[],
                                num_builds=None, finished_before=None,

@@ -431,7 +431,7 @@ class BuilderStatus(styles.Versioned):
             for ss in build.getSourceStamps() ])
 
     @defer.inlineCallbacks
-    def generateBuildNumbers(self, codebases, slavename, num_builds):
+    def generateBuildNumbers(self, codebases, num_builds):
         sourcestamps = []
 
         if codebases:
@@ -445,7 +445,6 @@ class BuilderStatus(styles.Versioned):
             retries = num_builds + 9
 
         lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
-                                                                             slavename=slavename,
                                                                              sourcestamps=sourcestamps,
                                                                              num_builds=retries)
 
@@ -465,10 +464,23 @@ class BuilderStatus(styles.Versioned):
         return key and useCache and num_builds == 1 and key in self.latestBuildCache
 
     @defer.inlineCallbacks
+    def getFinishedBuildsByNumbers(self, buildnumbers=[], results=None):
+        finishedBuilds = []
+        for bn in buildnumbers:
+            build = yield threads.deferToThread(self.getBuild, bn)
+            if build:
+                if results is not None and build.getResults() not in results:
+                    continue
+
+                finishedBuilds.append(build)
+
+        defer.returnValue(finishedBuilds)
+
+
+    @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
                                num_builds=None,
                                results=None,
-                               slavename=None,
                                useCache=False):
 
         build = None
@@ -484,7 +496,7 @@ class BuilderStatus(styles.Versioned):
             defer.returnValue(finishedBuilds)
             return
 
-        buildNumbers = yield self.generateBuildNumbers(codebases, slavename, num_builds)
+        buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
 
         for bn in buildNumbers:
             build = yield threads.deferToThread(self.getBuild, bn)
@@ -497,9 +509,6 @@ class BuilderStatus(styles.Versioned):
                     continue
 
             if branches and not branches & self._getBuildBranches(build):
-                continue
-
-            if slavename and build.getSlavename() != slavename:
                 continue
 
             finishedBuilds.append(build)
