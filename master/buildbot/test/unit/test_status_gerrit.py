@@ -172,6 +172,7 @@ class TestGerritStatusPush(unittest.TestCase):
             for i in xrange(len(buildResults)):
                 info.append({'name': "Builder-%d" % i, 'result': buildResults[i],
                              'resultText': resultText[i], 'text': 'buildText',
+                             'build': buildpairs[i][1],
                              'url': self.THING_URL})
             return str(info)
         return d
