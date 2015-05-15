@@ -19,7 +19,7 @@ config =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www/static'
-        
+
 
 
     ### ###########################################################################################
@@ -67,7 +67,7 @@ config =
             restangular:
                 version: "~1.4.0"
                 files: 'dist/restangular.js'
-                
+
         testdeps:
             "angular-mocks":
                 version: "~1.3.15"
@@ -97,7 +97,7 @@ gulp.task 'proxy', ['processindex'], ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
     argv = require('minimist')(process.argv)
     argv.host?= 'nine.buildbot.net'
-    argv.port?= 8020
+    argv.port?= 8080
 
     fs = require 'fs'
     path = require 'path'
@@ -114,8 +114,6 @@ gulp.task 'proxy', ['processindex'], ->
     server = http.createServer (req, res) ->
         if req.url.match /^\/(api|sse)/
             proxy.web req, res, {target: 'http://' + argv.host}
-        else if req.url.match /^\/ws/
-            proxy.ws req, res, {target: 'ws://' + argv.host}
         else
             filepath = config.dir.build + req.url.split('?')[0]
             if fs.existsSync(filepath) and fs.lstatSync(filepath).isDirectory()
@@ -127,6 +125,8 @@ gulp.task 'proxy', ['processindex'], ->
                 else
                     res.writeHead(200)
                     res.end(data)
+    server.on 'upgrade',  (req, socket, head) ->
+        proxy.ws req, socket, {target: 'ws://' + argv.host}
 
     server.listen parseInt(argv.port)
     console.log "[Proxy] server listening on port #{argv.port}"
