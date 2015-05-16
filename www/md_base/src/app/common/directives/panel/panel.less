@@ -23,11 +23,21 @@ panel {
     overflow-y: scroll;
   }
 
-  &.collapsed {
-    width: 50%;
+  @media (min-width: 640px) {
+    &.collapsed {
+      width: 50%;
 
-    .content {
+      .content {
+        height: 250px;
+      }
+    }
+  }
+
+  @media (min-width: 960px) {
+    &.collapsed .content {
       height: 300px;
     }
   }
+
+
 }
