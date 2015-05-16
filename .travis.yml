@@ -48,10 +48,6 @@ install:
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
   # mock is preinstalled on Travis
-  # txgithub requires Twisted >= 12.3.0
-  - pip install txgithub
-  # txrequests support only Python 2.6 and 2.7.
-  - pip install txrequests
 
   # Determine if current configuration is latest
   - |
@@ -63,6 +59,10 @@ install:
     fi;
 
   # Run additional tests only in latest configuration
+  # txrequests support only Python 2.6 and 2.7.
+  - "[ $IS_LATEST = false ] || pip install txrequests"
+  # txgithub requires Twisted >= 12.3.0
+  - "[ $IS_LATEST = false ] || pip install txgithub"
   # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
   - "[ $IS_LATEST = false ] || pip install pylint==1.1.0"
   - "[ $IS_LATEST = false ] || pip install pyflakes"
