@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: (menuServiceProvider, $stateProvider) ->
+    constructor: ($stateProvider, menuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'home'
@@ -17,3 +17,24 @@ class State extends Config
             templateUrl: "views/#{name}.html"
             name: name
             url: '/'
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name: 'home'
+            caption: 'Home'
+            description: 'Settings to customize the display of Home page'
+            items: [
+                type: 'bool'
+                name: 'overview_collapsed'
+                caption: 'Collapse overview panel'
+                default_value: false
+            ,
+                type: 'bool'
+                name: 'current_builds_collapsed'
+                caption: 'Collapse current builds panel'
+                default_value: true
+            ,
+                type: 'bool'
+                name: 'recent_builds_collapsed'
+                caption: 'Collapse recent builds panel'
+                default_value: true
+            ]

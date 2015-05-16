@@ -2,6 +2,15 @@ div.project-info(layout="row")
   h1(flex) {{ home.title }}
   md-button.md-raised.md-primary(ng-href="{{ home.titleURL }}") Homepage
 div.dashboard(ng-sortable="{animation: 150, handle:'.title'}")
-  panel(title="overview")
-  panel(title="current")
-  panel(title="recently")
+  panel(
+    title="overview",
+    is-collapsed="home.settings.overview_collapsed.value",
+    )
+  panel(
+    title="current builds",
+    is-collapsed="home.settings.current_builds_collapsed.value",
+    )
+  panel(
+    title="recent builds",
+    is-collapsed="home.settings.recent_builds_collapsed.value",
+    )

@@ -10,16 +10,21 @@ class Panel extends Directive
             bindToController: true
             scope:
                 title: '@'
+                isCollapsed: '='
         }
 
 
 class _Panel extends Controller
 
-    isCollapsed: false
-
-    constructor: (@$element) ->
+    constructor: (@$element, @$scope) ->
+        @$scope.$watch 'panel.isCollapsed', (=> @updateCollapse())
 
     toggleCollapse: ->
         @isCollapsed = !@isCollapsed
-        @$element.toggleClass('collapsed')
         return
+
+    updateCollapse: ->
+        if @isCollapsed
+            @$element.addClass('collapsed')
+        else
+            @$element.removeClass('collapsed')
