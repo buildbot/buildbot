@@ -27,12 +27,11 @@ from buildbot.master import BuildMaster
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
-from buildbot.test.util import www
 from buildslave.bot import BuildSlave
 from buildslave.bot import LocalBuildSlave
 
 
-class RunMasterBase(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
+class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     proto = "null"
     # If True the test cases must handle the configuration
     # of the master in the self.master attribute themselves.

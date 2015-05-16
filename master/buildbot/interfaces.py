@@ -129,6 +129,188 @@ class IEmailLookup(Interface):
         be reached by email), or a Deferred which will fire with the same."""
 
 
+class ILogObserver(Interface):
+
+    """Objects which provide this interface can be used in a BuildStep to
+    watch the output of a LogFile and parse it incrementally.
+    """
+
+    # internal methods
+    def setStep(step):
+        pass
+
+    def setLog(log):
+        pass
+
+    # methods called by the LogFile
+    def logChunk(build, step, log, channel, text):
+        pass
+
+
+class IBuildSlave(IPlugin):
+    # callback methods from the manager
+    pass
+
+
+class ILatentBuildSlave(IBuildSlave):
+
+    """A build slave that is not always running, but can run when requested.
+    """
+    substantiated = Attribute('Substantiated',
+                              'Whether the latent build slave is currently '
+                              'substantiated with a real instance.')
+
+    def substantiate():
+        """Request that the slave substantiate with a real instance.
+
+        Returns a deferred that will callback when a real instance has
+        attached."""
+
+    # there is an insubstantiate too, but that is not used externally ATM.
+
+    def buildStarted(sb):
+        """Inform the latent build slave that a build has started.
+
+        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        build finished.
+        """
+
+    def buildFinished(sb):
+        """Inform the latent build slave that a build has finished.
+
+        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        build finished.
+        """
+
+
+class IRenderable(Interface):
+
+    """An object that can be interpolated with properties from a build.
+    """
+
+    def getRenderingFor(iprops):
+        """Return a deferred that fires with interpolation with the given properties
+
+        @param iprops: the L{IProperties} provider supplying the properties.
+        """
+
+
+class IProperties(Interface):
+
+    """
+    An object providing access to build properties
+    """
+
+    def getProperty(name, default=None):
+        """Get the named property, returning the default if the property does
+        not exist.
+
+        @param name: property name
+        @type name: string
+
+        @param default: default value (default: @code{None})
+
+        @returns: property value
+        """
+
+    def hasProperty(name):
+        """Return true if the named property exists.
+
+        @param name: property name
+        @type name: string
+        @returns: boolean
+        """
+
+    def has_key(name):
+        """Deprecated name for L{hasProperty}."""
+
+    def setProperty(name, value, source, runtime=False):
+        """Set the given property, overwriting any existing value.  The source
+        describes the source of the value for human interpretation.
+
+        @param name: property name
+        @type name: string
+
+        @param value: property value
+        @type value: JSON-able value
+
+        @param source: property source
+        @type source: string
+
+        @param runtime: (optional) whether this property was set during the
+        build's runtime: usually left at its default value
+        @type runtime: boolean
+        """
+
+    def getProperties():
+        """Get the L{buildbot.process.properties.Properties} instance storing
+        these properties.  Note that the interface for this class is not
+        stable, so where possible the other methods of this interface should be
+        used.
+
+        @returns: L{buildbot.process.properties.Properties} instance
+        """
+
+    def getBuild():
+        """Get the L{buildbot.process.build.Build} instance for the current
+        build.  Note that this object is not available after the build is
+        complete, at which point this method will return None.
+
+        Try to avoid using this method, as the API of L{Build} instances is not
+        well-defined.
+
+        @returns L{buildbot.process.build.Build} instance
+        """
+
+    def render(value):
+        """Render @code{value} as an L{IRenderable}.  This essentially coerces
+        @code{value} to an L{IRenderable} and calls its @L{getRenderingFor}
+        method.
+
+        @name value: value to render
+        @returns: rendered value
+        """
+
+
+class IScheduler(IPlugin):
+    pass
+
+
+class ITriggerableScheduler(Interface):
+
+    """
+    A scheduler that can be triggered by buildsteps.
+    """
+
+    def trigger(waited_for, sourcestamps=None, set_props=None,
+                parent_buildid=None, parent_relationship=None):
+        """Trigger a build with the given source stamp and properties.
+        """
+
+
+class IBuildStepFactory(Interface):
+
+    def buildStep():
+        pass
+
+
+class IBuildStep(IPlugin):
+
+    """
+    A build step
+    """
+    # Currently has nothing
+
+
+class IConfigured(Interface):
+
+    def getConfigDict():
+        pass
+
+
+# #################### Deprecated Status Interfaces   ###############################
+
+
 class IStatus(Interface):
 
     """I am an object, obtainable from the buildmaster, which can provide
@@ -582,31 +764,6 @@ class IBuildStatus(Interface):
         delivered."""
 
 
-class ITestResult(Interface):
-
-    """I describe the results of a single unit test."""
-
-    def getName():
-        """Returns a tuple of strings which make up the test name. Tests may
-        be arranged in a hierarchy, so looking for common prefixes may be
-        useful."""
-
-    def getResults():
-        """Returns a constant describing the results of the test: SUCCESS,
-        WARNINGS, FAILURE."""
-
-    def getText():
-        """Returns a list of short strings which describe the results of the
-        test in slightly more detail. Suggested components include
-        'failure', 'error', 'passed', 'timeout'."""
-
-    def getLogs():
-        # in flux, it may be possible to provide more structured information
-        # like python Failure instances
-        """Returns a dictionary of test logs. The keys are strings like
-        'stdout', 'log', 'exceptions'. The values are strings."""
-
-
 class IStatusEvent(Interface):
 
     """I represent a Builder Event, something non-Build related that can
@@ -871,182 +1028,3 @@ class IBuildControl(Interface):
     def stopBuild(reason="<no reason given>"):
         """Halt the build. This has no effect if the build has already
         finished."""
-
-
-class ILogObserver(Interface):
-
-    """Objects which provide this interface can be used in a BuildStep to
-    watch the output of a LogFile and parse it incrementally.
-    """
-
-    # internal methods
-    def setStep(step):
-        pass
-
-    def setLog(log):
-        pass
-
-    # methods called by the LogFile
-    def logChunk(build, step, log, channel, text):
-        pass
-
-
-class IBuildSlave(IPlugin):
-    # callback methods from the manager
-    pass
-
-
-class ILatentBuildSlave(IBuildSlave):
-
-    """A build slave that is not always running, but can run when requested.
-    """
-    substantiated = Attribute('Substantiated',
-                              'Whether the latent build slave is currently '
-                              'substantiated with a real instance.')
-
-    def substantiate():
-        """Request that the slave substantiate with a real instance.
-
-        Returns a deferred that will callback when a real instance has
-        attached."""
-
-    # there is an insubstantiate too, but that is not used externally ATM.
-
-    def buildStarted(sb):
-        """Inform the latent build slave that a build has started.
-
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
-        build finished.
-        """
-
-    def buildFinished(sb):
-        """Inform the latent build slave that a build has finished.
-
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
-        build finished.
-        """
-
-
-class IRenderable(Interface):
-
-    """An object that can be interpolated with properties from a build.
-    """
-
-    def getRenderingFor(iprops):
-        """Return a deferred that fires with interpolation with the given properties
-
-        @param iprops: the L{IProperties} provider supplying the properties.
-        """
-
-
-class IProperties(Interface):
-
-    """
-    An object providing access to build properties
-    """
-
-    def getProperty(name, default=None):
-        """Get the named property, returning the default if the property does
-        not exist.
-
-        @param name: property name
-        @type name: string
-
-        @param default: default value (default: @code{None})
-
-        @returns: property value
-        """
-
-    def hasProperty(name):
-        """Return true if the named property exists.
-
-        @param name: property name
-        @type name: string
-        @returns: boolean
-        """
-
-    def has_key(name):
-        """Deprecated name for L{hasProperty}."""
-
-    def setProperty(name, value, source, runtime=False):
-        """Set the given property, overwriting any existing value.  The source
-        describes the source of the value for human interpretation.
-
-        @param name: property name
-        @type name: string
-
-        @param value: property value
-        @type value: JSON-able value
-
-        @param source: property source
-        @type source: string
-
-        @param runtime: (optional) whether this property was set during the
-        build's runtime: usually left at its default value
-        @type runtime: boolean
-        """
-
-    def getProperties():
-        """Get the L{buildbot.process.properties.Properties} instance storing
-        these properties.  Note that the interface for this class is not
-        stable, so where possible the other methods of this interface should be
-        used.
-
-        @returns: L{buildbot.process.properties.Properties} instance
-        """
-
-    def getBuild():
-        """Get the L{buildbot.process.build.Build} instance for the current
-        build.  Note that this object is not available after the build is
-        complete, at which point this method will return None.
-
-        Try to avoid using this method, as the API of L{Build} instances is not
-        well-defined.
-
-        @returns L{buildbot.process.build.Build} instance
-        """
-
-    def render(value):
-        """Render @code{value} as an L{IRenderable}.  This essentially coerces
-        @code{value} to an L{IRenderable} and calls its @L{getRenderingFor}
-        method.
-
-        @name value: value to render
-        @returns: rendered value
-        """
-
-
-class IScheduler(IPlugin):
-    pass
-
-
-class ITriggerableScheduler(Interface):
-
-    """
-    A scheduler that can be triggered by buildsteps.
-    """
-
-    def trigger(waited_for, sourcestamps=None, set_props=None,
-                parent_buildid=None, parent_relationship=None):
-        """Trigger a build with the given source stamp and properties.
-        """
-
-
-class IBuildStepFactory(Interface):
-
-    def buildStep():
-        pass
-
-
-class IBuildStep(IPlugin):
-
-    """
-    A build step
-    """
-    # Currently has nothing
-
-
-class IConfigured(Interface):
-
-    def getConfigDict():
-        pass

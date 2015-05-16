@@ -1,55 +1,49 @@
-.. bb:cfg:: status
+.. bb:cfg:: reporter
 
-.. _Status-Targets:
+.. _Reporters:
 
-Status Targets
---------------
+Reporters
+---------
 
 .. contents::
     :depth: 2
     :local:
 
 The Buildmaster has a variety of ways to present build status to various users.
-Each such delivery method is a `Status Target` object in the configuration's :bb:cfg:`status` list.
-To add status targets, you just append more objects to this list::
+Each such delivery method is a `Reporter Target` object in the configuration's ``services`` list.
+To add reporter targets, you just append more objects to this list::
 
-    c['status'] = []
+    c['services'] = []
 
-    from buildbot.plugins import status
-    c['status'].append(status.Waterfall(http_port=8010))
+    m = reporters.MailNotifier(fromaddr="buildbot@localhost",
+                               extraRecipients=["builds@lists.example.com"],
+                               sendToInterestedUsers=False)
+    c['services'].append(m)
 
-    m = status.MailNotifier(fromaddr="buildbot@localhost",
-                            extraRecipients=["builds@lists.example.com"],
-                            sendToInterestedUsers=False)
-    c['status'].append(m)
+    c['services'].append(reporters.IRC(host="irc.example.com", nick="bb",
+                                      channels=[{"channel": "#example1"},
+                                                {"channel": "#example2",
+                                                 "password": "somesecretpassword"}]))
 
-    c['status'].append(status.IRC(host="irc.example.com", nick="bb",
-                                  channels=[{"channel": "#example1"},
-                                            {"channel": "#example2",
-                                             "password": "somesecretpassword"}]))
-
-Most status delivery objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
+Most reporter objects take a ``tags=`` argument, which can contain a list of tag names: in this case, it will only show status for Builders that contains the named tags.
 
 .. note:: Implementation Note
 
-    Each of these objects should be a :class:`service.MultiService` which will be attached to the BuildMaster object when the configuration is processed.
-    They should use ``self.parent.getStatus()`` to get access to the top-level :class:`IStatus` object, either inside :meth:`startService` or later.
-    They may call :meth:`status.subscribe()` in :meth:`startService` to receive notifications of builder events, in which case they must define :meth:`builderAdded` and related methods.
-    See the docstrings in :file:`buildbot/interfaces.py` for full details.
+    Each of these objects should be a :class:`service.BuildbotService` which will be attached to the BuildMaster object when the configuration is processed.
 
-The remainder of this section describes each built-in status target.
-A full list of status targets is available in the :bb:index:`status`.
+The remainder of this section describes each built-in reporters.
+A full list of reporters is available in the :bb:index:`reporter`.
 
-.. bb:status:: MailNotifier
+.. bb:reporter:: MailNotifier
 
 .. index:: single: email; MailNotifier
 
 MailNotifier
 ~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.mail.MailNotifier
+.. py:class:: buildbot.reporter.mail.MailNotifier
 
-The buildbot can also send email when builds finish.
+The buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
 It is also quite common to send a message to a mailing list (usually named `builds` or similar) about every build.
 
@@ -67,32 +61,34 @@ You can also add interested users by setting the ``owners`` build property to a 
 
 Each :class:`MailNotifier` sends mail to a single set of recipients.
 To send different kinds of mail to different recipients, use multiple :class:`MailNotifier`\s.
+TODO: or subclass MailNotifier and override getRecipients()
+
 
 The following simple example will send an email upon the completion of each build, to just those developers whose :class:`Change`\s were included in the build.
 The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained.
 
 ::
 
-    from buildbot.plugins import status
-    mn = status.MailNotifier(fromaddr="buildbot@example.org",
-                             lookup="example.org")
-    c['status'].append(mn)
+    from buildbot.plugins import reporters
+    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                lookup="example.org")
+    c['services'].append(mn)
 
 To get a simple one-message-per-build (say, for a mailing list), use the following form instead.
 This form does not send mail to individual developers (and thus does not need the ``lookup=`` argument, explained below), instead it only ever sends mail to the `extra recipients` named in the arguments::
 
-    mn = status.MailNotifier(fromaddr="buildbot@example.org",
-                             sendToInterestedUsers=False,
-                             extraRecipients=['listaddr@example.org'])
+    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                sendToInterestedUsers=False,
+                                extraRecipients=['listaddr@example.org'])
 
 If your SMTP host requires authentication before it allows you to send emails, this can also be done by specifying ``smtpUser`` and ``smtpPassword``::
 
-    mn = status.MailNotifier(fromaddr="myuser@example.com",
-                             sendToInterestedUsers=False,
-                             extraRecipients=["listaddr@example.org"],
-                             relayhost="smtp.example.com", smtpPort=587,
-                             smtpUser="myuser@example.com",
-                             smtpPassword="mypassword")
+    mn = reporters.MailNotifier(fromaddr="myuser@example.com",
+                                sendToInterestedUsers=False,
+                                extraRecipients=["listaddr@example.org"],
+                                relayhost="smtp.example.com", smtpPort=587,
+                                smtpUser="myuser@example.com",
+                                smtpPassword="mypassword")
 
 .. note::
 
@@ -100,12 +96,12 @@ If your SMTP host requires authentication before it allows you to send emails, t
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
-    mn = status.MailNotifier(fromaddr="myuser@example.com",
-                             sendToInterestedUsers=False,
-                             extraRecipients=["listaddr@example.org"],
-                             useTls=True, relayhost="smtp.example.com",
-                             smtpPort=587, smtpUser="myuser@example.com",
-                             smtpPassword="mypassword")
+    mn = reporters.MailNotifier(fromaddr="myuser@example.com",
+                                sendToInterestedUsers=False,
+                                extraRecipients=["listaddr@example.org"],
+                                useTls=True, relayhost="smtp.example.com",
+                                smtpPort=587, smtpUser="myuser@example.com",
+                                smtpPassword="mypassword")
 
 .. note::
 
@@ -116,7 +112,7 @@ For this purpose MailNotifier provides the argument ``messageFormatter`` (a func
 
 For example, if only short emails are desired (e.g., for delivery to phones)::
 
-    from buildbot.plugins import status, util
+    from buildbot.plugins import reporters, util
     def messageFormatter(mode, name, build, results, master_status):
         result = util.Results[results]
 
@@ -127,18 +123,20 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
             'type' : 'plain'
         }
 
-    mn = status.MailNotifier(fromaddr="buildbot@example.org",
-                             sendToInterestedUsers=False,
-                             mode=('problem',),
-                             extraRecipients=['listaddr@example.org'],
-                             messageFormatter=messageFormatter)
+    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                sendToInterestedUsers=False,
+                                mode=('problem',),
+                                extraRecipients=['listaddr@example.org'],
+                                messageFormatter=messageFormatter)
 
 Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step is given below::
 
-    from buildbot.plugins import util, status
+    from buildbot.plugins import util, reporters
 
     import cgi, datetime
 
+    # FIXME: this code is barely readable, we should provide a better example with use of jinja templates
+    #
     def html_message_formatter(mode, name, build, results, master_status):
         """Provide a customized message to Buildbot's MailNotifier.
 
@@ -225,11 +223,11 @@ Another example of a function delivering a customized html email containing the 
                 'type': 'html'
                 }
 
-    mn = status.MailNotifier(fromaddr="buildbot@example.org",
-                             sendToInterestedUsers=False,
-                             mode=('failing',),
-                             extraRecipients=['listaddr@example.org'],
-                             messageFormatter=html_message_formatter)
+    mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                sendToInterestedUsers=False,
+                                mode=('failing',),
+                                extraRecipients=['listaddr@example.org'],
+                                messageFormatter=html_message_formatter)
 
 MailNotifier arguments
 ++++++++++++++++++++++
@@ -351,13 +349,13 @@ MailNotifier arguments
     Most of the time you can use a simple Domain instance.
     As a shortcut, you can pass as string: this will be treated as if you had provided ``Domain(str)``.
     For example, ``lookup='example.com'`` will allow mail to be sent to all developers whose SVN usernames match their ``example.com`` account names.
-    See :file:`buildbot/status/mail.py` for more details.
+    See :file:`buildbot/reporters/mail.py` for more details.
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
 ``messageFormatter``
     This is a optional function that can be used to generate a custom mail message.
-    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build status (``build``), the result code (``results``), and the BuildMaster status (``master_status``).
+    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build data api results (``build``), the result code (``results``), and a reference to the BuildMaster object (``master``), which can then be used to create additional data api calls.
     It returns a dictionary.
     The ``body`` key gives a string that is the complete text of the message.
     The ``type`` key is the message type ('plain' or 'html').
@@ -369,21 +367,14 @@ MailNotifier arguments
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
-``previousBuildGetter``
-    An optional function to calculate the previous build to the one at hand.
-    A :func:`previousBuildGetter` takes a :class:`BuildStatus` and returns a :class:`BuildStatus`.
-    This function is useful when builders don't process their requests in order of arrival (chronologically) and therefore the order of completion of builds does not reflect the order in which changes (and their respective requests) arrived into the system.
-    In such scenarios, status transitions in the chronological sequence of builds within a builder might not reflect the actual status transition in the topological sequence of changes in the tree.
-    What's more, the latest build (the build at hand) might not always be for the most recent request so it might not make sense to send a "change" or "problem" email about it.
-    Returning None from this function will prevent such emails from going out.
 
-As a help to those writing :func:`messageFormatter` functions, the following table describes how to get some useful pieces of information from the various status objects:
+As a help to those writing :func:`messageFormatter` functions, the following table describes how to get some useful pieces of information from the various data objects:
 
 Name of the builder that generated this event
     ``name``
 
 Title of the buildmaster
-    :meth:`master_status.getTitle()`
+    ``master.config.title``
 
 MailNotifier mode
     ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``, ``all``)
@@ -397,75 +388,28 @@ Builder result as a string
         # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
 
 URL to build page
-    ``master_status.getURLForThing(build)``
+    ``reporters.utils.getURLForBuild(master, build['buildid'])``
 
-URL to buildbot main page.
-    ``master_status.getBuildbotURL()``
+URL to buildbot main page
+    ``master.config.buildbotURL``
 
 Build text
-    ``build.getText()``
+    ``build['state_string']``
 
-Mapping of property names to values
-    ``build.getProperties()`` (a :class:`Properties` instance)
+Mapping of property names to (values, source)
+    ``build['properties']``
 
 Slave name
-    ``build.getSlavename()``
+    ``build['properties']['slavename']``
 
 Build reason (from a forced build)
-    ``build.getReason()``
+    ``build['properties']['reason']``
 
 List of responsible users
-    ``build.getResponsibleUsers()``
+    ``reporters.utils.getResponsibleUsersForBuild(master, build['buildid'])``
 
-Source information (only valid if ss is not ``None``)
 
-    A build has a set of sourcestamps::
-
-        for ss in build.getSourceStamp():
-            branch = ss.branch
-            revision = ss.revision
-            patch = ss.patch
-            changes = ss.changes # list
-
-    A change object has the following useful information:
-
-    ``who``
-        (str) who made this change
-
-    ``revision``
-        (str) what VC revision is this change
-
-    ``branch``
-        (str) on what branch did this change occur
-
-    ``when``
-        (str) when did this change occur
-
-    ``files``
-        (list of str) what files were affected in this change
-
-    ``comments``
-        (str) comments reguarding the change.
-
-    The ``Change`` methods :meth:`asText` and :meth:`asDict` can be used to format the information above.
-    :meth:`asText` returns a list of strings and :meth:`asDict` returns a dictionary suitable for html/mail rendering.
-
-Log information
-
-    ::
-
-        logs = list()
-        for log in build.getLogs():
-            log_name = "%s.%s" % (log.getStep().getName(), log.getName())
-            log_status, dummy = log.getStep().getResults()
-            # XXX logs no longer have a getText method
-            log_body = log.getText().splitlines() # Note: can be VERY LARGE
-            log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                            log.getStep().getName(),
-                                            log.getName())
-            logs.append((log_name, log_url, log_body, log_status))
-
-.. bb:status:: IRC
+.. bb:reporter:: IRC
 
 .. index:: IRC
 
@@ -475,7 +419,7 @@ IRC Bot
 .. py:class:: buildbot.status.words.IRC
 
 
-The :bb:status:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
+The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 ::
@@ -492,7 +436,7 @@ It can also be asked to announce builds as they occur, or be told to shut up.
                        'successToFailure': 1,
                        'failureToSuccess': 1,
                      })
-    c['status'].append(irc)
+    c['services'].append(irc)
 
 The following parameters are accepted by this class:
 
@@ -676,7 +620,7 @@ Two additional arguments can be set to control how fast the IRC bot tries to rec
 ``lostDelay`` defaults to a random number between 1 and 5, while ``failedDelay`` defaults to a random one between 45 and 60.
 Setting random defaults like this means multiple IRC bots are less likely to deny each other by flooding the server.
 
-.. bb:status:: StatusPush
+.. bb:reporter:: StatusPush
 
 StatusPush
 ~~~~~~~~~~
@@ -692,13 +636,13 @@ StatusPush
 
     from buildbot.plugins import status
     sp = status.StatusPush(serverPushCb=Process, bufferDelay=0.5, retryDelay=5)
-    c['status'].append(sp)
+    c['services'].append(sp)
 
 :class:`StatusPush` batches events normally processed and sends it to the :func:`serverPushCb` callback every ``bufferDelay`` seconds.
 The callback should pop items from the queue and then queue the next callback.
 If no items were popped from ``self.queue``, ``retryDelay`` seconds will be waited instead.
 
-.. bb:status:: HttpStatusPush
+.. bb:reporter:: HttpStatusPush
 
 HttpStatusPush
 ~~~~~~~~~~~~~~
@@ -710,12 +654,12 @@ HttpStatusPush
 
     from buildbot.plugins import status
     sp = status.HttpStatusPush(serverUrl="http://example.com/submit")
-    c['status'].append(sp)
+    c['services'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
 It is useful to create a status front end outside of buildbot for better scalability.
 
-.. bb:status:: GerritStatusPush
+.. bb:reporter:: GerritStatusPush
 
 GerritStatusPush
 ~~~~~~~~~~~~~~~~
@@ -792,9 +736,9 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. seealso::
 
-   :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:status:`GerritStatusPush`.
+   :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
 
-.. bb:status:: GitHubStatus
+.. bb:reporter:: GitHubStatus
 
 GitHubStatus
 ~~~~~~~~~~~~
@@ -824,7 +768,7 @@ GitHubStatus
             "github_repo_name": "bbtools",
             })
     c['builders'].append(buildbot_bbtools)
-    c['status'].append(gs)
+    c['services'].append(gs)
 
 :class:`GitHubStatus` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
@@ -858,7 +802,7 @@ StashStatusPush
     ss = status.StashStatusPush('https://stash.example.com:8080/',
                                 'stash_username',
                                 'secret_password')
-    c['status'].append(ss)
+    c['services'].append(ss)
 
 :class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
 The build status is published to a specific commit SHA in Stash.

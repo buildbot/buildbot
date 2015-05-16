@@ -18,8 +18,8 @@ import tempfile
 
 from twisted.trial import unittest
 
-from buildbot.util import json
 from buildbot.scripts import processwwwindex
+from buildbot.util import json
 
 
 class TestUsersClient(unittest.TestCase):

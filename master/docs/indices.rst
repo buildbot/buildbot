@@ -6,7 +6,7 @@ Indices and Tables
 * :bb:index:`sched`
 * :bb:index:`chsrc`
 * :bb:index:`step`
-* :bb:index:`status`
+* :bb:index:`reporter`
 * :bb:index:`cmdline`
 * :bb:index:`msg`
 * :bb:index:`event`

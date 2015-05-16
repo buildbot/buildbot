@@ -15,11 +15,12 @@
 
 from twisted.internet import defer
 
-from buildbot.test.util.integration import RunMasterBase
-from buildbot.status.results import CANCELLED
 from buildbot.config import BuilderConfig
+from buildbot.plugins import schedulers
+from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
-from buildbot.plugins import steps, schedulers
+from buildbot.status.results import CANCELLED
+from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and slave environment,
 # with two builders and a trigger step linking them. the triggered build never ends
