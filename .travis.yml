@@ -83,13 +83,13 @@ install:
   - (cd master; python setup.py develop)
   - (cd slave;  python setup.py develop)
   # mock is preinstalled on Travis
-  # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
-  # latest Twisted to avoid unintended upgrades.
-  - "[ $IS_LATEST = true ] || pip install txgithub"
-  # txrequests support only Python 2.6 and 2.7.
+  # txrequests supports both 2.6 and 2.7
   - pip install txrequests
 
   # Run additional tests only in latest configuration
+  # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
+  # latest Twisted to avoid unintended upgrades.
+  - "[ $IS_LATEST = true ] || pip install txgithub"
   # Astroid 1.3.0 dropped Python-2.6 spuport
   - "[ $IS_LATEST = false ] || pip install 'astroid<1.3.0'"
   # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
