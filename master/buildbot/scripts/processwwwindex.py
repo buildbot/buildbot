@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 
 
-import os
 import jinja2
+import os
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 from buildbot.util import json
-from twisted.internet import defer
 from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
+from twisted.internet import defer
 
 
 @in_reactor
