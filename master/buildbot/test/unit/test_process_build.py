@@ -154,7 +154,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         self.assert_(('startStep', (self.slavebuilder.slave.conn,), {})
                      in step.method_calls)
 
@@ -173,7 +173,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
-        self.assertEqual(b.result, CANCELLED)
+        self.assertEqual(b.results, CANCELLED)
 
         self.assert_(('interrupt', ('stop it',), {}) in step.method_calls)
 
@@ -214,7 +214,7 @@ class TestBuild(unittest.TestCase):
         d = b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
         def check(ign):
-            self.assertEqual(b.result, CANCELLED)
+            self.assertEqual(b.results, CANCELLED)
             self.assert_(('interrupt', ('stop it',), {}) in step1.method_calls)
             self.assert_(step2Started[0])
         d.addCallback(check)
@@ -301,7 +301,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.slavebuilder.slave.conn,), {}),
                       step.method_calls)
         self.assertEquals(claimCount[0], 1)
@@ -351,8 +351,8 @@ class TestBuild(unittest.TestCase):
         realLock.release(fakeBuild, fakeBuildAccess)
 
         def check(ign):
-            self.assertEqual(eBuild.result, SUCCESS)
-            self.assertEqual(cBuild.result, SUCCESS)
+            self.assertEqual(eBuild.results, SUCCESS)
+            self.assertEqual(cBuild.results, SUCCESS)
             self.assertEquals(claimLog, [fakeBuild, eBuild, cBuild])
 
         d.addCallback(check)
@@ -419,7 +419,7 @@ class TestBuild(unittest.TestCase):
         self.assert_(('startStep', (self.slavebuilder.slave.conn,), {})
                      not in step.method_calls)
         self.assert_(b.currentStep is None)
-        self.assertEqual(b.result, CANCELLED)
+        self.assertEqual(b.results, CANCELLED)
         self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
@@ -451,7 +451,7 @@ class TestBuild(unittest.TestCase):
         self.assert_(('startStep', (self.slavebuilder.slave.conn,), {})
                      not in step.method_calls)
         self.assert_(b.currentStep is None)
-        self.assertEqual(b.result, RETRY)
+        self.assertEqual(b.results, RETRY)
         self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
         self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
@@ -483,132 +483,132 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
 
         self.assertEqual(gotLocks, [True])
-        self.assertEqual(b.result, CANCELLED)
+        self.assertEqual(b.results, CANCELLED)
 
     def testStepDone(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(SUCCESS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneHaltOnFailure(self):
         b = self.build
         b.results = []
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, True)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneHaltOnFailureNoFlunkOnFailure(self):
         b = self.build
         b.results = []
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.flunkOnFailure = False
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, True)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneFlunkOnWarningsFlunkOnFailure(self):
         b = self.build
         b.results = []
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.flunkOnFailure = True
         step.flunkOnWarnings = True
         b.stepDone(WARNINGS, step)
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneNoWarnOnWarnings(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.warnOnWarnings = False
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneWarnings(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, WARNINGS)
+        self.assertEqual(b.results, WARNINGS)
 
     def testStepDoneFail(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneFailOverridesWarnings(self):
         b = self.build
         b.results = [SUCCESS, WARNINGS]
-        b.result = WARNINGS
+        b.results = WARNINGS
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneWarnOnFailure(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.warnOnFailure = True
         step.flunkOnFailure = False
         terminate = b.stepDone(FAILURE, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, WARNINGS)
+        self.assertEqual(b.results, WARNINGS)
 
     def testStepDoneFlunkOnWarnings(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneHaltOnFailureFlunkOnWarnings(self):
         b = self.build
         b.results = [SUCCESS]
-        b.result = SUCCESS
+        b.results = SUCCESS
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         self.haltOnFailure = True
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneWarningsDontOverrideFailure(self):
         b = self.build
         b.results = [FAILURE]
-        b.result = FAILURE
+        b.results = FAILURE
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.results, FAILURE)
 
     def testStepDoneRetryOverridesAnythingElse(self):
         b = self.build
         b.results = [RETRY]
-        b.result = RETRY
+        b.results = RETRY
         step = FakeBuildStep()
         step.alwaysRun = True
         b.stepDone(WARNINGS, step)
@@ -616,7 +616,7 @@ class TestBuild(unittest.TestCase):
         b.stepDone(SUCCESS, step)
         terminate = b.stepDone(EXCEPTION, step)
         self.assertEqual(terminate, True)
-        self.assertEqual(b.result, RETRY)
+        self.assertEqual(b.results, RETRY)
 
     def test_getSummaryStatistic(self):
         b = self.build
@@ -685,7 +685,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
@@ -704,7 +704,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
@@ -717,7 +717,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         expected_names = ["clone", "command", "clean"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
@@ -729,7 +729,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         expected_names = ["stage", "stage_1", "stage_2"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
@@ -748,7 +748,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
         b.startBuild(FakeBuildStatus(), None, self.slavebuilder)
-        self.assertEqual(b.result, SUCCESS)
+        self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c_1", "c_2", "c"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
@@ -833,7 +833,8 @@ class TestBuildBlameList(unittest.TestCase):
         r.sources.extend([self.patchSource])
         build = Build([r])
         blamelist = build.blamelist()
-        self.assertEqual(blamelist, ['jeff'])
+        # If no patch is set, author will not be est
+        self.assertEqual(blamelist, [])
 
 
 class TestSetupProperties_MultipleSources(unittest.TestCase):

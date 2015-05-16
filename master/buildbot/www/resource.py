@@ -44,7 +44,7 @@ class Resource(resource.Resource):
     def __init__(self, master):
         resource.Resource.__init__(self)
         self.master = master
-        if self.needsReconfig:
+        if self.needsReconfig and master is not None:
             master.www.resourceNeedsReconfigs(self)
 
     def reconfigResource(self, new_config):

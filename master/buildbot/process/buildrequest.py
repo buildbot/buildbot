@@ -15,15 +15,10 @@
 
 import calendar
 
-from buildbot import interfaces
 from buildbot.data import resultspec
-from buildbot.db import buildrequests
 from buildbot.process import properties
-from buildbot.status.results import FAILURE
 from buildbot.status.results import SKIPPED
 from twisted.internet import defer
-from twisted.python import log
-from zope.interface import implements
 
 
 class BuildRequestCollapser(object):
@@ -320,48 +315,3 @@ class BuildRequest(object):
 
     def getSubmitTime(self):
         return self.submittedAt
-
-    @defer.inlineCallbacks
-    def cancelBuildRequest(self):
-        # first, try to claim the request; if this fails, then it's too late to
-        # cancel the build anyway
-        try:
-            yield self.master.data.updates.claimBuildRequests([self.id])
-        except buildrequests.AlreadyClaimedError:
-            log.msg("build request already claimed; cannot cancel")
-            return
-
-        # send a cancellation message
-        builderid = -1  # TODO
-        key = ('buildrequests', self.bsid, builderid, self.id, 'cancelled')
-        msg = dict(
-            brid=self.id,
-            bsid=self.bsid,
-            buildername=self.buildername,
-            builderid=builderid)
-        self.master.mq.produce(key, msg)
-
-        # then complete it with 'FAILURE'; this is the closest we can get to
-        # cancelling a request without running into trouble with dangling
-        # references.
-        yield self.master.data.updates.completeBuildRequests([self.id],
-                                                             FAILURE)
-
-
-class BuildRequestControl:
-    implements(interfaces.IBuildRequestControl)
-
-    def __init__(self, builder, request):
-        self.original_builder = builder
-        self.original_request = request
-        self.brid = request.id
-
-    def subscribe(self, observer):
-        raise NotImplementedError
-
-    def unsubscribe(self, observer):
-        raise NotImplementedError
-
-    def cancel(self):
-        d = self.original_request.cancelBuildRequest()
-        d.addErrback(log.err, 'while cancelling build request')

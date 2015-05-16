@@ -169,7 +169,7 @@ class BuildbotService extends Factory
                 return mqService.on( path + "/" + event, onEvent)
 
 
-            elem.control = (method, params) ->
+            elem.control = (method, params={}) ->
                 # do jsonrpc2.0 like POST
                 id = jsonrpc2_id++
                 req =

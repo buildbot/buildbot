@@ -19,14 +19,20 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import service
 from buildbot.www import auth
 from buildbot.www import avatar
+from buildbot.www import change_hook
 from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
 from twisted.application import strports
+from twisted.cred.portal import IRealm
+from twisted.cred.portal import Portal
 from twisted.internet import defer
 from twisted.python import log
+from twisted.web import guard
+from twisted.web import resource
 from twisted.web import server
+from zope.interface import implements
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -150,6 +156,16 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # /sse
         root.putChild('sse', sse.EventResource(self.master))
 
+        # /change_hook
+        resource_obj = change_hook.ChangeHookResource(master=self.master)
+
+        # FIXME: this does not work with reconfig
+        change_hook_auth = new_config.www.get('change_hook_auth')
+        if change_hook_auth is not None:
+            resource_obj = self.setupProtectedResource(
+                resource_obj, change_hook_auth)
+        root.putChild("change_hook", resource_obj)
+
         self.root = root
 
         def either(a, b):  # a if a else b for py2.4
@@ -201,3 +217,22 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         new_config.www['auth'].reconfigAuth(self.master, new_config)
         for rsrc in self.reconfigurableResources:
             rsrc.reconfigResource(new_config)
+
+    def setupProtectedResource(self, resource_obj, checkers):
+        class SimpleRealm(object):
+
+            """
+            A realm which gives out L{ChangeHookResource} instances for authenticated
+            users.
+            """
+            implements(IRealm)
+
+            def requestAvatar(self, avatarId, mind, *interfaces):
+                if resource.IResource in interfaces:
+                    return (resource.IResource, resource_obj, lambda: None)
+                raise NotImplementedError()
+
+        portal = Portal(SimpleRealm(), checkers)
+        credentialFactory = guard.BasicCredentialFactory('Protected area')
+        wrapper = guard.HTTPAuthSessionWrapper(portal, [credentialFactory])
+        return wrapper

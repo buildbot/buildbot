@@ -592,7 +592,8 @@ class MasterConfig(util.ComparableMixin):
         allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
                        'plugins', 'auth', 'avatar_methods', 'logfileName',
-                       'logRotateLength', 'maxRotatedFiles', 'versions'])
+                       'logRotateLength', 'maxRotatedFiles', 'versions',
+                       'change_hook_dialects', 'change_hook_auth'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %

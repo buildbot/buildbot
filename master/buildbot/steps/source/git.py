@@ -24,6 +24,9 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
+RC_SUCCESS = 0
+GIT_HASH_LENGTH = 40
+
 
 def isTrueOrIsExactlyZero(v):
     # nonzero values are true...
@@ -119,12 +122,12 @@ class Git(Source):
         self.retryFetch = retryFetch
         self.submodules = submodules
         self.shallow = shallow
-        self.fetchcount = 0
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.getDescription = getDescription
         self.config = config
         self.supportsBranch = True
+        self.supportsSubmoduleCheckout = True
         self.srcdir = 'source'
         Source.__init__(self, **kwargs)
 
@@ -154,7 +157,7 @@ class Git(Source):
         def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
-            return 0
+            return RC_SUCCESS
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
@@ -163,7 +166,7 @@ class Git(Source):
             if patched:
                 return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
             else:
-                return 0
+                return RC_SUCCESS
 
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
         if patch:
@@ -218,7 +221,7 @@ class Git(Source):
 
         # if revision exists checkout to that revision
         # else fetch and update
-        if rc == 0:
+        if rc == RC_SUCCESS:
             yield self._dovccmd(['reset', '--hard', self.revision, '--'])
 
             if self.branch != 'HEAD':
@@ -243,14 +246,14 @@ class Git(Source):
     def clobber(self):
         yield self._doClobber()
         res = yield self._fullClone(shallowClone=self.shallow)
-        if res != 0:
+        if res != RC_SUCCESS:
             raise buildstep.BuildStepFailed
 
     @defer.inlineCallbacks
     def fresh(self):
         res = yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'],
                                   abandonOnFailure=False)
-        if res == 0:
+        if res == RC_SUCCESS:
             yield self._fetchOrFallback()
         else:
             yield self._doClobber()
@@ -284,7 +287,8 @@ class Git(Source):
         @d.addCallback
         def resetWorkdir(_):
             self.workdir = old_workdir
-            return 0
+            return RC_SUCCESS
+
         return d
 
     def finish(self, res):
@@ -303,17 +307,17 @@ class Git(Source):
     def parseGotRevision(self, _=None):
         stdout = yield self._dovccmd(['rev-parse', 'HEAD'], collectStdout=True)
         revision = stdout.strip()
-        if len(revision) != 40:
+        if len(revision) != GIT_HASH_LENGTH:
             raise buildstep.BuildStepFailed()
         log.msg("Got Git revision %s" % (revision, ))
         self.updateSourceProperty('got_revision', revision)
 
-        defer.returnValue(0)
+        defer.returnValue(RC_SUCCESS)
 
     @defer.inlineCallbacks
     def parseCommitDescription(self, _=None):
         if self.getDescription == False:  # dict() should not return here
-            defer.returnValue(0)
+            defer.returnValue(RC_SUCCESS)
             return
 
         cmd = ['describe']
@@ -335,7 +339,7 @@ class Git(Source):
         except Exception:
             pass
 
-        defer.returnValue(0)
+        defer.returnValue(RC_SUCCESS)
 
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
@@ -389,7 +393,7 @@ class Git(Source):
         if self.branch != 'HEAD':
             @d.addCallback
             def renameBranch(res):
-                if res:
+                if res != RC_SUCCESS:
                     return res
                 d = self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
                 # Ignore errors
@@ -404,7 +408,7 @@ class Git(Source):
         wrapper for self._fetch
         """
         res = yield self._fetch(None)
-        if res == 0:
+        if res == RC_SUCCESS:
             defer.returnValue(res)
             return
         elif self.retryFetch:
@@ -414,6 +418,7 @@ class Git(Source):
         else:
             raise buildstep.BuildStepFailed()
 
+    @defer.inlineCallbacks
     def _clone(self, shallowClone):
         """Retry if clone failed"""
 
@@ -440,29 +445,26 @@ class Git(Source):
         else:
             abandonOnFailure = True
         # If it's a shallow clone abort build step
-        d = self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
         if switchToBranch:
-            d.addCallback(lambda _: self._fetch(None))
+            res = yield self._fetch(None)
 
-        def _retry(res):
-            if self.stopped or res == 0:  # or shallow clone??
-                return res
+        done = self.stopped or res == RC_SUCCESS  # or shallow clone??
+        if self.retry and not done:
             delay, repeats = self.retry
             if repeats > 0:
                 log.msg("Checkout failed, trying %d more times after %d seconds"
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
+
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._doClobber())
                 df.addCallback(lambda _: self._clone(shallowClone))
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+                res = yield df
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
@@ -470,7 +472,7 @@ class Git(Source):
            In the case of shallow clones if any of the step fail abort whole build step.
         """
         res = yield self._clone(shallowClone)
-        if res != 0:
+        if res != RC_SUCCESS:
             defer.returnValue(res)
             return
 
@@ -497,7 +499,7 @@ class Git(Source):
 
         @d.addCallback
         def clobber(res):
-            if res != 0:
+            if res != RC_SUCCESS:
                 if self.clobberOnFailure:
                     return self.clobber()
                 else:
@@ -516,7 +518,7 @@ class Git(Source):
 
         @d.addCallback
         def checkRemoval(_):
-            if cmd.rc != 0:
+            if cmd.rc != RC_SUCCESS:
                 raise RuntimeError("Failed to delete directory")
             return cmd.rc
         return d
@@ -530,23 +532,25 @@ class Git(Source):
         if self.submodules:
             return self._dovccmd(['submodule', 'sync'])
         else:
-            return defer.succeed(0)
+            return defer.succeed(RC_SUCCESS)
 
     def _updateSubmodule(self, _=None):
         if self.submodules:
-            return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive', '--force'])
+            vccmd = ['submodule', 'update', '--init', '--recursive', '--force']
+            if self.supportsSubmoduleCheckout:
+                vccmd.extend(['--checkout'])
+            return self._dovccmd(vccmd)
         else:
-            return defer.succeed(0)
+            return defer.succeed(RC_SUCCESS)
 
     def _cleanSubmodule(self, _=None):
         if self.submodules:
-            command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
+            command = ['submodule', 'foreach', '--recursive', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             return self._dovccmd(command)
         else:
-            return defer.succeed(0)
+            return defer.succeed(RC_SUCCESS)
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
@@ -567,6 +571,8 @@ class Git(Source):
             version = stdout.strip().split(' ')[2]
             if LooseVersion(version) < LooseVersion("1.6.5"):
                 self.supportsBranch = False
+            if LooseVersion(version) < LooseVersion("1.7.8"):
+                self.supportsSubmoduleCheckout = False
             return gitInstalled
         return d
 
@@ -578,34 +584,31 @@ class Git(Source):
             return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
         return d
 
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
         if self.slaveVersionIsOlderThan('listdir', '2.16'):
-            d = self.pathExists(self.build.path_module.join(self.workdir, '.git'))
+            git_path = self.build.path_module.join(self.workdir, '.git')
+            exists = yield self.pathExists(git_path)
 
-            @d.addCallback
-            def checkWithPathExists(exists):
-                if(exists):
-                    return "update"
-                else:
-                    return "clone"
+            if exists:
+                defer.returnValue("update")
+
+            defer.returnValue("clone")
+
+        cmd = buildstep.RemoteCommand('listdir',
+                                      {'dir': self.workdir,
+                                       'logEnviron': self.logEnviron,
+                                       'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if 'files' not in cmd.updates:
+            # no files - directory doesn't exist
+            defer.returnValue("clone")
+        files = cmd.updates['files'][0]
+        if '.git' in files:
+            defer.returnValue("update")
+        elif files:
+            defer.returnValue("clobber")
         else:
-            cmd = buildstep.RemoteCommand('listdir',
-                                          {'dir': self.workdir,
-                                           'logEnviron': self.logEnviron,
-                                           'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def checkWithListdir(_):
-                if 'files' not in cmd.updates:
-                    # no files - directory doesn't exist
-                    return "clone"
-                files = cmd.updates['files'][0]
-                if '.git' in files:
-                    return "update"
-                elif len(files) > 0:
-                    return "clobber"
-                else:
-                    return "clone"
-        return d
+            defer.returnValue("clone")

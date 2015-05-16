@@ -89,11 +89,16 @@ class Trigger(BuildStep):
         BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
-        # FIXME: new style step cannot be interrupted anymore by just calling finished()
-        #        (which was a bad idea in the first place)
-        # we should claim the self.brids, and CANCELLED them
-        # if they were already claimed, stop the associated builds via data api
-        # then the big deferredlist will automatically be called
+        # We cancel the buildrequests, as the data api handles
+        # both cases:
+        # - build started: stop is sent,
+        # - build not created yet: related buildrequests are set to CANCELLED.
+        # Note that there is an identified race condition though (more details
+        # are available at buildbot.data.buildrequests).
+        for brid in self.brids:
+            self.master.data.control("cancel",
+                                     {'reason': 'parent build was interrupted'},
+                                     ("buildrequests", brid))
         if self.running and not self.ended:
             self.ended = True
 

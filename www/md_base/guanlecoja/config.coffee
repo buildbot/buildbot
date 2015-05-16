@@ -19,7 +19,7 @@ config =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www/static'
-        
+
 
 
     ### ###########################################################################################
@@ -50,6 +50,24 @@ config =
             "angular-ui-router":
                 version: '0.2.13'
                 files: 'release/angular-ui-router.js'
+            lodash:
+                version: "~2.4.1"
+                files: 'dist/lodash.js'
+            'underscore.string':
+                version: "~2.3.3"
+                files: 'lib/underscore.string.js'
+            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
+            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
+            # reimplement reconnecting ourselves
+            "reconnectingWebsocket":
+                version: "master"
+                files: ["reconnecting-websocket.js"]
+            # TODO: Remove the dependency of restangular once the new
+            # buildbotService is ready and restangular is deprecated
+            restangular:
+                version: "~1.4.0"
+                files: 'dist/restangular.js'
+
         testdeps:
             "angular-mocks":
                 version: "~1.3.15"
@@ -69,5 +87,48 @@ gulp.task 'icons', ->
             templates: ['src/icons/iconset.svg']
         ))
         .pipe(gulp.dest(path.join(config.dir.build, 'icons')))
+
+gulp.task 'processindex', ['index'], ->
+    indexpath = path.join(config.dir.build, 'index.html')
+    gulp.src ""
+        .pipe shell("buildbot processwwwindex -i '#{indexpath}'")
+
+gulp.task 'proxy', ['processindex'], ->
+    # this is a task for developing, it proxy api request to http://nine.buildbot.net
+    argv = require('minimist')(process.argv)
+    argv.host?= 'nine.buildbot.net'
+    argv.port?= 8080
+
+    fs = require 'fs'
+    path = require 'path'
+    http = require 'http'
+    httpProxy = require 'http-proxy'
+    proxy = httpProxy.createProxyServer({})
+    proxy.on 'proxyReq', (proxyReq, req, res, options) ->
+        delete proxyReq.removeHeader('Origin')
+        delete proxyReq.removeHeader('Referer')
+    proxy.on 'proxyRes', (proxyRes, req, res) ->
+        proxyRes.headers['Access-Control-Allow-Origin'] = '*'
+        console.log "[Proxy] #{req.method} #{req.url}"
+
+    server = http.createServer (req, res) ->
+        if req.url.match /^\/(api|sse)/
+            proxy.web req, res, {target: 'http://' + argv.host}
+        else
+            filepath = config.dir.build + req.url.split('?')[0]
+            if fs.existsSync(filepath) and fs.lstatSync(filepath).isDirectory()
+                filepath = path.join(filepath, 'index.html')
+            fs.readFile filepath, (err, data) ->
+                if err
+                    res.writeHead(404)
+                    res.end(JSON.stringify(err))
+                else
+                    res.writeHead(200)
+                    res.end(data)
+    server.on 'upgrade',  (req, socket, head) ->
+        proxy.ws req, socket, {target: 'ws://' + argv.host}
+
+    server.listen parseInt(argv.port)
+    console.log "[Proxy] server listening on port #{argv.port}"
 
 module.exports = config

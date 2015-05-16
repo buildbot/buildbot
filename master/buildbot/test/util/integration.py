@@ -33,9 +33,24 @@ from buildslave.bot import LocalBuildSlave
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     proto = "null"
+    # If True the test cases must handle the configuration
+    # of the master in the self.master attribute themselves.
+    # The setupConfig could help the module in that task.
+    # Note that whether testCaseHandleTheirSetup is False or True
+    # in all cases, tearDown that stops the master defined in self.master
+    # will be called.
+    testCasesHandleTheirSetup = False
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setupConfig(self, configFunc):
+        """
+        Setup and start a master configured
+        by the function configFunc defined in the test module.
+        @type configFunc: string
+        @param configFunc: name of a function
+        without argument defined in the test module
+        that returns a BuildmasterConfig object.
+        """
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
@@ -48,11 +63,13 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         # be changed
         open(self.configfile, "w").write(textwrap.dedent("""
             from buildbot.buildslave import BuildSlave
-            from %s import masterConfig
-            c = BuildmasterConfig = masterConfig()
+            from %s import %s
+            c = BuildmasterConfig = %s()
             c['slaves'] = [BuildSlave("local1", "localpw")]
             c['protocols'] = %s
-            """ % (self.__class__.__module__, proto)))
+            """ % (self.__class__.__module__,
+                   configFunc, configFunc,
+                   proto)))
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m
@@ -84,6 +101,11 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         elif self.proto == 'null':
             s = LocalBuildSlave("local1", self.basedir, False)
         s.setServiceParent(m)
+
+    def setUp(self):
+        if self.testCasesHandleTheirSetup:
+            return defer.succeed(None)
+        return self.setupConfig("masterConfig")
 
     @defer.inlineCallbacks
     def tearDown(self):

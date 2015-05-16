@@ -15,9 +15,10 @@
 
 import calendar
 
-import buildbot.status.web.change_hook as change_hook
+import buildbot.www.change_hook as change_hook
 
 from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 
 from twisted.trial import unittest
 
@@ -131,7 +132,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'github': True})
+            dialects={'github': True}, master=fakeMasterForHooks())
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
@@ -146,8 +147,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEquals(len(self.request.addedChanges), 2)
-            change = self.request.addedChanges[0]
+            self.assertEquals(len(self.changeHook.master.addedChanges), 2)
+            change = self.changeHook.master.addedChanges[0]
 
             self.assertEquals(change['files'], ['filepath.rb'])
             self.assertEquals(
@@ -170,7 +171,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
                 "41a212ee83ca127e3c8cf465891ab7216a705f59"
             )
 
-            change = self.request.addedChanges[1]
+            change = self.changeHook.master.addedChanges[1]
             self.assertEquals(change['files'], ['modfile', 'removedFile'])
             self.assertEquals(
                 change["repository"], "http://github.com/defunkt/github")
@@ -196,8 +197,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def testGitWithDistinctFalse(self):
         changeDict = {"payload": [gitJsonPayload.replace(
-            '"distinct": true,', '"distinct": false,')]
-        }
+            '"distinct": true,', '"distinct": false,')]}
         self.request = FakeRequest(changeDict)
         self.request.uri = "/change_hook/github"
         self.request.method = "GET"
@@ -207,8 +207,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEqual(len(self.request.addedChanges), 1)
-            change = self.request.addedChanges[0]
+            self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+            change = self.changeHook.master.addedChanges[0]
 
             self.assertEqual(
                 change['files'], ['modfile', 'removedFile'])
@@ -246,7 +246,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             expected = "Error processing changes."
-            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
             self.request.setResponseCode.assert_called_with(500, expected)
             self.assertEqual(len(self.flushLoggedErrors()), 1)
@@ -266,7 +266,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             expected = "no changes found"
-            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
 
         d.addCallback(check_changes)
@@ -284,7 +284,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             expected = "no changes found"
-            self.assertEquals(len(self.request.addedChanges), 0)
+            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
 
         d.addCallback(check_changes)

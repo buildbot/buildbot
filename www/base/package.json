@@ -1,12 +1,14 @@
 {
-    "name": "buildbot-www",
-    "engines": {
-        "node": ">=0.10.20",
-        "npm": ">=1.4.10"
-    },
-    "devDependencies": {
-        "guanlecoja": "~0.3.5",
-        "gulp": "3.8.6",
-        "gulp-shell": "0.2.9"
-    }
+  "name": "buildbot-www",
+  "engines": {
+    "node": ">=0.10.20",
+    "npm": ">=1.4.10"
+  },
+  "devDependencies": {
+    "guanlecoja": "~0.3.5",
+    "gulp": "3.8.6",
+    "gulp-shell": "^0.4.1",
+    "http-proxy": "^1.11.1",
+    "minimist": "^1.1.1"
+  }
 }

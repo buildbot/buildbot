@@ -34,6 +34,7 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 from buildbot.status.results import computeResultAndTermination
+from buildbot.status.results import worst_status
 from buildbot.util.eventual import eventually
 
 
@@ -89,6 +90,7 @@ class Build(properties.PropertiesMixin):
         self.terminate = False
 
         self._acquiringLock = None
+        self.results = SUCCESS   # overall results, may downgrade after each step
 
     def setBuilder(self, builder):
         """
@@ -141,7 +143,7 @@ class Build(properties.PropertiesMixin):
             if c.who not in blamelist:
                 blamelist.append(c.who)
         for source in self.sources:
-            if source.patch_info:  # Add patch author to blamelist
+            if source.patch:  # Add patch author to blamelist
                 blamelist.append(source.patch_info[0])
         blamelist.sort()
         return blamelist
@@ -236,6 +238,7 @@ class Build(properties.PropertiesMixin):
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
+
         self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
         # then we just assign the bulid to the first buildrequest
@@ -245,6 +248,12 @@ class Build(properties.PropertiesMixin):
                 builderid=(yield self.builder.getBuilderId()),
                 buildrequestid=brid,
                 buildslaveid=slave.buildslaveid)
+
+        self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
+                                                                     ("control", "builds",
+                                                                      str(self.buildid),
+                                                                      "stop"))
+        yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
         # now that we have a build_status, we can set properties
         self.setupProperties()
@@ -368,9 +377,6 @@ class Build(properties.PropertiesMixin):
                   if "owner" in r.properties]
         if owners:
             self.setProperty('owners', owners, self.reason)
-
-        self.results = []  # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
-        self.result = SUCCESS  # overall result, may downgrade after each step
         self.text = []  # list of text string lists (text2)
 
     def _addBuildSteps(self, step_factories):
@@ -440,22 +446,21 @@ class Build(properties.PropertiesMixin):
             self.terminate = True
         return self.startNextStep()
 
-    def stepDone(self, result, step):
+    def stepDone(self, results, step):
         """This method is called when the BuildStep completes. It is passed a
         status object from the BuildStep and is responsible for merging the
         Step's results into those of the overall Build."""
 
         terminate = False
         text = None
-        if isinstance(result, types.TupleType):
-            result, text = result
-        assert isinstance(result, type(SUCCESS)), "got %r" % (result,)
-        log.msg(" step '%s' complete: %s" % (step.name, Results[result]))
-        self.results.append(result)
+        if isinstance(results, types.TupleType):
+            results, text = results
+        assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
+        log.msg(" step '%s' complete: %s" % (step.name, Results[results]))
         if text:
             self.text.extend(text)
-        self.result, terminate = computeResultAndTermination(step, result,
-                                                             self.result)
+        self.results, terminate = computeResultAndTermination(step, results,
+                                                              self.results)
         if not self.conn:
             terminate = True
         return terminate
@@ -471,7 +476,7 @@ class Build(properties.PropertiesMixin):
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
         else:
-            self.result = RETRY
+            self.results = RETRY
             self.text = ["lost", "connection"]
             self.stopped = True
             if self._acquiringLock:
@@ -479,7 +484,7 @@ class Build(properties.PropertiesMixin):
                 lock.stopWaitingUntilAvailable(self, access, d)
                 d.callback(None)
 
-    def stopBuild(self, reason="<no reason given>"):
+    def stopBuild(self, reason="<no reason given>", cbParams=None):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
@@ -487,7 +492,7 @@ class Build(properties.PropertiesMixin):
         # build as failed quickly rather than waiting for the slave's
         # timeout to kill it on its own.
 
-        log.msg(" %s: stopping build: %s" % (self, reason))
+        log.msg(" %s: stopping build: %s %s" % (self, reason, cbParams))
         if self.finished:
             return
         # TODO: include 'reason' in this point event
@@ -495,7 +500,7 @@ class Build(properties.PropertiesMixin):
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.result = CANCELLED
+        self.results = CANCELLED
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -503,20 +508,20 @@ class Build(properties.PropertiesMixin):
             d.callback(None)
 
     def allStepsDone(self):
-        if self.result == FAILURE:
+        if self.results == FAILURE:
             text = ["failed"]
-        elif self.result == WARNINGS:
+        elif self.results == WARNINGS:
             text = ["warnings"]
-        elif self.result == EXCEPTION:
+        elif self.results == EXCEPTION:
             text = ["exception"]
-        elif self.result == RETRY:
+        elif self.results == RETRY:
             text = ["retry"]
-        elif self.result == CANCELLED:
+        elif self.results == CANCELLED:
             text = ["cancelled"]
         else:
             text = ["build", "successful"]
         text.extend(self.text)
-        return self.buildFinished(text, self.result)
+        return self.buildFinished(text, self.results)
 
     def buildException(self, why):
         log.msg("%s.buildException" % self)
@@ -534,22 +539,21 @@ class Build(properties.PropertiesMixin):
         state.
 
         It takes two arguments which describe the overall build status:
-        text, results. 'results' is one of SUCCESS, WARNINGS, or FAILURE.
+        text, results. 'results' is one of the possible results (see buildbot.status.results).
 
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
         abandoned."""
-
+        self.stopBuildConsumer.stopConsuming()
         self.finished = True
         if self.conn:
             self.subs.unsubscribe()
             self.subs = None
             self.conn = None
-        self.results = results
-
         log.msg(" %s: build finished" % self)
+        self.results = worst_status(self.results, results)
         self.build_status.setText(text)
-        self.build_status.setResults(results)
+        self.build_status.setResults(self.results)
         self.build_status.buildFinished()
         eventually(self.releaseLocks)
         self.deferred.callback(self)

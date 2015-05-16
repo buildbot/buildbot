@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import buildbot.status.web.change_hook as change_hook
+import mock
+
+import buildbot.www.change_hook as change_hook
 
 from buildbot import util
 from buildbot.changes import base
@@ -34,13 +36,13 @@ class TestPollingChangeHook(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options}, master=mock.Mock())
 
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"
         self.request.method = "GET"
 
-        master = self.request.site.buildbot_service.master
+        master = self.request.site.master
         master.change_svc = ChangeManager(master)
 
         self.changesrc = self.Subclass("example", 21)

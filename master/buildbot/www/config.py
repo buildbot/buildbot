@@ -44,7 +44,8 @@ class IndexResource(resource.Resource):
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderIndex)
 
-    def getEnvironmentVersions(self):
+    @staticmethod
+    def getEnvironmentVersions():
         import sys
         import twisted
         from buildbot import version as bbversion

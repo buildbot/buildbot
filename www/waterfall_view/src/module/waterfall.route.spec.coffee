@@ -1,6 +1,3 @@
-beforeEach ->
-    module 'waterfall_view'
-
 describe 'Waterfall view', ->
     $state = null
 

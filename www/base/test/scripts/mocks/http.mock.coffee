@@ -75,9 +75,10 @@ window.decorateHttpBackend = ($httpBackend) ->
             return ret
 
         hint = $httpBackend.epLastPath(ep).replace("n:","")
-        if not window.dataspec?
+        window.FIXTURES.dataspec = window.FIXTURES['dataspec.fixture.json']
+        if not window.FIXTURES.dataspec?
             throw Error("dataspec is not available in test environment?!")
-        for dataEp in window.dataspec
+        for dataEp in window.FIXTURES.dataspec
             dataEp.re ?= this.epRegexp(dataEp.path)
             if dataEp.re.test(ep)
                 if nItems?
@@ -177,5 +178,5 @@ if window.describe?
                 expect(value[i]).toEqual(expected[i])
 
         it 'should have value builder not crash for all data spec cases', ->
-            for dataEp in window.dataspec
+            for dataEp in window.FIXTURES.dataspec
                 $httpBackend.buildDataValue($httpBackend.epExample(dataEp.path))
