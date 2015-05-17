@@ -146,6 +146,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
         return None
 
     def describe(self, done=False):
+        if self.stopped and not self.rendered:
+            return u"stopped early"
         assert(self.rendered)
         desc = self._describe(done)
         if not desc:
