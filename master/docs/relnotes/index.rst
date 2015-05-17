@@ -213,6 +213,9 @@ Fixes
 
 * When no arguments are used ``buildbot checkconfig`` now uses :file:`buildbot.tac` to locate the master config file.
 
+* `buildbot.util.flatten` now correctly flattens arbitrarily nested lists.
+  `buildbot.util.flattened_iterator` provides an iterable over the collection which may be more efficient for extremely large lists.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -227,6 +230,11 @@ Deprecations, Removals, and Non-Compatible Changes
 
 ..
     TODO: 0.9.0 release notes should include a warning similar to that in 0.8.9 about new-style steps
+
+* `buildbot.util.flatten` falttens lists and tuples by default (previously only lists).
+  Additionally, flattening something that isn't the type to flatten has different behaviour.
+  Previously, it would return the original value.
+  Instead, it now returns an array with the original value as the sole element.
 
 WebStatus
 .........
