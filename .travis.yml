@@ -74,6 +74,8 @@ install:
       export IS_LATEST=false
     fi;
 
+  # codecov is the interface to codecov.io; see after_success
+  - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
   # coveralls is the interface to coveralls.io; see after_success
   - "echo 'travis_fold:start:coveralls'; pip install coveralls; echo 'travis_fold:end:coveralls'"
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
@@ -117,4 +119,5 @@ notifications:
   email: false
 
 after_success:
+  - "[ $IS_LATEST = false ] || codecov"
   - "[ $IS_LATEST = false ] || coveralls"

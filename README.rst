@@ -27,5 +27,7 @@ Related repositories:
 
 .. |travis-badge| image:: https://travis-ci.org/buildbot/buildbot.svg?branch=master
 .. _travis-badge: https://travis-ci.org/buildbot/buildbot
+.. |codecov-badge| image:: https://img.shields.io/codecov/buildbot/buildbot.svg
+.. _codecov-badge: https://codecov.io/buildbot/buildbot?branch=master
 .. |coveralls-badge| image:: https://img.shields.io/coveralls/buildbot/buildbot.svg
 .. _coveralls-badge: https://coveralls.io/r/buildbot/buildbot?branch=master
