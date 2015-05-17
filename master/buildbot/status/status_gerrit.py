@@ -292,6 +292,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                         'resultText': resultText,
                         'text': ' '.join(build.getText()),
                         'url': self.master_status.getURLForThing(build),
+                        'build': build
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
