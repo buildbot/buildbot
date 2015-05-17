@@ -4,7 +4,7 @@ Buildbot-0.4.2 was released 08 Jan 2004
 
 The test suite has been completely moved over to Twisted's "Trial"
 framework, and all tests now pass. To run the test suite (consisting of 64
-tests, probably covering about 30% of BuildBot's logic), do this:
+tests, probably covering about 30% of Buildbot's logic), do this:
 
  PYTHONPATH=. trial -v buildbot.test
 
