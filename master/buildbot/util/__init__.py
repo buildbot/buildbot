@@ -66,7 +66,7 @@ def flattened_iterator(l, types=(list, tuple)):
             yield sub_element
 
 
-def flatten(l, types=(list, tuple)):
+def flatten(l, types=(list, )):
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
     flatten into a single dimenstion.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
@@ -76,6 +76,8 @@ def flatten(l, types=(list, tuple)):
     """
     # For backwards compatability, this returned a list, not an iterable.
     # Changing to return an iterable could break things.
+    if not isinstance(l, types):
+        return l
     return list(flattened_iterator(l, types))
 
 
