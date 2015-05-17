@@ -16,9 +16,11 @@
 import mock
 import re
 
+from buildbot import locks
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process.buildstep import regex_log_evaluator
+from buildbot.process.properties import renderer
 from buildbot.status.results import EXCEPTION
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -181,6 +183,41 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         props.setProperty.assert_called_with("x", "y", "t", runtime=True)
         bs.setProperty("x", "abc", "test", runtime=True)
         props.setProperty.assert_called_with("x", "abc", "test", runtime=True)
+
+    @defer.inlineCallbacks
+    def test_renderableLocks(self):
+        lock1 = mock.Mock(spec=locks.MasterLock)
+        lock1.name = "masterlock"
+
+        lock2 = mock.Mock(spec=locks.SlaveLock)
+        lock2.name = "slavelock"
+
+        renderedLocks = [False]
+
+        @renderer
+        def rendered_locks(props):
+            renderedLocks[0] = True
+            access1 = locks.LockAccess(lock1, 'counting')
+            access2 = locks.LockAccess(lock2, 'exclusive')
+            return [access1, access2]
+
+        self.setupStep(self.FakeBuildStep(locks=rendered_locks))
+        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        yield self.runStep()
+
+        self.assertTrue(renderedLocks[0])
+
+    @defer.inlineCallbacks
+    def test_regularLocks(self):
+        lock1 = mock.Mock(spec=locks.MasterLock)
+        lock1.name = "masterlock"
+
+        lock2 = mock.Mock(spec=locks.SlaveLock)
+        lock2.name = "slavelock"
+
+        self.setupStep(self.FakeBuildStep(locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
+        self.expectOutcome(result=SUCCESS, status_text=["generic"])
+        yield self.runStep()
 
     @defer.inlineCallbacks
     def test_runCommand(self):
