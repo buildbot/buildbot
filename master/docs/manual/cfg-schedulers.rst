@@ -784,12 +784,13 @@ The scheduler takes the following parameters:
 ``codebases``
 
     A list of strings or :ref:`CodebaseParameter <ForceScheduler-Parameters>` specifying the codebases that should be presented.
-    The default is a single codebase with no name.
+    The default is a single codebase with no name (i.e. `codebases=['']`).
 
 ``properties``
 
     A list of :ref:`parameters <ForceScheduler-Parameters>`, one for each property.
     These can be arbitrary parameters, where the parameter's name is taken as the property name, or ``AnyPropertyParameter``, which allows the web user to specify the property name.
+    The default value is an empty list.
 
 ``buttonName``
 

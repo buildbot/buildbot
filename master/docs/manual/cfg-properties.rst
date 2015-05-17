@@ -223,7 +223,9 @@ The following ways of interpreting the value are available.
     The character that follows the question mark is used as the delimiter between the two alternatives.
     In the above examples, it is a pipe, but any character other than ``(`` can be used.
 
-Although these are similar to shell substitutions, no other substitutions are currently supported.
+.. note::
+
+   Although these are similar to shell substitutions, no other substitutions are currently supported.
 
 Example::
 
