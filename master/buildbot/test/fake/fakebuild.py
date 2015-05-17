@@ -18,8 +18,10 @@ import posixpath
 
 from buildbot import config
 from buildbot import interfaces
+from buildbot.buildslave import base
 from buildbot.process import factory
 from buildbot.process import properties
+from buildbot.process import slavebuilder
 from buildbot.test.fake import fakemaster
 from twisted.python import components
 
@@ -43,12 +45,15 @@ class FakeBuild(properties.PropertiesMixin):
     def __init__(self, props=None, master=None):
         self.build_status = FakeBuildStatus()
         self.builder = fakemaster.FakeBuilderStatus(master)
+        self.slavebuilder = mock.Mock(spec=slavebuilder.SlaveBuilder)
+        self.slavebuilder.slave = mock.Mock(spec=base.BuildSlave)
         self.builder.config = config.BuilderConfig(
             name='bldr',
             slavenames=['a'],
             factory=factory.BuildFactory())
         self.path_module = posixpath
         self.workdir = 'build'
+        self.locks = []
 
         self.sources = {}
         if props is None:
