@@ -66,11 +66,11 @@ class Git(Source):
 
     """ Class for Git with all the smarts """
     name = 'git'
-    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method"]
+    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
-                 clobberOnFailure=False, getDescription=False, config=None, **kwargs):
+                 clobberOnFailure=False, getDescription=False, config=None, origin=None, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -108,6 +108,9 @@ class Git(Source):
         @type  getDescription: boolean or dict
         @param getDescription: Use 'git describe' to describe the fetched revision
 
+        @type origin: string
+        @param origin: The name to give the remote when cloning (default None)
+
         @type  config: dict
         @param config: Git configuration options to enable when running git
         """
@@ -129,6 +132,7 @@ class Git(Source):
         self.supportsBranch = True
         self.supportsSubmoduleCheckout = True
         self.srcdir = 'source'
+        self.origin = origin
         Source.__init__(self, **kwargs)
 
         if not self.repourl:
@@ -422,21 +426,23 @@ class Git(Source):
     def _clone(self, shallowClone):
         """Retry if clone failed"""
 
-        args = []
+        command = ['clone']
         switchToBranch = False
         if self.supportsBranch and self.branch != 'HEAD':
             if self.branch.startswith('refs/'):
                 # we can't choose this branch from 'git clone' directly; we
                 # must do so after the clone
                 switchToBranch = True
-                args += ['--no-checkout']
+                command += ['--no-checkout']
             else:
-                args += ['--branch', self.branch]
+                command += ['--branch', self.branch]
         if shallowClone:
-            args += ['--depth', '1']
+            command += ['--depth', '1']
         if self.reference:
-            args += ['--reference', self.reference]
-        command = ['clone'] + args + [self.repourl, '.']
+            command += ['--reference', self.reference]
+        if self.origin:
+            command += ['--origin', self.origin]
+        command += [self.repourl, '.']
 
         if self.prog:
             command.append('--progress')
