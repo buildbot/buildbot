@@ -127,7 +127,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             rows = res.fetchall()
             if rows:
                 for row in rows:
-                    if row.buildername not in lastBuilds.keys():
+                    if row.buildername not in lastBuilds:
                         lastBuilds[row.buildername] = [row.number]
                     else:
                         lastBuilds[row.buildername].append(row.number)
