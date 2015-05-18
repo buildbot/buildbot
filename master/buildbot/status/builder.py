@@ -488,7 +488,7 @@ class BuilderStatus(styles.Versioned):
         return build
 
     def loadBuildFromThread(self, buildnumber):
-        if buildnumber not in self.loadingBuilds.keys():
+        if buildnumber not in self.loadingBuilds:
             d = threads.deferToThread(self.getBuild, buildnumber)
             d.addCallback(self.buildLoaded, buildnumber=buildnumber)
             self.loadingBuilds[buildnumber] = {'defer': d, 'access': 1, 'build': None}
@@ -499,6 +499,10 @@ class BuilderStatus(styles.Versioned):
 
     @defer.inlineCallbacks
     def deferToThread(self, buildnumber):
+        if buildnumber in self.buildCache.cache:
+            defer.returnValue(self.getBuildByNumber(number=buildnumber))
+            return
+
         self.loadBuildFromThread(buildnumber=buildnumber)
         yield self.loadingBuilds[buildnumber]['defer']
         build = self.getLoadedBuildFromThread(buildnumber)

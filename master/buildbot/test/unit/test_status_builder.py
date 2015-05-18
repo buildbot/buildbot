@@ -38,6 +38,7 @@ class TestBuilderStatus(unittest.TestCase):
         self.builder_status.master = self.master
 
         self.builder_status.buildCache = Mock()
+        self.builder_status.buildCache.cache = {}
 
         def getCachedBuild(number):
             build_status = BuildStatus(self.builder_status, self.master, number)
