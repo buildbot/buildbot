@@ -105,7 +105,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getLastsBuildsNumbersBySlave(self, slavename, num_builds=1):
+    def getLastsBuildsNumbersBySlave(self, slavename, num_builds=15):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             builds_tbl = self.db.model.builds
@@ -137,8 +137,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return lastBuilds
 
         return self.db.pool.do(thd)
-
-
 
     def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
         def thd(conn):
