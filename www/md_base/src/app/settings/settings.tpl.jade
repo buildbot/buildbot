@@ -4,7 +4,7 @@ section.card(ng-repeat="group in settings.groups", layout-md="column", layout-gt
     p {{ group.description }}
 
   div.content(flex-gt-md="66")
-    div.setting-item(ng-repeat="item in group.items", ng-switch="", on="item.type", layout="row")
+    div.setting-item(ng-repeat="item in group.items|filter:{type:'!hidden'}", ng-switch="", on="item.type", layout="row")
       label(flex) {{ item.caption }}
       div.setting-control.bool(ng-switch-when="bool")
         md-checkbox(ng-model="item.value", aria-label="{{ item.caption }}")

@@ -24,17 +24,26 @@ class State extends Config
             description: 'Settings to customize the display of Home page'
             items: [
                 type: 'bool'
-                name: 'overview_collapsed'
-                caption: 'Collapse overview panel'
+                name: 'lock_panels'
+                caption: 'Lock panels'
                 default_value: false
             ,
-                type: 'bool'
-                name: 'current_builds_collapsed'
-                caption: 'Collapse current builds panel'
-                default_value: true
-            ,
-                type: 'bool'
-                name: 'recent_builds_collapsed'
-                caption: 'Collapse recent builds panel'
-                default_value: true
+                type: 'hidden'
+                name: 'panels'
+                default_value: [
+                    name: 'overview'
+                    title: 'overview'
+                    collapsed: false
+                    template: 'views/overview_panel.html'
+                ,
+                    name: 'current_builds'
+                    title: 'current builds'
+                    collapsed: true
+                    template: 'views/current_builds_panel.html'
+                ,
+                    name: 'recent_builds'
+                    title: 'recent builds'
+                    collapsed: true
+                    template: 'views/recent_builds_panel.html'
+                ]
             ]
