@@ -228,11 +228,6 @@ The arguments to this scheduler are:
 
 ``reason``
 
-``createAbsoluteSourceStamps``
-    This option only has effect when using multiple codebases.
-    When ``True``, it uses the last seen revision for each codebase that does not have a change.
-    When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
-
 ``treeStableTimer``
     The scheduler will wait for this many seconds before starting the build.
     If new changes are made during this interval, the timer will be restarted, so really the build will be started after a change and then after this many seconds of inactivity.
@@ -395,7 +390,9 @@ The arguments to this scheduler are:
 ``onlyImportant``
 
 ``createAbsoluteSourceStamps``
-    See :ref:`Configuring-Schedulers`.
+    This option only has effect when using multiple codebases.
+    When ``True``, it uses the last seen revision for each codebase that does not have a change.
+    When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
 
 ``onlyIfChanged``
     If this is true, then builds will not be scheduled at the designated time
