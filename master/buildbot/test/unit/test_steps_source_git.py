@@ -501,7 +501,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
         )
-        self.expectOutcome(result=SUCCESS)
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
     def test_mode_full_clobber(self):
