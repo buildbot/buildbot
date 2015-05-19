@@ -365,9 +365,15 @@ class Builder(config.ReconfigurableServiceMixin,
         # record the build in the db - one row per buildrequest
         try:
             bids = []
-            for req in build.requests:
-                bid = yield self.master.db.builds.addBuild(req.id, bs.number, slavebuilder.slave.slavename)
+
+            if len(build.requests) > 0:
+                main_br = build.requests[0]
+                bid = yield self.master.db.builds.addBuild(main_br.id, bs.number, slavebuilder.slave.slavename)
                 bids.append(bid)
+                # add build information to merged br
+                for req in build.requests[1:]:
+                    bid = yield self.master.db.builds.addBuild(req.id, bs.number)
+                    bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')
             run_cleanups()
@@ -375,7 +381,7 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # let status know
-        self.master.status.build_started(req.id, self.name, bs)
+        self.master.status.build_started(main_br.id, self.name, bs)
 
         # start the build. This will first set up the steps, then tell the
         # BuildStatus that it has started, which will announce it to the world

@@ -20,7 +20,7 @@ import os, re, itertools
 from cPickle import load, dump
 import datetime
 from buildbot.interfaces import IStatusReceiver
-from twisted.internet import defer
+from twisted.internet import defer, threads
 
 from zope.interface import implements
 from twisted.python import log, runtime
@@ -30,7 +30,6 @@ from buildbot.util.lru import LRUCache
 from buildbot.status.event import Event
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
-from twisted.internet import threads
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
@@ -93,6 +92,7 @@ class BuilderStatus(styles.Versioned):
         self.latestBuildCache = {}
         self.pendingBuildsCache = None
         self.tags = []
+        self.loadingBuilds = {}
 
 
     # persistence
@@ -126,6 +126,7 @@ class BuilderStatus(styles.Versioned):
         self.deleteKey('status', d)
         self.deleteKey('nextBuildNumber', d)
         del d['master']
+        self.deleteKey('loadingBuilds', d)
 
         if 'pendingBuildCache' in d:
             del d['pendingBuildCache']
@@ -141,6 +142,7 @@ class BuilderStatus(styles.Versioned):
         self.currentBuilds = []
         self.watchers = []
         self.slavenames = []
+        self.loadingBuilds = {}
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
         # self.master must be filled in by our parent
@@ -186,6 +188,7 @@ class BuilderStatus(styles.Versioned):
 
         filename = os.path.join(self.basedir, "builder")
         tmpfilename = filename + ".tmp"
+
         try:
             with open(tmpfilename, "wb") as f:
                 dump(self, f, -1)
@@ -193,6 +196,7 @@ class BuilderStatus(styles.Versioned):
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)
+
             os.rename(tmpfilename, filename)
         except:
             log.msg("unable to save builder %s" % self.name)
@@ -455,35 +459,94 @@ class BuilderStatus(styles.Versioned):
             return self.getBuild(self.latestBuildCache[key]["build"])
         return None
 
+    @defer.inlineCallbacks
+    def getLatestBuildCacheAsync(self, key):
+        cache = self.latestBuildCache[key]
+        max_cache = datetime.timedelta(days=self.master.config.lastBuildCacheDays)
+        if datetime.datetime.now() - cache["date"] > max_cache:
+            del self.latestBuildCache[key]
+        elif cache["build"] is not None:
+            build = yield self.deferToThread(self.latestBuildCache[key]["build"])
+            defer.returnValue(build)
+            return
+        defer.returnValue(None)
+
     def shouldUseLatestBuildCache(self, useCache, num_builds, key):
         return key and useCache and num_builds == 1 and key in self.latestBuildCache
+
+    def buildLoaded(self, build, buildnumber):
+        if build and not self.loadingBuilds[buildnumber]['build']:
+            self.loadingBuilds[buildnumber]['build'] = build
+
+    def getLoadedBuildFromThread(self, buildnumber):
+        build = self.loadingBuilds[buildnumber]['build']
+
+        self.loadingBuilds[buildnumber]['access'] -= 1
+        if not self.loadingBuilds[buildnumber]['access']:
+            del self.loadingBuilds[buildnumber]
+
+        return build
+
+    def loadBuildFromThread(self, buildnumber):
+        if buildnumber not in self.loadingBuilds:
+            d = threads.deferToThread(self.getBuild, buildnumber)
+            d.addCallback(self.buildLoaded, buildnumber=buildnumber)
+            self.loadingBuilds[buildnumber] = {'defer': d, 'access': 1, 'build': None}
+            return
+
+        if self.loadingBuilds[buildnumber]['defer']:
+            self.loadingBuilds[buildnumber]['access'] += 1
+
+    @defer.inlineCallbacks
+    def deferToThread(self, buildnumber):
+        if buildnumber in self.buildCache.cache:
+            defer.returnValue(self.getBuildByNumber(number=buildnumber))
+            return
+
+        self.loadBuildFromThread(buildnumber=buildnumber)
+        yield self.loadingBuilds[buildnumber]['defer']
+        build = self.getLoadedBuildFromThread(buildnumber)
+        defer.returnValue(build)
+
+    @defer.inlineCallbacks
+    def getFinishedBuildsByNumbers(self, buildnumbers=[], results=None):
+        finishedBuilds = []
+        for bn in buildnumbers:
+            build = yield self.deferToThread(bn)
+
+            if build:
+                if results is not None and build.getResults() not in results:
+                    continue
+
+                finishedBuilds.append(build)
+
+        defer.returnValue(finishedBuilds)
+
 
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, branches=[], codebases={},
                                num_builds=None,
-                               max_search=None,
                                results=None,
-                               slavename=None,
                                useCache=False):
 
         build = None
         finishedBuilds = []
-        max_search = max_search if max_search is not None else num_builds
         branches = set(branches)
 
         key = self.getLatestBuildKey(codebases)
+
         if self.shouldUseLatestBuildCache(useCache, num_builds, key):
-            build = self.getLatestBuildCache(key)
+            build = yield self.getLatestBuildCacheAsync(key)
 
             if build:
                 finishedBuilds.append(build)
             defer.returnValue(finishedBuilds)
             return
 
-        buildNumbers = yield self.generateBuildNumbers(codebases, max_search)
+        buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
 
         for bn in buildNumbers:
-            build = yield threads.deferToThread(self.getBuild, bn)
+            build = yield self.deferToThread(bn)
 
             if build is None:
                 continue
@@ -495,12 +558,9 @@ class BuilderStatus(styles.Versioned):
             if branches and not branches & self._getBuildBranches(build):
                 continue
 
-            if slavename and build.getSlavename() != slavename:
-                continue
-
             finishedBuilds.append(build)
 
-            if num_builds == 1 or (max_search > num_builds and len(finishedBuilds) == num_builds):
+            if num_builds == 1:
                 break
 
         if key and useCache and num_builds == 1:

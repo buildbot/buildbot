@@ -56,7 +56,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._bdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def addBuild(self, brid, number, slavename, _reactor=reactor):
+    def addBuild(self, brid, number, slavename=None, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()
             r = conn.execute(self.db.model.builds.insert(),
@@ -105,6 +105,39 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def getLastsBuildsNumbersBySlave(self, slavename, num_builds=15):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            lastBuilds = {}
+            maxSearch = num_builds if num_builds < 200 else 200
+
+            q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
+                .where(builds_tbl.c.slavename == slavename)
+            q = q.distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+
+            res = conn.execute(q)
+
+            rows = res.fetchall()
+            if rows:
+                for row in rows:
+                    if row.buildername not in lastBuilds:
+                        lastBuilds[row.buildername] = [row.number]
+                    else:
+                        lastBuilds[row.buildername].append(row.number)
+
+            res.close()
+
+            return lastBuilds
+
+        return self.db.pool.do(thd)
+
     def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
@@ -116,10 +149,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             lastBuilds = []
             maxSearch = num_builds if num_builds < 200 else 200
 
-            q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
+            q = sa.select(columns=[builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
-                                                          & (builds_tbl.c.finish_time != None)))\
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
             if sourcestamps and len(sourcestamps) > 0:
@@ -157,7 +191,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                     q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
 
-            q = q.order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+            q = q.distinct(builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
             res = conn.execute(q)
 

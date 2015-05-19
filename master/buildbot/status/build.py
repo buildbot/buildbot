@@ -462,6 +462,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             # leftover from 0.5.0, which stored builds in directories
             shutil.rmtree(filename, ignore_errors=True)
         tmpfilename = filename + ".tmp"
+
         try:
             with open(tmpfilename, "wb") as f:
                 dump(self, f, -1)
@@ -472,6 +473,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 # general (non-windows) case
                 if os.path.exists(filename):
                     os.unlink(filename)
+
             os.rename(tmpfilename, filename)
         except:
             log.msg("unable to save build %s-#%d" % (self.builder.name,
