@@ -2,6 +2,10 @@ panel {
   display: block;
   width: 100%;
   padding: 5px;
+  
+  &.sortable-ghost {
+    opacity: 0.5;
+  }
 
   .inner-container {
     background: #fff;
@@ -16,6 +20,10 @@ panel {
     color: #999;
     cursor: move;
     line-height: 36px;
+
+    &.locked {
+      cursor: default;
+    }
   }
 
   .content {

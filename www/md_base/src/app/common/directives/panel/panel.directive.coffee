@@ -6,11 +6,12 @@ class Panel extends Directive
             templateUrl: 'views/panel.html'
             controller: '_PanelController'
             controllerAs: 'panel'
-            transclude: true
             bindToController: true
             scope:
-                title: '@'
+                title: '='
                 isCollapsed: '='
+                template: '='
+                locked: '='
         }
 
 
