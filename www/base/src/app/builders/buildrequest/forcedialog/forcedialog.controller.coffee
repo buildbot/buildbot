@@ -3,7 +3,7 @@ class forceDialog extends Controller
         # prepare default values
         prepareFields = (fields) ->
             for field in fields
-                if field.type == 'nested'
+                if field.fields?
                     prepareFields(field.fields)
                 else
                     field.value = field.default
@@ -22,7 +22,7 @@ class forceDialog extends Controller
                 gatherFields = (fields) ->
                     for field in fields
                         field.errors = ''
-                        if field.type == 'nested'
+                        if field.fields?
                             gatherFields(field.fields)
                         else
                             params[field.fullName] = field.value
