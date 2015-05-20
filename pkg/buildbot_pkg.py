@@ -144,6 +144,9 @@ class my_build_py(build_py):
 
 def setup_www_plugin(**kw):
     package = kw['packages'][0]
-    setup(version=getVersion(os.path.join(package, "__init__.py")),
-          cmdclass=dict(build=my_build, egg_info=my_egg_info, build_py=my_build_py),
+    if 'version' not in kw:
+        kw['version'] = getVersion(os.path.join(package, "__init__.py"))
+    setup(cmdclass=dict(build=my_build,
+                        egg_info=my_egg_info,
+                        build_py=my_build_py),
           **kw)
