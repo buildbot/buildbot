@@ -78,12 +78,12 @@ When this is setup you should add a `POST` service pointing to ``/change_hook/bi
 For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
-Note that there is a satandalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
+Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
 This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
-    As in the previous case, the incoming HTTP requests for this hook are not authenticated bu default.
+    As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from BitBucket, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
@@ -171,7 +171,7 @@ These parameters will be passed along to the scheduler.
 
 .. warning::
 
-    As in the previous case, the incoming HTTP requests for this hook are not authenticated bu default.
+    As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from your GitLab server, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
