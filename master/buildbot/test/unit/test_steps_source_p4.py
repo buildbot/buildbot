@@ -207,7 +207,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4extra_views=[('-//depot/trunk/test', 'test'),
-                                         ('-//depot/trunk/doc', 'doc')],
+                                         ('-//depot/trunk/doc', 'doc'),
+                                         ('-//depot/trunk/white space', 'white space')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -231,12 +232,15 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         \t-//depot/trunk/test/... //p4_client1/test/...
         \t-//depot/trunk/doc/... //p4_client1/doc/...
+        \t"-//depot/trunk/white space/..." "//p4_client1/white space/..."
         ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
-                          p4viewspec=[('//depot/trunk/', '')],
+                          p4viewspec=[('//depot/trunk/', ''),
+                                      ('//depot/white space/', 'white space/'),
+                                      ('-//depot/white space/excluded/', 'white space/excluded/')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -258,13 +262,17 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...
+        \t"//depot/white space/..." "//p4_client1/white space/..."
+        \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec_suffix(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4viewspec_suffix=None,
-                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml')],
+                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
+                                      ('//depot/white space/...', 'white space/...'),
+                                      ('-//depot/white space/excluded/...', 'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -286,6 +294,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
+        \t"//depot/white space/..." "//p4_client1/white space/..."
+        \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
         self._incremental(client_stdin=client_spec)
 
@@ -473,7 +483,10 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_p4viewspec(self):
         self.setupStep(
             P4(p4port='localhost:12000',
-               mode='full', p4viewspec=[('//depot/main/', '')],
+               mode='full',
+               p4viewspec=[('//depot/main/', ''),
+                           ('//depot/main/white space/', 'white space/'),
+                           ('-//depot/main/white space/excluded/', 'white space/excluded/')],
                p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -494,7 +507,10 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         LineEnd:\tlocal
 
         View:
-        \t//depot/main/... //p4_client1/...\n''' % root_dir)
+        \t//depot/main/... //p4_client1/...
+        \t"//depot/main/white space/..." "//p4_client1/white space/..."
+        \t"-//depot/main/white space/excluded/..." "//p4_client1/white space/excluded/..."
+        ''' % root_dir)
 
         self._full(client_stdin=client_stdin)
 
@@ -621,7 +637,9 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mode_full_p4viewspec_suffix(self):
         self.setupStep(P4(p4port='localhost:12000', mode='full',
                           p4viewspec_suffix=None,
-                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml')],
+                          p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
+                                      ('//depot/trunk/white space/...', 'white space/...'),
+                                      ('-//depot/trunk/white space/excluded/...', 'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
         root_dir = '/home/user/workspace/wkdir'
@@ -643,6 +661,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/foo.xml //p4_client1/bar.xml
+        \t"//depot/trunk/white space/..." "//p4_client1/white space/..."
+        \t"-//depot/trunk/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
         self._full(client_stdin=client_spec)
 
