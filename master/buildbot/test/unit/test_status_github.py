@@ -21,6 +21,7 @@ import datetime
 
 
 from mock import Mock
+from mock import patch
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -34,7 +35,12 @@ try:
 except ImportError:
     txgithub = None
 else:
+    # Import fully qualified module for patching.
+    import buildbot.status.github
+    buildbot.status.github
+
     from buildbot.status.github import GitHubStatus
+    from buildbot.status.github import _getGitHubState
 
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging
@@ -119,7 +125,6 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         status = GitHubStatus(
             token=token, repoOwner=repoOwner, repoName=repoName)
 
-        self.assertEqual(token, status._token)
         self.assertEqual(repoOwner, status._repoOwner)
         self.assertEqual(repoName, status._repoName)
 
@@ -127,6 +132,29 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(status._sha, Interpolate("%(src::revision)s"))
         self.assertEqual(status._startDescription, "Build started.")
         self.assertEqual(status._endDescription, "Build done.")
+
+    def test_custom_github_url(self):
+        """
+        Check that the custom URL is passed as it should be
+        """
+        with patch('buildbot.status.github.GitHubAPI') as mock:
+            token = 'GitHub-API-Token'
+            owner = Interpolate('owner')
+            name = Interpolate('name')
+
+            GitHubStatus(token, owner, name)
+
+            mock.assert_called_once_with(oauth2_token=token, baseURL=None)
+
+        with patch('buildbot.status.github.GitHubAPI') as mock:
+            token = 'GitHub-API-Token'
+            owner = Interpolate('owner')
+            name = Interpolate('name')
+            url = 'https://my.example.com/api'
+
+            GitHubStatus(token, owner, name, baseURL=url)
+
+            mock.assert_called_once_with(oauth2_token=token, baseURL=url)
 
     def test_startService(self):
         """
@@ -241,7 +269,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -256,7 +284,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'pending',
@@ -300,7 +328,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
@@ -316,7 +344,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'repo-owner',
             'repoName': 'repo-name',
             'sha': '123',
-            'targetURL': 'http://domain.tld',
+            'targetURL': 'http://example.tld',
             'buildNumber': '1',
             # Augmented arguments.
             'state': 'success',
@@ -326,37 +354,6 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'endDateTime': endDateTime,
             'duration': '2 seconds',
         })
-
-    def test_timeDeltaToHumanReadable(self):
-        """
-        It will return a human readable time difference.
-        """
-        result = self.status._timeDeltaToHumanReadable(1, 1)
-        self.assertEqual('super fast', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 2)
-        self.assertEqual('1 seconds', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 61)
-        self.assertEqual('1 minutes', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 62)
-        self.assertEqual('1 minutes, 1 seconds', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 1)
-        self.assertEqual('1 hours', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 61)
-        self.assertEqual('1 hours, 1 minutes', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 60 * 60 + 62)
-        self.assertEqual('1 hours, 1 minutes, 1 seconds', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 1)
-        self.assertEqual('1 days', result)
-
-        result = self.status._timeDeltaToHumanReadable(1, 24 * 60 * 60 + 2)
-        self.assertEqual('1 days, 1 seconds', result)
 
     def test_getGitHubRepoProperties_skip_no_sha(self):
         """
@@ -402,7 +399,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._repoName = Interpolate('name')
         self.status._sha = Interpolate('sha')
         self.status._status = Mock()
-        self.status._status.getURLForThing = lambda build: 'http://thing'
+        self.status._status.getURLForThing = lambda build: 'http://example.org'
         self.build.getNumber = lambda: 1
 
         d = self.status._getGitHubRepoProperties(self.build)
@@ -413,7 +410,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoName': 'name',
             'repoOwner': 'owner',
             'sha': 'sha',
-            'targetURL': 'http://thing',
+            'targetURL': 'http://example.org',
         },
             result)
 
@@ -422,14 +419,9 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         _getGitHubState will try to translate BuildBot status into GitHub
         status. For unknown values will fallback to 'error'.
         """
-        self.assertEqual(
-            'success', self.status._getGitHubState(SUCCESS))
-
-        self.assertEqual(
-            'failure', self.status._getGitHubState(FAILURE))
-
-        self.assertEqual(
-            'error', self.status._getGitHubState('anything-else'))
+        self.assertEqual('success', _getGitHubState(SUCCESS))
+        self.assertEqual('failure', _getGitHubState(FAILURE))
+        self.assertEqual('error', _getGitHubState('anything-else'))
 
     def test_sendGitHubStatus_success(self):
         """
