@@ -259,12 +259,14 @@ def retryCommandWindowsOSPwShell(command):
            +'; if ($?) { exit 0 } else { sleep 5} } exit -1'
 
 def rsyncWithRetry(step, origin, destination):
+
+    rsync_command = "rsync -var --progress --partial '%s' '%s'" % (origin, destination)
     if _isWindowsSlave(step):
         if step.usePowerShell:
-            return retryCommandWindowsOSPwShell("rsync -var --progress --partial %s %s" % (origin, destination))
-        return retryCommandWindowsOS("rsync -var --progress --partial '%s' '%s'" % (origin, destination))
+            return retryCommandWindowsOSPwShell(rsync_command)
+        return retryCommandWindowsOS(rsync_command)
 
-    return retryCommandLinuxOS("rsync -var --progress --partial '%s' '%s'" % (origin, destination))
+    return retryCommandLinuxOS(rsync_command)
 
 
 class UploadArtifact(ShellCommand):
