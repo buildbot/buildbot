@@ -56,6 +56,12 @@ config =
             'underscore.string':
                 version: "~2.3.3"
                 files: 'lib/underscore.string.js'
+            # Here we uses 'sortable.js'. It provides some good features compared with other solutions:
+            # 1. It doesn't depends on JQuery
+            # 2. It is based on HTML5's drag API and works better with those not
+            # 3. It supports sortable on elements with different sizes and `float: left`
+            # 4. It supports moving animation
+            # 5. It officially provides a binding to AngularJS
             'sortable.js':
                 version: "~1.2.0"
                 files: ['Sortable.js', 'ng-sortable.js']
