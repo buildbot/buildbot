@@ -287,6 +287,9 @@ class P4(Source):
         # Setup a view
         client_spec += "View:\n"
 
+        def has_whitespace(*args):
+            return any([re.search(r'\s', i) for i in args])
+
         if self.p4viewspec:
             # uses only p4viewspec array of tuples to build view
             # If the user specifies a viewspec via an array of tuples then
@@ -295,19 +298,33 @@ class P4(Source):
             for k, v in self.p4viewspec:
                 if debug_logging:
                     log.msg('P4:_createClientSpec():key:%s value:%s' % (k, v))
-                client_spec += '\t%s%s //%s/%s%s\n' % (k, suffix, self.p4client, v, suffix)
+
+                qa = '"' if has_whitespace(k, suffix) else ''
+                qb = '"' if has_whitespace(self.p4client, v, suffix) else ''
+                client_spec += '\t%s%s%s%s %s//%s/%s%s%s\n' % (qa, k, suffix, qa,
+                                                               qb, self.p4client, v, suffix, qb)
         else:
             # Uses p4base, p4branch, p4extra_views
-            client_spec += "\t%s" % (self.p4base)
+
+            qa = '"' if has_whitespace(self.p4base, self.p4branch) else ''
+
+            client_spec += "\t%s%s" % (qa, self.p4base)
 
             if self.p4branch:
                 client_spec += "/%s" % (self.p4branch)
 
-            client_spec += "/... //%s/...\n" % (self.p4client)
+            client_spec += "/...%s " % qa
+
+            qb = '"' if has_whitespace(self.p4client) else ''
+            client_spec += "%s//%s/...%s\n" % (qb, self.p4client, qb)
 
             if self.p4extra_views:
                 for k, v in self.p4extra_views:
-                    client_spec += "\t%s/... //%s/%s/...\n" % (k, self.p4client, v)
+                    qa = '"' if has_whitespace(k) else ''
+                    qb = '"' if has_whitespace(k, self.p4client, v) else ''
+
+                    client_spec += "\t%s%s/...%s %s//%s/%s/...%s\n" % (qa, k, qa,
+                                                                       qb, self.p4client, v, qb)
 
         client_spec = client_spec.encode('utf-8')  # resolve unicode issues
         if debug_logging:
