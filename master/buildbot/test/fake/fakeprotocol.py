@@ -59,6 +59,6 @@ class FakeConnection(base.Connection):
         self.remoteCalls.append(('remoteStartBuild', builderName))
         return defer.succeed(None)
 
-    def remoteInterruptCommand(self, commandId, why):
-        self.remoteCalls.append(('remoteInterruptCommand', commandId, why))
+    def remoteInterruptCommand(self, builderName, commandId, why):
+        self.remoteCalls.append(('remoteInterruptCommand', builderName, commandId, why))
         return defer.succeed(None)

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.internet import reactor
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
@@ -84,6 +85,8 @@ def triggeredBuildIsNotCreated():
 
 class TriggeringMaster(RunMasterBase):
     testCasesHandleTheirSetup = True
+    proto = "pb"
+
     change = dict(branch="master",
                   files=["foo.c"],
                   author="me@foo.com",
@@ -120,6 +123,23 @@ class TriggeringMaster(RunMasterBase):
             else:
                 self.master.data.control("stop", {}, ("builds", self.higherBuild))
                 self.higherBuild = None
+        yield self.runTest(newCallback)
+
+    @defer.inlineCallbacks
+    def testTriggerRunsForeverAfterCmdStarted(self):
+        yield self.setupConfig("triggerRunsForever")
+        self.higherBuild = None
+
+        def newCallback(_, data):
+            if self.higherBuild is None:
+                self.higherBuild = data['buildid']
+            else:
+
+                def f():
+                    self.master.data.control("stop", {}, ("builds", self.higherBuild))
+                    self.higherBuild = None
+                reactor.callLater(5.0, f)
+
         yield self.runTest(newCallback)
 
     @defer.inlineCallbacks

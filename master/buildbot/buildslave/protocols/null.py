@@ -87,5 +87,6 @@ class Connection(base.Connection):
     def remoteStartBuild(self, builderName):
         return defer.succeed(self.buildslave.bot.builders[builderName].remote_startBuild())
 
-    def remoteInterruptCommand(self, commandId, why):
-        return defer.maybeDeferred(self.buildslave.bot.remote_interruptCommand, commandId, why)
+    def remoteInterruptCommand(self, builderName, commandId, why):
+        slavebuilder = self.buildslave.bot.builders[builderName]
+        return defer.maybeDeferred(slavebuilder.remote_interruptCommand, commandId, why)
