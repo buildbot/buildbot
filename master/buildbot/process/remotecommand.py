@@ -158,7 +158,8 @@ class RemoteCommand(base.RemoteCommandImpl):
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
 
-        d = self.conn.remoteInterruptCommand(self.commandID, str(why))
+        d = self.conn.remoteInterruptCommand(self.builder_name,
+                                             self.commandID, str(why))
         # the slave may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d

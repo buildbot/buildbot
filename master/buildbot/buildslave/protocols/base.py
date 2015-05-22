@@ -74,7 +74,7 @@ class Connection(object):
     def remoteStartBuild(self, builderName):
         raise NotImplementedError
 
-    def remoteInterruptCommand(self, commandId, why):
+    def remoteInterruptCommand(self, builderName, commandId, why):
         raise NotImplementedError
 
 

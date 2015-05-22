@@ -65,5 +65,5 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
 
     def test_sig_remoteInterruptCommand(self):
         @self.assertArgSpecMatches(self.conn.remoteInterruptCommand)
-        def remoteInterruptCommand(commandId, why):
+        def remoteInterruptCommand(builderName, commandId, why):
             pass

@@ -268,8 +268,9 @@ class Connection(base.Connection, pb.Avatar):
         slavebuilder = self.builders.get(builderName)
         return slavebuilder.callRemote('startBuild')
 
-    def remoteInterruptCommand(self, commandId, why):
-        return defer.maybeDeferred(self.mind.callRemote, "interruptCommand",
+    def remoteInterruptCommand(self, builderName, commandId, why):
+        slavebuilder = self.builders.get(builderName)
+        return defer.maybeDeferred(slavebuilder.callRemote, "interruptCommand",
                                    commandId, why)
 
     # perspective methods called by the slave
