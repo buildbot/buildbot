@@ -1,10 +1,17 @@
-This plugin permits to create two linked UI elements that can be integrated
-in the force dialog. The force dialog is the UI element that is displayed
-when onces clicks on the FORCE button associated to a ForceScheduler.
+This plugin permits to create two linked UI inputs that can be integrated
+in the force dialog:
+- pizza: a text field where the name of the pizza (lower or uppercase)
+  can be written,
+- ingredients: a select input where the ingredients to make the pizza
+  described in the input above can be selected. This input is automatically
+  populated via a custom webservice provided by the plugin.
+
+The force dialog is the UI element that is displayed
+when one clicks on the FORCE button associated to a ForceScheduler.
 
 More precisely the code is composed of two parts:
 - python:
-  * buildbot_nestedexample/__init__.py: definition of NestedExample
+  * buildbot_nestedexample/__init__.py: definition of NestedExample,
     child of buildbot.schedulers.forcesched.NestedParameter.
     The two UI elements are embedded in the fields attribute,
     and linked to the coffee/jade code by means of its type="nestedexample".
@@ -20,7 +27,7 @@ More precisely the code is composed of two parts:
     src/module/nestedexamplefield.directive.coffee
     src/module/nestedexamplefield.tpl.jade
 
-    Note that the name of the files match the following naming
+    Note that the name of the files match, as they must, the following naming
     convention:
     <type>field.directive.coffee
     <type>field.tpl.jade
@@ -31,10 +38,11 @@ More precisely the code is composed of two parts:
     * ...tpl.jade: to communicate to the two basefield-s where the embedded elements are.
                    This permits to benefit from the error displaying features provided
                    by basefield.
-    Please have a look at the commentaries in the code to have more details about it.
+    Please have a look at the commentaries in the code for more details.
 
 To activate that plugin in one buildbot instance,
-one should just add that UI element in the ForceScheduler like:
+one should:
+- add that UI element in the ForceScheduler like,
 
 ...
 from buildbot_nestedexample import NestedExample
@@ -51,7 +59,7 @@ ForceScheduler(codebases=[CodebaseParameter(codebase="",
                                          default="",
                                          size=80)])
 
-And activate the plugin in the buildbot configuration.
+- and activate the plugin in the buildbot configuration,
 
 c['www'] = dict(...
                 plugins=dict(nestedexample={}))
