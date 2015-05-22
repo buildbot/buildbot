@@ -1,0 +1,23 @@
+div
+  //- basefield is an angular-js directive provided by buildbot-nine.
+  //- (ng-init="field=pizza") (ng-init="field=ingredients")
+  //- are necessary to benefit
+  //- from the error reporting mechanism provided by basefield
+  //- in our embedded UI elements. They just say that the field
+  //- element to process is not the root element (here nestedexample) but
+  //- each of the embedded elements.
+  basefield(ng-init="field=pizza")
+      label.control-label.col-sm-2(for="{{pizza.name}}")
+          | {{pizza.label}}
+      .col-sm-10
+          input.form-control(type='text',
+                             name="{{pizza.name}}",
+                             ng-model="pizza.value",
+                             ng-change="getIngredients()")
+  basefield(ng-init="field=ingredients")
+      label.control-label.col-sm-2(for="{{ingredients.name}}")
+          | {{ingredients.label}}
+      .col-sm-10
+          select.form-control(name="{{ingredients.name}}",
+                              ng-model="ingredients.value",
+                              ng-options="v for v in ingredients.choices")

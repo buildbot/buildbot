@@ -1,0 +1,25 @@
+This plugin permits to create two linked UI elements that can be integrated
+in the force dialog. The force dialog is the UI element that is displayed
+when onces clicks on the FORCE button associated to a ForceScheduler.
+
+To activate it, one should just add that UI element in the ForceScheduler like:
+
+...
+from buildbot_nestedexample import NestedExample
+from buildbot.schedulers.forcesched import ForceScheduler
+
+ForceScheduler(codebases=[CodebaseParameter(codebase="",
+                                            branch=FixedParameter(name="branch", default=""),
+                                            revision=FixedParameter(name="revision", default=""),
+                                            repository=FixedParameter(name="repository", default=""),
+                                            project=FixedParameter(name="project", default=""))],
+               reason=StringParameter(name="reason",
+                                      default=""),
+               properties=[NestedExample(required=True,
+                                         default="",
+                                         size=80)])
+
+And activate the plugin in the buildbot configuration.
+
+c['www'] = dict(...
+                plugins=dict(nestedexample={}))
