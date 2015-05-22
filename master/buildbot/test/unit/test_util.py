@@ -250,6 +250,7 @@ class Flatten(unittest.TestCase):
     def test_string(self):
         self.assertEqual(util.flatten("abc"), "abc")
 
+
 class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
