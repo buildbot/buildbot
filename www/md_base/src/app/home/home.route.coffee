@@ -34,16 +34,13 @@ class State extends Config
                     name: 'overview'
                     title: 'overview'
                     collapsed: false
-                    template: 'views/overview_panel.html'
                 ,
                     name: 'current_builds'
                     title: 'current builds'
                     collapsed: true
-                    template: 'views/current_builds_panel.html'
                 ,
                     name: 'recent_builds'
                     title: 'recent builds'
                     collapsed: true
-                    template: 'views/recent_builds_panel.html'
                 ]
             ]

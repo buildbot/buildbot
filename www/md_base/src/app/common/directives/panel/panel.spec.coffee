@@ -65,3 +65,14 @@ describe 'panel', ->
 
         expect(title.hasClass('locked')).toBe(true)
         expect(titlebar.children().length).toBe(1)
+
+
+    it 'should compile content directive correctly', ->
+        $httpBackend.expectGETSVGIcons()
+        $rootScope.test_name = 'underline_should_be_replaced'
+        panel = $compile('<panel name="test_name">')($rootScope)
+        $httpBackend.flush()
+
+        content = panel.children().eq(0).children().eq(1)
+        subdirective = content.children()[0]
+        expect(subdirective.tagName.toLowerCase()).toBe('underline-should-be-replaced')

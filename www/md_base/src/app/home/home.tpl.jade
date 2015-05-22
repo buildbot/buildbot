@@ -4,8 +4,8 @@ div.project-info(layout="row")
 div.dashboard(ng-sortable="home.sortable_settings")
   panel(
     ng-repeat="panel in home.panels",
+    name="panel.name",
     title="panel.title",
     is-collapsed="panel.collapsed",
     locked="home.settings.lock_panels.value",
-    template="panel.template",
     )
