@@ -21,6 +21,6 @@ class Home extends Controller
 
     edit_panels: (state) ->
         @editing_panels = state
-        @sortable_settings.disabled = state
+        @sortable_settings.disabled = !state
         @settings.lock_panels.value = !state
         @bbSettingsService.save()
