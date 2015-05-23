@@ -2,7 +2,7 @@ class Home extends Controller
     title: ''
     titleURL: ''
 
-    constructor: ($scope, config, bbSettingsService) ->
+    constructor: ($scope, config, @bbSettingsService) ->
         @title = config.title
         @titleURL = config.titleURL
 
@@ -15,5 +15,12 @@ class Home extends Controller
 
         @panels = @settings.panels.value
 
-        $scope.$watch 'home.panels', (-> bbSettingsService.save()), true
-        $scope.$watch 'home.settings.lock_panels', (-> bbSettingsService.save()), true
+        @editing_panels = !@settings.lock_panels.value
+
+        $scope.$watch 'home.panels', (=> @bbSettingsService.save()), true
+
+    edit_panels: (state) ->
+        @editing_panels = state
+        @sortable_settings.disabled = state
+        @settings.lock_panels.value = state
+        @bbSettingsService.save()
