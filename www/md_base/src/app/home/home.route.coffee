@@ -26,7 +26,7 @@ class State extends Config
                 type: 'bool'
                 name: 'lock_panels'
                 caption: 'Lock panels'
-                default_value: false
+                default_value: true
             ,
                 type: 'hidden'
                 name: 'panels'
