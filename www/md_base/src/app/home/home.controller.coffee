@@ -16,3 +16,4 @@ class Home extends Controller
         @panels = @settings.panels.value
 
         $scope.$watch 'home.panels', (-> bbSettingsService.save()), true
+        $scope.$watch 'home.settings.lock_panels', (-> bbSettingsService.save()), true
