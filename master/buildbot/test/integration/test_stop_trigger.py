@@ -85,7 +85,6 @@ def triggeredBuildIsNotCreated():
 
 class TriggeringMaster(RunMasterBase):
     testCasesHandleTheirSetup = True
-    proto = "pb"
 
     change = dict(branch="master",
                   files=["foo.c"],
