@@ -21,14 +21,63 @@ import textwrap
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
+from buildbot.schedulers.basic import BaseBasicScheduler
 from buildslave.bot import BuildSlave
 from buildslave.bot import LocalBuildSlave
+
+
+class WaitForStartConsumingSchedulers(object):
+    """
+    startService does not return a deferred. So, when
+    we call yield master.reconfigServiceWithBuildbotConfig
+    we cannot know whether services, like schedulers, have finished their
+    setup.
+    This creates an issue regarding the SingleBranch, AnyBranch schedulers.
+    These schedulers are able to trigger builds only after they have
+    subscribed to the 'new' change event. If we try to start a build with a new change
+    before they subscribed to the event (what can happen as startService does not return a deferred),
+    the build will never start, and the test will timeout.
+    This class implements a poller to ensure that these schedulers have subscribed to the event,
+    before any test tries to create a build with a new change.
+    """
+    POLL_INTERVAL_SEC = 1
+
+    def __init__(self, master):
+        self.ds = [(defer.Deferred(), s)
+                   for s in master.allSchedulers()
+                   if isinstance(s, BaseBasicScheduler) and s._change_consumer is None]
+        self.task = None
+
+    def startPolling(self):
+        self.task = task.LoopingCall(self.callbackSchedulers)
+        self.task.start(self.POLL_INTERVAL_SEC, now=True)
+
+    def stopPolling(self):
+        self.task.stop()
+
+    def getAllDeferreds(self):
+        return [d for (d, _) in self.ds]
+
+    def callbackSchedulers(self):
+        for (d, s) in self.ds:
+            if s._change_consumer is not None:
+                d.callback(None)
+        self.ds = [(d, s) for (d, s) in self.ds
+                   if s._change_consumer is None]
+
+    @defer.inlineCallbacks
+    def waitForSchedToBeActive(self):
+        d = defer.DeferredList(self.getAllDeferreds())
+        self.startPolling()
+        yield d
+        self.stopPolling()
 
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
@@ -101,6 +150,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         elif self.proto == 'null':
             s = LocalBuildSlave("local1", self.basedir, False)
         s.setServiceParent(m)
+        ws = WaitForStartConsumingSchedulers(self.master)
+        yield ws.waitForSchedToBeActive()
 
     def setUp(self):
         if self.testCasesHandleTheirSetup:
