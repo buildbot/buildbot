@@ -1,0 +1,65 @@
+This plugin permits to create two linked UI inputs that can be integrated
+in the force dialog:
+- pizza: a text field where the name of the pizza (lower or uppercase)
+  can be written,
+- ingredients: a select input where the ingredients to make the pizza
+  described in the input above can be selected. This input is automatically
+  populated via a custom webservice provided by the plugin.
+
+The force dialog is the UI element that is displayed
+when one clicks on the FORCE button associated to a ForceScheduler.
+
+More precisely the code is composed of two parts:
+- python:
+  * buildbot_nestedexample/__init__.py: definition of NestedExample,
+    child of buildbot.schedulers.forcesched.NestedParameter.
+    The two UI elements are embedded in the fields attribute,
+    and linked to the coffee/jade code by means of its type="nestedexample".
+  * buildbot_nestedexample/api.py: define the "getIngredients" endpoint
+    that returns the ingredients necessary to make one pizza.
+- coffee:
+  * plugin boilerplate:
+    guanlecoja/config.coffee
+    gulpfile.js
+    package.json
+    setup.py
+  * ui logic:
+    src/module/nestedexamplefield.directive.coffee
+    src/module/nestedexamplefield.tpl.jade
+
+    Note that the name of the files match, as they must, the following naming
+    convention:
+    <type>field.directive.coffee
+    <type>field.tpl.jade
+
+    Regarding the coffee code, the only non standard angular code, is the one
+    that permits:
+    * ...directive.coffee: to extract the embedded elements from the scope, and
+    * ...tpl.jade: to communicate to the two basefield-s where the embedded elements are.
+                   This permits to benefit from the error displaying features provided
+                   by basefield.
+    Please have a look at the commentaries in the code for more details.
+
+To activate that plugin in one buildbot instance,
+one should:
+- add that UI element in the ForceScheduler like,
+
+...
+from buildbot_nestedexample import NestedExample
+from buildbot.schedulers.forcesched import ForceScheduler
+
+ForceScheduler(codebases=[CodebaseParameter(codebase="",
+                                            branch=FixedParameter(name="branch", default=""),
+                                            revision=FixedParameter(name="revision", default=""),
+                                            repository=FixedParameter(name="repository", default=""),
+                                            project=FixedParameter(name="project", default=""))],
+               reason=StringParameter(name="reason",
+                                      default=""),
+               properties=[NestedExample(required=True,
+                                         default="",
+                                         size=80)])
+
+- and activate the plugin in the buildbot configuration,
+
+c['www'] = dict(...
+                plugins=dict(nestedexample={}))
