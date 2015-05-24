@@ -162,6 +162,7 @@ setup_args = {
         "buildbot.plugins",
         "buildbot.process",
         "buildbot.process.users",
+        "buildbot.reporters",
         "buildbot.schedulers",
         "buildbot.scripts",
         "buildbot.status",
