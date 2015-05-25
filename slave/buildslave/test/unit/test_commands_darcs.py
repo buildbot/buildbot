@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import darcs
@@ -28,6 +29,7 @@ class TestDarcs(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('darcs', 'path/to/darcs')
         self.clean_environ()
@@ -63,9 +65,9 @@ class TestDarcs(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://darcs.net\n")
-        return d
+        yield self.run_command()
+
+        self.assertSourceData("http://darcs.net\n")
 
 example_changes = """\
 

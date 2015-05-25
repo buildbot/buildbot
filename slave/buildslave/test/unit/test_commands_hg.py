@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import hg
@@ -31,6 +32,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
     def patch_sourcedirIsUpdateable(self, result):
         self.cmd.sourcedirIsUpdateable = lambda: result
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('hg', 'path/to/hg')
         self.clean_environ()
@@ -83,10 +85,11 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bitbucket.org/nicolas17/pyboinc\n")
-        return d
+        yield self.run_command()
 
+        self.assertSourceData("http://bitbucket.org/nicolas17/pyboinc\n")
+
+    @defer.inlineCallbacks
     def test_update_existing(self):
         self.patch_getCommand('hg', 'path/to/hg')
         self.clean_environ()
@@ -131,10 +134,12 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
             + 0,
         ]
         self.patch_runprocess(*expects)
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bitbucket.org/nicolas17/pyboinc\n")
-        return d
 
+        yield self.run_command()
+
+        self.assertSourceData("http://bitbucket.org/nicolas17/pyboinc\n")
+
+    @defer.inlineCallbacks
     def test_update_existing_change_branch(self):
         self.patch_getCommand('hg', 'path/to/hg')
         self.clean_environ()
@@ -186,10 +191,12 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
 
         ]
         self.patch_runprocess(*expects)
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bitbucket.org/nicolas17/pyboinc\n")
-        return d
 
+        yield self.run_command()
+
+        self.assertSourceData("http://bitbucket.org/nicolas17/pyboinc\n")
+
+    @defer.inlineCallbacks
     def test_update_handle_emptyupdate(self):
         self.patch_getCommand('hg', 'path/to/hg')
         self.clean_environ()
@@ -242,10 +249,12 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
             + 0,
         ]
         self.patch_runprocess(*expects)
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bitbucket.org/nicolas17/pyboinc\n")
-        return d
 
+        yield self.run_command()
+
+        self.assertSourceData("http://bitbucket.org/nicolas17/pyboinc\n")
+
+    @defer.inlineCallbacks
     def test_update_existing_change_branch_purge_fail(self):
         self.patch_getCommand('hg', 'path/to/hg')
         self.clean_environ()
@@ -322,6 +331,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
 
         ]
         self.patch_runprocess(*expects)
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bitbucket.org/nicolas17/pyboinc\n")
-        return d
+
+        yield self.run_command()
+
+        self.assertSourceData("http://bitbucket.org/nicolas17/pyboinc\n")

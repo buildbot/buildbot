@@ -16,18 +16,15 @@
 import os
 import shutil
 
+from os import errno
+
 from twisted.trial import unittest
 
 from buildslave.commands import fs
 from buildslave.commands import utils
+from buildslave.test.util import compat
 from buildslave.test.util.command import CommandTestMixin
-from twisted.python import runtime
-
-# python-2.4 doesn't have os.errno
-if hasattr(os, 'errno'):
-    errno = os.errno
-else:
-    import errno
+from twisted.internet import defer
 
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
@@ -38,52 +35,52 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.make_command(fs.RemoveDirectory, dict(
             dir='workdir',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'workdir'))))
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertFalse(os.path.exists(
+            os.path.abspath(os.path.join(self.basedir, 'workdir'))))
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    # we only use rmdirRecursive on windows
+    @compat.skipUnlessPlatformIs("win32")
+    @defer.inlineCallbacks
     def test_simple_exception(self):
-        if runtime.platformType == "posix":
-            return  # we only use rmdirRecursive on windows
 
         def fail(dir):
             raise RuntimeError("oh noes")
         self.patch(utils, 'rmdirRecursive', fail)
+
         self.make_command(fs.RemoveDirectory, dict(
             dir='workdir',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertIn({'rc': -1}, self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertIn({'rc': -1}, self.get_updates(), self.builder.show())
+
+    @defer.inlineCallbacks
     def test_multiple_dirs(self):
         self.make_command(fs.RemoveDirectory, dict(
             dir=['workdir', 'sourcedir'],
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            for dirname in ['workdir', 'sourcedir']:
-                self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, dirname))))
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
+
+        for dirname in ['workdir', 'sourcedir']:
+            self.assertFalse(os.path.exists(
+                os.path.abspath(os.path.join(self.basedir, dirname))))
+
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
 
 
 class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
@@ -94,24 +91,26 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.make_command(fs.CopyDirectory, dict(
             fromdir='workdir',
             todir='copy',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'copy'))))
-            self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertTrue(os.path.exists(
+            os.path.abspath(os.path.join(self.basedir, 'copy'))))
+        # this may ignore a 'header' : '..', which is OK
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    # we only use rmdirRecursive on windows
+    @compat.skipUnlessPlatformIs("win32")
+    @defer.inlineCallbacks
     def test_simple_exception(self):
-        if runtime.platformType == "posix":
-            return  # we only use rmdirRecursive on windows
 
         def fail(src, dest):
             raise RuntimeError("oh noes")
@@ -120,14 +119,12 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
             fromdir='workdir',
             todir='copy',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertIn({'rc': -1},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
+
+        self.assertIn({'rc': -1},
+                      self.get_updates(),
+                      self.builder.show())
 
 
 class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
@@ -138,46 +135,40 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.make_command(fs.MakeDirectory, dict(
             dir='test-dir',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'test-dir'))))
-            self.assertUpdates(
-                [{'rc': 0}],
-                self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertTrue(os.path.exists(
+            os.path.abspath(os.path.join(self.basedir, 'test-dir'))))
+        self.assertUpdates([{'rc': 0}], self.builder.show())
+
+    @defer.inlineCallbacks
     def test_already_exists(self):
         self.make_command(fs.MakeDirectory, dict(
             dir='workdir',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertUpdates(
-                [{'rc': 0}],
-                self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertUpdates([{'rc': 0}], self.builder.show())
+
+    @defer.inlineCallbacks
     def test_existing_file(self):
         self.make_command(fs.MakeDirectory, dict(
             dir='test-file',
         ), True)
         open(os.path.join(self.basedir, 'test-file'), "w")
-        d = self.run_command()
 
-        def check(_):
-            self.assertIn({'rc': errno.EEXIST},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
+
+        self.assertIn({'rc': errno.EEXIST},
+                      self.get_updates(),
+                      self.builder.show())
 
 
 class TestStatFile(CommandTestMixin, unittest.TestCase):
@@ -188,51 +179,50 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_non_existant(self):
         self.make_command(fs.StatFile, dict(
             file='no-such-file',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertIn({'rc': errno.ENOENT},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertIn({'rc': errno.ENOENT},
+                      self.get_updates(),
+                      self.builder.show())
+
+    @defer.inlineCallbacks
     def test_directory(self):
         self.make_command(fs.StatFile, dict(
             file='workdir',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            import stat
-            self.assertTrue(stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        import stat
+        self.assertTrue(
+            stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    @defer.inlineCallbacks
     def test_file(self):
         self.make_command(fs.StatFile, dict(
             file='test-file',
         ), True)
         open(os.path.join(self.basedir, 'test-file'), "w")
 
-        d = self.run_command()
+        yield self.run_command()
 
-        def check(_):
-            import stat
-            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        import stat
+        self.assertTrue(
+            stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
 
+    @defer.inlineCallbacks
     def test_file_workdir(self):
         self.make_command(fs.StatFile, dict(
             file='test-file',
@@ -241,16 +231,14 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         os.mkdir(os.path.join(self.basedir, 'wd'))
         open(os.path.join(self.basedir, 'wd', 'test-file'), "w")
 
-        d = self.run_command()
+        yield self.run_command()
 
-        def check(_):
-            import stat
-            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        import stat
+        self.assertTrue(
+            stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
 
 
 class TestGlobPath(CommandTestMixin, unittest.TestCase):
@@ -261,49 +249,47 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_non_existant(self):
         self.make_command(fs.GlobPath, dict(
             path='no-*-file',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertEqual(self.get_updates()[0]['files'], [])
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertEqual(self.get_updates()[0]['files'], [])
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    @defer.inlineCallbacks
     def test_directory(self):
         self.make_command(fs.GlobPath, dict(
             path='[wxyz]or?d*',
         ), True)
-        d = self.run_command()
 
-        def check(_):
-            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'workdir')])
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        yield self.run_command()
 
+        self.assertEqual(self.get_updates()[0]['files'],
+                         [os.path.join(self.basedir, 'workdir')])
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
+
+    @defer.inlineCallbacks
     def test_file(self):
         self.make_command(fs.GlobPath, dict(
             path='t*-file',
         ), True)
         open(os.path.join(self.basedir, 'test-file'), "w")
 
-        d = self.run_command()
+        yield self.run_command()
 
-        def check(_):
-            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.get_updates()[0]['files'],
+                         [os.path.join(self.basedir, 'test-file')])
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
 
 
 class TestListDir(CommandTestMixin, unittest.TestCase):
@@ -314,19 +300,18 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_non_existant(self):
         self.make_command(fs.ListDir,
                           dict(dir='no-such-dir'),
                           True)
-        d = self.run_command()
+        yield self.run_command()
 
-        def check(_):
-            self.assertIn({'rc': errno.ENOENT},
-                          self.get_updates(),
-                          self.builder.show())
-        d.addCallback(check)
-        return d
+        self.assertIn({'rc': errno.ENOENT},
+                      self.get_updates(),
+                      self.builder.show())
 
+    @defer.inlineCallbacks
     def test_dir(self):
         self.make_command(fs.ListDir, dict(
             dir='workdir',
@@ -335,20 +320,13 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
         open(os.path.join(workdir, 'file1'), "w")
         open(os.path.join(workdir, 'file2'), "w")
 
-        d = self.run_command()
+        yield self.run_command()
 
-        def any(items):  # not a builtin on python-2.4
-            for i in items:
-                if i:
-                    return True
+        self.assertIn({'rc': 0},
+                      self.get_updates(),
+                      self.builder.show())
 
-        def check(_):
-            self.assertIn({'rc': 0},
-                          self.get_updates(),
-                          self.builder.show())
-            self.failUnless(any([
-                'files' in upd and sorted(upd['files']) == ['file1', 'file2']
-                for upd in self.get_updates()]),
-                self.builder.show())
-        d.addCallback(check)
-        return d
+        self.failUnless(any([
+            'files' in upd and sorted(upd['files']) == ['file1', 'file2']
+            for upd in self.get_updates()]),
+            self.builder.show())

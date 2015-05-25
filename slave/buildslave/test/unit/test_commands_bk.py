@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import bk
@@ -28,6 +29,7 @@ class TestBK(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('bk', 'path/to/bk')
         self.clean_environ()
@@ -63,7 +65,7 @@ class TestBK(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
+        yield self.run_command()
+
         # TODO: why the extra quotes?
-        d.addCallback(self.check_sourcedata, '"http://bkdemo.bkbits.net/bk_demo1\n"')
-        return d
+        self.assertSourceData('"http://bkdemo.bkbits.net/bk_demo1\n"')

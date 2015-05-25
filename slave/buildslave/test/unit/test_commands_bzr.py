@@ -15,6 +15,7 @@
 
 import textwrap
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import bzr
@@ -30,6 +31,7 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('bzr', 'path/to/bzr')
         self.clean_environ()
@@ -72,6 +74,7 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata, "http://bazaar.launchpad.net/~bzr/bzr-gtk/trunk\n")
-        return d
+        yield self.run_command()
+
+        self.assertSourceData(
+            "http://bazaar.launchpad.net/~bzr/bzr-gtk/trunk\n")

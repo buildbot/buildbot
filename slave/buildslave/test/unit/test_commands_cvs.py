@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildslave.commands import cvs
@@ -28,6 +29,7 @@ class TestCVS(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
+    @defer.inlineCallbacks
     def test_simple(self):
         self.patch_getCommand('cvs', 'path/to/cvs')
         self.clean_environ()
@@ -57,7 +59,7 @@ class TestCVS(SourceCommandTestMixin, unittest.TestCase):
         ]
         self.patch_runprocess(*expects)
 
-        d = self.run_command()
-        d.addCallback(self.check_sourcedata,
-                      ":pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot\nhtdocs\nNone\n")
-        return d
+        yield self.run_command()
+
+        self.assertSourceData(
+            ":pserver:anoncvs@anoncvs.NetBSD.org:/cvsroot\nhtdocs\nNone\n")
