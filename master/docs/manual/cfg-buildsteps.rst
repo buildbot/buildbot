@@ -2259,7 +2259,7 @@ To run trial tests manually, you run the :command:`trial` executable and tell it
 The most common way of doing this is with a module name.
 For petmail, this might look like :command:`trial petmail.test`, which would locate all the :file:`test_*.py` files under :file:`petmail/test/`, running every test case it could find in them.
 Unlike the ``unittest.py`` that comes with Python, it is not necessary to run the :file:`test_foo.py` as a script; you always let trial do the importing and running.
-The step's ``tests``` parameter controls which tests trial will run: it can be a string or a list of strings.
+The step's ``tests`` parameter controls which tests trial will run: it can be a string or a list of strings.
 
 To find the test cases, the Python search path must allow something like ``import petmail.test`` to work.
 For packages that don't use a separate top-level :file:`lib` directory, ``PYTHONPATH=.`` will work, and will use the test cases (and the code they are testing) in-place.
