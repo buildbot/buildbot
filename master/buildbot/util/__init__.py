@@ -49,17 +49,36 @@ def naturalSort(l):
     return l
 
 
-def flatten(l, types=list):
-    if l and isinstance(l, types):
-        rv = []
-        for e in l:
-            if isinstance(e, types):
-                rv.extend(flatten(e, types))
-            else:
-                rv.append(e)
-        return rv
-    else:
+def flattened_iterator(l, types=(list, tuple)):
+    """
+    Generator for a list/tuple that potentially contains nested/lists/tuples of arbitrary nesting
+    that returns every individual non-list/tuple element.  In other words, [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
+    will yield 5, 6, 8, 3, 2, 2, 1, 3, 4
+
+    This is safe to call on something not a list/tuple - the original input is yielded.
+    """
+    if not isinstance(l, types):
+        yield l
+        return
+
+    for element in l:
+        for sub_element in flattened_iterator(element, types):
+            yield sub_element
+
+
+def flatten(l, types=(list, )):
+    """
+    Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
+    flatten into a single dimenstion.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
+    into [5, 6, 8, 3, 2, 2, 1, 3, 4]
+
+    This is safe to call on something not a list/tuple - the original input is returned as a list
+    """
+    # For backwards compatability, this returned a list, not an iterable.
+    # Changing to return an iterable could break things.
+    if not isinstance(l, types):
         return l
+    return list(flattened_iterator(l, types))
 
 
 def now(_reactor=None):
