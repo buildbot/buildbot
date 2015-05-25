@@ -25,15 +25,16 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
+from buildbot.schedulers.basic import BaseBasicScheduler
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
-from buildbot.schedulers.basic import BaseBasicScheduler
 from buildslave.bot import BuildSlave
 from buildslave.bot import LocalBuildSlave
 
 
 class WaitForStartConsumingSchedulers(object):
+
     """
     startService does not return a deferred. So, when
     we call yield master.reconfigServiceWithBuildbotConfig
