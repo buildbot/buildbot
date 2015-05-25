@@ -373,6 +373,7 @@ class Git(Source):
                 return cmd.rc
         return d
 
+    @defer.inlineCallbacks
     def _fetch(self, _):
         command = ['fetch', '-t', self.repourl, self.branch]
         # If the 'progress' option is set, tell git fetch to output
@@ -382,28 +383,21 @@ class Git(Source):
         if self.prog:
             command.append('--progress')
 
-        d = self._dovccmd(command)
+        yield self._dovccmd(command)
 
-        @d.addCallback
-        def checkout(_):
-            if self.revision:
-                rev = self.revision
-            else:
-                rev = 'FETCH_HEAD'
-            command = ['reset', '--hard', rev, '--']
-            abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
-            return self._dovccmd(command, abandonOnFailure)
+        if self.revision:
+            rev = self.revision
+        else:
+            rev = 'FETCH_HEAD'
+        command = ['reset', '--hard', rev, '--']
+        abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
+        res = yield self._dovccmd(command, abandonOnFailure)
 
-        if self.branch != 'HEAD':
-            @d.addCallback
-            def renameBranch(res):
-                if res != RC_SUCCESS:
-                    return res
-                d = self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
-                # Ignore errors
-                d.addCallback(lambda _: res)
-                return d
-        return d
+        if res == RC_SUCCESS and self.branch != 'HEAD':
+            # Ignore errors
+            yield self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
+
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _fetchOrFallback(self, _=None):
