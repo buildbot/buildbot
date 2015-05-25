@@ -38,7 +38,7 @@ Buildbot uses the Python setuptools entry-point mechanism to allow multiple pack
 This allows frontend developers and users to build custom components for the web UI without hacking Buildbot itself.
 
 Python development and AngularJS development are very different processes, requiring different environment requirements and skillsets.
-To maimize hackability, Buildbot separates the two cleanly.
+To maximize hackability, Buildbot separates the two cleanly.
 An experienced AngularJS hacker should be quite comfortable in the :src:`www/` directory, with a few exceptions described below.
 Similarly, an experienced Python hacker can simply download the pre-built web UI (from pypi!) and never venture near the :src:`www/` directory.
 
