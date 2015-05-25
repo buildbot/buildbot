@@ -107,13 +107,12 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     :param list: potentially nested list
     :param types: An optional iterable of the types to flatten.
-    By default, if unspecified, this flattens both lists and tuples
+        By default, if unspecified, this flattens both lists and tuples
     :returns: flat list
 
-    Flatten nested lists into a list containing no other lists.
-    For example:
+    Flatten nested lists into a list containing no other lists. For example:
 
-    .. code-block:: none
+    .. code-block:: python
 
         >>> flatten([ [  1, 2 ], 3, [ [ 4 ], 5 ] ])
         [ 1, 2, 3, 4, 5 ]
@@ -124,7 +123,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     :param list: potentially nested list
     :param types: An optional iterable of the types to flatten.
-    By default, if unspecified, this flattens both lists and tuples.
+        By default, if unspecified, this flattens both lists and tuples.
     :returns: iterator over every element that isn't in types
 
     Returns a generator that doesn't yield any lists/tuples.  For example:
@@ -309,7 +308,7 @@ This package provides a few useful collection objects.
 
     This is a collection of named sets.
     In principal, it contains an empty set for every name, and you can add things to sets, discard things from sets, and so on.
-    
+
     ::
 
         >>> ks = KeyedSets()
