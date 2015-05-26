@@ -1,1 +1,20 @@
-| overview panel content
+div.tile
+  div.title Masters
+  div.count {{ overview.masters.count }}
+  div.extra
+    | {{ overview.masters.active }} active.
+div.tile
+  div.title Slaves
+  div.count {{ overview.slaves.count }}
+  div.extra
+    | {{ overview.slaves.connections }} connections.
+div.tile
+  div.title Builders
+  div.count {{ overview.builders.count }}
+  div.extra
+    a(ui-sref="builds") View all builders
+div.tile
+  div.title Schedulers
+  div.count {{ overview.schedulers.count }}
+  div.extra
+    a(ui-sref="builds") View all schedulers
