@@ -36,16 +36,15 @@ class Monotone(Source):
     renderables = ['repourl']
     possible_methods = ('clobber', 'copy', 'fresh', 'clean')
 
-    def __init__(self, repourl=None, branch=None, progress=False, mode='incremental',
-                 method=None, **kwargs):
+    def __init__(self, repourl=None, branch=None, progress=False,
+                 mode='incremental', method=None, **kwargs):
 
         self.repourl = repourl
         self.method = method
         self.mode = mode
         self.branch = branch
         self.sourcedata = "%s?%s" % (self.repourl, self.branch)
-        self.databasename = 'db.mtn'
-        self.database = '../db.mtn'
+        self.database = 'db.mtn'
         self.progress = progress
         Source.__init__(self, **kwargs)
         errors = []
@@ -83,14 +82,21 @@ class Monotone(Source):
                 raise BuildSlaveTooOldError("Monotone is not installed on slave")
             return 0
         d.addCallback(lambda _: self._checkDb())
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+        d.addCallback(lambda _: self._retryPull())
 
-        @d.addCallback
-        def checkPatched(patched):
-            if patched:
-                return self.clean()
-            else:
-                return 0
+        # If we're not throwing away the workdir, check if it's
+        # somehow patched or modified and revert.
+        if self.mode != 'full' or self.method not in ('clobber', 'copy'):
+            d.addCallback(lambda _: self.sourcedirIsPatched())
+
+            @d.addCallback
+            def checkPatched(patched):
+                if patched:
+                    return self.clean()
+                else:
+                    return 0
+
+        # Add a mode specific callback
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:
@@ -111,8 +117,7 @@ class Monotone(Source):
 
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            yield self._retryClone()
-            yield self._checkout()
+            yield self.clobber()
         elif self.method == 'clean':
             yield self.clean()
             yield self._update()
@@ -126,23 +131,20 @@ class Monotone(Source):
     def mode_incremental(self, _):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
-            yield self._retryClone()
-            yield self._checkout()
+            yield self.clobber()
         else:
-            yield self._pull()
-            yield self._update(dopull=False)
+            yield self._update()
 
     def clobber(self):
         d = self.runRmdir(self.workdir)
-        d.addCallback(lambda _: self.runRmdir(self.databasename))
-        d.addCallback(lambda _: self._retryClone())
         d.addCallback(lambda _: self._checkout())
         return d
 
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout, })
+        cmd = remotecommand.RemoteCommand('rmdir', {
+            'dir': self.workdir,
+            'logEnviron': self.logEnviron,
+            'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -167,7 +169,8 @@ class Monotone(Source):
         return d
 
     def checkMonotone(self):
-        cmd = remotecommand.RemoteShellCommand(self.workdir, ['mtn', '--version'],
+        cmd = remotecommand.RemoteShellCommand(self.workdir,
+                                               ['mtn', '--version'],
                                                env=self.env,
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout)
@@ -188,7 +191,8 @@ class Monotone(Source):
         if not ignore_ignored:
             commands.append(['mtn', 'ls', 'ignored'])
         for cmd in commands:
-            stdout = yield self._dovccmd(cmd, collectStdout=True)
+            stdout = yield self._dovccmd(self.workdir, cmd,
+                                         collectStdout=True)
             if len(stdout) == 0:
                 continue
             for filename in stdout.strip().split('\n'):
@@ -216,52 +220,39 @@ class Monotone(Source):
                 return
         defer.returnValue(0)
 
-    def _clone(self, abandonOnFailure=False):
-        command = ['mtn', 'db', 'init', '--db', self.database]
-        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
-        d.addCallback(lambda _: self._pull())
-        return d
-
     def _checkout(self, abandonOnFailure=False):
-        command = ['mtn', 'checkout', '.', '--db=%s' % (self.database)]
+        command = ['mtn', 'checkout', self.workdir, '--db', self.database]
         if self.revision:
             command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
+        return self._dovccmd('', command, abandonOnFailure=abandonOnFailure)
 
-        return self._dovccmd(command, abandonOnFailure=abandonOnFailure)
-
-    def _update(self, dopull=True, abandonOnFailure=False):
-        if dopull:
-            d = self._pull()
-        else:
-            d = defer.succeed(0)
-        command = ['mtn', 'update', '--db=%s' % (self.database)]
+    def _update(self, abandonOnFailure=False):
+        command = ['mtn', 'update']
         if self.revision:
             command.extend(['--revision', self.revision])
         else:
-            command.extend(["-r", "h:" + self.branch])
-        command.extend(["-b", self.branch])
-
-        d.addCallback(lambda _: self._dovccmd(command, abandonOnFailure=abandonOnFailure))
-        return d
+            command.extend(['--revision', 'h:' + self.branch])
+        command.extend(['--branch', self.branch])
+        return self._dovccmd(self.workdir, command,
+                             abandonOnFailure=abandonOnFailure)
 
     def _pull(self, abandonOnFailure=False):
-        command = ['mtn', 'pull', self.sourcedata,
-                   '--db=%s' % (self.database)]
+        command = ['mtn', 'pull', self.sourcedata, '--db', self.database]
         if self.progress:
             command.extend(['--ticker=dot'])
         else:
             command.extend(['--ticker=none'])
-        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        d = self._dovccmd('', command, abandonOnFailure=abandonOnFailure)
         return d
 
-    def _retryClone(self):
+    def _retryPull(self):
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
         else:
             abandonOnFailure = True
 
-        d = self._clone(abandonOnFailure)
+        d = self._pull(abandonOnFailure)
 
         def _retry(res):
             if self.stopped or res == 0:
@@ -272,9 +263,7 @@ class Monotone(Source):
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir))
-                df.addCallback(lambda _: self.runRmdir(self.databasename))
-                df.addCallback(lambda _: self._retryClone())
+                df.addCallback(lambda _: self._retryPull())
                 reactor.callLater(delay, df.callback, None)
                 return df
             return res
@@ -285,7 +274,9 @@ class Monotone(Source):
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _=None):
-        stdout = yield self._dovccmd(['mtn', 'automate', 'select', 'w:'], collectStdout=True)
+        stdout = yield self._dovccmd(self.workdir,
+                                     ['mtn', 'automate', 'select', 'w:'],
+                                     collectStdout=True)
         revision = stdout.strip()
         if len(revision) != 40:
             raise buildstep.BuildStepFailed()
@@ -293,21 +284,21 @@ class Monotone(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
-                 abandonOnFailure=True, wkdir=None):
+    def _dovccmd(self, workdir, command,
+                 collectStdout=False, initialStdin=None, decodeRC=None,
+                 abandonOnFailure=True):
         if not command:
             raise ValueError("No command specified")
 
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
-        workdir = wkdir or self.workdir
-        cmd = remotecommand.RemoteShellCommand(workdir, command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin,
-                                               decodeRC=decodeRC)
+        cmd = buildstep.RemoteShellCommand(workdir, command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
+                                           collectStdout=collectStdout,
+                                           initialStdin=initialStdin,
+                                           decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
         d = self.runCommand(cmd)
 
@@ -322,35 +313,50 @@ class Monotone(Source):
                 return cmd.rc
         return d
 
+    @defer.inlineCallbacks
     def _checkDb(self):
-        d = self._dovccmd(['mtn', 'db', 'info', '--db', self.database], collectStdout=True)
-
-        @d.addCallback
-        def checkInfo(stdout):
-            if stdout.find("does not exist") > 0:
-                log.msg("Database does not exist")
-                return 0
-            elif stdout.find("(migration needed)") > 0:
+        db_exists = yield self.pathExists(self.database)
+        db_needs_init = False
+        if db_exists:
+            stdout = yield self._dovccmd(
+                '', ['mtn', 'db', 'info', '--db', self.database],
+                collectStdout=True)
+            if stdout.find("migration needed") >= 0:
                 log.msg("Older format database found, migrating it")
-                return self._dovccmd(['mtn', 'db', 'migrate', '--db', self.database])
-            elif stdout.find("(too new, cannot use)") > 0:
-                log.msg("The database is of a newer format than mtn can handle...  Abort!")
+                yield self._dovccmd('', ['mtn', 'db', 'migrate', '--db',
+                                         self.database])
+            elif stdout.find("too new, cannot use") >= 0 or \
+                    stdout.find("database has no tables") >= 0:
+                # The database is of a newer format which the slave's
+                # mtn version can not handle. Drop it and pull again
+                # with that monotone version installed on the
+                # slave. Do the same if it's an empty file.
+                yield self.runRmdir(self.database)
+                db_needs_init = True
+            elif stdout.find("not a monotone database") >= 0:
+                # There exists a database file, but it's not a valid
+                # monotone database. Do not delete it, but fail with
+                # an error.
                 raise buildstep.BuildStepFailed()
             else:
                 log.msg("Database exists and compatible")
-                return 0
-        return d
+        else:
+            db_needs_init = True
+            log.msg("Database does not exist")
 
+        if db_needs_init:
+            command = ['mtn', 'db', 'init', '--db', self.database]
+            yield self._dovccmd('', command)
+
+    @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
-        d = self.pathExists(self.build.path_module.join(self.workdir, '_MTN'))
+        workdir_path = self.build.path_module.join(self.workdir, '_MTN')
+        workdir_exists = yield self.pathExists(workdir_path)
 
-        @d.addCallback
-        def cont(res):
-            if res:
-                d.addCallback(lambda _: self.pathExists('db.mtn'))
-            else:
-                return False
-        return d
+        if not workdir_exists:
+            log.msg("Workdir does not exist, falling back to a fresh clone")
+
+        defer.returnValue(workdir_exists)
 
     def finish(self, res):
         d = defer.succeed(res)

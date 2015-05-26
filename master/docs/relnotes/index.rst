@@ -274,6 +274,11 @@ Steps
 
 * Old-style *source* steps (imported directly from ``buildbot.steps.source``) are no longer supported on the master.
 
+* The monotone source step got an overhaul and can now better manage
+  its database (initialize and/or migrate it, if needed). In the
+  spirit of monotone, buildbot now always keeps the database around,
+  as it's an append-only database.
+
 Changes and Removals
 ....................
 
