@@ -138,6 +138,8 @@ Each slave performs the same checkout, make, and test build step sequence.
 We want to enforce that at most one test step is executed between all slaves due to restrictions with the data base server.
 This is done by adding the ``locks=`` parameter with the third step.
 It takes a list of locks with their access mode.
+Alternatively, this can take a renderable that returns an list of locks with their access mode.
+
 In this case only the :data:`db_lock` is needed.
 The exclusive access mode is used to ensure there is at most one slave that executes the test step.
 
