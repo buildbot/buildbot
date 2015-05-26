@@ -8,10 +8,7 @@ class Panel extends Directive
             controllerAs: 'panel'
             bindToController: true
             scope:
-                name: '='
-                title: '='
-                isCollapsed: '='
-                template: '='
+                bind: '='
                 locked: '='
         }
 
@@ -21,20 +18,20 @@ class _Panel extends Controller
     constructor: (@$element, @$scope, $compile) ->
         # The following watch statement is necessary as the collapse function
         # is done by toggleClass in this controller instead of binding in template.
-        @$scope.$watch 'panel.isCollapsed', (=> @updateCollapse())
+        @$scope.$watch 'panel.bind.collapsed', (=> @updateCollapse())
 
-        if @name
-            tag = @name.replace /_/g, '-'
+        if @bind.name
+            tag = @bind.name.replace /_/g, '-'
             content = @$element.children().eq(0).children().eq(1)
             content.html("<#{tag}></#{tag}>")
             $compile(content.contents())(@$scope)
 
     toggleCollapse: ->
-        @isCollapsed = !@isCollapsed
+        @bind.collapsed = !@bind.collapsed
         return
 
     updateCollapse: ->
-        if @isCollapsed
+        if @bind.collapsed
             @$element.addClass('collapsed')
         else
             @$element.removeClass('collapsed')
