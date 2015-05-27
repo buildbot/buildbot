@@ -268,6 +268,8 @@ def rsyncWithRetry(step, origin, destination):
 
     return retryCommandLinuxOS(rsync_command)
 
+def getRemoteLocation(artifactServer, artifactServerDir, artifactPath, artifact):
+    return artifactServer + ":" + artifactServerDir + "/" + artifactPath + "/" + artifact.replace(" ", r"\ ")
 
 class UploadArtifact(ShellCommand):
 
@@ -301,7 +303,7 @@ class UploadArtifact(ShellCommand):
             artifactPath += "/%s" % self.artifactDirectory
 
 
-        remotelocation = self.artifactServer + ":" + self.artifactServerDir + "/" + artifactPath + "/" + self.artifact.replace(" ", r"\ ")
+        remotelocation = getRemoteLocation(self.artifactServer, self.artifactServerDir, artifactPath, self.artifact)
 
         command = rsyncWithRetry(self, self.artifact, remotelocation)
 
@@ -350,7 +352,7 @@ class DownloadArtifact(ShellCommand):
         if (self.artifactDirectory):
             artifactPath += "/%s" % self.artifactDirectory
 
-        remotelocation = self.artifactServer + ":" +self.artifactServerDir + "/" + artifactPath + "/" + self.artifact
+        remotelocation = getRemoteLocation(self.artifactServer, self.artifactServerDir, artifactPath, self.artifact)
 
         command = rsyncWithRetry(self, remotelocation, self.artifactDestination)
 
