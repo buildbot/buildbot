@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import zlib
 
 import sqlalchemy as sa
 
@@ -68,22 +69,27 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.first_line)
             rv = []
             for row in conn.execute(q):
-                assert not row.compressed, "compressed rows not supported yet"
-                content = row.content.decode('utf-8')
-                if row.first_line < first_line:
-                    idx = -1
-                    count = first_line - row.first_line
-                    for _ in xrange(count):
-                        idx = content.index('\n', idx + 1)
-                    content = content[idx + 1:]
-                if row.last_line > last_line:
-                    idx = len(content) + 1
-                    count = row.last_line - last_line
-                    for _ in xrange(count):
-                        idx = content.rindex('\n', 0, idx)
-                    content = content[:idx]
-                rv.append(content)
+                if row.compressed:
+                    # Uncompress the payload
+                    rv.append(zlib.decompress(row.content).decode('utf-8'))
+                else:
+                    # Extract all chunks
+                    content = row.content.decode('utf-8')
+                    if row.first_line < first_line:
+                        idx = -1
+                        count = first_line - row.first_line
+                        for _ in xrange(count):
+                            idx = content.index('\n', idx + 1)
+                        content = content[idx + 1:]
+                    if row.last_line > last_line:
+                        idx = len(content) + 1
+                        count = row.last_line - last_line
+                        for _ in xrange(count):
+                            idx = content.rindex('\n', 0, idx)
+                        content = content[:idx]
+                    rv.append(content)
             return u'\n'.join(rv) + u'\n' if rv else u''
+
         return self.db.pool.do(thd)
 
     def addLog(self, stepid, name, slug, type):
@@ -115,24 +121,41 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return  # ignore a missing log
 
-            # Break the content up into chunks.  This takes advantage of the
-            # fact that no character but u'\n' maps to b'\n' in UTF-8.
-
             first_line = chunk_first_line = row[0]
             remaining = content.encode('utf-8')
-            while remaining:
-                chunk, remaining = self._splitBigChunk(remaining, logid)
+            compressed_remaining = zlib.compress(remaining, 9)
 
-                last_line = chunk_first_line + chunk.count('\n')
+            if len(remaining) <= len(compressed_remaining):
+                # No advantages to compress this chunk => store text
+                # Break the content up into chunks.  This takes advantage of the
+                # fact that no character but u'\n' maps to b'\n' in UTF-8.
+
+                while remaining:
+                    chunk, remaining = self._splitBigChunk(remaining, logid)
+
+                    last_line = chunk_first_line + chunk.count('\n')
+                    conn.execute(self.db.model.logchunks.insert(),
+                                 dict(logid=logid, first_line=chunk_first_line,
+                                      last_line=last_line, content=chunk,
+                                      compressed=0))
+                    chunk_first_line = last_line + 1
+            else:
+                # Storing compressed data as smaller.
+                # Doing it right now is better as it will avoid doing it in the compress method:
+                #  - less "post-processing" operation
+                #  - more time efficient to compress "big" log ASAP
+                #  - avoid DB fragmentation risk
+                last_line = chunk_first_line + remaining.count('\n')
                 conn.execute(self.db.model.logchunks.insert(),
                              dict(logid=logid, first_line=chunk_first_line,
-                                  last_line=last_line, content=chunk,
-                                  compressed=0))
-                chunk_first_line = last_line + 1
+                                  last_line=last_line, content=compressed_remaining,
+                                  compressed=1))
 
             conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
                          num_lines=last_line + 1)
-            return (first_line, last_line)
+
+            return first_line, last_line
+
         return self.db.pool.do(thd)
 
     def _splitBigChunk(self, content, logid):
@@ -176,6 +199,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     def compressLog(self, logid):
         # TODO: compression not supported yet
+
+        # As live compression is done in appendLog this method shall 'just' analyze if there are benefits
+        # to regroup all contiguous text chunk, compress them and replace them in the db.
         return defer.succeed(None)
 
     def _logdictFromRow(self, row):
