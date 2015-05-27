@@ -25,7 +25,6 @@ commandRegistry = {
     "bk": "buildslave.commands.bk.BK",
     "cvs": "buildslave.commands.cvs.CVS",
     "darcs": "buildslave.commands.darcs.Darcs",
-    "git": "buildslave.commands.git.Git",
     "repo": "buildslave.commands.repo.Repo",
     "bzr": "buildslave.commands.bzr.Bzr",
     "hg": "buildslave.commands.hg.Mercurial",
