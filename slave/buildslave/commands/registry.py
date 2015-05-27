@@ -22,7 +22,6 @@ commandRegistry = {
     "uploadDirectory": "buildslave.commands.transfer.SlaveDirectoryUploadCommand",
     "downloadFile": "buildslave.commands.transfer.SlaveFileDownloadCommand",
     "repo": "buildslave.commands.repo.Repo",
-    "bzr": "buildslave.commands.bzr.Bzr",
     "hg": "buildslave.commands.hg.Mercurial",
     "p4": "buildslave.commands.p4.P4",
     "mtn": "buildslave.commands.mtn.Monotone",
