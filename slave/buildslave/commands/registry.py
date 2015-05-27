@@ -23,7 +23,6 @@ commandRegistry = {
     "downloadFile": "buildslave.commands.transfer.SlaveFileDownloadCommand",
     "svn": "buildslave.commands.svn.SVN",
     "bk": "buildslave.commands.bk.BK",
-    "cvs": "buildslave.commands.cvs.CVS",
     "darcs": "buildslave.commands.darcs.Darcs",
     "repo": "buildslave.commands.repo.Repo",
     "bzr": "buildslave.commands.bzr.Bzr",
