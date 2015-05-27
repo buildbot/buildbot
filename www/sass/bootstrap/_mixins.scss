@@ -38,7 +38,7 @@ $cb-lightness: 40%;
       .#{$classname} {
         color: #fff;
         a {
-          color: #fff;
+          color: #fff !important;
         }
       }
     }

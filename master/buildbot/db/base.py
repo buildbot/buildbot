@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from sqlalchemy.dialects import mysql
+from datetime import datetime
+from decimal import Decimal
+from sqlalchemy.orm import Query
+
 class DBConnectorComponent(object):
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
@@ -57,6 +62,40 @@ class DBConnectorComponent(object):
         col_length = col.type.length - 2
         return value[:col_length] + '..' if len(value) > col_length else value
 
+    # Utility method that generates the sqlalchemy expression to SQL statement
+    # only used for debugging purpose
+    def getSQLExpression(self, statement, dialect=None):
+        if isinstance(statement, Query):
+            if dialect is None:
+                dialect = statement.session.get_bind(
+                    statement._mapper_zero_or_none()
+                ).dialect
+            statement = statement.statement
+        if dialect is None:
+            dialect = getattr(statement.bind, 'dialect', None)
+        if dialect is None:
+            dialect = mysql.dialect()
+
+        Compiler = type(statement._compiler(dialect))
+
+        class LiteralCompiler(Compiler):
+            visit_bindparam = Compiler.render_literal_bindparam
+
+            def render_literal_value(self, value, type_):
+                if isinstance(value, (Decimal, long)):
+                    return str(value)
+                elif isinstance(value, datetime):
+                    return repr(str(value))
+                else:  # fallback
+                    value = super(LiteralCompiler, self).render_literal_value(
+                        value, type_,
+                    )
+                    if isinstance(value, unicode):
+                        return value.encode('UTF-8')
+                    else:
+                        return value
+
+        return LiteralCompiler(dialect, statement)
 
 class CachedMethod(object):
     def __init__(self, cache_name, method):

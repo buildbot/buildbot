@@ -117,7 +117,7 @@ class XMLTestResource(HtmlResource):
         xml_type = NUNIT
 
         try:
-            html = self.log.html
+            html = self.log.getText()
             if "nosetests" in html:
                 xml_type = NOSE
             elif "<testsuites>" and "testsuite" in html:

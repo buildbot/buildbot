@@ -33,7 +33,6 @@
         margin-top: 0;
     }
     .question-icon {
-         float: left;
         margin-left: 8px;    
     }
 	&:after {
@@ -209,6 +208,27 @@ div.welcome-txt {
 	margin-top:0px;		
 }
 
+@keyframes animatedSpinner {
+    0% { background-position: 0 0; }
+    100% { background-position: -130px 0; }
+}
+@-moz-keyframes animatedSpinner {
+    0% { background-position: 0 0; }
+    100% { background-position: -130px 0; }
+}
+@-webkit-keyframes animatedSpinner {
+    0% { background-position: 0 0; }
+    100% { background-position: -130px 0; }
+}
+@-ms-keyframes animatedSpinner {
+    0% { background-position: 0 0; }
+    100% { background-position: -130px 0; }
+}
+@-o-keyframes animatedSpinner {
+    0% { background-position: 0 0; }
+    100% { background-position: -130px 0; }
+}
+
 .spin-icon {
 	opacity:0.7;	
 	content: "";	 		
@@ -220,6 +240,12 @@ div.welcome-txt {
     &.pull-bottom {
     	margin-bottom: -2px;	
 	}
+
+    animation: animatedSpinner 1s steps(10, end) infinite;
+    -moz-animation: animatedSpinner 1s steps(10, end) infinite;
+    -webkit-animation: animatedSpinner 1s steps(10, end) infinite;
+    -ms-animation: animatedSpinner 1s steps(10, end) infinite;
+    -o-animation: animatedSpinner 1s steps(10, end) infinite;
 }
 
  
@@ -288,16 +314,6 @@ div.welcome-txt {
 			font-size: 27px;
 		}
 	}
-}
-
-.point-of-failure:after {
-    font-family: "katana_icons";
-    content: "";
-    display: inline-block;
-    padding: 0;
-    font-weight:normal;
-    font-size: 16px;
-    position: relative;
 }
 
 span.log-error {

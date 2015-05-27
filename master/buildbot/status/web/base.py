@@ -527,16 +527,14 @@ class HtmlResource(resource.Resource, ContextMixin):
             requireLogin = master.config.requireLogin
             allowed_urls = ["/login"]
             if requireLogin is True and not authz.authenticated(request) and request.path not in allowed_urls:
-                url = str(request.URLPath())
-                parsed_url = urlparse.urlparse(url)
-                url = url.replace("{0}://{1}/".format(parsed_url.scheme, parsed_url.netloc), master.status.getBuildbotURL())
-                
-                request.redirect(path_to_login(request, url))
+                redirect_url = urlparse.urljoin(master.status.getBuildbotURL(), request.uri)
+                request.redirect(path_to_login(request, redirect_url))
                 return
             # User can view this page
             else:
                 ctx['instant_json'] = yield self.getInstantJSON(request)
                 ctx['user_settings'] = yield authz.getAllUserAttr(request)
+                ctx['user_settings_json'] = json.dumps(ctx['user_settings'])
                 result = yield self.content(request, ctx)
                 defer.returnValue(result)
 
@@ -835,7 +833,7 @@ def userfilter(value):
     else:
         return emailfilter(value) # filter for emails here for safety
 
-def _revlinkcfg(replace, templates):
+def _revlinkcfg(replace):
     '''Helper function that returns suitable macros and functions
        for building revision links depending on replacement mechanism
 '''
@@ -890,7 +888,7 @@ def shortrevfilter(replace, templates):
         @param templates: a jinja2 environment
     '''
 
-    url_f = _revlinkcfg(replace, templates)
+    url_f = _revlinkcfg(replace)
 
     def filter(rev, repo):
         if not rev:
@@ -932,7 +930,7 @@ def revlinkfilter(replace, templates):
         @param templates: a jinja2 environment
     '''
 
-    url_f = _revlinkcfg(replace, templates)
+    url_f = _revlinkcfg(replace)
 
     def filter(rev, repo):
         if not rev:

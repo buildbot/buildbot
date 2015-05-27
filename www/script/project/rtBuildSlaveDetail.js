@@ -7,7 +7,8 @@ define(function (require) {
         dt = require('project/datatables-extend'),
         rtTable = require('rtGenericTable'),
         popup = require('ui.popup'),
-        hb = require('project/handlebars-extend');
+        hb = require('project/handlebars-extend'),
+        helpers = require('helpers');
 
 
     require('project/moment-extend');
@@ -66,6 +67,7 @@ define(function (require) {
             realtimePages.initRealtime(realtimeFunctions);
 
             privFunc.initCancelBuild();
+            helpers.initRecentBuildsFilters();
         },
         rtfProcessSlaveInfo: function (data) {
             data.shutdownURL = $slaveInfo.attr("data-shutdown-url");

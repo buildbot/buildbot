@@ -198,42 +198,6 @@ define(function (require) {
             // Display the codebases form in a popup
             popup.initCodebaseBranchesPopup($("#codebasesBtn"));
         },
-        validateForm: function (formContainer) { // validate the forcebuildform
-            var formEl = $('.command_forcebuild', formContainer);
-            var excludeFields = ':button, :hidden, :checkbox, :submit';
-            $('.grey-btn', formEl).bind("click.katana", function (e) {
-
-                var allInputs = $('input', formEl).not(excludeFields);
-
-                var rev = allInputs.filter(function () {
-                    return this.name.indexOf("revision") >= 0;
-                });
-
-                var emptyRev = rev.filter(function () {
-                    return this.value === "";
-                });
-
-                if (emptyRev.length > 0 && emptyRev.length < rev.length) {
-
-                    rev.each(function () {
-                        if ($(this).val() === "") {
-                            $(this).addClass('not-valid');
-                        } else {
-                            $(this).removeClass('not-valid');
-                        }
-                    });
-
-                    $('.form-message', formEl).hide();
-
-                    if (!$('.error-input', formEl).length) {
-                        var template = popups({'errorinput': 'true', 'text': 'Fill out the empty revision fields or clear all before submitting'});
-                        var errorinput = $(template);
-                        $(formEl).prepend(errorinput);
-                    }
-                    e.preventDefault();
-                }
-            });
-        },
         initJSONPopup: function (jsonPopupElem, data) {
             var $jsonPopupElem = $(jsonPopupElem);
 
@@ -397,7 +361,6 @@ define(function (require) {
                             destroyAfter: true,
                             autoShow: false,
                             onCreate: function ($elem) {
-                                popup.validateForm($elem);
 
                                 //Setup AJAX form and instant builds
                                 require(["rtGlobal"], function (rtGlobal) {

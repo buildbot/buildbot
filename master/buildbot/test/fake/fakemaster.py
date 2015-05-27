@@ -21,6 +21,7 @@ from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
 from buildbot.process import properties
+from buildbot.config import ProjectConfig
 import mock
 
 class FakeCache(object):
@@ -143,6 +144,10 @@ class FakeMaster(object):
         if not lockid in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         return self.locks[lockid]
+
+    def getProject(self, name):
+        pass
+
 
 # Leave this alias, in case we want to add more behavior later
 def make_master(wantDb=False, testcase=None, **kwargs):

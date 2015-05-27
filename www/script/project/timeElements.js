@@ -6,13 +6,10 @@ define(function (require) {
         moment = require('moment'),
         extendMoment = require('project/moment-extend'),
         HEARTBEAT = 5000,
-        ANIM_INTERVAL = 80,
-        lastAnim = 0,
         lastBeat,
         timeObjects = {"timeAgo": [], "elapsed": [], "progressBars": []},
         interval,
-        oldLang = moment.lang(),
-        animPos = 0;
+        oldLang = moment.lang();
 
     var privateFunc = {
         heartbeatInterval: function () {
@@ -49,26 +46,6 @@ define(function (require) {
                     array.push(obj);
                 }
             }
-        },
-        spinIconAnimation: function (ts) {
-            var frames = 10;
-            var frameWidth = 13;
-            $.each($('.animate-spin'), function (i, obj) {
-                var $obj = $(obj);
-                if (animPos >= frames) {
-                    animPos = 0;
-                }
-
-                var offset = animPos * -frameWidth;
-                $obj.css("background-position", offset + "px 0px");
-            });
-
-            if ((ts - lastAnim) > ANIM_INTERVAL) {
-                animPos += 1;
-                lastAnim = ts;
-            }
-
-            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         processTimeAgo: function ($el, startTimestamp) {
             $el.html(moment.unix(startTimestamp).fromServerNow());
@@ -123,7 +100,6 @@ define(function (require) {
                 privateFunc.heartbeatInterval();
                 extendMoment.init();
             }
-            window.requestAnimationFrame(privateFunc.spinIconAnimation);
         },
         addTimeAgoElem: function (el, startTimestamp) {
             var $el = $(el);

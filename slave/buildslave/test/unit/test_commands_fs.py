@@ -16,10 +16,12 @@
 import os
 import shutil
 from twisted.trial import unittest
+from mock import Mock
 
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import fs
 from twisted.python import runtime
+from twisted.internet import defer
 from buildslave.commands import utils
 
 class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
@@ -217,3 +219,81 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
                     self.builder.show())
         d.addCallback(check)
         return d
+
+
+class TestListTreeFunc(unittest.TestCase):
+    """
+    test fs._list_tree() function
+    """
+    ROOTDIR = "rootdir"
+
+    OS_WALK_RES = [
+        (ROOTDIR,
+         ["subdir1"],
+         ["rootfile1", "rootfile2"]),
+        (os.path.join("rootdir", "subdir1"),
+         [],
+         ["subdirfile1.pkg", "subdirfile2.dat"])]
+
+    RES_ALL = [
+        ("",
+         ["subdir1"],
+         ["rootfile1", "rootfile2"]),
+        ("subdir1",
+         [],
+         ["subdirfile1.pkg", "subdirfile2.dat"])]
+
+    RES_FILTERED = [
+        ("",
+         ["subdir1"],
+         []),
+        ("subdir1",
+         [],
+         ["subdirfile1.pkg"])]
+
+    def setUp(self):
+        self.patch(os, "walk", Mock(return_value=self.OS_WALK_RES))
+
+    def test_all(self):
+        # test with an 'all inclusive' filter
+        self.assertEquals(fs._list_tree(self.ROOTDIR, ""),
+                          self.RES_ALL)
+
+    def test_filter(self):
+        # list only .pkg files
+        self.assertEquals(fs._list_tree(self.ROOTDIR, ".*pkg$"),
+                          self.RES_FILTERED)
+
+
+class TestListTree(CommandTestMixin, unittest.TestCase):
+    WORKDIR = "wkrdir"
+    DIR = "tstdir"
+    FILE_FILTER = "file_fltr"
+
+    def setUp(self):
+        self.setUpCommand()
+
+        self._list_tree = Mock()
+        self.patch(fs, "_list_tree", self._list_tree)
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    @defer.inlineCallbacks
+    def test_lstree(self):
+        self.make_command(fs.ListTree,
+                          dict(workdir=self.WORKDIR,
+                               dir=self.DIR,
+                               file_filter=self.FILE_FILTER))
+
+        yield self.run_command()
+
+        # check that fs._list_tree() was called with correct arguments
+        self._list_tree.assert_called_once_with(
+            os.path.join(self.basedir, self.WORKDIR, self.DIR),
+            self.FILE_FILTER)
+
+        # check that command 'returned' correct results
+        updates = self.get_updates()
+        self.assertIn({"rc": 0}, updates)
+        self.assertIn({"nodes": self._list_tree.return_value}, updates)

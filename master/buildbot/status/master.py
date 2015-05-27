@@ -23,7 +23,7 @@ from twisted.internet import defer
 from twisted.application import service
 from zope.interface import implements
 from buildbot import config, interfaces, util
-from buildbot.status.web.base import getCodebasesArg
+from buildbot.status.web.base import getCodebasesArg, _revlinkcfg
 from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
@@ -48,6 +48,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._buildset_sub = None
         self._build_request_sub = None
         self._change_sub = None
+        self.rev_url_func = None
 
     # service management
 
@@ -320,17 +321,42 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         d.addCallback(make_status_objects)
         return d
 
-    def generateFinishedBuilds(self, builders=[], branches=[],
-                               num_builds=None, finished_before=None,
-                               max_search=200):
-
+    def getBuildersConfigured(self, builders):
         def want_builder(bn):
             if builders:
                 return bn in builders
             return True
+
         builder_names = [bn
                          for bn in self.getBuilderNames()
                          if want_builder(bn)]
+        return builder_names
+
+    @defer.inlineCallbacks
+    def generateFinishedBuildsAsync(self, num_builds=15, results=None, slavename=None):
+
+        lastBuilds = yield self.master.db.builds.getLastsBuildsNumbersBySlave(slavename, num_builds)
+        builders = lastBuilds.keys()
+
+        builder_names = []
+        if builders:
+            builder_names = self.getBuildersConfigured(builders)
+
+        all_builds = []
+        for bn in builder_names:
+            b = self.getBuilder(bn)
+            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=sorted(lastBuilds[bn], reverse=True),
+                                                                  results=results)
+            all_builds.extend(finished_builds)
+
+        sorted_builds = sorted(all_builds, key=lambda build: build.started, reverse=True)
+        defer.returnValue(sorted_builds)
+
+    def generateFinishedBuilds(self, builders=[], branches=[],
+                               num_builds=None, finished_before=None,
+                               max_search=200):
+
+        builder_names = self.getBuildersConfigured(builders)
 
         # 'sources' is a list of generators, one for each Builder we're
         # using. When the generator is exhausted, it is replaced in this list
@@ -410,6 +436,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             with open(filename, "rb") as f:
                 builder_status = load(f)
             builder_status.master = self.master
+            builder_status.basedir = os.path.join(self.basedir, basedir)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
             # this pickle, too.  We determine this by looking at the list of
@@ -553,3 +580,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             for observer in self._builder_observers[buildername]:
                 if hasattr(observer, 'requestCancelled'):
                     eventually(observer.requestSubmitted, brs)
+
+    def get_rev_url(self, rev, repo):
+        # Lazy load this so that the config is ready for us
+        if self.rev_url_func is None:
+            self.rev_url_func = _revlinkcfg(self.master.config.revlink)
+
+        if not rev:
+            return u''
+
+        rev = unicode(rev)
+        return self.rev_url_func(rev, repo)

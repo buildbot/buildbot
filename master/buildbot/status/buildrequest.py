@@ -161,7 +161,7 @@ class BuildRequestStatus:
         ss = yield self.getSourceStamp()
         sources = yield self.getSourceStamps()
         result['brid'] = self.brid
-        result['source'] = ss.asDict()
+        result['source'] = ss.asDict(self.status)
         result['sources'] = [s.asDict() for s in sources.values()]
         props = yield self.getBuildProperties()
         result['properties'] = props.asList()

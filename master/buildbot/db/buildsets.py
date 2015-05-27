@@ -54,7 +54,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             if properties:
                 bs_props_tbl = self.db.model.buildset_properties
                 if 'priority' in properties:
-                    priority = properties.get('priority')[0]
+                    priority_property = properties.get('priority')[0]
+                    priority = priority_property if priority_property \
+                                                    and priority_property.isdigit() \
+                                                    and int(priority_property) > 0 else 0
 
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,

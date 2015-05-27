@@ -18,6 +18,7 @@ from __future__ import with_statement
 import os
 import cStringIO, cPickle
 import mock
+import time
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.status import logfile
@@ -199,8 +200,7 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
     def test_addEntry_length(self):
         self.do_test_addEntry([(1, 'x'), (2, 'y')],
                                      'x')
-        print "\n log %s \n" % self.logfile.length
-        self.assertEqual(self.logfile.length, 30)
+        self.assertEqual(self.logfile.length, 2)
 
     def test_addEntry_unicode(self):
         return self.do_test_addEntry([(1, u'\N{SNOWMAN}')],
@@ -282,6 +282,19 @@ class TestLogFile(unittest.TestCase, dirs.DirsMixin):
         logChunk_chunks = [ tuple(args[0][3:])
                             for args in watcher.logChunk.call_args_list ]
 
+    def test_enable_timestamps(self):
+        #
+        # test enabling timestamp prepending
+        #
+        self.logfile.setTimestampsMode(prepend_timestamps=True)
+
+        # patch time function, so that we control the timestamp used
+        strftime_mock = mock.Mock(return_value="12:01:29")
+        self.patch(time, "strftime", strftime_mock)
+
+        self.do_test_addEntry([(0, "new message")], "[12:01:29]   new message")
+
+        strftime_mock.assert_called_once_with("%X")
 
     def test_addStdout(self):
         addEntry = mock.Mock()

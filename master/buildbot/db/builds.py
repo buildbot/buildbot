@@ -56,11 +56,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._bdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def addBuild(self, brid, number, _reactor=reactor):
+    def addBuild(self, brid, number, slavename=None, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()
             r = conn.execute(self.db.model.builds.insert(),
-                    dict(number=number, brid=brid, start_time=start_time,
+                    dict(number=number, brid=brid, slavename=slavename, start_time=start_time,
                         finish_time=None))
             return r.inserted_primary_key[0]
         return self.db.pool.do(thd)
@@ -102,6 +102,109 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
                     res = conn.execute(stmt)
                     return res.rowcount
+
+        return self.db.pool.do(thd)
+
+    def getLastsBuildsNumbersBySlave(self, slavename, num_builds=15):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            lastBuilds = {}
+            maxSearch = num_builds if num_builds < 200 else 200
+
+            q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
+                .where(builds_tbl.c.slavename == slavename)
+            q = q.distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+
+            res = conn.execute(q)
+
+            rows = res.fetchall()
+            if rows:
+                for row in rows:
+                    if row.buildername not in lastBuilds:
+                        lastBuilds[row.buildername] = [row.number]
+                    else:
+                        lastBuilds[row.buildername].append(row.number)
+
+            res.close()
+
+            return lastBuilds
+
+        return self.db.pool.do(thd)
+
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, num_builds=1):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db .model.buildsets
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            builds_tbl = self.db.model.builds
+
+            lastBuilds = []
+            maxSearch = num_builds if num_builds < 200 else 200
+
+            q = sa.select(columns=[builds_tbl.c.number],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.finish_time != None))).\
+                where(buildrequests_tbl.c.mergebrid == None)\
+                .where(buildrequests_tbl.c.buildername == buildername)
+
+            if sourcestamps and len(sourcestamps) > 0:
+                # check that sourcestampset match all branches x codebases
+                clauses = []
+                exclude_clauses = []
+                for ss in sourcestamps:
+                    stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                        .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                        .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                        .where(sourcestamps_tbl.c.branch == ss['b_branch'])
+                    clauses.append(sourcestampsets_tbl.c.id == stmt_include)
+
+                    if len(sourcestamps) > 1:
+                        stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                            .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
+                            .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                            .where(sourcestamps_tbl.c.branch != ss['b_branch'])
+                        exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
+
+                stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+                    .where(sa.or_(*clauses))
+
+                stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+                q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+                if len(sourcestamps) > 1:
+                    stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
+                        .where(sa.or_(*exclude_clauses))
+
+                    stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
+                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
+
+                    q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
+
+            q = q.distinct(builds_tbl.c.number)\
+                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+
+            res = conn.execute(q)
+
+            rows = res.fetchall()
+            if rows:
+                for row in rows:
+                    if row.number not in lastBuilds:
+                        lastBuilds.append(row.number)
+
+            res.close()
+
+            return sorted(lastBuilds, reverse=True)
 
         return self.db.pool.do(thd)
 

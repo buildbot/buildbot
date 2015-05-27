@@ -122,7 +122,7 @@
        <span class="label">{{f.label}}</span>
             <span class="select">
             <select name='{{f.fullName}}' {{ f.multiple and "multiple" or ""}}>
-             {% for c in default_props[sch.name+"."+f.fullName+".choices"] %}
+             {% for c in f.choices %}
                 <option {{(c in default_props[sch.name+"."+f.fullName]) and "selected" or ""}}>{{c}}</option>
             {% endfor %}
        </select>
@@ -235,7 +235,7 @@
  </form>
 {% endmacro %}
 {% macro force_build(force_url, authz, request, on_all=False, on_selected=False, builders=[], force_schedulers={},default_props={}, slaves=[], is_admin=0) %}
-  {% for name, sch in force_schedulers.items() | sort %}
+  {% for name, sch in force_schedulers.items() %}
     {{ force_build_one_scheduler(force_url, authz, request, on_all, on_selected, builders, sch, default_props=default_props, slaves=slaves, is_admin=is_admin) }}
   {% endfor %}
 
@@ -266,9 +266,24 @@
   </form>
 {% endmacro %}
 
-{% macro rebuild_build(rebuild_url, authz, ss, builderName, url) %}
+{% macro rebuild_build(rebuild_url, authz, exactly, ss, builderName, url) %}
 <div class="forms-inline">
- <form id="buildForm" method="post" action="{{ rebuild_url }}" class="command rebuild">
+ <form id="buildForm" method="post" action="{{ rebuild_url }}&property1name=force_rebuild&property1value=True" class="command rebuild">
+
+    {% if exactly %}
+      <p>This build was built from a specific set of
+          source files, and can be rebuilt exactly
+          as it was here.</p>
+    {% else %}
+      <p>This build was built from the most recent revision
+      {% if ss.branch %}
+        (along branch {{ ss.branch }})
+      {% endif %}
+      and thus it might not be possible to rebuild it
+      exactly. <br/>Any changes that have been committed
+      after this build was started <b>will</b> be
+      included in a rebuild.</p>
+    {% endif %}
 
 
   {% if on_all %}

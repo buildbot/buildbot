@@ -20,11 +20,12 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
             {
                 branch: "trunk",
                 codebase: "unity",
-                display_repository: "http://rhodecode.hq.unity3d.com/unity/unity",
+                display_repository: "http://rhodecode.hq.unity3d.com/all-unity",
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/all-unity",
                 revision: "b841045fb3160b1c",
-                revision_short: "b841045fb316"
+                revision_short: "b841045fb316",
+                url: "http://rhodecode.hq.unity3d.com/all-unity/changeset/b841045fb3160b1c"
             },
             {
                 branch: "faked",
@@ -33,7 +34,8 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                 project: "general",
                 repository: "http://mercurial-mirror.hq.unity3d.com/fake",
                 revision: "c841045fb3160b1c0044b3b04f40482f685208cf",
-                revision_short: "b841045fb316"
+                revision_short: "b841045fb316",
+                url: "http://rhodecode.hq.unity3d.com/fake/fake/changeset/c841045fb3160b1c0044b3b04f40482f685208cf"
             }
         ],
         text: [
@@ -148,7 +150,9 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
     function expectRevisionToWarn($html, $revisionDict, tmpProjectData, tmpBuilderData) {
         $revisionDict = gt.cell.revision(0, function (data) {
             return data.latestBuild.sourceStamps;
-        }, true, function () { return tmpProjectData.latestRevisions; });
+        }, true, function () {
+            return tmpProjectData.latestRevisions;
+        });
 
         $html = $($revisionDict.mRender(undefined, undefined, tmpBuilderData));
 
@@ -169,6 +173,11 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
         var $revisionDict,
             $html;
 
+        beforeEach(function beforeEach() {
+            $html = undefined;
+            $revisionDict = undefined;
+        });
+
         it("renders correctly", function () {
             $revisionDict = gt.cell.revision(0, function (data) {
                 return data.latestBuild.sourceStamps;
@@ -183,8 +192,7 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
                 var $row = $(row),
                     $links = $row.find("a"),
                     sourceStamps = builderData.latestBuild.sourceStamps,
-                    displayURL = sourceStamps[i].display_repository,
-                    changesetURL = displayURL + "/changeset/" + sourceStamps[i].revision,
+                    changesetURL = sourceStamps[i].url,
                     text = $row.text(),
                     textParts = text.split("/");
 
@@ -198,6 +206,8 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
                 expect($($links[1]).attr("href")).toEqual(changesetURL);
                 expect($($links[1]).html()).toEqual(sourceStamps[i].revision_short);
+
+                expect($row.find('recent-build-icon').length).toEqual(0);
             });
         });
 
@@ -217,6 +227,69 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
                 expect(textParts.length).toEqual(2);
             });
+        });
+
+        it("shows historic build", function () {
+            var build_properties = [
+                    ["buildnumber", 120, "Build"],
+                    ["buildLatestRev", false, "Force Build Form"]
+                ],
+                customBuild = $.extend({}, buildData, {properties: build_properties}),
+                latestRevDict = {
+                    "http://mercurial-mirror.hq.unity3d.com/all-unity": {revision: "zxym"},
+                    "http://mercurial-mirror.hq.unity3d.com/fake": {revision: "zxym"}
+                };
+
+            $revisionDict = gt.cell.revision(0, function (data) {
+                return $.extend(true, {}, data.sourceStamps);
+            }, false, function () {
+                return latestRevDict;
+            });
+
+            $html = $($revisionDict.mRender(undefined, undefined, customBuild));
+            expect($html.find('.recent-build-icon').length).toEqual(2);
+        });
+
+        it("doesn't show historic build if the build is triggered", function () {
+            var build_properties = [
+                    ["buildnumber", 120, "Build"],
+                    ["buildLatestRev", "", "Trigger"]
+                ],
+                customBuild = $.extend({}, buildData, {properties: build_properties}),
+                latestRevDict = {
+                    "http://mercurial-mirror.hq.unity3d.com/all-unity": {revision: "zxym"},
+                    "http://mercurial-mirror.hq.unity3d.com/fake": {revision: "c841045fb3160b1c0044b3b04f40482f685208cf"}
+                };
+
+            $revisionDict = gt.cell.revision(0, function (data) {
+                return $.extend(true, {}, data.sourceStamps);
+            }, false, function pending_changes() {
+                return latestRevDict;
+            });
+
+            $html = $($revisionDict.mRender(undefined, undefined, customBuild));
+            expect($html.find('.recent-build-icon').length).toEqual(0);
+        });
+
+        it("doesn't show historic build if the latest revision", function () {
+            var build_properties = [
+                    ["buildnumber", 120, "Build"],
+                    ["buildLatestRev", true, "Force Build Form"]
+                ],
+                customBuild = $.extend({}, buildData, {properties: build_properties}),
+                latestRevDict = {
+                    "http://mercurial-mirror.hq.unity3d.com/all-unity": {revision: "b841045fb3160b1c"},
+                    "http://mercurial-mirror.hq.unity3d.com/fake": {revision: "c841045fb3160b1c0044b3b04f40482f685208cf"}
+                };
+
+            $revisionDict = gt.cell.revision(0, function (data) {
+                return $.extend(true, {}, data.sourceStamps);
+            }, false, function pending_changes() {
+                return latestRevDict;
+            });
+
+            $html = $($revisionDict.mRender(undefined, undefined, customBuild));
+            expect($html.find('.recent-build-icon').length).toEqual(0);
         });
 
         describe("shows pending changes", function () {
@@ -399,11 +472,11 @@ define(["jquery", "rtGenericTable", "project/handlebars-extend"], function ($, g
 
             function setup(overTimeBuild) {
                 customBuilds = [
-                    $.extend({}, buildData, {times: [1402648683.694], eta: 0 }),
-                    $.extend({}, buildData, {times: [1337], eta: 1337 }) ];
+                    $.extend({}, buildData, {times: [1402648683.694], eta: 0}),
+                    $.extend({}, buildData, {times: [1337], eta: 1337})];
 
                 if (overTimeBuild === true) {
-                    customBuilds.push($.extend({}, buildData, {times: [745482], eta: -50 }));
+                    customBuilds.push($.extend({}, buildData, {times: [745482], eta: -50}));
                 }
 
                 customSlaveData = $.extend({}, slaveData, {connected: true, runningBuilds: customBuilds});

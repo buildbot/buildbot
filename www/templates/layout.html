@@ -27,7 +27,14 @@
         
     {% if instant_json %}
     <script id="instant-json" type="application/javascript">
-    var instantJSON = {{ instant_json }};
+    var instantJSON = {{ instant_json }},
+        userSettings = {{ user_settings_json }};
+    </script>
+    {% endif %}
+
+    {% if user_settings_json %}
+    <script id="user-settings-json" type="application/javascript">
+    var userSettings = {{ user_settings_json }};
     </script>
     {% endif %}
 

@@ -72,6 +72,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     codebase = ''
     sourcestampsetid = None
     ssid = None
+    totalChanges = 0
 
     compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
 
@@ -250,7 +251,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             text.append("[patch]")
         return text
 
-    def asDict(self):
+    def asDict(self, status=None):
         result = {}
         # Constant
         result['revision'] = self.revision
@@ -272,11 +273,17 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['project'] = self.project
         result['repository'] = self.repository
         result['codebase'] = self.codebase
+
+        from buildbot.status.master import Status
+        if isinstance(status, Status):
+            result['url'] = status.get_rev_url(self.revision, self.repository)
+
+        result['totalChanges'] = self.totalChanges
         return result
 
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
-        self._addSourceStampToDatabase_lock = defer.DeferredLock();
+        self._addSourceStampToDatabase_lock = defer.DeferredLock()
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
