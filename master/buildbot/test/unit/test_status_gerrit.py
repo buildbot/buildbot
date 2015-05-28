@@ -350,13 +350,11 @@ class TestGerritStatusPush(unittest.TestCase):
         gsp.master_status = gsp.master.status
         gsp.getCachedVersion = yield Mock(return_value="2.9")
 
-        d = yield self.run_fake_single_build(gsp, SUCCESS)
+        yield self.run_fake_single_build(gsp, SUCCESS)
 
         ssh_args = spawn_process.call_args[0][2]
         ssh_msg = ' '.join(ssh_args)
         assert expected_value in ssh_msg, "Flag value wrong or not present"
-
-        defer.returnValue(d)
 
     @defer.inlineCallbacks
     def test_valid_notify_flag(self):
