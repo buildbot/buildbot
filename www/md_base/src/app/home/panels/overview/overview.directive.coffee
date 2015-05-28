@@ -24,6 +24,7 @@ class _Overview extends Controller
         count: 0
  
     constructor: (buildbotService) ->
+        # TODO: Avoid fetch all the data here after # there is a direct API interface
         buildbotService.all('masters').getList().then (entries) =>
             actives = 0
             for master in entries

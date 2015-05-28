@@ -8,6 +8,8 @@ class Panel extends Directive
             controllerAs: 'panel'
             bindToController: true
             scope:
+                # Using bind directly to avoid `title` attr on the element which lead to showing a tooltip
+                # This also makes the interface more simpler for outsiders.
                 bind: '='
                 locked: '='
         }
