@@ -297,8 +297,13 @@ class MasterConfig(util.ComparableMixin):
 
         if 'logCompressionMethod' in config_dict:
             logCompressionMethod = config_dict.get('logCompressionMethod')
-            if logCompressionMethod not in ('bz2', 'gz'):
-                error("c['logCompressionMethod'] must be 'bz2' or 'gz'")
+            if logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
+                error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+            elif logCompressionMethod == "lz4":
+                try:
+                    import lz4
+                except ImportError:
+                    error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
             self.logCompressionMethod = logCompressionMethod
 
         copy_int_param('logMaxSize')

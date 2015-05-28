@@ -19,12 +19,39 @@ from buildbot.db import base
 from twisted.internet import defer
 from twisted.python import log
 
+def dumps_gzip(data):
+    import zlib
+    return zlib.compress(data, 9)
+
+def read_gzip(data):
+    import zlib
+    return zlib.decompress(data)
+
+def dumps_lz4(data):
+    import lz4
+    return lz4.dumps(data)
+
+def read_lz4(data):
+    import lz4
+    return lz4.loads(data)
+
+def dumps_bz2(data):
+    import bz2
+    return bz2.compress(data, 9)
+
+def read_bz2(data):
+    import bz2
+    return bz2.decompress(data)
 
 class LogsConnectorComponent(base.DBConnectorComponent):
 
     # Postgres and MySQL will both allow bigger sizes than this.  The limit
     # for MySQL appears to be max_packet_size (default 1M).
     MAX_CHUNK_SIZE = 65536
+    COMPRESSION_MODE = {"raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
+                        "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
+                        "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
+                        "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
 
     def _getLog(self, whereclause):
         def thd(conn):
@@ -68,8 +95,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.first_line)
             rv = []
             for row in conn.execute(q):
-                assert not row.compressed, "compressed rows not supported yet"
-                content = row.content.decode('utf-8')
+                # Retrieve associated "reader" and extract the data
+                data = [y["read"] for y in self.COMPRESSION_MODE.itervalues() if y["id"] == row.compressed][0](
+                    row.content)
+                content = data.decode(self.master.config.logEncoding)
+
                 if row.first_line < first_line:
                     idx = -1
                     count = first_line - row.first_line
@@ -119,20 +149,32 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # fact that no character but u'\n' maps to b'\n' in UTF-8.
 
             first_line = chunk_first_line = row[0]
-            remaining = content.encode('utf-8')
+            remaining = content.encode(self.master.config.logEncoding)
             while remaining:
                 chunk, remaining = self._splitBigChunk(remaining, logid)
-
                 last_line = chunk_first_line + chunk.count('\n')
+
+                # Set the default compressed mode to "raw" id
+                compressed_mode = self.COMPRESSION_MODE["raw"]["id"]
+                # Do we have to compress the chunk?
+                if self.master.config.logCompressionMethod != "raw":
+                    start = time.clock()
+                    compressed_chunk = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]["dumps"](chunk)
+                    # Is it useful to compress the chunk?
+                    if len(chunk) > len(compressed_chunk):
+                        compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]["id"]
+                        chunk = compressed_chunk
+
                 conn.execute(self.db.model.logchunks.insert(),
                              dict(logid=logid, first_line=chunk_first_line,
                                   last_line=last_line, content=chunk,
-                                  compressed=0))
+                                  compressed=compressed_mode))
                 chunk_first_line = last_line + 1
 
             conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
                          num_lines=last_line + 1)
-            return (first_line, last_line)
+
+            return first_line, last_line
         return self.db.pool.do(thd)
 
     def _splitBigChunk(self, content, logid):
@@ -155,7 +197,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         truncline = content[:self.MAX_CHUNK_SIZE]
         while truncline:
             try:
-                truncline.decode('utf-8')
+                truncline.decode(self.master.config.logEncoding)
                 break
             except UnicodeDecodeError:
                 truncline = truncline[:-1]
@@ -176,6 +218,20 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     def compressLog(self, logid):
         # TODO: compression not supported yet
+
+        # Compression is done on chunk directly in appendLog method to:
+        # - reduce re-processing of the log in this method (done at the end of the step)
+        # - avoid too many DB operations and so, DB fragmentation risk
+        #
+        # So, this method shall 'just' analyze if there are benefits
+        # to regroup all contiguous chunk, (re)compress them and replace them in the db.
+        # e.g.:
+        #    - chunk raw 1
+        #    - chunk low compress 2
+        #    - chunk high compress 3
+        #   if grouping and high compressing chunk raw 1&2 is smaller, then this method shall optimize like:
+        #    - chunk high compress 1&2
+        #    - chunk high compress 3
         return defer.succeed(None)
 
     def _logdictFromRow(self, row):
