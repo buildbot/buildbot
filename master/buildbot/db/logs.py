@@ -236,23 +236,59 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, complete=1)
         return self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def compressLog(self, logid):
-        # TODO: compression not supported yet
+        def thd(conn):
+            # get the set of chunks
+            tbl = self.db.model.logchunks
+            q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content), tbl.c.compressed])
+            q = q.where(tbl.c.logid == logid)
+            q = q.order_by(tbl.c.first_line)
+            rows = conn.execute(q)
+            uncompressed_length = 0
+            numchunks = 0
+            totlength = 0
+            totlines = 0
+            for row in rows:
+                if row.compressed == 0:
+                    uncompressed_length += row.length_1
+                totlength += row.length_1
+                totlines = row.last_line - row.first_line
+                numchunks += 1
 
-        # Compression is done on chunk directly in appendLog method to:
-        # - reduce re-processing of the log in this method (done at the end of the step)
-        # - avoid too many DB operations and so, DB fragmentation risk
-        #
-        # So, this method shall 'just' analyze if there are benefits
-        # to regroup all contiguous chunk, (re)compress them and replace them in the db.
-        # e.g.:
-        #    - chunk raw 1
-        #    - chunk low compress 2
-        #    - chunk high compress 3
-        #   if grouping and high compressing chunk raw 1&2 is smaller, then this method shall optimize like:
-        #    - chunk high compress 1&2
-        #    - chunk high compress 3
-        return defer.succeed(None)
+            # do nothing if its not worth.
+            # if uncompressed_length < 200 and numchunks < 4:
+            #    return
+            q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
+            q = q.where(tbl.c.logid == logid)
+            q = q.order_by(tbl.c.first_line)
+            rows = conn.execute(q)
+            wholelog = ""
+            for row in rows:
+                wholelog += self.COMPRESSION_BYID[row.compressed](row.content).decode('utf-8') + "\n"
+
+            d = tbl.delete()
+            d = d.where(tbl.c.logid == logid)
+            conn.execute(d).close()
+            conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
+                         num_lines=0)
+
+            return wholelog
+
+        wholelog = yield self.db.pool.do(thd)
+        if wholelog is None or len(wholelog) == 0:
+            defer.returnValue(0)
+
+        yield self.appendLog(logid, wholelog)
+
+        def getLogSize(conn):
+            # get the set of chunks
+            tbl = self.db.model.logchunks
+            q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
+            q = q.where(tbl.c.logid == logid)
+            return conn.execute(q).fetchone()[0]
+        newsize = yield self.db.pool.do(getLogSize)
+        defer.returnValue(len(wholelog) - newsize)
 
     def _logdictFromRow(self, row):
         rv = dict(row)

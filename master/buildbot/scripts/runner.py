@@ -652,6 +652,27 @@ class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
     ]
 
 
+class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
+    subcommandFunction = "buildbot.scripts.cleanupdb.cleanupDatabase"
+    optFlags = [
+        ["quiet", "q", "Do not emit the commands being run"],
+    ]
+    optParameters = [
+    ]
+
+    def getSynopsis(self):
+        return "Usage:    buildbot cleanupdb [options] [<basedir>]"
+
+    longdesc = """
+    This command takes an existing buildmaster working directory and
+    do some optimization on the database
+
+    This command uses the database specified in
+    the master configuration file.  If you wish to use a database other than
+    the default (sqlite), be sure to set that parameter before upgrading.
+    """
+
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -685,6 +706,9 @@ class Options(usage.Options):
         ['processwwwindex', None, ProcessWWWIndexOption,
          "Process the index.html to enable the front end package working without backend. "
          "This is a command to work with the frontend's proxy task."
+         ],
+        ['cleanupdb', None, CleanupDBOptions,
+         "cleanup the database"
          ]
     ]
 
