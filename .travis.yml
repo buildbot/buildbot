@@ -98,6 +98,8 @@ install:
   - "[ $IS_LATEST = false ] || pip install pyflakes"
   - "[ $IS_LATEST = false ] || pip install sphinx"
   - "[ $IS_LATEST = false ] || pip install pep8==1.5.7"
+  # Install lz4 for log compression utest
+  - pip install lz4
 
 # Tests running commands
 script:
