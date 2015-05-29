@@ -1478,10 +1478,14 @@ GerritStatusPush
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
 
-.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, ...)
+.. py:class:: GerritStatusPush(server, username, notify, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, ...)
 
    :param string server: Gerrit SSH server's address to use for push event notifications.
    :param string username: Gerrit SSH server's username.
+   :param string notify: Notify handling that defines to whom email notifications should be sent after the review is stored.
+        Allowed values are NONE, OWNER, OWNER_REVIEWERS and ALL. If not set, the default is ALL.
+        This parameter released in Gerrit 2.9:
+        https://gerrit-documentation.storage.googleapis.com/Documentation/2.9/cmd-review.html#_options
    :param int port: (optional) Gerrit SSH server's port (default: 29418)
    :param reviewCB: (optional) callback that is called each time a build is finished, and that is used to define the message and review approvals depending on the build result.
    :param reviewArg: (optional) argument passed to the review callback.

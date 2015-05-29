@@ -31,6 +31,8 @@ Slave
 Features
 ~~~~~~~~
 
+* :bb:status:`GerritStatusPush` now has parameter --notify which is used to control e-mail notifications from Gerrit.
+
 Fixes
 ~~~~~
 
