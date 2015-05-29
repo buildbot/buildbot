@@ -1,0 +1,43 @@
+overview {
+  display: block;
+  overflow: hidden;
+  padding: 20px 0;
+
+  .tile {
+    float: left;
+    width: 25%;
+    text-align: center;
+
+    .title {
+      font-size: 0.8em;
+      color: #333;
+    }
+
+    .count {
+      font-size: 80px;
+      color: #673ab7;
+    }
+
+    .extra {
+      color: #999;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .count {
+      font-size: 50px !important;
+    }
+  }
+}
+
+.collapsed overview {
+  .tile {
+    width: 50%;
+    margin-bottom: 5px;
+  }
+  
+  .count {
+    font-size: 50px;
+  }
+}

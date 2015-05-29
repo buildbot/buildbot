@@ -12,10 +12,15 @@ describe 'panel', ->
 
     beforeEach inject injected
 
+    panelbind =
+        name: 'underline_should_be_replaced'
+        title: "test_title_string"
+        collapsed: false
+
     it 'should display title normally', ->
         $httpBackend.expectGETSVGIcons()
-        $rootScope.title = "test_title_string"
-        panel = $compile('<panel title="title">')($rootScope)
+        $rootScope.data = panelbind
+        panel = $compile('<panel bind="data">')($rootScope)
         $httpBackend.flush()
 
         title = panel.children().eq(0).children().eq(0)
@@ -23,17 +28,18 @@ describe 'panel', ->
 
     it 'should collapse normally', ->
         $httpBackend.expectGETSVGIcons()
-        panel = $compile('<panel is-collapsed="collapsed">')($rootScope)
+        $rootScope.data = panelbind
+        panel = $compile('<panel bind="data">')($rootScope)
         $httpBackend.flush()
 
         expect(panel.hasClass('collapsed')).toBe(false)
 
-        $rootScope.collapsed = true
+        panelbind.collapsed = true
         $rootScope.$digest()
 
         expect(panel.hasClass('collapsed')).toBe(true)
 
-        $rootScope.collapsed = false
+        panelbind.collapsed = false
         $rootScope.$digest()
 
         expect(panel.hasClass('collapsed')).toBe(false)
@@ -42,17 +48,18 @@ describe 'panel', ->
         expandButton = titlebar.children().eq(1).children().eq(0)
 
         expandButton.triggerHandler('click')
-        expect($rootScope.collapsed).toBe(true)
+        expect(panelbind.collapsed).toBe(true)
         expect(panel.hasClass('collapsed')).toBe(true)
 
         expandButton.triggerHandler('click')
-        expect($rootScope.collapsed).toBe(false)
+        expect(panelbind.collapsed).toBe(false)
         expect(panel.hasClass('collapsed')).toBe(false)
 
 
     it 'should lock normally', ->
         $httpBackend.expectGETSVGIcons()
-        panel = $compile('<panel locked="locked">')($rootScope)
+        $rootScope.data = panelbind
+        panel = $compile('<panel bind="data" locked="locked">')($rootScope)
         $httpBackend.flush()
 
         titlebar = panel.children().eq(0).children().eq(0)
@@ -69,8 +76,8 @@ describe 'panel', ->
 
     it 'should compile content directive correctly', ->
         $httpBackend.expectGETSVGIcons()
-        $rootScope.test_name = 'underline_should_be_replaced'
-        panel = $compile('<panel name="test_name">')($rootScope)
+        $rootScope.data = panelbind
+        panel = $compile('<panel bind="data">')($rootScope)
         $httpBackend.flush()
 
         content = panel.children().eq(0).children().eq(1)
