@@ -11,11 +11,14 @@ class BuildStatus extends Directive
                     build = scope.build
                     if build.complete is false and build.started_at > 0
                         scope.status_class = 'pending'
+                        scope.icon = 'build-pending'
                     else if build.results == 0
                         scope.status_class = 'success'
+                        scope.icon = 'build-success'
                     else if build.results == 2 or build.results == 4
                         scope.status_class = 'fail'
+                        scope.icon = 'build-fail'
                     else
+                        scope.icon = 'build-pending'
                         scope.status_class = ''
-                    console.log scope.status_class
         }
