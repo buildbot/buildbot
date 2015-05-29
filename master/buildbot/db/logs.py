@@ -52,6 +52,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
                         "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
                         "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
+    COMPRESSION_ID = dict((x["id"], {"dumps": x["dumps"], "read": x["read"]}) for x in COMPRESSION_MODE.itervalues())
 
     def _getLog(self, whereclause):
         def thd(conn):
@@ -96,8 +97,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             rv = []
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
-                data = [y["read"] for y in self.COMPRESSION_MODE.itervalues() if y["id"] == row.compressed][0](
-                    row.content)
+                data = self.COMPRESSION_ID[row.compressed]["read"](row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -155,20 +155,20 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 last_line = chunk_first_line + chunk.count('\n')
 
                 # Set the default compressed mode to "raw" id
-                compressed_mode = self.COMPRESSION_MODE["raw"]["id"]
+                compressed_id = self.COMPRESSION_MODE["raw"]["id"]
                 # Do we have to compress the chunk?
                 if self.master.config.logCompressionMethod != "raw":
                     compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
                     compressed_chunk = compressed_mode["dumps"](chunk)
                     # Is it useful to compress the chunk?
                     if len(chunk) > len(compressed_chunk):
-                        compressed_mode = compressed_mode["id"]
+                        compressed_id = compressed_mode["id"]
                         chunk = compressed_chunk
 
                 conn.execute(self.db.model.logchunks.insert(),
                              dict(logid=logid, first_line=chunk_first_line,
                                   last_line=last_line, content=chunk,
-                                  compressed=compressed_mode))
+                                  compressed=compressed_id))
                 chunk_first_line = last_line + 1
 
             conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),

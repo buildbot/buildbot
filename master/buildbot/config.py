@@ -306,7 +306,7 @@ class MasterConfig(util.ComparableMixin):
                     error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library"
                           "('pip install lz4'). Compression mode is set to 'raw'")
         else:
-            logCompressionMethod = 'raw'
+            logCompressionMethod = 'bz2'
 
             self.logCompressionMethod = logCompressionMethod
 
