@@ -156,6 +156,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
                 # Set the default compressed mode to "raw" id
                 compressed_id = self.COMPRESSION_MODE["raw"]["id"]
+                raw_len = len(chunk)
                 # Do we have to compress the chunk?
                 if self.master.config.logCompressionMethod != "raw":
                     compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
@@ -164,6 +165,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     if len(chunk) > len(compressed_chunk):
                         compressed_id = compressed_mode["id"]
                         chunk = compressed_chunk
+
+                if compressed_id != self.COMPRESSION_MODE["raw"]["id"]:
+                    log.msg("Store {} instead of {}".format(len(chunk), raw_len))
 
                 conn.execute(self.db.model.logchunks.insert(),
                              dict(logid=logid, first_line=chunk_first_line,

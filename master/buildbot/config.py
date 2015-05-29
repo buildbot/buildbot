@@ -295,20 +295,16 @@ class MasterConfig(util.ComparableMixin):
 
         copy_int_param('logCompressionLimit')
 
-        if 'logCompressionMethod' in config_dict:
-            logCompressionMethod = config_dict.get('logCompressionMethod')
-            if logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-                error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
-            elif logCompressionMethod == "lz4":
-                try:
-                    import lz4
-                except ImportError:
-                    error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library"
-                          "('pip install lz4'). Compression mode is set to 'raw'")
-        else:
-            logCompressionMethod = 'bz2'
+        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'bz2')
+        if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
+            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
-            self.logCompressionMethod = logCompressionMethod
+        if self.logCompressionMethod == "lz4":
+            try:
+                import lz4
+            except ImportError:
+                error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library"
+                      "('pip install lz4'). Compression mode is set to 'raw'")
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
