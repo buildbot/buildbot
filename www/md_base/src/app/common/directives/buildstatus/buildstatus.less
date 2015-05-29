@@ -1,0 +1,30 @@
+build-status {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+
+  span.dot {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin: 7px;
+    border-radius: 50%;
+    border: 1px solid #aaa;
+    background: #eee;
+
+    &.pending {
+      background: #FF3;
+      border-color: #AA1; 
+    }
+
+    &.success {
+      background: #3F3;
+      border-color: #1A1; 
+    }
+
+    &.fail {
+      background: #F33;
+      border-color: #A11; 
+    }
+  }
+}
