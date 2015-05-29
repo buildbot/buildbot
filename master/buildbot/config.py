@@ -303,7 +303,11 @@ class MasterConfig(util.ComparableMixin):
                 try:
                     import lz4
                 except ImportError:
-                    error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
+                    error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library"
+                          "('pip install lz4'). Compression mode is set to 'raw'")
+        else:
+            logCompressionMethod = 'raw'
+
             self.logCompressionMethod = logCompressionMethod
 
         copy_int_param('logMaxSize')

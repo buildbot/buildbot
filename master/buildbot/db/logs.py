@@ -98,7 +98,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 # Retrieve associated "reader" and extract the data
                 data = [y["read"] for y in self.COMPRESSION_MODE.itervalues() if y["id"] == row.compressed][0](
                     row.content)
-                content = data.decode(self.master.config.logEncoding)
+                content = data.decode('utf-8')
 
                 if row.first_line < first_line:
                     idx = -1
@@ -149,7 +149,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # fact that no character but u'\n' maps to b'\n' in UTF-8.
 
             first_line = chunk_first_line = row[0]
-            remaining = content.encode(self.master.config.logEncoding)
+            remaining = content.encode('utf-8')
             while remaining:
                 chunk, remaining = self._splitBigChunk(remaining, logid)
                 last_line = chunk_first_line + chunk.count('\n')
@@ -158,11 +158,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 compressed_mode = self.COMPRESSION_MODE["raw"]["id"]
                 # Do we have to compress the chunk?
                 if self.master.config.logCompressionMethod != "raw":
-                    start = time.clock()
-                    compressed_chunk = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]["dumps"](chunk)
+                    compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
+                    compressed_chunk = compressed_mode["dumps"](chunk)
                     # Is it useful to compress the chunk?
                     if len(chunk) > len(compressed_chunk):
-                        compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]["id"]
+                        compressed_mode = compressed_mode["id"]
                         chunk = compressed_chunk
 
                 conn.execute(self.db.model.logchunks.insert(),
@@ -197,7 +197,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         truncline = content[:self.MAX_CHUNK_SIZE]
         while truncline:
             try:
-                truncline.decode(self.master.config.logEncoding)
+                truncline.decode('utf-8')
                 break
             except UnicodeDecodeError:
                 truncline = truncline[:-1]
