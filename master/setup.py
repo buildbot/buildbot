@@ -244,7 +244,8 @@ setup_args = {
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
                 'OPTIONS']),
             ('buildbot.steps.master', [
-                'MasterShellCommand', 'SetProperty', 'LogRenderable']),
+                'MasterShellCommand', 'SetProperty', 'LogRenderable',
+                'CancelRelatedBuilds', 'StopRelatedBuilds']),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
             ('buildbot.steps.mtrlogobserver', ['MTR']),

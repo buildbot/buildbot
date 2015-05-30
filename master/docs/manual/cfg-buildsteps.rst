@@ -2574,6 +2574,117 @@ LogRenderable
 This build step takes content which can be renderable and logs it in a pretty-printed format.
 It can be useful for debugging properties during a build.
 
+.. _handle-related-builds:
+
+Handling Related Builds
+-----------------------
+
+There are situations when you want to cancel and/or stop related builds (for example, when the Buildbot is configured to build every new change, however build results for an older change might not be relevant any more).
+To handle these situations Buildbot offers two build steps (which are executed on master):
+
+* CancelRelatedBuilds
+* StopRelatedBuilds
+
+These steps work in a pretty much same way: they look at possible candidates' source stamps and decide whether the step is relevant based on own source stamp.
+If the source stamps are somehow relevant (decided by a function provided as a parameter), then the corresponding build request will be cancelled, or the corresponding build will be stopped.
+
+.. bb:step:: CancelRelatedBuilds
+
+CancelRelatedBuilds
++++++++++++++++++++
+
+.. py:class:: buildbot.steps.master.CancelRelatedBuilds
+
+Beside `common parameters <Buildstep-Common-Parameters>`_ `CancelRelatedBuilds` accepts following parameters:
+
+``builderNames``
+    This is the set of builders which this step will check for possible candidates.
+    Possible values:
+
+    ``None``
+        check all builders known to the system
+
+    list of strings
+        check only these builders
+
+``preProcess``
+    This is an optional parameter to specify a function that would preprocess own build's source stamp.
+    This might be useful if the computations are extensive and there could be a lot of possible candidates to check.
+    Default: just use own build's source stamp.
+
+    .. code-block:: python
+
+        def preProcess(source_stamps):
+            """
+            :returns: what is passed as the first argument to `isRelevant`
+            """
+
+``isRelevant``
+    This is a mandatory parameter to specify a function that would take two parameters: own source stamps (possibly pre-processed) and the source stamps of the candidate build request.
+    If this function returns `True`, the candidate will be cancelled.
+
+    .. code-block:: python
+
+        def isRelevant(own_source_stamps, their_source_stamps):
+            """
+            :type own_source_stamps: either list(SourceStamp) or what is returned by `preProcess`
+            :type their_source_stamps: list(SourceStamp)
+            """
+
+    .. note::
+
+       It is possible that by the time the cancel request is sent, the corresponding build request is already started to build.
+
+.. bb:step:: StopRelatedBuilds
+
+StopRelatedBuilds
++++++++++++++++++
+
+.. py:class:: buildbot.steps.master.StopRelatedBuilds
+
+Beside `common parameters <Buildstep-Common-Parameters>`_ `StopRelatedBuilds` accepts following parameters:
+
+``builderNames``
+    This is the set of builders which this step will check for possible candidates.
+    Possible values:
+
+    ``None``
+        check all builders known to the system
+
+    list of strings
+        check only these builders
+
+``preProcess``
+    This is an optional parameter to specify a function that would preprocess own build's source stamp.
+    This might be useful if the computations are extensive and there could be a lot of possible candidates to check.
+    Default: just use own build's source stamp.
+
+    .. code-block:: python
+
+        def preProcess(source_stamps):
+            """
+            :returns: what is passed as the first argument to `isRelevant`
+            """
+
+``isRelevant``
+    This is a mandatory parameter to specify a function that would take two parameters: own source stamp (possibly pre-processed) and the source stamp of the candidate build.
+    If this function returns `True`, the candidate will be stopped.
+
+    .. code-block:: python
+
+        def isRelevant(own_source_stamps, their_source_stamps):
+            """
+            :type own_source_stamps: either list(SourceStamp) or what is returned by `preProcess`
+            :type their_source_stamps: list(SourceStamp)
+            """
+
+    .. note::
+
+       It is possible that by the time the stop request is sent, the corresponding build request is already finished.
+
+``reason`` (default: `Stopped by StopRelatedBuilds`)
+    This is an optional parameter to specify a string that will be used as a reason for stopping candidates.
+
 .. index:: Properties; from steps
 
 .. _Setting-Properties:
