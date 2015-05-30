@@ -240,6 +240,8 @@ setup_args = {
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
+            ('buildbot.steps.gerrit', [
+                'CancelGerritRelatedBuilds', 'StopGerritRelatedBuilds']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
                 'OPTIONS']),
@@ -335,6 +337,9 @@ setup_args = {
             ('buildbot.status.web.auth', [
                 'BasicAuth', 'HTPasswdAprAuth', 'HTPasswdAuth', 'UsersAuth']),
             ('buildbot.status.web.authz', ['Authz']),
+            ('buildbot.steps.gerrit', [
+                ('gerrit.pre_process', 'pre_process'),
+                ('gerrit.is_relevant', 'is_relevant')]),
             ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
             ('buildbot.steps.source.repo', [
                 ('repo.DownloadsFromChangeSource',

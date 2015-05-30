@@ -2585,6 +2585,11 @@ To handle these situations Buildbot offers two build steps (which are executed o
 * CancelRelatedBuilds
 * StopRelatedBuilds
 
+and specific implementation for Gerrit
+
+* CancelGerritRelatedBuilds
+* StopGerritRelatedBuilds
+
 These steps work in a pretty much same way: they look at possible candidates' source stamps and decide whether the step is relevant based on own source stamp.
 If the source stamps are somehow relevant (decided by a function provided as a parameter), then the corresponding build request will be cancelled, or the corresponding build will be stopped.
 
@@ -2684,6 +2689,47 @@ Beside `common parameters <Buildstep-Common-Parameters>`_ `StopRelatedBuilds` ac
 
 ``reason`` (default: `Stopped by StopRelatedBuilds`)
     This is an optional parameter to specify a string that will be used as a reason for stopping candidates.
+
+.. bb:step:: CancelGerritRelatedBuilds
+
+CancelGerritRelatedBuilds
++++++++++++++++++++++++++
+
+This is a convenience step that provides `preProcess` and `isRelevant` parameters to constructor of `CancelRelatedBuilds`.
+It's a rough equivalent of:
+
+.. code-block:: python
+
+    from buildbot.plugins import steps, util
+
+    class CancelGerritRelatedBuilds(CancelRelatedBuilds):
+        def __init__(self, **kwargs):
+            CancelRelatedBuilds.__init__(
+                self,
+                preProcess=util.gerrit.pre_process,
+                isRelevant=util.gerrit.is_relevant,
+                **kwargs)
+
+.. bb:step:: StopGerritRelatedBuilds
+
+StopGerritRelatedBuilds
++++++++++++++++++++++++
+
+This is a convenience step that provides `preProcess`, `isRelevant` and `reason` parameters to constructor of `StopRelatedBuilds`.
+It's a rough equivalent of:
+
+.. code-block:: python
+
+    from buildbot.plugins import steps, util
+
+    class StopGerritRelatedBuilds(StopRelatedBuilds):
+        def __init__(self, **kwargs):
+            StopRelatedBuilds.__init__(
+                self,
+                preProcess=util.gerrit.pre_process,
+                isRelevant=util.gerrit.is_relevant,
+                reason='A new patch set for the same change is submitted',
+                **kwargs)
 
 .. index:: Properties; from steps
 
