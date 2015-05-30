@@ -10,6 +10,7 @@ class RecentBuilds extends Directive
         }
 
 class _RecentBuilds extends Controller
+    showBuilders: true
     builds: []
     constructor: ($scope, buildbotService) ->
         buildbotService.all('builds').getList(

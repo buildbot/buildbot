@@ -4,6 +4,7 @@ angular.module 'app', [
     'ngMaterial',
     'ui.router',
     'ng-sortable',
+    'angularMoment',
 ]
     .config ($mdThemingProvider) ->
         $mdThemingProvider.theme('default')
