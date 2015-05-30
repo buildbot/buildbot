@@ -430,10 +430,12 @@ class BuilderStatus(styles.Versioned):
             for ss in build.getSourceStamps() ])
 
     @defer.inlineCallbacks
-    def generateBuildNumbers(self, codebases, num_builds):
-        sourcestamps = []
+    def generateBuildNumbers(self, codebases={}, branches=[], results=None, num_builds=1):
+        sourcestamps = [{'b_branch': b} for b in branches if b is not None] if branches else []
+        #TODO: support filter by RETRY result
+        results_filter = [r for r in results if r is not None and r != RETRY] if results else []
 
-        if codebases:
+        if codebases and not branches:
             for key, value in codebases.iteritems():
                 sourcestamps.append({'b_codebase': key, 'b_branch': value})
 
@@ -445,6 +447,7 @@ class BuilderStatus(styles.Versioned):
 
         lastBuildsNumbers = yield self.master.db.builds.getLastBuildsNumbers(buildername=self.name,
                                                                              sourcestamps=sourcestamps,
+                                                                             results=results_filter,
                                                                              num_builds=retries)
 
         defer.returnValue(lastBuildsNumbers)
@@ -543,7 +546,7 @@ class BuilderStatus(styles.Versioned):
             defer.returnValue(finishedBuilds)
             return
 
-        buildNumbers = yield self.generateBuildNumbers(codebases, num_builds)
+        buildNumbers = yield self.generateBuildNumbers(codebases, branches, results, num_builds)
 
         for bn in buildNumbers:
             build = yield self.deferToThread(bn)
@@ -554,9 +557,6 @@ class BuilderStatus(styles.Versioned):
             if results is not None:
                 if build.getResults() not in results:
                     continue
-
-            if branches and not branches & self._getBuildBranches(build):
-                continue
 
             finishedBuilds.append(build)
 

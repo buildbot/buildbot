@@ -28,6 +28,7 @@ from buildbot.util import bbcollections
 from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
+from buildbot.status.results import RETRY
 
 class Status(config.ReconfigurableServiceMixin, service.MultiService):
     implements(interfaces.IStatus)
@@ -320,8 +321,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, num_builds=15, results=None, slavename=None):
-
-        lastBuilds = yield self.master.db.builds.getLastsBuildsNumbersBySlave(slavename, num_builds)
+        #TODO: support filter by RETRY result
+        results_filter = [r for r in results if r is not None and r != RETRY] if results else []
+        lastBuilds = yield self.master.db.builds.getLastsBuildsNumbersBySlave(slavename, results_filter, num_builds)
         builders = lastBuilds.keys()
 
         builder_names = []
