@@ -12,10 +12,12 @@ class RecentBuilds extends Directive
 class _RecentBuilds extends Controller
     showBuilders: true
     builds: []
-    constructor: ($scope, buildbotService) ->
+    constructor: ($scope, buildbotService, bbSettingsService) ->
+        homeSetting = bbSettingsService.getSettingsGroup 'home'
+
         buildbotService.all('builds').getList(
             complete: true
             order:'-complete_at'
-            limit: 8
+            limit: homeSetting.n_recent_builds.value
         ).then (data) =>
             @builds = data
