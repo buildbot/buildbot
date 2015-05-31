@@ -7,7 +7,7 @@ class BuildStatus extends Directive
             scope:
                 build: '='
             link: (scope) ->
-                scope.$watch 'build', ->
+                updateBuild = ->
                     build = scope.build
                     if build.complete is false and build.started_at > 0
                         scope.status_class = 'pending'
@@ -19,6 +19,7 @@ class BuildStatus extends Directive
                         scope.status_class = 'fail'
                         scope.icon = 'build-fail'
                     else
+                        scope.status_class = 'unknown'
                         scope.icon = 'build-pending'
-                        scope.status_class = ''
+                scope.$watch 'build', updateBuild, true
         }
