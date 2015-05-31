@@ -35,7 +35,7 @@ describe 'overview', ->
         count = slavetile.children().eq(1).text().trim()
         expect(count).toBe('1')
         extra = slavetile.children().eq(2).text().trim()
-        expect(extra).toBe('1 connections.')
+        expect(extra).toBe('1 connection.')
 
         builderstile = elem.children().eq(2)
         count = builderstile.children().eq(1).text().trim()
