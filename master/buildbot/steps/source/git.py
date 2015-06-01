@@ -337,6 +337,7 @@ class Git(Source):
 
         defer.returnValue(RC_SUCCESS)
 
+    @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
         if self.config is not None:
@@ -345,25 +346,22 @@ class Git(Source):
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
         cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               full_command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin)
+                                           full_command,
+                                           env=self.env,
+                                           logEnviron=self.logEnviron,
+                                           timeout=self.timeout,
+                                           collectStdout=collectStdout,
+                                           initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
-                raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            else:
-                return cmd.rc
-        return d
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            defer.returnValue(cmd.stdout)
+            return
+        defer.returnValue(cmd.rc)
 
     @defer.inlineCallbacks
     def _fetch(self, _):
