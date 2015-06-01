@@ -59,7 +59,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
                         "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
                         "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
-    COMPRESSION_ID = dict((x["id"], {"dumps": x["dumps"], "read": x["read"]}) for x in COMPRESSION_MODE.itervalues())
+    COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.itervalues())
+    total_raw_bytes = 0
+    total_compressed_bytes = 0
 
     def _getLog(self, whereclause):
         def thd(conn):
@@ -85,7 +87,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.logs
             q = tbl.select()
-            q = q.where(tbl.c.stepid == stepid)
+            if stepid is not None:
+                q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
             res = conn.execute(q)
             return [self._logdictFromRow(row) for row in res.fetchall()]
@@ -104,7 +107,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             rv = []
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
-                data = self.COMPRESSION_ID[row.compressed]["read"](row.content)
+                data = self.COMPRESSION_BYID[row.compressed]["read"](row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -137,6 +140,41 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     "log with slug '%r' already exists in this step" % (slug,))
         return self.db.pool.do(thd)
 
+    def thdCompressChunk(self, chunk):
+        # Set the default compressed mode to "raw" id
+        compressed_id = self.COMPRESSION_MODE["raw"]["id"]
+        self.total_raw_bytes += len(chunk)
+        # Do we have to compress the chunk?
+        if self.master.config.logCompressionMethod != "raw":
+            compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
+            compressed_chunk = compressed_mode["dumps"](chunk)
+            # Is it useful to compress the chunk?
+            if len(chunk) > len(compressed_chunk):
+                compressed_id = compressed_mode["id"]
+                chunk = compressed_chunk
+        self.total_compressed_bytes += len(chunk)
+        return chunk, compressed_id
+
+    def thdSplitAndAppendChunk(self, conn, logid, content, first_line):
+        # Break the content up into chunks.  This takes advantage of the
+        # fact that no character but u'\n' maps to b'\n' in UTF-8.
+        remaining = content
+        chunk_first_line = last_line = first_line
+        while remaining:
+            chunk, remaining = self._splitBigChunk(remaining, logid)
+            last_line = chunk_first_line + chunk.count('\n')
+
+            chunk, compressed_id = self.thdCompressChunk(chunk)
+            conn.execute(self.db.model.logchunks.insert(),
+                         dict(logid=logid, first_line=chunk_first_line,
+                              last_line=last_line, content=chunk,
+                              compressed=compressed_id))
+            chunk_first_line = last_line + 1
+
+        conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
+                     num_lines=last_line + 1)
+        return first_line, last_line
+
     def appendLog(self, logid, content):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
@@ -152,40 +190,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return  # ignore a missing log
 
-            # Break the content up into chunks.  This takes advantage of the
-            # fact that no character but u'\n' maps to b'\n' in UTF-8.
+            return self.thdSplitAndAppendChunk(conn=conn,
+                                               logid=logid,
+                                               content=content.encode('utf-8'),
+                                               first_line=row[0])
 
-            first_line = chunk_first_line = row[0]
-            remaining = content.encode('utf-8')
-            while remaining:
-                chunk, remaining = self._splitBigChunk(remaining, logid)
-                last_line = chunk_first_line + chunk.count('\n')
-
-                # Set the default compressed mode to "raw" id
-                compressed_id = self.COMPRESSION_MODE["raw"]["id"]
-                raw_len = len(chunk)
-                # Do we have to compress the chunk?
-                if self.master.config.logCompressionMethod != "raw":
-                    compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
-                    compressed_chunk = compressed_mode["dumps"](chunk)
-                    # Is it useful to compress the chunk?
-                    if len(chunk) > len(compressed_chunk):
-                        compressed_id = compressed_mode["id"]
-                        chunk = compressed_chunk
-
-                if compressed_id != self.COMPRESSION_MODE["raw"]["id"]:
-                    log.msg("Store {} instead of {}".format(len(chunk), raw_len))
-
-                conn.execute(self.db.model.logchunks.insert(),
-                             dict(logid=logid, first_line=chunk_first_line,
-                                  last_line=last_line, content=chunk,
-                                  compressed=compressed_id))
-                chunk_first_line = last_line + 1
-
-            conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
-                         num_lines=last_line + 1)
-
-            return first_line, last_line
         return self.db.pool.do(thd)
 
     def _splitBigChunk(self, content, logid):

@@ -301,7 +301,9 @@ class MasterConfig(util.ComparableMixin):
 
         if self.logCompressionMethod == "lz4":
             try:
+
                 import lz4
+                [lz4]
             except ImportError:
                 error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
 
