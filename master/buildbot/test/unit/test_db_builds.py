@@ -232,6 +232,37 @@ class TestBuildsConnectorComponent(
 
         self.assertEqual(lastBuildNumber, [3])
 
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersFilterBranchResults(self):
+        builds = [fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder",
+                                       complete=1, results=4,
+                                       submitted_at=self.SUBMITTED_AT_EPOCH,
+                                       complete_at=self.COMPLETE_AT_EPOCH),
+                   fakedb.Buildset(id=2, sourcestampsetid=2),
+                   fakedb.SourceStampSet(id=2),
+                   fakedb.SourceStamp(id=3, revision='a', codebase='1',
+                                      sourcestampsetid=2, branch='master', repository='z'),
+                   fakedb.SourceStamp(id=4, revision='b', codebase='4', sourcestampsetid=2,
+                                      branch='development', repository='w'),
+                   fakedb.Build(id=2, number=3, brid=2, start_time=self.SUBMITTED_AT_EPOCH,
+                                finish_time=self.COMPLETE_AT_EPOCH)]
+        yield  self.insertTestData(self.last_builds + builds)
+
+        sourcestamps_filter = [{'b_branch': 'master'}, {'b_branch': 'qa'}]
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter,
+                                                                    results=[0],
+                                                                    num_builds=4)
+
+        self.assertEqual(lastBuildNumber, [4])
+
+        lastBuildNumber = yield self.db.builds.getLastBuildsNumbers(buildername="builder",
+                                                                    sourcestamps=sourcestamps_filter,
+                                                                    results=[0, 4],
+                                                                    num_builds=4)
+
+        self.assertEqual(lastBuildNumber, [4, 3])
 
     @defer.inlineCallbacks
     def test_getLastsBuildsNumbersBySlave(self):
@@ -259,4 +290,32 @@ class TestBuildsConnectorComponent(
         self.assertEqual(lastBuildNumber, {'builder': [4], 'builder1': [3]})
 
         lastBuildNumber = yield self.db.builds.getLastsBuildsNumbersBySlave(slavename='slave-02')
+        self.assertEqual(lastBuildNumber, {'builder2': [5]})
+
+    @defer.inlineCallbacks
+    def test_getLastsBuildsNumbersBySlaveFilterResults(self):
+        builds = [fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder1",
+                                       complete=1, results=4,
+                                       submitted_at=self.SUBMITTED_AT_EPOCH,
+                                       complete_at=self.COMPLETE_AT_EPOCH),
+                   fakedb.Buildset(id=2, sourcestampsetid=2),
+                   fakedb.SourceStampSet(id=2),
+                   fakedb.SourceStamp(id=3, revision='a', codebase='1',
+                                      sourcestampsetid=2, branch='master', repository='z'),
+                   fakedb.SourceStamp(id=4, revision='b', codebase='4', sourcestampsetid=2,
+                                      branch='development', repository='w'),
+                   fakedb.Build(id=2, number=3, brid=2, start_time=self.SUBMITTED_AT_EPOCH,
+                                finish_time=self.COMPLETE_AT_EPOCH, slavename='slave-01'),
+                   fakedb.BuildRequest(id=3, buildsetid=2, buildername="builder2",
+                                       complete=1, results=7,
+                                       submitted_at=self.SUBMITTED_AT_EPOCH,
+                                       complete_at=self.COMPLETE_AT_EPOCH),
+                   fakedb.Build(id=3, number=5, brid=3, start_time=self.SUBMITTED_AT_EPOCH,
+                                finish_time=self.COMPLETE_AT_EPOCH, slavename='slave-02')]
+        yield  self.insertTestData(self.last_builds + builds)
+
+        lastBuildNumber = yield self.db.builds.getLastsBuildsNumbersBySlave(slavename='slave-01', results=[0, 4])
+        self.assertEqual(lastBuildNumber, {'builder': [4], 'builder1': [3]})
+
+        lastBuildNumber = yield self.db.builds.getLastsBuildsNumbersBySlave(slavename='slave-02', results=[7])
         self.assertEqual(lastBuildNumber, {'builder2': [5]})
