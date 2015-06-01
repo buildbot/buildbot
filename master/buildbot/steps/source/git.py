@@ -221,14 +221,26 @@ class Git(Source):
         yield self._syncSubmodule(None)
         yield self._updateSubmodule(None)
 
+    @defer.inlineCallbacks
     def clean(self):
         command = ['clean', '-f', '-f', '-d']
-        d = self._dovccmd(command)
-        d.addCallback(self._fetchOrFallback)
-        d.addCallback(self._syncSubmodule)
-        d.addCallback(self._updateSubmodule)
-        d.addCallback(self._cleanSubmodule)
-        return d
+        rc = yield self._dovccmd(command)
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+
+        rc = yield self._fetchOrFallback()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = yield self._syncSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = self._updateSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = self._cleanSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        defer.returnValue(RC_SUCCESS)
 
     @defer.inlineCallbacks
     def clobber(self):
