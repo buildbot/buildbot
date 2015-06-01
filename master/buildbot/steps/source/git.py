@@ -354,6 +354,7 @@ class Git(Source):
 
         defer.returnValue(RC_SUCCESS)
 
+    @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
         if self.config is not None:
@@ -369,18 +370,15 @@ class Git(Source):
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
-                raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            else:
-                return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
-        return d
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            defer.returnValue(cmd.stdout)
+            return
+        defer.returnValue(cmd.rc)
 
     @defer.inlineCallbacks
     def _fetch(self, _):
