@@ -285,17 +285,12 @@ class Git(Source):
         finally:
             self.workdir = old_workdir
 
+    @defer.inlineCallbacks
     def finish(self, res):
-        d = defer.succeed(res)
-
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " %
-                    (self.cmd))
-            return results
-        d.addCallback(self.finished)
-        return d
+        self.setStatus(self.cmd, res)
+        log.msg("Closing log, sending result of the command %s " %
+                (self.cmd))
+        yield self.finished(res)
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _=None):
