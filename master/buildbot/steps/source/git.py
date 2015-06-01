@@ -491,23 +491,18 @@ class Git(Source):
 
         defer.returnValue(res)
 
+    @defer.inlineCallbacks
     def _fullCloneOrFallback(self):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
            is set to True remove the build directory and try a full clone again.
         """
 
-        d = self._fullClone()
-
-        @d.addCallback
-        def clobber(res):
-            if res != RC_SUCCESS:
-                if self.clobberOnFailure:
-                    return self.clobber()
-                else:
-                    raise buildstep.BuildStepFailed()
-            else:
-                return res
-        return d
+        res = yield self._fullClone()
+        if res != RC_SUCCESS:
+            if not self.clobberOnFailure:
+                raise buildstep.BuildStepFailed()
+            res = yield self.clobber()
+        defer.returnValue(res)
 
     def _doClobber(self):
         """Remove the work directory"""
