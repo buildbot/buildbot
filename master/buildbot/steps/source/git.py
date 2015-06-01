@@ -528,12 +528,13 @@ class Git(Source):
             rc = yield self._dovccmd(['submodule', 'sync'])
         defer.returnValue(rc)
 
+    @defer.inlineCallbacks
     def _updateSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
-            return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive', '--force'])
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(['submodule', 'update',
+                                      '--init', '--recursive', '--force'])
+        defer.returnValue(rc)
 
     def _cleanSubmodule(self, _=None):
         if self.submodules:
