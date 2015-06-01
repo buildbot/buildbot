@@ -504,20 +504,13 @@ class Git(Source):
             res = yield self.clobber()
         defer.returnValue(res)
 
+    @defer.inlineCallbacks
     def _doClobber(self):
         """Remove the work directory"""
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def checkRemoval(_):
-            if cmd.rc != RC_SUCCESS:
-                raise RuntimeError("Failed to delete directory")
-            return cmd.rc
-        return d
+        rc = yield self.runRmdir(self.workdir)
+        if rc != RC_SUCCESS:
+            raise RuntimeError("Failed to delete directory")
+        defer.returnValue(rc)
 
     def computeSourceRevision(self, changes):
         if not changes:
