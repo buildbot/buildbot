@@ -16,6 +16,7 @@
 from distutils.version import LooseVersion
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import failure
 from twisted.python import log
 
 from buildbot import config as bbconfig
@@ -147,40 +148,35 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        d = self.checkBranchSupport()
+        try:
+            gitInstalled = yield self.checkBranchSupport()
 
-        def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
-            return RC_SUCCESS
-        d.addCallback(checkInstall)
 
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+            patched = yield self.sourcedirIsPatched()
 
-        def checkPatched(patched):
             if patched:
-                return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
-            else:
-                return RC_SUCCESS
-        d.addCallback(checkPatched)
+                yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
-        if self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
-        elif self.mode == 'full':
-            d.addCallback(lambda _: self.full())
-        if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        d.addCallback(self.parseCommitDescription)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
-        return d
+            if self.mode == 'incremental':
+                yield self.incremental()
+            elif self.mode == 'full':
+                yield self.full()
+            if patch:
+                yield self.patch(patch=patch)
+            yield self.parseGotRevision()
+            res = yield self.parseCommitDescription()
+            yield self.finish(res)
+        except Exception as e:
+            self.failed(failure.Failure())
 
     @defer.inlineCallbacks
     def full(self):
