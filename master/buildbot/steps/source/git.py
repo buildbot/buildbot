@@ -279,30 +279,30 @@ class Git(Source):
         yield self._updateSubmodule()
         yield self._cleanSubmodule()
 
+    @defer.inlineCallbacks
     def copy(self):
-        d = self.runRmdir(self.workdir, abandonOnFailure=False)
+        yield self.runRmdir(self.workdir)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(lambda _: self.incremental())
 
-        def copy(_):
+        try:
+            rc = yield self.incremental()
+            if rc != RC_SUCCESS:
+                raise buildstep.BuildStepFailed()
+
             cmd = buildstep.RemoteCommand('cpdir',
                                           {'fromdir': self.srcdir,
                                            'todir': old_workdir,
                                            'logEnviron': self.logEnviron,
                                            'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
-        d.addCallback(copy)
-
-        def resetWorkdir(_):
+            yield self.runCommand(cmd)
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            defer.returnValue(RC_SUCCESS)
+        finally:
             self.workdir = old_workdir
-            return RC_SUCCESS
-
-        d.addCallback(resetWorkdir)
-        return d
 
     def finish(self, res):
         d = defer.succeed(res)
