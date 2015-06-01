@@ -536,14 +536,15 @@ class Git(Source):
                                       '--init', '--recursive', '--force'])
         defer.returnValue(rc)
 
+    @defer.inlineCallbacks
     def _cleanSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
             command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
-            return self._dovccmd(command)
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(command)
+        defer.returnValue(rc)
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
