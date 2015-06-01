@@ -566,13 +566,12 @@ class Git(Source):
             self.supportsSubmoduleCheckout = False
         defer.returnValue(gitInstalled)
 
+    @defer.inlineCallbacks
     def applyPatch(self, patch):
-        d = self._dovccmd(['update-index', '--refresh'])
+        yield self._dovccmd(['update-index', '--refresh'])
 
-        @d.addCallback
-        def applyAlready(res):
-            return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
-        return d
+        res = yield self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
