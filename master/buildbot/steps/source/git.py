@@ -510,9 +510,11 @@ class Git(Source):
             res = yield self.clobber()
         defer.returnValue(res)
 
+    @defer.inlineCallbacks
     def _doClobber(self):
         """Remove the work directory"""
-        return self.runRmdir(self.workdir)
+        rc = yield self.runRmdir(self.workdir)
+        defer.returnValue(rc)
 
     def computeSourceRevision(self, changes):
         if not changes:
