@@ -149,37 +149,35 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        d = self.checkBranchSupport()
+        try:
+            gitInstalled = yield self.checkBranchSupport()
 
-        @d.addCallback
-        def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
-            return RC_SUCCESS
 
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+            patched = yield self.sourcedirIsPatched()
 
-        @d.addCallback
-        def checkPatched(patched):
             if patched:
-                return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
-            else:
-                return RC_SUCCESS
+                yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
-        d.addCallback(self._getAttrGroupMember('mode', self.mode))
-        if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        d.addCallback(self.parseCommitDescription)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
-        return d
+            if self.mode == 'incremental':
+                yield self.incremental()
+            elif self.mode == 'full':
+                yield self.full()
+            if patch:
+                yield self.patch(patch=patch)
+            yield self.parseGotRevision()
+            res = yield self.parseCommitDescription()
+            yield self.finish(res)
+        except Exception as e:
+            yield self.failed(e)
 
     @defer.inlineCallbacks
     def mode_full(self, _):
