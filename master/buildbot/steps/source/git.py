@@ -517,11 +517,12 @@ class Git(Source):
             return None
         return changes[-1].revision
 
+    @defer.inlineCallbacks
     def _syncSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
-            return self._dovccmd(['submodule', 'sync'])
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(['submodule', 'sync'])
+        defer.returnValue(rc)
 
     def _updateSubmodule(self, _=None):
         if self.submodules:
