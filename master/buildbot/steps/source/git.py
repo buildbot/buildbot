@@ -554,19 +554,17 @@ class Git(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
+    @defer.inlineCallbacks
     def checkBranchSupport(self):
-        d = self._dovccmd(['--version'], collectStdout=True)
+        stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
-        def checkSupport(stdout):
-            gitInstalled = False
-            if 'git' in stdout:
-                gitInstalled = True
-            version = stdout.strip().split(' ')[2]
-            if LooseVersion(version) < LooseVersion("1.6.5"):
-                self.supportsBranch = False
-            return gitInstalled
-        d.addCallback(checkSupport)
-        return d
+        gitInstalled = False
+        if 'git' in stdout:
+            gitInstalled = True
+        version = stdout.strip().split(' ')[2]
+        if LooseVersion(version) < LooseVersion("1.6.5"):
+            self.supportsBranch = False
+        defer.returnValue(gitInstalled)
 
     def applyPatch(self, patch):
         d = self._dovccmd(['update-index', '--refresh'])
