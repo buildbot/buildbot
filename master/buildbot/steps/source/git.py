@@ -262,34 +262,30 @@ class Git(Source):
         yield self._updateSubmodule()
         yield self._cleanSubmodule()
 
+    @defer.inlineCallbacks
     def copy(self):
-        cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.workdir,
-                                                    'logEnviron': self.logEnviron,
-                                                    'timeout': self.timeout, })
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runRmdir(self.workdir, abandonOnFailure=False)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(self.mode_incremental)
 
-        @d.addCallback
-        def copy(_):
-            cmd = remotecommand.RemoteCommand('cpdir',
-                                              {'fromdir': self.srcdir,
-                                               'todir': old_workdir,
-                                               'logEnviron': self.logEnviron,
-                                               'timeout': self.timeout, })
+        try:
+            rc = yield self.mode_incremental()
+            if rc != RC_SUCCESS:
+                raise buildstep.BuildStepFailed()
+
+            cmd = buildstep.RemoteCommand('cpdir',
+                                          {'fromdir': self.srcdir,
+                                           'todir': old_workdir,
+                                           'logEnviron': self.logEnviron,
+                                           'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
-
-        @d.addCallback
-        def resetWorkdir(_):
+            yield self.runCommand(cmd)
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            defer.returnValue(RC_SUCCESS)
+        finally:
             self.workdir = old_workdir
-            return RC_SUCCESS
-
-        return d
 
     def finish(self, res):
         d = defer.succeed(res)
