@@ -80,7 +80,7 @@ class MasterConfig(util.ComparableMixin):
         self.logHorizon = None
         self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
-        self.logCompressionMethod = 'bz2'
+        self.logCompressionMethod = 'gz'
         self.logEncoding = 'utf-8'
         self.logMaxSize = None
         self.logMaxTailSize = None
@@ -295,7 +295,7 @@ class MasterConfig(util.ComparableMixin):
 
         copy_int_param('logCompressionLimit')
 
-        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'bz2')
+        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
         if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
             error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
@@ -303,8 +303,7 @@ class MasterConfig(util.ComparableMixin):
             try:
                 import lz4
             except ImportError:
-                error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library"
-                      "('pip install lz4'). Compression mode is set to 'raw'")
+                error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')

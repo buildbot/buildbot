@@ -19,29 +19,36 @@ from buildbot.db import base
 from twisted.internet import defer
 from twisted.python import log
 
+
 def dumps_gzip(data):
     import zlib
     return zlib.compress(data, 9)
+
 
 def read_gzip(data):
     import zlib
     return zlib.decompress(data)
 
+
 def dumps_lz4(data):
     import lz4
     return lz4.dumps(data)
+
 
 def read_lz4(data):
     import lz4
     return lz4.loads(data)
 
+
 def dumps_bz2(data):
     import bz2
     return bz2.compress(data, 9)
 
+
 def read_bz2(data):
     import bz2
     return bz2.decompress(data)
+
 
 class LogsConnectorComponent(base.DBConnectorComponent):
 

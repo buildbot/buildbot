@@ -436,7 +436,11 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_lz4_compress_big_chunk(self):
-        import lz4
+        try:
+            import lz4
+        except ImportError:
+            raise unittest.SkipTest("lz4 not installed, skip the test")
+
         yield self.insertTestData(self.backgroundData + self.testLogLines)
         line = u'xy' * 10000
         self.db.master.config.logCompressionMethod = "lz4"
