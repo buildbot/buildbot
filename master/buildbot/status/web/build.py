@@ -58,8 +58,15 @@ class ForceBuildActionResource(ActionResource):
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             comments.decode(getRequestCharset(req))
-            reason = ("The web-page 'rebuild' button was pressed by "
-                      "'%s':\n" % (comments))
+            reason = ("The web-page 'rebuild' button was pressed "
+                      "'%s': %s\n" % (name, comments))
+
+            useSourcestamp = req.args.get("useSourcestamp", None)
+            if useSourcestamp and useSourcestamp==['updated']:
+                absolute=False
+            else:
+                absolute=True
+
             msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
@@ -69,7 +76,10 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                tup = yield bc.rebuildBuild(b, reason, extraProperties)
+                tup = yield bc.rebuildBuild(b, 
+                    reason=reason, 
+                    extraProperties=extraProperties,
+                    absolute=absolute)
                 # rebuildBuild returns None on error (?!)
                 if not tup:
                     msg = "rebuilding a build failed "+ str(tup)
@@ -416,7 +426,7 @@ class StatusResourceBuild(HtmlResource):
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
-        reason = ("The web-page 'stop build' button was pressed by "
+        reason = ("The web-page 'stop build' button was pressed "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
 
         c = interfaces.IControl(self.getBuildmaster(req))

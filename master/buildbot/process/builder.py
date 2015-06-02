@@ -595,7 +595,7 @@ class BuilderControl:
         return d
 
     @defer.inlineCallbacks
-    def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
+    def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None, absolute=True):
         if not bs.isFinished():
             return
 
@@ -612,7 +612,7 @@ class BuilderControl:
             (v,s) = properties_dict['buildLatestRev']
             properties_dict['buildLatestRev'] = (False, s)
 
-        ssList = bs.getSourceStamps(absolute=True)
+        ssList = bs.getSourceStamps(absolute=absolute)
         
         if ssList:
             sourcestampsetid = yield  ssList[0].getSourceStampSetId(self.control.master)
