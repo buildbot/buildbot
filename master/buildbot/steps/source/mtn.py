@@ -70,44 +70,39 @@ class Monotone(Source):
         if errors:
             raise ConfigErrors(errors)
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        d = self.checkMonotone()
-
-        @d.addCallback
-        def checkInstall(monotoneInstalled):
+        try:
+            monotoneInstalled = yield self.checkMonotone()
             if not monotoneInstalled:
                 raise BuildSlaveTooOldError("Monotone is not installed on slave")
-            return 0
-        d.addCallback(lambda _: self._checkDb())
-        d.addCallback(lambda _: self._retryPull())
 
-        # If we're not throwing away the workdir, check if it's
-        # somehow patched or modified and revert.
-        if self.mode != 'full' or self.method not in ('clobber', 'copy'):
-            d.addCallback(lambda _: self.sourcedirIsPatched())
+            yield self._checkDb()
+            yield self._retryPull()
 
-            @d.addCallback
-            def checkPatched(patched):
+            # If we're not throwing away the workdir, check if it's
+            # somehow patched or modified and revert.
+            if self.mode != 'full' or self.method not in ('clobber', 'copy'):
+                patched = yield self.sourcedirIsPatched()
                 if patched:
-                    return self.clean()
-                else:
-                    return 0
+                    yield self.clean()
 
-        # Add a mode specific callback
-        d.addCallback(self._getAttrGroupMember('mode', self.mode))
+            # Call a mode specific method
+            fn = self._getAttrGroupMember('mode', self.mode)
+            yield fn()
 
-        if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
-        return d
+            if patch:
+                yield self.patch(None, patch)
+            yield self.parseGotRevision()
+            self.finish()
+        except Exception, e:
+            self.failed(e)
 
     @defer.inlineCallbacks
-    def mode_full(self, _):
+    def mode_full(self):
         if self.method == 'clobber':
             yield self.clobber()
             return
@@ -128,18 +123,19 @@ class Monotone(Source):
             raise ValueError("Unknown method, check your configuration")
 
     @defer.inlineCallbacks
-    def mode_incremental(self, _):
+    def mode_incremental(self):
         updatable = yield self._sourcedirIsUpdatable()
         if not updatable:
             yield self.clobber()
         else:
             yield self._update()
 
+    @defer.inlineCallbacks
     def clobber(self):
-        d = self.runRmdir(self.workdir)
-        d.addCallback(lambda _: self._checkout())
-        return d
+        yield self.runRmdir(self.workdir)
+        yield self._checkout()
 
+    @defer.inlineCallbacks
     def copy(self):
         cmd = remotecommand.RemoteCommand('rmdir', {
             'dir': self.workdir,
@@ -149,25 +145,19 @@ class Monotone(Source):
         d = self.runCommand(cmd)
 
         self.workdir = 'source'
-        d.addCallback(self.mode_incremental)
+        yield self.mode_incremental()
+        cmd = remotecommand.RemoteCommand('cpdir',
+                                          {'fromdir': 'source',
+                                           'todir': 'build',
+                                           'logEnviron': self.logEnviron,
+                                           'timeout': self.timeout, })
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def copy(_):
-            cmd = remotecommand.RemoteCommand('cpdir',
-                                              {'fromdir': 'source',
-                                               'todir': 'build',
-                                               'logEnviron': self.logEnviron,
-                                               'timeout': self.timeout, })
-            cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
+        self.workdir = 'build'
+        defer.returnValue(0)
 
-        @d.addCallback
-        def resetWorkdir(_):
-            self.workdir = 'build'
-            return 0
-        return d
-
+    @defer.inlineCallbacks
     def checkMonotone(self):
         cmd = remotecommand.RemoteShellCommand(self.workdir,
                                                ['mtn', '--version'],
@@ -175,14 +165,8 @@ class Monotone(Source):
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-
-        @d.addCallback
-        def evaluate(_):
-            if cmd.rc != 0:
-                return False
-            return True
-        return d
+        yield self.runCommand(cmd)
+        defer.returnValue(cmd.rc == 0)
 
     @defer.inlineCallbacks
     def clean(self, ignore_ignored=True):
@@ -246,34 +230,29 @@ class Monotone(Source):
         d = self._dovccmd('', command, abandonOnFailure=abandonOnFailure)
         return d
 
+    @defer.inlineCallbacks
     def _retryPull(self):
         if self.retry:
             abandonOnFailure = (self.retry[1] <= 0)
         else:
             abandonOnFailure = True
 
-        d = self._pull(abandonOnFailure)
-
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
+        res = yield self._pull(abandonOnFailure)
+        if self.retry:
             delay, repeats = self.retry
-            if repeats > 0:
+            if self.stopped or res == 0 or repeats <= 0:
+                defer.returnValue(res)
+            else:
                 log.msg("Checkout failed, trying %d more times after %d seconds"
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
                 df.addCallback(lambda _: self._retryPull())
                 reactor.callLater(delay, df.callback, None)
-                return df
-            return res
-
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+                yield df
 
     @defer.inlineCallbacks
-    def parseGotRevision(self, _=None):
+    def parseGotRevision(self):
         stdout = yield self._dovccmd(self.workdir,
                                      ['mtn', 'automate', 'select', 'w:'],
                                      collectStdout=True)
@@ -284,6 +263,7 @@ class Monotone(Source):
         self.updateSourceProperty('got_revision', revision)
         defer.returnValue(0)
 
+    @defer.inlineCallbacks
     def _dovccmd(self, workdir, command,
                  collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True):
@@ -300,18 +280,15 @@ class Monotone(Source):
                                            initialStdin=initialStdin,
                                            decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        @d.addCallback
-        def evaluateCommand(_):
-            if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
-                raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            else:
-                return cmd.rc
-        return d
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            defer.returnValue(cmd.stdout)
+        else:
+            defer.returnValue(cmd.rc)
 
     @defer.inlineCallbacks
     def _checkDb(self):
@@ -358,14 +335,8 @@ class Monotone(Source):
 
         defer.returnValue(workdir_exists)
 
-    def finish(self, res):
-        d = defer.succeed(res)
-
-        @d.addCallback
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " %
-                    (self.cmd))
-            return results
-        d.addCallback(self.finished)
-        return d
+    def finish(self):
+        self.setStatus(self.cmd, 0)
+        log.msg("Closing log, sending result of the command %s " %
+                (self.cmd))
+        return self.finished(0)
