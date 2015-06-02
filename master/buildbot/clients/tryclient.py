@@ -193,7 +193,9 @@ class MercurialExtractor(SourceStampExtractor):
 
     def parseStatus(self, output):
         m = re.search(r'^(\w+)', output)
-        self.baserev = m.group(0)
+        if not m:
+            raise RuntimeError("Revision %r is not in the right format" % (output,))
+            self.baserev = m.group(0)
 
     def getPatch(self, res):
         d = self.dovc(["diff", "-r", self.baserev])
@@ -607,8 +609,12 @@ class Try(pb.Referenceable):
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
-            argv = ["ssh", "-l", tryuser, tryhost,
-                    buildbotbin, "tryserver", "--jobdir", trydir]
+            if tryuser:
+                argv = ["ssh", "-l", tryuser, tryhost,
+                        buildbotbin, "tryserver", "--jobdir", trydir]
+            else:
+                argv = ["ssh", tryhost,
+                        buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)
             reactor.spawnProcess(pp, argv[0], argv, os.environ)
             d = pp.d
