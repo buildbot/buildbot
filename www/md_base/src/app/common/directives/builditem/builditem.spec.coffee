@@ -35,11 +35,11 @@ describe 'builditem', ->
         $httpBackend.flush()
 
         innerRow = elem.children().eq(0)
-        expect(innerRow.children().length).toBe(4)
+        expect(innerRow.children().length).toBe(5)
 
         builderName = innerRow.children().eq(1).text().trim()
         buildNumber = innerRow.children().eq(2).text().trim()
-        date = innerRow.children().eq(3).text().trim()
+        date = innerRow.children().eq(4).text().trim()
 
         expect(builderName).toBe('11')
         expect(buildNumber).toBe('#' + $rootScope.build.number)
@@ -57,7 +57,7 @@ describe 'builditem', ->
         $rootScope.$digest()
 
         innerRow = elem.children().eq(0)
-        expect(innerRow.children().length).toBe(3)
+        expect(innerRow.children().length).toBe(4)
         expect(innerRow.children()[0].tagName.toLowerCase()).toBe('build-status')
         expect(innerRow.children().eq(1).hasClass('number')).toBe(true)
-        expect(innerRow.children().eq(2).hasClass('time')).toBe(true)
+        expect(innerRow.children().eq(3).hasClass('time')).toBe(true)

@@ -2,12 +2,13 @@ beforeEach module 'app'
 
 describe 'buildstatus', ->
 
-    $rootScope = $compile = $httpBackend = null
+    $rootScope = $compile = $httpBackend = RESULTS_TEXT = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
         $rootScope = $injector.get('$rootScope')
         $httpBackend = $injector.get('$httpBackend')
+        RESULTS_TEXT = $injector.get('RESULTS_TEXT')
         decorateHttpBackend($httpBackend)
 
     beforeEach inject injected
@@ -56,3 +57,48 @@ describe 'buildstatus', ->
         expect(icon.hasClass('pending')).toBe(false)
         expect(icon.hasClass('success')).toBe(false)
         expect(icon.hasClass('fail')).toBe(true)
+
+    it 'should show build status(text mode) correctly', ->
+        $rootScope.build =
+            complete: false
+            started_at: 0
+            results: -1
+        elem = $compile('<build-status build="build" type="text">')($rootScope)
+        $rootScope.$digest()
+        span = elem.children().eq(0)
+
+        # unknown status
+        expect(span.hasClass('unknown')).toBe(true)
+        expect(span.hasClass('pending')).toBe(false)
+        expect(span.hasClass('success')).toBe(false)
+        expect(span.hasClass('fail')).toBe(false)
+        expect(span.text().trim()).toBe('UNKNOWN')
+
+        # pending status
+        $rootScope.build.started_at = (new Date()).valueOf()
+        $rootScope.$digest()
+        expect(span.hasClass('unknown')).toBe(false)
+        expect(span.hasClass('pending')).toBe(true)
+        expect(span.hasClass('success')).toBe(false)
+        expect(span.hasClass('fail')).toBe(false)
+        expect(span.text().trim()).toBe('PENDING')
+        
+        # success status
+        $rootScope.build.complete = true
+        $rootScope.build.results = 0
+        $rootScope.$digest()
+        expect(span.hasClass('unknown')).toBe(false)
+        expect(span.hasClass('pending')).toBe(false)
+        expect(span.hasClass('success')).toBe(true)
+        expect(span.hasClass('fail')).toBe(false)
+        expect(span.text().trim()).toBe('SUCCESS')
+
+        # fail status
+        for i in [1..6]
+            $rootScope.build.results = i
+            $rootScope.$digest()
+            expect(span.hasClass('unknown')).toBe(false)
+            expect(span.hasClass('pending')).toBe(false)
+            expect(span.hasClass('success')).toBe(false)
+            expect(span.hasClass('fail')).toBe(true)
+            expect(span.text().trim()).toBe(RESULTS_TEXT[i])
