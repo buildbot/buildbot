@@ -29,6 +29,7 @@ Slave
 
 Features
 ~~~~~~~~
+* Buildbot now support a new PNG Status Resource that can be accessed publicly from for example README.md files or wikis or whatever other resource. This view produces an image in png format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

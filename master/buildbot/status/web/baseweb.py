@@ -30,6 +30,7 @@ from buildbot.status.web.base import StaticFile, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.forms import FormsKatanaResource
+from buildbot.status.web.pngstatus import PngStatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.olpb import OneLinePerBuild
@@ -116,6 +117,7 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
      /builders/_all/{force,stop}: force a build/stop building on all builders.
      /buildstatus?builder=...&number=...: an embedded iframe for the console
+     /png?buildername=...&number=...&size=... a png resource with build info
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
      /buildslaves : list all BuildSlaves
@@ -542,6 +544,8 @@ class WebStatus(service.MultiService):
             root.putChild("atom", Atom10StatusResource(status))
         if "json" in self.provide_feeds:
             root.putChild("json", JsonStatusResource(status))
+
+        root.putChild("png", PngStatusResource(status))
 
         if self.master.config.gzip:
             self.site.resource = wrapper(root)

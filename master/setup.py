@@ -152,6 +152,7 @@ setup_args = {
                 ("buildbot/clients", [
                     "buildbot/clients/debug.glade",
                 ]),
+                include("buildbot/status/web/files/", '*.png'),
                 include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
                 include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
                 include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),

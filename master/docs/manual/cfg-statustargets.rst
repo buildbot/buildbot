@@ -359,6 +359,14 @@ be used to access them.
     As with ``/one_line_per_build``, this page will also honor
     ``builder=`` and ``branch=`` arguments.
 
+``/png``
+    This view produces an image in png format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
+
+:samp:`/png?builder=${BUILDERNAME}&number=$BUILDNUM&size=large`
+    This generate a large png image reporting the status of the given $BUILDNUM for the given builder $BUILDERNAME. The sizes are `small`, `normal` and `large` if no size is given the `normal` size is returned, if no $BUILDNUM is given the last build is returned. For example:
+
+    .. image:: _images/success_normal.png
+
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.
     It'll redirect to ``/authfail`` on ``False``, ``/users/table`` on ``True``,
