@@ -142,7 +142,7 @@ class Monotone(Source):
             'logEnviron': self.logEnviron,
             'timeout': self.timeout, })
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
         self.workdir = 'source'
         yield self.mode_incremental()
