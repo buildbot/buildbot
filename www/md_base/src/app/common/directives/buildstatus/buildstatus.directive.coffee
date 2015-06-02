@@ -4,22 +4,36 @@ class BuildStatus extends Directive
         return {
             restrict: 'E'
             templateUrl: 'views/buildstatus.html'
+            controller: '_BuildStatusController'
+            controllerAs: 'status'
+            bindToController: true
             scope:
                 build: '='
-            link: (scope) ->
-                updateBuild = ->
-                    build = scope.build
-                    if build.complete is false and build.started_at > 0
-                        scope.status_class = 'pending'
-                        scope.icon = 'build-pending'
-                    else if build.results == 0
-                        scope.status_class = 'success'
-                        scope.icon = 'build-success'
-                    else if build.results == 2 or build.results == 4
-                        scope.status_class = 'fail'
-                        scope.icon = 'build-fail'
-                    else
-                        scope.status_class = 'unknown'
-                        scope.icon = 'build-pending'
-                scope.$watch 'build', updateBuild, true
+                type: '@'
         }
+
+class _BuildStatus extends Controller
+
+    constructor: ($scope, RESULTS_TEXT) ->
+        @type = 'icon' if @type != 'text'
+
+        updateBuild = =>
+            build = @build
+            if build.complete is false and build.started_at > 0
+                @status_class = 'pending'
+                @icon = 'build-pending'
+            else if build.results == 0
+                @status_class = 'success'
+                @icon = 'build-success'
+            else if build.results == 2 or build.results == 4
+                @status_class = 'fail'
+                @icon = 'build-fail'
+            else
+                @status_class = 'unknown'
+                @icon = 'build-pending'
+
+            @status_text = RESULTS_TEXT[build.results]
+            @status_text ?= 'UNKNOWN'
+
+        $scope.$watch 'status.build', updateBuild, true
+

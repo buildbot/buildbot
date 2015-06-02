@@ -1,1 +1,2 @@
-md-icon(md-svg-icon="{{ icon }}", ng-class="status_class")
+md-icon(ng-if="status.type == 'icon'", md-svg-icon="{{ status.icon }}", ng-class="status.status_class")
+span(ng-if="status.type == 'text'", ng-class="status.status_class") {{ status.status_text }}
