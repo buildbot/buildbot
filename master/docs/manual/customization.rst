@@ -179,7 +179,7 @@ No other sub-projects or branches will be tracked.
 If we want our ChangeSource to follow multiple branches, we have to do two things.
 First we have to change our ``svnurl=`` argument to watch more than just ``amanda/trunk``.
 We will set it to ``amanda`` so that we'll see both the trunk and all the branches.
-Second, we have to tell :bb:chsrc:`SVNPoller` how to split the ``({PROJECT-plus-BRANCH})({FILEPATH})`` strings it gets from the repository out into ``({BRANCH})`` and ``({FILEPATH})```.
+Second, we have to tell :bb:chsrc:`SVNPoller` how to split the ``({PROJECT-plus-BRANCH})({FILEPATH})`` strings it gets from the repository out into ``({BRANCH})`` and ``({FILEPATH})``.
 
 We do the latter by providing a ``split_file`` function.
 This function is responsible for splitting something like ``branches/3_3/common-src/amanda.h`` into ``branch='branches/3_3'`` and ``filepath='common-src/amanda.h'``.

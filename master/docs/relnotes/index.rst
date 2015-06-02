@@ -16,6 +16,9 @@ Features
 
 * :bb:step:`Git` supports an "origin" option to give a name to the remote repo.
 
+* two new general steps are added to handle related builds -- :bb:step:`CancelRelatedBuilds` and :bb:step:`StopRelatedBuilds` -- as well as Gerrit specific ones -- :bb:step:`CancelGerritRelatedBuilds` and :bb:step:`StopGerritRelatedBuilds`.
+  More information in :ref:`the manual <handle-related-builds>`.
+
 Fixes
 ~~~~~
 
