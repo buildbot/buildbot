@@ -348,6 +348,11 @@ The Git step takes the following arguments:
    (optional): instructs git to attempt shallow clones (``--depth 1``).
    This option can be used only in full builds with clobber method.
 
+``reference``
+   (optional): use the specified string as a path to a reference
+   repository on the local machine. Git will try to grab objects from
+   this path first instead of the main repository, if they exist.
+
 ``progress``
    (optional): passes the (``--progress``) flag to (:command:`git
    fetch`). This solves issues of long fetches being killed due to
