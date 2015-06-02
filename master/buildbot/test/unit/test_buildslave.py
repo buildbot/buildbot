@@ -15,7 +15,7 @@
 
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, task, reactor
 from buildbot import buildslave, config, locks
 from buildbot.test.fake import fakemaster, pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
@@ -24,6 +24,20 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     class ConcreteBuildSlave(buildslave.AbstractBuildSlave):
         pass
+
+    def setUp(self):
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.botmaster = FakeBotMaster(self.master)
+
+        self.clock = task.Clock()
+        self.patch(reactor, 'callLater', self.clock.callLater)
+        self.patch(reactor, 'seconds', self.clock.seconds)
+
+    def createBuildslave(self, name='bot', password='pass', **kwargs):
+        slave = self.ConcreteBuildSlave(name, password, **kwargs)
+        slave.master = self.master
+        slave.botmaster = self.botmaster
+        return slave   
 
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass')
@@ -225,3 +239,133 @@ class TestAbstractBuildSlave(unittest.TestCase):
         lock = locks.SlaveLock('lock')
         bs = self.ConcreteBuildSlave('bot', 'pass', locks = [lock.access("counting")])
         bs.setServiceParent(botmaster)
+
+    @defer.inlineCallbacks
+    def test_startService_getSlaveInfo_empty(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        self.assertEqual(slave.slave_status.getAdmin(), None)
+        self.assertEqual(slave.slave_status.getHost(), None)
+        self.assertEqual(slave.slave_status.getAccessURI(), None)
+        self.assertEqual(slave.slave_status.getVersion(), None)
+
+    def createRemoteBot(self):
+        class Bot():
+            def __init__(self):
+                self.commands = []
+                self.response = {
+                    'getSlaveInfo': mock.Mock(return_value=defer.succeed({}))
+                }
+
+            def callRemote(self, command, *args):
+                self.commands.append((command,) + args)
+                response = self.response.get(command)
+                if response:
+                    return response(*args)
+                return defer.succeed(None)
+        
+        return Bot()
+
+    @defer.inlineCallbacks
+    def test_attached_checkRemoteCalls(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        bot = self.createRemoteBot()
+        yield slave.attached(bot)
+
+        self.assertEqual(True, slave.slave_status.isConnected())
+        self.assertEqual(5, len(bot.commands))
+        self.assertEqual(bot.commands[0], ('print', 'attached'))
+        self.assertEqual(bot.commands[1], ('getSlaveInfo',))
+        self.assertEqual(bot.commands[2], ('getVersion',))
+        self.assertEqual(bot.commands[3], ('getCommands',))
+        self.assertEqual(bot.commands[4], ('setBuilderList',[]))
+
+    @defer.inlineCallbacks
+    def test_attached_callRemote_print_raises(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        bot = self.createRemoteBot()
+        bot.response['print'] = mock.Mock(return_value=defer.fail(ValueError()))
+        yield slave.attached(bot)
+
+        # just check that things still go on
+        self.assertEqual(True, slave.slave_status.isConnected())
+        self.assertEqual(5, len(bot.commands))
+
+    @defer.inlineCallbacks
+    def test_attached_callRemote_getSlaveInfo(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        ENVIRON = {}
+
+        bot = self.createRemoteBot()
+        bot.response['getSlaveInfo'] = mock.Mock(return_value=defer.succeed({
+            'admin':   'TheAdmin',
+            'host':    'TheHost',
+            'access_uri': 'TheURI',
+            'environ': ENVIRON,
+            'basedir': 'TheBaseDir',
+            'system': 'TheSlaveSystem'
+        }))
+        yield slave.attached(bot)
+
+        # check that things were all good
+        self.assertEqual(True, slave.slave_status.isConnected())
+        self.assertEqual(5, len(bot.commands))
+
+        # check the values get set right
+        self.assertEqual(slave.slave_status.getAdmin(),     "TheAdmin")
+        self.assertEqual(slave.slave_status.getHost(),      "TheHost")
+        self.assertEqual(slave.slave_status.getAccessURI(), "TheURI")
+        self.assertEqual(slave.slave_environ, ENVIRON)
+        self.assertEqual(slave.slave_basedir, 'TheBaseDir')
+        self.assertEqual(slave.slave_system,  'TheSlaveSystem')
+
+    @defer.inlineCallbacks
+    def test_attached_callRemote_getVersion(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        bot = self.createRemoteBot()
+        bot.response['getVersion'] = mock.Mock(return_value=defer.succeed("TheVersion"))
+        yield slave.attached(bot)
+
+        # check that things were all good
+        self.assertEqual(True, slave.slave_status.isConnected())
+        self.assertEqual(5, len(bot.commands))
+
+        # check the values get set right
+        self.assertEqual(slave.slave_status.getVersion(), "TheVersion")
+
+    @defer.inlineCallbacks
+    def test_attached_callRemote_getCommands(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        COMMANDS = ['a','b']
+
+        bot = self.createRemoteBot()
+        bot.response['getCommands'] = mock.Mock(return_value=defer.succeed(COMMANDS))
+        yield slave.attached(bot)
+
+        # check that things were all good
+        self.assertEqual(True, slave.slave_status.isConnected())
+        self.assertEqual(5, len(bot.commands))
+
+        # check the values get set right
+        self.assertEqual(slave.slave_commands, COMMANDS)
+
+    @defer.inlineCallbacks
+    def test_attached_callsMaybeStartBuildsForSlave(self):
+        slave = self.createBuildslave()
+        yield slave.startService()
+
+        bot = self.createRemoteBot()
+        yield slave.attached(bot)
+
+        self.assertEqual(self.botmaster.buildsStartedForSlaves, ["bot"])

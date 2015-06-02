@@ -52,6 +52,9 @@ class FakeStatus(object):
     def __init__(self):
         self.master = None
 
+    def slaveConnected(self, name):
+        pass
+
 
     def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
         return FakeBuilderStatus(self.master)
