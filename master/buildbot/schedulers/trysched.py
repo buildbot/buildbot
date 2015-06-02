@@ -69,7 +69,7 @@ class JobdirService(MaildirService):
 
 class Try_Jobdir(TryBase):
 
-    compare_attrs = TryBase.compare_attrs + ('jobdir',)
+    compare_attrs = ('jobdir',)
 
     def __init__(self, name, builderNames, jobdir,
                  properties={}):
