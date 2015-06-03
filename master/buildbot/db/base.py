@@ -59,8 +59,8 @@ class DBConnectorComponent(object):
                     % (col, col.type.length, value))
 
     def truncateColumn(self, col, value):
-        col_length = col.type.length - 2
-        return value[:col_length] + '..' if len(value) > col_length else value
+        col_length = col.type.length - 2 if col.type.length else None
+        return value[:col_length] + '..' if col_length and len(value) > col_length else value
 
     # Utility method that generates the sqlalchemy expression to SQL statement
     # only used for debugging purpose

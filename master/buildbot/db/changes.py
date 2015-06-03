@@ -57,7 +57,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             comments_val = self.truncateColumn(ch_tbl.c.comments, comments)
             self.check_length(ch_tbl.c.author, author)
-            self.check_length(ch_tbl.c.comments, comments_val)
             self.check_length(ch_tbl.c.branch, branch)
             self.check_length(ch_tbl.c.revision, revision)
             self.check_length(ch_tbl.c.revlink, revlink)
