@@ -19,7 +19,7 @@ from twisted.trial import unittest
 from buildslave.scripts import base
 from buildslave.test.util import misc
 
-class TestIsBuildslaveDir(misc.OpenFileMixin, unittest.TestCase):
+class TestIsBuildslaveDir(misc.FileIOMixin, unittest.TestCase):
     """Test buildslave.scripts.base.isBuildslaveDir()"""
 
     def setUp(self):

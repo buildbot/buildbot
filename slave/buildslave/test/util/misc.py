@@ -16,10 +16,12 @@
 import os
 import sys
 import mock
+import errno
 import shutil
 import __builtin__
 import cStringIO
 from buildslave.scripts import base
+
 
 def nl(s):
     """Convert the given string to the native newline format, assuming it is
@@ -28,6 +30,7 @@ def nl(s):
     if not isinstance(s, basestring):
         return s
     return s.replace('\n', os.linesep)
+
 
 class BasedirMixin(object):
     """Mix this in and call setUpBasedir and tearDownBasedir to set up
@@ -69,11 +72,12 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class OpenFileMixin:
+class FileIOMixin:
     """
-    Mixin for patching open() to simulate successful reads and I/O errors.
+    Mixin for patching open(), read() and write() to simulate successful
+    I/O operations and various I/O errors.
     """
-    def setUpOpen(self, file_contents):
+    def setUpOpen(self, file_contents="dummy-contents"):
         """
         patch open() to return file object with provided contents.
 
@@ -90,7 +94,7 @@ class OpenFileMixin:
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
 
-    def setUpOpenError(self, errno, strerror="dummy-msg",
+    def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
                        filename="dummy-file"):
         """
         patch open() to raise IOError
@@ -102,7 +106,7 @@ class OpenFileMixin:
         self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
         self.patch(__builtin__, "open", self.open)
 
-    def setUpReadError(self, errno, strerror="dummy-msg",
+    def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
                        filename="dummy-file"):
         """
         patch open() to return a file object that will raise IOError on read()
@@ -115,6 +119,21 @@ class OpenFileMixin:
         self.fileobj = mock.Mock()
         self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
                                                           filename))
+        self.open = mock.Mock(return_value=self.fileobj)
+        self.patch(__builtin__, "open", self.open)
+
+    def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg",
+                        filename="dummy-file"):
+        """
+        patch open() to return a file object that will raise IOError on write()
+
+        @param    errno: exception's errno value
+        @param strerror: exception's strerror value
+        @param filename: exception's filename value
+        """
+        self.fileobj = mock.Mock()
+        self.fileobj.write = mock.Mock(side_effect=IOError(errno, strerror,
+                                                           filename))
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
 

@@ -19,5 +19,5 @@
 
 modules = [] # for the benefit of pyflakes
 
-from buildslave.scripts import logwatcher, create_slave
-modules.extend([logwatcher, create_slave])
+from buildslave.scripts import logwatcher
+modules.extend([logwatcher])
