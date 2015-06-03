@@ -13,7 +13,7 @@ describe 'buildstatus', ->
 
     beforeEach inject injected
 
-    it 'should show build status correctly', ->
+    it 'should show status correctly', ->
         $httpBackend.expectGETSVGIcons()
         $rootScope.build =
             complete: false
@@ -27,8 +27,8 @@ describe 'buildstatus', ->
         expect(icon.attr('md-svg-icon')).toBe('build-pending')
         expect(icon.hasClass('unknown')).toBe(true)
         expect(icon.hasClass('pending')).toBe(false)
-        expect(icon.hasClass('success')).toBe(false)
-        expect(icon.hasClass('fail')).toBe(false)
+        for _, text of RESULTS_TEXT
+            expect(icon.hasClass(text.toLowerCase())).toBe(false)
 
         # pending status
         $rootScope.build.started_at = (new Date()).valueOf()
@@ -36,8 +36,8 @@ describe 'buildstatus', ->
         expect(icon.attr('md-svg-icon')).toBe('build-pending')
         expect(icon.hasClass('unknown')).toBe(false)
         expect(icon.hasClass('pending')).toBe(true)
-        expect(icon.hasClass('success')).toBe(false)
-        expect(icon.hasClass('fail')).toBe(false)
+        for _, text of RESULTS_TEXT
+            expect(icon.hasClass(text.toLowerCase())).toBe(false)
         
         # success status
         $rootScope.build.complete = true
@@ -46,59 +46,15 @@ describe 'buildstatus', ->
         expect(icon.attr('md-svg-icon')).toBe('build-success')
         expect(icon.hasClass('unknown')).toBe(false)
         expect(icon.hasClass('pending')).toBe(false)
-        expect(icon.hasClass('success')).toBe(true)
-        expect(icon.hasClass('fail')).toBe(false)
-
-        # fail status
-        $rootScope.build.results = 2
-        $rootScope.$digest()
-        expect(icon.attr('md-svg-icon')).toBe('build-fail')
-        expect(icon.hasClass('unknown')).toBe(false)
-        expect(icon.hasClass('pending')).toBe(false)
-        expect(icon.hasClass('success')).toBe(false)
-        expect(icon.hasClass('fail')).toBe(true)
-
-    it 'should show build status(text mode) correctly', ->
-        $rootScope.build =
-            complete: false
-            started_at: 0
-            results: -1
-        elem = $compile('<build-status build="build" type="text">')($rootScope)
-        $rootScope.$digest()
-        span = elem.children().eq(0)
-
-        # unknown status
-        expect(span.hasClass('unknown')).toBe(true)
-        expect(span.hasClass('pending')).toBe(false)
-        expect(span.hasClass('success')).toBe(false)
-        expect(span.hasClass('fail')).toBe(false)
-        expect(span.text().trim()).toBe('UNKNOWN')
-
-        # pending status
-        $rootScope.build.started_at = (new Date()).valueOf()
-        $rootScope.$digest()
-        expect(span.hasClass('unknown')).toBe(false)
-        expect(span.hasClass('pending')).toBe(true)
-        expect(span.hasClass('success')).toBe(false)
-        expect(span.hasClass('fail')).toBe(false)
-        expect(span.text().trim()).toBe('PENDING')
-        
-        # success status
-        $rootScope.build.complete = true
-        $rootScope.build.results = 0
-        $rootScope.$digest()
-        expect(span.hasClass('unknown')).toBe(false)
-        expect(span.hasClass('pending')).toBe(false)
-        expect(span.hasClass('success')).toBe(true)
-        expect(span.hasClass('fail')).toBe(false)
-        expect(span.text().trim()).toBe('SUCCESS')
+        for code, text of RESULTS_TEXT
+            expect(icon.hasClass(text.toLowerCase())).toBe(code == '0')
 
         # fail status
         for i in [1..6]
             $rootScope.build.results = i
             $rootScope.$digest()
-            expect(span.hasClass('unknown')).toBe(false)
-            expect(span.hasClass('pending')).toBe(false)
-            expect(span.hasClass('success')).toBe(false)
-            expect(span.hasClass('fail')).toBe(true)
-            expect(span.text().trim()).toBe(RESULTS_TEXT[i])
+            expect(icon.attr('md-svg-icon')).toBe('build-fail')
+            expect(icon.hasClass('unknown')).toBe(false)
+            expect(icon.hasClass('pending')).toBe(false)
+            for code, text of RESULTS_TEXT
+                expect(icon.hasClass(text.toLowerCase())).toBe(parseInt(code) == i)
