@@ -175,7 +175,7 @@ class Monotone(Source):
         if not ignore_ignored:
             commands.append(['mtn', 'ls', 'ignored'])
         for cmd in commands:
-            stdout = yield self._dovccmd(self.workdir, cmd,
+            stdout = yield self._dovccmd(cmd, workdir=self.workdir,
                                          collectStdout=True)
             if len(stdout) == 0:
                 continue
@@ -209,7 +209,8 @@ class Monotone(Source):
         if self.revision:
             command.extend(['--revision', self.revision])
         command.extend(['--branch', self.branch])
-        return self._dovccmd('', command, abandonOnFailure=abandonOnFailure)
+        return self._dovccmd(command, workdir='.',
+                             abandonOnFailure=abandonOnFailure)
 
     def _update(self, abandonOnFailure=False):
         command = ['mtn', 'update']
@@ -218,7 +219,7 @@ class Monotone(Source):
         else:
             command.extend(['--revision', 'h:' + self.branch])
         command.extend(['--branch', self.branch])
-        return self._dovccmd(self.workdir, command,
+        return self._dovccmd(command, workdir=self.workdir,
                              abandonOnFailure=abandonOnFailure)
 
     def _pull(self, abandonOnFailure=False):
@@ -227,7 +228,8 @@ class Monotone(Source):
             command.extend(['--ticker=dot'])
         else:
             command.extend(['--ticker=none'])
-        d = self._dovccmd('', command, abandonOnFailure=abandonOnFailure)
+        d = self._dovccmd(command, workdir='.',
+                          abandonOnFailure=abandonOnFailure)
         return d
 
     @defer.inlineCallbacks
@@ -253,8 +255,8 @@ class Monotone(Source):
 
     @defer.inlineCallbacks
     def parseGotRevision(self):
-        stdout = yield self._dovccmd(self.workdir,
-                                     ['mtn', 'automate', 'select', 'w:'],
+        stdout = yield self._dovccmd(['mtn', 'automate', 'select', 'w:'],
+                                     workdir=self.workdir,
                                      collectStdout=True)
         revision = stdout.strip()
         if len(revision) != 40:
@@ -264,7 +266,7 @@ class Monotone(Source):
         defer.returnValue(0)
 
     @defer.inlineCallbacks
-    def _dovccmd(self, workdir, command,
+    def _dovccmd(self, command, workdir,
                  collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True):
         if not command:
@@ -296,12 +298,14 @@ class Monotone(Source):
         db_needs_init = False
         if db_exists:
             stdout = yield self._dovccmd(
-                '', ['mtn', 'db', 'info', '--db', self.database],
+                ['mtn', 'db', 'info', '--db', self.database],
+                workdir='.',
                 collectStdout=True)
             if stdout.find("migration needed") >= 0:
                 log.msg("Older format database found, migrating it")
-                yield self._dovccmd('', ['mtn', 'db', 'migrate', '--db',
-                                         self.database])
+                yield self._dovccmd(['mtn', 'db', 'migrate', '--db',
+                                         self.database],
+                                    workdir='.')
             elif stdout.find("too new, cannot use") >= 0 or \
                     stdout.find("database has no tables") >= 0:
                 # The database is of a newer format which the slave's
@@ -323,7 +327,7 @@ class Monotone(Source):
 
         if db_needs_init:
             command = ['mtn', 'db', 'init', '--db', self.database]
-            yield self._dovccmd('', command)
+            yield self._dovccmd(command, workdir='.')
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
