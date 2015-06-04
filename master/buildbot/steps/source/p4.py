@@ -288,7 +288,7 @@ class P4(Source):
         client_spec += "View:\n"
 
         def has_whitespace(*args):
-            return any([re.search(r'\s', i) for i in args])
+            return any([re.search(r'\s', i) for i in args if i is not None])
 
         if self.p4viewspec:
             # uses only p4viewspec array of tuples to build view
