@@ -261,6 +261,21 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
+
+        # Grab all the parameters which are prefixed with 'property.'.
+        # We'll use these to filter the builds and build requests we
+        # show below.
+        props = {}
+        prop_prefix = 'property.'
+        for arg, val in req.args.iteritems():
+            if arg.startswith(prop_prefix):
+                props[arg[len(prop_prefix):]] = val[0]
+        def prop_match(oprops):
+            for key, val in props.iteritems():
+                if key not in oprops or val != str(oprops[key]):
+                    return False
+            return True
+
         project = cxt['selectedproject'] = b.getProject()
         cxt['name'] = b.getName()
         cxt['friendly_name'] = b.getFriendlyName()

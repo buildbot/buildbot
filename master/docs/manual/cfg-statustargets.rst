@@ -302,7 +302,10 @@ be used to access them.
 :samp:`/builders/${BUILDERNAME}`
     This describes the given :class:`Builder` and provides buttons to force a
     build.  A ``numbuilds=`` argument will control how many build lines
-    are displayed (5 by default).
+    are displayed (5 by default).  This page also accepts property filters
+    of the form ``property.${PROPERTYNAME}=${PROPERTVALUE}``.  When used,
+    only builds and build requests which have properties with matching string
+    representations will be shown.
 
 :samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}`
     This describes a specific Build.
