@@ -139,7 +139,6 @@
 
 {% macro pause_slave(pause_url, authz, paused) %}
   <form method="post" action="{{ pause_url }}" class='command pause_slave'>
-
   {% if paused %}
     <p>To cause this slave to start running new builds again,
       push the 'Unpause Slave' button</p>
@@ -147,11 +146,10 @@
     <p>To cause this slave to stop running new builds,
       push the 'Pause Slave' button</p>
   {% endif %}
-
   {% if paused %}
-      <input type="submit" value="Unpause Slave" />
+      <input class="grey-btn" type="submit" value="Unpause Slave" />
   {% else %}
-      <input type="submit" value="Pause Slave" />
+      <input class="grey-btn" type="submit" value="Pause Slave" />
   {% endif %}
  </form>
 {% endmacro %}
