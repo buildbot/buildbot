@@ -352,11 +352,35 @@ class Git(Source):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)
+
+        # check for the interruptSignal flag
+        sigtermTime = None
+        interruptSignal = None
+
+        # If possible prefer to send a SIGTERM to git before we send a SIGKILL.
+        # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
+        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
+        # before getting terminated
+        if not self.slaveVersionIsOlderThan("shell", "2.16"):
+            # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
+            # stick around for too long because this is on top of any timeout
+            # we have hit.
+            sigtermTime = 1
+        else:
+            # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
+            # killing.  This should be safe.
+            if self.slaveVersionIsOlderThan("shell", "2.15"):
+                log.msg("NOTE: slave does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
+            else:
+                interruptSignal = 'TERM'
+
         cmd = remotecommand.RemoteShellCommand(self.workdir,
                                                full_command,
                                                env=self.env,
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout,
+                                               sigtermTime=sigtermTime,
+                                               interruptSignal=interruptSignal,
                                                collectStdout=collectStdout,
                                                initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
