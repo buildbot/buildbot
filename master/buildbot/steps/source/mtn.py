@@ -304,7 +304,7 @@ class Monotone(Source):
             if stdout.find("migration needed") >= 0:
                 log.msg("Older format database found, migrating it")
                 yield self._dovccmd(['mtn', 'db', 'migrate', '--db',
-                                         self.database],
+                                     self.database],
                                     workdir='.')
             elif stdout.find("too new, cannot use") >= 0 or \
                     stdout.find("database has no tables") >= 0:
