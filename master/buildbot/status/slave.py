@@ -81,6 +81,9 @@ class SlaveStatus:
         self._lastMessageReceived = when
     def setPaused(self, isPaused):
         self.paused = isPaused
+        if not self.paused and self.name in self.master.botmaster.slaves:
+            self.master.botmaster.maybeStartBuildsForSlave(self.name)
+
 
     def setMaster(self, master):
         self.master = master

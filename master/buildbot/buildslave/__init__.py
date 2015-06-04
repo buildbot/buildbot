@@ -719,17 +719,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down slave')
 
-    def pause(self):
-        """Stop running new builds on the slave."""
-        self.slave_status.setPaused(True)
-
-    def unpause(self):
-        """Restart running new builds on the slave."""
-        self.slave_status.setPaused(False)
-        self.botmaster.maybeStartBuildsForSlave(self.slavename)
-
     def isPaused(self):
-        return self.paused
+        return self.slave_status.paused
 
 class BuildSlave(AbstractBuildSlave):
 
