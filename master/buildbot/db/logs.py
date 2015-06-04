@@ -20,11 +20,48 @@ from twisted.internet import defer
 from twisted.python import log
 
 
+def dumps_gzip(data):
+    import zlib
+    return zlib.compress(data, 9)
+
+
+def read_gzip(data):
+    import zlib
+    return zlib.decompress(data)
+
+
+def dumps_lz4(data):
+    import lz4
+    return lz4.dumps(data)
+
+
+def read_lz4(data):
+    import lz4
+    return lz4.loads(data)
+
+
+def dumps_bz2(data):
+    import bz2
+    return bz2.compress(data, 9)
+
+
+def read_bz2(data):
+    import bz2
+    return bz2.decompress(data)
+
+
 class LogsConnectorComponent(base.DBConnectorComponent):
 
     # Postgres and MySQL will both allow bigger sizes than this.  The limit
     # for MySQL appears to be max_packet_size (default 1M).
     MAX_CHUNK_SIZE = 65536
+    COMPRESSION_MODE = {"raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
+                        "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
+                        "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
+                        "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
+    COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.itervalues())
+    total_raw_bytes = 0
+    total_compressed_bytes = 0
 
     def _getLog(self, whereclause):
         def thd(conn):
@@ -50,7 +87,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             tbl = self.db.model.logs
             q = tbl.select()
-            q = q.where(tbl.c.stepid == stepid)
+            if stepid is not None:
+                q = q.where(tbl.c.stepid == stepid)
             q = q.order_by(tbl.c.id)
             res = conn.execute(q)
             return [self._logdictFromRow(row) for row in res.fetchall()]
@@ -68,8 +106,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.first_line)
             rv = []
             for row in conn.execute(q):
-                assert not row.compressed, "compressed rows not supported yet"
-                content = row.content.decode('utf-8')
+                # Retrieve associated "reader" and extract the data
+                data = self.COMPRESSION_BYID[row.compressed]["read"](row.content)
+                content = data.decode('utf-8')
+
                 if row.first_line < first_line:
                     idx = -1
                     count = first_line - row.first_line
@@ -100,6 +140,41 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     "log with slug '%r' already exists in this step" % (slug,))
         return self.db.pool.do(thd)
 
+    def thdCompressChunk(self, chunk):
+        # Set the default compressed mode to "raw" id
+        compressed_id = self.COMPRESSION_MODE["raw"]["id"]
+        self.total_raw_bytes += len(chunk)
+        # Do we have to compress the chunk?
+        if self.master.config.logCompressionMethod != "raw":
+            compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
+            compressed_chunk = compressed_mode["dumps"](chunk)
+            # Is it useful to compress the chunk?
+            if len(chunk) > len(compressed_chunk):
+                compressed_id = compressed_mode["id"]
+                chunk = compressed_chunk
+        self.total_compressed_bytes += len(chunk)
+        return chunk, compressed_id
+
+    def thdSplitAndAppendChunk(self, conn, logid, content, first_line):
+        # Break the content up into chunks.  This takes advantage of the
+        # fact that no character but u'\n' maps to b'\n' in UTF-8.
+        remaining = content
+        chunk_first_line = last_line = first_line
+        while remaining:
+            chunk, remaining = self._splitBigChunk(remaining, logid)
+            last_line = chunk_first_line + chunk.count('\n')
+
+            chunk, compressed_id = self.thdCompressChunk(chunk)
+            conn.execute(self.db.model.logchunks.insert(),
+                         dict(logid=logid, first_line=chunk_first_line,
+                              last_line=last_line, content=chunk,
+                              compressed=compressed_id))
+            chunk_first_line = last_line + 1
+
+        conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
+                     num_lines=last_line + 1)
+        return first_line, last_line
+
     def appendLog(self, logid, content):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
@@ -115,24 +190,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return  # ignore a missing log
 
-            # Break the content up into chunks.  This takes advantage of the
-            # fact that no character but u'\n' maps to b'\n' in UTF-8.
+            return self.thdSplitAndAppendChunk(conn=conn,
+                                               logid=logid,
+                                               content=content.encode('utf-8'),
+                                               first_line=row[0])
 
-            first_line = chunk_first_line = row[0]
-            remaining = content.encode('utf-8')
-            while remaining:
-                chunk, remaining = self._splitBigChunk(remaining, logid)
-
-                last_line = chunk_first_line + chunk.count('\n')
-                conn.execute(self.db.model.logchunks.insert(),
-                             dict(logid=logid, first_line=chunk_first_line,
-                                  last_line=last_line, content=chunk,
-                                  compressed=0))
-                chunk_first_line = last_line + 1
-
-            conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
-                         num_lines=last_line + 1)
-            return (first_line, last_line)
         return self.db.pool.do(thd)
 
     def _splitBigChunk(self, content, logid):
@@ -176,6 +238,20 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     def compressLog(self, logid):
         # TODO: compression not supported yet
+
+        # Compression is done on chunk directly in appendLog method to:
+        # - reduce re-processing of the log in this method (done at the end of the step)
+        # - avoid too many DB operations and so, DB fragmentation risk
+        #
+        # So, this method shall 'just' analyze if there are benefits
+        # to regroup all contiguous chunk, (re)compress them and replace them in the db.
+        # e.g.:
+        #    - chunk raw 1
+        #    - chunk low compress 2
+        #    - chunk high compress 3
+        #   if grouping and high compressing chunk raw 1&2 is smaller, then this method shall optimize like:
+        #    - chunk high compress 1&2
+        #    - chunk high compress 3
         return defer.succeed(None)
 
     def _logdictFromRow(self, row):

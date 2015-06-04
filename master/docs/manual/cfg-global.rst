@@ -212,8 +212,16 @@ The default value is 4096, which should be a reasonable default on most file sys
 This setting has no impact on status plugins, and merely affects the required disk space on the master for build logs.
 
 The :bb:cfg:`logCompressionMethod` controls what type of compression is used for build logs.
-The default is 'bz2', and the other valid option is 'gz'.
-'bz2' offers better compression at the expense of more CPU time.
+The default is 'gz', and the other valid option are 'raw' (no compression), 'gz' or 'lz4' (required lz4 package).
+
+Please find below some stats extracted from 50x "Pyflakes" runs (results may differ according to log type).
+
+.. csv-table:: Space saving details
+   :header: "compression", "raw log size", "compressed log size", "space saving", "compression speed"
+
+   "bz2", "2.981 MB", "0.603 MB", "79.77%", "3.433 MB/s"
+   "gz", "2.981 MB", "0.568 MB", "80.95%", "6.604 MB/s"
+   "lz4", "2.981 MB", "0.844 MB", "71.68%", "77.668 MB/s"
 
 The :bb:cfg:`logMaxSize` parameter sets an upper limit (in bytes) to how large logs from an individual build step can be.
 The default value is None, meaning no upper limit to the log size.

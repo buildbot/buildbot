@@ -47,7 +47,7 @@ global_defaults = dict(
     logHorizon=None,
     buildHorizon=None,
     logCompressionLimit=4096,
-    logCompressionMethod='bz2',
+    logCompressionMethod='gz',
     logEncoding='utf-8',
     logMaxTailSize=None,
     logMaxSize=None,
@@ -375,6 +375,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     # tests
 
     def test_load_global_defaults(self):
+        self.maxDiff = None
         self.cfg.load_global(self.filename, {})
         self.assertResults(**global_defaults)
 
@@ -447,13 +448,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  logCompressionLimit=10)
 
     def test_load_global_logCompressionMethod(self):
-        self.do_test_load_global(dict(logCompressionMethod='gz'),
-                                 logCompressionMethod='gz')
+        self.do_test_load_global(dict(logCompressionMethod='bz2'),
+                                 logCompressionMethod='bz2')
 
     def test_load_global_logCompressionMethod_invalid(self):
         self.cfg.load_global(self.filename,
                              dict(logCompressionMethod='foo'))
-        self.assertConfigError(self.errors, "must be 'bz2' or 'gz'")
+        self.assertConfigError(self.errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
     def test_load_global_codebaseGenerator(self):
         func = lambda _: "dummy"

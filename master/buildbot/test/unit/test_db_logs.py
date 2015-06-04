@@ -337,6 +337,132 @@ class RealTests(Tests):
         self.assertEqual(len(chunk), 65534)
         chunk.decode('utf-8')
 
+    @defer.inlineCallbacks
+    def test_no_compress_small_chunk(self):
+        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        self.db.master.config.logCompressionMethod = "gz"
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, u'abc\n')),
+            (7, 7))
+
+        def thd(conn):
+            res = conn.execute(self.db.model.logchunks.select(
+                whereclause=self.db.model.logchunks.c.first_line > 6))
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = yield self.db.pool.do(thd)
+        self.assertEqual(newRow, {
+            'logid': 201,
+            'first_line': 7,
+            'last_line': 7,
+            'content': 'abc',
+            'compressed': 0})
+
+    @defer.inlineCallbacks
+    def test_raw_compress_big_chunk(self):
+        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        line = u'xy' * 10000
+        self.db.master.config.logCompressionMethod = "raw"
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, line + '\n')),
+            (7, 7))
+
+        def thd(conn):
+            res = conn.execute(self.db.model.logchunks.select(
+                whereclause=self.db.model.logchunks.c.first_line > 6))
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = yield self.db.pool.do(thd)
+        self.assertEqual(newRow, {
+            'logid': 201,
+            'first_line': 7,
+            'last_line': 7,
+            'content': line,
+            'compressed': 0})
+
+    @defer.inlineCallbacks
+    def test_gz_compress_big_chunk(self):
+        import zlib
+        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        line = u'xy' * 10000
+        self.db.master.config.logCompressionMethod = "gz"
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, line + '\n')),
+            (7, 7))
+
+        def thd(conn):
+            res = conn.execute(self.db.model.logchunks.select(
+                whereclause=self.db.model.logchunks.c.first_line > 6))
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = yield self.db.pool.do(thd)
+        self.assertEqual(newRow, {
+            'logid': 201,
+            'first_line': 7,
+            'last_line': 7,
+            'content': zlib.compress(line, 9),
+            'compressed': 1})
+
+    @defer.inlineCallbacks
+    def test_bz2_compress_big_chunk(self):
+        import bz2
+        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        line = u'xy' * 10000
+        self.db.master.config.logCompressionMethod = "bz2"
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, line + '\n')),
+            (7, 7))
+
+        def thd(conn):
+            res = conn.execute(self.db.model.logchunks.select(
+                whereclause=self.db.model.logchunks.c.first_line > 6))
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = yield self.db.pool.do(thd)
+        self.assertEqual(newRow, {
+            'logid': 201,
+            'first_line': 7,
+            'last_line': 7,
+            'content': bz2.compress(line, 9),
+            'compressed': 2})
+
+    @defer.inlineCallbacks
+    def test_lz4_compress_big_chunk(self):
+        try:
+            import lz4
+        except ImportError:
+            raise unittest.SkipTest("lz4 not installed, skip the test")
+
+        yield self.insertTestData(self.backgroundData + self.testLogLines)
+        line = u'xy' * 10000
+        self.db.master.config.logCompressionMethod = "lz4"
+        self.assertEqual(
+            (yield self.db.logs.appendLog(201, line + '\n')),
+            (7, 7))
+
+        def thd(conn):
+            res = conn.execute(self.db.model.logchunks.select(
+                whereclause=self.db.model.logchunks.c.first_line > 6))
+            row = res.fetchone()
+            res.close()
+            return dict(row)
+
+        newRow = yield self.db.pool.do(thd)
+        self.assertEqual(newRow, {
+            'logid': 201,
+            'first_line': 7,
+            'last_line': 7,
+            'content': lz4.dumps(line),
+            'compressed': 3})
+
     # TODO: test compressing with >64k
     # TODO: test compressing compressed size >64k
 
