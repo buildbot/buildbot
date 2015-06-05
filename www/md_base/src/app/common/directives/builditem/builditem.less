@@ -1,0 +1,34 @@
+build-item {
+  display: block;
+  margin: 5px 0;
+  padding: 5px;
+  background: rgba(0, 0, 0, 0.05);
+
+  .inner {
+    line-height: 30px;
+    font-size: 16px;
+    color: #999;
+
+    span {
+      padding: 0 5px;
+    }
+  }
+
+  .builder-name {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 20%;
+    min-width: 100px;
+    border-right: 1px solid #ddd;
+  }
+
+  .status-text {
+    width: 15%;
+    min-width: 100px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding: 0 5px;
+  }
+}

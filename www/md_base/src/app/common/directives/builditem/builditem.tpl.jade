@@ -1,0 +1,6 @@
+div.inner(layout="row")
+  build-status(build="builditem.build")
+  span.builder-name(ng-if="builditem.showBuilder") {{ builditem.builder.name }}
+  span.number(flex) \#{{ builditem.build.number }}
+  span.status-text {{ builditem.build.state_string }}
+  span.time(am-time-ago="builditem.build.started_at", am-preprocess="unix")

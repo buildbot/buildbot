@@ -4,7 +4,7 @@
 #
 ### ###############################################################################################
 ANGULAR_TAG = "~1.3.15"
-ANGULAR_MATERIAL_TAG = "~0.8.3"
+ANGULAR_MATERIAL_TAG = "~0.9.6"
 
 path = require 'path'
 gulp = require 'gulp'
@@ -33,7 +33,7 @@ config =
         # JavaScript libraries (order matters)
         deps:
             moment:
-                version: "~2.6.0"
+                version: "~2.10.3"
                 files: 'moment.js'
             angular:
                 version: ANGULAR_TAG
@@ -50,6 +50,9 @@ config =
             "angular-ui-router":
                 version: '0.2.13'
                 files: 'release/angular-ui-router.js'
+            "angular-moment":
+                version: '0.10.1'
+                files: 'angular-moment.js'
             lodash:
                 version: "~2.4.1"
                 files: 'dist/lodash.js'

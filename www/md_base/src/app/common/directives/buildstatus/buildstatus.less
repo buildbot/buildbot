@@ -1,0 +1,38 @@
+build-status {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  color: #aaa;
+  font-size: 14px;
+  text-align: center;
+
+  md-icon, span {
+    &.success {
+        color: #8d4;
+    }
+    &.warnings {
+        color: #fa3;
+    }
+    &.failure {
+        color: #e88;
+    }
+    &.skipped {
+        color: #AADDEE;
+    }
+    &.exception {
+        color: #c6c;
+    }
+    &.retry {
+        color: #ecc;
+    }
+    &.cancelled {
+        color: #ecc;
+    }
+    &.pending {
+        color: #E7D100;
+    }
+    &.unknown {
+        color: #EEE;
+    }
+  }
+}
