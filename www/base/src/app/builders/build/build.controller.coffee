@@ -9,8 +9,8 @@ class Build extends Controller
         $scope.$watch 'build.complete', (n, o) ->
             if n == false
                 glTopbarContextualActionsService.setContextualActions [
-                        caption: "Stop"
-                        extra_class: "btn-danger"
+                        caption: "Stop Build"
+                        extra_class: "btn-primary"
                         action: -> buildbotService.one("builds", $scope.build.buildid).control("stop")
                 ]
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
