@@ -942,6 +942,10 @@ Monotone step takes the following arguments:
 
   (optional): defaults to ``'incremental'``.
   Specifies whether to clean the build tree or not.
+  In any case, the slave first pulls from the given remote repository
+  to synchronize (or possibly initialize) its local database. The mode
+  and method only affect how the build tree is checked-out or updated
+  from the local database.
 
     ``incremental``
       The source is update, but any built files are left untouched.
@@ -949,6 +953,8 @@ Monotone step takes the following arguments:
     ``full``
       The build tree is clean of any built files.
       The exact method for doing this is controlled by the ``method`` argument.
+      Even in this mode, the revisions already pulled remain in the database
+      and a fresh pull is rarely needed.
 
 ``method``
 
@@ -957,8 +963,8 @@ Monotone step takes the following arguments:
    The full mode has four methods defined:
 
    ``clobber``
-      It removes the build directory entirely then makes full clone from repo.
-      This can be slow as it need to clone whole repository.
+      It removes the build directory entirely then makes fresh checkout from
+      the database.
 
    ``clean``
       This remove all other files except those tracked and ignored by Monotone.
