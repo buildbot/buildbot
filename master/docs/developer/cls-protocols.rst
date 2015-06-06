@@ -97,15 +97,17 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Just starts build
 
-    .. py:method:: remoteInterruptCommand(commandId, why)
+    .. py:method:: remoteInterruptCommand(builderName, commandId, why)
 
+        :param builderName: self explanatory
+        :type builderName: string
         :param commandId: command number
         :type commandId: string
         :param why: reason to interrupt
         :type why: string
         :returns: Deferred
 
-        Interrupt command with given CommandID on slave, print reason "why" to
+        Interrupt the command executed on builderName with given commandId on slave, print reason "why" to
         slave logs
 
 Following classes are describing the slave -> master part of the protocol.
