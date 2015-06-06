@@ -44,7 +44,18 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-class ClusteredService(service.Service, util.ComparableMixin):
+class AsyncService(service.Service):
+
+    @defer.inlineCallbacks
+    def setServiceParent(self, parent):
+        if self.parent is not None:
+            yield self.disownServiceParent()
+        parent = service.IServiceCollection(parent, parent)
+        self.parent = parent
+        yield self.parent.addService(self)
+
+
+class ClusteredService(AsyncService, util.ComparableMixin):
 
     compare_attrs = ('name',)
 
@@ -103,6 +114,7 @@ class ClusteredService(service.Service, util.ComparableMixin):
 
         service.Service.startService(self)
         self._startActivityPolling()
+        return self._activityPollDeferred
 
     def stopService(self):
         # subclasses should override stopService only to perform actions that should
@@ -166,30 +178,28 @@ class ClusteredService(service.Service, util.ComparableMixin):
                 return
 
             if not claimed:
+                # this master is not responsible
+                # for this service, we stop waiting
+                # for its activation and trust
+                # the claimed master to do the job properly
+                self._stopActivityPolling()
                 return
 
-            self._stopActivityPolling()
-            self.active = True
             try:
+                # this master is responsible for this service
+                # we activate it and consider it as active
+                # only after it is activate()-ed.
                 yield self.activate()
+                self.active = True
             except Exception:
                 # this service is half-active, and noted as such in the db..
                 log.err(_why='WARNING: ClusteredService(%s) is only partially active' % self.name)
+            finally:
+                self._stopActivityPolling()
 
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
             log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
-
-
-class AsyncService(service.Service):
-
-    @defer.inlineCallbacks
-    def setServiceParent(self, parent):
-        if self.parent is not None:
-            yield self.disownServiceParent()
-        parent = service.IServiceCollection(parent, parent)
-        self.parent = parent
-        yield self.parent.addService(self)
 
 
 class AsyncMultiService(AsyncService, service.MultiService):

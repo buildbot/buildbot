@@ -23,7 +23,7 @@ from twisted.python import reflect
 
 
 class SchedulerManager(util_service.ReconfigurableServiceMixin,
-                       service.MultiService):
+                       util_service.AsyncMultiService):
 
     def __init__(self, master):
         service.MultiService.__init__(self)
@@ -86,7 +86,7 @@ class SchedulerManager(util_service.ReconfigurableServiceMixin,
             sch.objectid = objectid
             sch.master = self.master
 
-            # *then* attacah and start it
+            # *then* attach and start it
             yield sch.setServiceParent(self)
 
         metrics.MetricCountEvent.log("num_schedulers", len(list(self)),
