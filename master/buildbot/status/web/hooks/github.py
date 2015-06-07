@@ -16,6 +16,7 @@
 import hmac
 import logging
 import re
+import warnings
 
 from hashlib import sha1
 
@@ -216,7 +217,10 @@ def getChanges(request, options=None):
         request
             the http request object
     """
-    if options is None:
+    if options is None or (isinstance(options, bool) and options):
+        if options is not None:
+            warnings.warn('Use of True for GitHub hook is deprecated.  '
+                          'Please see the documentation for possible values')
         options = {}
 
     klass = options.get('class', GitHubEventHandler)
