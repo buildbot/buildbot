@@ -40,10 +40,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project", "pollAtLaunch")
+                     "category", "project", "pollAtLaunch",
+                     "ignoredAuthors")
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
+                 ignoredAuthors=[],
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
@@ -87,6 +89,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
+
+        self.ignoredAuthors = ignoredAuthors
 
     def activate(self):
         # make our workdir absolute, relative to the master's basedir
@@ -299,6 +303,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 raise failures[0]
 
             timestamp, author, files, comments = [r[1] for r in results]
+
+            if authors in self.ignoredAuthors:
+                continue
 
             yield self.master.data.updates.addChange(
                 author=author, revision=ascii2unicode(rev), files=files,
