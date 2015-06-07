@@ -319,6 +319,28 @@ class BuildStepMixin(object):
     # callbacks from the running step
 
     @defer.inlineCallbacks
+    def _validate_expectation(self, exp, command):
+        got = (command.remote_command, command.args)
+
+        if exp.shouldAssertCommandEqualExpectation():
+            # handle any incomparable args
+            for arg in exp.incomparable_args:
+                self.failUnless(arg in got[1],
+                                "incomparable arg '%s' not received" % (arg,))
+                del got[1][arg]
+
+            # first check any ExpectedRemoteReference instances
+            try:
+                self.assertEqual((exp.remote_command, exp.args), got)
+            except AssertionError:
+                _describe_cmd_difference(exp, command)
+                raise
+
+        if exp.shouldRunBehaviors():
+            # let the Expect object show any behaviors that are required
+            yield exp.runBehaviors(command)
+
+    @defer.inlineCallbacks
     def _remotecommand_run(self, command, step, conn, builder_name):
         self.assertEqual(step, self.step)
         self.assertEqual(conn, self.conn)
@@ -328,26 +350,20 @@ class BuildStepMixin(object):
             self.fail("got command %r when no further commands were expected"
                       % (got,))
 
-        exp = self.expected_remote_commands.pop(0)
+        exp = self.expected_remote_commands[0]
 
-        # handle any incomparable args
-        for arg in exp.incomparable_args:
-            self.failUnless(arg in got[1],
-                            "incomparable arg '%s' not received" % (arg,))
-            del got[1][arg]
-
-        # first check any ExpectedRemoteReference instances
         try:
-            self.assertEqual((exp.remote_command, exp.args), got)
-        except AssertionError:
-            _describe_cmd_difference(exp, command)
+            yield self._validate_expectation(exp, command)
+            exp.expectationPassed(exp)
+        except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
             # the log and print an [ERROR].  This may result in
             # double-reporting, but that's better than non-reporting!
             log.err()
-            raise
+            exp.raiseExpectationFailure(exp, e)
+        finally:
+            if not exp.shouldKeepMatchingAfter(command):
+                self.expected_remote_commands.pop(0)
 
-        # let the Expect object show any behaviors that are required
-        yield exp.runBehaviors(command)
         defer.returnValue(command)
