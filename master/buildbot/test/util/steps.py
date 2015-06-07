@@ -322,6 +322,18 @@ class BuildStepMixin(object):
     def _validate_expectation(self, exp, command):
         got = (command.remote_command, command.args)
 
+        for child_exp in exp.nestedExpectations():
+            try:
+                yield self._validate_expectation(child_exp, command)
+                exp.expectationPassed(exp)
+            except AssertionError as e:
+                # log this error, as the step may swallow the AssertionError or
+                # otherwise obscure the failure.  Trial will see the exception in
+                # the log and print an [ERROR].  This may result in
+                # double-reporting, but that's better than non-reporting!
+                log.err()
+                exp.raiseExpectationFailure(child_exp, e)
+
         if exp.shouldAssertCommandEqualExpectation():
             # handle any incomparable args
             for arg in exp.incomparable_args:

@@ -279,6 +279,12 @@ class Expect(object):
         """
         return False
 
+    def nestedExpectations(self):
+        """
+        Any sub-expectations that should be validated.
+        """
+        return []
+
     def __repr__(self):
         return "Expect(" + repr(self.remote_command) + ")"
 
