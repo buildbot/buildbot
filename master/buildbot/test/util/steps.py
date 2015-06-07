@@ -318,6 +318,7 @@ class BuildStepMixin(object):
 
     # callbacks from the running step
 
+    @defer.inlineCallbacks
     def _remotecommand_run(self, command, step, conn, builder_name):
         self.assertEqual(step, self.step)
         self.assertEqual(conn, self.conn)
@@ -348,6 +349,5 @@ class BuildStepMixin(object):
             raise
 
         # let the Expect object show any behaviors that are required
-        d = exp.runBehaviors(command)
-        d.addCallback(lambda _: command)
-        return d
+        yield exp.runBehaviors(command)
+        defer.returnValue(command)
