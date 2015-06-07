@@ -430,13 +430,26 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
                               '"fullName": "username", "type": "text", "size": 30}')
 
-    def test_UserNameParameterError(self):
-        for value in ["test", "test@buildbot.net", "<test@buildbot.net>"]:
-            self.do_ParameterTest(value=value,
-                                  expect=CollectedValidationError,
-                                  expectKind=Exception,
-                                  klass=UserNameParameter(debug=False),
-                                  name="username", label="Your name:")
+    def test_UserNameParameterErrorTestIsInvalidMail(self):
+        self.do_ParameterTest(value="test",
+                              expect=CollectedValidationError,
+                              expectKind=Exception,
+                              klass=UserNameParameter(debug=False),
+                              name="username", label="Your name:")
+
+    def test_UserNameParameterErrorTestAtBuildbotInvalidMail(self):
+        self.do_ParameterTest(value="test@buildbot.net",
+                              expect=CollectedValidationError,
+                              expectKind=Exception,
+                              klass=UserNameParameter(debug=False),
+                              name="username", label="Your name:")
+
+    def test_UserNameParameterErrorTestAtBuildbotBisInvalidMail(self):
+        self.do_ParameterTest(value="<test@buildbot.net>",
+                              expect=CollectedValidationError,
+                              expectKind=Exception,
+                              klass=UserNameParameter(debug=False),
+                              name="username", label="Your name:")
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',

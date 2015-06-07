@@ -17,7 +17,6 @@ import mock
 
 from buildbot.schedulers import base
 from buildbot.schedulers import manager
-from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -29,6 +28,7 @@ class SchedulerManager(unittest.TestCase):
         self.objectids = {}
 
         self.master = mock.Mock()
+        self.master.master = self.master
 
         def getObjectId(sched_name, class_name):
             k = (sched_name, class_name)
@@ -42,8 +42,9 @@ class SchedulerManager(unittest.TestCase):
 
         self.new_config = mock.Mock()
 
-        self.sm = manager.SchedulerManager(self.master)
-        self.sm.startService()
+        self.sm = manager.SchedulerManager()
+        self.sm.setServiceParent(self.master)
+        return self.sm.startService()
 
     def tearDown(self):
         if self.sm.running:
@@ -61,7 +62,7 @@ class SchedulerManager(unittest.TestCase):
             assert self.master is not None
             assert self.objectid is not None
             self.already_started = True
-            base.BaseScheduler.startService(self)
+            return base.BaseScheduler.startService(self)
 
         def stopService(self):
             d = base.BaseScheduler.stopService(self)
@@ -72,14 +73,12 @@ class SchedulerManager(unittest.TestCase):
             d.addCallback(still_set)
             return d
 
-    class ReconfigSched(service.ReconfigurableServiceMixin, Sched):
+    class ReconfigSched(Sched):
 
-        def reconfigServiceWithBuildbotConfig(self, new_config):
+        def reconfigServiceWithSibling(self, new_config):
             self.reconfig_count += 1
-            new_sched = new_config.schedulers[self.name]
-            self.attr = new_sched.attr
-            return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                        new_config)
+            self.attr = new_config.attr
+            return base.BaseScheduler.reconfigServiceWithSibling(self, new_config)
 
     class ReconfigSched2(ReconfigSched):
         pass

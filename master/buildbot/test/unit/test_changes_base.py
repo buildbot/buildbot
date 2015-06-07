@@ -32,8 +32,6 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
     def setUp(self):
         yield self.setUpChangeSource()
 
-        self.attachChangeSource(self.Subclass(name="DummyCS"))
-
     def tearDown(self):
         return self.tearDownChangeSource()
 
@@ -47,7 +45,7 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
         self.attachChangeSource(cs)
         self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
 
-        cs.startService()
+        yield cs.startService()
         cs.clock.advance(cs.POLL_INTERVAL_SEC / 2)
         cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
         cs.clock.advance(cs.POLL_INTERVAL_SEC / 5)
@@ -57,7 +55,10 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
         self.assertEqual(cs.serviceid, self.DUMMY_CHANGESOURCE_ID)
 
         # clear that masterid
+        yield cs.stopService()
         self.setChangeSourceToMaster(None)
+
+        yield cs.startService()
         cs.clock.advance(cs.POLL_INTERVAL_SEC)
         self.assertTrue(cs.activate.called)
         self.assertFalse(cs.deactivate.called)
@@ -102,7 +103,6 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         self.changesource.pollInterval = 5
         self.startChangeSource()
-
         d = defer.Deferred()
         d.addCallback(self.runClockFor, 12)
 

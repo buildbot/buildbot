@@ -71,7 +71,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         # set up a fake master
         db = self.db = self.master.db
         self.mq = self.master.mq
-        scheduler.master = self.master
+        scheduler.setServiceParent(self.master)
 
         rows = [fakedb.Object(id=objectid, name=scheduler.name,
                               class_name='SomeScheduler')]

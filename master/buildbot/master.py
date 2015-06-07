@@ -147,7 +147,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.botmaster = BotMaster(self)
         self.botmaster.setServiceParent(self)
 
-        self.scheduler_manager = SchedulerManager(self)
+        self.scheduler_manager = SchedulerManager()
         self.scheduler_manager.setServiceParent(self)
 
         self.user_manager = UserManagerManager(self)

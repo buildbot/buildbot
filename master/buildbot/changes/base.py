@@ -22,8 +22,11 @@ from buildbot.util import service
 from buildbot.util.poll import method as poll_method
 
 
-class ChangeSource(service.ClusteredService):
+class ChangeSource(service.ClusteredBuildbotService):
     implements(IChangeSource)
+
+    def __init__(self, name):
+        super(ChangeSource, self).__init__(name=name)
 
     def describe(self):
         pass

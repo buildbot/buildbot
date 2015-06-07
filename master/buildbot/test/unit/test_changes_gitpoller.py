@@ -167,7 +167,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         @d.addCallback
         def create_poller(_):
             self.poller = gitpoller.GitPoller(self.REPOURL)
-            self.poller.master = self.master
+            self.poller.setServiceParent(self.master)
         return d
 
     def tearDown(self):
@@ -965,23 +965,21 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'git',
                 'when_timestamp': 1273258009,
-            },
-                {
-                    'author': 'by:64a5dc2a',
-                    'branch': 'master',
-                    'category': None,
-                    'codebase': None,
-                    'comments': 'hello!',
-                    'files': ['/etc/64a'],
-                    'project': '',
-                    'properties': {},
-                    'repository': 'git@example.com:foo/baz.git',
-                    'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                    'revlink': '',
-                    'src': 'git',
-                    'when_timestamp': 1273258009,
-                }
-            ])
+            }, {
+                'author': 'by:64a5dc2a',
+                'branch': 'master',
+                'category': None,
+                'codebase': None,
+                'comments': 'hello!',
+                'files': ['/etc/64a'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            }])
             self.assertAllCommandsRan()
 
             self.master.db.state.assertStateByClass(

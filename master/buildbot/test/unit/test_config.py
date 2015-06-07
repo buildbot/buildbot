@@ -696,7 +696,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         class Sch(schedulers_base.BaseScheduler):
 
             def __init__(self, name):
-                self.name = name
+                super(Sch, self).__init__(name, [""])
+
         sch = Sch('sch')
         self.cfg.load_schedulers(self.filename,
                                  dict(schedulers=[sch]))

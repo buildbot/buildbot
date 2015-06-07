@@ -90,11 +90,11 @@ class AsyncMultiService(unittest.TestCase):
         self.assertTrue(d.called)
 
 
-class ClusteredService(unittest.TestCase):
+class ClusteredBuildbotService(unittest.TestCase):
     SVC_NAME = 'myName'
     SVC_ID = 20
 
-    class DummyService(service.ClusteredService):
+    class DummyService(service.ClusteredBuildbotService):
         pass
 
     def setUp(self):
@@ -211,8 +211,9 @@ class ClusteredService(unittest.TestCase):
 
         self.assertFalse(self.svc.isActive())
 
+    @defer.inlineCallbacks
     def test_start_PollButClaimFails(self):
-        self.svc.startService()
+        yield self.svc.startService()
 
         # at the POLL time, it gets called again, but we're still inactive...
         self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 1.05)
@@ -500,11 +501,12 @@ class ClusteredService(unittest.TestCase):
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         self.assertEqual(False, self.svc.isActive())
 
+    @defer.inlineCallbacks
     def test_activate_raises(self):
         self.setServiceClaimable(self.svc, defer.succeed(True))
         self.setActivateToReturn(self.svc, RuntimeError())
 
-        self.svc.startService()
+        yield self.svc.startService()
 
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
         # half-active: we actually return True in this case:

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot.buildslave.protocols import pb as bbpb
-from buildbot.process import metrics
+from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
 from buildbot.util import service
 from twisted.internet import defer
@@ -54,9 +54,11 @@ class BuildslaveRegistration(object):
         return self.pbReg.getPort()
 
 
-class BuildslaveManager(service.BuildbotServiceManager):
+class BuildslaveManager(MeasuredBuildbotServiceManager):
 
-    name = "buildslaves"
+    name = "BuildslaveManager"
+    managed_services_name = "buildslaves"
+
     config_attr = "slaves"
     PING_TIMEOUT = 10
     reconfig_priority = 127
@@ -72,20 +74,6 @@ class BuildslaveManager(service.BuildbotServiceManager):
 
         # connection objects keyed by buildslave name
         self.connections = {}
-
-    @defer.inlineCallbacks
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-
-        timer = metrics.Timer("BuildSlaveManager.reconfigServiceSlaves")
-        timer.start()
-
-        yield service.BuildbotServiceManager.reconfigServiceWithBuildbotConfig(self,
-                                                                               new_config)
-
-        metrics.MetricCountEvent.log("num_slaves",
-                                     len(self.slaves), absolute=True)
-
-        timer.stop()
 
     @property
     def slaves(self):
