@@ -28,6 +28,17 @@ commandRegistry = {
     "stat": "buildslave.commands.fs.StatFile",
     "glob": "buildslave.commands.fs.GlobPath",
     "listdir": "buildslave.commands.fs.ListDir",
+
+    # Commands that are no longer supported
+    "svn": "buildslave.commands.removed.Svn",
+    "bk": "buildslave.commands.removed.Bk",
+    "cvs": "buildslave.commands.removed.Cvs",
+    "darcs": "buildslave.commands.removed.Darcs",
+    "git": "buildslave.commands.removed.Git",
+    "bzr": "buildslave.commands.removed.Bzr",
+    "hg": "buildslave.commands.removed.Hg",
+    "p4": "buildslave.commands.removed.P4",
+    "mtn": "buildslave.commands.removed.Mtn",
 }
 
 
