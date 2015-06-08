@@ -91,7 +91,7 @@ def _makeBaseDir(basedir, quiet):
 
     try:
         os.mkdir(basedir)
-    except OSError, exception:
+    except OSError as exception:
         raise CreateSlaveError("error creating directory %s: %s" %
                                (basedir, exception.strerror))
 
@@ -112,7 +112,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
     if os.path.exists(tacfile):
         try:
             oldcontents = open(tacfile, "rt").read()
-        except IOError, exception:
+        except IOError as exception:
             raise CreateSlaveError("error reading %s: %s" %
                                    (tacfile, exception.strerror))
 
@@ -132,7 +132,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         f.write(tac_file_contents)
         f.close()
         os.chmod(tacfile, 0600)
-    except IOError, exception:
+    except IOError as exception:
         raise CreateSlaveError("could not write %s: %s" %
                                (tacfile, exception.strerror))
 
@@ -159,7 +159,7 @@ def _makeInfoFiles(basedir, quiet):
 
         try:
             open(filepath, "wt").write(contents)
-        except IOError, exception:
+        except IOError as exception:
             raise CreateSlaveError("could not write %s: %s" %
                                    (filepath, exception.strerror))
         return True
@@ -170,7 +170,7 @@ def _makeInfoFiles(basedir, quiet):
             print "mkdir", path
         try:
             os.mkdir(path)
-        except OSError, exception:
+        except OSError as exception:
             raise CreateSlaveError("error creating directory %s: %s" %
                                    (path, exception.strerror))
 
@@ -214,7 +214,7 @@ def createSlave(config):
         _makeBaseDir(basedir, quiet)
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
-    except CreateSlaveError, exception:
+    except CreateSlaveError as exception:
         print "%s\nfailed to configure buildslave in %s" % \
             (exception, config['basedir'])
         return 1
