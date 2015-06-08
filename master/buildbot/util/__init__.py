@@ -77,7 +77,7 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
-class ComparableMixin:
+class ComparableMixin(object):
 
     compare_attrs = []
 
