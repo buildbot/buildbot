@@ -24,7 +24,6 @@ import stat
 import subprocess
 import sys
 import traceback
-import types
 
 from collections import deque
 from tempfile import NamedTemporaryFile
@@ -443,7 +442,7 @@ class RunProcess:
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
-        if type(self.command) in types.StringTypes:
+        if isinstance(self.command, basestring):
             if runtime.platformType == 'win32':
                 argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
                 if '/c' not in argv:
@@ -581,7 +580,7 @@ class RunProcess:
         tf = NamedTemporaryFile(dir='.', suffix=".bat", delete=False)
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
-        if type(self.command) in types.StringTypes:
+        if isinstance(self.command, basestring):
             tf.write(self.command)
         else:
             tf.write(win32_batch_quote(self.command))
