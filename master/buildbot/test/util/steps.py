@@ -29,6 +29,51 @@ from twisted.internet import defer
 from twisted.internet import task
 
 
+def _dict_diff(d1, d2):
+    """
+    Given two dictionaries describe their difference
+    For nested dictionaries, key-paths are concatenated with the '.' operator
+
+    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
+    in any nested keys
+    """
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    both = d1_keys & d2_keys
+
+    missing_in_d1 = []
+    missing_in_d2 = []
+    different = []
+
+    for k in both:
+        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(d1[k], d2[k])
+            missing_in_d1.extend(['{0}.{1}'.format(k, m) for m in missing_in_v1])
+            missing_in_d2.extend(['{0}.{1}'.format(k, m) for m in missing_in_v2])
+            for child_k, left, right in different_in_v:
+                different.append(('{0}.{1}'.format(k, child_k), left, right))
+            continue
+        if d1[k] != d2[k]:
+            different.append((k, d1[k], d2[k]))
+    missing_in_d1.extend(d2_keys - both)
+    missing_in_d2.extend(d1_keys - both)
+    return missing_in_d1, missing_in_d2, different
+
+
+def _describe_cmd_difference(exp, command):
+    if exp.args == command.args:
+        return
+
+    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp.args, command.args)
+    if missing_in_exp:
+        print('Keys in cmd missing from expectation: {0}'.format(missing_in_exp))
+    if missing_in_cmd:
+        print('Keys in expectation missing from command: {0}'.format(missing_in_cmd))
+    if diff:
+        formatted_diff = ['"{0}": expected {1}, vs actual {2}'.format(*d) for d in diff]
+        print('Key differences between expectation and command: {0}'.format('\n'.join(formatted_diff)))
+
+
 class BuildStepMixin(object):
 
     """
@@ -294,6 +339,7 @@ class BuildStepMixin(object):
         try:
             self.assertEqual((exp.remote_command, exp.args), got)
         except AssertionError:
+            _describe_cmd_difference(exp, command)
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
             # the log and print an [ERROR].  This may result in
