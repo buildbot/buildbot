@@ -96,6 +96,11 @@ class BuildChooserBase(object):
             brdicts.sort(key=lambda brd : brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
         defer.returnValue(self.unclaimedBrdicts)
+
+    @defer.inlineCallbacks
+    def claimBuildRequests(self, breqs):
+        brids = [br.id for br in breqs]
+        yield self.master.db.buildrequests.claimBuildRequests(brids)
     
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
@@ -321,6 +326,15 @@ class KatanaBuildChooser(BasicBuildChooser):
     def __init__(self, bldr, master):
         BasicBuildChooser.__init__(self, bldr, master)
 
+    @defer.inlineCallbacks
+    def claimBuildRequests(self, breqs):
+        brids = [br.id for br in breqs]
+        if len(breqs) > 1:
+            yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
+            log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
+        else:
+            yield self.master.db.buildrequests.claimBuildRequests(brids)
+
     def getSelectedSlaveFromBuildRequest(self, breq):
         """
         Grab the selected slave and return the slave object
@@ -422,11 +436,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         breqs = yield self.mergeRequests(breq)
         for b in breqs:
                 self._removeBuildRequest(b)
-
-        if len(breqs) > 1:
-            brids = [br.id for br in breqs]
-            yield self.master.db.buildrequests.mergePendingBuildRequests(brids)
-            log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
 
         defer.returnValue((slave, breqs))
 
@@ -731,7 +740,7 @@ class BuildRequestDistributor(service.Service):
             # claim brid's
             brids = [ br.id for br in breqs ]
             try:
-                yield self.master.db.buildrequests.claimBuildRequests(brids)
+                yield bc.claimBuildRequests(breqs)
             except AlreadyClaimedError:
                 # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
