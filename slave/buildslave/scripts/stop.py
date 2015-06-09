@@ -16,6 +16,8 @@
 import os
 import time
 
+from twisted.python import log
+
 from buildslave.scripts import base
 
 
@@ -63,12 +65,12 @@ def stopSlave(basedir, quiet, signame="TERM"):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                print "buildslave process %d is dead" % pid
+                log.msg("buildslave process %d is dead" % pid)
             return
         timer += 1
         time.sleep(1)
     if not quiet:
-        print "never saw process go away"
+        log.msg("never saw process go away")
 
 
 def stop(config, signame="TERM"):
@@ -82,6 +84,6 @@ def stop(config, signame="TERM"):
         stopSlave(basedir, quiet, signame)
     except SlaveNotRunning:
         if not quiet:
-            print "buildslave not running"
+            log.msg("buildslave not running")
 
     return 0

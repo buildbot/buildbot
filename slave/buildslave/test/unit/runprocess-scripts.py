@@ -57,7 +57,7 @@ script_fns = {}
 
 
 def script(fn):
-    script_fns[fn.func_name] = fn
+    script_fns[fn.__name__] = fn
     return fn
 
 # scripts
