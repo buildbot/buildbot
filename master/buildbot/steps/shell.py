@@ -185,7 +185,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         try:
             # if self.cmd is set, then use the RemoteCommand's info
             if self.cmd:
-                command = self.cmd.command
+                command = self.cmd.remote_command
             # otherwise, if we were configured with a command, use that
             elif self.command:
                 command = self.command
