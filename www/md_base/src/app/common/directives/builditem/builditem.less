@@ -3,6 +3,7 @@ build-item {
   margin: 5px 0;
   padding: 5px;
   background: rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 
   .inner {
     line-height: 30px;
@@ -25,10 +26,33 @@ build-item {
 
   .status-text {
     width: 15%;
-    min-width: 100px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     padding: 0 5px;
+  }
+
+  .time {
+    width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &.ng-enter, &.ng-leave {
+    -webkit-transition: 0.2s linear all;
+    -moz-transition: 0.2s linear all;
+    -o-transition: 0.2s linear all;
+    transition: 0.2s linear all;
+  }
+
+  &.ng-enter, &.ng-leave.ng-leave-active {
+    opacity: 0;
+    height: 0;
+  }
+
+  &.ng-enter.ng-enter-active, &.ng-leave {
+    opacity: 1;
+    height: 40px;
   }
 }
