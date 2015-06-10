@@ -433,6 +433,8 @@ class Interpolate(util.ComparableMixin, object):
         if not Interpolate.identifier_re.match(prop):
             config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
             prop = repl = None
+        if prop == "workdir":
+            prop = "builddir"
         return _thePropertyDict, prop, repl
 
     @staticmethod
