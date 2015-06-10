@@ -6,26 +6,27 @@ class Build extends Controller
         buildnumber = _.parseInt($stateParams.build)
 
         $scope.last_build = true
-        $scope.is_stopped = false
+        $scope.is_stopping = false
 
         $scope.$watch 'build.complete', (n, o) ->
             if n == true
                 glTopbarContextualActionsService.setContextualActions []
 
-            else if n == false and not $scope.is_stopped
+            else if n == false and not $scope.is_stopping
                 glTopbarContextualActionsService.setContextualActions [
                         caption: "Stop"
                         extra_class: "btn-danger"
                         action: ->
-                            $scope.is_stopped = true
+                            $scope.is_stopping = true
                             buildbotService.one("builds", $scope.build.buildid).control("stop")
                 ]
 
-        $scope.$watch 'is_stopped', (n, o) ->
+        $scope.$watch 'is_stopping', (n, o) ->
             if n == true
                 glTopbarContextualActionsService.setContextualActions [
                         caption: "Stop on going..."
-                        extra_class: "btn-warning"
+                        icon: "spinner"
+                        extra_class: "spin"
                 ]
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
