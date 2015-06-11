@@ -52,7 +52,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     timer = 0
     try:
         os.kill(pid, signum)
-    except OSError, e:
+    except OSError as e:
         if e.errno != 3:
             raise
 

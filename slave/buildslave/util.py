@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import time
-import types
 
 
 def remove_userpassword(url):
@@ -58,7 +57,7 @@ class Obfuscated:
 
     @staticmethod
     def to_text(s):
-        if isinstance(s, (str, unicode)):
+        if isinstance(s, basestring):
             return s
         else:
             return str(s)
@@ -66,7 +65,7 @@ class Obfuscated:
     @staticmethod
     def get_real(command):
         rv = command
-        if isinstance(command, types.ListType):
+        if isinstance(command, list):
             rv = []
             for elt in command:
                 if isinstance(elt, Obfuscated):
@@ -78,7 +77,7 @@ class Obfuscated:
     @staticmethod
     def get_fake(command):
         rv = command
-        if isinstance(command, types.ListType):
+        if isinstance(command, list):
             rv = []
             for elt in command:
                 if isinstance(elt, Obfuscated):

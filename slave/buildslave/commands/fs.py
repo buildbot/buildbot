@@ -42,7 +42,7 @@ class MakeDirectory(base.Command):
             if not os.path.isdir(dirname):
                 os.makedirs(dirname)
             self.sendStatus({'rc': 0})
-        except OSError, e:
+        except OSError as e:
             log.msg("MakeDirectory %s failed" % dirname, e)
             self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
@@ -204,7 +204,7 @@ class StatFile(base.Command):
             stat = os.stat(filename)
             self.sendStatus({'stat': tuple(stat)})
             self.sendStatus({'rc': 0})
-        except OSError, e:
+        except OSError as e:
             log.msg("StatFile %s failed" % filename, e)
             self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
             self.sendStatus({'rc': e.errno})
@@ -224,7 +224,7 @@ class GlobPath(base.Command):
             files = glob.glob(pathname)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
-        except OSError, e:
+        except OSError as e:
             log.msg("GlobPath %s failed" % pathname, e)
             self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
             self.sendStatus({'rc': e.errno})
@@ -244,7 +244,7 @@ class ListDir(base.Command):
             files = os.listdir(dirname)
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
-        except OSError, e:
+        except OSError as e:
             log.msg("ListDir %s failed" % dirname, e)
             self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
