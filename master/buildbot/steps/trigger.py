@@ -19,7 +19,9 @@ from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status.results import DEPENDENCY_FAILURE
+from buildbot.status.results import DEPENDENCY_FAILURE, RETRY
+from twisted.python.failure import Failure
+from buildbot.schedulers.triggerable import TriggerableSchedulerStopped
 
 from buildbot.process.slavebuilder import IDLE, BUILDING
 
@@ -52,7 +54,7 @@ class ResumableBuildStep(LoggingBuildStep):
         if len(self.build.requests) > 0:
             yield master.db.buildrequests.unclaimBuildRequests([self.build.requests[0].id])
 
-class Trigger(ResumableBuildStep):
+class Trigger(LoggingBuildStep):
     name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
@@ -94,7 +96,7 @@ class Trigger(ResumableBuildStep):
         self.set_properties = properties
         self.running = False
         self.ended = False
-        ResumableBuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
         if self.running:
@@ -167,6 +169,12 @@ class Trigger(ResumableBuildStep):
         if self.running:
             self.finished(result)
 
+    def checkDisconection(self, result, results):
+        if isinstance(results, Failure) and results.check(TriggerableSchedulerStopped):
+            result = RETRY
+            self.addErrorResult(results)
+        return result
+
     @defer.inlineCallbacks
     def start(self):
         # Get all triggerable schedulers and check if there are invalid schedules
@@ -226,6 +234,8 @@ class Trigger(ResumableBuildStep):
             result = DEPENDENCY_FAILURE
             self.step_status.setText(["Dependency failed to build."])
             self.step_status.setText2(["(dependency failed to build)"])
+            result = self.checkDisconection(result, results)
+
         else:
             result = SUCCESS
 
