@@ -24,7 +24,7 @@ class Build extends Controller
         $scope.$watch 'is_stopping', (n, o) ->
             if n == true
                 glTopbarContextualActionsService.setContextualActions [
-                        caption: "Stop on going..."
+                        caption: "Stopping..."
                         icon: "spinner"
                         extra_class: "spin"
                 ]
