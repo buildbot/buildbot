@@ -21,8 +21,38 @@ from twisted.internet import defer
 from buildbot import config
 from buildbot.status.results import DEPENDENCY_FAILURE
 
+from buildbot.process.slavebuilder import IDLE, BUILDING
 
-class Trigger(LoggingBuildStep):
+class ResumableBuildStep(LoggingBuildStep):
+    name = "Resume Build"
+    description="Resume Build..."
+    descriptionDone="Resume Build"
+
+    def __init__(self, resumeBuild=True, **kwargs):
+        self.resumeBuild = resumeBuild
+        LoggingBuildStep.__init__(self, **kwargs)
+
+    def releaseBuildLocks(self):
+        self.build.releaseLocks()
+        # release slave lock
+        self.build.slavebuilder.state = IDLE
+        self.build.builder.builder_status.setBigState("idle")
+
+    def acquireLocks(self, res=None):
+        self.releaseBuildLocks()
+        return defer.succeed(None)
+
+    def releaseLocks(self):
+        # release the build locks
+        pass
+
+    @defer.inlineCallbacks
+    def resumeBuild(self):
+        master = self.build.builder.botmaster.parent
+        if len(self.build.requests) > 0:
+            yield master.db.buildrequests.unclaimBuildRequests([self.build.requests[0].id])
+
+class Trigger(ResumableBuildStep):
     name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
@@ -64,7 +94,7 @@ class Trigger(LoggingBuildStep):
         self.set_properties = properties
         self.running = False
         self.ended = False
-        LoggingBuildStep.__init__(self, **kwargs)
+        ResumableBuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
         if self.running:
@@ -138,12 +168,6 @@ class Trigger(LoggingBuildStep):
             self.finished(result)
 
     @defer.inlineCallbacks
-    def resumeBuild(self):
-        master = self.build.builder.botmaster.parent
-        if len(self.build.requests) > 0:
-            yield master.db.buildrequests.unclaimBuildRequests([self.build.requests[0].id])
-
-    @defer.inlineCallbacks
     def start(self):
         # Get all triggerable schedulers and check if there are invalid schedules
         (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
@@ -173,7 +197,6 @@ class Trigger(LoggingBuildStep):
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=True)
-            yield self.resumeBuild()
 
         else:
             # do something to handle errors
@@ -259,23 +282,3 @@ class Trigger(LoggingBuildStep):
         return
 
 
-from buildbot.process.slavebuilder import IDLE, BUILDING
-
-class TriggerBuilds(Trigger):
-    name = "Resume Build"
-    description="Resume Build..."
-    descriptionDone="Resume Build"
-
-    def releaseBuildLocks(self):
-        self.build.releaseLocks()
-        # release slave lock
-        self.build.slavebuilder.state = IDLE
-        self.build.builder.builder_status.setBigState("idle")
-
-    def acquireLocks(self, res=None):
-        self.releaseBuildLocks()
-        return defer.succeed(None)
-
-    def releaseLocks(self):
-        # release the build locks
-        pass
