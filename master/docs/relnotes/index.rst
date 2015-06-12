@@ -129,6 +129,9 @@ Their API has slightly to changed in order to adapt to the new data API.
 
 * :bb:reporter:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
 
+* :class:`~buildbot.changes.gerritchangesource.GerritChangeSource`
+  and :class:`~buildbot.status.status_gerrit.GerritStatusPush` constructors don't require username parameter anymore.
+
 Fixes
 ~~~~~
 
