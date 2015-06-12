@@ -96,7 +96,7 @@ class CheckArtifactExists(ShellCommand):
     descriptionDone="Searching complete."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
-                 artifactServerURL=None, stopBuild=True,**kwargs):
+                 artifactServerURL=None, stopBuild=True, **kwargs):
         self.master = None
         self.build_sourcestamps = []
         if not isinstance(artifact, list):

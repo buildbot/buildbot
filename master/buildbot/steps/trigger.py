@@ -19,7 +19,7 @@ from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status.results import DEPENDENCY_FAILURE, RETRY
+from buildbot.status.results import DEPENDENCY_FAILURE, RETRY, RESUME
 from twisted.python.failure import Failure
 from buildbot.schedulers.triggerable import TriggerableSchedulerStopped
 
@@ -48,13 +48,17 @@ class ResumableBuildStep(LoggingBuildStep):
         # release the build locks
         pass
 
-    @defer.inlineCallbacks
-    def resumeBuild(self):
-        master = self.build.builder.botmaster.parent
-        if len(self.build.requests) > 0:
-            yield master.db.buildrequests.unclaimBuildRequests([self.build.requests[0].id])
+    def finished(self, results):
+        if self.resumeBuild and results == SUCCESS:
+            text = ["Build Will Be Resumed"]
+            # saved the a resume build status
+            # in this case skip the finished time ?
+            self.build.buildFinished(text, RESUME)
 
-class Trigger(LoggingBuildStep):
+        LoggingBuildStep.finished(self, results)
+
+
+class Trigger(ResumableBuildStep):
     name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
@@ -96,7 +100,7 @@ class Trigger(LoggingBuildStep):
         self.set_properties = properties
         self.running = False
         self.ended = False
-        LoggingBuildStep.__init__(self, **kwargs)
+        ResumableBuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
         if self.running:
