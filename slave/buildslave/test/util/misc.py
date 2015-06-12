@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 import __builtin__
-import cStringIO
+import io
 import errno
 import mock
 import os
@@ -152,7 +152,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = cStringIO.StringIO()
+        self.stdout = io.BytesIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

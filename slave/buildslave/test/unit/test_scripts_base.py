@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import cStringIO
+import io
 import os
 import sys
 
@@ -28,7 +28,7 @@ class TestIsBuildslaveDir(misc.FileIOMixin, unittest.TestCase):
 
     def setUp(self):
         # capture output to stdout
-        self.mocked_stdout = cStringIO.StringIO()
+        self.mocked_stdout = io.BytesIO()
         self.patch(sys, "stdout", self.mocked_stdout)
 
         # generate OS specific relative path to buildbot.tac inside basedir
