@@ -79,3 +79,19 @@ Currently, only `InfluxDB <http://influxdb.com>` is supported as a storage backe
 
       This method constructs a dictionary of data to be sent to InfluxDB in the proper format and sends the data to the
       influxDB instance.
+
+
+Utilities
+---------
+
+.. py:class:: CaptureProperty
+
+   A placeholder for keeping track of the properties a user wants captured as stats.
+   It takes two arguments:
+
+   * ``builder_name``: The name of builder in which the property is recorded.
+   * ``property_name``: The name of property needed to be recorded as a statistic.
+
+   It is available in the configuration as ``stats_service.CaptureProperty``
+   A list of :class:`CaptureProperty` instances is passed to a storage backend for
+   filtering out the build properties that are sent to :class:`StatsService`.
