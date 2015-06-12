@@ -41,6 +41,7 @@ from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
 from buildbot.db import connector as dbconnector
 from buildbot.db import exceptions
+from buildbot.statistics import stats_service
 from buildbot.mq import connector as mqconnector
 from buildbot.process import cache
 from buildbot.process import debug
@@ -131,6 +132,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.metrics = metrics.MetricLogObserver()
         self.metrics.setServiceParent(self)
+
+        self.stats_service = stats_service.StatsService(self)
+        self.stats_service.setServiceParent(self)
 
         self.caches = cache.CacheManager()
         self.caches.setServiceParent(self)

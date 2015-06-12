@@ -558,6 +558,7 @@ class Build(properties.PropertiesMixin):
         eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None
+        self.postProperties()
 
     def releaseLocks(self):
         if self.locks:
@@ -578,6 +579,14 @@ class Build(properties.PropertiesMixin):
             return reduce(summary_fn, step_stats_list)
         else:
             return reduce(summary_fn, step_stats_list, initial_value)
+
+    @defer.inlineCallbacks
+    def postProperties(self):
+        # we get all properties, post to MetricsService to filter out
+        # the one that a user wants to post.
+        properties = interfaces.IProperties(self)
+        yield self.master.stats_service.postProperties(properties,
+                                                       self.builder.name)
 
     # IBuildControl
 
