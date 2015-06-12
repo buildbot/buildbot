@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.python import failure
 
 
-class Expect:
+class Expect(object):
 
     """
     An expected instantiation of RunProcess.  Usually used within a RunProcess
@@ -64,7 +64,7 @@ class Expect:
             other_kwargs, self.result)
 
 
-class FakeRunProcess:
+class FakeRunProcess(object):
 
     """
     A fake version of L{buildslave.runprocess.RunProcess} which will

@@ -36,7 +36,7 @@ def now(_reactor=None):
         return time.time()
 
 
-class Obfuscated:
+class Obfuscated(object):
 
     """An obfuscated string in a command"""
 

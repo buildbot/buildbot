@@ -46,7 +46,7 @@ class MasterPerspective(pb.Avatar):
             on_keepalive()
 
 
-class MasterRealm:
+class MasterRealm(object):
 
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective

@@ -74,7 +74,7 @@ command_version = "2.16"
 #  >= 2.16: listdir command added to read a directory
 
 
-class Command:
+class Command(object):
     implements(ISlaveCommand)
 
     """This class defines one command that can be invoked by the build master.
