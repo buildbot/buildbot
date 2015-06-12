@@ -14,7 +14,41 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from buildbot.process import buildstep
 from buildbot.statistics import stats_service
+from buildbot.statistics import storage_backends
+from buildbot.statistics import capture
+from buildbot.status.results import SUCCESS
+
+
+class FakeStatsStorageService(storage_backends.StatsStorageBase):
+    """
+    Fake Storage service used in unit tests
+    """
+    def __init__(self, stats=None):
+        self.stored_data = []
+        if not stats:
+            self.stats = [capture.CaptureProperty("TestBuilder",
+                                                  'test')]
+        else:
+            self.stats = stats
+
+    @defer.inlineCallbacks
+    def postStatsValue(self, name, value, series_name, context={}):
+        self.stored_data.append((name, value, series_name, context))
+        yield None
+
+
+class FakeBuildStep(buildstep.BuildStep):
+    """
+    A fake build step to be used for testing.
+    """
+    def doSomething(self):
+        self.setProperty("test", 10, "test")
+
+    def start(self):
+        self.doSomething()
+        return SUCCESS
 
 
 class FakeStatsService(stats_service.StatsService):

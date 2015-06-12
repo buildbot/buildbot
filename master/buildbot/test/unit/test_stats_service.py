@@ -20,8 +20,10 @@ from twisted.trial import unittest
 
 from buildbot.statistics.storage_backends import StatsStorageBase
 from buildbot.statistics.storage_backends import InfluxStorageService
+from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
+from buildbot.test.util import steps
 
 
 class TestStatsServicesBase(unittest.TestCase):
@@ -80,3 +82,56 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
             if s not in registeredStorageServices:
                 raise AssertionError("reconfigServiceWithBuildbotConfig failed."
                                      "Not all storage services registered.")
+
+
+class TestInfluxDBInstall(TestStatsServicesBase):
+    # Smooth test of influx db service. We don't want to force people to install influxdb, so we
+    # just disable this unit test if the influxdb module is not installed, using SkipTest
+    @defer.inlineCallbacks
+    def test_reconfigure_with_influx_service(self):
+        try:
+            # Try to import
+            import influxdb
+            # consume it somehow to please pylint
+            [influxdb]
+        except:
+            raise unittest.SkipTest("Skipping unit test of InfluxStorageService because "
+                                    "you don't have the influxdb module in your system")
+
+        self.master.config.statsServices = [InfluxStorageService(
+            "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats",
+        )]
+        yield self.master.stats_service.reconfigServiceWithBuildbotConfig(self.master.config)
+
+
+class TestStatsServicesCallFromAStep(steps.BuildStepMixin, unittest.TestCase):
+    """
+    test the stats service from a fake step
+    """
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    @defer.inlineCallbacks
+    def test_expose_property_from_step(self):
+        # this test tests properties being exposed
+        fake_storage_service = fakestats.FakeStatsStorageService()
+        step = fakestats.FakeBuildStep()
+        self.setupStep(step)
+        self.expectOutcome(SUCCESS)
+
+        self.master.config.statsServices = [fake_storage_service]
+        self.master.stats_service.reconfigServiceWithBuildbotConfig(self.master.config)
+
+        yield self.runStep()
+
+        self.master.stats_service.postProperties(self.properties, "TestBuilder")
+
+        # the last element of tuple is builder_name + "-" + name
+        # see statistics.stats_service.postProperties for more
+        # Also, see FakeBuildStep.doSomething for property values
+        self.assertEqual([
+            ("test", 10, 'TestBuilder-test', {"builder_name": "TestBuilder"})
+        ], fake_storage_service.stored_data)
