@@ -100,7 +100,6 @@ class BuildStep(object, properties.PropertiesMixin):
     set_runtime_properties = True
 
     renderables = [
-        'locks',
         'haltOnFailure',
         'flunkOnWarnings',
         'flunkOnFailure',
