@@ -147,7 +147,7 @@ class Command(object):
         self.args = args
         self.startTime = None
 
-        missingArgs = filter(lambda arg: arg not in args, self.requiredArgs)
+        missingArgs = [arg for arg in self.requiredArgs if arg not in args]
         if missingArgs:
             raise ValueError("%s is missing args: %s" %
                              (self.__class__.__name__, ", ".join(missingArgs)))

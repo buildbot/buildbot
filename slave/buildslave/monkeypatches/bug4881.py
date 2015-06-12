@@ -14,6 +14,8 @@
 #
 # Copyright Buildbot Team Members
 
+from builtins import range
+
 import os
 
 from twisted.internet import process
@@ -189,7 +191,7 @@ class _FDDetector(object):
         # to close
         if maxfds > 1024:
             maxfds = 1024
-        return xrange(maxfds)
+        return range(maxfds)
 
     def _fallbackFDImplementation(self):
         """
@@ -197,7 +199,7 @@ class _FDDetector(object):
         close 256 FDs.
         """
         maxfds = 256
-        return xrange(maxfds)
+        return range(maxfds)
 
 
 detector = _FDDetector()

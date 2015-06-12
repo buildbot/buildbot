@@ -358,7 +358,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless("FOO=BAR" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -371,7 +371,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless("FOO=BAR" not in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -386,7 +386,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless("EXPND=-$" not in headers, "got:\n" + headers)
             self.failUnless("DOESNT_FIND=--" in headers, "got:\n" + headers)
             self.failUnless("DOESNT_EXPAND=-${---}-" in headers, "got:\n" + headers)
@@ -401,7 +401,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless(not re.match('\bPATH=', headers), "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -414,7 +414,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless(not re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
                             "got:\n" + headers)
         d.addCallback(check)
@@ -428,7 +428,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"]])
+            headers = "".join([list(update.values())[0] for update in b.updates if list(update) == ["header"]])
             self.failUnless(not re.match('\bFOO=a%sb\b' % (os.pathsep), headers),
                             "got:\n" + headers)
         d.addCallback(check)
