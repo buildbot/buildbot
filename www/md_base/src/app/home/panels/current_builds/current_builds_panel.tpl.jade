@@ -1,1 +1,6 @@
-| current builds panel content
+div.no-build(ng-if="(current_builds|filter:{complete:false}).length == 0")
+  | No running builds now. Go to 
+  a(ui-sref="builds") builds panel
+  |  to trigger a build.
+
+build-item.build(ng-repeat="build in current_builds|filter:{complete:false}", build="build", show-builder="current.showBuilders")
