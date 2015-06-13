@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import StringIO
+import io
 import os
 import shutil
 import sys
@@ -325,7 +325,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
 
         def check_tarfile(_):
-            f = StringIO.StringIO(self.fakemaster.data)
+            f = io.BytesIO(self.fakemaster.data)
             a = tarfile.open(fileobj=f, name='check.tar')
             exp_names = ['.', 'aa', 'bb']
             got_names = [n.rstrip('/') for n in a.getnames()]
