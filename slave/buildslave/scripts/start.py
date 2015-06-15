@@ -21,7 +21,7 @@ import time
 from buildslave.scripts import base
 
 
-class Follower:
+class Follower(object):
 
     def follow(self):
         from twisted.internet import reactor

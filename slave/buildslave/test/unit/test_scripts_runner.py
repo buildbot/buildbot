@@ -37,7 +37,7 @@ class OptionsMixin(object):
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 
-class BaseDirTestsMixin:
+class BaseDirTestsMixin(object):
 
     """
     Common tests for Options classes with 'basedir' parameter

@@ -48,7 +48,7 @@ class BasedirMixin(object):
             shutil.rmtree(self.basedir)
 
 
-class IsBuildslaveDirMixin:
+class IsBuildslaveDirMixin(object):
 
     """
     Mixin for setting up mocked base.isBuildslaveDir() function
@@ -77,7 +77,7 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class FileIOMixin:
+class FileIOMixin(object):
 
     """
     Mixin for patching open(), read() and write() to simulate successful
