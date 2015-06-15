@@ -763,10 +763,12 @@ GitHubStatus
     repoOwner = Interpolate("%(prop:github_repo_owner)s")
     repoName = Interpolate("%(prop:github_repo_name)s")
     sha = Interpolate("%(src::revision)s")
+    context = Interpolate("buildbot/%(prop:buildername)s")
     gs = status.GitHubStatus(token='githubAPIToken',
                              repoOwner=repoOwner,
                              repoName=repoName,
                              sha=sha,
+                             context=context,
                              startDescription='Build started.',
                              endDescription='Build done.')
     buildbot_bbtools = util.BuilderConfig(
@@ -796,6 +798,9 @@ This allow using a single :class:`GitHubStatus` for multiple projects.
 By default `sha` is defined as: `%(src::revision)s`.
 
 In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty string, the plugin will skip sending the status.
+
+The `context` argument is passed to GitHub to differentiate between statuses. A static string can be passed or :class:`Interpolate` for dynamic substitution.
+The default context is `buildbot/%(prop:buildername)s`.
 
 You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
 
