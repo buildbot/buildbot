@@ -280,6 +280,23 @@ class Builder(config.ReconfigurableServiceMixin,
             return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
         return defer.succeed(True)
 
+
+    @defer.inlineCallbacks
+    def maybeResumeBuild(self, slavebuilder, breqs):
+
+        buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breqs.id)
+
+        build_status = yield self.builder_status.deferToThread(buildnumber)
+        # if there is a problem loading the builder status retry the build
+
+        # add new build element into the db with the current slave
+
+        #if not self.running:
+        defer.returnValue(False)
+
+        # build_started = yield self._resumeBuildFor(slavebuilder, breqs)
+        #defer.returnValue(build_started)
+
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests):
         """Start a build on the given slave.

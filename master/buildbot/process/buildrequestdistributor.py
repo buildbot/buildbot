@@ -446,7 +446,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             defer.returnValue((None, None))
             return
 
-        self._removeBuildRequest(breq)
+        # TODO: maybe try merging with pending build requests
 
         defer.returnValue((slave, breq))
 
@@ -495,8 +495,9 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _getNextBuildToResume(self):
         # we need to resume builds that are claimed by this master
         # since the status is not in the db
+        # TODO: cached this information
         brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed="mine", complete=1, results=RESUME)
+                        buildername=self.bldr.name, claimed="mine", complete=1, results=RESUME, exclude_merged=True)
 
         if not brdicts:
             defer.returnValue(None)
@@ -806,7 +807,9 @@ class BuildRequestDistributor(service.Service):
             defer.returnValue(False)
             return
 
-        defer.returnValue(True)
+        buildStarted = yield bldr.maybeResumeBuild(slave, breqs)
+
+        defer.returnValue(buildStarted)
 
     @defer.inlineCallbacks
     def _maybeStartNewBuildsOnBuilder(self, bc, bldr):

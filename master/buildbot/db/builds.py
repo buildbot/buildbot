@@ -56,6 +56,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._bdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
+    def getBuildNumberForRequest(self, brid):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = sa.select(columns=[sa.func.max(tbl.c.number).label("number")]).where(tbl.c.brid == brid)
+            res = conn.execute(q)
+            row = res.fetchone()
+            if row:
+                return row.number
+            return None
+        return self.db.pool.do(thd)
+
     def addBuild(self, brid, number, slavename=None, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()

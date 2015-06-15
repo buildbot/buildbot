@@ -53,6 +53,7 @@ class ResumableBuildStep(LoggingBuildStep):
             text = ["Build Will Be Resumed"]
             # saved the a resume build status
             # in this case skip the finished time ?
+            self.step_status.stepFinished(SUCCESS)
             self.build.buildFinished(text, RESUME)
 
         LoggingBuildStep.finished(self, results)

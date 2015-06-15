@@ -19,7 +19,6 @@ from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
-from buildbot.status.results import RESUME
 
 class AlreadyClaimedError(Exception):
     pass
@@ -70,7 +69,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
-                         branch=None, repository=None, results=None):
+                         branch=None, repository=None, results=None, exclude_merged=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -119,8 +118,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             if results is not None:
                 q = q.where(reqs_tbl.c.results == results)
-                if results == RESUME:
-                    q = q.where(reqs_tbl.c.mergebrid == None)
+
+            if exclude_merged:
+                q = q.where(reqs_tbl.c.mergebrid == None)
 
             if branch is not None:
               q = q.where(sstamps_tbls.c.branch == branch)
