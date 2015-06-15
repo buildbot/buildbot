@@ -24,6 +24,7 @@ from twisted.internet import defer
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
                name=unicode(sched.name),
+               button_name=unicode(sched.buttonName),
                label=unicode(sched.label),
                builder_names=map(unicode, sched.builderNames))
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
@@ -88,6 +89,7 @@ class ForceScheduler(base.ResourceType):
 
     class EntityType(types.Entity):
         name = types.Identifier(20)
+        button_name = types.String()
         label = types.String()
         builder_names = types.List(of=types.Identifier(20))
         all_fields = types.List(of=types.JsonObject())
