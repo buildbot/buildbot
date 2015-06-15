@@ -19,6 +19,7 @@ from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.status.results import RESUME
 
 class AlreadyClaimedError(Exception):
     pass
@@ -68,7 +69,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-            bsid=None, _master_objectid=None, brids=None, branch=None, repository=None):
+                         bsid=None, _master_objectid=None, brids=None,
+                         branch=None, repository=None, results=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -87,6 +89,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                              sstamps_tbls.c.sourcestampsetid)
 
             q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
+
             if claimed is not None:
                 if not claimed:
                     q = q.where(
@@ -98,20 +101,30 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 else:
                     q = q.where(
                         (claims_tbl.c.claimed_at != None))
+
             if buildername is not None:
                 q = q.where(reqs_tbl.c.buildername == buildername)
+
             if complete is not None:
                 if complete:
                     q = q.where(reqs_tbl.c.complete != 0)
                 else:
                     q = q.where(reqs_tbl.c.complete == 0)
+
             if bsid is not None:
                 q = q.where(reqs_tbl.c.buildsetid == bsid)
+
             if brids is not None:
                 q = q.where(reqs_tbl.c.id.in_(brids))
 
+            if results is not None:
+                q = q.where(reqs_tbl.c.results == results)
+                if results == RESUME:
+                    q = q.where(reqs_tbl.c.mergebrid == None)
+
             if branch is not None:
               q = q.where(sstamps_tbls.c.branch == branch)
+
             if repository is not None:
               q = q.where(sstamps_tbls.c.repository == repository)
 

@@ -62,6 +62,9 @@ class FakeBuild(properties.PropertiesMixin):
     def releaseLocks(self):
         pass
 
+    def buildFinished(self, text, results):
+        pass
+
 
 components.registerAdapter(
         lambda build : build.build_status.properties,

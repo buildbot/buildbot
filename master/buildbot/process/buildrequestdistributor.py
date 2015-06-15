@@ -1,3 +1,4 @@
+# coding=utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -22,6 +23,8 @@ from twisted.application import service
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.status.results import RESUME
+
 
 import random
 
@@ -49,6 +52,7 @@ class BuildChooserBase(object):
         self.master = master
         self.breqCache = {}
         self.unclaimedBrdicts = None
+
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
@@ -192,40 +196,51 @@ class BasicBuildChooser(BuildChooserBase):
         self.nextBuild = self.bldr.config.nextBuild
         
         self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
+
+    @defer.inlineCallbacks
+    def _pickUpSlave(self, slave, breq):
+        #  3. make sure slave+ is usable for the breq
+        recycledSlaves = []
+        while slave:
+            canStart = yield self.canStartBuild(slave, breq)
+            if canStart:
+                break
+            # try a different slave
+            recycledSlaves.append(slave)
+            slave = yield self._popNextSlave()
+
+        # recycle the slaves that we didnt use to the head of the queue
+        # this helps ensure we run 'nextSlave' only once per slave choice
+        if recycledSlaves:
+            self._unpopSlaves(recycledSlaves)
+
+        defer.returnValue(slave)
+
+
         
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
         
         while 1:
-            #  1. pick a slave
-            slave = yield self._popNextSlave()
-            if not slave:
-                break
             
-            #  2. pick a build
+            #  1. pick a build
             breq = yield self._getNextUnclaimedBuildRequest()
             if not breq:
+                break
+
+            #  2. pick a slave
+            #slave = yield self._pickUpSlave(breq)
+            slave = yield self._popNextSlave()
+            if not slave:
                 break
 
             # either satisfy this build or we leave it for another day
             self._removeBuildRequest(breq)
 
             #  3. make sure slave+ is usable for the breq
-            recycledSlaves = []
-            while slave:
-                canStart = yield self.canStartBuild(slave, breq)
-                if canStart:
-                    break
-                # try a different slave
-                recycledSlaves.append(slave)
-                slave = yield self._popNextSlave()
-                
-            # recycle the slaves that we didnt use to the head of the queue
-            # this helps ensure we run 'nextSlave' only once per slave choice
-            if recycledSlaves:    
-                self._unpopSlaves(recycledSlaves)
-                
+            slave = yield self._pickUpSlave(slave, breq)
+
             #  4. done? otherwise we will try another build
             if slave:
                 nextBuild = (slave, breq)
@@ -424,6 +439,18 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
+    def chooseNextBuildToResume(self):
+        slave, breq = yield self.popNextBuildToResume()
+
+        if not slave or not breq:
+            defer.returnValue((None, None))
+            return
+
+        self._removeBuildRequest(breq)
+
+        defer.returnValue((slave, breq))
+
+    @defer.inlineCallbacks
     def chooseNextBuild(self):
         # Return the next build, as a (slave, [breqs]) pair
 
@@ -463,6 +490,52 @@ class KatanaBuildChooser(BasicBuildChooser):
                 defer.returnValue(True)
                 return
         defer.returnValue(False)
+
+    @defer.inlineCallbacks
+    def _getNextBuildToResume(self):
+        # we need to resume builds that are claimed by this master
+        # since the status is not in the db
+        brdicts = yield self.master.db.buildrequests.getBuildRequests(
+                        buildername=self.bldr.name, claimed="mine", complete=1, results=RESUME)
+
+        if not brdicts:
+            defer.returnValue(None)
+            return
+
+        brdict = brdicts[0]
+        nextBreq = yield self._getBuildRequestForBrdict(brdict)
+        defer.returnValue(nextBreq)
+
+    @defer.inlineCallbacks
+    def popNextBuildToResume(self):
+        nextBuild = (None, None)
+        # 1. pick a build
+        breq = yield self._getNextBuildToResume()
+
+        if not breq:
+            defer.returnValue(nextBuild)
+            return
+
+        # run the build on a specific slave
+        if  self.buildRequestHasSelectedSlave(breq):
+            nextBuild = yield self.buildHasSelectedSlave(breq)
+            defer.returnValue(nextBuild)
+            return
+
+        #  2. pick a slave
+        slave = yield self._popNextSlave()
+
+        if not slave:
+            defer.returnValue(nextBuild)
+            return
+
+        # 3. make sure slave is usable for the breq
+        slave = yield self._pickUpSlave(slave, breq)
+        if slave:
+            nextBuild = (slave, breq)
+
+        defer.returnValue(nextBuild)
+
 
     @defer.inlineCallbacks
     def popNextBuild(self):
@@ -713,7 +786,7 @@ class BuildRequestDistributor(service.Service):
                 # get the actual builder object
                 bldr = self.botmaster.builders.get(bldr_name)
                 if bldr:
-                    yield self._maybeStartBuildsOnBuilder(bldr) 
+                    yield self._maybeStartBuildsOnBuilder(bldr)
             except Exception:
                 log.err(Failure(),
                         "from maybeStartBuild for builder '%s'" % (bldr_name,))
@@ -724,6 +797,39 @@ class BuildRequestDistributor(service.Service):
 
         self.active = False
         self._quiet()
+
+    @defer.inlineCallbacks
+    def _maybeResumeBuildOnBuilder(self, bc, bldr):
+        slave, breqs = yield bc.chooseNextBuildToResume()
+
+        if not slave or not breqs:
+            defer.returnValue(False)
+            return
+
+        defer.returnValue(True)
+
+    @defer.inlineCallbacks
+    def _maybeStartNewBuildsOnBuilder(self, bc, bldr):
+        slave, breqs = yield bc.chooseNextBuild()
+
+        if not slave or not breqs:
+            defer.returnValue(False)
+            return
+
+        # claim brid's
+        brids = [ br.id for br in breqs ]
+        yield bc.claimBuildRequests(breqs)
+
+        buildStarted = yield bldr.maybeStartBuild(slave, breqs)
+
+        if not buildStarted:
+            yield self.master.db.buildrequests.unclaimBuildRequests(brids)
+
+            # and try starting builds again.  If we still have a working slave,
+            # then this may re-claim the same buildrequests
+            self.botmaster.maybeStartBuildsForBuilder(self.name)
+
+        defer.returnValue(True)
     
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr):
@@ -731,29 +837,24 @@ class BuildRequestDistributor(service.Service):
         # this object is temporary and will go away when we're done
 
         bc = self.createBuildChooser(bldr, self.master)
-    
-        while 1:
-            slave, breqs = yield bc.chooseNextBuild()
-            if not slave or not breqs:
-                break
 
-            # claim brid's
-            brids = [ br.id for br in breqs ]
+        resume_builds = isinstance(bc, KatanaBuildChooser)
+        new_builds = True
+
+        while 1:
             try:
-                yield bc.claimBuildRequests(breqs)
+                if resume_builds:
+                    resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
+
+                if new_builds:
+                    new_builds = yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
+
             except AlreadyClaimedError:
-                # some brids were already claimed, so start over
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            buildStarted = yield bldr.maybeStartBuild(slave, breqs)
-            
-            if not buildStarted:
-                yield self.master.db.buildrequests.unclaimBuildRequests(brids)
-    
-                # and try starting builds again.  If we still have a working slave,
-                # then this may re-claim the same buildrequests
-                self.botmaster.maybeStartBuildsForBuilder(self.name)
+            if not new_builds and not resume_builds:
+                break
             
     def createBuildChooser(self, bldr, master):
         # just instantiate the build chooser requested
