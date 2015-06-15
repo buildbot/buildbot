@@ -21,7 +21,7 @@ html(ng-app="app", ng-controller="appController as app")
               md-icon(md-svg-icon="navicon")
             b Buildbot
             span.title(ng-bind="app.title")
-        md-content.md-padding(flex, ui-view, ng-class="app.title")
+        md-content.md-padding(flex, ui-view, ng-class="app.name")
           h1 Hello buildbot!
 
       script(src="scripts.js?_#{(new Date()).getTime()}")

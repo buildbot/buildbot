@@ -17,3 +17,5 @@ class State extends Config
             templateUrl: "views/#{name}.html"
             name: name
             url: "/#{name}"
+            data:
+                title: 'Builds'

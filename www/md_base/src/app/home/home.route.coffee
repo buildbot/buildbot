@@ -17,6 +17,8 @@ class State extends Config
             templateUrl: "views/#{name}.html"
             name: name
             url: '/'
+            data:
+                title: 'Home'
 
         bbSettingsServiceProvider.addSettingsGroup
             name: 'home'
