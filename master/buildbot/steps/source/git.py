@@ -136,7 +136,6 @@ class Git(Source):
         self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         d = self.checkGit()
         def checkInstall(gitInstalled):

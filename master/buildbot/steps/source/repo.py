@@ -217,7 +217,6 @@ class Repo(Source):
     @defer.inlineCallbacks
     def doStartVC(self):
         self.manifest_override_url = self.build.getProperty("manifest_override_url")
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         # run our setup callbacks from the start, we'll use the results later
         properties = self.build.getProperties()

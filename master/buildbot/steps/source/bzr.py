@@ -57,7 +57,6 @@ class Bzr(Source):
             self.branch = branch
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLogForRemoteCommands("stdio")
 
         if self.repourl is None:
             #We only want os path characters if its not a web url

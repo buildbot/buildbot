@@ -49,7 +49,7 @@ class CVS(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch
         self.revision = revision
-        self.stdio_log = self.addLog("stdio")
+
         self.method = self._getMethod()
         d = self.checkCvs()
         def checkInstall(cvsInstalled):
