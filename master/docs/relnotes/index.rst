@@ -129,6 +129,8 @@ Their API has slightly to changed in order to adapt to the new data API.
 
 * :bb:reporter:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
 
+* :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
+
 Fixes
 ~~~~~
 
