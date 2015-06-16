@@ -568,8 +568,7 @@ class ForceScheduler(base.BaseScheduler):
                  buttonName="Force Build",
                  codebases=None,
                  label=None,
-                 properties=None,
-                 ):
+                 properties=None):
         """
         Initialize a ForceScheduler.
 
@@ -669,7 +668,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
-        self.buttonName = buttonName
+        self.buttonName = name if buttonName is None else buttonName
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
