@@ -355,6 +355,10 @@ class StatusResourceBuild(HtmlResource):
                 cxt_value = unicode(value)
             else:
                 cxt_value = value
+
+            if name == 'submittedTime':
+                cxt_value = time.ctime(value)
+
             p = { 'name': name, 'value': cxt_value, 'source': source}
             if len(cxt_value) > 500:
                 p['short_value'] = cxt_value[:500]
