@@ -358,10 +358,17 @@ class Build(properties.PropertiesMixin):
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
 
+        if len(self.requests) > 0:
+            self.build_status.setSubmitted(self.requests[0].submittedAt)
+            self.setProperty("submittedTime", self.requests[0].submittedAt, "buildrequest")
+            self.build_status.setBuildChainID(self.requests[0].buildChainID)
+            self.setProperty("buildChainID", self.requests[0].buildChainID, "buildrequest")
+
         # gather owners from build requests
         owners = [r.properties['owner'] for r in self.requests
                   if r.properties.has_key('owner')]
         if owners: self.setProperty('owners', owners, self.reason)
+        self.build_status.setOwners(owners)
 
         self.results = [] # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
         self.result = SUCCESS # overall result, may downgrade after each step

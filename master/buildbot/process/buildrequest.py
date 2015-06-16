@@ -102,6 +102,13 @@ class BuildRequest(object):
         buildrequest.submittedAt = dt and calendar.timegm(dt.utctimetuple())
         buildrequest.master = master
 
+        def getBuilChainID():
+            if 'startbrid' in brdict and brdict['startbrid'] is not None:
+                return brdict['startbrid']
+            return brid
+
+        buildrequest.buildChainID = getBuilChainID()
+
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
         assert buildset # schema should guarantee this

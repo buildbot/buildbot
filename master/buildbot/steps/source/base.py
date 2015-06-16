@@ -89,7 +89,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         default value will then match all changes.
         """
 
-        LoggingBuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, timestamp_stdio=True, **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -250,6 +250,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             revision = None
             branch = self.branch
             patch = None
+
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
+        self.stdio_log.setTimestampsMode(self.timestamp_stdio)
 
         self.startVC(branch, revision, patch)
 

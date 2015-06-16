@@ -14,6 +14,8 @@ class FakeRequest:
         self.sources = []
         self.reason = "Because"
         self.properties = Properties()
+        self.submittedAt = None
+        self.buildChainID = None
 
     def mergeSourceStampsWith(self, others):
         return self.sources
