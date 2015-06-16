@@ -47,6 +47,15 @@ class FakeBuildStatus:
     def setReason(self, reason):
         self.reason = reason
 
+    def setSubmitted(self, submitted):
+        self.submitted = submitted
+
+    def setBuildChainID(self, buildChainID):
+        self.buildChainID = buildChainID
+
+    def setOwners(self, owners):
+        self.owners = owners
+
     def setBlamelist(self, bl):
         self.bl = bl
 
@@ -69,6 +78,8 @@ class FakeBuildRequest:
         self.sources = sources
         self.buildername = buildername
         self.changes = []
+        self.submittedAt = None
+        self.buildChainID = None
         self.properties = Properties()
 
     def mergeSourceStampsWith(self, others):
@@ -76,6 +87,9 @@ class FakeBuildRequest:
 
     def mergeReasons(self, others):
         return self.reason
+
+def setProperty(propname, value, source='Unknown', runtime=None):
+    pass
 
 
 class TestShellCommandProperties(unittest.TestCase):
@@ -92,6 +106,7 @@ class TestShellCommandProperties(unittest.TestCase):
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
         b.builder = FakeBuilder()
+        b.setProperty = setProperty
 
         # This shouldn't raise an exception
         b.setupBuild(None)
@@ -110,6 +125,7 @@ class TestSetProperty(unittest.TestCase):
         b.build_status = FakeBuildStatus()
         b.slavebuilder = FakeSlaveBuilder()
         b.builder = FakeBuilder()
+        b.setProperty = setProperty
 
         # This shouldn't raise an exception
         b.setupBuild(None)

@@ -88,7 +88,7 @@ class Source(LoggingBuildStep):
         default value will then match all changes.
         """
 
-        LoggingBuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, timestamp_stdio=True, **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
