@@ -565,7 +565,7 @@ class ForceScheduler(base.BaseScheduler):
                  username=UserNameParameter(),
                  reason=StringParameter(name="reason", default="force build", size=20),
                  reasonString="A build was forced by '%(owner)s': %(reason)s",
-                 buttonName="Force Build",
+                 buttonName=None,
                  codebases=None,
                  label=None,
                  properties=None):
