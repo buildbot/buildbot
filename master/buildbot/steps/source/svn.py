@@ -63,7 +63,6 @@ class SVN(Source):
     def startVC(self, branch, revision, patch):
         self.revision = revision
         self.method = self._getMethod()
-        self.stdio_log = self.addLog("stdio")
 
         d = self.checkSvn()
         def checkInstall(svnInstalled):

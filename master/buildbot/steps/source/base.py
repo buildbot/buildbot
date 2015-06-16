@@ -250,5 +250,8 @@ class Source(LoggingBuildStep):
             branch = self.branch
             patch = None
 
+        self.stdio_log = self.addLog("stdio")
+        self.stdio_log.setTimestampsMode(self.timestamp_stdio)
+
         self.startVC(branch, revision, patch)
 
