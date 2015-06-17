@@ -668,7 +668,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
-        self.buttonName = name if buttonName is None else buttonName
+        self.buttonName = buttonName or name
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
