@@ -32,7 +32,7 @@ class StatsService(service.ReconfigurableServiceMixin, service.AsyncMultiService
         self.registeredStorageServices = []
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        log.msg("Reconfiguring StatsService with config: {!r}".format(new_config))
+        log.msg("Reconfiguring StatsService with config: {0!r}".format(new_config))
 
         # To remove earlier used services when reconfig happens
         self.registeredStorageServices = []
