@@ -33,6 +33,7 @@ class FakeBuilder:
 class FakeBuildStatus:
     def __init__(self):
         self.names = []
+        self.results = None
 
     def addStepWithName(self, name, type):
         self.names.append(name)

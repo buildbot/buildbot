@@ -280,6 +280,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     # methods for the base.Build to invoke
 
+    def getStepByName(self, name):
+        for s in self.steps:
+            if s.name == name:
+                return s
+        return None
+
     def addStepWithName(self, name, step_type):
         """The Build is setting up, and has added a new BuildStep to its
         list. Create a BuildStepStatus object to which it can send status

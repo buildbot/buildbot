@@ -26,6 +26,9 @@ class AlreadyClaimedError(Exception):
 class NotClaimedError(Exception):
     pass
 
+class UpdateBuildRequestError(Exception):
+    pass
+
 class BrDict(dict):
     pass
 
@@ -597,6 +600,40 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
         return self.db.pool.do(thd)
+
+    def updateBuildRequests(self, brids, results=0, complete=-1):
+        def thd(conn):
+
+            transaction = conn.begin()
+            buildrequests_tbl = self.db.model.buildrequests
+
+            # we'll need to batch the brids into groups of 100, so that the
+            # parameter lists supported by the DBAPI aren't exhausted
+            iterator = iter(brids)
+
+            while 1:
+                batch = list(itertools.islice(iterator, 100))
+                if not batch:
+                    break # success!
+
+                q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(batch))\
+                    .values(complete=complete)\
+                    .values(results=results)
+
+                if complete == -1:
+                    q = q.values(complete_at=None)
+
+                res = conn.execute(q)
+
+                # if an incorrect number of rows were updated, then we failed.
+                if res.rowcount != len(batch):
+                    log.msg("tried to update %d buildreqests, "
+                        "but only updated %d" % (len(batch), res.rowcount))
+                    transaction.rollback()
+                    raise UpdateBuildRequestError
+            transaction.commit()
+        return self.db.pool.do(thd)
+
 
     @with_master_objectid
     def completeBuildRequests(self, brids, results, complete_at=None,

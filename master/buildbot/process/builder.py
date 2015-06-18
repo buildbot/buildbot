@@ -282,23 +282,22 @@ class Builder(config.ReconfigurableServiceMixin,
 
 
     @defer.inlineCallbacks
-    def maybeResumeBuild(self, slavebuilder, breqs):
-
-        buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breqs.id)
+    def maybeResumeBuild(self, slavebuilder, buildnumber, breqs):
 
         build_status = yield self.builder_status.deferToThread(buildnumber)
         # if there is a problem loading the builder status retry the build
 
         # add new build element into the db with the current slave
 
-        #if not self.running:
-        defer.returnValue(False)
+        if not self.running:
+            defer.returnValue(False)
 
-        # build_started = yield self._resumeBuildFor(slavebuilder, breqs)
-        #defer.returnValue(build_started)
+        build_started = yield self._startBuildFor(slavebuilder, breqs, build_status)
+        defer.returnValue(build_started)
+        #defer.returnValue(False)
 
     @defer.inlineCallbacks
-    def _startBuildFor(self, slavebuilder, buildrequests):
+    def _startBuildFor(self, slavebuilder, buildrequests, build_status=None):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
         @param sb: the L{SlaveBuilder} which will host this build
@@ -397,7 +396,13 @@ class Builder(config.ReconfigurableServiceMixin,
             return
 
         # create the BuildStatus object that goes with the Build
-        bs = self.builder_status.newBuild()
+        if build_status is None:
+            bs = self.builder_status.newBuild()
+        else:
+            bs = build_status
+            bs.builder = self.builder_status
+            bs.waitUntilFinished().addCallback(self.builder_status._buildFinished)
+            # update the steps to use finished steps
 
         # record the build in the db - one row per buildrequest
         try:

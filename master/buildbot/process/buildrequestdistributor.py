@@ -443,12 +443,14 @@ class KatanaBuildChooser(BasicBuildChooser):
         slave, breq = yield self.popNextBuildToResume()
 
         if not slave or not breq:
-            defer.returnValue((None, None))
+            defer.returnValue((None, None, None))
             return
+
+        buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
 
         # TODO: maybe try merging with pending build requests
 
-        defer.returnValue((slave, breq))
+        defer.returnValue((slave, buildnumber, [breq]))
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
@@ -801,13 +803,20 @@ class BuildRequestDistributor(service.Service):
 
     @defer.inlineCallbacks
     def _maybeResumeBuildOnBuilder(self, bc, bldr):
-        slave, breqs = yield bc.chooseNextBuildToResume()
+        slave, buildnumber, breqs = yield bc.chooseNextBuildToResume()
 
         if not slave or not breqs:
             defer.returnValue(False)
             return
 
-        buildStarted = yield bldr.maybeResumeBuild(slave, breqs)
+        brids = [br.id for br in breqs]
+        yield self.master.db.buildrequests.updateBuildRequests(brids)
+
+        buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
+
+        if not buildStarted:
+            bc.slavepool = bldr.getAvailableSlaves()
+            yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
 
         defer.returnValue(buildStarted)
 
@@ -846,10 +855,10 @@ class BuildRequestDistributor(service.Service):
 
         while 1:
             try:
-                if resume_builds:
+                if resume_builds: # check resumebuildrequest
                     resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
 
-                if new_builds:
+                if new_builds: # check unclaimedbuildrequests
                     new_builds = yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
 
             except AlreadyClaimedError:

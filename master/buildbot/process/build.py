@@ -23,7 +23,7 @@ from twisted.internet import defer, error
 
 from buildbot import interfaces
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE
+  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE, RESUME
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
@@ -297,13 +297,8 @@ class Build(properties.PropertiesMixin):
     def _startBuild_2(self, res):
         self.startNextStep()
 
-    def setupBuild(self, expectations):
-        # create the actual BuildSteps. If there are any name collisions, we
-        # add a count to the loser until it is unique.
-        self.steps = []
-        self.stepStatuses = {}
+    def createSteps(self, sps):
         stepnames = {}
-        sps = []
 
         for factory in self.stepFactories:
             step = factory.buildStep()
@@ -322,13 +317,19 @@ class Build(properties.PropertiesMixin):
             else:
                 stepnames[name] = 0
             step.name = name
-            self.steps.append(step)
 
             # tell the BuildStatus about the step. This will create a
             # BuildStepStatus and bind it to the Step.
-            step_status = self.build_status.addStepWithName(name, type(step))
-            step.setStepStatus(step_status)
+            if self.build_status.results == RESUME:
+                step_status = self.build_status.getStepByName(name)
+            else:
+                step_status = self.build_status.addStepWithName(name, type(step))
 
+            if step_status.finished:
+                continue
+
+            step.setStepStatus(step_status)
+            self.steps.append(step)
             sp = None
             if self.useProgress:
                 # XXX: maybe bail if step.progressMetrics is empty? or skip
@@ -339,6 +340,14 @@ class Build(properties.PropertiesMixin):
             if sp:
                 sps.append(sp)
 
+    def setupBuild(self, expectations):
+        # create the actual BuildSteps. If there are any name collisions, we
+        # add a count to the loser until it is unique.
+        self.steps = []
+        self.stepStatuses = {}
+        sps = []
+
+        self.createSteps(sps)
         # Create a buildbot.status.progress.BuildProgress object. This is
         # called once at startup to figure out how to build the long-term
         # Expectations object, and again at the start of each build to get a
@@ -388,6 +397,7 @@ class Build(properties.PropertiesMixin):
             return None
         if not self.remote:
             return None
+
         if self.terminate or self.stopped:
             # Run any remaining alwaysRun steps, and skip over the others
             while True:
@@ -398,6 +408,7 @@ class Build(properties.PropertiesMixin):
                     return None
         else:
             return self.steps.pop(0)
+
 
     def startNextStep(self):
         try:
