@@ -292,6 +292,7 @@ class GerritStatusPush(service.BuildbotService):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
         yield utils.getDetailsForBuilds(self.master, buildset, [build])
+        build['url'] = utils.getURLForBuild(self.master, build['builder']['builderid'], build['number'])
         self.buildFinished(build['builder']['name'], build, build['results'])
 
     @defer.inlineCallbacks
