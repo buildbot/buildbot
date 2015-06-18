@@ -81,6 +81,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
+        self.resume = []
         self.properties = properties.Properties()
 
     def __repr__(self):
