@@ -194,6 +194,52 @@
             </div>
             {% endfor %}
 
+            {% if resume %}
+            <div class="divider"></div>
+            <h2 class="head-2">
+                Build Resume Information
+            </h2>
+
+            {% for rb in resume %}
+            <div class="dataTables_wrapper">
+                <table class="table table-katana table-stripes m-bottom">
+                    <tr>
+                        <td>
+                            Start
+                        </td>
+                        <td class="start-time-js">
+                            {{ rb.startTime }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            End
+                        </td>
+                        <td class="end-time-js">
+                            {{ rb.finishedTime }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            BuildSlave
+                        </td>
+                        <td >
+                            {{ rb.slavename }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Last Step
+                        </td>
+                        <td >
+                          {{rb.lastStepNumber }} {{ rb.lastStepName }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            {% endfor %}
+            {% endif %}
+
             {#
             # TODO: turn this into a table, or some other sort of definition-list
             # that doesn't take up quite so much vertical space

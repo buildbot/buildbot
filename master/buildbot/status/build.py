@@ -25,6 +25,8 @@ from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
 from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED
+from buildbot.status.results import RESUME
+import time
 
 # Avoid doing an import since it creates circular reference
 TriggerType = "<class 'buildbot.steps.trigger.Trigger'>"
@@ -42,6 +44,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     changes = []
     blamelist = []
     progress = None
+    resume = []
     started = None
     finished = None
     submitted = None
@@ -341,9 +344,21 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.results = results
 
     def buildFinished(self):
-        self.currentStep = None
         self.finished = util.now()
 
+        if self.results == RESUME:
+            build_data = {'start' : self.started,
+                          'finished': self.finished,
+                          'startTime': time.ctime(self.started),
+                          'finishedTime': time.ctime(self.finished),
+                          'slavename': self.slavename,
+                          'lastStepName': self.currentStep.name,
+                          'lastStepNumber': self.currentStep.step_number+1}
+            self.resume.append(build_data)
+            self.finished = None
+            self.started = None
+
+        self.currentStep = None
         for r in self.updates.keys():
             if self.updates[r] is not None:
                 self.updates[r].cancel()
@@ -578,6 +593,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['url'] = status.getURLForThing(self)
         result['url']['path'] += args
         result['builder_url'] = status.getURLForThing(self.builder) + args
+
+        if self.resume:
+            result['resume'] = self.resume
 
         if include_failure_url:
             result['failure_url'] = self.get_failure_of_interest()

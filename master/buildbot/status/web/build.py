@@ -302,6 +302,9 @@ class StatusResourceBuild(HtmlResource):
         except KeyError:
             pass
 
+        if b.resume:
+            cxt['resume'] = b.resume
+
         cxt['steps'] = []
 
         for s in b.getSteps():
