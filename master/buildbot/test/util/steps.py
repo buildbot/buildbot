@@ -66,7 +66,8 @@ class BuildStepMixin(object):
     # utilities
 
     def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
-                  buildFiles=[], wantDefaultWorkdir=True):
+                  buildFiles=[], wantDefaultWorkdir=True, wantData=True,
+                  wantDb=False, wantMq=False):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
@@ -81,11 +82,21 @@ class BuildStepMixin(object):
             commands.
 
         @param slave_env: environment from the slave at slave startup
+
+        @param wantData(bool): Set to True to add data API connector to master.
+            Default value: True.
+
+        @param wantDb(bool): Set to True to add database connector to master.
+            Default value: False.
+
+        @param wantMq(bool): Set to True to add mq connector to master.
+            Default value: False.
         """
         factory = interfaces.IBuildStepFactory(step)
 
         step = self.step = factory.buildStep()
-        self.master = fakemaster.make_master(wantData=True, testcase=self)
+        self.master = fakemaster.make_master(wantData=wantData, wantDb=wantDb,
+                                             wantMq=wantMq, testcase=self)
 
         # set defaults
         if wantDefaultWorkdir:

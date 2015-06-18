@@ -13,53 +13,78 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import threads
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import service
 from buildbot.statistics.storage_backends import StatsStorageBase
 
 
-class StatsService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+class StatsService(service.BuildbotService):
     """
     A middleware for passing on statistics data to all storage backends.
     """
-    def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
-        self.setName('StatsService')
-        log.msg("Creating StatsService")
-        self.master = master
-        self.registeredStorageServices = []
-
-    def reconfigServiceWithBuildbotConfig(self, new_config):
-        log.msg("Reconfiguring StatsService with config: {0!r}".format(new_config))
-
-        # To remove earlier used services when reconfig happens
-        self.registeredStorageServices = []
-        for svc in new_config.statsServices:
-            if not isinstance(svc, StatsStorageBase):
+    def checkConfig(self, storage_backends):
+        for sb in storage_backends:
+            if not isinstance(sb, StatsStorageBase):
                 raise TypeError("Invalid type of stats storage service {0!r}. "
                                 "Should be of type StatsStorageBase, "
                                 "is: {0!r}".format(type(StatsStorageBase)))
+
+    def reconfigService(self, storage_backends):
+        log.msg("Reconfiguring StatsService with config: {0!r}".format(storage_backends))
+
+        self.checkConfig(storage_backends)
+
+        self.registeredStorageServices = []
+        for svc in storage_backends:
             self.registeredStorageServices.append(svc)
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        self.consumers = []
+        self.registerConsumers()
 
-    def postProperties(self, properties, builder_name):
-        """
-        Expose all properties set in a step to be filtered and posted to
-        statistics storage.
-        """
+    @defer.inlineCallbacks
+    def registerConsumers(self):
+        self.removeConsumers()  # remove existing consumers and add new ones
+        self.consumers = []
+
         for svc in self.registeredStorageServices:
             for cap in svc.captures:
-                for prop_name in properties.properties:
-                    if builder_name == cap.builder_name and \
-                       prop_name == cap.property_name:
-                        context = {
-                            "builder_name": builder_name
-                        }
-                        series_name = builder_name + "-" + prop_name
-                        return threads.deferToThread(svc.postStatsValue, prop_name,
-                                                 properties.getProperty(prop_name),
-                                                 series_name, context)
+                cap.parent_svcs.append(svc)
+                cap.master = self.master
+                consumer = yield self.master.mq.startConsuming(cap.consumer, cap.routingKey)
+                self.consumers.append(consumer)
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield service.BuildbotService.stopService(self)
+        self.removeConsumers()
+
+    @defer.inlineCallbacks
+    def removeConsumers(self):
+        for consumer in self.consumers:
+            yield consumer.stopConsuming()
+        self.consumers = []
+
+    @defer.inlineCallbacks
+    def yieldMetricsValue(self, data_name, post_data, buildid):
+        """
+        A method to allow posting data that is not generated and stored as build-data in
+        the database. This method generates the `stats-yield-data` event to the mq layer
+        which is then consumed in self.postData.
+
+        @params
+        data_name: (str) The unique name for identifying this data.
+        post_data: (dict) A dictionary of key-value pairs that'll be sent for storage.
+        buildid: The buildid of the current Build.
+        """
+        build_data = yield self.master.data.get(('builds', buildid))
+        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+
+        msg = dict()
+        msg['data_name'] = data_name
+        msg['post_data'] = post_data
+        msg['build_data'] = build_data
+
+        self.master.mq.produce(routingKey, msg)
+        yield defer.returnValue(None)

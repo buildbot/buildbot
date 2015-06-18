@@ -102,7 +102,6 @@ class MasterConfig(util.ComparableMixin):
             type='simple',
         )
         self.metrics = None
-        self.statsServices = []
         self.caches = dict(
             Builds=15,
             Changes=10,
@@ -129,7 +128,7 @@ class MasterConfig(util.ComparableMixin):
         'db', "db_poll_interval", "db_url", "eventHorizon",
         "logCompressionLimit", "logCompressionMethod", "logEncoding",
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
-        "collapseRequests", "metrics", "mq", "multiMaster", "statsServices", "prioritizeBuilders",
+        "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
         "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
@@ -233,7 +232,6 @@ class MasterConfig(util.ComparableMixin):
             config.load_db(filename, config_dict)
             config.load_mq(filename, config_dict)
             config.load_metrics(filename, config_dict)
-            config.load_statsServices(filename, config_dict)
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_builders(filename, config_dict)
@@ -442,14 +440,6 @@ class MasterConfig(util.ComparableMixin):
                 error("c['metrics'] must be a dictionary")
             else:
                 self.metrics = metrics
-
-    def load_statsServices(self, filename, config_dict):
-        if 'statsServices' in config_dict:
-            statsServices = config_dict["statsServices"]
-            if not isinstance(statsServices, list):
-                error("c['statsServices'] must be a list")
-            else:
-                self.statsServices = statsServices
 
     def load_caches(self, filename, config_dict):
         explicit = False

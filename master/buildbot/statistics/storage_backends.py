@@ -18,6 +18,11 @@ from twisted.python import log
 
 from buildbot import config
 
+try:
+    from influxdb import InfluxDBClient
+except ImportError:
+    InfluxDBClient = None
+
 
 class StatsStorageBase(object):
     """
@@ -34,11 +39,8 @@ class InfluxStorageService(StatsStorageBase):
     """
     def __init__(self, url, port, user, password, db, captures,
                  name="InfluxStorageService"):
-        try:
-            from influxdb import InfluxDBClient
-        except ImportError:
+        if not InfluxDBClient:
             config.error("Python client for InfluxDB not installed.")
-
         self.url = url
         self.port = port
         self.user = user
@@ -52,21 +54,17 @@ class InfluxStorageService(StatsStorageBase):
                                      self.password, self.db)
         self.inited = True
 
-    def postStatsValue(self, name, value, series_name, context={}):
+    def postStatsValue(self, post_data, series_name, context={}):
         if not self.inited:
-            log.err("Service {} not initialized".format(self.name))
+            log.err("Service {0} not initialized".format(self.name))
             return
         log.msg("Sending data to InfluxDB")
-        log.msg("name: {!r}".format(name))
-        log.msg("value: {!r}".format(value))
-        log.msg("context: {!r}".format(context))
+        log.msg("post_data: {0!r}".format(post_data))
+        log.msg("context: {0!r}".format(context))
 
         data = {}
         data['name'] = series_name
-        data['fields'] = {
-            "name": name,
-            "value": value
-        }
+        data['fields'] = post_data
         data['tags'] = context
         points = [data]
         self.client.write_points(points)

@@ -25,18 +25,20 @@ class FakeStatsStorageService(storage_backends.StatsStorageBase):
     """
     Fake Storage service used in unit tests
     """
-    def __init__(self, stats=None):
+    def __init__(self, stats=None, name='FakeStatsStorageService'):
         self.stored_data = []
         if not stats:
             self.stats = [capture.CaptureProperty("TestBuilder",
                                                   'test')]
         else:
             self.stats = stats
+        self.name = name
+        self.captures = []
 
     @defer.inlineCallbacks
-    def postStatsValue(self, name, value, series_name, context={}):
-        self.stored_data.append((name, value, series_name, context))
-        yield None
+    def postStatsValue(self, post_data, series_name, context={}):
+        self.stored_data.append((post_data, series_name, context))
+        yield defer.succeed(None)
 
 
 class FakeBuildStep(buildstep.BuildStep):
@@ -55,17 +57,25 @@ class FakeStatsService(stats_service.StatsService):
     """
     Fake StatsService for use in fakemaster
     """
-    @defer.inlineCallbacks
-    def postProperties(self, properties, builder_name):
-        """
-        No filtering. Straight post stuff to FakeStatsStorageService.
-        """
-        for svc in self.registeredStorageServices:
-            for prop_name in properties.properties:
-                context = {
-                    "builder_name": builder_name
-                }
-                series_name = builder_name + "-" + prop_name
-                yield svc.postStatsValue(prop_name,
-                                         properties.getProperty(prop_name),
-                                         series_name, context)
+    def __init__(self, master=None, *args, **kwargs):
+        stats_service.StatsService.__init__(self, *args, **kwargs)
+        self.master = master
+
+    @property
+    def master(self):
+        return self._master
+
+    @master.setter
+    def master(self, value):
+        self._master = value
+
+
+class FakeInfluxDBClient(object):
+    """
+    Fake Influx module for testing on systems that don't have influxdb installed.
+    """
+    def __init__(self, *args, **kwargs):
+        self.points = None
+
+    def write_points(self, points):
+        self.points = points
