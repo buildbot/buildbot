@@ -601,7 +601,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    def updateBuildRequests(self, brids, results=0, complete=-1):
+    def updateBuildRequests(self, brids, results=-1, complete=0):
         def thd(conn):
 
             transaction = conn.begin()

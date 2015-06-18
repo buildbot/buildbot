@@ -33,7 +33,7 @@ from buildbot.status.buildrequest import BuildRequestStatus
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY, Results, worst_status
+from buildbot.status.results import EXCEPTION, RETRY, RESUME, Results, worst_status
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
                    EXCEPTION, RETRY, Results, worst_status ]
 
@@ -869,6 +869,9 @@ class BuilderStatus(styles.Versioned):
         self.latestBuildCache[k] = cache
 
     def saveLatestBuild(self, build, key=None):
+        if build.getResults() == RESUME:
+            return
+
         cache = {"build": None, "date": datetime.datetime.now()}
 
         if build is not None:
