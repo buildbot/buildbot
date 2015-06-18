@@ -22,18 +22,20 @@ import time
 
 import warnings
 
-from buildbot.status import buildset
-from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.builder import EXCEPTION
-from buildbot.status.builder import FAILURE
-from buildbot.status.builder import RETRY
-from buildbot.status.builder import Results
-from buildbot.status.builder import SUCCESS
-from buildbot.status.builder import WARNINGS
+from buildbot.reporters import utils
+from buildbot.status.results import EXCEPTION
+from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
+from buildbot.status.results import Results
+from buildbot.status.results import SUCCESS
+from buildbot.status.results import WARNINGS
+from buildbot.util import service
+
+
 from distutils.version import LooseVersion
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
-from twisted.python import log
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -128,15 +130,27 @@ class DEFAULT_SUMMARY(object):
     pass
 
 
-class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotifierMixin):
+class GerritStatusPush(service.BuildbotService):
 
     """Event streamer to a gerrit ssh server."""
+    name = "GerritStatusPush"
+    gerrit_server = None
+    gerrit_username = None
+    gerrit_port = None
+    gerrit_version_time = None
+    gerrit_version = None
+    gerrit_identity_file = None
+    reviewCB = None
+    reviewArg = None
+    startCB = None
+    startArg = None
+    summaryCB = None
+    summaryArg = None
 
-    def __init__(self, server, username, reviewCB=DEFAULT_REVIEW,
-                 startCB=None, port=29418, reviewArg=None,
-                 startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                 identity_file=None, **kwargs):
-        StatusReceiverMultiService.__init__(self)
+    def reconfigService(self, server, username, reviewCB=DEFAULT_REVIEW,
+                        startCB=None, port=29418, reviewArg=None,
+                        startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
+                        identity_file=None):
 
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
@@ -149,7 +163,6 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             reviewCB = None
         if summaryCB is DEFAULT_SUMMARY:
             summaryCB = None
-
         # Parameters.
         self.gerrit_server = server
         self.gerrit_username = username
@@ -239,27 +252,26 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             else:
                 print "gerrit status: OK"
 
-    def setServiceParent(self, parent):
-        """
-        @type  parent: L{buildbot.master.BuildMaster}
-        """
-        StatusReceiverMultiService.setServiceParent(self, parent)
-        self.master_status = self.parent
-        self.master_status.subscribe(self)
-
+    @defer.inlineCallbacks
     def startService(self):
-        print """Starting up."""
-        if self.summaryCB:
-            # TODO: handle deferred
-            self.summarySubscribe().addErrback(log.err, 'while subscribing')
+        yield service.BuildbotService.startService(self)
+        startConsuming = self.master.mq.startConsuming
+        self._buildsetCompleteConsumer = yield startConsuming(
+            self.buildsetComplete,
+            ('buildsets', None, 'complete'))
 
-        StatusReceiverMultiService.startService(self)
+        self._buildCompleteConsumer = yield startConsuming(
+            self.buildComplete,
+            ('builds', None, 'finished'))
+
+        self._buildStartedConsumer = yield startConsuming(
+            self.buildStarted,
+            ('builds', None, 'started'))
 
     def stopService(self):
-        self.summaryUnsubscribe()
-
-    def builderAdded(self, name, builder):
-        return self  # subscribe to this builder
+        self._buildsetCompleteConsumer.stopConsuming()
+        self._buildCompleteConsumer.stopConsuming()
+        self._buildStartedConsumer.stopConsuming()
 
     def buildStarted(self, builderName, build):
         if self.startCB is not None:
@@ -268,14 +280,33 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
 
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
-        if self.reviewCB:
-            result = _handleLegacyResult(self.reviewCB(builderName, build, result, self.master_status, self.reviewArg))
-            self.sendCodeReviews(build, result)
+        result = _handleLegacyResult(self.reviewCB(builderName, build, result, self.master, self.reviewArg))
+        self.sendCodeReviews(build, result)
+
+    @defer.inlineCallbacks
+    def buildComplete(self, key, build):
+        if self.reviewCB is None:
+            return
+        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
+        buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
+        yield utils.getDetailsForBuilds(self.master, buildset, [build])
+        self.buildFinished(build['builder']['name'], build, build['results'])
+
+    @defer.inlineCallbacks
+    def buildsetComplete(self, key, msg):
+        if not self.summaryCB:
+            return
+        bsid = msg['bsid']
+        res = yield utils.getDetailsForBuildset(
+            self.master, bsid, wantProperties=True)
+        builds = res['builds']
+        buildset = res['buildset']
+        self.sendBuildSetSummary(buildset, builds)
 
     def sendBuildSetSummary(self, buildset, builds):
         if self.summaryCB:
             def getBuildInfo(build):
-                result = build.getResults()
+                result = build['results']
                 resultText = {
                     SUCCESS: "succeeded",
                     FAILURE: "failed",
@@ -283,15 +314,15 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
                     EXCEPTION: "encountered an exception",
                 }.get(result, "completed with unknown result %d" % result)
 
-                return {'name': build.getBuilder().getName(),
+                return {'name': build['builder']['name'],
                         'result': result,
                         'resultText': resultText,
-                        'text': ' '.join(build.getText()),
-                        'url': self.master_status.getURLForThing(build),
+                        'text': build['state_string'],
+                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'], build['number'])
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
-            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']], self.master_status, self.summaryArg))
+            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']], self.master, self.summaryArg))
             self.sendCodeReviews(builds[0], result)
 
     def sendCodeReviews(self, build, result):
@@ -299,9 +330,11 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         if message is None:
             return
 
+        def getProperty(build, name):
+            return build['properties'].get(name, [None])[0]
         # Gerrit + Repo
-        downloads = build.getProperty("repo_downloads")
-        downloaded = build.getProperty("repo_downloaded")
+        downloads = getProperty(build, "repo_downloads")
+        downloaded = getProperty(build, "repo_downloaded")
         if downloads is not None and downloaded is not None:
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
@@ -319,9 +352,9 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
             return
 
         # Gerrit + Git
-        if build.getProperty("event.change.id") is not None:  # used only to verify Gerrit source
-            project = build.getProperty("project")
-            revision = build.getProperty("got_revision") or build.getProperty("revision")
+        if getProperty(build, "event.change.id") is not None:  # used only to verify Gerrit source
+            project = getProperty(build, "project")
+            revision = getProperty(build, "got_revision") or build.getProperty("revision")
 
             # review doesn't really work with multiple revisions, so let's
             # just assume it's None there
