@@ -285,6 +285,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def maybeResumeBuild(self, slavebuilder, buildnumber, breqs):
 
         build_status = yield self.builder_status.deferToThread(buildnumber)
+        build_status.finished = None
         # if there is a problem loading the builder status retry the build
 
         # add new build element into the db with the current slave

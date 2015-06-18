@@ -36,6 +36,8 @@ class ResumableBuildStep(LoggingBuildStep):
 
     def releaseBuildLocks(self):
         self.build.releaseLocks()
+        # reset the build locks
+        self.build.locks = []
         # release slave lock
         self.build.slavebuilder.state = IDLE
         self.build.builder.builder_status.setBigState("idle")
