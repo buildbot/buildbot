@@ -81,7 +81,7 @@ def _new_add_label(label, value):
     return ["--label %s=%d" % (label, int(value))]
 
 
-def defaultReviewCB(builderName, build, result, status, arg):
+def defaultReviewCB(builderName, build, result, master, arg):
     if result == RETRY:
         return makeReviewResult(None)
 
@@ -93,7 +93,7 @@ def defaultReviewCB(builderName, build, result, status, arg):
                             (GERRIT_LABEL_VERIFIED, result == SUCCESS or -1))
 
 
-def defaultSummaryCB(buildInfoList, results, status, arg):
+def defaultSummaryCB(buildInfoList, results, master, arg):
     success = False
     failure = False
 
@@ -233,7 +233,7 @@ class GerritStatusPush(service.BuildbotService):
         command = self._gerritCmd("version")
         callback = lambda gerrit_version: self.processVersion(gerrit_version, func)
 
-        reactor.spawnProcess(self.VersionPP(callback), command[0], command)
+        self.spawnProcess(self.VersionPP(callback), command[0], command)
 
     class LocalPP(ProcessProtocol):
 
@@ -390,7 +390,7 @@ class GerritStatusPush(service.BuildbotService):
                 command.extend(add_label(label, value))
 
         command.append(str(revision))
-        print command
-        reactor.spawnProcess(self.LocalPP(self), command[0], command)
+        self.spawnProcess(self.LocalPP(self), command[0], command)
 
-# vim: set ts=4 sts=4 sw=4 et:
+    def spawnProcess(self, *arg, **kw):
+        reactor.spawnProcess(*arg, **kw)

@@ -17,8 +17,11 @@ from buildbot.reporters import utils
 from buildbot.reporters.gerrit import GERRIT_LABEL_REVIEWED
 from buildbot.reporters.gerrit import GERRIT_LABEL_VERIFIED
 from buildbot.reporters.gerrit import GerritStatusPush
+from buildbot.reporters.gerrit import defaultReviewCB
+from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.status.results import FAILURE
+from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -109,13 +112,18 @@ class TestGerritStatusPush(unittest.TestCase):
                                              wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
-    def setupGerritStatusPush(self, *args, **kwargs):
+    def setupGerritStatusPushSimple(self, *args, **kwargs):
         serv = kwargs.pop("server", "serv")
         username = kwargs.pop("username", "user")
         gsp = GerritStatusPush(serv, username, *args, **kwargs)
-        gsp.sendCodeReview = Mock()
         yield gsp.setServiceParent(self.master)
         yield gsp.startService()
+        defer.returnValue(gsp)
+
+    @defer.inlineCallbacks
+    def setupGerritStatusPush(self, *args, **kwargs):
+        gsp = yield self.setupGerritStatusPushSimple(*args, **kwargs)
+        gsp.sendCodeReview = Mock()
         defer.returnValue(gsp)
 
     @defer.inlineCallbacks
@@ -168,6 +176,14 @@ class TestGerritStatusPush(unittest.TestCase):
         self.master.db.changes.getChangesForBuild = getChangesForBuild
         defer.returnValue((buildset, builds))
 
+    def makeBuildInfo(self, buildResults, resultText):
+        info = []
+        for i in xrange(len(buildResults)):
+            info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
+                         'resultText': resultText[i], 'text': u'buildText',
+                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i)})
+        return info
+
     @defer.inlineCallbacks
     def run_fake_summary_build(self, gsp, buildResults, finalResult,
                                resultText, expWarning=False):
@@ -175,11 +191,7 @@ class TestGerritStatusPush(unittest.TestCase):
         yield gsp.buildsetComplete('buildset.98.complete'.split("."),
                                    buildset)
 
-        info = []
-        for i in xrange(len(buildResults)):
-            info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
-                         'resultText': resultText[i], 'text': u'buildText',
-                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i)})
+        info = self.makeBuildInfo(buildResults, resultText)
         if expWarning:
             self.assertEqual([w['message'] for w in self.flushWarnings()],
                              ['The Gerrit status callback uses the old '
@@ -339,3 +351,42 @@ class TestGerritStatusPush(unittest.TestCase):
 
     def test_buildComplete_failure_sends_review_legacy(self):
         return self.check_single_build_legacy(FAILURE, -1)
+
+    def test_defaultReviewCBSuccess(self):
+        res = defaultReviewCB("builderName", {}, SUCCESS, None, None)
+        self.assertEqual(res['labels'], {'Verified': 1})
+        res = defaultReviewCB("builderName", {}, RETRY, None, None)
+        self.assertEqual(res['labels'], {})
+
+    def test_defaultSummaryCB(self):
+        info = self.makeBuildInfo([SUCCESS, FAILURE], ["yes", "no"])
+        res = defaultSummaryCB(info, SUCCESS, None, None)
+        self.assertEqual(res['labels'], {'Verified': -1})
+        info = self.makeBuildInfo([SUCCESS, SUCCESS], ["yes", "yes"])
+        res = defaultSummaryCB(info, SUCCESS, None, None)
+        self.assertEqual(res['labels'], {'Verified': 1})
+
+    @defer.inlineCallbacks
+    def testBuildGerritCommand(self):
+        gsp = yield self.setupGerritStatusPushSimple()
+        spawnSkipFirstArg = Mock()
+        gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
+        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'])
+        gsp.processVersion("2.6", lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
+             '--project project', "--message 'bla'", '--label Verified=1', 'revision'])
+
+        # <=2.5 uses other syntax
+        gsp.processVersion("2.4", lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
+             "--message 'bla'", '--verified 1', 'revision'])
