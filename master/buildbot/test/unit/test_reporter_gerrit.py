@@ -22,7 +22,8 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from mock import Mock, call
+from mock import Mock
+from mock import call
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -93,7 +94,7 @@ class TestGerritStatusPush(unittest.TestCase):
     TEST_PROJECT = u'testProject'
     TEST_REVISION = u'd34db33fd43db33f'
     TEST_CHANGE_ID = u'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
-    TEST_BUILDER_NAME = 'Builder0'
+    TEST_BUILDER_NAME = u'Builder0'
     TEST_PROPS = {
         'gerrit_branch': 'refs/changes/34/1234/1',
         'project': TEST_PROJECT,
@@ -284,6 +285,7 @@ class TestGerritStatusPush(unittest.TestCase):
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
         buildset, builds = yield self.setupBuildResults([buildResult], buildResult)
 
+        yield gsp.buildStarted(None, builds[0])
         yield gsp.buildComplete(None, builds[0])
 
         if expWarning:
@@ -298,27 +300,33 @@ class TestGerritStatusPush(unittest.TestCase):
     @defer.inlineCallbacks
     def check_single_build(self, buildResult, verifiedScore):
 
-        gsp = yield self.setupGerritStatusPush(reviewCB=testReviewCB)
+        gsp = yield self.setupGerritStatusPush(reviewCB=testReviewCB,
+                                               startCB=testStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
+        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+                                 (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
-                                                   result)
+        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
+                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        gsp.sendCodeReview.assert_has_calls(calls)
 
     @defer.inlineCallbacks
     def check_single_build_legacy(self, buildResult, verifiedScore):
-        gsp = yield self.setupGerritStatusPush(reviewCB=legacyTestReviewCB)
+        gsp = yield self.setupGerritStatusPush(reviewCB=legacyTestReviewCB,
+                                               startCB=testStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
 
+        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+                                 (GERRIT_LABEL_REVIEWED, 0))
         result = makeReviewResult(msg,
                                   (GERRIT_LABEL_VERIFIED, verifiedScore),
                                   (GERRIT_LABEL_REVIEWED, 0))
-        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
-                                                   self.TEST_REVISION,
-                                                   result)
+        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
+                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        gsp.sendCodeReview.assert_has_calls(calls)
 
     def test_buildComplete_success_sends_review(self):
         return self.check_single_build(SUCCESS, 1)

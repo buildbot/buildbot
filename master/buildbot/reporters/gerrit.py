@@ -273,9 +273,11 @@ class GerritStatusPush(service.BuildbotService):
         self._buildCompleteConsumer.stopConsuming()
         self._buildStartedConsumer.stopConsuming()
 
-    def buildStarted(self, builderName, build):
+    @defer.inlineCallbacks
+    def buildStarted(self, key, build):
         if self.startCB is not None:
-            message = self.startCB(builderName, build, self.startArg)
+            builder = yield self.master.data.get(("builders", build['builderid']))
+            message = self.startCB(builder['name'], build, self.startArg)
             self.sendCodeReviews(build, message)
 
     def buildFinished(self, builderName, build, result):
