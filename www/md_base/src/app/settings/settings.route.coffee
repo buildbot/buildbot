@@ -60,3 +60,4 @@ class State extends Config
             url: "/#{name}"
             data:
                 title: 'Settings'
+                classname: 'settings'

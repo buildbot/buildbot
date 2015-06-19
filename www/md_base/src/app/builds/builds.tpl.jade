@@ -1,16 +1,20 @@
 div.menu
   div.grid-menu
-    div.menu-item
+    md-button.menu-item.no-select(ui-sref="builds.masters")
       md-icon(md-svg-icon="wand")
       span.title Masters
-    div.menu-item
+      div.md-ripple-container
+    md-button.menu-item.no-select(ui-sref="builds.slaves")
       md-icon(md-svg-icon="hammer")
       span.title Slaves
-    div.menu-item
+    md-button.menu-item.no-select(ui-sref="builds.schedulers")
       md-icon(md-svg-icon="clock")
       span.title Schedulers
-    div.menu-item
+    md-button.menu-item.no-select(ui-sref="builds.changes")
       md-icon(md-svg-icon="changes")
       span.title Latest changes
-md-content(flex, ui-view)
+
+  div.builders-menu
+    div.menu-title BUILDERS
+md-content(flex, ui-view="")
   | content

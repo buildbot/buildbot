@@ -19,3 +19,4 @@ class State extends Config
             url: "/#{name}"
             data:
                 title: 'Builds'
+                classname: 'builds'

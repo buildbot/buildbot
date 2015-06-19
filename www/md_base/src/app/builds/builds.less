@@ -11,27 +11,47 @@
   padding: 0px !important;
 
   .menu {
-    max-width: 250px;
-    width: 30%;
+    width: 250px;
     border-right: 1px solid #dfdfef;
     background: #fff;
 
-    .grid-menu .menu-item {
-      float: left;
+    .md-button.menu-item {
+      display: block;
       padding: 10px;
-      width: 50%;
-      height: 60px;
+      margin: 0;
       color: #333;
       cursor: pointer;
-      text-align: center;
-      border-left: 1px solid #eee;
-      border-bottom: 1px solid #eee;
+      border-radius: 0;
+    }
 
-      span.title {
-        margin-top: 5px;
-        display: block;
-        font-size: 12px;
+    .grid-menu {
+      overflow: hidden;
+
+      .menu-item {
+        float: left;
+        width: 50%;
+        height: 80px;
+        text-align: center;
+        border-left: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+
+        span.title {
+          line-height: 24px;
+          display: block;
+          font-size: 12px;
+        }
       }
+    }
+
+    .builders-menu {
+      margin-top: 80px;
+
+      .menu-title {
+        font-size: 14px;
+        color: #333;
+        text-align: center;
+      }
+
     }
   }
 }

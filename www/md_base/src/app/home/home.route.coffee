@@ -19,6 +19,7 @@ class State extends Config
             url: '/'
             data:
                 title: 'Home'
+                classname: 'home'
 
         bbSettingsServiceProvider.addSettingsGroup
             name: 'home'
