@@ -1,4 +1,7 @@
 class Builds extends Controller
-    constructor: () ->
+    builders: []
+    constructor: (buildbotService) ->
+        buildbotService.all('builders').getList().then (builders) =>
+            @builders = builders
 
     
