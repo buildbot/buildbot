@@ -138,7 +138,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getBuildRequestInQueue(self, sorted=False, limit=False):
+    # TODO: pass the current masterobject id to the selection filter
+    @with_master_objectid
+    def getBuildRequestInQueue(self, buildername=None, _master_objectid=None, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -165,26 +167,30 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 res.close()
                 return rv
 
-            pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
+            pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason, reqs_tbl.c.submitted_at],
                           from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
                           .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
                                        (reqs_tbl.c.complete == 0)))
+
             pending = checkConditions(pending)
 
-            resume = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
-                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
+            resume = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason, reqs_tbl.c.submitted_at],
+                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
+                                                      & (claims_tbl.c.objectid == _master_objectid))
                                .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)))\
                 .where(reqs_tbl.c.results == RESUME)\
                 .where(reqs_tbl.c.complete == 1)\
                 .where(reqs_tbl.c.mergebrid == None)
 
             resume = checkConditions(resume)
+            buildqueue = pending.alias('pending').select().union_all(resume.alias('resume').select())
 
-            pending_buildrequests = getResults(pending)
-            resume_buildrequests = getResults(resume)
 
-            return pending_buildrequests + resume_buildrequests
+            result = getResults(buildqueue)
+
+            # todo return sorted by submmited
+            return result
 
         return self.db.pool.do(thd)
 
