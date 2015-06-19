@@ -846,7 +846,7 @@ class QueueJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True, limit=200)
+        unclaimed_brq = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=True, limit=200)
 
         #Convert to dictionary
         output = []
@@ -1064,7 +1064,7 @@ class GlobalJsonResource(JsonResource):
             b = self.status.getBuilder(b_name)
             current_builds |= set(b.getCurrentBuilds())
 
-        queue = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=False)
+        queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
         result = {"slaves_count": len(connected_slaves),
                   "slaves_busy": len(slave_busy),
                   "running_builds": len(current_builds),

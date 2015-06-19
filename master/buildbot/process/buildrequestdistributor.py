@@ -816,7 +816,7 @@ class BuildRequestDistributor(service.Service):
 
         if not buildStarted:
             bc.slavepool = bldr.getAvailableSlaves()
-            yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
+            yield self.master.db.buildrequests.updateBuildRequests(brids, complete=1, results=RESUME)
 
         defer.returnValue(buildStarted)
 

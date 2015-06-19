@@ -356,7 +356,11 @@ class BuilderStatus(styles.Versioned):
         brdicts = yield db.buildrequests.getBuildRequests(claimed=False,
                                              buildername=self.name)
 
-        result = [BuildRequestStatus(self.name, brdict['brid'],self.status) for brdict in brdicts]
+        resumed_brdicts = yield db.buildrequests.getBuildRequests(buildername=self.name, claimed="mine",
+                                                                  results=RESUME)
+
+        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts + resumed_brdicts]
+
         defer.returnValue(result)
 
     def foundCodebasesInBuild(self, build, codebases):

@@ -19,6 +19,7 @@ from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.status.results import RESUME
 
 class AlreadyClaimedError(Exception):
     pass
@@ -137,32 +138,53 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    def getUnclaimedBuildRequest(self, sorted=False, limit=False):
+    def getBuildRequestInQueue(self, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             buildset_tbl = self.db.model.buildsets
 
-            q = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
+            def checkConditions(query):
+                if limit:
+                    query = query.limit(200)
+
+                if sorted:
+                    query = query.order_by(reqs_tbl.c.submitted_at)
+
+                return query
+
+            def getResults(query):
+                rv = []
+                res = conn.execute(query)
+                rows = res.fetchall()
+
+                if rows:
+                    for row in rows:
+                        rv.append(dict(brid=row.id, buildername=row.buildername, reason=row.reason))
+
+                res.close()
+                return rv
+
+            pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
                           from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
                           .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
                                        (reqs_tbl.c.complete == 0)))
-            if limit:
-                q = q.limit(200)
+            pending = checkConditions(pending)
 
-            if sorted:
-                q = q.order_by(reqs_tbl.c.submitted_at)
+            resume = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason],
+                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
+                               .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)))\
+                .where(reqs_tbl.c.results == RESUME)\
+                .where(reqs_tbl.c.complete == 1)\
+                .where(reqs_tbl.c.mergebrid == None)
 
-            res = conn.execute(q)
-            rows = res.fetchall()
-            rv = []
-            if rows:
-                for row in rows:
-                    rv.append(dict(brid=row.id, buildername=row.buildername, reason=row.reason))
+            resume = checkConditions(resume)
 
-            res.close()
-            return rv
+            pending_buildrequests = getResults(pending)
+            resume_buildrequests = getResults(resume)
+
+            return pending_buildrequests + resume_buildrequests
 
         return self.db.pool.do(thd)
 
@@ -620,7 +642,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     .values(complete=complete)\
                     .values(results=results)
 
-                if complete == -1:
+                if complete == 0:
                     q = q.values(complete_at=None)
 
                 res = conn.execute(q)
