@@ -174,6 +174,7 @@ setup_args = {
         "buildbot.util",
         "buildbot.www",
         "buildbot.www.hooks",
+        "buildbot.www.authz",
     ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
         "buildbot.test.util",
