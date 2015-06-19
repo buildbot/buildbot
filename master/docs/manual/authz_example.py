@@ -1,4 +1,4 @@
-from buildbot.www.authz import Authz
+from buildbot.www.authz import Authz, fnmatchStrMatcher
 from buildbot.www.authz.roles import RolesFromGroups, RolesFromEmails, RolesFromOwner
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
@@ -7,7 +7,7 @@ from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 
 authz = Authz(
-    stringsMatcher=Authz.fnmatchMatcher,  # simple matcher with '*' glob character
+    stringsMatcher=fnmatchStrMatcher,  # simple matcher with '*' glob character
     # stringsMatcher = Authz.reMatcher,  # if you prefer regular expressions
     allowRules=[
         # admins can do anything,

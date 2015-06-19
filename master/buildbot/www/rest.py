@@ -23,6 +23,7 @@ from buildbot.data import resultspec
 from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
+from buildbot.www.authz import Forbidden
 from contextlib import contextmanager
 from twisted.internet import defer
 from twisted.python import log
@@ -133,6 +134,10 @@ class V2RootResource(resource.Resource):
         except BadJsonRpc2 as e:
             writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
             return
+        except Forbidden, e:
+            # There is nothing in jsonrc spec about forbidden error, so pick invalid request
+            writeError(e.message, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
+            return
         except Exception as e:
             log.err(_why='while handling API request')
             writeError(repr(e), errcode=500,
@@ -196,7 +201,15 @@ class V2RootResource(resource.Resource):
         with self.handleErrors(writeError):
             method, id, params = self.decodeJsonRPC2(request)
             jsonRpcReply['id'] = id
+            yield self.master.www.assertUserAllowed(request, tuple(request.postpath),
+                                                    method, params)
+            userinfos = self.master.www.getUserInfos(request)
+            if 'anonymous' in userinfos and userinfos['anonymous']:
+                owner = "anonymous"
+            else:
+                owner = userinfos['email']
             ep, kwargs = self.getEndpoint(request)
+            params['owner'] = owner
 
             result = yield ep.control(method, params, kwargs)
             jsonRpcReply['result'] = result

@@ -69,16 +69,13 @@ class IndexResource(resource.Resource):
         request.setHeader("content-type", 'text/html')
         request.setHeader("Cache-Control", "public;max-age=0")
 
-        session = request.getSession()
         try:
             yield self.config['auth'].maybeAutoLogin(request)
         except Error as e:
             config["on_load_warning"] = e.message
 
-        if hasattr(session, "user_info"):
-            config.update({"user": session.user_info})
-        else:
-            config.update({"user": {"anonymous": True}})
+        user_info = self.master.www.getUserInfos(request)
+        config.update({"user": user_info})
 
         config.update(self.config)
         config['buildbotURL'] = self.master.config.buildbotURL

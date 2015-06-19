@@ -26,6 +26,7 @@ from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.www import auth
 from buildbot.www import avatar
+from buildbot.www.authz import authz
 from twisted.python import failure
 from twisted.python import log
 
@@ -117,6 +118,7 @@ class MasterConfig(util.ComparableMixin):
             port=None,
             plugins=dict(),
             auth=auth.NoAuth(),
+            authz=authz.Authz(),
             avatar_methods=avatar.AvatarGravatar(),
             logfileName='http.log',
         )
@@ -594,7 +596,7 @@ class MasterConfig(util.ComparableMixin):
         www_cfg = config_dict['www']
         allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins', 'auth', 'avatar_methods', 'logfileName',
+                       'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles', 'versions',
                        'change_hook_dialects', 'change_hook_auth'])
         unknown = set(www_cfg.iterkeys()) - allowed

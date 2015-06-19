@@ -55,7 +55,8 @@ class ForceSchedulerEndpoint(base.Endpoint):
         if action == "force":
             sched = yield self.findForceScheduler(kwargs['schedulername'])
             try:
-                res = yield sched.force("user", **args)
+                print args
+                res = yield sched.force(**args)
                 defer.returnValue(res)
             except forcesched.CollectedValidationError as e:
                 raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])

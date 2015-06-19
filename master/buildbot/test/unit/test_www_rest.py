@@ -19,6 +19,7 @@ import re
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
 from buildbot.util import json
+from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 from twisted.internet import defer
@@ -493,6 +494,11 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.master = self.make_master(url='h:/')
+
+        def allow(*args, **kw):
+            return
+        self.master.www.assertUserAllowed = allow
+
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
@@ -669,6 +675,22 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
             responseCode=500)
         # the error gets logged, too:
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+
+    @defer.inlineCallbacks
+    def test_authz_forbidden(self):
+
+        @defer.inlineCallbacks
+        def deny(request, ep, action, options):
+            if "13" in ep:
+                raise authz.Forbidden("no no")
+            defer.returnValue(None)
+        self.master.www.assertUserAllowed = deny
+        yield self.render_control_resource(self.rsrc, '/test/13',
+                                           action="fail")
+        self.assertJsonRpcError(
+            message=re.compile('no no'),
+            jsonrpccode=JSONRPC_CODES['invalid_request'],
+            responseCode=403)
 
 
 class ContentTypeParser(unittest.TestCase):
