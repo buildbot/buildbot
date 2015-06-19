@@ -18,6 +18,7 @@ import re
 import textwrap
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildslave import runprocess
 from buildslave.commands.base import AbandonChain
@@ -66,8 +67,8 @@ class Repo(SourceBaseCommand):
         return os.path.join(self.builder.basedir, self.srcdir)
 
     def sourcedirIsUpdateable(self):
-        print os.path.join(self._fullSrcdir(), ".repo")
-        print os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
+        log.msg(os.path.join(self._fullSrcdir(), ".repo"))
+        log.msg(os.path.isdir(os.path.join(self._fullSrcdir(), ".repo")))
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
 
     def _repoCmd(self, command, cb=None, abandonOnFailure=True, **kwargs):

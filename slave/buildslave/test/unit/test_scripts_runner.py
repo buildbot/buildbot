@@ -297,14 +297,14 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
                          "incorrect master host and/or port")
 
 
-class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
+class TestOptions(misc.LoggingMixin, unittest.TestCase):
 
     """
     Test buildslave.scripts.runner.Options class.
     """
 
     def setUp(self):
-        self.setUpStdoutAssertions()
+        self.setUpLogging()
 
     def parse(self, *args):
         opts = runner.Options()
@@ -319,7 +319,7 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
     def test_version(self):
         exception = self.assertRaises(SystemExit, self.parse, '--version')
         self.assertEqual(exception.code, 0, "unexpected exit code")
-        self.assertInStdout('Buildslave version:')
+        self.assertLogged('Buildslave version:')
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())
@@ -331,14 +331,14 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 functionPlaceholder = None
 
 
-class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
+class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     """
     Test buildslave.scripts.runner.run()
     """
 
     def setUp(self):
-        self.setUpStdoutAssertions()
+        self.setUpLogging()
 
     class TestSubCommand(usage.Options):
         subcommandFunction = __name__ + ".functionPlaceholder"
@@ -394,9 +394,9 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         exception = self.assertRaises(SystemExit, runner.run)
         self.assertEqual(exception.code, 1, "unexpected exit code")
-        self.assertStdoutEqual("command:  usage-error-message\n\n"
-                               "GeneralUsage\n",
-                               "unexpected error message on stdout")
+        self.assertLogged("command:  usage-error-message",
+                          "GeneralUsage",
+                          "unexpected error message on stdout")
 
     def test_run_bad_suboption(self):
         """
@@ -412,6 +412,6 @@ class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertEqual(exception.code, 1, "unexpected exit code")
 
         # check that we get error message for a sub-option
-        self.assertStdoutEqual("command:  usage-error-message\n\n"
-                               "SubOptionUsage\n",
-                               "unexpected error message on stdout")
+        self.assertLogged("command:  usage-error-message",
+                          "SubOptionUsage",
+                          "unexpected error message on stdout")

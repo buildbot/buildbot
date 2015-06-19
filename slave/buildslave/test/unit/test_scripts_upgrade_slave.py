@@ -36,8 +36,8 @@ from buildbot.slave.bot import BuildSlave
 
 
 class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
-                       misc.StdoutAssertionsMixin,
                        misc.FileIOMixin,
+                       misc.LoggingMixin,
                        unittest.TestCase):
 
     """
@@ -46,7 +46,7 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
     config = {"basedir": "dummy"}
 
     def setUp(self):
-        self.setUpStdoutAssertions()
+        self.setUpLogging()
 
         # expected buildbot.tac relative path
         self.buildbot_tac = os.path.join(self.config["basedir"],
@@ -81,8 +81,8 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
         self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
                          "unexpected exit code")
 
-        # check message to stdout
-        self.assertStdoutEqual("No changes made\n")
+        # check message to the log
+        self.assertLogged("No changes made")
 
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.buildbot_tac)
@@ -106,8 +106,8 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
         self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
                          "unexpected exit code")
 
-        # check message to stdout
-        self.assertStdoutEqual("buildbot.tac updated\n")
+        # check message to the log
+        self.assertLogged("buildbot.tac updated")
 
         # check calls to open()
         self.open.assert_has_calls([mock.call(self.buildbot_tac),
