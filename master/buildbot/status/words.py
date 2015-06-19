@@ -871,7 +871,7 @@ class Contact(base.StatusReceiver):
         reactor.callLater(5.0, self.send, "(>^.^<)")
         
     def command_HUSTLE(self, args):
-        reactor.callLater(0.5, self.send, "/me does the hustle")
+        reactor.callLater(1.0, self.send, "/me does the hustle")
     command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"  
 
     def command_SHUTDOWN(self, args):
