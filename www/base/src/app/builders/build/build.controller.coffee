@@ -18,15 +18,17 @@ class Build extends Controller
                         extra_class: "btn-danger"
                         action: ->
                             $scope.is_stopping = true
-                            buildbotService.one("builds", $scope.build.buildid).control("stop")
+                            buildbotService.one("builds", $scope.build.buildid).control("stop").then (->), (why) ->
+                                $scope.is_stopping = false
+                                $scope.error = "Cannot stop: " + why.data.error.message
+                                glTopbarContextualActionsService.setContextualActions []
                 ]
 
         $scope.$watch 'is_stopping', (n, o) ->
             if n == true
                 glTopbarContextualActionsService.setContextualActions [
                         caption: "Stopping..."
-                        icon: "spinner"
-                        extra_class: "spin"
+                        icon: "spinner fa-spin"
                 ]
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
