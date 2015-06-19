@@ -13,20 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.test.fake import fakedb
 from buildbot.test.util import www
 from buildbot.www import authz
-from twisted.trial import unittest
-from twisted.internet import defer
-from buildbot.test.fake import fakedb
-from buildbot.www.authz.roles import RolesFromGroups, RolesFromEmails, RolesFromOwner
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
-from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
-from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
+from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
+from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
+from buildbot.www.authz.roles import RolesFromEmails
+from buildbot.www.authz.roles import RolesFromGroups
+from buildbot.www.authz.roles import RolesFromOwner
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Authz(www.WwwTestMixin, unittest.TestCase):
+
     def setUp(self):
         authzcfg = authz.Authz(
             stringsMatcher=authz.fnmatchStrMatcher,  # simple matcher with '*' glob character
@@ -79,7 +82,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
             fakedb.Buildset(id=8822),
             fakedb.BuildsetProperty(buildsetid=8822, property_name='owner',
                                     property_value='["user@nine.com", "force"]'),
-            fakedb.BuildRequest(id=82, buildsetid=8822),
+            fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=3),
             fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
